@@ -1,7 +1,7 @@
 """ pyplots.ai
 bump-basic: Basic Bump Chart
-Library: highcharts unknown | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-23
+Library: highcharts 1.10.3 | Python 3.14.3
+Quality: 91/100 | Updated: 2026-02-22
 """
 
 import tempfile
@@ -11,7 +11,7 @@ from pathlib import Path
 
 from highcharts_core.chart import Chart
 from highcharts_core.options import HighchartsOptions
-from highcharts_core.options.series.area import LineSeries
+from highcharts_core.options.series.spline import SplineSeries
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
@@ -21,88 +21,150 @@ teams = ["Eagles", "Wolves", "Tigers", "Bears", "Sharks", "Lions"]
 weeks = ["Week 1", "Week 2", "Week 3", "Week 4", "Week 5", "Week 6"]
 
 # Rankings for each team across weeks (1 = best, 6 = worst)
-# Designed to show various patterns: overtakes, stability, rise, fall
+# Shows various patterns: overtakes, stability, rise, fall, swaps
 rankings = {
-    "Eagles": [3, 2, 1, 1, 2, 1],  # Rise to top, brief dip, reclaim
-    "Wolves": [1, 1, 2, 3, 3, 2],  # Start strong, fade then recover
-    "Tigers": [4, 3, 3, 2, 1, 3],  # Steady rise to peak, then drop
-    "Bears": [2, 4, 4, 4, 4, 4],  # Early drop, stabilize mid-table
-    "Sharks": [5, 5, 5, 5, 5, 5],  # Consistently 5th
-    "Lions": [6, 6, 6, 6, 6, 6],  # Consistently last
+    "Eagles": [3, 2, 1, 1, 2, 1],
+    "Wolves": [1, 1, 2, 3, 3, 2],
+    "Tigers": [4, 3, 3, 2, 1, 3],
+    "Bears": [2, 4, 5, 4, 4, 4],
+    "Sharks": [5, 5, 4, 5, 6, 5],
+    "Lions": [6, 6, 6, 6, 5, 6],
 }
 
-# Colorblind-safe palette for 6 teams
-colors = ["#306998", "#FFD43B", "#9467BD", "#17BECF", "#E377C2", "#8C564B"]
+# Colorblind-safe palette starting with Python Blue
+# Teal replaces red for better perceptual distance from orange under colorblindness
+colors = ["#306998", "#FFD43B", "#9467BD", "#FF7F0E", "#17BECF", "#8C564B"]
 
-# Create chart
+# Visual hierarchy: thicker lines for teams with dramatic rank changes
+line_widths = {
+    "Eagles": 9,  # rises to #1 — protagonist
+    "Wolves": 6,
+    "Tigers": 9,  # dramatic arc #4→#1→#3
+    "Bears": 5,
+    "Sharks": 4,  # minor fluctuation
+    "Lions": 4,  # mostly stable at bottom
+}
+
+marker_radii = {"Eagles": 16, "Wolves": 12, "Tigers": 16, "Bears": 10, "Sharks": 9, "Lions": 9}
+
+# Chart
 chart = Chart(container="container")
 chart.options = HighchartsOptions()
 
-# Chart configuration
 chart.options.chart = {
-    "type": "line",
+    "type": "spline",
     "width": 4800,
     "height": 2700,
     "backgroundColor": "#ffffff",
-    "marginLeft": 250,
-    "marginRight": 250,
+    "marginLeft": 200,
+    "marginRight": 260,
     "marginBottom": 250,
     "spacingTop": 100,
+    "marginTop": 300,
 }
 
 # Title
 chart.options.title = {
-    "text": "bump-basic · highcharts · pyplots.ai",
+    "text": "bump-basic \u00b7 highcharts \u00b7 pyplots.ai",
     "style": {"fontSize": "72px", "fontWeight": "bold"},
 }
 
 # Subtitle
-chart.options.subtitle = {"text": "League Standings Over Season", "style": {"fontSize": "48px"}}
+chart.options.subtitle = {"text": "League Standings Over Season", "style": {"fontSize": "48px", "color": "#666666"}}
 
-# X-axis (weeks)
+# X-axis
 chart.options.x_axis = {
     "categories": weeks,
-    "title": {"text": "Match Week", "style": {"fontSize": "48px"}, "margin": 30},
-    "labels": {"style": {"fontSize": "36px"}, "y": 50},
-    "lineWidth": 2,
-    "tickWidth": 2,
-    "gridLineWidth": 1,
-    "gridLineColor": "#e0e0e0",
+    "labels": {"style": {"fontSize": "40px"}},
+    "lineWidth": 0,
+    "tickWidth": 0,
+    "gridLineWidth": 0,
 }
 
-# Y-axis (rankings - inverted so rank 1 is at top)
+# Y-axis (inverted so rank 1 is at top)
 chart.options.y_axis = {
-    "title": {"text": "Rank Position", "style": {"fontSize": "48px"}, "margin": 30},
-    "labels": {"style": {"fontSize": "36px"}, "x": -15},
-    "reversed": True,  # Rank 1 at top
-    "min": 1,
-    "max": 6,
+    "title": {"text": "Rank", "style": {"fontSize": "40px", "color": "#444444"}},
+    "labels": {"style": {"fontSize": "40px"}, "format": "#{value}"},
+    "reversed": True,
+    "lineWidth": 0,
+    "min": 0.5,
+    "max": 6.5,
     "tickInterval": 1,
+    "startOnTick": False,
+    "endOnTick": False,
     "gridLineWidth": 1,
-    "gridLineDashStyle": "Dash",
+    "gridLineDashStyle": "Dot",
     "gridLineColor": "#e0e0e0",
+    "plotBands": [
+        {
+            "from": 0.5,
+            "to": 1.5,
+            "color": "rgba(255, 215, 0, 0.06)",
+            "label": {
+                "text": "\u2605",
+                "align": "left",
+                "x": -60,
+                "style": {"fontSize": "36px", "color": "rgba(200, 170, 0, 0.35)"},
+            },
+        }
+    ],
 }
 
-# Legend
-chart.options.legend = {
-    "enabled": True,
-    "layout": "vertical",
-    "align": "right",
-    "verticalAlign": "middle",
-    "itemStyle": {"fontSize": "36px"},
-    "itemMarginBottom": 15,
-}
+# Legend disabled — endpoint data labels already identify each team
+chart.options.legend = {"enabled": False}
 
-# Plot options for line styling - bump charts need clear markers
-chart.options.plot_options = {"line": {"lineWidth": 6, "marker": {"enabled": True, "radius": 14, "symbol": "circle"}}}
+# Tooltip disabled for static output
+chart.options.tooltip = {"enabled": False}
 
-# Add series for each team
+# Credits off
+chart.options.credits = {"enabled": False}
+
+# Default plot options for spline
+chart.options.plot_options = {"spline": {"marker": {"enabled": True, "symbol": "circle"}}}
+
+# Series with data labels at endpoints, key-moment annotations, and visual hierarchy
 series_list = []
 for i, team in enumerate(teams):
-    series = LineSeries()
+    ranks = rankings[team]
+    data_points = []
+    for j, rank in enumerate(ranks):
+        point = {"y": rank}
+        if j == len(ranks) - 1:
+            # Data label at end point showing team name
+            point["dataLabels"] = {
+                "enabled": True,
+                "format": "{series.name}",
+                "align": "left",
+                "verticalAlign": "middle",
+                "x": 20,
+                "style": {"fontSize": "32px", "fontWeight": "bold", "color": colors[i], "textOutline": "3px white"},
+            }
+        elif team == "Eagles" and j == 2:
+            # Storytelling: Eagles take #1 at Week 3
+            point["dataLabels"] = {
+                "enabled": True,
+                "format": "\u2191 Takes lead",
+                "align": "center",
+                "y": -30,
+                "style": {"fontSize": "26px", "fontWeight": "normal", "color": "#555555", "textOutline": "2px white"},
+            }
+        elif team == "Tigers" and j == 4:
+            # Storytelling: Tigers peak at #1 at Week 5
+            point["dataLabels"] = {
+                "enabled": True,
+                "format": "\u2191 Peak",
+                "align": "center",
+                "y": -30,
+                "style": {"fontSize": "26px", "fontWeight": "normal", "color": "#555555", "textOutline": "2px white"},
+            }
+        data_points.append(point)
+
+    series = SplineSeries()
     series.name = team
-    series.data = rankings[team]
+    series.data = data_points
     series.color = colors[i]
+    series.line_width = line_widths[team]
+    series.marker = {"radius": marker_radii[team], "symbol": "circle"}
     series_list.append(series)
 
 chart.options.series = series_list
@@ -126,12 +188,11 @@ html_content = f"""<!DOCTYPE html>
 </body>
 </html>"""
 
-# Write temp HTML and take screenshot
 with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False, encoding="utf-8") as f:
     f.write(html_content)
     temp_path = f.name
 
-# Also save as plot.html for interactive version
+# Save interactive version
 Path("plot.html").write_text(html_content, encoding="utf-8")
 
 chrome_options = Options()
@@ -143,8 +204,8 @@ chrome_options.add_argument("--window-size=4800,2700")
 
 driver = webdriver.Chrome(options=chrome_options)
 driver.get(f"file://{temp_path}")
-time.sleep(5)  # Wait for chart to render
+time.sleep(5)
 driver.save_screenshot("plot.png")
 driver.quit()
 
-Path(temp_path).unlink()  # Clean up temp file
+Path(temp_path).unlink()

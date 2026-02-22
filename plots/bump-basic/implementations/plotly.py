@@ -1,58 +1,92 @@
 """ pyplots.ai
 bump-basic: Basic Bump Chart
-Library: plotly 6.5.0 | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-23
+Library: plotly 6.5.2 | Python 3.14.3
+Quality: 91/100 | Updated: 2026-02-22
 """
 
 import plotly.graph_objects as go
 
 
-# Data - Sports league standings over a season
-entities = ["Team Alpha", "Team Beta", "Team Gamma", "Team Delta", "Team Epsilon"]
-periods = ["Week 1", "Week 2", "Week 3", "Week 4", "Week 5", "Week 6"]
+# Data - Formula 1 driver standings over a season
+drivers = ["Verstappen", "Hamilton", "Norris", "Leclerc", "Piastri", "Sainz"]
+races = ["Bahrain", "Jeddah", "Melbourne", "Suzuka", "Miami", "Imola", "Monaco", "Silverstone"]
 
-# Rankings for each team across periods (1 = best)
 rankings = {
-    "Team Alpha": [3, 2, 1, 1, 2, 1],
-    "Team Beta": [1, 1, 2, 3, 3, 2],
-    "Team Gamma": [2, 3, 3, 2, 1, 3],
-    "Team Delta": [4, 4, 5, 4, 4, 4],
-    "Team Epsilon": [5, 5, 4, 5, 5, 5],
+    "Verstappen": [1, 1, 1, 1, 1, 2, 3, 2],
+    "Hamilton": [4, 3, 4, 3, 3, 3, 1, 1],
+    "Norris": [5, 5, 3, 4, 2, 1, 2, 3],
+    "Leclerc": [2, 2, 2, 2, 4, 4, 4, 4],
+    "Piastri": [3, 4, 5, 5, 5, 5, 5, 5],
+    "Sainz": [6, 6, 6, 6, 6, 6, 6, 6],
 }
 
-# Colors - Python Blue first, then colorblind-safe palette
-colors = ["#306998", "#FFD43B", "#2ecc71", "#e74c3c", "#9b59b6"]
+# Colorblind-safe palette — Python Blue first, teal replaces green to avoid red-green issue
+colors = {
+    "Verstappen": "#306998",
+    "Hamilton": "#e74c3c",
+    "Norris": "#17becf",
+    "Leclerc": "#f39c12",
+    "Piastri": "#9b59b6",
+    "Sainz": "#95a5a6",
+}
+
+# Visual hierarchy — emphasize dynamic storylines, mute static ones
+rank_changes = {d: max(r) - min(r) for d, r in rankings.items()}
+line_widths = {d: 5 if rank_changes[d] >= 3 else 3 if rank_changes[d] >= 2 else 2 for d in drivers}
+marker_sizes = {d: 16 if rank_changes[d] >= 3 else 12 if rank_changes[d] >= 2 else 10 for d in drivers}
+opacities = {d: 1.0 if rank_changes[d] >= 3 else 0.8 if rank_changes[d] >= 2 else 0.45 for d in drivers}
 
 # Create figure
 fig = go.Figure()
 
-for i, (entity, ranks) in enumerate(rankings.items()):
+for driver in drivers:
+    ranks = rankings[driver]
+    color = colors[driver]
     fig.add_trace(
         go.Scatter(
-            x=periods,
+            x=races,
             y=ranks,
             mode="lines+markers",
-            name=entity,
-            line={"width": 4, "color": colors[i]},
-            marker={"size": 16, "color": colors[i]},
+            name=driver,
+            line={"width": line_widths[driver], "color": color},
+            marker={"size": marker_sizes[driver], "color": color, "line": {"width": 2, "color": "white"}},
+            opacity=opacities[driver],
+            showlegend=False,
+            hovertemplate="<b>%{text}</b><br>%{x}: P%{y}<extra></extra>",
+            text=[driver] * len(races),
         )
+    )
+    # End-of-line label
+    fig.add_annotation(
+        x=races[-1],
+        y=ranks[-1],
+        text=f"  <b>{driver}</b>" if rank_changes[driver] >= 3 else f"  {driver}",
+        showarrow=False,
+        xanchor="left",
+        font={"size": 16, "color": color},
+        opacity=opacities[driver],
     )
 
 # Layout with inverted Y-axis (rank 1 at top)
 fig.update_layout(
-    title={"text": "bump-basic · plotly · pyplots.ai", "font": {"size": 28}},
-    xaxis={"title": {"text": "Period", "font": {"size": 22}}, "tickfont": {"size": 18}},
+    title={"text": "bump-basic · plotly · pyplots.ai", "font": {"size": 28}, "x": 0.02, "xanchor": "left"},
+    xaxis={"title": {"text": "Race", "font": {"size": 22}}, "tickfont": {"size": 18}, "showgrid": False},
     yaxis={
-        "title": {"text": "Rank", "font": {"size": 22}},
+        "title": {"text": "Championship Position", "font": {"size": 22}},
         "tickfont": {"size": 18},
-        "autorange": "reversed",  # Invert so rank 1 is at top
+        "autorange": "reversed",
         "tickmode": "linear",
         "tick0": 1,
         "dtick": 1,
+        "gridcolor": "rgba(0,0,0,0.06)",
+        "gridwidth": 1,
+        "showgrid": True,
+        "zeroline": False,
     },
-    legend={"font": {"size": 18}, "x": 1.02, "y": 1, "xanchor": "left"},
     template="plotly_white",
-    margin={"r": 150},  # Extra margin for legend
+    margin={"r": 130, "t": 80, "l": 80, "b": 70},
+    plot_bgcolor="rgba(0,0,0,0)",
+    hoverlabel={"font_size": 16},
 )
 
 # Save as PNG (4800x2700 px)

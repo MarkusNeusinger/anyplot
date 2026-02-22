@@ -1,166 +1,175 @@
 library: bokeh
 specification_id: bump-basic
 created: '2025-12-23T09:19:07Z'
-updated: '2025-12-23T09:23:52Z'
-generated_by: claude-opus-4-5-20251101
+updated: '2026-02-22T21:27:01Z'
+generated_by: claude-opus-4-6
 workflow_run: 20456608591
 issue: 0
-python_version: 3.13.11
-library_version: 3.8.1
+python_version: 3.14.3
+library_version: 3.8.2
 preview_url: https://storage.googleapis.com/pyplots-images/plots/bump-basic/bokeh/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/bump-basic/bokeh/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/bump-basic/bokeh/plot.html
-quality_score: 91
+quality_score: 90
 impl_tags:
   dependencies: []
   techniques:
-  - columndatasource
+  - annotations
+  - manual-ticks
   patterns:
-  - data-generation
   - iteration-over-groups
+  - columndatasource
   dataprep: []
-  styling: []
+  styling:
+  - grid-styling
+  - alpha-blending
 review:
   strengths:
-  - Clean implementation following KISS principle with clear data→plot→save structure
-  - Correct Y-axis inversion (rank 1 at top) as required by spec
-  - Effective use of Category10 colorblind-safe palette
-  - Good marker and line sizing for data density
-  - Proper use of ColumnDataSource for Bokeh best practices
-  - Both PNG and HTML outputs generated for maximum usability
+  - Effective visual hierarchy through highlight system differentiating dramatic movers
+    (Ferrari, McLaren, Red Bull) from stable entities
+  - Clean aesthetic with removed spines, subtle dashed grid, and custom light background
+  - CustomJSTickFormatter for ordinal rank labels (1st, 2nd, etc.) is a smart Bokeh-specific
+    touch
+  - End-of-line labels with color-matched text and bold/normal differentiation eliminate
+    need for separate legend
+  - Realistic F1 data context with interesting rank change narratives
   weaknesses:
-  - Legend label font size (18pt) appears small in the rendered image relative to
-    other text elements
-  - Could benefit from HoverTool to show team name and rank on hover for better interactivity
-  image_description: 'The plot displays a bump chart showing sports league standings
-    over 6 weeks. Five teams (Team Alpha, Team Beta, Team Gamma, Team Delta, Team
-    Epsilon) are represented by colored lines (blue, orange, green, red, purple respectively)
-    using the Category10 palette. The Y-axis shows "Rank Position" from 1-5 with rank
-    1 at the top (inverted axis). The X-axis shows "Week" labels from Week 1 to Week
-    6. Each team''s trajectory is shown with connected lines and circular dot markers
-    at each week. A legend is positioned on the right side. The title follows the
-    required format: "bump-basic · bokeh · pyplots.ai". The background is a subtle
-    light gray (#fafafa) with dashed grid lines.'
+  - Non-highlighted entities (Mercedes, Aston Martin) at alpha 0.55 are slightly hard
+    to follow through crossover sections
+  - Red/green color pair (#D44D5C/#5BA67D) could be improved for deuteranopia safety
+  image_description: |-
+    The plot displays a bump chart tracking Formula 1 constructor standings over 6 races. The y-axis is inverted with rank 1 ("1st") at the top and rank 5 ("5th") at the bottom, using ordinal suffix labels via custom JavaScript formatting. The x-axis shows "Race 1" through "Race 6" with the label "Constructor Standings by Race". The title "bump-basic · bokeh · pyplots.ai" appears in bold dark blue at the top left.
+
+    Five teams are plotted with distinct colors: Red Bull Racing (blue #306998), McLaren (orange #E6894A), Ferrari (red/rose #D44D5C), Mercedes (green #5BA67D), and Aston Martin (purple #8B6DB0). Three teams (Red Bull, McLaren, Ferrari) are highlighted with thicker lines (10px), larger markers (38px), and higher alpha (0.95), while Mercedes and Aston Martin are subdued (5px lines, 22px markers, alpha 0.55). End-of-line labels to the right of each team's final position serve as the legend, with highlighted teams in bold.
+
+    The background is light gray (#f8f9fa) with subtle dashed horizontal grid lines (alpha 0.25). All axis lines, spines, and tick marks are removed. The layout is clean and balanced with generous right margin accommodating the team name labels.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 28
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 28pt, axis labels at 22pt, tick labels at 18pt - all perfectly
-          readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text anywhere
+        comment: 'All font sizes explicitly set above minimums: 32pt title, 24pt axis
+          labels, 20pt tick/annotation labels'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text; end-of-line labels at distinct rank positions
+          with clear vertical spacing
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Markers (size=20) and lines (width=4) are visible and well-sized,
-          slightly could be larger for the resolution
+        comment: Good hierarchy with highlighted entities prominent; non-highlighted
+          entities at alpha 0.55 slightly faded but traceable
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 3
+        max: 4
         passed: true
-        comment: Category10 palette is colorblind-safe with good contrast
+        comment: Good 5-color palette; red/green pair has some deuteranopia risk,
+          mitigated by alpha/weight differentiation
       - id: VQ-05
-        name: Layout Balance
+        name: Layout & Canvas
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Good proportions, legend on right side works well, minor whitespace
-          at top
+        comment: Plot fills 60%+ of canvas; right margin serves functional purpose
+          for end labels; balanced margins
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Labels are descriptive ("Week", "Rank Position") but no units needed
-          for these categories
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
-        max: 2
+        comment: Descriptive labels appropriate for domain; units not applicable for
+          ranks/races
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
         passed: true
-        comment: Grid alpha 0.3 is subtle, legend well-placed but label font could
-          be more prominent
+        comment: 'Strong design: custom palette, intentional hierarchy, custom background,
+          removed spines — above defaults'
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines removed, subtle dashed grid, custom background, generous whitespace
+          via min_border settings
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Clear visual hierarchy: Ferrari rise and McLaren fall immediately
+          visible through bold lines and high alpha'
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct bump chart showing rankings over time
+        comment: Correct bump chart with lines connecting rank positions over time
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Periods on X, Rank on Y, entities connected by lines
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Y-axis inverted, distinct colors, dot markers at each period, lines
-          connecting entities
-      - id: SC-04
-        name: Data Range
+        comment: Inverted y-axis, distinct colors, dot markers, lines connecting same
+          entity across all periods
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All ranks (1-5) and all weeks (1-6) visible
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X=periods, Y=ranks, each line=one entity; all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: All 5 teams correctly labeled in legend
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses exact format: "bump-basic · bokeh · pyplots.ai"'
+        comment: Correct title format; end-of-line labels serve as legend with color-matched
+          text
     data_quality:
-      score: 18
-      max: 20
+      score: 14
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Shows rank changes, overtakes (Team Gamma rises from 5 to 1), stability
-          (Team Epsilon stays at 5), and various trajectories. Could show more dramatic
-          swaps.
+        comment: Shows rank rises, falls, stability, multiple crossovers, varied magnitudes
+          of change
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Sports league standings is a perfect real-world scenario for bump
-          charts
+        comment: F1 constructor standings with real team names; neutral sports scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: 5 teams, 6 weeks is appropriate; ranks 1-5 makes sense
+        comment: 5 teams over 6 races, ranks 1-5; perfectly sensible for F1 context
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -168,41 +177,49 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure, no functions/classes
+        comment: Clean imports-data-figure-plot loop-styling-save; no functions/classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Deterministic data (hardcoded rankings)
+        comment: All data hardcoded/deterministic, no random elements
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: 'All imports used: export_png, ColumnDataSource, CustomJSTickFormatter,
+          FixedTicker, Label, figure'
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic; loop with highlight differentiation is appropriate
+          complexity
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current Bokeh API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves as plot.png correctly but also creates plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot.png via export_png; uses current Bokeh 3.x API
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses Bokeh features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of ColumnDataSource, figure(), scatter()/line() with source,
+          Label annotation via add_layout
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses ColumnDataSource, Legend model, proper categorical x_range setup,
-          export_png + HTML output. Could leverage more interactive features like
-          HoverTool for a bump chart.
+        comment: CustomJSTickFormatter with embedded JavaScript for ordinal suffixes
+          is distinctively Bokeh
   verdict: APPROVED

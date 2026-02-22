@@ -1,168 +1,189 @@
 library: letsplot
 specification_id: bump-basic
 created: '2025-12-23T09:19:04Z'
-updated: '2025-12-23T09:23:58Z'
-generated_by: claude-opus-4-5-20251101
+updated: '2026-02-22T21:26:22Z'
+generated_by: claude-opus-4-6
 workflow_run: 20456613134
 issue: 0
-python_version: 3.13.11
+python_version: 3.14.3
 library_version: 4.8.2
 preview_url: https://storage.googleapis.com/pyplots-images/plots/bump-basic/letsplot/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/bump-basic/letsplot/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/bump-basic/letsplot/plot.html
-quality_score: 92
+quality_score: 93
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
+  - layer-composition
+  - hover-tooltips
+  - html-export
   patterns:
   - data-generation
   dataprep: []
   styling:
-  - minimal-chrome
+  - alpha-blending
+  - grid-styling
 review:
   strengths:
-  - Excellent use of direct labeling on the right side instead of legend, improving
-    readability
-  - Clean inverted Y-axis with rank 1 at top as specified
-  - Good colorblind-safe palette with Python Blue (#306998) as primary color
-  - Proper implementation of bump chart pattern with lines connecting same entity
-    across periods
-  - Well-sized elements (line width 2.5, point size 6) for clear visibility
-  - Correct title format and output specifications (PNG at 4800x2700 via scale=3)
+  - Hero emphasis via mapped size/alpha aesthetics creates clear visual hierarchy
+    and data storytelling without annotations
+  - Custom cohesive muted palette with Python Blue anchor and warm/cool balance
+  - Excellent data design with dramatic narrative arcs (rise-and-fall, comeback, steady
+    climb, volatility)
+  - Direct entity labels in matching colors replace legend cleanly
+  - layer_tooltips() with HTML export leverages lets-plot interactive capabilities
+  - 'Substantial visual refinement: y-only subtle grid, removed ticks, clean whitespace'
   weaknesses:
-  - Right margin could be slightly wider to prevent labels from appearing too close
-    to plot edge
-  - Could leverage lets-plot interactive tooltip features in the HTML output
-  - Data shows limited dramatic position changes - more crossovers would better demonstrate
-    bump chart capabilities
-  image_description: 'The plot displays a bump chart showing rankings of 5 tech companies
-    (Alpha Corp, Beta Inc, Gamma Tech, Delta Systems, Epsilon Labs) over 6 quarters
-    (Q1-Q6). The Y-axis is correctly inverted with rank 1 at the top and rank 5 at
-    the bottom. Each company is represented by a distinct colored line: dark blue
-    (Alpha Corp), yellow (Beta Inc), green (Gamma Tech), purple (Delta Systems), and
-    pink (Epsilon Labs). Lines connect rankings across time periods with dot markers
-    at each data point. Company labels appear on the right side of the chart at their
-    final positions. The title "bump-basic · letsplot · pyplots.ai" appears at the
-    top. The layout is clean with a minimal theme and subtle grid.'
+  - At dense crossover regions (Q2-Q3), non-hero points could be slightly larger to
+    aid line traceability
+  - Entity labels at geom_text size=15 could be slightly larger for stronger visual
+    hierarchy
+  - Company names follow obvious fictional pattern (Alpha, Beta, Gamma) rather than
+    realistic naming
+  image_description: 'The plot displays a bump chart tracking 5 tech companies (Alpha
+    Corp, Beta Inc, Gamma Tech, Delta Systems, Epsilon Labs) across 6 quarterly periods
+    (Q1-Q6). The Y-axis is inverted with rank 1 at the top and rank 5 at the bottom,
+    labeled "Market Rank Position." The X-axis shows "Quarterly Period" with Q1-Q6
+    labels. The title reads "bump-basic · letsplot · pyplots.ai" in bold at the top
+    left. Each entity is drawn with a distinct color: blue (Alpha Corp), orange/brown
+    (Beta Inc), green (Gamma Tech), purple (Delta Systems), and pink/rose (Epsilon
+    Labs). Beta Inc''s line is noticeably thicker and fully opaque as the "hero" entity,
+    while the other lines are slightly thinner and at 70% opacity. Dot markers appear
+    at each data point. Entity names are directly labeled at the right end of each
+    line in matching colors. The background is white with subtle light gray horizontal
+    grid lines only on the Y-axis. X-axis grid lines are removed. The chart clearly
+    shows dramatic crossovers: Beta Inc rises from rank 3 to 1, then collapses to
+    rank 5; Alpha Corp reclaims rank 1 by Q5; Delta Systems steadily climbs from 4
+    to 2; Gamma Tech is volatile; Epsilon Labs lingers near the bottom with slight
+    improvement.'
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title, axis labels, and company labels are all clearly readable at
-          appropriate sizes
+        comment: 'All font sizes explicitly set: title=24 bold, axis_title=20, axis_text=16,
+          geom_text labels=15. All text clearly readable.'
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements; company labels are well-spaced on the
-          right
+        comment: No text overlap. Entity labels well-spaced on right side, axis labels
+          well-separated.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Lines are thick (2.5) and points (size 6) are clearly visible for
-          the data density
+        comment: Lines clearly visible with hero/rest thickness differentiation. At
+          dense crossover regions, tracing individual lines requires effort.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Good colorblind-safe palette with distinct hues (blue, yellow, green,
-          purple, pink)
+        comment: Five distinct hues (blue, orange, green, purple, pink) with good
+          perceptual separation. No red-green reliance.
       - id: VQ-05
-        name: Layout Balance
-        score: 3
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Good use of space, but right margin for labels could be more balanced
+        comment: Plot fills ~65% of canvas, balanced margins. Right margin accommodates
+          direct labels. 16:9 aspect ratio appropriate.
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Labels are descriptive ("Quarter", "Rank") but no units needed for
-          this context
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
-        max: 2
+        comment: 'Descriptive labels: Market Rank Position and Quarterly Period. Units
+          not applicable for ordinal rank.'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
         passed: true
-        comment: Grid is subtle with minimal theme, legend hidden in favor of direct
-          labels (good choice)
+        comment: Custom muted palette with Python Blue anchor. Hero emphasis via mapped
+          size/alpha. Thoughtful typography hierarchy. Clearly above defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: theme_minimal base with x-grid removed, subtle y-grid, ticks removed,
+          white background, explicit margins, direct labels replacing legend.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Hero emphasis on Beta Inc rise-and-fall creates focal point. Intentional
+          data arcs guide viewer. Strong visual hierarchy via thickness and opacity.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct bump chart showing rankings over time
+        comment: Correct bump chart showing rankings over time with connected lines.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X=period (quarters), Y=rank, correctly inverted axis
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Y-axis inverted, distinct colors, dot markers at each period, lines
-          connecting entities
-      - id: SC-04
-        name: Data Range
+        comment: Y-axis inverted, distinct colors, dot markers, connecting lines,
+          entity labels all present.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible (ranks 1-5, Q1-Q6)
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X=period (quarters), Y=rank. 5 entities across 6 periods within spec
+          range.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Direct labels on right side correctly identify each company
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses correct format "bump-basic · letsplot · pyplots.ai"
+        comment: Title matches required format. Direct colored labels replace legend
+          appropriately.
     data_quality:
-      score: 18
-      max: 20
+      score: 14
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows rank changes, overtakes, stability (Epsilon flat), and volatility
-          (Gamma), but could show more dramatic position swaps
+        comment: 'Shows all bump chart aspects: crossovers, rise-and-fall, comeback,
+          steady climb, volatility, bottom stability.'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Tech company rankings is a plausible and comprehensible scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 4
         max: 5
         passed: true
-        comment: 5 entities and 6 periods is appropriate; rankings are sensible but
-          simple
+        comment: Tech company market rankings over quarters is plausible. Company
+          names fictional but realistic-sounding.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Ranks 1-5 for 5 entities, each rank used once per period. 6 quarters
+          reasonable business timeline.
     code_quality:
       score: 10
       max: 10
@@ -172,41 +193,49 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure, no functions/classes
+        comment: Clean Imports-Data-Plot-Save structure. No functions or classes.
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Data is deterministic (hardcoded values)
+        comment: Fully deterministic hardcoded data, no random generation.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imported items are used. No unused imports.
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current lets-plot API
+        comment: Hero emphasis via mapped scales is elegant and idiomatic. Avoids
+          duplicated geom layers.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot.png with scale=3 for 4800x2700px. Also saves HTML.
+          Current API usage.
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses ggplot2 grammar correctly with geom_line, geom_point, geom_text,
-          scale_y_reverse, and theme customization. Uses ggsize and scale=3 for proper
-          export. Could leverage more interactive features.
+        comment: 'Expert ggplot grammar: aes mappings, geom layering, scale_y_reverse,
+          scale_size_manual/scale_alpha_manual mapped to role column.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: layer_tooltips() with custom configuration is distinctive to lets-plot.
+          HTML export with interactive tooltips showcases built-in interactivity.
   verdict: APPROVED
