@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 bump-basic: Basic Bump Chart
 Library: highcharts 1.10.3 | Python 3.14.3
 Quality: 83/100 | Updated: 2026-02-22
@@ -11,7 +11,7 @@ from pathlib import Path
 
 from highcharts_core.chart import Chart
 from highcharts_core.options import HighchartsOptions
-from highcharts_core.options.series.area import LineSeries
+from highcharts_core.options.series.spline import SplineSeries
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
@@ -32,19 +32,32 @@ rankings = {
 }
 
 # Colorblind-safe palette starting with Python Blue
-colors = ["#306998", "#FFD43B", "#9467BD", "#17BECF", "#E377C2", "#8C564B"]
+# Replaced cyan→orange and pink→crimson for better perceptual distance
+colors = ["#306998", "#FFD43B", "#9467BD", "#FF7F0E", "#D62728", "#8C564B"]
+
+# Visual hierarchy: thicker lines for teams with dramatic rank changes
+line_widths = {
+    "Eagles": 9,  # rises to #1 — protagonist
+    "Wolves": 6,
+    "Tigers": 9,  # dramatic arc #4→#1→#3
+    "Bears": 5,
+    "Sharks": 4,  # minor fluctuation
+    "Lions": 4,  # mostly stable at bottom
+}
+
+marker_radii = {"Eagles": 16, "Wolves": 12, "Tigers": 16, "Bears": 10, "Sharks": 9, "Lions": 9}
 
 # Chart
 chart = Chart(container="container")
 chart.options = HighchartsOptions()
 
 chart.options.chart = {
-    "type": "line",
+    "type": "spline",
     "width": 4800,
     "height": 2700,
     "backgroundColor": "#ffffff",
     "marginLeft": 200,
-    "marginRight": 480,
+    "marginRight": 380,
     "marginBottom": 250,
     "spacingTop": 100,
     "marginTop": 300,
@@ -70,17 +83,30 @@ chart.options.x_axis = {
 
 # Y-axis (inverted so rank 1 is at top)
 chart.options.y_axis = {
-    "title": {"text": None},
+    "title": {"text": "Rank", "style": {"fontSize": "40px", "color": "#444444"}},
     "labels": {"style": {"fontSize": "40px"}, "format": "#{value}"},
     "reversed": True,
-    "min": 0.7,
-    "max": 6.3,
+    "min": 0.5,
+    "max": 6.5,
     "tickInterval": 1,
     "startOnTick": False,
     "endOnTick": False,
     "gridLineWidth": 1,
     "gridLineDashStyle": "Dot",
     "gridLineColor": "#e0e0e0",
+    "plotBands": [
+        {
+            "from": 0.5,
+            "to": 1.5,
+            "color": "rgba(255, 215, 0, 0.06)",
+            "label": {
+                "text": "\u2605",
+                "align": "left",
+                "x": -60,
+                "style": {"fontSize": "36px", "color": "rgba(200, 170, 0, 0.35)"},
+            },
+        }
+    ],
 }
 
 # Legend
@@ -100,16 +126,34 @@ chart.options.tooltip = {"enabled": False}
 # Credits off
 chart.options.credits = {"enabled": False}
 
-# Line styling with markers
-chart.options.plot_options = {"line": {"lineWidth": 7, "marker": {"enabled": True, "radius": 14, "symbol": "circle"}}}
+# Default plot options for spline
+chart.options.plot_options = {"spline": {"marker": {"enabled": True, "symbol": "circle"}}}
 
-# Series
+# Series with data labels at endpoints and visual hierarchy
 series_list = []
 for i, team in enumerate(teams):
-    series = LineSeries()
+    ranks = rankings[team]
+    data_points = []
+    for j, rank in enumerate(ranks):
+        point = {"y": rank}
+        if j == len(ranks) - 1:
+            # Data label at end point showing team name
+            point["dataLabels"] = {
+                "enabled": True,
+                "format": "{series.name}",
+                "align": "left",
+                "verticalAlign": "middle",
+                "x": 20,
+                "style": {"fontSize": "32px", "fontWeight": "bold", "color": colors[i], "textOutline": "3px white"},
+            }
+        data_points.append(point)
+
+    series = SplineSeries()
     series.name = team
-    series.data = rankings[team]
+    series.data = data_points
     series.color = colors[i]
+    series.line_width = line_widths[team]
+    series.marker = {"radius": marker_radii[team], "symbol": "circle"}
     series_list.append(series)
 
 chart.options.series = series_list
