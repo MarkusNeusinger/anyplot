@@ -1,6 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 bullet-basic: Basic Bullet Chart
 Library: plotly 6.5.2 | Python 3.14.3
+Quality: 91/100 | Updated: 2026-02-22
 """
 
 import plotly.graph_objects as go
