@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 bump-basic: Basic Bump Chart
 Library: bokeh 3.8.2 | Python 3.14.3
-Quality: /100 | Updated: 2026-02-22
+Quality: 76/100 | Updated: 2026-02-22
 """
 
 from bokeh.io import export_png
