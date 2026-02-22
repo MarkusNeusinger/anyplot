@@ -1,7 +1,7 @@
 library: seaborn
 specification_id: bullet-basic
 created: '2025-12-23T09:20:31Z'
-updated: '2026-02-22T12:00:00+00:00'
+updated: '2026-02-22T21:55:24Z'
 generated_by: claude-opus-4-6
 workflow_run: 20456603775
 issue: 0
@@ -10,166 +10,172 @@ library_version: 0.13.2
 preview_url: https://storage.googleapis.com/pyplots-images/plots/bullet-basic/seaborn/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/bullet-basic/seaborn/plot_thumb.png
 preview_html: null
-quality_score: null
+quality_score: 87
 impl_tags:
   dependencies: []
   techniques:
-  - custom-legend
   - annotations
+  - custom-legend
+  - layer-composition
   patterns:
   - data-generation
+  - iteration-over-groups
+  - explicit-figure
   dataprep: []
-  styling: []
+  styling:
+  - grid-styling
+  - edge-highlighting
 review:
   strengths:
-  - Excellent visual design following spec recommendations (grayscale bands, contrasting
-    target markers)
-  - Clean implementation showing multiple bullet charts for comparison
-  - Proper use of zorder to layer elements correctly (ranges → bars → markers)
-  - Well-placed value labels with bold formatting for readability
-  - Comprehensive legend explaining all visual elements
-  - Good variety in data showing metrics both above and below targets
+  - Excellent spec compliance — all bullet chart features implemented correctly with
+    proper qualitative bands, target markers, and value labels
+  - Strong data quality — varied performance scenarios create meaningful comparison
+    across metrics
+  - Clean code structure — KISS pattern with deterministic data, clean imports, and
+    no over-engineering
+  - Good visual refinement — spines removed, subtle grid, edge highlighting on bars
   weaknesses:
-  - Seaborn is minimally utilized - only sns.barplot for the actual value bars, while
-    most visualization work is done with matplotlib. Could better leverage seaborn
-    DataFrame-centric approach or styling capabilities.
-  image_description: 'The plot displays a horizontal bullet chart with four KPI metrics
-    (Revenue, Customer Satisfaction, Efficiency, Quality Score) stacked vertically.
-    Each metric shows:
-
-    - **Grayscale background bands** in three shades (light gray for Poor, medium
-    gray for Satisfactory, dark gray for Good)
-
-    - **Blue horizontal bars** (#306998 Python Blue) representing actual values
-
-    - **Black vertical marker lines** indicating targets
-
-    - **Blue percentage labels** (78%, 85%, 62%, 91%) positioned to the right of each
-    bar
-
-
-    The title "bullet-basic · seaborn · pyplots.ai" is displayed at the top in bold.
-    X-axis shows "Performance (%)" from 0-100. A well-positioned legend in the upper
-    right explains all elements. The layout is clean with subtle vertical grid lines
-    and no overlapping elements.'
+  - No visual hierarchy to differentiate above-target vs below-target metrics — all
+    bars use identical blue styling
+  - Vertical spacing between metrics is generous, leaving wasted canvas space
+  - Much of the implementation relies on raw matplotlib rather than leveraging seaborn-specific
+    capabilities
+  image_description: 'The plot displays four horizontal bullet charts stacked vertically
+    for the metrics: Revenue, Customer Satisfaction, Efficiency, and Quality Score.
+    Each metric has three grayscale qualitative range bands going from light gray
+    (Poor) to medium gray (Satisfactory) to darker gray (Good). Blue (#306998) horizontal
+    bars represent actual values, drawn narrower than the background bands. Thick
+    black vertical lines mark the target for each metric. Value labels in bold blue
+    text (78%, 85%, 35%, 91%) appear to the right of the bars/targets. The title "bullet-basic
+    · seaborn · pyplots.ai" is centered at the top in bold. The x-axis is labeled
+    "Performance (%)" with ticks at 0, 20, 40, 60, 80, 100. A legend in the upper
+    right shows Poor, Satisfactory, Good, Actual, and Target entries. Top, right,
+    and left spines are removed, with a subtle dashed vertical grid at low opacity.'
   criteria_checklist:
     visual_quality:
-      score: 38
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title 24pt bold, axis labels 20pt, tick labels 16pt, all perfectly
-          readable
+        comment: 'All font sizes explicitly set: title=24, labels=20, ticks=16, value
+          labels=18. All text clearly readable.'
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text, metric labels clear, value labels positioned
-          well
+        comment: No overlapping text. Y-axis labels use line breaks. Legend does not
+          obscure data.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Bars, target markers, and background bands all clearly visible and
-          well-sized
+        comment: Actual bars well-sized relative to range bands, target markers clearly
+          visible at linewidth=5, grayscale bands distinguishable.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Grayscale bands with blue bars, colorblind-safe design
+        comment: Grayscale bands + blue bars + black targets = inherently colorblind-safe.
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Excellent proportions, good use of space
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: false
+        comment: Good canvas use but generous vertical spacing between the 4 metrics
+          creates some wasted space.
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: '"Performance (%)" is descriptive with units, but Y-axis has no label
-          (set to empty string intentionally)'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
-        max: 2
+        comment: Performance (%) with units; descriptive metric names on y-axis.
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: 'Above well-configured defaults: cohesive grayscale palette via sns.light_palette,
+          Python Blue with edge colors. But core design choices are spec-driven rather
+          than creative.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
         passed: true
-        comment: Grid subtle (alpha 0.3), legend well-placed but could use slightly
-          smaller font for balance
+        comment: 'Good refinement: top/right/left spines removed, subtle dashed x-grid
+          at alpha=0.3, y-grid disabled, y-tick length=0, edge highlighting on bars.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Data creates natural story (Efficiency at 35% is outlier) but no
+          design-driven visual hierarchy. All bars use identical styling regardless
+          of above/below target.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct bullet chart implementation
+        comment: Correct bullet chart with horizontal bars, qualitative range bands,
+          and target markers.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Actual values as bars, targets as markers, ranges as background bands
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: actual bar, target marker, qualitative
-          ranges, labels'
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: actual bars, target markers, qualitative bands,
+          grayscale shading, value labels, multiple aligned bullets.'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis 0-115 shows all data clearly
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X=performance percentage, Y=metrics. All data correctly mapped.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies Poor/Satisfactory/Good/Actual/Target
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses correct format "bullet-basic · seaborn · pyplots.ai"
+        comment: Title format correct. Legend labels match data.
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows metrics above target (Quality Score 91% vs 85%), below target
-          (Revenue 78% vs 90%, Efficiency 62% vs 75%), and at target (Customer Satisfaction
-          85% vs 80% exceeds). Good variety but could show one metric in "poor" range
+        comment: 'Shows all aspects: above target, below target, significantly below.
+          Different range thresholds per metric.'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Business KPIs (Revenue, Customer Satisfaction, Efficiency, Quality
-          Score) are realistic metrics
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Percentage values 0-100 with realistic performance numbers
+        comment: Real-world business KPI context. Neutral and comprehensible.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sensible 0-100% scale for KPIs with realistic performance levels.
     code_quality:
       score: 10
       max: 10
@@ -179,42 +185,47 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear structure: imports → data → plot → save'
+        comment: Clean imports, data, plot, save structure. No functions/classes.
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set (even though data is hardcoded)
+        comment: Deterministic hardcoded data.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used (matplotlib.patches, pyplot, numpy, pandas, seaborn)
+        comment: All imports used (mpatches, plt, pd, sns).
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Modern seaborn API usage
+        comment: Clean, appropriate complexity. No fake UI.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300
-    library_features:
-      score: 0
-      max: 5
+        comment: Saves as plot.png, dpi=300, bbox_inches=tight. Current API.
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 0
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: false
-        comment: sns.barplot is used but the implementation is primarily matplotlib-based.
-          The grayscale bands, target markers, and styling all use matplotlib directly.
-          Seaborn's distinctive features (statistical aggregation, automatic styling,
-          hue-based coloring) are not leveraged.
-  verdict: APPROVED
+        comment: 'Good usage: sns.barplot() with left parameter, sns.light_palette(),
+          sns.set_theme() with rc. DataFrames as expected.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Uses seaborn-specific features (light_palette, set_theme, barplot
+          left param) but target markers, value labels, and legend are pure matplotlib.
+  verdict: REJECTED
