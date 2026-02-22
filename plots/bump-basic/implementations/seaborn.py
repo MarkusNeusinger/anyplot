@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 bump-basic: Basic Bump Chart
 Library: seaborn 0.13.2 | Python 3.14.3
-Quality: 86/100 | Updated: 2026-02-22
+Quality: 92/100 | Updated: 2026-02-22
 """
 
 import matplotlib.pyplot as plt
