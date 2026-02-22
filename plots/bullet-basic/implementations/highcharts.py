@@ -1,7 +1,6 @@
-""" pyplots.ai
+"""pyplots.ai
 bullet-basic: Basic Bullet Chart
 Library: highcharts 1.10.3 | Python 3.14.3
-Quality: 89/100 | Updated: 2026-02-22
 """
 
 import json
@@ -33,6 +32,9 @@ range_colors = ["#e0e0e0", "#b0b0b0", "#808080"]
 color_above = "#2E7D32"  # Forest green — exceeds target
 color_below = "#E65100"  # Deep orange — below target
 
+# Font stack for polished typography
+font_family = "'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif"
+
 # Normalize all values to 0-100% scale for a shared axis
 series_data = []
 for m in metrics:
@@ -48,7 +50,12 @@ for m in metrics:
 
 categories = [m["name"] for m in metrics]
 
-# Chart configuration
+# Identify worst-performing metric (lowest actual/target ratio) for storytelling emphasis
+worst_idx = min(range(len(metrics)), key=lambda i: metrics[i]["actual"] / metrics[i]["target"])
+worst_m = metrics[worst_idx]
+gap_pct = round((1 - worst_m["actual"] / worst_m["target"]) * 100, 1)
+
+# Chart configuration — tighter layout for better canvas utilization
 chart_options = {
     "chart": {
         "type": "bullet",
@@ -57,12 +64,13 @@ chart_options = {
         "backgroundColor": "#ffffff",
         "inverted": True,
         "marginLeft": 380,
-        "marginRight": 100,
-        "spacing": [80, 60, 60, 60],
+        "marginRight": 120,
+        "spacing": [50, 40, 50, 40],
+        "style": {"fontFamily": font_family},
     },
     "title": {
-        "text": "Q4 Performance Dashboard \u00b7 bullet-basic \u00b7 highcharts \u00b7 pyplots.ai",
-        "style": {"fontSize": "48px", "fontWeight": "bold"},
+        "text": "Q4 Performance Dashboard · bullet-basic · highcharts · pyplots.ai",
+        "style": {"fontSize": "48px", "fontWeight": "bold", "fontFamily": font_family},
     },
     "subtitle": {
         "text": (
@@ -72,20 +80,23 @@ chart_options = {
             "&emsp;&emsp;"
             '<span style="color:#E65100;">&#9632;</span> Below target'
             "&emsp;&emsp;"
-            '<span style="color:#1a1a1a;">|</span> Target marker'
+            '<span style="color:#1a1a1a;">&#124;</span> Target marker'
             "</span>"
         ),
         "useHTML": True,
-        "style": {"fontSize": "30px", "color": "#666666"},
+        "style": {"fontSize": "30px", "color": "#555555", "fontFamily": font_family},
     },
-    "xAxis": {"categories": categories, "labels": {"style": {"fontSize": "32px", "fontWeight": "bold"}}},
+    "xAxis": {
+        "categories": categories,
+        "labels": {"style": {"fontSize": "32px", "fontWeight": "bold", "fontFamily": font_family}},
+    },
     "yAxis": {
         "gridLineWidth": 0,
         "min": 0,
         "max": 100,
-        "title": {"text": "% of Maximum", "style": {"fontSize": "28px"}},
+        "title": {"text": "% of Maximum", "style": {"fontSize": "28px", "fontFamily": font_family}},
         "tickInterval": 10,
-        "labels": {"format": "{value}%", "style": {"fontSize": "24px"}},
+        "labels": {"format": "{value}%", "style": {"fontSize": "24px", "fontFamily": font_family}},
         "plotBands": [
             {"from": 0, "to": range_pcts[0], "color": range_colors[0]},
             {"from": range_pcts[0], "to": range_pcts[1], "color": range_colors[1]},
@@ -95,14 +106,20 @@ chart_options = {
     "legend": {"enabled": False},
     "plotOptions": {
         "bullet": {
-            "pointPadding": 0.15,
+            "pointPadding": 0.1,
             "borderWidth": 0,
-            "groupPadding": 0.05,
-            "targetOptions": {"width": "200%", "height": 10, "borderWidth": 0, "color": "#1a1a1a"},
+            "groupPadding": 0.02,
+            "targetOptions": {"width": "220%", "height": 12, "borderWidth": 0, "color": "#000000"},
             "dataLabels": {
                 "enabled": True,
                 "format": "{point.label}",
-                "style": {"fontSize": "28px", "fontWeight": "bold", "color": "#ffffff"},
+                "style": {
+                    "fontSize": "28px",
+                    "fontWeight": "bold",
+                    "color": "#ffffff",
+                    "fontFamily": font_family,
+                    "textOutline": "none",
+                },
                 "inside": True,
                 "align": "right",
             },
@@ -118,22 +135,40 @@ chart_options = {
             "</span>"
         ),
     },
+    "annotations": [
+        {
+            "labels": [
+                {
+                    "point": {"x": worst_idx, "y": series_data[worst_idx]["y"], "xAxis": 0, "yAxis": 0},
+                    "text": f"▼ {gap_pct}% below target",
+                    "style": {"fontSize": "24px", "fontWeight": "bold", "color": "#E65100", "fontFamily": font_family},
+                    "backgroundColor": "rgba(255,255,255,0.85)",
+                    "borderColor": "#E65100",
+                    "borderWidth": 2,
+                    "borderRadius": 6,
+                    "padding": 10,
+                    "y": -30,
+                }
+            ],
+            "draggable": "",
+        }
+    ],
     "credits": {"enabled": False},
 }
 
-# Download Highcharts JS files for inline embedding
-highcharts_url = "https://code.highcharts.com/highcharts.js"
-highcharts_more_url = "https://code.highcharts.com/highcharts-more.js"
-bullet_url = "https://code.highcharts.com/modules/bullet.js"
-
-with urllib.request.urlopen(highcharts_url, timeout=30) as response:
-    highcharts_js = response.read().decode("utf-8")
-
-with urllib.request.urlopen(highcharts_more_url, timeout=30) as response:
-    highcharts_more_js = response.read().decode("utf-8")
-
-with urllib.request.urlopen(bullet_url, timeout=30) as response:
-    bullet_js = response.read().decode("utf-8")
+# Download Highcharts JS files for inline embedding (jsDelivr CDN)
+cdn_base = "https://cdn.jsdelivr.net/npm/highcharts@11.4"
+js_urls = {
+    "highcharts": f"{cdn_base}/highcharts.js",
+    "highcharts_more": f"{cdn_base}/highcharts-more.js",
+    "bullet": f"{cdn_base}/modules/bullet.js",
+    "annotations": f"{cdn_base}/modules/annotations.js",
+}
+js_modules = {}
+for name, url in js_urls.items():
+    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+    with urllib.request.urlopen(req, timeout=30) as response:
+        js_modules[name] = response.read().decode("utf-8")
 
 # Generate HTML with inline scripts
 chart_options_json = json.dumps(chart_options)
@@ -141,9 +176,10 @@ html_content = f"""<!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
-    <script>{highcharts_js}</script>
-    <script>{highcharts_more_js}</script>
-    <script>{bullet_js}</script>
+    <script>{js_modules["highcharts"]}</script>
+    <script>{js_modules["highcharts_more"]}</script>
+    <script>{js_modules["bullet"]}</script>
+    <script>{js_modules["annotations"]}</script>
 </head>
 <body style="margin:0;">
     <div id="container" style="width: 4800px; height: 2700px;"></div>
