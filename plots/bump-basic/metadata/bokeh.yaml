@@ -1,7 +1,7 @@
 library: bokeh
 specification_id: bump-basic
 created: '2025-12-23T09:19:07Z'
-updated: '2026-02-22T21:02:37Z'
+updated: '2026-02-22T21:14:23Z'
 generated_by: claude-opus-4-6
 workflow_run: 20456608591
 issue: 0
@@ -10,47 +10,51 @@ library_version: 3.8.2
 preview_url: https://storage.googleapis.com/pyplots-images/plots/bump-basic/bokeh/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/bump-basic/bokeh/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/bump-basic/bokeh/plot.html
-quality_score: 76
+quality_score: 88
 impl_tags:
   dependencies: []
   techniques:
-  - hover-tooltips
+  - annotations
   - custom-legend
   patterns:
   - iteration-over-groups
   - columndatasource
   dataprep: []
   styling:
+  - minimal-chrome
   - alpha-blending
   - grid-styling
 review:
   strengths:
-  - Perfect spec compliance with all required features (inverted y-axis, distinct
-    colors, markers, connected lines)
-  - Clean well-structured code following KISS principles with perfect 10/10 code quality
-  - Custom cohesive color palette starting with Python Blue
-  - Subtle grid styling and custom background show intentional design choices
+  - Excellent data storytelling through alpha-based visual hierarchy highlighting
+    dramatic ranking changes (Ferrari rise, McLaren fall)
+  - Perfect spec compliance and data quality with realistic F1 standings data
+  - Polished visual refinement with removed spines, subtle grid, and refined typography
+  - Well-structured code with clean KISS pattern and deterministic data
   weaknesses:
-  - Lines and markers appear thin relative to the large canvas reducing visual impact
-  - Generic team names instead of realistic entities
-  - No visual hierarchy or storytelling - all lines have equal weight despite interesting
-    rank dynamics
-  - HoverTool included but non-functional in PNG output
-  - Default Bokeh axis spines still present
-  image_description: 'The plot displays a bump chart tracking the rankings of 5 teams
-    (Team Alpha, Team Beta, Team Gamma, Team Delta, Team Epsilon) across 6 weeks.
-    The y-axis shows "Rank" from 1 (top) to 5 (bottom), correctly inverted. The x-axis
-    shows "Week" with labels Week 1 through Week 6. Each team is represented by a
-    colored line with dot markers: steel blue (Team Alpha), orange (Team Beta), teal
-    green (Team Gamma), muted red/coral (Team Delta), and purple (Team Epsilon). A
-    legend is positioned to the right outside the plot area. The background is light
-    gray (#fafafa) with subtle grid lines. The title "bump-basic · bokeh · pyplots.ai"
-    appears at top-left. Lines and markers are visible but appear thin relative to
-    the large canvas. The data shows interesting ranking dynamics — Team Gamma rises
-    from 5th to 1st at Week 5, while Team Beta falls from 1st to 4th by Week 6.'
+  - Redundant right-side legend alongside end-of-line labels creates visual clutter
+  - Non-highlighted team labels (especially Aston Martin) are too faint at alpha 0.35
+    against the light background
+  - Does not leverage Bokeh-distinctive features beyond basic model patterns
+  image_description: 'The plot displays a bump chart of Formula 1 constructor standings
+    across 6 races on a light gray background (#f8f9fa). The y-axis is inverted with
+    rank 1 at the top and rank 5 at the bottom, labeled "Championship Position." The
+    x-axis shows "Race 1" through "Race 6" labeled "Constructor Standings by Race."
+    Five teams are represented with distinct colors: Red Bull Racing (blue, #306998),
+    McLaren (orange, #E6894A), Ferrari (red/pink, #D44D5C), Mercedes (teal/green,
+    #5BA67D), and Aston Martin (purple, #8B6DB0). Three highlighted teams (Red Bull,
+    McLaren, Ferrari) have thick opaque lines (~10px) and large dot markers, while
+    Mercedes and Aston Martin are rendered with thinner faded lines and smaller markers
+    creating a clear visual hierarchy. End-of-line labels appear to the right of the
+    last data point for each team in matching colors, and a separate legend is positioned
+    on the right outside the plot area. All spines and ticks are removed for a clean
+    look, with subtle dashed horizontal grid lines at low alpha. The title reads "bump-basic
+    · bokeh · pyplots.ai" in bold dark text at the top left. Ferrari shows a dramatic
+    rise from 5th to 1st place while McLaren falls from 1st to 4th, which the visual
+    hierarchy emphasizes effectively.'
   criteria_checklist:
     visual_quality:
-      score: 24
+      score: 26
       max: 30
       items:
       - id: VQ-01
@@ -58,61 +62,72 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 28pt, axis labels 22pt, ticks
-          18pt, legend 24pt), all readable
+        comment: All font sizes explicitly set (title 32pt, labels 24pt, ticks 20pt,
+          annotations 20pt, legend 22pt). Non-highlighted team labels at alpha 0.35
+          reduce readability for Aston Martin.
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No overlapping text; legend placed outside plot area
+        comment: End-of-line labels spaced by rank position avoid overlap. Redundant
+          legend + end labels create visual clutter in right margin.
       - id: VQ-03
         name: Element Visibility
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Lines and markers visible but thin/small for 4800x2700 canvas
+        passed: true
+        comment: Highlighted teams very visible with thick lines (10px) and large
+          markers (38px). Non-highlighted teams intentionally faded but still distinguishable.
       - id: VQ-04
         name: Color Accessibility
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Custom palette with decent differentiation; green and red could challenge
-          deuteranopia
+        comment: Five distinct hues distinguishable under common colorblind conditions.
+          No red-green pairing as sole differentiator.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good proportions; plot fills ~55% of canvas with legend on right
+        comment: Data area fills ~55% of canvas with balanced margins. Right side
+          has redundant labels + legend consuming extra space.
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Week and Rank are descriptive but minimal
+        passed: true
+        comment: 'Descriptive labels: Championship Position, Constructor Standings
+          by Race. Units not applicable for rankings.'
     design_excellence:
-      score: 9
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: Custom palette and background but looks like well-configured defaults
+        passed: true
+        comment: Cohesive custom palette, intentional alpha-based visual hierarchy,
+          muted axis colors, bold dark title. Clearly above defaults with professional
+          polish.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Subtle grid and custom background but default spines still present
+        passed: true
+        comment: All spines and ticks removed, subtle dashed grid at low alpha, light
+          gray background with white border, generous padding. Minor deduction for
+          redundant legend + labels.
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 5
         max: 6
-        passed: false
-        comment: Interesting data dynamics but no visual emphasis or hierarchy
+        passed: true
+        comment: Strong visual hierarchy through highlight mechanism. Ferrari rise
+          from 5th to 1st and McLaren fall from 1st to 4th are immediately apparent.
+          Clear narrative focal point.
     spec_compliance:
       score: 15
       max: 15
@@ -122,47 +137,52 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct bump chart with lines and markers showing rankings over time
+        comment: Correct bump chart with rankings over time, connected lines, inverted
+          y-axis.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Y-axis inverted, distinct colors, dot markers, lines connect entities
+        comment: Inverted y-axis, distinct colors, dot markers at each period, lines
+          connecting same entity across all periods.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=periods, Y=ranks, all data correctly mapped
+        comment: X = periods (races), Y = rank positions. All data visible and correctly
+          mapped.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows correct format; legend labels match data
+        comment: Title follows spec format. Legend labels match all 5 team names.
     data_quality:
-      score: 12
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows rank changes, overtakes, stability, and dramatic movements
+        comment: Shows rank changes, crossovers, dramatic rises, dramatic falls, rank
+          stability, and tight competition.
       - id: DQ-02
         name: Realistic Context
-        score: 3
+        score: 5
         max: 5
-        passed: false
-        comment: Sports league theme is plausible but team names are generic
+        passed: true
+        comment: Formula 1 constructor standings with real team names. Neutral sports
+          context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 5 teams across 6 weeks is appropriate for bump chart
+        comment: 5 teams ranked 1-5 across 6 races. Valid unique rankings per race.
     code_quality:
       score: 10
       max: 10
@@ -172,31 +192,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean Imports-Data-Plot-Save structure
+        comment: 'Clean linear flow: imports, data, figure, plot loop, legend, styling,
+          save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data is hardcoded and deterministic
+        comment: All data hardcoded and deterministic. No random generation.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: 'All imports used: export_png, ColumnDataSource, Label, Legend, figure.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean loop, appropriate complexity, Pythonic style
+        comment: Clean loop with highlight logic, appropriate complexity. No over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png using current Bokeh API
+        comment: Saves as plot.png via export_png. Current Bokeh API.
     library_mastery:
       score: 6
       max: 10
@@ -206,12 +227,13 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of ColumnDataSource, figure(), Legend model, HoverTool
+        comment: Good use of ColumnDataSource, figure with categorical x_range, Label
+          annotation model, Legend model with external placement.
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: ColumnDataSource and Legend model are Bokeh-specific but HoverTool
-          is non-functional in PNG
+        comment: Uses Bokeh Label and Legend model placement but nothing that strongly
+          differentiates from other libraries.
   verdict: REJECTED
