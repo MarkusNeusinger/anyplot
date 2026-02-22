@@ -1,11 +1,10 @@
 """ pyplots.ai
 bullet-basic: Basic Bullet Chart
-Library: plotly 6.5.0 | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-23
+Library: plotly 6.5.2 | Python 3.14.3
+Quality: 91/100 | Updated: 2026-02-22
 """
 
 import plotly.graph_objects as go
-from plotly.subplots import make_subplots
 
 
 # Data - Multiple KPIs with different performance levels
@@ -16,97 +15,91 @@ metrics = [
     {"label": "Satisfaction", "actual": 4.2, "target": 4.5, "ranges": [3.0, 4.0, 5.0]},
 ]
 
-# Grayscale colors for qualitative ranges (poor -> satisfactory -> good)
-range_colors = ["#D9D9D9", "#BFBFBF", "#A6A6A6"]
+# Blue-gray tones for qualitative range bands (poor -> satisfactory -> good)
+range_colors = ["#8B9DAF", "#B0BEC5", "#D6DEE3"]
 
-# Create subplots - one row per metric for proper scaling
-fig = make_subplots(
-    rows=len(metrics), cols=1, shared_xaxes=False, vertical_spacing=0.12, subplot_titles=[m["label"] for m in metrics]
-)
+# Bar colors: distinguish above-target (strong blue) from below-target (warm amber)
+ABOVE_TARGET = "#306998"
+BELOW_TARGET = "#C2853A"
 
-# Create each bullet chart in its own subplot
+# Create figure with native Indicator traces (bullet mode)
+fig = go.Figure()
+n = len(metrics)
+spacing = 0.025
+row_height = (1.0 - spacing * (n - 1)) / n
+
 for i, m in enumerate(metrics):
-    row = i + 1
+    y_start = max(0.0, 1.0 - (i + 1) * row_height - i * spacing)
+    y_end = y_start + row_height
+    meets_target = m["actual"] >= m["target"]
+    bar_color = ABOVE_TARGET if meets_target else BELOW_TARGET
+    num_color = ABOVE_TARGET if meets_target else BELOW_TARGET
 
-    # Add qualitative range bands (background, plotted in reverse order)
-    for j, r in enumerate(reversed(m["ranges"])):
-        fig.add_trace(
-            go.Bar(
-                x=[r],
-                y=[""],
-                orientation="h",
-                marker=dict(color=range_colors[len(m["ranges"]) - 1 - j]),
-                width=0.6,
-                showlegend=False,
-                hoverinfo="skip",
-            ),
-            row=row,
-            col=1,
-        )
-
-    # Add actual value bar (primary measure) using Python Blue
     fig.add_trace(
-        go.Bar(
-            x=[m["actual"]],
-            y=[""],
-            orientation="h",
-            marker=dict(color="#306998"),
-            width=0.25,
-            showlegend=False,
-            name=m["label"],
-            hovertemplate=f"{m['label']}: {m['actual']}<extra></extra>",
-        ),
-        row=row,
-        col=1,
+        go.Indicator(
+            mode="number+gauge",
+            value=m["actual"],
+            number={"font": {"size": 26, "color": num_color, "family": "Helvetica Neue, Arial, sans-serif"}},
+            domain={"x": [0.18, 0.95], "y": [y_start, y_end]},
+            title={
+                "text": m["label"],
+                "font": {"size": 22, "family": "Helvetica Neue, Arial, sans-serif"},
+                "align": "left",
+            },
+            gauge={
+                "shape": "bullet",
+                "axis": {
+                    "range": [0, m["ranges"][-1]],
+                    "tickfont": {"size": 16, "family": "Helvetica Neue, Arial, sans-serif"},
+                },
+                "bar": {"color": bar_color},
+                "bgcolor": "white",
+                "threshold": {"line": {"color": "#1A1A1A", "width": 4}, "thickness": 0.75, "value": m["target"]},
+                "steps": [
+                    {"range": [0, m["ranges"][0]], "color": range_colors[0]},
+                    {"range": [m["ranges"][0], m["ranges"][1]], "color": range_colors[1]},
+                    {"range": [m["ranges"][1], m["ranges"][2]], "color": range_colors[2]},
+                ],
+            },
+        )
     )
 
-    # Add target marker line (thin black vertical line)
-    fig.add_shape(
-        type="line",
-        x0=m["target"],
-        x1=m["target"],
-        y0=-0.4,
-        y1=0.4,
-        line=dict(color="#1A1A1A", width=5),
-        row=row,
-        col=1,
-    )
-
-    # Add actual value annotation for precise reading
-    max_range = m["ranges"][-1]
-    fig.add_annotation(
-        x=max_range * 1.02,
-        y=0,
-        text=f"<b>{m['actual']}</b>",
-        showarrow=False,
-        font=dict(size=20, color="#306998"),
-        xanchor="left",
-        row=row,
-        col=1,
-    )
-
-    # Update x-axis range for each subplot
-    fig.update_xaxes(
-        range=[0, max_range * 1.15], tickfont=dict(size=16), showgrid=True, gridcolor="rgba(0,0,0,0.1)", row=row, col=1
-    )
-
-    fig.update_yaxes(showticklabels=False, row=row, col=1)
+# Annotations for best and worst performers
+fig.add_annotation(
+    x=0.95,
+    y=0.97,
+    xref="paper",
+    yref="paper",
+    text="▲ Above target",
+    showarrow=False,
+    font={"size": 15, "color": ABOVE_TARGET, "family": "Helvetica Neue, Arial, sans-serif"},
+    xanchor="right",
+)
+fig.add_annotation(
+    x=0.95,
+    y=0.93,
+    xref="paper",
+    yref="paper",
+    text="▼ Below target",
+    showarrow=False,
+    font={"size": 15, "color": BELOW_TARGET, "family": "Helvetica Neue, Arial, sans-serif"},
+    xanchor="right",
+)
 
 # Layout
 fig.update_layout(
-    title=dict(text="bullet-basic · plotly · pyplots.ai", font=dict(size=32), x=0.5, xanchor="center"),
-    barmode="overlay",
+    title={
+        "text": "bullet-basic · plotly · pyplots.ai",
+        "font": {"size": 32, "family": "Helvetica Neue, Arial, sans-serif", "color": "#2C3E50"},
+        "x": 0.5,
+        "xanchor": "center",
+    },
     template="plotly_white",
-    margin=dict(l=80, r=100, t=120, b=60),
-    showlegend=False,
+    paper_bgcolor="#FAFBFC",
+    margin={"l": 40, "r": 40, "t": 100, "b": 30},
     height=900,
     width=1600,
 )
-
-# Update subplot titles font size
-for annotation in fig["layout"]["annotations"]:
-    if "text" in annotation and annotation["text"] in [m["label"] for m in metrics]:
-        annotation["font"] = dict(size=22)
 
 # Save
 fig.write_image("plot.png", width=1600, height=900, scale=3)

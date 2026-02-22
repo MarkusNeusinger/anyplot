@@ -17,6 +17,7 @@ A bump chart visualizes how rankings change over time by plotting rank positions
 - `period` (categorical or time) - Time points for ranking snapshots
 - `rank` (integer) - Position at each period (1 = highest rank)
 - Size: 5-10 entities, 4-8 periods typical
+- Example: Formula 1 driver standings over a 10-race season
 
 ## Notes
 
