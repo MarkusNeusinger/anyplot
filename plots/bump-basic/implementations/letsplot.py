@@ -1,7 +1,6 @@
-""" pyplots.ai
+"""pyplots.ai
 bump-basic: Basic Bump Chart
 Library: letsplot 4.8.2 | Python 3.14.3
-Quality: 82/100 | Updated: 2026-02-22
 """
 
 import pandas as pd
@@ -9,6 +8,8 @@ from lets_plot import (
     LetsPlot,
     aes,
     element_blank,
+    element_line,
+    element_rect,
     element_text,
     geom_line,
     geom_point,
@@ -75,26 +76,57 @@ df = pd.DataFrame(data)
 # Subset for labels at end of lines
 df_labels = df[df["period_num"] == 6].copy()
 
-# Colors - Python Blue first, then colorblind-safe palette
-colors = ["#306998", "#FFD43B", "#2CA02C", "#9467BD", "#E377C2"]
+# Cohesive muted palette — Python Blue anchors, warm/cool balance
+colors = ["#306998", "#C47D2A", "#3A9E78", "#8B6AAE", "#D4707A"]
 
-# Plot
+# Hero entity (Beta Inc) has the most dramatic arc — highlight it
+df_hero = df[df["entity"] == "Beta Inc"]
+df_rest = df[df["entity"] != "Beta Inc"]
+
+# Plot — layered: background lines, then hero emphasis
+tooltip_cfg = layer_tooltips().title("@entity").line("@|@period").line("Rank|@rank")
+
 plot = (
-    ggplot(df, aes(x="period_num", y="rank", color="entity", group="entity"))
-    + geom_line(size=2.5, alpha=0.85, tooltips=layer_tooltips().title("@entity").line("@|@period").line("Rank|@rank"))
-    + geom_point(size=6, tooltips=layer_tooltips().title("@entity").line("@|@period").line("Rank|@rank"))
-    + geom_text(aes(label="entity"), data=df_labels, nudge_x=0.35, hjust=0, size=11)
+    ggplot(df_rest, aes(x="period_num", y="rank", color="entity", group="entity"))
+    # Background lines — thinner, slightly transparent
+    + geom_line(size=2.0, alpha=0.55, tooltips=tooltip_cfg)
+    + geom_point(size=5, alpha=0.65, tooltips=tooltip_cfg)
+    # Hero line — Beta Inc's dramatic rise-and-fall stands out
+    + geom_line(
+        aes(x="period_num", y="rank", color="entity", group="entity"),
+        data=df_hero,
+        size=3.5,
+        alpha=1.0,
+        tooltips=tooltip_cfg,
+    )
+    + geom_point(
+        aes(x="period_num", y="rank", color="entity", group="entity"),
+        data=df_hero,
+        size=8,
+        alpha=1.0,
+        tooltips=tooltip_cfg,
+    )
+    # End-of-line entity labels
+    + geom_text(aes(label="entity"), data=df_labels, nudge_x=0.3, hjust=0, size=12)
     + scale_y_reverse(breaks=[1, 2, 3, 4, 5])
-    + scale_x_continuous(breaks=[1, 2, 3, 4, 5, 6], labels=["Q1", "Q2", "Q3", "Q4", "Q5", "Q6"], limits=[0.5, 8.2])
+    + scale_x_continuous(breaks=[1, 2, 3, 4, 5, 6], labels=["Q1", "Q2", "Q3", "Q4", "Q5", "Q6"], limits=[0.5, 7.8])
     + scale_color_manual(values=colors)
-    + labs(x="Quarter", y="Rank", title="bump-basic \u00b7 letsplot \u00b7 pyplots.ai")
+    + labs(x="Quarterly Period", y="Market Rank Position", title="bump-basic · letsplot · pyplots.ai")
     + theme_minimal()
     + theme(
+        plot_title=element_text(size=24, face="bold"),
         axis_title=element_text(size=20),
         axis_text=element_text(size=16),
-        plot_title=element_text(size=24),
         legend_position="none",
         axis_ticks=element_blank(),
+        # Subtle y-axis grid only — remove x-axis grid for cleaner look
+        panel_grid_major_x=element_blank(),
+        panel_grid_minor_x=element_blank(),
+        panel_grid_major_y=element_line(color="#E0E0E0", size=0.5),
+        panel_grid_minor_y=element_blank(),
+        plot_background=element_rect(fill="white", color="white"),
+        # Generous margins
+        plot_margin=[40, 60, 30, 20],
     )
     + ggsize(1600, 900)
 )
