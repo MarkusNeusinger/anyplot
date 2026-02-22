@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 bullet-basic: Basic Bullet Chart
 Library: bokeh 3.8.2 | Python 3.14.3
-Quality: /100 | Updated: 2026-02-22
+Quality: 82/100 | Updated: 2026-02-22
 """
 
 from bokeh.io import export_png, output_file, save
