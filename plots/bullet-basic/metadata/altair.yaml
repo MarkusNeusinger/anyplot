@@ -1,170 +1,188 @@
 library: altair
 specification_id: bullet-basic
 created: '2025-12-23T09:18:21Z'
-updated: '2025-12-23T09:22:59Z'
-generated_by: claude-opus-4-5-20251101
+updated: '2026-02-22T22:07:36Z'
+generated_by: claude-opus-4-6
 workflow_run: 20456606505
 issue: 0
-python_version: 3.13.11
+python_version: 3.14.3
 library_version: 6.0.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/bullet-basic/altair/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/bullet-basic/altair/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/bullet-basic/altair/plot.html
-quality_score: 92
+quality_score: 91
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
+  - hover-tooltips
   - html-export
   patterns:
-  - data-generation
+  - iteration-over-groups
   dataprep:
   - normalization
   styling: []
 review:
   strengths:
-  - Excellent implementation of bullet chart pattern using Altair layering capability
-  - Grayscale bands follow spec recommendation for keeping focus on primary measure
-  - Smart normalization approach to show multiple metrics with different scales on
-    common axis
-  - Clean separation of data preparation and visualization code
-  - Title format exactly matches specification
-  - Realistic business KPI scenario with meaningful metric labels
+  - Conditional coloring (blue for above-target, brown for below-target) creates immediate
+    visual storytelling and clear data narrative
+  - All font sizes explicitly set throughout, ensuring readability at full resolution
+  - 'Excellent use of Altair declarative grammar: alt.condition(), x/x2 range encoding,
+    and layered composition'
+  - Normalization to percentage-of-goal enables fair comparison across metrics with
+    different scales
+  - Realistic neutral business KPI data with good feature coverage (mix of above and
+    below target)
+  - Clean code structure with no unnecessary complexity
   weaknesses:
-  - Vertical spacing between bullet charts is quite large, reducing the compact design
-    benefit mentioned in spec
-  - 'Does not display actual values as text labels on the bars (spec notes: Consider
-    adding the actual value as a text label)'
-  - Could leverage Altair interactivity features (tooltips showing original values)
-  image_description: 'The plot displays 4 horizontal bullet charts stacked vertically
-    for different KPI metrics: Revenue ($K), Profit ($K), New Customers, and Satisfaction
-    (1-5). Each bullet chart shows three grayscale background bands (Poor in light
-    gray #d9d9d9, Satisfactory in medium gray #bdbdbd, Good in dark gray #969696)
-    representing qualitative performance ranges. The actual performance value is shown
-    as a blue bar (Python Blue #306998), and the target is marked with a thin black
-    vertical tick mark. The title "bullet-basic · altair · pyplots.ai" appears at
-    the top center in large font. The x-axis is labeled "% of Maximum" ranging from
-    0 to ~108. The y-axis shows the metric names with appropriate units. A legend
-    at the bottom identifies the three performance bands.'
+  - Vertical spacing between bullet rows is slightly excessive (paddingInner=0.35);
+    tighter packing would improve canvas utilization
+  - Chart height (700px) does not target the 900px standard for 16:9 output at scale_factor=3.0
+  image_description: 'The plot displays four horizontal bullet charts stacked vertically
+    for business KPI metrics: Revenue ($K), Profit ($K), New Customers, and Satisfaction.
+    Each bullet has three grayscale background bands (light gray for Poor, medium
+    gray for Satisfactory, darker gray for Good) extending across a shared x-axis
+    labeled "Performance (% of Goal)" ranging from 0 to 120. The actual performance
+    bars are colored Python Blue (#306998) for metrics exceeding their targets (Revenue
+    at 275, New Customers at 320) and warm brown (#8B4513) for metrics below target
+    (Profit at 85, Satisfaction at 4.2). Thick dark vertical tick marks indicate targets.
+    Bold value labels appear at the end of each bar in color-matched text. The title
+    "bullet-basic · altair · pyplots.ai" is centered at the top in large font. A horizontal
+    legend at the bottom shows the three performance bands (Poor, Satisfactory, Good).
+    The metric labels on the y-axis are bold and clearly readable. The overall design
+    is clean with no grid lines or view strokes, and the conditional coloring immediately
+    communicates which metrics are above vs below target.'
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title ~28pt, axis labels ~18pt, all clearly readable. Slightly smaller
-          than ideal but still very good.
+        comment: 'All font sizes explicitly set: title 28pt, axis titles 22pt, y-labels
+          20pt bold, tick labels 16-18pt, value labels 17pt bold, legend 16-18pt'
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements anywhere
+        comment: All text elements well separated, no collisions between labels, values,
+          or tick marks
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Bars and target markers are well-sized and clearly visible
+        comment: Bars well-sized (height=36), target markers prominent (thickness=5,
+          size=92), grayscale bands clearly distinguishable
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Grayscale bands are colorblind-safe; blue actual bar provides good
-          contrast
-      - id: VQ-05
-        name: Layout Balance
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Good proportions, though vertical spacing between bullets is quite
-          large
+        comment: Blue vs brown is colorblind-safe; grayscale bands use monotone progression;
+          high contrast target markers
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: false
+        comment: Good horizontal utilization but paddingInner=0.35 creates noticeable
+          vertical gaps; height=700 produces wider-than-standard aspect ratio
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: X-axis has "% of Maximum" which is descriptive but no unit; Y-axis
-          metrics have units
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
-        max: 2
+        comment: X-axis 'Performance (% of Goal)' with units; y-axis uses descriptive
+          metric names
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Intentional color scheme with Python Blue for above-target and warm
+          brown for below-target; above defaults but not publication-level polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Grid disabled, view strokes removed, clean background; good refinement
+          but axis lines still visible
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
         passed: true
-        comment: Legend is well placed at bottom; no grid visible (acceptable for
-          bullet charts)
+        comment: Conditional coloring creates immediate narrative; viewer instantly
+          sees which metrics beat targets vs which fall short
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct bullet chart type with all required components
+        comment: 'Correct bullet chart with all structural components: actual bars,
+          qualitative range bands, and target markers'
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Actual values as bars, targets as markers, ranges as background bands
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Has actual bar, target marker, qualitative range bands per spec
-      - id: SC-04
-        name: Data Range
+        comment: 'All spec features present: actual bars, target markers, grayscale
+          ranges, horizontal orientation, text labels, multiple aligned bullets'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Shows all data clearly with scale extending to 110%
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Normalization to percentage-of-goal enables comparison across different-scale
+          metrics; all data correctly positioned
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies Poor/Satisfactory/Good bands
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses exact format `bullet-basic · altair · pyplots.ai`
+        comment: Title format correct; legend labels (Poor/Satisfactory/Good) match
+          data bands
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows 4 metrics with varied actual/target relationships (above target,
-          below target), different scale normalizations
+        comment: Four distinct metrics with varied range breakpoints; mix of above-target
+          and below-target results
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Business KPIs (Revenue, Profit, Customers, Satisfaction) are realistic
-          dashboard metrics
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: 'Values are realistic: Revenue $275K, Profit $85K, 320 customers,
-          4.2/5 satisfaction'
+        comment: Business KPI dashboard with Revenue, Profit, New Customers, Satisfaction
+          — realistic neutral scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Values realistic for business context: Revenue $275K, Profit $85K,
+          320 customers, Satisfaction 4.2/5.0'
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -172,13 +190,14 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → dataframes → charts → layer → save'
+        comment: Linear Imports → Data → Plot → Save structure with no functions or
+          classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Deterministic data (no random values)
+        comment: Fully deterministic hardcoded data, no random elements
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -186,27 +205,35 @@ review:
         passed: true
         comment: Only altair and pandas imported, both used
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean normalization loop, well-organized separate dataframes, no
+          over-engineering
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current Altair API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves as plot.png and plot.html (correct)
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot.png with scale_factor=3.0 and plot.html; uses current
+          Altair 6.x API
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Good use of layering (alt.layer), mark_bar with x/x2 for ranges,
-          mark_tick for targets. Could have used tooltips or selection for more Altair-specific
-          interactivity.
+        comment: 'Expert Altair usage: declarative grammar, proper encoding types,
+          alt.layer() composition, alt.condition() conditional encoding'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: false
+        comment: Leverages alt.condition(alt.datum), x/x2 range encoding, layered
+          marks, tooltip formatting; could push further with selections
   verdict: APPROVED

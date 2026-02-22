@@ -1,176 +1,187 @@
 library: matplotlib
 specification_id: bullet-basic
 created: '2025-12-23T09:18:21Z'
-updated: '2025-12-23T09:20:35Z'
-generated_by: claude-opus-4-5-20251101
+updated: '2026-02-22T22:04:16Z'
+generated_by: claude-opus-4-6
 workflow_run: 20456603104
 issue: 0
-python_version: 3.13.11
+python_version: 3.14.3
 library_version: 3.10.8
 preview_url: https://storage.googleapis.com/pyplots-images/plots/bullet-basic/matplotlib/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/bullet-basic/matplotlib/plot_thumb.png
 preview_html: null
-quality_score: 92
+quality_score: 91
 impl_tags:
   dependencies: []
   techniques:
-  - custom-legend
   - annotations
+  - custom-legend
+  - patches
   patterns:
-  - data-generation
+  - iteration-over-groups
   dataprep: []
-  styling: []
+  styling:
+  - grid-styling
 review:
   strengths:
-  - Excellent multi-metric bullet chart implementation showing diverse KPIs with different
-    scales and units
-  - Clean visual hierarchy with grayscale bands providing context without distraction
-  - Proper use of matplotlib barh for horizontal bars with correct layering (zorder)
-  - Value labels positioned consistently to the right of each metric for easy reading
-  - Legend is comprehensive and well-placed, explaining all visual elements
-  - Realistic business dashboard scenario with meaningful metrics
+  - Excellent use of FancyBboxPatch for rounded corners on both bars and bands, adding
+    professional polish
+  - Semantic color coding (blue = above target, red = below target) creates immediate
+    visual narrative
+  - Well-chosen realistic KPI data with varying scales and a good mix of above/below
+    target results
+  - 'Clean, minimal visual design: 3 spines removed, subtle grid, hidden y-ticks,
+    generous spacing'
+  - Perfect spec compliance with all required bullet chart features present and correct
   weaknesses:
-  - No x-axis label (though justified by different units per metric)
-  image_description: 'The plot displays 4 horizontal bullet charts stacked vertically,
-    each representing a different KPI metric. From top to bottom: Revenue (275$K actual
-    vs 250 target), Profit (45% actual vs 50 target), New Customers (85 actual vs
-    100 target), and Satisfaction (4.2/5 actual vs 4.5 target). Each bullet chart
-    features:
-
-    - A blue (#306998) horizontal bar showing the actual value
-
-    - A black vertical marker line indicating the target
-
-    - Three grayscale background bands (light gray for Poor, medium gray for Satisfactory,
-    darker gray for Good)
-
-    - Value labels displayed to the right of each bar with appropriate units
-
-    The title "bullet-basic · matplotlib · pyplots.ai" is centered at the top. A legend
-    in the lower right corner explains the color coding. The layout is clean with
-    subtle dotted vertical grid lines.'
+  - Legend fontsize at 14pt is below the library-recommended 16pt (minor, justified
+    by 6-item layout)
+  - Color accessibility could be improved with a pattern or more colorblind-safe alternative
+    to blue/red
+  image_description: The plot displays five horizontal bullet charts stacked vertically,
+    representing a Quarterly KPI Dashboard. The metrics are Revenue (92%), Profit
+    Margin (38%), Customer Growth (71%), Satisfaction (84%), and On-Time Delivery
+    (96%). Each bullet has three grayscale background bands ranging from light gray
+    (Poor) through medium gray (Satisfactory) to dark gray (Good), with varying range
+    thresholds per metric. The actual value bars use Python Blue (#306998) for above-target
+    metrics (Revenue, On-Time Delivery) and muted red (#c0392b) for below-target metrics
+    (Profit Margin, Customer Growth, Satisfaction). Thin black vertical target markers
+    are clearly visible. Percentage values are displayed to the right of each bar
+    in matching colors. The bars and bands have rounded corners (FancyBboxPatch).
+    Top, right, and left spines are removed. A subtle dashed x-axis grid at alpha=0.2
+    provides reference. The title reads "bullet-basic · matplotlib · pyplots.ai" at
+    the top. A 6-item legend at the bottom identifies Above Target, Below Target,
+    Target, Good, Satisfactory, and Poor.
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 24pt, y-axis labels at 18pt, tick labels at 16pt, value
-          labels at 16pt - all perfectly readable
+        comment: 'All font sizes explicitly set: title 24pt, xlabel 20pt, ytick labels
+          18pt bold, xtick labels 16pt, value annotations 16pt bold, legend 14pt'
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements, clean layout
+        comment: No overlapping elements. Generous spacing between bullets. Legend
+          fits cleanly below
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Bars, target markers, and bands are all clearly visible and appropriately
-          sized
+        comment: Bars, bands, and target markers all clearly visible with good contrast
+          ratios
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 3
+        max: 4
         passed: true
-        comment: Grayscale bands are colorblind-safe, blue bar has good contrast
+        comment: Blue vs red is generally colorblind-accessible, grayscale bands universally
+          safe. Not perfect for all CVD types
       - id: VQ-05
-        name: Layout Balance
+        name: Layout & Canvas
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Good proportions, though the different scales cause visual imbalance
-          between metrics (e.g., Satisfaction bar appears tiny compared to Revenue)
+        comment: Plot fills canvas well with tight_layout and bbox_inches tight. Balanced
+          margins
       - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: false
-        comment: No x-axis label (intentionally omitted due to different units per
-          metric, which is reasonable but technically loses points)
-      - id: VQ-07
-        name: Grid & Legend
+        name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Subtle grid with alpha=0.3 and dashed lines, legend well-placed in
-          lower right
+        comment: X-axis Performance (%) with units. Y-axis has descriptive metric
+          names
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Strong design: intentional palette with semantic meaning, FancyBboxPatch
+          rounded corners, grayscale bands with wider contrast'
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Three spines removed, subtle dashed grid at alpha=0.2, y-axis tick
+          marks hidden, generous spacing, rounded corners
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Color coding communicates performance narrative: blue=above target,
+          red=below. Mix creates immediate insight'
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct bullet chart implementation with actual bar, target marker,
-          and qualitative bands
+        comment: 'Correct bullet chart with all components: actual bar, target marker,
+          qualitative bands'
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Actual values as bars, targets as vertical markers, ranges as background
-          bands
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: actual bar, target marker, qualitative
-          bands, labels, text values'
-      - id: SC-04
-        name: Data Range
+        comment: 'All spec features present: actual bar, target marker, grayscale
+          bands, horizontal orientation, value labels, metric labels'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within axis ranges
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 'Data correctly mapped: actual as bar width, target as vertical line,
+          ranges as band widths'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly labels all elements
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses exact format "bullet-basic · matplotlib · pyplots.ai"
+        comment: Title in correct format. Legend labels match data semantics
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows multiple metrics with varying performance levels (Revenue exceeds
-          target, others below target), different units, different scales
+        comment: Shows both above and below target scenarios, varying range scales,
+          different gap sizes from target
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: KPI dashboard scenario is realistic and comprehensible (Revenue,
-          Profit, New Customers, Satisfaction)
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: 'Values are realistic: Revenue in $K, Profit as %, customer counts,
-          satisfaction on 5-point scale'
+        comment: Quarterly KPI dashboard with real business metrics. Neutral business
+          domain
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All values realistic for their domain: Profit Margin 38% with [20,40,60],
+          On-Time Delivery 96% with [60,80,100]'
     code_quality:
-      score: 7
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -178,43 +189,49 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear structure: imports → data → plot → save'
+        comment: 'Clean linear flow: imports, data, colors, figure, loop, styling,
+          save. No functions or classes'
       - id: CQ-02
         name: Reproducibility
-        score: 0
-        max: 3
-        passed: false
-        comment: No random seed needed (deterministic data), but data is hardcoded
-          so this is acceptable - however marking 0 since there's no explicit seed
-          statement even though not strictly needed
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic hardcoded data, no random generation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports used (plt, Line2D, Patch)
+        comment: 'All imports used: plt, Line2D, FancyBboxPatch, Patch'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: No deprecated functions used
+        comment: Clean loop, appropriate FancyBboxPatch usage, no over-engineering
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as 'plot.png'
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot.png with dpi=300, bbox_inches tight. No deprecated
+          API
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses Axes methods, FancyBboxPatch, ax.vlines, custom patch-based
+          legend. Proper matplotlib patterns
+      - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses matplotlib's barh, custom legend with Patch and Line2D objects,
-          appropriate styling. Could have used more advanced features like FancyBboxPatch
-          or custom transforms, but implementation is solid.
+        comment: FancyBboxPatch with boxstyle round is distinctive matplotlib feature.
+          Custom legend with Line2D + Patch handles
   verdict: APPROVED
