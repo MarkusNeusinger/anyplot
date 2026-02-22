@@ -1,170 +1,176 @@
 library: plotly
 specification_id: bullet-basic
 created: '2025-12-23T09:18:22Z'
-updated: '2025-12-23T09:22:28Z'
-generated_by: claude-opus-4-5-20251101
+updated: '2026-02-22T22:05:03Z'
+generated_by: claude-opus-4-6
 workflow_run: 20456603137
 issue: 0
-python_version: 3.13.11
-library_version: 6.5.0
+python_version: 3.14.3
+library_version: 6.5.2
 preview_url: https://storage.googleapis.com/pyplots-images/plots/bullet-basic/plotly/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/bullet-basic/plotly/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/bullet-basic/plotly/plot.html
-quality_score: 92
+quality_score: 91
 impl_tags:
   dependencies: []
   techniques:
-  - subplots
   - annotations
   - html-export
   patterns:
-  - data-generation
+  - iteration-over-groups
   dataprep: []
   styling: []
 review:
   strengths:
-  - Excellent implementation of bullet chart concept using overlaid horizontal bars
-    for qualitative ranges
-  - Clean visual hierarchy with grayscale ranges focusing attention on the blue actual-value
-    bar
-  - Good use of Plotly subplot system to handle multiple metrics with independent
-    scales
-  - Value annotations provide precise reading as recommended in the spec
-  - Target markers are clearly visible thin black lines perpendicular to the bars
-  - Multiple KPIs demonstrate the comparison capability mentioned in the spec
+  - Excellent use of Plotly native go.Indicator bullet gauge — idiomatic and feature-complete
+  - Semantic color-coding (blue for above-target, amber for below-target) creates
+    immediate visual storytelling
+  - Blue-gray range bands are more refined than plain grayscale, following Stephen
+    Few bullet chart principles
+  - Clean deterministic code with elegant loop-based construction and calculated row
+    spacing
+  - Perfect spec compliance with all required features present
   weaknesses:
-  - Could use Plotly native go.Indicator with bullet mode for more idiomatic implementation
-  - Profit chart shows 140 tick label extending into right margin area
-  - Missing explicit x-axis title though subplot titles provide context
-  image_description: 'The plot displays four horizontal bullet charts arranged vertically,
-    each representing a different KPI metric. From top to bottom: Revenue ($K) showing
-    actual value of 275 exceeding target of 250, Profit ($K) at 85 below target of
-    100, Customers at 320 below target of 400, and Satisfaction at 4.2 below target
-    of 4.5. Each bullet chart features three grayscale background bands representing
-    qualitative ranges (poor/satisfactory/good), a blue (#306998) horizontal bar showing
-    the actual value, a thin black vertical line marking the target, and the actual
-    value displayed in blue text on the right side. The title "bullet-basic · plotly
-    · pyplots.ai" is centered at the top. The overall design is clean with a white
-    background and subtle gridlines.'
+  - Vertical spacing between bullet rows could be tighter to reduce whitespace
+  - No metric lands in the poor qualitative range, limiting demonstration of that
+    band
+  - Legend annotations float somewhat disconnected from the chart area
+  image_description: The plot displays four horizontal bullet charts stacked vertically
+    on a subtle off-white (#FAFBFC) background. Each bullet shows three blue-gray
+    qualitative range bands graduating from darker (#8B9DAF, poor) to lighter (#D6DEE3,
+    good). Revenue ($K) uses a deep blue (#306998) bar reaching 275 with the target
+    marker at 250, indicating above-target performance. Profit ($K), Customers, and
+    Satisfaction all use warm amber (#C2853A) bars at 85, 320, and 4.2 respectively,
+    with target lines at 100, 400, and 4.5 — all below target. Numeric values appear
+    to the right of each gauge in matching colors. A compact legend in the upper right
+    reads "▲ Above target" (blue) and "▼ Below target" (amber). The title "bullet-basic
+    · plotly · pyplots.ai" is centered at the top in dark slate (#2C3E50). All text
+    uses Helvetica Neue with explicitly set sizes.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 32pt, subplot titles at 22pt, tick labels at 16pt, value
-          annotations at 20pt - all clearly readable
+        comment: 'All font sizes explicitly set: title 32pt, labels 22pt, numbers
+          26pt, ticks 16pt. Perfectly readable.'
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping elements anywhere
+        comment: Clean row separation with calculated spacing. No text collisions.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Bars, range bands, and target markers all clearly visible with good
-          sizing
+        comment: Bars, target markers, and range bands all clearly distinguishable.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Uses grayscale for ranges and single blue for actual values - colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Good proportions, though right margin annotation "140" visible on
-          Profit chart extends slightly beyond intended area
+        comment: Blue vs amber is colorblind-safe. Blue-gray range bands have adequate
+          contrast.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good horizontal use. Legend annotations float somewhat far from chart
+          area. Slightly generous vertical spacing.
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Subplot titles serve as labels but lack explicit axis titles with
-          units on x-axis
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
-        max: 2
+        comment: Labels include units. Title follows correct format.
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
         passed: true
-        comment: Grid is subtle (alpha 0.1), no legend needed for this chart type
+        comment: Thoughtful design with blue-gray range bands, semantic color-coding,
+          Helvetica Neue typography, subtle background. Clearly above defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: plotly_white template, explicit margins, calculated row spacing,
+          refined range band colors.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Color differentiation immediately communicates above/below target
+          performance. Legend and numeric values reinforce narrative.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct bullet chart implementation with all components
+        comment: Correct bullet chart using native go.Indicator with gauge shape=bullet.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Actual values as bars, targets as markers, ranges as background bands
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
         comment: 'All spec features present: actual bar, target marker, qualitative
-          range bands, labels, value annotations'
-      - id: SC-04
-        name: Data Range
+          ranges, labels, stacked bullets, grayscale shading, text values.'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within appropriate ranges
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: All values correctly mapped to bars, thresholds, and range steps.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No legend needed, metric labels are clear
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correctly formatted as "bullet-basic · plotly · pyplots.ai"
+        comment: Title format correct. Above/below target legend annotations appropriate
+          for chart type.
     data_quality:
-      score: 19
-      max: 20
+      score: 14
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: 'Shows multiple scenarios: exceeding target (Revenue), below target
-          (others), different scales and units'
+        comment: Demonstrates above-target and below-target scenarios, different scales/units.
+          No metric in poor range.
       - id: DQ-02
         name: Realistic Context
-        score: 6
-        max: 7
-        passed: true
-        comment: KPI dashboard scenario is realistic; metrics are plausible business
-          KPIs
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Values are realistic for business metrics (Revenue in $K, customer
-          counts, satisfaction scores 1-5)
+        comment: Business KPI dashboard — neutral, real-world, immediately comprehensible.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Revenue $275K, Profit $85K, 320 customers, 4.2/5.0 satisfaction —
+          all plausible.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -172,40 +178,48 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple script structure: imports → data → plot → save'
+        comment: Clean Imports → Data → Plot loop → Save. No functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
-        max: 3
+        max: 2
         passed: true
-        comment: Deterministic data (no random), but no explicit seed statement
+        comment: Deterministic hardcoded data, no randomness.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports (plotly.graph_objects, plotly.subplots)
+        comment: Single import (plotly.graph_objects), fully used.
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Plotly API
+        comment: Clean loop with elegant row spacing calculation. Conditional color
+          logic is minimal.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot.png at 4800x2700. Also exports HTML. Current API.
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses subplots, shapes for target markers, annotations, hover templates;
-          could leverage Plotly's native Indicator trace with bullet mode
+        comment: Uses go.Indicator with gauge shape=bullet — native Plotly approach.
+          mode=number+gauge, threshold, steps all correct.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: go.Indicator bullet mode, combined number+gauge, built-in threshold
+          markers, domain-based layout, HTML export — all Plotly-distinctive.
   verdict: APPROVED
