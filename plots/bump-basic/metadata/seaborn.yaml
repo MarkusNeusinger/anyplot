@@ -1,161 +1,182 @@
 library: seaborn
 specification_id: bump-basic
 created: '2025-12-23T09:18:13Z'
-updated: '2025-12-23T09:20:51Z'
-generated_by: claude-opus-4-5-20251101
+updated: '2026-02-22T21:15:44Z'
+generated_by: claude-opus-4-6
 workflow_run: 20456606720
 issue: 0
-python_version: 3.13.11
+python_version: 3.14.3
 library_version: 0.13.2
 preview_url: https://storage.googleapis.com/pyplots-images/plots/bump-basic/seaborn/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/bump-basic/seaborn/plot_thumb.png
 preview_html: null
-quality_score: 91
+quality_score: 92
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
   - manual-ticks
   patterns:
   - data-generation
-  - wide-to-long
+  - explicit-figure
   dataprep: []
-  styling: []
+  styling:
+  - grid-styling
 review:
   strengths:
-  - Excellent visual design with inverted Y-axis correctly placing rank 1 at top
-  - Clean color palette starting with Python blue (#306998) as first color
-  - Well-positioned legend outside plot area preventing data overlap
-  - Data shows interesting narrative with multiple overtakes and rank changes
-  - Proper use of seaborn lineplot with hue for categorical grouping
+  - Perfect visual quality with all font sizes explicitly set, colorblind-safe palette,
+    and no overlap
+  - Effective data storytelling through end-of-line labels with bold emphasis for
+    top-ranked teams
+  - Very refined visual design with subtle y-axis-only grid, removed spines, and clean
+    direct labels replacing legend
+  - Excellent data quality showing diverse ranking trajectories with realistic sports
+    league context
+  - Clean, idiomatic seaborn code following KISS structure
   weaknesses:
-  - Axis labels could be more descriptive (e.g., "Competition Week" and "League Position")
-  image_description: 'The bump chart displays 5 sports teams (Lions, Tigers, Bears,
-    Eagles, Wolves) with their ranking positions tracked over 6 weeks (Week 1-6).
-    The Y-axis shows ranks 1-5 with rank 1 at the top (inverted axis as required).
-    Each team is represented by a distinct colored line with circular markers: Lions
-    (blue #306998), Tigers (yellow), Bears (red), Eagles (green), and Wolves (purple).
-    Lines connect the rankings across weeks showing position changes. The title follows
-    the correct format "bump-basic · seaborn · pyplots.ai". A legend on the right
-    side clearly identifies each team. The grid is subtle with dashed lines at alpha
-    0.3.'
+  - Library mastery could reach higher with more distinctive seaborn features
+  - Design could reach publication quality with additional hierarchy like varying
+    line opacity for lower-ranked teams
+  image_description: 'The plot displays a bump chart tracking 5 sports teams (Lions,
+    Tigers, Bears, Eagles, Wolves) across 6 competition weeks. The Y-axis shows "League
+    Position (Rank)" inverted so rank 1 is at the top and rank 5 at the bottom. The
+    X-axis shows "Competition Week" from Week 1 through Week 6. Each team has a distinct
+    color and marker shape: Lions (blue circles), Tigers (orange X markers), Bears
+    (purple squares), Eagles (teal plus markers), Wolves (rose diamond markers). Lines
+    are thick and markers are large, making trajectories easy to follow. End-of-line
+    labels on the right identify each team directly, with bold weight for the top-2
+    ranked teams (Lions, Tigers). The legend has been removed in favor of these direct
+    labels. Top and right spines are removed, y-axis grid uses subtle dashed lines
+    at very low alpha (0.15), x-axis grid is disabled. The title reads "bump-basic
+    · seaborn · pyplots.ai" in medium-weight font. The overall design is clean and
+    professional with a muted, colorblind-safe palette.'
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 24pt, labels at 20pt, ticks at 16pt - all perfectly readable
+        comment: 'All font sizes explicitly set: title=24, labels=20, ticks=16, annotations=15.
+          All text clearly readable'
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text or elements
+        comment: No text overlap. End-of-line labels at distinct rank positions, x-axis
+          labels well-spaced
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Markers size 18 and linewidth 4 are excellent for 5 entities over
-          6 periods
+        comment: Large markers (18) with 5 distinct shapes, thick lines (linewidth=4).
+          Perfectly adapted to 30 data points
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Five distinct colors that are colorblind-safe (blue, yellow, red,
-          green, purple)
+        comment: Fully colorblind-safe muted palette (blue, orange, purple, teal,
+          rose). Marker shapes provide additional redundancy
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Good proportions, legend placed outside plot area using bbox_to_anchor
+        comment: 16:9 figsize with tight_layout and bbox_inches='tight'. Plot fills
+          canvas well with balanced margins
       - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: false
-        comment: Labels are "Week" and "Rank" without units or context; could be more
-          descriptive
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle at alpha=0.3 with dashed lines; legend is well-placed
-          outside
+        comment: Competition Week and League Position (Rank) are descriptive with
+          clarifier
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom muted palette, end-of-line labels, distinct markers, bold
+          for top-2 teams. Clearly above defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines removed, dashed grid at alpha=0.15 y-axis only, generous whitespace,
+          clean direct labels
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: End-of-line labels with bold for top-2 create visual hierarchy. Data
+          trajectories tell clear stories
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct bump chart with lines connecting rankings over time
+        comment: Correct bump chart with connected lines showing ranking changes over
+          time
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Period (Week) on X-axis, Rank on Y-axis, correctly mapped
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Y-axis inverted, distinct colors, dot markers present, lines connect
-          entities
-      - id: SC-04
-        name: Data Range
+        comment: 'All spec features present: inverted Y-axis, distinct colors, dot
+          markers, connecting lines'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 5 ranks and 6 weeks visible
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X=period, Y=rank, all data visible with correct axis orientation
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies all 5 teams
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses correct format "bump-basic · seaborn · pyplots.ai"
+        comment: Correct title format. End-of-line labels correctly identify all teams
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows rank changes, overtakes (Tigers→Lions at Week 3), stability,
-          rises and falls
+        comment: Shows rises, falls, fluctuation, stability, and crossover points
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Sports league standings over a season is a realistic and comprehensible
-          scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: 5 teams over 6 weeks with ranks 1-5 is perfect for bump chart demonstration
+        comment: Sports league standings with plausible team names. Neutral real-world
+          scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Ranks 1-5 for 5 teams across 6 weeks. Realistic for league standings
     code_quality:
-      score: 7
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -163,41 +184,47 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple imports → data → plot → save structure, no functions/classes
+        comment: Clean Imports-Data-Plot-Style-Save flow, no functions or classes
       - id: CQ-02
         name: Reproducibility
-        score: 0
-        max: 3
-        passed: false
-        comment: No random seed set (though data is deterministic, best practice is
-          to include seed when using any randomness)
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hardcoded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports (matplotlib.pyplot, pandas, seaborn)
+        comment: 'All imports used: matplotlib.pyplot, pandas, seaborn'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current seaborn API
+        comment: Clean, Pythonic, appropriate complexity
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as 'plot.png'
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot.png at dpi=300, current seaborn API
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses sns.lineplot with hue/style/markers, sns.set_theme, sns.despine,
+          sns.color_palette. Axes-level API
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
-        passed: false
-        comment: Uses seaborn's lineplot with hue grouping and palette, which is good
-          but relatively basic seaborn usage
+        passed: true
+        comment: Leverages hue+style combination, marker dict mapping, set_theme with
+          rc, despine, color_palette
   verdict: APPROVED

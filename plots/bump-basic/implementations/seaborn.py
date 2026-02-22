@@ -1,7 +1,7 @@
 """ pyplots.ai
 bump-basic: Basic Bump Chart
-Library: seaborn 0.13.2 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-23
+Library: seaborn 0.13.2 | Python 3.14.3
+Quality: 92/100 | Updated: 2026-02-22
 """
 
 import matplotlib.pyplot as plt
@@ -10,67 +10,97 @@ import seaborn as sns
 
 
 # Data - Sports league standings over 6 weeks
-data = {
-    "Team": ["Lions"] * 6 + ["Tigers"] * 6 + ["Bears"] * 6 + ["Eagles"] * 6 + ["Wolves"] * 6,
-    "Week": ["Week 1", "Week 2", "Week 3", "Week 4", "Week 5", "Week 6"] * 5,
-    "Rank": [
-        3,
-        2,
-        1,
-        1,
-        2,
-        1,  # Lions - start mid, climb to top
-        1,
-        1,
-        2,
-        3,
-        1,
-        2,  # Tigers - start top, fluctuate
-        5,
-        4,
-        4,
-        2,
-        3,
-        3,  # Bears - steady climb from bottom
-        2,
-        3,
-        3,
-        4,
-        4,
-        5,  # Eagles - gradual decline
-        4,
-        5,
-        5,
-        5,
-        5,
-        4,  # Wolves - mostly bottom, slight recovery
-    ],
-}
-df = pd.DataFrame(data)
+teams = ["Lions", "Tigers", "Bears", "Eagles", "Wolves"]
+weeks = ["Week 1", "Week 2", "Week 3", "Week 4", "Week 5", "Week 6"]
+ranks = [
+    3,
+    2,
+    1,
+    1,
+    2,
+    1,  # Lions - start mid, climb to top
+    1,
+    1,
+    2,
+    3,
+    1,
+    2,  # Tigers - start top, fluctuate
+    5,
+    4,
+    4,
+    2,
+    3,
+    3,  # Bears - steady climb from bottom
+    2,
+    3,
+    3,
+    4,
+    4,
+    5,  # Eagles - gradual decline
+    4,
+    5,
+    5,
+    5,
+    5,
+    4,  # Wolves - mostly bottom, slight recovery
+]
+df = pd.DataFrame(
+    {"Team": [team for team in teams for _ in weeks], "Competition Week": weeks * len(teams), "League Position": ranks}
+)
 
-# Colors for each team - Python Blue first, then distinct colorblind-safe colors
-palette = ["#306998", "#FFD43B", "#E74C3C", "#2ECC71", "#9B59B6"]
+# Colorblind-safe muted palette via seaborn (Python Blue first)
+palette = sns.color_palette(["#306998", "#D4823E", "#8B6CAF", "#3A9E8F", "#C27185"])
+markers = {"Lions": "o", "Tigers": "X", "Bears": "s", "Eagles": "P", "Wolves": "D"}
 
-# Create plot
+# Refined theme
+sns.set_theme(style="whitegrid", rc={"grid.linestyle": "--", "grid.alpha": 0.15})
 fig, ax = plt.subplots(figsize=(16, 9))
 
-sns.lineplot(data=df, x="Week", y="Rank", hue="Team", marker="o", markersize=18, linewidth=4, palette=palette, ax=ax)
+sns.lineplot(
+    data=df,
+    x="Competition Week",
+    y="League Position",
+    hue="Team",
+    style="Team",
+    markers=markers,
+    dashes=False,
+    markersize=18,
+    linewidth=4,
+    palette=palette,
+    hue_order=teams,
+    sort=False,
+    ax=ax,
+)
 
 # Invert y-axis so rank 1 is at top
 ax.invert_yaxis()
-
-# Set y-axis ticks to integer ranks only
 ax.set_yticks([1, 2, 3, 4, 5])
+ax.xaxis.grid(False)
+sns.despine(ax=ax)
 
-# Styling
-ax.set_xlabel("Week", fontsize=20)
-ax.set_ylabel("Rank", fontsize=20)
-ax.set_title("bump-basic · seaborn · pyplots.ai", fontsize=24)
+# Style
+ax.set_xlabel("Competition Week", fontsize=20)
+ax.set_ylabel("League Position (Rank)", fontsize=20)
+ax.set_title("bump-basic · seaborn · pyplots.ai", fontsize=24, fontweight="medium", pad=20)
 ax.tick_params(axis="both", labelsize=16)
-ax.grid(True, alpha=0.3, linestyle="--")
 
-# Legend styling - placed outside plot area
-ax.legend(title="Team", fontsize=14, title_fontsize=16, loc="center left", bbox_to_anchor=(1, 0.5))
+# End-of-line labels for direct identification and storytelling
+final_positions = {team: ranks[i * 6 + 5] for i, team in enumerate(teams)}
+for i, team in enumerate(teams):
+    rank = final_positions[team]
+    ax.annotate(
+        team,
+        xy=(5, rank),
+        xytext=(12, 0),
+        textcoords="offset points",
+        fontsize=15,
+        fontweight="bold" if rank <= 2 else "normal",
+        color=palette[i],
+        va="center",
+    )
+
+# Remove legend (replaced by end-of-line labels for cleaner design)
+ax.get_legend().remove()
 
 plt.tight_layout()
 plt.savefig("plot.png", dpi=300, bbox_inches="tight")
