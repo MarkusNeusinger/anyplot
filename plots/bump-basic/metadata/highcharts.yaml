@@ -1,7 +1,7 @@
 library: highcharts
 specification_id: bump-basic
 created: '2025-12-23T09:19:17Z'
-updated: '2026-02-22T21:03:26Z'
+updated: '2026-02-22T21:15:52Z'
 generated_by: claude-opus-4-6
 workflow_run: 20456612794
 issue: 0
@@ -10,49 +10,52 @@ library_version: 1.10.3
 preview_url: https://storage.googleapis.com/pyplots-images/plots/bump-basic/highcharts/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/bump-basic/highcharts/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/bump-basic/highcharts/plot.html
-quality_score: 83
+quality_score: 87
 impl_tags:
   dependencies:
   - selenium
   techniques:
   - html-export
+  - annotations
   patterns:
-  - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
   - grid-styling
 review:
   strengths:
-  - Perfect spec compliance with all required bump chart features and correctly inverted
-    Y-axis
-  - Excellent data quality with realistic sports scenario showing diverse ranking
-    patterns (overtakes, rises, falls, stability)
-  - Clean code structure with deterministic data and linear KISS flow
-  - Good typography hierarchy with explicitly set font sizes at all levels
-  - Dotted grid lines and removed tick marks show intentional design refinement
+  - 'Significant improvement from attempt 1: added visual hierarchy through line thickness/marker
+    size, spline curves, plotBands, endpoint labels, Y-axis title, and improved color
+    palette'
+  - Perfect spec compliance — all required bump chart features present with correctly
+    inverted Y-axis
+  - Excellent data quality — realistic sports scenario with diverse ranking patterns
+    showcasing overtakes, rises, falls, and stability
+  - Effective data storytelling through visual weight differentiation (Eagles and
+    Tigers as protagonists)
+  - Clean, deterministic code with appropriate Selenium export pattern
   weaknesses:
-  - No visual storytelling or hierarchy — all lines have equal weight with no emphasis
-    on key narratives
-  - Color palette has potential accessibility issues between blue/cyan and pink/purple
-    pairs
-  - LineSeries imported from wrong module path (area instead of line)
-  - No axis titles — missing Rank label on Y-axis
-  - Library mastery is generic — no distinctive Highcharts features like spline interpolation
-    or endpoint data labels
+  - 'Redundant labeling: both endpoint data labels AND legend show team names — remove
+    one for cleaner design'
+  - Orange (#FF7F0E) and red (#D62728) are perceptually close for colorblind viewers
+  - Spline interpolation creates minor visual confusion at rank crossover points where
+    curves overshoot rank boundaries
   image_description: 'The plot displays a bump chart titled "bump-basic · highcharts
     · pyplots.ai" with subtitle "League Standings Over Season" on a white background.
-    The Y-axis is inverted with #1 at the top and #6 at the bottom, showing rank positions.
-    The X-axis shows Week 1 through Week 6. Six teams are plotted with distinct colored
-    lines and filled circle markers: Eagles (dark blue) starts at #3 and rises to
-    #1 by Week 3; Wolves (yellow/gold) starts at #1 and declines to #2; Tigers (purple)
-    starts at #4, dramatically climbs to #1 at Week 5, then drops to #3; Bears (cyan)
-    starts at #2 and falls sharply to #4-5 range; Sharks (pink) fluctuates around
-    #5; Lions (brown) remains mostly at #6 with a brief rise to #5 at Week 5. Lines
-    are thick (~7px) with large circle markers at each data point. A vertical legend
-    on the right lists all six teams with matching color indicators. Grid lines are
-    dotted and light gray. Typography hierarchy is clear with bold large title, smaller
-    gray subtitle, and consistent label sizing.'
+    The Y-axis is labeled "Rank" and inverted with #1 at the top and #6 at the bottom.
+    The X-axis shows Week 1 through Week 6. Six teams are plotted with smooth spline
+    curves and circle markers of varying sizes: Eagles (dark blue, thick line ~9px,
+    large markers) starts at #3, rises to #1 by Week 3, dips to #2 at Week 5, and
+    finishes at #1; Wolves (yellow/gold, medium line) starts at #1 and gradually declines
+    to #2; Tigers (purple, thick line ~9px) starts at #4, peaks at #1 in Week 5, then
+    drops to #3; Bears (orange, medium line) starts at #2 and falls to #4; Sharks
+    (red, thin line) fluctuates around #4-6; Lions (brown, thin line) stays mostly
+    at #6 with a brief rise to #5 at Week 5. A subtle yellow-gold band highlights
+    the #1 rank zone with a star symbol on the left. Endpoint data labels show team
+    names at the rightmost data point. A vertical legend on the far right lists all
+    six teams with matching color indicators. Grid lines are dotted and light gray.
+    The spline interpolation creates smooth, flowing curves between data points, with
+    visible crossover patterns where teams swap positions.'
   criteria_checklist:
     visual_quality:
       score: 27
@@ -64,65 +67,70 @@ review:
         max: 8
         passed: true
         comment: 'All font sizes explicitly set: title 72px, subtitle 48px, axis labels
-          40px, legend 36px'
+          40px, y-axis title 40px, legend 36px, data labels 32px. All text clearly
+          readable.'
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: No actual text overlap, but right side has both endpoint data labels
+          and legend showing same team names, creating visual clutter.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Lines at 7px width with radius-14 markers, all 6 teams clearly distinguishable
+        comment: Line widths (4-9px) and marker radii (9-16px) create clear visual
+          hierarchy. All 6 teams easily distinguishable.
       - id: VQ-04
         name: Color Accessibility
         score: 3
         max: 4
         passed: false
-        comment: Blue/cyan and pink/purple pairs may be confusable under some color
-          vision deficiencies
+        comment: Orange (#FF7F0E) and red (#D62728) are perceptually close for protanopia/deuteranopia.
+          Blue, yellow, purple well-separated.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: false
-        comment: Chart fills ~55-60% of canvas, right margin generous for legend but
-          creates some asymmetry
+        comment: Chart fills ~55-60% of canvas. Generous bottom margin and right side
+          accommodates both data labels and legend but slightly asymmetric.
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'Y-axis labels show #1-#6 format but no explicit axis title (set
-          to None)'
+        passed: true
+        comment: Y-axis title 'Rank' present with formatted labels '#1'-'#6'. X-axis
+          shows descriptive week categories.
     design_excellence:
-      score: 11
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Custom palette, good typography hierarchy, above defaults but not
-          publication-ready
+        passed: true
+        comment: 'Custom colorblind-safe palette, intentional line-weight hierarchy,
+          plotBand with star for #1, spline curves, endpoint labels with text outlines.
+          Clearly above defaults.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: false
-        comment: Dotted grid lines, removed tick marks, generous margins show intentional
-          refinement
+        comment: Dotted grid lines, removed x-axis grid and tick marks, clean background.
+          Good refinement but redundant labeling and axis frame lines remain.
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
         passed: false
-        comment: Data well-crafted with diverse patterns but no visual emphasis or
-          hierarchy to guide viewer
+        comment: 'Visual hierarchy through line thickness and marker size highlights
+          Eagles and Tigers as protagonists. Gold plotBand draws attention to #1.
+          Lacks annotations for key events.'
     spec_compliance:
       score: 15
       max: 15
@@ -132,26 +140,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct bump chart with inverted Y-axis showing rankings over time
+        comment: Correct bump chart using spline curves with inverted Y-axis showing
+          rankings over time.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: inverted Y, distinct colors, dot markers,
-          connected lines, 6 entities, 6 periods'
+        comment: Inverted Y-axis, distinct colors, dot markers, lines connecting entities,
+          6 entities and 6 periods.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = time periods, Y = rank positions, all data correctly plotted
+        comment: X = weeks, Y = rank. All data points visible and correctly plotted.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend labels match team names
+        comment: Title follows exact format. Legend labels match team names.
     data_quality:
       score: 15
       max: 15
@@ -161,19 +170,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows overtakes, rises, falls, stability, swaps, and convergence
+        comment: Shows overtakes, dramatic arcs, gradual declines, stability, and
+          position swaps.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Sports league standings — real, comprehensible, neutral scenario
+        comment: Sports league standings — real, comprehensible, neutral scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Rankings 1-6 for 6 teams over 6 weeks, unique rankings each week
+        comment: Rankings 1-6 for 6 teams over 6 weeks with unique rankings per week.
     code_quality:
       score: 10
       max: 10
@@ -183,47 +193,48 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: Imports, Data, Chart config, Series loop, Export'
+        comment: Linear flow with no functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data hardcoded, fully deterministic
+        comment: All data hardcoded, deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used, no unused imports
+        comment: All imports used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean series creation loop, well-organized config sections
+        comment: Clean series loop with per-team dictionaries for visual hierarchy.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png via Selenium, also saves plot.html
+        comment: Saves as plot.png and plot.html. Uses current API.
     library_mastery:
-      score: 5
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
         passed: false
-        comment: Correct dict-based config but LineSeries imported from area module
-          instead of line module
+        comment: Uses Chart with container, HighchartsOptions, SplineSeries, proper
+          dict-based config. Good Highcharts patterns.
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Uses reversed axis and legend placement but no truly distinctive
-          Highcharts features like spline, dataLabels, or plotBands
+        comment: SplineSeries and plotBands are Highcharts-specific. Point-level dataLabels
+          is a Highcharts pattern. But no truly unique features like linkedTo or custom
+          events.
   verdict: REJECTED
