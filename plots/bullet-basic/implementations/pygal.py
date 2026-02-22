@@ -1,6 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 bullet-basic: Basic Bullet Chart
 Library: pygal 3.1.0 | Python 3.14.3
+Quality: 85/100 | Updated: 2026-02-22
 """
 
 import xml.etree.ElementTree as ET
