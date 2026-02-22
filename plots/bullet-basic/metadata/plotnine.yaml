@@ -1,16 +1,16 @@
 library: plotnine
 specification_id: bullet-basic
 created: '2025-12-23T09:19:04Z'
-updated: '2025-12-23T09:23:44Z'
-generated_by: claude-opus-4-5-20251101
+updated: '2026-02-22T12:00:00+00:00'
+generated_by: claude-opus-4-6
 workflow_run: 20456606052
 issue: 0
-python_version: 3.13.11
-library_version: 0.15.2
+python_version: 3.14.3
+library_version: 0.15.3
 preview_url: https://storage.googleapis.com/pyplots-images/plots/bullet-basic/plotnine/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/bullet-basic/plotnine/plot_thumb.png
 preview_html: null
-quality_score: 94
+quality_score: null
 impl_tags:
   dependencies: []
   techniques:

@@ -1,13 +1,14 @@
-""" pyplots.ai
+"""pyplots.ai
 bullet-basic: Basic Bullet Chart
-Library: plotnine 0.15.2 | Python 3.13.11
-Quality: 94/100 | Created: 2025-12-23
+Library: plotnine 0.15.3 | Python 3.14.3
+Quality: /100 | Updated: 2026-02-22
 """
 
 import pandas as pd
 from plotnine import (
     aes,
     element_blank,
+    element_line,
     element_text,
     geom_rect,
     geom_segment,
@@ -51,9 +52,11 @@ for i, m in enumerate(metrics):
     )
     range_data.append({"y": y_pos, "xmin": (m["ranges"][1] / max_val) * 100, "xmax": 100, "band": "Good"})
 
-    # Actual value bar
+    # Actual value bar - format label as integer when possible
     actual_pct = (m["actual"] / max_val) * 100
-    actual_data.append({"y": y_pos, "xmin": 0, "xmax": actual_pct, "label": m["label"], "actual": m["actual"]})
+    val = m["actual"]
+    val_str = str(int(val)) if val == int(val) else str(val)
+    actual_data.append({"y": y_pos, "xmin": 0, "xmax": actual_pct, "label": m["label"], "actual": val_str})
 
     # Target marker
     target_pct = (m["target"] / max_val) * 100
@@ -63,12 +66,26 @@ df_ranges = pd.DataFrame(range_data)
 df_actual = pd.DataFrame(actual_data)
 df_target = pd.DataFrame(target_data)
 
-# Grayscale colors for qualitative bands (good=light, satisfactory=medium, poor=dark)
+# Grayscale colors for qualitative bands (poor=dark, satisfactory=medium, good=light)
 band_colors = {"Poor": "#707070", "Satisfactory": "#A0A0A0", "Good": "#D0D0D0"}
 
 # Bar height parameters
-range_height = 0.65
-actual_height = 0.28
+range_height = 0.6
+actual_height = 0.25
+
+# Band legend labels centered in each zone of the bottom metric (Satisfaction: 50%, 70%, 100%)
+sat = metrics[-1]
+sat_max = sat["ranges"][-1]
+poor_mid = (sat["ranges"][0] / sat_max) * 50
+satis_mid = ((sat["ranges"][0] + sat["ranges"][1]) / (2 * sat_max)) * 100
+good_mid = ((sat["ranges"][1] + sat_max) / (2 * sat_max)) * 100
+legend_labels = pd.DataFrame(
+    [
+        {"x": poor_mid, "y": -0.52, "text": "Poor"},
+        {"x": satis_mid, "y": -0.52, "text": "Satisfactory"},
+        {"x": good_mid, "y": -0.52, "text": "Good"},
+    ]
+)
 
 # Plot - horizontal bullet charts (x is performance, y is metric category)
 plot = (
@@ -89,14 +106,22 @@ plot = (
         color="#1a1a1a",
         size=2.5,
     )
-    # Actual value labels at end of bars
+    # Actual value labels above each bar
     + geom_text(
-        df_actual, aes(x="xmax + 3", y="y", label="actual"), ha="left", size=12, color="#306998", fontweight="bold"
+        df_actual,
+        aes(x="xmax", y="y + range_height/2 + 0.05", label="actual"),
+        ha="right",
+        va="bottom",
+        size=10,
+        color="#306998",
+        fontweight="bold",
     )
+    # Band meaning labels below the bottom metric
+    + geom_text(legend_labels, aes(x="x", y="y", label="text"), size=8, color="#555555", va="top")
     # Scale and labels
-    + scale_x_continuous(limits=(0, 115), breaks=[0, 25, 50, 75, 100], expand=(0, 0))
+    + scale_x_continuous(limits=(0, 100), breaks=[0, 25, 50, 75, 100], expand=(0, 0.02))
     + scale_y_continuous(
-        breaks=list(range(len(metrics))), labels=[m["label"] for m in reversed(metrics)], expand=(0.15, 0.15)
+        breaks=list(range(len(metrics))), labels=[m["label"] for m in reversed(metrics)], expand=(0.25, 0.12)
     )
     + labs(title="bullet-basic · plotnine · pyplots.ai", x="Performance (%)", y="")
     # Theme
@@ -110,8 +135,7 @@ plot = (
         axis_text_y=element_text(size=18, ha="right"),
         panel_grid_major_y=element_blank(),
         panel_grid_minor=element_blank(),
-        panel_grid_major_x=element_blank(),
-        legend_position="none",
+        panel_grid_major_x=element_line(color="#e0e0e0", size=0.3),
     )
 )
 
