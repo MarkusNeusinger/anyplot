@@ -1,6 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 bump-basic: Basic Bump Chart
 Library: pygal 3.1.0 | Python 3.14.3
+Quality: 90/100 | Updated: 2026-02-22
 """
 
 import pygal

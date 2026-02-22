@@ -1,7 +1,7 @@
 library: pygal
 specification_id: bump-basic
 created: '2025-12-23T09:17:51Z'
-updated: '2026-02-22T21:12:39Z'
+updated: '2026-02-22T21:22:16Z'
 generated_by: claude-opus-4-6
 workflow_run: 20456611378
 issue: 0
@@ -10,7 +10,7 @@ library_version: 3.1.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/bump-basic/pygal/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/bump-basic/pygal/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/bump-basic/pygal/plot.html
-quality_score: 88
+quality_score: 90
 impl_tags:
   dependencies: []
   techniques:
@@ -23,36 +23,40 @@ impl_tags:
   - grid-styling
 review:
   strengths:
-  - Excellent data storytelling through intentional warm/cool color palette and dot
-    size hierarchy reinforcing the McLaren-vs-Red-Bull narrative
-  - Perfect spec compliance with all required bump chart features including inverted
-    y-axis
-  - Strong pygal idioms with per-series stroke_style, custom value_formatter, and
-    dict-format y_labels
-  - Realistic F1 context with real team and race names and plausible ranking trajectories
-  - Clean well-commented code with clear design rationale
+  - Excellent data storytelling through intentional warm/cool color contrast and multi-channel
+    visual hierarchy (line widths, dot sizes, color narrative)
+  - Perfect spec compliance — all required bump chart features implemented correctly
+    with properly inverted y-axis
+  - Line visibility significantly improved from attempt 2 — stroke widths now render
+    prominently in PNG with opacity=1.0 and increased widths
+  - Realistic F1 context with real team and Grand Prix names, plausible ranking trajectories
+    with compelling narrative
+  - Clean, well-commented code with clear design rationale explaining color and hierarchy
+    choices
   weaknesses:
-  - Connecting lines between dots are too faint/thin undermining the bump chart core
-    purpose of showing ranking trajectories
-  - Aston Martin series barely visible with small gray dots and near-invisible line
-    at P5
-  - Barcelona label tight against right canvas edge
+  - Aston Martin series at P5, while improved with darker gray, is still the least
+    visible element — borderline for a chart where every entity should be traceable
+  - Barcelona label slightly tight against right canvas edge despite margin_right=100
+  - Monospace font rendering in pygal PNG output limits typographic polish (library
+    limitation)
   image_description: 'The plot displays a bump chart of Formula 1 constructor standings
     across 6 Grand Prix races (Bahrain, Jeddah, Melbourne, Imola, Monaco, Barcelona).
-    The y-axis shows positions P1 (top) through P5 (bottom), correctly inverted. Five
-    teams are plotted: Red Bull Racing (dark navy dots), McLaren (bold orange dots),
-    Ferrari (smaller red dots), Mercedes (small teal dots), and Aston Martin (tiny
-    gray dots, barely visible at P5). Dot sizes vary to create visual hierarchy —
-    McLaren and Red Bull have the largest dots. The connecting lines between data
-    points are notably faint and thin despite custom stroke widths in the code, making
-    trajectories harder to follow than expected. The title "bump-basic · pygal · pyplots.ai"
-    is displayed at the top in large text. Axis labels read "Grand Prix" (x) and "Constructor
-    Standing" (y). The legend is at the bottom in a single row. The background is
-    white with a very light gray (#FAFAFA) plot area. The "Barcelona" label is tight
-    against the right canvas edge.'
+    The y-axis is correctly inverted with P1 at top and P5 at bottom. Five teams are
+    plotted with connecting lines and dot markers: Red Bull Racing (dark navy, thick
+    line, large dots) starts at P1 and drops to P3 by Barcelona; McLaren (bold orange,
+    thickest line, largest dots) rises dramatically from P4 to P1 by Melbourne and
+    holds; Ferrari (red, medium line/dots) stays relatively stable between P2-P3;
+    Mercedes (teal, thinner line, smaller dots) drops from P3 to P4; Aston Martin
+    (darker gray #6B6B6B, thinnest line, smallest dots) remains flat at P5. The title
+    "bump-basic · pygal · pyplots.ai" is centered at top in large text. X-axis labeled
+    "Grand Prix" with race names, y-axis labeled "Constructor Standing" with P1-P5.
+    Y-axis guides are subtle, x-guides disabled. Background is white with #FAFAFA
+    plot area. Legend at bottom in a single row of 5 items. The connecting lines are
+    now clearly visible with differentiated stroke widths creating visual hierarchy
+    — a significant improvement over attempt 2 where lines were very faint.'
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -61,45 +65,45 @@ review:
         max: 8
         passed: true
         comment: All font sizes explicitly set (title=72, label=48, major_label=42,
-          legend=40, value=36). All text clearly readable.
+          legend=40, value=36). All text clearly readable at full resolution.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text. Race names well-spaced, rank labels clear, legend
-          in clean single row.
+        comment: No text overlap anywhere. Race names well-spaced, P1-P5 labels clear,
+          legend items in a clean single row.
       - id: VQ-03
         name: Element Visibility
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Dots visible with good size variation but connecting lines are very
-          faint/thin despite custom stroke_style widths. Aston Martin series barely
-          visible. Bump chart lines are essential visual elements.
+        passed: true
+        comment: Lines now clearly visible with differentiated stroke widths (7-16px)
+          and global stroke_width=8. Opacity=1.0. Aston Martin visible with darker
+          gray but still the least prominent element.
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Navy, orange, red, teal, gray — all distinct and colorblind-safe.
-          No red-green confusion.
+        comment: Navy, orange, red, teal, darker gray — all five colors distinct and
+          colorblind-safe. No red-green confusion.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: 'Good canvas utilization. Minor issue: Barcelona label tight against
-          right edge.'
+        comment: Good canvas utilization with margin_right=100. Barcelona label slightly
+          tight against right edge but readable.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels: Grand Prix and Constructor Standing. Units not
-          applicable for categorical data.'
+        comment: Grand Prix and Constructor Standing are descriptive and appropriate
+          for categorical/ranking data.
     design_excellence:
-      score: 14
+      score: 15
       max: 20
       items:
       - id: DE-01
@@ -107,23 +111,23 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Strong design with intentional warm/cool color contrast, custom palette
-          with narrative purpose, dot size hierarchy. Above defaults but faint lines
-          undermine design intent.
+        comment: 'Strong design: warm/cool color contrast for narrative, custom 5-color
+          palette, subtle #FAFAFA plot background. Clearly above configured defaults.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: X-guides disabled, subtle y-guides, clean legend layout, margin for
-          breathing room. Faint line rendering weakens overall refinement.
+        comment: X-guides disabled, y-guides subtle, generous margins, clean legend
+          layout. Good whitespace management.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Clear McLaren-rise/Red-Bull-fall narrative with visual hierarchy
-          through dot sizes and stroke widths. Faint lines weaken the bump story visually.
+        comment: Clear narrative through line width hierarchy, dot size variation,
+          and warm/cool color contrast. McLaren's dramatic rise immediately apparent
+          without annotations.
     spec_compliance:
       score: 15
       max: 15
@@ -139,22 +143,22 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: inverted y-axis, distinct colors, dot markers,
-          connecting lines, 5 entities, 6 periods.'
+        comment: Y-axis inverted, distinct colors, dot markers, lines connecting entities,
+          5 entities and 6 periods.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: time periods (races), Y: rankings (inverted). Custom P1-P5 labels.
-          All data points correctly positioned.'
+        comment: 'X-axis: time periods (races), Y-axis: rankings (inverted). Custom
+          y_labels with dict format show P1-P5.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows required format. Legend shows all 5 constructors with
-          correct labels.
+        comment: Title 'bump-basic · pygal · pyplots.ai' matches required format.
+          Legend shows all 5 constructors.
     data_quality:
       score: 15
       max: 15
@@ -164,22 +168,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows rises, drops, stability, overtakes, and convergence. Excellent
-          trajectory variety.
+        comment: Shows ranking rises, drops, stability, overtakes, and convergence.
+          Excellent variety of bump chart trajectories.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
         comment: F1 constructor standings with real team and Grand Prix names. Neutral
-          sports context.
+          sports context with plausible scenarios.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Rankings 1-5 for 5 constructors, 6 race weekends. Realistic for a
-          season segment.
+        comment: 5 constructors ranked 1-5 across 6 race weekends. Sensible and realistic
+          for an F1 season segment.
     code_quality:
       score: 10
       max: 10
@@ -189,14 +193,14 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: Imports, Data, Style, Chart Config, Add Series,
-          Save. No functions or classes.'
+        comment: 'Clean linear flow: Imports → Data → Style → Chart Config → Add Series
+          → Save.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hardcoded data.
+        comment: Fully deterministic hardcoded data, no random elements.
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -208,30 +212,31 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Clean dict comprehension for rank inversion, well-organized styling
-          dicts, good comments.
+        comment: Clean dict comprehension for rank inversion, well-organized dicts,
+          clear comments. No fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html. Current pygal API.
+        comment: Saves as plot.png via render_to_png and plot.html via render_to_file.
+          Current pygal 3.1.0 API.
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: 'Expert pygal usage: Style class, per-series stroke_style and dots_size,
-          value_formatter lambda, tooltip config, dict-format y_labels.'
+        comment: 'Strong pygal usage: Style class, per-series stroke_style/dots_size,
+          custom y_labels with dict format, value_formatter lambda, tooltip config.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses per-series stroke_style, dots_size, value_formatter, tooltip_border_radius/fancy_mode,
-          dict-format y_labels. Pygal-specific but not showcasing truly unique capabilities.
-  verdict: REJECTED
+        comment: Per-series stroke_style/dots_size, value_formatter lambda, tooltip
+          config, dict-format y_labels are pygal-specific but not truly unique capabilities.
+  verdict: APPROVED
