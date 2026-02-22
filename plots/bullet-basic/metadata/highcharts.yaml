@@ -1,7 +1,7 @@
 library: highcharts
 specification_id: bullet-basic
 created: '2025-12-23T09:19:24Z'
-updated: '2026-02-22T21:55:48Z'
+updated: '2026-02-22T22:07:32Z'
 generated_by: claude-opus-4-6
 workflow_run: 20456609079
 issue: 0
@@ -10,117 +10,121 @@ library_version: 1.10.3
 preview_url: https://storage.googleapis.com/pyplots-images/plots/bullet-basic/highcharts/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/bullet-basic/highcharts/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/bullet-basic/highcharts/plot.html
-quality_score: 87
+quality_score: 89
 impl_tags:
   dependencies:
   - selenium
   - pillow
   techniques:
   - html-export
-  - hover-tooltips
-  patterns:
-  - data-generation
-  - iteration-over-groups
+  patterns: []
   dataprep:
   - normalization
   styling:
   - grid-styling
 review:
   strengths:
-  - 'Excellent data choice: Q4 KPI dashboard with 4 diverse metrics showing both above
-    and below-target scenarios'
-  - All font sizes explicitly set and readable, with white data labels on bars showing
-    actual values
-  - Clean normalization to a common percentage scale enabling cross-metric comparison
-  - Native Highcharts bullet module with proper plotBands and targetOptions
+  - Excellent spec compliance — all bullet chart features implemented correctly with
+    native Highcharts bullet type
+  - Strong data quality — realistic Q4 KPI dashboard with meaningful mix of above/below-target
+    metrics
+  - Effective conditional coloring (green/orange) creates immediate visual communication
+    of performance
+  - Clean, well-structured code with good comments and deterministic data
+  - Proper use of Highcharts bullet module with targetOptions and plotBands
   weaknesses:
-  - All bars use the same blue color regardless of target achievement — color-coding
-    would strengthen storytelling
-  - Target markers are somewhat thin and could be more visually prominent
-  - Does not use the highcharts-core Python API as recommended in the library guide
+  - Does not use the highcharts-core Python wrapper — builds raw JSON config instead
+    of using the recommended Python API
+  - Canvas utilization could be tighter — some wasted vertical space between rows
+  - Default font rendering without custom font family selection
+  - All metrics treated equally — no emphasis on the most critical underperforming
+    metric
   image_description: 'The plot displays a horizontal bullet chart titled "Q4 Performance
-    Dashboard · bullet-basic · highcharts · pyplots.ai" with a subtitle "Actual performance
-    vs targets across key business metrics." Four KPI metrics are stacked vertically:
-    Revenue, Profit, New Customers, and Satisfaction. Each metric features a blue
-    (#306998) horizontal bar representing the actual value, a thin black vertical
-    line marking the target, and three grayscale background bands (light gray for
-    poor, medium gray for satisfactory, dark gray for good). White data labels appear
-    on each bar showing actual values ($275K, 22%, 1,650, 4.5/5). The x-axis shows
-    "% of Maximum" from 0% to 100% with 10% tick intervals. All values are normalized
-    to a common percentage scale for cross-metric comparison.'
+    Dashboard · bullet-basic · highcharts · pyplots.ai" with a subtitle explaining
+    color encoding. Four business metrics are stacked vertically: Revenue, Profit,
+    New Customers, and Satisfaction. Each row has three grayscale background bands
+    (light gray for poor, medium gray for satisfactory, darker gray for good) spanning
+    0-50%, 50-75%, and 75-100%. Actual performance is shown as colored horizontal
+    bars — forest green (#2E7D32) for metrics exceeding targets (Revenue at ~91.7%,
+    New Customers at ~82.5%) and deep orange (#E65100) for below-target metrics (Profit
+    at ~62.9%, Satisfaction at ~90%). Black vertical target markers are clearly visible
+    for each metric. White data labels inside bars show "$275K", "22%", "1,650", and
+    "4.5/5". The x-axis is labeled "% of Maximum" with ticks every 10%. A subtitle-based
+    legend explains green = exceeds target, orange = below target, black line = target
+    marker.'
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 48px, subtitle 30px, category
-          labels 32px, axis title 28px, tick labels 24px, data labels 28px). All text
-          clearly readable.
+        comment: 'All font sizes explicitly set: title 48px, subtitle 30px, category
+          labels 32px bold, axis title 28px, tick labels 24px, data labels 28px bold'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements. Category labels, tick labels, and data
-          labels well-spaced.
+        comment: No overlapping text elements. Category labels well-spaced, data labels
+          inside bars, tick labels clear
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Blue bars clearly visible against grayscale bands. Target markers
-          visible but somewhat thin relative to canvas size.
+        comment: Bars and bands clearly visible. Target markers prominent but could
+          be more distinct against darker gray band
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Blue on grayscale with black targets. Fully colorblind-safe.
+        comment: Green and deep orange is colorblind-safe. Grayscale bands distinguishable
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Chart fills canvas well with appropriate margins. Some vertical space
-          between metric rows could be tighter.
+        comment: Good layout with appropriate left margin. Some wasted vertical space
+          between rows. Canvas utilization ~60%
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis titled '% of Maximum' with percentage-formatted tick labels.
-          Descriptive category names.
+        comment: X-axis labeled '% of Maximum' with percentage format. Descriptive
+          category names
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Python Blue primary, grayscale hierarchy, white data labels, bold
-          categories. Above defaults but not publication-level.
+        comment: 'Clearly above defaults: conditional coloring, grayscale bands per
+          Stephen Few, HTML subtitle legend. Not publication-ready — default fonts,
+          functional but not refined palette'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Grid removed, clean background, generous spacing, borderless bars.
-          Good refinement.
+        comment: Grid removed, credits disabled, clean background, generous spacing.
+          No custom font family, default Highcharts chrome
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Revenue and New Customers exceed targets while Profit and Satisfaction
-          fall short. Normalized scale enables comparison. Same bar color limits instant
-          insight.
+        comment: Conditional coloring communicates on/off track immediately. Mix of
+          2 above + 2 below target creates contrast. No focal point on most critical
+          insight
     spec_compliance:
       score: 15
       max: 15
@@ -130,28 +134,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct bullet chart type with all sub-elements: actual bar, target
-          marker, qualitative range bands.'
+        comment: Correct bullet chart using Highcharts native bullet type with inverted
+          horizontal orientation
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: bars, targets, qualitative bands, grayscale
-          shading, data labels, stacked layout, horizontal orientation.'
+        comment: 'All features: actual bar, target marker, qualitative bands, multiple
+          bullets, data labels'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Values normalized to 0-100% for shared axis. Categories on y-axis,
-          percentages on x-axis.
+        comment: Values correctly normalized to 0-100% scale. Actual, target, ranges
+          properly mapped
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title includes required format. Legend correctly disabled for single-series.
+        comment: Title includes required format. Subtitle-based HTML legend explains
+          color encoding
     data_quality:
       score: 15
       max: 15
@@ -161,22 +166,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Four diverse metrics showing both above-target and below-target scenarios
-          with different underlying scales.
+        comment: 4 metrics with varied scales, mix of above/below target, distinct
+          qualitative bands
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Q4 KPI dashboard is a quintessential real-world business scenario.
-          Neutral and comprehensible.
+        comment: Q4 KPI dashboard — realistic neutral business scenario with plausible
+          values
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'All values plausible: Revenue $275K, Profit 22%, New Customers 1650,
-          Satisfaction 4.5/5.'
+        comment: 'All values realistic: revenue in $K, profit as margin %, customers
+          in thousands, satisfaction on 5-point scale'
     code_quality:
       score: 10
       max: 10
@@ -187,33 +192,33 @@ review:
         max: 3
         passed: true
         comment: 'Clean linear flow: imports, data, config, JS download, HTML, screenshot,
-          crop.'
+          crop. No functions/classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data deterministic with hardcoded values.
+        comment: Fully deterministic with hardcoded values
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: json, tempfile, time, urllib.request, pathlib,
-          PIL, selenium.'
+        comment: 'All imports used: json, tempfile, time, urllib.request, Path, PIL
+          Image, selenium'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean normalization loop, well-organized chart options dict, appropriate
-          complexity.
+        comment: Clean, well-organized. Concise normalization loop, well-structured
+          config, clear conditional logic
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html. Current Highcharts API.
+        comment: Saves as plot.png with crop to 4800x2700. Also saves plot.html
     library_mastery:
       score: 7
       max: 10
@@ -223,13 +228,13 @@ review:
         score: 3
         max: 5
         passed: true
-        comment: Well-structured Highcharts config with plotBands, targetOptions,
-          inverted chart. Bypasses highcharts-core Python API, using raw JSON instead.
+        comment: Builds raw JSON config bypassing highcharts-core Python wrapper.
+          Works but not idiomatic for the Python API
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Native bullet chart module, plotBands for qualitative ranges, targetOptions
-          for markers, inverted chart. Distinctive Highcharts capabilities.
+        comment: Native bullet chart type, plotBands, targetOptions, inverted layout,
+          useHTML subtitle
   verdict: REJECTED
