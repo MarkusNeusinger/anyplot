@@ -1,7 +1,6 @@
-""" pyplots.ai
+"""pyplots.ai
 bullet-basic: Basic Bullet Chart
 Library: letsplot 4.8.2 | Python 3.14.3
-Quality: 85/100 | Updated: 2026-02-22
 """
 # ruff: noqa: F405
 
@@ -30,59 +29,105 @@ target_pct = [target[i] / good[i] * 100 for i in range(n)]
 poor_pct = [poor[i] / good[i] * 100 for i in range(n)]
 sat_pct = [satisfactory[i] / good[i] * 100 for i in range(n)]
 
-# Reversed y positions (top to bottom)
-y_pos = list(range(n - 1, -1, -1))
-bar_h = 0.35
-narrow_h = 0.14
-marker_h = 0.28
+# Above/below target for color differentiation
+status = ["Above Target" if actual[i] >= target[i] else "Below Target" for i in range(n)]
 
-# Build all rects into one DataFrame with a layer column for ordering
-rows = []
+# Y positions (reversed for top-to-bottom reading)
+y_pos = list(range(n - 1, -1, -1))
+bar_h = 0.38
+narrow_h = 0.16
+marker_h = 0.34
+
+# Qualitative range bands (grayscale per Stephen Few convention)
+range_rows = []
 for i in range(n):
     y = y_pos[i]
-    # Good range (lightest, full width background)
-    rows.append({"xmin": 0.0, "xmax": 100.0, "ymin": y - bar_h, "ymax": y + bar_h, "layer": "1_good"})
-    # Satisfactory range
-    rows.append({"xmin": 0.0, "xmax": sat_pct[i], "ymin": y - bar_h, "ymax": y + bar_h, "layer": "2_sat"})
-    # Poor range (darkest)
-    rows.append({"xmin": 0.0, "xmax": poor_pct[i], "ymin": y - bar_h, "ymax": y + bar_h, "layer": "3_poor"})
-    # Actual value (narrow)
-    rows.append({"xmin": 0.0, "xmax": actual_pct[i], "ymin": y - narrow_h, "ymax": y + narrow_h, "layer": "4_actual"})
-    # Target marker (thin vertical)
-    rows.append(
+    range_rows.append({"xmin": 0, "xmax": 100, "ymin": y - bar_h, "ymax": y + bar_h, "band": "Good"})
+    range_rows.append({"xmin": 0, "xmax": sat_pct[i], "ymin": y - bar_h, "ymax": y + bar_h, "band": "Satisfactory"})
+    range_rows.append({"xmin": 0, "xmax": poor_pct[i], "ymin": y - bar_h, "ymax": y + bar_h, "band": "Poor"})
+df_ranges = pd.DataFrame(range_rows)
+
+# Actual value bars with metadata for interactive tooltips
+actual_rows = []
+for i in range(n):
+    y = y_pos[i]
+    actual_rows.append(
         {
-            "xmin": target_pct[i] - 0.3,
-            "xmax": target_pct[i] + 0.3,
-            "ymin": y - marker_h,
-            "ymax": y + marker_h,
-            "layer": "5_target",
+            "xmin": 0,
+            "xmax": actual_pct[i],
+            "ymin": y - narrow_h,
+            "ymax": y + narrow_h,
+            "status": status[i],
+            "metric": metrics[i],
+            "actual_val": f"{actual[i]:g}",
+            "target_val": f"{target[i]:g}",
+            "achievement": f"{actual[i] / target[i] * 100:.0f}%",
         }
     )
+df_actual = pd.DataFrame(actual_rows)
 
-df = pd.DataFrame(rows)
+# Target markers
+target_rows = []
+for i in range(n):
+    y = y_pos[i]
+    target_rows.append({"x": target_pct[i], "y": y - marker_h, "xend": target_pct[i], "yend": y + marker_h})
+df_target = pd.DataFrame(target_rows)
 
-# Plot using fill mapped to layer, drawn in layer order
+# Value annotations for precise reading (in original units)
+annot_labels = ["$275K", "88%", "3.8", "42"]
+annot_rows = []
+for i in range(n):
+    annot_rows.append({"x": actual_pct[i] + 2, "y": float(y_pos[i]), "label": annot_labels[i]})
+df_annot = pd.DataFrame(annot_rows)
+
+# Build layered bullet chart
 plot = (
-    ggplot(df, aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax", fill="layer"))
-    + geom_rect()
+    ggplot()
+    # Qualitative range bands
+    + geom_rect(data=df_ranges, mapping=aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax", fill="band"), size=0)
+    # Actual value bars — color-coded by target achievement with letsplot tooltips
+    + geom_rect(
+        data=df_actual,
+        mapping=aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax", fill="status"),
+        size=0,
+        tooltips=(
+            layer_tooltips()
+            .line("@{metric}")
+            .line("Actual|@{actual_val}")
+            .line("Target|@{target_val}")
+            .line("Achievement|@{achievement}")
+        ),
+    )
+    # Target markers (prominent vertical lines)
+    + geom_segment(data=df_target, mapping=aes(x="x", y="y", xend="xend", yend="yend"), size=2.5, color="#1a1a1a")
+    # Value annotations beside each bar
+    + geom_text(
+        data=df_annot, mapping=aes(x="x", y="y", label="label"), size=10, hjust=0, color="#2a2a2a", fontface="bold"
+    )
+    # Color scales
     + scale_fill_manual(
         values={
-            "1_good": "#CCCCCC",
-            "2_sat": "#999999",
-            "3_poor": "#555555",
-            "4_actual": "#306998",
-            "5_target": "#1a1a1a",
+            "Good": "#C8C8C8",
+            "Satisfactory": "#969696",
+            "Poor": "#525252",
+            "Above Target": "#2D6A4F",
+            "Below Target": "#C0785A",
         }
     )
+    # Axes
     + scale_x_continuous(name="Performance (%)", limits=[0, 105])
-    + scale_y_continuous(breaks=y_pos, labels=metrics, limits=[-0.7, n - 0.3])
-    + labs(title="bullet-basic · letsplot · pyplots.ai", y="")
+    + scale_y_continuous(breaks=y_pos, labels=metrics, limits=[-0.6, n - 0.4])
+    + labs(
+        title="bullet-basic · letsplot · pyplots.ai", subtitle="Q4 2024 Dashboard — Actual vs. Target Performance", y=""
+    )
+    # Theme
     + theme_minimal()
     + theme(
-        plot_title=element_text(size=24),
+        plot_title=element_text(size=24, face="bold"),
+        plot_subtitle=element_text(size=16, color="#666666"),
         axis_title_x=element_text(size=20),
         axis_text_x=element_text(size=16),
-        axis_text_y=element_text(size=18),
+        axis_text_y=element_text(size=18, face="bold"),
         legend_position="none",
         panel_grid_major_y=element_blank(),
         panel_grid_minor=element_blank(),
@@ -95,7 +140,7 @@ plot = (
 ggsave(plot, "plot.png", scale=3)
 ggsave(plot, "plot.html")
 
-# Move files from lets-plot-images subfolder to current directory
+# Move files from lets-plot-images subfolder
 if os.path.exists("lets-plot-images/plot.png"):
     shutil.move("lets-plot-images/plot.png", "plot.png")
 if os.path.exists("lets-plot-images/plot.html"):
