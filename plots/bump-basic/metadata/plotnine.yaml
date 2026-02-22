@@ -1,161 +1,188 @@
 library: plotnine
 specification_id: bump-basic
 created: '2025-12-23T09:18:24Z'
-updated: '2025-12-23T09:21:54Z'
-generated_by: claude-opus-4-5-20251101
+updated: '2026-02-22T21:15:55Z'
+generated_by: claude-opus-4-6
 workflow_run: 20456610470
 issue: 0
-python_version: 3.13.11
-library_version: 0.15.2
+python_version: 3.14.3
+library_version: 0.15.3
 preview_url: https://storage.googleapis.com/pyplots-images/plots/bump-basic/plotnine/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/bump-basic/plotnine/plot_thumb.png
 preview_html: null
-quality_score: 92
+quality_score: 94
 impl_tags:
   dependencies: []
   techniques:
+  - layer-composition
   - annotations
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep: []
   styling:
-  - minimal-chrome
+  - alpha-blending
+  - grid-styling
+  - edge-highlighting
 review:
   strengths:
-  - Excellent implementation of the bump chart concept with proper Y-axis inversion
-  - Smart use of direct labeling (geom_text) instead of legend for cleaner visualization
-  - Well-chosen Set2 color palette provides good distinction and colorblind accessibility
-  - Data tells a compelling story with varied ranking patterns (leader Alpha Corp,
-    volatile Gamma Tech, stable underperformer Epsilon Labs)
-  - Clean code structure following KISS principles
+  - Excellent visual hierarchy through protagonist/supporting cast distinction with
+    differentiated line weights, marker sizes, and alpha values
+  - Custom colorblind-safe palette with intentional warm/cool contrast and deuteranopia
+    consideration
+  - 'Effective data storytelling: crossover emphasis at Q4''24, bold/italic label
+    differentiation, and layered rendering order guide the viewer''s eye'
+  - Clean idiomatic plotnine code using grammar of graphics layering with data subsetting
+  - Perfect spec compliance with inverted y-axis, dot markers, connecting lines, and
+    direct end labels
   weaknesses:
-  - Grid lines could be more subtle (lower alpha) for a cleaner look
-  - Axis labels are functional but could be more descriptive
-  image_description: 'The plot displays a bump chart showing tech company rankings
-    over 6 quarters (Q1-Q6). Five companies are tracked: Alpha Corp (teal), Gamma
-    Tech (green), Beta Inc (coral/salmon), Delta Systems (blue/periwinkle), and Epsilon
-    Labs (pink). The Y-axis shows ranks 1-5 with rank 1 at the top (inverted). Lines
-    connect each company''s rank across quarters with dot markers at each data point.
-    Company names appear as labels on the right side at their final Q6 positions.
-    The title "bump-basic · plotnine · pyplots.ai" is displayed at the top. The background
-    is minimal with a subtle grid.'
+  - Design polish could reach full publication quality with custom typefaces or explanatory
+    subtitle
+  - Library Mastery could improve by leveraging more uniquely plotnine features like
+    stat layers or coord transforms
+  image_description: 'The plot displays a bump chart tracking streaming platform market
+    share rankings over 8 quarters (Q1''24 to Q4''25). Six platforms are shown: WavePlay
+    (orange, bold line), StreamVue (dark blue, bold line), CloudCast (green, thin),
+    PixelFlix (teal, thin), SonicNet (brown, thin), and EchoTV (gray, thin). The y-axis
+    is inverted with rank 1 at the top and rank 6 at the bottom, labeled "Market Share
+    Ranking". The x-axis shows quarterly labels. Two "protagonist" lines (WavePlay
+    and StreamVue) are drawn thicker and more saturated, while four supporting lines
+    are thinner and more transparent. A subtle crossover emphasis (large semi-transparent
+    circle) appears at Q4''24 where WavePlay overtakes StreamVue for the #1 position.
+    End labels are placed to the right — bold for protagonists, italic for supporting
+    cast. White-filled circle markers appear at each data point. The background is
+    light gray (#fafafa) with a white panel, subtle horizontal grid lines only, and
+    no vertical grid lines. The title reads "bump-basic · plotnine · pyplots.ai" in
+    bold at the top.'
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 24pt, axis labels at 20pt, tick labels at 16pt - all clearly
-          readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements; end labels well-spaced at different
-          ranks
+        comment: 'All font sizes explicitly set: title=24pt, axis_title=20pt, axis_text=16pt,
+          base=14pt, end labels 13/11. All perfectly readable.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlap anywhere. End labels well-spaced, x-axis labels clearly
+          separated.
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Lines (size=2.5) and points (size=6) are well-sized; slight deduction
-          as some line crossings are dense
+        comment: Lines and points well-adapted. Protagonist lines bold (size 3.5,
+          markers size 7), supporting thinner but traceable.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Set2 palette is colorblind-safe with good distinction between categories
-      - id: VQ-05
-        name: Layout Balance
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Good proportions; right side has adequate space for labels but could
-          be slightly tighter
+        comment: Custom colorblind-safe palette with teal replacing red for deuteranopia
+          safety. All six colors distinct.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 16:9 canvas well-utilized (~70% fill). Right margin accommodates
+          end labels intentionally.
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: '"Quarter" and "Rank" are descriptive but lack context (e.g., could
-          be "Quarterly Period")'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
-        max: 2
+        comment: Descriptive labels. Units not applicable for ordinal ranks and categorical
+          time.
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
         passed: true
-        comment: Grid subtle, legend disabled in favor of direct labels (good choice),
-          but grid could be even more subtle
+        comment: Strong design with custom palette, warm/cool contrast, protagonist/supporting
+          hierarchy, typography differentiation. Clearly above defaults but not full
+          publication polish.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle y-only grid (alpha=0.15), x-grid removed, custom background
+          (#fafafa/white), refined text colors. Very polished.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear narrative through protagonist/supporting hierarchy. Crossover
+          emphasis at Q4'24 highlights key inflection. Viewer grasps story immediately.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct bump chart showing ranking changes over time
+        comment: Correct bump chart with rankings connected over time periods.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X=period, Y=rank, color=entity - correctly assigned
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Y-axis inverted, distinct colors, dot markers, lines connecting entities
-      - id: SC-04
-        name: Data Range
+        comment: 'All spec features: inverted y-axis, distinct colors, dot markers,
+          connecting lines, entity labels.'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, axis limits appropriate (0.5-7.5 allows space for
-          labels)
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X=time periods, Y=rank positions, all 6 entities across 8 periods
+          correctly mapped.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Direct labels accurate and match entities
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: "bump-basic · plotnine · pyplots.ai"'
+        comment: Title format correct. Legend hidden with direct end labels — effective
+          approach.
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows rank changes, overtakes, stability (Epsilon Labs), volatility
-          (Gamma Tech); good variety but all 5 ranks used every period (no ties shown)
+        comment: 'Shows all bump chart aspects: rising, falling, stable, crossovers,
+          mid-range volatility.'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Tech company market rankings is a plausible real-world scenario
+        comment: 'Streaming platform market share rankings: realistic business scenario,
+          neutral topic.'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: 5 entities, 6 periods is appropriate; ranks 1-5 sensible
+        comment: 6 platforms ranked 1-6, 8 quarters over 2 years, gradual plausible
+          ranking changes.
     code_quality:
       score: 10
       max: 10
@@ -165,41 +192,47 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple imports → data → plot → save structure, no functions/classes
+        comment: Clean Imports → Data → Plot → Save structure, no functions or classes.
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Data is deterministic (hardcoded values)
+        comment: Fully deterministic hardcoded ranking data.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used, no unused imports.
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current plotnine API
+        comment: Elegant layered approach with protagonist/supporting data subsetting.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as "plot.png"
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot.png with dpi=300, current plotnine API.
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert use of ggplot grammar: layered geom composition with data
+          subsetting, proper aes/scale/theme chaining.'
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses ggplot grammar properly with geom_line, geom_point, geom_text,
-          scale_y_reverse, theme customization; solid plotnine usage but no advanced
-          features like faceting
+        comment: Grammar of graphics layering with data subsetting per geom, scale_y_reverse,
+          geom_text typography. Distinctive but adaptable to other libraries.
   verdict: APPROVED

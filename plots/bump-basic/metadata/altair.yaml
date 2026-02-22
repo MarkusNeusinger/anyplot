@@ -1,165 +1,182 @@
 library: altair
 specification_id: bump-basic
 created: '2025-12-23T09:18:27Z'
-updated: '2025-12-23T09:23:38Z'
-generated_by: claude-opus-4-5-20251101
+updated: '2026-02-22T21:16:07Z'
+generated_by: claude-opus-4-6
 workflow_run: 20456609780
 issue: 0
-python_version: 3.13.11
+python_version: 3.14.3
 library_version: 6.0.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/bump-basic/altair/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/bump-basic/altair/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/bump-basic/altair/plot.html
-quality_score: 92
+quality_score: 90
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
   - hover-tooltips
-  patterns:
-  - data-generation
+  - html-export
+  - annotations
+  patterns: []
   dataprep: []
-  styling: []
+  styling:
+  - grid-styling
 review:
   strengths:
-  - Excellent choice of Premier League standings as realistic bump chart scenario
-  - Proper Y-axis inversion (rank 1 at top) as specified
-  - Good use of layered charts combining lines and points for clarity
-  - Python Blue (#306998) used as primary color per pyplots convention
-  - Interactive HTML version with tooltips exported alongside PNG
-  - Clean declarative Altair syntax with proper encoding types (O, Q, N)
+  - Arsenal visual emphasis via thicker line and larger markers creates genuine data
+    storytelling
+  - End-of-line labels replacing legend is a clean professional design choice
+  - Interactive highlight selection is an excellent use of Altair distinctive capabilities
+  - Cohesive color palette with Python Blue as primary color
+  - Fully deterministic hardcoded data with realistic Premier League context
+  - Dual output (PNG + interactive HTML) leverages Altair strengths
   weaknesses:
-  - Brown and light gray colors for Man United and Tottenham could be more distinguishable
-    for accessibility
-  - Missing explicit reproducibility comment (data is deterministic but not annotated)
-  image_description: 'The plot displays a bump chart showing Premier League team standings
-    over 6 match weeks. The title "bump-basic · altair · pyplots.ai" appears at the
-    top in large black text. The Y-axis shows "League Position" from 1 (top) to 6
-    (bottom), correctly inverted. The X-axis shows "Match Week" with Week 1-6 labels
-    rotated at approximately 45 degrees. Six teams are represented with distinct colors:
-    Arsenal (blue), Chelsea (yellow), Liverpool (red/coral), Man City (green), Man
-    United (brown), and Tottenham (light gray). Each team''s trajectory is shown with
-    connected lines (stroke width ~4) and filled circular markers at each week. The
-    legend is positioned on the right side. A subtle dashed grid helps track positions.
-    The layout is clean with good proportions.'
+  - Red/green color pair for Liverpool/Man City is suboptimal for colorblind accessibility
+  - End-of-line labels at 16pt could be slightly larger for maximum clarity
+  image_description: The plot displays a bump chart tracking Premier League standings
+    for 6 football teams (Arsenal, Chelsea, Liverpool, Man City, Man United, Tottenham)
+    over 6 match weeks. The Y-axis is "League Position" (inverted, rank 1 at top,
+    6 at bottom) and the X-axis is "Match Week" (Week 1–6). Arsenal is drawn in dark
+    blue (#306998) with a thicker line and larger dot markers, creating a clear visual
+    focal point — it starts 3rd, rises to 1st by Week 3, and finishes 1st. Liverpool
+    (red/salmon) starts 1st but drops mid-season. Man United (purple/mauve) declines
+    from 2nd to 5th. Tottenham (teal) remains anchored at 6th throughout. Chelsea
+    (gold) hovers mid-table, and Man City (green) is volatile. End-of-line text labels
+    replace a traditional legend, positioned to the right of Week 6. The grid is subtle
+    (dashed, low opacity), the view frame is removed, and the title "bump-basic ·
+    altair · pyplots.ai" is centered at the top. Overall, a clean and well-composed
+    bump chart with intentional visual hierarchy.
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 28
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 7
+        max: 8
         passed: true
-        comment: Title at 28pt, axis labels at 22pt, tick labels at 18pt - all clearly
-          readable
+        comment: Title 28pt, axis titles 22pt, ticks 18pt, end labels 16pt — all explicitly
+          set; end labels slightly small
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text, all labels are distinct and readable
+        comment: No overlapping text; end labels at distinct rank positions, axis
+          labels well-spaced
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Line strokeWidth=4 and point size=250 are well-suited for 6 entities
-          over 6 periods
+        comment: Lines and filled markers clearly visible; Arsenal emphasis via thicker
+          stroke and larger points
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
+        score: 3
+        max: 4
         passed: true
-        comment: Good distinct colors, though brown/gray could be more distinguishable
+        comment: Cohesive palette but red/green pair for Liverpool/Man City suboptimal
+          for deuteranopia; end labels mitigate
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Good proportions, legend well-positioned on right
+        comment: Plot fills canvas well at 4800x2700; balanced margins with space
+          for end labels
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Descriptive labels ("Match Week", "League Position") but no units
-          (N/A for rankings)
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
-        max: 2
+        comment: Descriptive labels (League Position, Match Week); correct title format
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
         passed: true
-        comment: Grid is subtle (alpha=0.3, dashed), legend is well-placed but could
-          have larger spacing
+        comment: Custom cohesive palette, Arsenal emphasis, end labels — clearly above
+          defaults with intentional design
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle dashed grid (opacity 0.2), view frame removed, legend replaced
+          with end labels; axis lines remain default
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Arsenal featured narrative with thicker line and larger markers creates
+          visual hierarchy; Man United decline and Tottenham stasis provide contrast
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct bump chart showing rankings over time
+        comment: Correct bump chart with lines connecting rank positions over time,
+          inverted Y-axis
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Entity→color, Period→X-axis, Rank→Y-axis correctly assigned
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Inverted Y-axis, distinct colors, dot markers at each period, lines
-          connecting entities
-      - id: SC-04
-        name: Data Range
+        comment: 'All spec features present: inverted Y-axis, distinct colors, dot
+          markers, connecting lines, 6 entities, 6 periods'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All ranks 1-6 visible, all weeks shown
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X = periods, Y = rank (inverted), color = entity — all correctly
+          mapped
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies all 6 teams
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses exact format "bump-basic · altair · pyplots.ai"
+        comment: Title follows correct format; end-of-line labels clearly identify
+          each team
     data_quality:
-      score: 20
-      max: 20
+      score: 14
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Shows rank changes, overtakes, stability (Tottenham), volatility
-          (Man United), rises (Arsenal), falls (Man United)
+        comment: Shows rank changes, stability, overtakes, decline — good variety;
+          no tied ranks demonstrated
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Premier League standings is a perfect real-world application for
-          bump charts
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: 6 teams over 6 weeks with ranks 1-6 is realistic and appropriate
+        comment: Premier League football standings — real, comprehensible, neutral
+          sports context
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 6 teams ranked 1-6 over 6 match weeks; unique ranks per week; sensible
+          values
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -167,14 +184,13 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure, no functions/classes
+        comment: Clean Imports → Data → Plot → Save flow, no functions/classes
       - id: CQ-02
         name: Reproducibility
-        score: 1
-        max: 3
-        passed: false
-        comment: Deterministic data (hardcoded), but no random seed comment to clarify
-          intent
+        score: 2
+        max: 2
+        passed: true
+        comment: All data hardcoded, fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -182,27 +198,35 @@ review:
         passed: true
         comment: Only altair and pandas imported, both used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Modern Altair API used
-      - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as plot.png with correct scale_factor
-    library_features:
-      score: 2
-      max: 5
-      items:
-      - id: LF-01
-        name: Uses distinctive library features
+        name: Code Elegance
         score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-organized with helpful comments; appropriate complexity
+          for layered Altair chart
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot.png with scale_factor=3.0 and plot.html; current Altair
+          API
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses declarative encoding, layered charts (lines + points), interactive
-          HTML export, tooltips - good usage but could leverage more Altair-specific
-          features like selections
+        comment: Declarative grammar with proper encoding types, layer composition,
+          selection parameters, conditional encoding
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Interactive highlight via selection_point, conditional encoding,
+          datum predicates, HTML export with interactivity
   verdict: APPROVED
