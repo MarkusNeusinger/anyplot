@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 bullet-basic: Basic Bullet Chart
 Library: highcharts 1.10.3 | Python 3.14.3
 Quality: 87/100 | Updated: 2026-02-22
@@ -29,14 +29,20 @@ range_pcts = [50, 75, 100]
 # Grayscale for qualitative ranges — light to dark = poor to good
 range_colors = ["#e0e0e0", "#b0b0b0", "#808080"]
 
+# Conditional bar colors — colorblind-safe green/amber for target achievement
+color_above = "#2E7D32"  # Forest green — exceeds target
+color_below = "#E65100"  # Deep orange — below target
+
 # Normalize all values to 0-100% scale for a shared axis
 series_data = []
 for m in metrics:
+    above_target = m["actual"] >= m["target"]
     series_data.append(
         {
             "y": round(m["actual"] / m["max"] * 100, 1),
             "target": round(m["target"] / m["max"] * 100, 1),
             "label": m["label"],
+            "color": color_above if above_target else color_below,
         }
     )
 
@@ -59,7 +65,17 @@ chart_options = {
         "style": {"fontSize": "48px", "fontWeight": "bold"},
     },
     "subtitle": {
-        "text": "Actual performance vs targets across key business metrics",
+        "text": (
+            "Actual performance vs targets across key business metrics"
+            '<br/><span style="font-size:24px;">'
+            '<span style="color:#2E7D32;">&#9632;</span> Exceeds target'
+            "&emsp;&emsp;"
+            '<span style="color:#E65100;">&#9632;</span> Below target'
+            "&emsp;&emsp;"
+            '<span style="color:#1a1a1a;">|</span> Target marker'
+            "</span>"
+        ),
+        "useHTML": True,
         "style": {"fontSize": "30px", "color": "#666666"},
     },
     "xAxis": {"categories": categories, "labels": {"style": {"fontSize": "32px", "fontWeight": "bold"}}},
@@ -82,8 +98,7 @@ chart_options = {
             "pointPadding": 0.15,
             "borderWidth": 0,
             "groupPadding": 0.05,
-            "color": "#306998",
-            "targetOptions": {"width": "180%", "height": 6, "borderWidth": 0, "color": "#1a1a1a"},
+            "targetOptions": {"width": "200%", "height": 10, "borderWidth": 0, "color": "#1a1a1a"},
             "dataLabels": {
                 "enabled": True,
                 "format": "{point.label}",
