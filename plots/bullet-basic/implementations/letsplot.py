@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 bullet-basic: Basic Bullet Chart
 Library: letsplot 4.8.2 | Python 3.14.3
 Quality: 89/100 | Updated: 2026-02-22
@@ -35,9 +35,9 @@ status = ["Above Target" if actual[i] >= target[i] else "Below Target" for i in 
 
 # Y positions (reversed for top-to-bottom reading)
 y_pos = list(range(n - 1, -1, -1))
-bar_h = 0.38
-narrow_h = 0.16
-marker_h = 0.34
+bar_h = 0.35
+narrow_h = 0.15
+marker_h = 0.31
 
 # Qualitative range bands (grayscale per Stephen Few convention)
 range_rows = []
@@ -81,6 +81,11 @@ for i in range(n):
     annot_rows.append({"x": actual_pct[i] + 2, "y": float(y_pos[i]), "label": annot_labels[i]})
 df_annot = pd.DataFrame(annot_rows)
 
+# Band legend annotation (compact text explaining grayscale ranges)
+df_band_note = pd.DataFrame(
+    [{"x": 0, "y": -0.45, "label": "Bands:  Dark = Poor  ·  Medium = Satisfactory  ·  Light = Good"}]
+)
+
 # Build layered bullet chart
 plot = (
     ggplot()
@@ -105,6 +110,8 @@ plot = (
     + geom_text(
         data=df_annot, mapping=aes(x="x", y="y", label="label"), size=10, hjust=0, color="#2a2a2a", fontface="bold"
     )
+    # Band legend (text note explaining grayscale qualitative ranges)
+    + geom_text(data=df_band_note, mapping=aes(x="x", y="y", label="label"), size=8, hjust=0, color="#777777")
     # Color scales
     + scale_fill_manual(
         values={
@@ -113,11 +120,14 @@ plot = (
             "Poor": "#525252",
             "Above Target": "#2D6A4F",
             "Below Target": "#C0785A",
-        }
+        },
+        labels={"Above Target": "Above Target", "Below Target": "Below Target"},
+        breaks=["Above Target", "Below Target"],
+        name="Performance",
     )
     # Axes
-    + scale_x_continuous(name="Performance (%)", limits=[0, 105])
-    + scale_y_continuous(breaks=y_pos, labels=metrics, limits=[-0.6, n - 0.4])
+    + scale_x_continuous(name="Performance (%)", limits=[0, 102], expand=[0, 1])
+    + scale_y_continuous(breaks=y_pos, labels=metrics, limits=[-0.6, n - 0.45], expand=[0, 0])
     + labs(
         title="bullet-basic · letsplot · pyplots.ai", subtitle="Q4 2024 Dashboard — Actual vs. Target Performance", y=""
     )
@@ -129,7 +139,10 @@ plot = (
         axis_title_x=element_text(size=20),
         axis_text_x=element_text(size=16),
         axis_text_y=element_text(size=18, face="bold"),
-        legend_position="none",
+        legend_position="bottom",
+        legend_direction="horizontal",
+        legend_title=element_text(size=14, face="bold"),
+        legend_text=element_text(size=14),
         panel_grid_major_y=element_blank(),
         panel_grid_minor=element_blank(),
         panel_grid_major_x=element_line(size=0.3, color="#E0E0E0"),
