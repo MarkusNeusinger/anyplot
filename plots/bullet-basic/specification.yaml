@@ -6,7 +6,7 @@ title: Basic Bullet Chart
 
 # Specification tracking
 created: 2025-12-15T20:44:46Z
-updated: 2025-12-15T20:44:46Z
+updated: 2026-02-22T12:00:00Z
 issue: 999
 suggested: MarkusNeusinger
 
@@ -15,10 +15,13 @@ tags:
   plot_type:
     - bullet
     - bar
+    - gauge
   data_type:
     - numeric
+    - categorical
   domain:
     - business
+    - general
   features:
     - basic
     - comparison
