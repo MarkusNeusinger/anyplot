@@ -1,157 +1,191 @@
 library: letsplot
 specification_id: bullet-basic
 created: '2025-12-23T09:18:13Z'
-updated: '2025-12-23T09:21:24Z'
-generated_by: claude-opus-4-5-20251101
+updated: '2026-02-22T22:38:12Z'
+generated_by: claude-opus-4-6
 workflow_run: 20456608549
 issue: 0
-python_version: 3.13.11
+python_version: 3.14.3
 library_version: 4.8.2
 preview_url: https://storage.googleapis.com/pyplots-images/plots/bullet-basic/letsplot/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/bullet-basic/letsplot/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/bullet-basic/letsplot/plot.html
-quality_score: 97
+quality_score: 89
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
+  - annotations
+  - hover-tooltips
   - html-export
   patterns:
-  - data-generation
+  - iteration-over-groups
   dataprep:
   - normalization
-  styling: []
+  styling:
+  - grid-styling
 review:
   strengths:
-  - Excellent implementation of bullet chart using lets-plot ggplot2 grammar with
-    stacked geom_bar for ranges
-  - Creative use of geom_tile for target markers as thin vertical lines
-  - Perfect grayscale color scheme following Stephen Few design guidelines
-  - Multiple KPIs with varying performance levels demonstrate comparison capability
-  - Clean normalization approach allows comparison across metrics with different scales
+  - Excellent spec compliance with all bullet chart features implemented correctly
+    (actual bars, target markers, qualitative bands)
+  - Strong data storytelling through color-coded above/below target status — viewer
+    immediately sees performance gaps
+  - Professional grayscale band design following Stephen Few's bullet chart conventions
+  - Realistic KPI dashboard context with 4 varied metrics showing both above and below
+    target scenarios
+  - Good use of letsplot-specific layer_tooltips() for interactive hover information
+    in HTML export
+  - Clean, well-organized code with deterministic data
   weaknesses:
-  - None significant - implementation meets all quality criteria
-  image_description: The plot displays a horizontal bullet chart with 4 KPI metrics
-    (Revenue, Profit, Customer Satisfaction, Market Share) arranged vertically. Each
-    metric shows three grayscale background bands (dark gray for Poor, medium gray
-    for Satisfactory, light gray for Good), a blue (#306998) horizontal bar representing
-    actual performance, and a black vertical marker indicating the target value. The
-    title "bullet-basic · letsplot · pyplots.ai" is displayed at the top. The x-axis
-    is labeled "Performance (%)" ranging from 0-110, and a legend at the bottom explains
-    the performance ranges. The design follows Stephen Few's bullet chart specification
-    with clean, minimal styling.
+  - Annotation text (size=12) and band explanation text (size=10) are slightly small
+    compared to other text elements
+  - Some vertical whitespace between bullet groups could be utilized more efficiently
+  - Library mastery limited by letsplot's lack of native bullet chart support — implementation
+    relies on manual geom_rect construction
+  image_description: The plot displays four horizontal bullet charts stacked vertically
+    for a Q4 2024 KPI dashboard. Metrics shown are Revenue ($K), Profit Margin (%),
+    Satisfaction, and New Customers. Each metric has three grayscale background bands
+    (dark gray for Poor, medium gray for Satisfactory, light gray for Good) following
+    Stephen Few's convention. Actual values are shown as narrower colored bars — teal-green
+    (#2D6A4F) for "Above Target" (Profit Margin, New Customers) and warm copper (#C0785A)
+    for "Below Target" (Revenue, Satisfaction). Black vertical lines mark target values.
+    Value annotations ($275K, 88%, 3.8, 42) appear beside each bar in matching colors.
+    The title reads "bullet-basic · letsplot · pyplots.ai" with subtitle "Q4 2024
+    Dashboard — Actual vs. Target Performance". A band explanation note sits below
+    the last metric. The x-axis shows "Performance (%)" from 0-105. A bottom legend
+    identifies the green and copper color coding.
   criteria_checklist:
     visual_quality:
-      score: 38
-      max: 40
+      score: 27
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 7
+        max: 8
         passed: true
-        comment: all text clearly readable with appropriate font sizes
+        comment: All main text sizes explicitly set. Annotation text (size=12) and
+          band note (size=10) slightly below ideal minimum but readable.
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: no overlapping text elements
+        comment: No overlapping text or data elements. All labels, annotations, and
+          bars clearly separated.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: bars and markers appropriately sized
+        comment: 'Bars, target markers, and grayscale bands all visible. Minor: band
+          differentiation could be slightly clearer where bars overlap bands.'
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: grayscale ranges are colorblind-safe
+        comment: Teal-green vs warm copper is colorblind-safe. Grayscale bands use
+          good luminance progression.
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 3
+        max: 4
         passed: true
-        comment: good proportions and spacing
+        comment: Plot fills canvas adequately. Some vertical whitespace between bullet
+          groups could be tighter.
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: x-axis has label with units, y-axis uses metric names (appropriate
-          for chart type)
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
-        max: 2
+        comment: X-axis 'Performance (%)' with units. Y-axis metric labels descriptive.
+          Title format correct.
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
         passed: true
-        comment: subtle grid, legend well-placed at bottom
+        comment: Custom palette with Stephen Few grayscale convention, intentional
+          teal/copper color coding, off-white background, bold typography. Strong
+          design intent.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: theme_minimal removes spines. Y-grid removed. X-grid subtle. Background
+          softened. Good attention to detail.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Color-coded above/below target creates visual hierarchy. Subtitle
+          provides context. Good but not exceptional narrative.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: correct bullet chart implementation
+        comment: Correct bullet chart with actual bars, target markers, and qualitative
+          range bands.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: actual as bar, target as marker, ranges as background
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: all spec features present (actual, target, ranges, labels)
-      - id: SC-04
-        name: Data Range
+        comment: 'All spec features present: actual bar, target marker, grayscale
+          bands, horizontal orientation, value labels, multiple bullets.'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: axes show all data (0-110%)
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 'X-axis: normalized performance %. Y-axis: metric categories. All
+          properly mapped.'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: legend correctly describes performance ranges
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'uses exact format: bullet-basic · letsplot · pyplots.ai'
+        comment: Title format correct. Legend shows Above/Below Target. Band explanation
+          text provided.
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: shows multiple metrics with varying performance levels
+        comment: '4 metrics with varied performance: 2 above target, 2 below. Different
+          range proportions demonstrate versatility.'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: plausible business KPI scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: sensible values for business metrics
+        comment: Real-world KPI dashboard scenario. Q4 2024 business context. Neutral
+          and comprehensible.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: All values realistic for their business context (revenue in $K, margins
+          in %, satisfaction on 5-point scale).
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -159,39 +193,50 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: clean imports → data → plot → save flow
+        comment: 'Linear flow: imports, data, normalization, DataFrame construction,
+          plot, save. No functions/classes.'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
-        passed: true
-        comment: deterministic data, no randomness
-      - id: CQ-03
-        name: Clean Imports
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: os/shutil needed for lets-plot file handling
+        comment: Fully deterministic with hardcoded data values.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used. Wildcard lets_plot import is standard pattern.
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: current API usage
+        comment: Clean, well-organized. Tooltip usage is legitimate letsplot interactivity.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: saves as plot.png
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves plot.png via ggsave with scale=3. Also saves HTML. Current
+          API.
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 5
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: excellent ggplot2 grammar usage
-  verdict: APPROVED
+        comment: Proper ggplot grammar with layered composition. scale_fill_manual
+          with selective breaks/labels. Manual rect construction necessary for bullet
+          charts.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses layer_tooltips() for interactive hover — a distinctive letsplot
+          feature. HTML export showcases interactive capabilities.
+  verdict: REJECTED
