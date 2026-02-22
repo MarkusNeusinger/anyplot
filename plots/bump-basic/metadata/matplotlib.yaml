@@ -1,163 +1,185 @@
 library: matplotlib
 specification_id: bump-basic
 created: '2025-12-23T09:18:16Z'
-updated: '2026-02-22T20:55:00+00:00'
+updated: '2026-02-22T21:04:11Z'
 generated_by: claude-opus-4-6
 workflow_run: 20456607471
 issue: 0
-python_version: '3.14.3'
-library_version: '3.10.8'
+python_version: 3.14.3
+library_version: 3.10.8
 preview_url: https://storage.googleapis.com/pyplots-images/plots/bump-basic/matplotlib/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/bump-basic/matplotlib/plot_thumb.png
 preview_html: null
-quality_score: null
+quality_score: 87
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
   - manual-ticks
   patterns:
-  - data-generation
   - iteration-over-groups
+  - explicit-figure
   dataprep: []
-  styling: []
+  styling:
+  - edge-highlighting
+  - grid-styling
 review:
   strengths:
-  - Correctly inverted Y-axis with rank 1 at top per spec requirements
-  - Python blue (#306998) used as primary color for Team Alpha
-  - Clean, readable layout with no overlapping elements
-  - Realistic sports league standings scenario that clearly demonstrates rank changes
-  - Legend properly positioned outside plot area using bbox_to_anchor
-  - Appropriate sizing for 4800x2700 output (16x9 at 300dpi)
+  - Excellent use of path_effects for white outlines on lines and text, creating clean
+    visual separation at crossings
+  - End-of-line labels replacing a traditional legend is a superior direct-labeling
+    design choice
+  - Perfect spec compliance with inverted Y-axis, proper markers, and connected lines
+  - Realistic and engaging F1 championship data with valid rankings (no duplicate
+    ranks per race)
+  - Clean, deterministic, KISS code structure
   weaknesses:
-  - Bottom two teams (Delta, Epsilon) have limited rank movement - could show more
-    dramatic position swaps to better demonstrate bump chart capabilities
-  - Axis labels lack units/context (though Period and Rank are descriptive for this
-    use case)
-  image_description: 'The plot displays a bump chart showing sports league standings
-    for 5 teams (Alpha, Beta, Gamma, Delta, Epsilon) over 6 weeks. The Y-axis is correctly
-    inverted with rank 1 at the top. Each team is represented by a distinct colored
-    line with circular markers: Team Alpha in Python blue (#306998), Team Beta in
-    yellow/gold (#FFD43B), Team Gamma in green (#2ecc71), Team Delta in red (#e74c3c),
-    and Team Epsilon in purple (#9b59b6). Lines connect each team''s position across
-    weeks, clearly showing rank changes - for example, Team Alpha rises from 3rd to
-    1st place, while Team Beta drops from 1st to 2nd. The chart has a subtle dashed
-    grid, clear axis labels ("Period" and "Rank"), and a well-positioned legend outside
-    the plot area on the right. The title correctly uses the format "bump-basic ·
-    matplotlib · pyplots.ai".'
+  - 'Two similar orange colors (#e8963e and #ff7f0e) for Hamilton and Sainz are hard
+    to distinguish'
+  - No visual emphasis or hierarchy highlighting key rank changes or overtake moments
+  - End-label fontsize (15) slightly below the recommended minimum of 16
+  image_description: 'The plot shows a bump chart depicting Formula 1 championship
+    position changes across 8 Grand Prix races (Bahrain, Jeddah, Melbourne, Suzuka,
+    Shanghai, Miami, Imola, Monaco). Seven drivers are tracked with distinct colored
+    lines and circular markers (markersize 14): Verstappen (dark blue, #306998), Hamilton
+    (amber-orange, #e8963e), Norris (green, #2ca02c), Leclerc (red, #d62728), Sainz
+    (bright orange, #ff7f0e), Piastri (brown, #8c564b), and Russell (gray, #7f7f7f).
+    The Y-axis is inverted with rank 1 at the top. Lines have white path-effect outlines
+    that help separate crossing trajectories. End-of-line bold labels in matching
+    colors replace a traditional legend, placed to the right of each driver''s final
+    position. Top and right spines are removed. A subtle y-axis grid (alpha 0.2) is
+    present. X-axis race labels are rotated approximately 25 degrees. The title reads
+    "bump-basic · matplotlib · pyplots.ai" in fontsize 24. The overall layout is landscape
+    16:9 with good canvas utilization.'
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 28
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 24pt, labels at 20pt, ticks at 16pt - all perfectly readable
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping elements, all text fully readable
-      - id: VQ-03
-        name: Element Visibility
         score: 7
         max: 8
         passed: true
-        comment: Markers (s=15) and lines (lw=3) well-sized, slightly smaller markers
-          would be ideal for 5 entities
+        comment: All font sizes explicitly set (title=24, labels=20, ticks=16). End-of-line
+          labels at fontsize=15, slightly below recommended 16.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text. End labels at distinct ranks. Rotated x-axis
+          labels don't collide.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Markers (size 14) and lines (width 3.5) well-adapted. White stroke
+          path effects separate crossing lines.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Colorblind-safe palette with good contrast between all teams
+        score: 3
+        max: 4
+        passed: false
+        comment: 'Two similar orange colors (#e8963e and #ff7f0e) hard to distinguish.
+          Red-green pairing also present. Mitigated by end labels.'
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Good proportions, legend well-positioned outside plot area
+        comment: Good 16:9 proportions with tight_layout. Right margin extended for
+          end labels. Balanced margins.
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Descriptive labels but no units (though units aren't applicable for
-          rank/period)
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
-        max: 2
-        passed: true
-        comment: Grid at alpha=0.3 is good, legend well-placed outside plot area
+        comment: 'Descriptive labels: Grand Prix and Championship Position. Units
+          not applicable for rankings.'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Path effects and end labels show design intent above defaults. Color
+          palette flawed with two similar oranges.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Spines removed, subtle grid, path effects polish, generous whitespace.
+          Clearly refined beyond defaults.
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: F1 context creates natural narrative through rank crossings. No explicit
+          visual emphasis on key overtake moments.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct bump chart showing rankings over time
+        comment: Correct bump chart showing rankings over time with connected lines.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Periods on X-axis, ranks on Y-axis correctly assigned
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Y-axis inverted, distinct colors, dot markers, lines connecting entities
-      - id: SC-04
-        name: Data Range
+        comment: Inverted Y-axis, distinct colors, dot markers, lines connecting entities
+          across periods.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 5 ranks and 6 periods visible
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X=periods (races), Y=rank. 7 entities, 8 periods within spec ranges.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies all 5 teams
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: "bump-basic · matplotlib · pyplots.ai"'
+        comment: Title format correct. End-of-line labels (valid legend alternative)
+          match driver names.
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Shows rank changes and overtakes well, but top 3 teams have more
-          dynamic movement than bottom 2
+        comment: Shows rank changes, swaps, overtakes, stable positions, recovery
+          patterns. Valid rankings (1-7, no duplicates).
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Sports league standings is a perfect, comprehensible scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: 5 teams, 6 weeks, ranks 1-5 - all realistic values
+        comment: F1 driver standings with real driver names and Grand Prix locations.
+          Neutral, engaging scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Rankings 1-7 for 7 drivers, each rank used exactly once per race.
+          Plausible championship dynamics.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -165,40 +187,50 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple imports → data → plot → save structure, no functions/classes
+        comment: 'Clean linear flow: Imports, Data, Plot, Style, Save. No functions
+          or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
-        max: 3
+        max: 2
         passed: true
-        comment: Data is deterministic (no random values), but no explicit seed comment
+        comment: Fully deterministic hardcoded data. No random generation.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib and numpy, both used
+        comment: 'All imports used: patheffects, pyplot, numpy.'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current matplotlib API
+        comment: Clean Pythonic code. Dictionary for data, loop for multi-series.
+          No fake functionality.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot.png with dpi=300 and bbox_inches=tight. No deprecated
+          API.
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Axes methods throughout, proper fig/ax creation, invert_yaxis, spines
+          manipulation. Very idiomatic.
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Good use of matplotlib axes methods, invert_yaxis, bbox_to_anchor
-          for legend. Could use annotations or text labels for additional features.
-  verdict: APPROVED
+        comment: Uses matplotlib.patheffects (Stroke, Normal, withStroke) for white
+          outline effects on lines and text.
+  verdict: REJECTED

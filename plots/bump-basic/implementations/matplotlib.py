@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 bump-basic: Basic Bump Chart
 Library: matplotlib 3.10.8 | Python 3.14.3
-Quality: /100 | Updated: 2026-02-22
+Quality: 87/100 | Updated: 2026-02-22
 """
 
 import matplotlib.patheffects as pe
