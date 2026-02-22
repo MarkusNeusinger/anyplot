@@ -1,52 +1,77 @@
-""" pyplots.ai
+"""pyplots.ai
 bump-basic: Basic Bump Chart
-Library: matplotlib 3.10.8 | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-23
+Library: matplotlib 3.10.8 | Python 3.14.3
+Quality: /100 | Updated: 2026-02-22
 """
 
+import matplotlib.patheffects as pe
 import matplotlib.pyplot as plt
 import numpy as np
 
 
-# Data - Sports league standings over a season
-entities = ["Team Alpha", "Team Beta", "Team Gamma", "Team Delta", "Team Epsilon"]
-periods = ["Week 1", "Week 2", "Week 3", "Week 4", "Week 5", "Week 6"]
+# Data - Formula 1 driver standings over a 10-race season
+drivers = ["Verstappen", "Hamilton", "Norris", "Leclerc", "Sainz", "Piastri", "Russell"]
+races = ["Bahrain", "Jeddah", "Melbourne", "Suzuka", "Shanghai", "Miami", "Imola", "Monaco"]
 
-# Rankings for each team across periods (1 = best)
+# Rankings per driver across races (1 = championship leader)
 rankings = {
-    "Team Alpha": [3, 2, 1, 1, 2, 1],
-    "Team Beta": [1, 1, 2, 3, 3, 2],
-    "Team Gamma": [2, 3, 3, 2, 1, 3],
-    "Team Delta": [4, 4, 5, 4, 4, 4],
-    "Team Epsilon": [5, 5, 4, 5, 5, 5],
+    "Verstappen": [1, 1, 1, 2, 3, 3, 2, 1],
+    "Hamilton": [4, 3, 2, 1, 1, 2, 1, 2],
+    "Norris": [5, 5, 4, 3, 2, 1, 3, 3],
+    "Leclerc": [2, 2, 3, 4, 5, 5, 4, 4],
+    "Sainz": [3, 4, 5, 5, 4, 4, 5, 5],
+    "Piastri": [6, 6, 7, 7, 6, 6, 6, 7],
+    "Russell": [7, 7, 6, 6, 7, 7, 7, 6],
 }
 
 # Colors - Python Blue first, then colorblind-safe palette
-colors = ["#306998", "#FFD43B", "#2ecc71", "#e74c3c", "#9b59b6"]
+colors = ["#306998", "#e8963e", "#2ca02c", "#d62728", "#ff7f0e", "#8c564b", "#7f7f7f"]
 
-# Create plot (4800x2700 px)
+# Plot
 fig, ax = plt.subplots(figsize=(16, 9))
+x = np.arange(len(races))
 
-x = np.arange(len(periods))
-
-for i, (entity, ranks) in enumerate(rankings.items()):
-    ax.plot(x, ranks, marker="o", markersize=15, linewidth=3, color=colors[i], label=entity)
+for i, (driver, ranks) in enumerate(rankings.items()):
+    ax.plot(
+        x,
+        ranks,
+        marker="o",
+        markersize=14,
+        linewidth=3.5,
+        color=colors[i],
+        zorder=3,
+        path_effects=[pe.Stroke(linewidth=5.5, foreground="white"), pe.Normal()],
+    )
+    # End-of-line labels (replaces legend, more direct)
+    ax.text(
+        x[-1] + 0.15,
+        ranks[-1],
+        driver,
+        fontsize=15,
+        fontweight="bold",
+        color=colors[i],
+        va="center",
+        path_effects=[pe.withStroke(linewidth=3, foreground="white")],
+    )
 
 # Invert Y-axis so rank 1 is at top
 ax.invert_yaxis()
 
-# Labels and styling
-ax.set_xlabel("Period", fontsize=20)
-ax.set_ylabel("Rank", fontsize=20)
-ax.set_title("bump-basic · matplotlib · pyplots.ai", fontsize=24)
+# Style
+ax.set_xlabel("Grand Prix", fontsize=20)
+ax.set_ylabel("Championship Position", fontsize=20)
+ax.set_title("bump-basic \u00b7 matplotlib \u00b7 pyplots.ai", fontsize=24, fontweight="medium")
 
 ax.set_xticks(x)
-ax.set_xticklabels(periods)
-ax.set_yticks(range(1, len(entities) + 1))
+ax.set_xticklabels(races, rotation=25, ha="right")
+ax.set_yticks(range(1, len(drivers) + 1))
 ax.tick_params(axis="both", labelsize=16)
 
-ax.grid(True, alpha=0.3, linestyle="--")
-ax.legend(fontsize=16, loc="upper left", bbox_to_anchor=(1.02, 1))
+ax.yaxis.grid(True, alpha=0.2, linewidth=0.8)
+ax.spines["top"].set_visible(False)
+ax.spines["right"].set_visible(False)
+
+ax.set_xlim(-0.3, len(races) - 1 + 1.5)
 
 plt.tight_layout()
 plt.savefig("plot.png", dpi=300, bbox_inches="tight")
