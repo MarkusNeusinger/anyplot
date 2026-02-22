@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 bullet-basic: Basic Bullet Chart
 Library: matplotlib 3.10.8 | Python 3.14.3
-Quality: 88/100 | Updated: 2026-02-22
+Quality: 91/100 | Updated: 2026-02-22
 """
 
 import matplotlib.pyplot as plt
