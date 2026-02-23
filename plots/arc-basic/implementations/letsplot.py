@@ -1,7 +1,6 @@
-""" pyplots.ai
+"""pyplots.ai
 arc-basic: Basic Arc Diagram
 Library: letsplot 4.8.2 | Python 3.14.3
-Quality: 89/100 | Updated: 2026-02-23
 """
 
 import numpy as np
@@ -55,9 +54,9 @@ edges = [
     (8, 9, 2),  # Iris-Jack
 ]
 
-# Node positions along x-axis
-x_positions = np.linspace(0, 1, n_nodes)
-y_baseline = 0.08
+# Node positions along x-axis — wider spacing for label readability
+x_positions = np.linspace(0, 1.3, n_nodes)
+y_baseline = 0.06
 
 # Count connections per node for visual hierarchy
 connections = [0] * n_nodes
@@ -108,9 +107,9 @@ for edge_id, (start, end, weight) in enumerate(edges):
 
 arc_df = pd.DataFrame(arc_data)
 
-# Node data with size based on total connection weight
+# Node data with size based on total connection weight (higher floor for peripheral nodes)
 max_conn = max(connections)
-node_sizes = [6 + 10 * (c / max_conn) for c in connections]
+node_sizes = [9 + 7 * (c / max_conn) for c in connections]
 node_df = pd.DataFrame(
     {"x": x_positions, "y": [y_baseline] * n_nodes, "name": nodes, "node_size": node_sizes, "connections": connections}
 )
@@ -119,11 +118,11 @@ node_df = pd.DataFrame(
 baseline_df = pd.DataFrame({"x": [x_positions[0]], "xend": [x_positions[-1]], "y": [y_baseline], "yend": [y_baseline]})
 
 # Label data (positioned below nodes)
-label_df = pd.DataFrame({"x": x_positions, "y": [y_baseline - 0.045] * n_nodes, "name": nodes})
+label_df = pd.DataFrame({"x": x_positions, "y": [y_baseline - 0.04] * n_nodes, "name": nodes})
 
 # Legend data: small line segments showing weight encoding
-legend_x = 0.82
-legend_y_start = 0.76
+legend_x = 1.1
+legend_y_start = 0.72
 legend_spacing = 0.06
 legend_line_len = 0.07
 legend_lines = pd.DataFrame(
@@ -155,7 +154,7 @@ plot = (
     + geom_path(
         data=arc_df,
         mapping=aes(x="x", y="y", group="edge_id", size="size", color="color", alpha="alpha"),
-        tooltips=layer_tooltips().line("@connection").line("Strength: @strength"),
+        tooltips=layer_tooltips().title("@connection").line("Strength|@strength"),
     )
     + scale_size_identity()
     + scale_color_identity()
@@ -168,7 +167,7 @@ plot = (
         fill="#FFD43B",
         stroke=1.5,
         shape=21,
-        tooltips=layer_tooltips().line("@name").line("Connections: @connections"),
+        tooltips=layer_tooltips().title("@name").line("Total weight|@connections"),
     )
     + scale_size_identity()
     # Node labels
@@ -191,9 +190,12 @@ plot = (
         hjust=0,
     )
     # Styling
-    + xlim(-0.06, 1.12)
-    + ylim(-0.04, 0.85)
-    + labs(title="arc-basic \u00b7 letsplot \u00b7 pyplots.ai")
+    + xlim(-0.05, 1.48)
+    + ylim(-0.01, 0.82)
+    + labs(
+        title="arc-basic \u00b7 letsplot \u00b7 pyplots.ai",
+        subtitle="Character interactions in a story chapter \u2014 node size reflects connection strength",
+    )
     + theme(
         axis_title=element_blank(),
         axis_text=element_blank(),
@@ -203,6 +205,7 @@ plot = (
         panel_background=element_rect(fill="white", color="white"),
         plot_background=element_rect(fill="white", color="white"),
         plot_title=element_text(size=24, face="bold", color="#1A3A5C"),
+        plot_subtitle=element_text(size=16, color="#4A6B82"),
         legend_position="none",
     )
     + ggsize(1600, 900)
