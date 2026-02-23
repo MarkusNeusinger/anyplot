@@ -1,162 +1,184 @@
 library: pygal
 specification_id: bubble-packed
 created: '2025-12-23T09:17:15Z'
-updated: 2026-02-23T15:35:00+00:00
+updated: '2026-02-23T15:47:31Z'
 generated_by: claude-opus-4-6
 workflow_run: 20456561911
 issue: 0
-python_version: "3.14.3"
-library_version: "3.1.0"
+python_version: 3.14.3
+library_version: 3.1.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/bubble-packed/pygal/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/bubble-packed/pygal/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/bubble-packed/pygal/plot.html
-quality_score: null
+quality_score: 79
 impl_tags:
   dependencies: []
   techniques:
-  - html-export
+  - annotations
+  - custom-legend
+  - patches
   patterns:
-  - data-generation
+  - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
   - edge-highlighting
 review:
   strengths:
-  - Excellent creative implementation using pygal XML filter to draw custom packed
-    bubbles since pygal lacks native packed bubble chart
-  - Clean packing algorithm that places circles without overlap and keeps them centered
-  - Good color palette with four distinct group colors that are colorblind-accessible
-  - Proper area-based scaling using sqrt for accurate visual perception
-  - Realistic budget allocation scenario that makes the visualization meaningful
-  - Correct title format and legend placement
+  - Effective custom packing algorithm that produces a clean, well-spaced layout
+  - Thoughtful color palette with adaptive text colors for readability on light/dark
+    backgrounds
+  - Clean professional appearance with fill-opacity and white stroke details
+  - Realistic department budget data with good size variation
+  - Deterministic and reproducible output
   weaknesses:
-  - Value labels show only dollar amounts without category names - larger circles
-    could fit abbreviated labels
-  - Some smaller circles have cramped or small value labels
-  image_description: 'The plot displays a packed bubble chart representing department
-    budget allocation across four groups: Technology (blue), Marketing (yellow), Operations
-    (teal/cyan), and Sales (coral/pink). The largest bubble in the center shows "$450K"
-    (Software Development, Technology group). Circles are well-packed without overlap,
-    with sizes proportional to budget values ranging from $90K to $450K. White value
-    labels appear inside larger bubbles. The title "bubble-packed · pygal · pyplots.ai"
-    is at the top center. A horizontal legend at the bottom shows the four group categories
-    with color indicators. The background is white with subtle dark outlines around
-    each circle.'
+  - 'Library Mastery is low: pygal used only as SVG rendering shell with empty Pie
+    chart container and all visualization built in raw SVG'
+  - 'No group clustering: circles from same group scattered throughout packing rather
+    than clustered together'
+  - Design could be more storytelling-oriented with a clear focal point or narrative
+  - Packing algorithm could be improved to group related circles
+  image_description: 'The plot displays a packed bubble chart titled "bubble-packed
+    · pygal · pyplots.ai". It shows 16 circles of varying sizes representing department
+    budget allocations. Circles are color-coded by group: Technology (steel blue #306998)
+    — Software $450K (largest), Cloud $280K, Data $180K, Security $120K; Marketing
+    (yellow #FFD43B) — Digital $350K, Brand $220K, Events $150K, PR $90K (smallest);
+    Operations (teal #4ECDC4) — Facilities $280K, HR $200K, Legal $160K, Admin $100K;
+    Sales (coral pink #FF6B6B) — Enterprise $380K, SMB $250K, Partners $170K, Support
+    $110K. Circles are packed tightly in the center of a white canvas without overlapping,
+    separated by thin white strokes. Labels inside circles show abbreviated department
+    names and dollar values in bold sans-serif text, with dark text on yellow circles
+    and white text on others. A legend at the bottom shows the four groups with colored
+    squares. The overall layout is clean with generous whitespace around the packed
+    cluster.'
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 27
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 7
+        max: 8
         passed: true
-        comment: All value labels clearly readable; title and legend text good size
+        comment: 'Font sizes explicitly set: title_font_size=72, legend_font_size=42,
+          bubble labels dynamically computed from radius. All text readable.'
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Excellent circle packing with no overlapping elements
+        comment: No overlapping text or circles. Packing algorithm with padding ensures
+          clean separation.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Circle sizes well adapted to show value differences
+        comment: All 16 circles clearly visible with good size differentiation. White
+          stroke borders aid distinction.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 3
+        max: 4
         passed: true
-        comment: Four distinct colors (blue, yellow, teal, coral) are colorblind-friendly
+        comment: Blue/yellow/teal/pink palette is reasonably colorblind-safe. Teal
+          and blue could be challenging under certain color vision deficiencies.
       - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
+        name: Layout & Canvas
+        score: 3
+        max: 4
         passed: true
-        comment: Good overall layout, slight asymmetry in packing but acceptable
+        comment: Bubble cluster fills center ~50% of canvas. Balanced margins. Some
+          empty space below bubbles before legend.
       - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: true
-        comment: N/A for packed bubble charts (no axes)
-      - id: VQ-07
-        name: Grid & Legend
+        name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Legend well-placed at bottom, no distracting grid
+        comment: No axes needed for packed bubble chart. Title correct format. Values
+          displayed with units ($K).
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Custom color palette with good harmony. Adapted text colors for readability.
+          Fill-opacity 0.85 adds depth. Above defaults but not publication-exceptional.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Clean white background, no unnecessary chrome. Opacity and stroke
+          details are polished. Minimal legend at bottom.
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Size variation naturally highlights largest budgets. Color grouping
+          enables comparison. But no specific narrative emphasis or focal point.
     spec_compliance:
-      score: 23
-      max: 25
+      score: 14
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct packed bubble chart with circles sized by value
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Values correctly mapped to circle area
-      - id: SC-03
+        comment: Correct packed bubble chart with circles sized by value and packed
+          without overlap.
+      - id: SC-02
         name: Required Features
-        score: 4
-        max: 5
+        score: 3
+        max: 4
         passed: true
-        comment: Has grouping by color, value labels; tooltips present in SVG (less
-          visible in PNG)
-      - id: SC-04
-        name: Data Range
+        comment: Size represents value, packed without overlap, labels inside circles,
+          color encodes group. Group clustering not implemented.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 16 data items visible
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Values correctly determine circle area via sqrt scaling. All 16 items
+          visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly shows all four groups
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses correct "{spec-id} · {library} · pyplots.ai" format
+        comment: Title matches format. Legend shows all four groups with correct colors.
     data_quality:
-      score: 18
-      max: 20
+      score: 14
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Shows size variation well; grouping visible by color; missing category
-          labels on circles
+        comment: 16 items across 4 groups with good size variation (90-450). Missing
+          group clustering aspect.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Department budget allocation is an excellent, realistic scenario
+        comment: Department budget allocation is a real-world, neutral business scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Budget values in $K are realistic, though $450K for Software Development
-          is on the high side for some organizations
+        comment: Values $90K-$450K are realistic for department budgets.
     code_quality:
-      score: 9
+      score: 8
       max: 10
       items:
       - id: CQ-01
@@ -164,41 +186,49 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Has one function (add_packed_bubbles) but necessary for XML filter
-          approach
+        comment: One function required by pygal add_xml_filter API. Manual packing
+          algorithm adds structural complexity.
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Deterministic data, no random elements
+        comment: 'Fully deterministic: hardcoded data and deterministic packing algorithm.'
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: 'All imports used: math, pygal, etree, Style.'
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
         score: 1
-        max: 1
+        max: 2
         passed: true
-        comment: Uses current pygal API
+        comment: Manual packing algorithm adds complexity. Empty Pie chart as container
+          is a creative workaround.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves as plot.png via render_to_png. Current API usage.
+    library_mastery:
+      score: 4
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 5
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 2
         max: 5
-        passed: true
-        comment: Creative use of pygal's XML filter API to add custom SVG elements,
-          leverages native SVG rendering
-  verdict: APPROVED
+        passed: false
+        comment: Uses pygal.Pie as container shell with no actual pie data. Core visualization
+          is custom SVG via add_xml_filter.
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: add_xml_filter is distinctive pygal feature. But actual visualization
+          bypasses all pygal chart capabilities.
+  verdict: REJECTED
