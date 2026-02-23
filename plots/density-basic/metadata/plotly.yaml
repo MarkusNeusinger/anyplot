@@ -1,7 +1,7 @@
 library: plotly
 specification_id: density-basic
 created: '2025-12-23T01:30:36Z'
-updated: '2026-02-23T22:38:00+00:00'
+updated: '2026-02-23T22:46:50Z'
 generated_by: claude-opus-4-6
 workflow_run: 20448650972
 issue: 0
@@ -10,9 +10,10 @@ library_version: 6.5.2
 preview_url: https://storage.googleapis.com/pyplots-images/plots/density-basic/plotly/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/density-basic/plotly/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/density-basic/plotly/plot.html
-quality_score: null
+quality_score: 87
 impl_tags:
-  dependencies: []
+  dependencies:
+  - scipy
   techniques:
   - hover-tooltips
   - html-export
@@ -22,148 +23,152 @@ impl_tags:
   - kde
   styling:
   - alpha-blending
+  - grid-styling
 review:
   strengths:
-  - Excellent manual KDE implementation using Silverman's rule of thumb for bandwidth
-    selection
-  - Rug plot nicely shows individual observations as recommended in spec
-  - Bimodal distribution effectively demonstrates density plot's ability to reveal
-    distribution characteristics
-  - Good use of Plotly's interactive features (hover templates, HTML export)
-  - Clean, readable code structure following KISS principles
-  - Appropriate font sizing for 4800×2700px output
+  - 'Excellent data choice: bimodal SAT score distribution effectively showcases density
+    plot capabilities'
+  - Full spec compliance with all requested features (density curve, fill, rug plot)
+  - All font sizes explicitly set for crisp readability at target resolution
+  - Clean, well-structured code with proper reproducibility
   weaknesses:
-  - Axis label "Test Score" could include units for full VQ-06 credit
-  - Could use more specific realistic context (e.g., "SAT Math Scores" instead of
-    generic "Test Score")
-  - Does not leverage Plotly's built-in density/histogram functions (ff.create_distplot
-    or histogram with histnorm)
-  image_description: The plot shows a density curve (KDE) for test scores ranging
-    from approximately 30 to 120. The curve is rendered in a blue color (#306998)
-    with a semi-transparent light blue fill under the curve. The distribution is slightly
-    bimodal with a main peak around 75-78 and a secondary shoulder/peak around 85-88.
-    A rug plot is displayed along the x-axis showing individual observations as vertical
-    gray tick marks - these are densely clustered in the 60-95 range with sparse outliers
-    below 50 and above 100. The title "density-basic · plotly · pyplots.ai" is centered
-    at the top. Axis labels are "Test Score" (x-axis) and "Density" (y-axis). A legend
-    in the upper right shows "Density" (line) and "Observations" (tick mark). The
-    background uses the plotly_white template with subtle gray gridlines.
+  - Rug plot markers are too faint (0.35 opacity) to be clearly visible
+  - No visual emphasis on the bimodal structure — the two peaks lack annotation or
+    highlighting
+  - KDE computation done externally in scipy rather than leveraging Plotly-native
+    approaches
+  image_description: 'The plot displays a density curve (KDE) of SAT Math scores on
+    a white background. The main curve is drawn in dark blue (#306998 / Python Blue)
+    with a line width of approximately 3.5, and the area underneath is filled with
+    a semi-transparent light blue. The curve clearly shows a bimodal distribution:
+    a larger primary peak around 550 and a smaller secondary peak around 670-680.
+    Along the bottom at y=0, a rug plot shows individual observations as small vertical
+    tick marks in the same blue color with low opacity. The x-axis is labeled "SAT
+    Math Score (points)" ranging from 350 to 800, and the y-axis is labeled "Density"
+    ranging from 0 to ~0.0045. The title "density-basic · plotly · pyplots.ai" is
+    centered at the top. A legend in the upper right corner shows "Density" (line)
+    and "Observations" (tick mark) entries with a subtle white background. The y-axis
+    has very faint horizontal grid lines; the x-axis has no grid. Overall layout is
+    clean and professional.'
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 36pt, axis labels at 28pt, tick labels at 22pt - all excellently
-          readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title=36, axis labels=28, ticks=22,
+          legend=20'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
         passed: true
         comment: No overlapping text elements
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Density curve line width of 4 is clearly visible, fill with appropriate
-          transparency
+        comment: Density curve visible; rug plot faint at 0.35 opacity
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Single blue color scheme is colorblind-safe
+        comment: Single-series Python Blue, good contrast
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Good proportions with adequate margins
+        comment: Well-balanced margins, plot fills canvas appropriately
       - id: VQ-06
-        name: Axis Labels
-        score: 1
-        max: 2
-        passed: false
-        comment: Labels are descriptive but lack units (e.g., "Test Score (points)")
-      - id: VQ-07
-        name: Grid & Legend
+        name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Grid at alpha 0.2 is subtle, legend well-positioned
+        comment: X-axis includes units (points), Y-axis Density is correct
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Consistent Python Blue, plotly_white template, custom fill transparency.
+          Above default but not publication-showcase.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: X-grid removed, y-grid subtle at 0.15 opacity, no zeroline, clean
+          legend
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Bimodal data implies story but no visual emphasis on two peaks
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct density/KDE plot with smooth curve
+        comment: Correct density plot using KDE
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Values correctly mapped to x-axis, density on y-axis
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Includes fill under curve with transparency, rug plot as suggested
-          in spec
-      - id: SC-04
-        name: Data Range
+        comment: Density curve, fill, rug plot, appropriate bandwidth all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible with appropriate padding
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X=SAT scores, Y=density, full range visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies Density curve and Observations
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses correct format `density-basic · plotly · pyplots.ai`
+        comment: Title matches format, legend labels descriptive and accurate
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Bimodal distribution demonstrates distribution shape detection capability,
-          shows skewness and modality as mentioned in spec
+        comment: Bimodal distribution shows modality, skewness, shape; rug plot shows
+          observations
       - id: DQ-02
         name: Realistic Context
         score: 5
-        max: 7
-        passed: false
-        comment: Test scores is a plausible scenario but could be more specific (e.g.,
-          "SAT Math Scores", "Final Exam Scores")
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 5
         max: 5
         passed: true
-        comment: Test scores in 40-110 range are realistic
+        comment: 'SAT Math scores: real, neutral educational scenario'
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: SAT range 200-800 correct, means and stdevs realistic
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -171,43 +176,46 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure, no functions/classes
+        comment: Linear flow, no functions or classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy and plotly.graph_objects, both used
+        comment: All imports used
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-organized, appropriate complexity
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current Plotly API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves both plot.png and plot.html but implementation manually computes
-          KDE rather than using library functions
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot.png and plot.html with current API
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 3
         max: 5
         passed: false
-        comment: Good use of hover templates for interactivity, HTML export for interactive
-          version. However, manually computes KDE instead of using plotly's built-in
-          histogram with histnorm='probability density' or ff.create_distplot. Still
-          uses plotly features like fill='tozeroy' and custom hover templates.
-  verdict: APPROVED
+        comment: go.Figure/go.Scatter used correctly with hovertemplate, but KDE done
+          externally in scipy
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Hovertemplate, HTML export, fill=tozeroy are Plotly-specific
+  verdict: REJECTED
