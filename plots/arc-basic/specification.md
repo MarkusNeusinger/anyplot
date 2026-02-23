@@ -17,6 +17,7 @@ An arc diagram arranges nodes along a single horizontal line and draws connectio
 - `edges` (list of tuples) - Pairs of node indices or names indicating connections
 - `weights` (numeric, optional) - Edge weights affecting arc thickness or height
 - Size: 10-50 nodes typical for readability
+- Example: Character interactions in a novel — nodes as characters, edges as dialogue exchanges
 
 ## Notes
 
