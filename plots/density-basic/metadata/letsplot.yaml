@@ -1,7 +1,7 @@
 library: letsplot
 specification_id: density-basic
 created: '2025-12-23T10:03:24Z'
-updated: '2026-02-23T22:46:47Z'
+updated: '2026-02-23T22:58:57Z'
 generated_by: claude-opus-4-6
 workflow_run: 20457538654
 issue: 0
@@ -10,10 +10,12 @@ library_version: 4.8.2
 preview_url: https://storage.googleapis.com/pyplots-images/plots/density-basic/letsplot/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/density-basic/letsplot/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/density-basic/letsplot/plot.html
-quality_score: 85
+quality_score: 89
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
+  - layer-composition
   - hover-tooltips
   - html-export
   patterns:
@@ -24,32 +26,35 @@ impl_tags:
   - grid-styling
 review:
   strengths:
-  - Excellent spec compliance with correct density plot, proper title format, and
-    descriptive axis labels with units
-  - Realistic, neutral marathon finish time data with multimodal distribution showing
-    skew and multiple runner groups
-  - 'Good visual refinement: subtle grid styling, removed ticks/minor grids, y-axis
-    expand tuning'
-  - Clean KISS code structure with reproducibility seed and proper letsplot save workflow
-  - Uses letsplot-distinctive features (layer_tooltips, HTML export)
+  - 'Excellent data storytelling improvement: vertical reference lines and group annotations
+    guide the viewer through three runner populations'
+  - Full spec compliance with density curve, rug plot, fill transparency, appropriate
+    bandwidth, and correct title format
+  - Realistic neutral marathon data with multimodal distribution demonstrating all
+    density plot features
+  - 'Clean visual refinement: subtle grid styling, removed ticks, no minor grids,
+    custom y-axis expand'
+  - Uses letsplot-distinctive layer_tooltips() for interactive hover and HTML export
+  - 'Perfect code quality: KISS structure, reproducible seed, clean ggplot chain'
   weaknesses:
-  - No visual hierarchy or data storytelling - the multimodal distribution story is
-    not emphasized
-  - Minor text overlap at bottom-left origin where y-axis 0 collides with x-axis 150
-  - Y-axis density values have many decimal places making the left margin slightly
-    heavy
-  - Design could be elevated further toward publication quality
+  - Top annotations Competitive and Main Pack are slightly crowded due to proximity
+    (40 data-units apart)
+  - Design could be further elevated with color-based emphasis to create a stronger
+    focal point
+  - Y-axis decimal labels still contribute slight left-margin heaviness
   image_description: The plot shows a single density curve of marathon finish times
-    on a white background. The x-axis is labeled "Finish Time (minutes)" ranging from
-    150 to approximately 370, and the y-axis is labeled "Density" ranging from 0 to
-    approximately 0.011. The curve is filled with a semi-transparent Python Blue (#306998)
-    and outlined with a darker blue (#1e4263). The distribution is right-skewed with
-    a main peak around 240 minutes and a visible shoulder around 200 minutes representing
-    competitive runners, then a long tail extending to approximately 370 minutes for
-    casual runners. The title "density-basic · letsplot · pyplots.ai" appears at the
-    top left. The background uses a minimal theme with only subtle horizontal gridlines
-    in light gray. No rug plot is present. There is minor text overlap at the bottom-left
-    origin where the y-axis "0" collides with the x-axis "150" label.
+    filled with semi-transparent Python Blue (#306998) and outlined with a darker
+    blue (#1e4263). The x-axis is labeled "Finish Time (minutes)" ranging from 150
+    to ~370, and the y-axis is labeled "Density" with breaks at 0.002, 0.004, 0.006,
+    0.008, 0.010. The distribution is right-skewed with a shoulder around 200 minutes
+    and a dominant peak around 240 minutes, followed by a long tail extending to ~370
+    minutes. Three dashed gray vertical reference lines mark group centroids at x=200,
+    240, and 300. At the top of the plot, three text annotations read "Competitive
+    (~3:20)", "Main Pack (~4:00)", and "Casual (~5:00)". A rug plot of small vertical
+    ticks (subtle, low alpha) runs along the x-axis base showing individual observations.
+    The title "density-basic · letsplot · pyplots.ai" appears at the top left. The
+    background uses a minimal theme with subtle horizontal gridlines only, no vertical
+    gridlines, and no axis ticks.
   criteria_checklist:
     visual_quality:
       score: 28
@@ -61,42 +66,43 @@ review:
         max: 8
         passed: true
         comment: 'All font sizes explicitly set: title=24, axis_title=20, axis_text=16.
-          All text clearly readable.'
+          Group annotations at size=12 readable.'
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Minor overlap at origin where y-axis 0 collides with x-axis 150 tick
-          label.
+        comment: Competitive and Main Pack annotations slightly crowded at top (40
+          data-units apart). Not overlapping but tighter than ideal.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Density curve clearly visible with good fill (alpha=0.55) and strong
-          outline (size=1.8).
+        comment: Density curve perfectly visible with alpha=0.55 fill and size=1.8
+          outline. Rug ticks appropriately subtle.
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Single series Python Blue with good contrast. No colorblind issues.
+        comment: Single series Python Blue with good contrast. No colorblind issues
+          with monochromatic scheme.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good canvas utilization. Y-axis density decimal values create slight
-          left-margin heaviness.
+        comment: Good canvas utilization. Minor left-margin heaviness from y-axis
+          decimal labels.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: X-axis has units (minutes). Y-axis Density is appropriate.
+        comment: X-axis Finish Time (minutes) has units. Y-axis Density is appropriate.
     design_excellence:
-      score: 11
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -104,8 +110,8 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above defaults: Python Blue with darker outline, minimal theme,
-          custom grid styling. Thoughtful but not publication-quality.'
+        comment: 'Above defaults: intentional Python Blue palette with darker outline,
+          multiple info layers, cohesive design. Not quite publication-level.'
       - id: DE-02
         name: Visual Refinement
         score: 4
@@ -115,11 +121,12 @@ review:
           ticks removed, y-axis expand tuned.'
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 5
         max: 6
-        passed: false
-        comment: Data displayed without visual hierarchy or emphasis. Viewer must
-          discover multimodal structure unaided.
+        passed: true
+        comment: 'Strong storytelling: vertical reference lines and group annotations
+          guide viewer through three runner populations. Lacks color-based focal point
+          emphasis.'
     spec_compliance:
       score: 15
       max: 15
@@ -129,52 +136,53 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct KDE/density plot using geom_density().
+        comment: Correct KDE/density plot using geom_density() with gaussian kernel.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Smooth density curve, fill with transparency, appropriate bandwidth.
-          Rug plot optional.
+        comment: Smooth density curve, fill with transparency, rug plot, appropriate
+          bandwidth, trim.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis correctly maps continuous variable, y-axis shows density,
-          full range visible.
+        comment: X-axis correctly maps continuous variable, y-axis shows density.
+          Full data range visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows exact format. No legend needed for single series.
+        comment: Title density-basic · letsplot · pyplots.ai follows exact format.
+          No legend needed for single series.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows right-skew, multimodality, and long tail. A rug plot would
-          additionally show individual observations.
+        comment: Shows right-skew, multimodality, long tail, rug plot for individual
+          observations. All key density plot features.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Marathon finish times are real, neutral, and comprehensible with
-          three realistic runner groups.
+        comment: 'Marathon finish times: real, neutral, comprehensible. Three runner
+          groups reflect realistic demographics.'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Realistic marathon times: competitive ~200 min, main pack ~240 min,
-          casual ~300 min.'
+        comment: Competitive ~200min, main pack ~240min, casual ~300min. All realistic
+          marathon times.
     code_quality:
       score: 10
       max: 10
@@ -184,25 +192,26 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean Imports-Data-Plot-Save structure with no functions or classes.
+        comment: Clean Imports → Data → Plot → Save structure. No functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set before data generation.
+        comment: np.random.seed(42) set before all data generation.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used. noqa comments appropriate for wildcard import pattern.
+        comment: numpy, pandas, lets_plot all used. noqa comments appropriate for
+          wildcard import.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean ggplot chain, appropriate complexity, no over-engineering.
+        comment: Clean ggplot chain. Rug via geom_segment is appropriate. No over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
@@ -218,13 +227,13 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Good ggplot grammar usage following letsplot patterns: aes, geom_density,
-          labs, scales, theme, ggsize, ggsave.'
+        comment: 'Good ggplot grammar: aes(), geom_density() with kernel/adjust/trim,
+          geom_segment(), geom_vline(), geom_text(), proper scale and theme usage.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses layer_tooltips() for interactive hover and HTML export - distinctive
-          letsplot features.
+        comment: Uses layer_tooltips() with custom line formatting for interactive
+          hover. HTML export leverages letsplot interactive output.
   verdict: REJECTED
