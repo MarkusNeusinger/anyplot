@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 arc-basic: Basic Arc Diagram
 Library: highcharts 1.10.3 | Python 3.14.3
 Quality: 82/100 | Created: 2026-02-23
@@ -69,7 +69,7 @@ for name in nodes:
     )
 
 # Scale weights up for visual node sizing (arc diagram sizes nodes by total weight flow)
-weight_scale = 8
+weight_scale = 10
 links_data = [{"from": src, "to": tgt, "weight": w * weight_scale} for src, tgt, w in edges]
 
 # Chart options (raw JS — highcharts_core doesn't support arcdiagram type)
@@ -79,10 +79,10 @@ chart_options = {
         "height": 2700,
         "backgroundColor": "#ffffff",
         "marginTop": 150,
-        "marginBottom": 100,
+        "marginBottom": 30,
         "marginLeft": 100,
         "marginRight": 100,
-        "spacingBottom": 10,
+        "spacingBottom": 0,
     },
     "title": {
         "text": "Character Interactions \u00b7 arc-basic \u00b7 highcharts \u00b7 pyplots.ai",
@@ -110,16 +110,16 @@ chart_options = {
             "centeredLinks": True,
             "linkColorMode": "from",
             "linkOpacity": 0.5,
-            "linkWeight": 8,
-            "equalNodes": True,
-            "nodeWidth": 50,
-            "minLinkWidth": 4,
-            "marker": {"lineWidth": 4, "lineColor": "#ffffff"},
+            "linkWeight": 14,
+            "equalNodes": False,
+            "nodeWidth": 55,
+            "minLinkWidth": 6,
+            "marker": {"radius": 50, "lineWidth": 5, "lineColor": "#ffffff"},
             "dataLabels": [
                 {
                     "enabled": True,
                     "rotation": 0,
-                    "y": 50,
+                    "y": 80,
                     "align": "center",
                     "nodeFormat": "{point.name}",
                     "format": "",
@@ -181,21 +181,23 @@ setTimeout(function() {
             el.parentNode.style.display = 'none';
         }
     });
-    // Enlarge node circles for 4800x2700 canvas
+    // Enlarge node paths (rendered as SVG arcs, not circles) via transform scale
     var chart = Highcharts.charts[0];
     if (chart && chart.series[0] && chart.series[0].nodes) {
         chart.series[0].nodes.forEach(function(node) {
             if (node.graphic) {
                 var el = node.graphic.element;
-                if (el.tagName === 'circle') {
-                    el.setAttribute('r', 20);
-                    el.setAttribute('stroke', '#ffffff');
-                    el.setAttribute('stroke-width', '4');
-                }
+                var bbox = el.getBBox();
+                var cx = bbox.x + bbox.width / 2;
+                var cy = bbox.y + bbox.height / 2;
+                var scale = 2.5;
+                el.setAttribute('transform',
+                    'translate(' + cx + ',' + cy + ') scale(' + scale + ') translate(' + (-cx) + ',' + (-cy) + ')');
+                el.setAttribute('stroke-width', '2');
             }
         });
     }
-}, 1500);
+}, 2500);
 """
 
 # Build HTML with inline JS
@@ -251,26 +253,7 @@ chrome_options.add_argument("--window-size=4800,2900")
 
 driver = webdriver.Chrome(options=chrome_options)
 driver.get(f"file://{temp_path}")
-time.sleep(5)
-# Debug: check SVG node elements
-node_info = driver.execute_script("""
-    var chart = Highcharts.charts[0];
-    if (!chart || !chart.series[0]) return 'no chart/series';
-    var nodes = chart.series[0].nodes;
-    if (!nodes) return 'no nodes property';
-    var info = 'nodes: ' + nodes.length;
-    nodes.forEach(function(n, i) {
-        if (n.graphic) {
-            var el = n.graphic.element;
-            info += '\\n  ' + i + ': tag=' + el.tagName + ' attrs=';
-            for (var a of el.attributes) info += a.name + '=' + a.value + ' ';
-        } else {
-            info += '\\n  ' + i + ': no graphic';
-        }
-    });
-    return info;
-""")
-print(node_info)
+time.sleep(6)
 driver.save_screenshot("plot_raw.png")
 driver.quit()
 
