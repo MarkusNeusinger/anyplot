@@ -1,6 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 arc-basic: Basic Arc Diagram
 Library: plotly 6.5.2 | Python 3.14.3
+Quality: 87/100 | Updated: 2026-02-23
 """
 
 import numpy as np
