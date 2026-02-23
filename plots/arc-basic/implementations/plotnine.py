@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 arc-basic: Basic Arc Diagram
 Library: plotnine 0.15.3 | Python 3.14.3
 Quality: 81/100 | Updated: 2026-02-23
@@ -13,6 +13,7 @@ import numpy as np  # noqa: E402
 import pandas as pd  # noqa: E402
 from plotnine import (  # noqa: E402
     aes,
+    annotate,
     coord_cartesian,
     element_blank,
     element_rect,
@@ -23,6 +24,7 @@ from plotnine import (  # noqa: E402
     ggplot,
     labs,
     scale_alpha_identity,
+    scale_color_gradient,
     scale_size_identity,
     theme,
 )
@@ -70,7 +72,14 @@ for arc_id, (start, end, weight) in enumerate(edges):
     y_arc = y_baseline + height * np.sin(theta)
 
     arc_df_chunk = pd.DataFrame(
-        {"x": x_arc, "y": y_arc, "arc_id": arc_id, "size": 0.8 + weight * 0.7, "alpha": 0.30 + weight * 0.18}
+        {
+            "x": x_arc,
+            "y": y_arc,
+            "arc_id": arc_id,
+            "weight": float(weight),
+            "size": 0.6 + weight * 0.8,
+            "alpha": 0.40 + weight * 0.18,
+        }
     )
     arc_rows.append(arc_df_chunk)
 
@@ -80,19 +89,34 @@ arc_df = pd.concat(arc_rows, ignore_index=True)
 node_df = pd.DataFrame({"x": x_positions, "y": [y_baseline] * n_nodes})
 label_df = pd.DataFrame({"x": x_positions, "y": [y_baseline - 0.03] * n_nodes, "name": nodes})
 
-# Plot
+# Plot with weight-to-color gradient for visual hierarchy
 plot = (
     ggplot()
-    + geom_path(arc_df, aes(x="x", y="y", group="arc_id", size="size", alpha="alpha"), color="#306998")
+    + geom_path(arc_df, aes(x="x", y="y", group="arc_id", color="weight", size="size", alpha="alpha"))
+    + scale_color_gradient(low="#A8C4D8", high="#1A3A5C")
     + scale_size_identity()
     + scale_alpha_identity()
-    + geom_point(node_df, aes(x="x", y="y"), color="#306998", size=8, stroke=1.2, fill="white")
-    + geom_text(label_df, aes(x="x", y="y", label="name"), size=12, color="#2C3E50", fontweight="bold", va="top")
-    + coord_cartesian(xlim=(-0.05, 1.05))
-    + labs(title="Character Interactions \u00b7 arc-basic \u00b7 plotnine \u00b7 pyplots.ai")
+    + geom_point(node_df, aes(x="x", y="y"), color="#1A3A5C", size=8, stroke=1.5, fill="white")
+    + geom_text(label_df, aes(x="x", y="y", label="name"), size=16, color="#1A3A5C", fontweight="bold", va="top")
+    + annotate(
+        "text",
+        x=0.5,
+        y=0.78,
+        label="Stronger connections shown in darker blue",
+        size=12,
+        color="#666666",
+        ha="center",
+        fontstyle="italic",
+    )
+    + coord_cartesian(xlim=(-0.06, 1.06), ylim=(-0.10, 0.85))
+    + labs(
+        title="Character Interactions \u00b7 arc-basic \u00b7 plotnine \u00b7 pyplots.ai",
+        subtitle="Narrative connections in Chapter 1 — arc thickness and color encode interaction strength",
+    )
     + theme(
         figure_size=(16, 9),
         plot_title=element_text(size=24, ha="center", weight="bold"),
+        plot_subtitle=element_text(size=14, ha="center", color="#555555"),
         plot_margin=0.02,
         axis_title=element_blank(),
         axis_text=element_blank(),
