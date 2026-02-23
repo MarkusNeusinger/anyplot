@@ -1,7 +1,6 @@
-""" pyplots.ai
+"""pyplots.ai
 arc-basic: Basic Arc Diagram
 Library: plotly 6.5.2 | Python 3.14.3
-Quality: 86/100 | Updated: 2026-02-23
 """
 
 import numpy as np
@@ -31,11 +30,11 @@ edges = [
 # Node positions along horizontal axis
 x_positions = np.linspace(0, 10, n_nodes)
 
-# Weight-based styling: opacity and width encode connection strength
+# Weight-based styling: color intensity, opacity, and width encode connection strength
 arc_styles = {
-    1: {"color": "rgba(48, 105, 152, 0.30)", "width": 2.0},
-    2: {"color": "rgba(48, 105, 152, 0.55)", "width": 3.0},
-    3: {"color": "rgba(48, 105, 152, 0.85)", "width": 4.5},
+    1: {"color": "rgba(100, 149, 194, 0.40)", "width": 2.5, "label": "Weak (1)"},
+    2: {"color": "rgba(48, 105, 152, 0.60)", "width": 3.5, "label": "Medium (2)"},
+    3: {"color": "rgba(20, 66, 110, 0.90)", "width": 5.0, "label": "Strong (3)"},
 }
 
 # Create figure
@@ -51,15 +50,33 @@ for src, tgt, weight in edges:
     y_arc = arc_height * 4 * t * (1 - t)
 
     style = arc_styles[weight]
+    distance = abs(tgt - src)
     fig.add_trace(
         go.Scatter(
             x=x_arc,
             y=y_arc,
             mode="lines",
             line={"width": style["width"], "color": style["color"]},
-            hoverinfo="text",
-            hovertext=f"{nodes[src]} — {nodes[tgt]}  (weight {weight})",
+            hovertemplate=(
+                f"<b>{nodes[src]} \u2014 {nodes[tgt]}</b><br>"
+                f"Weight: <b>{weight}</b> ({style['label'].split(' ')[0].lower()})<br>"
+                f"Distance: {distance} positions<extra></extra>"
+            ),
             showlegend=False,
+        )
+    )
+
+# Weight legend using dummy traces
+for w in [3, 2, 1]:
+    style = arc_styles[w]
+    fig.add_trace(
+        go.Scatter(
+            x=[None],
+            y=[None],
+            mode="lines",
+            line={"width": style["width"], "color": style["color"]},
+            name=style["label"],
+            showlegend=True,
         )
     )
 
@@ -69,10 +86,10 @@ fig.add_trace(
         x=x_positions,
         y=np.zeros(n_nodes),
         mode="markers+text",
-        marker={"size": 24, "color": "#FFD43B", "line": {"width": 2.5, "color": "#306998"}},
+        marker={"size": 26, "color": "#FFD43B", "line": {"width": 2.5, "color": "#306998"}},
         text=nodes,
         textposition="bottom center",
-        textfont={"size": 18, "color": "#2a2a2a"},
+        textfont={"size": 22, "color": "#2a2a2a"},
         hovertemplate="<b>%{text}</b><extra></extra>",
         showlegend=False,
     )
@@ -83,23 +100,50 @@ fig.add_shape(
     type="line", x0=x_positions[0] - 0.3, x1=x_positions[-1] + 0.3, y0=0, y1=0, line={"width": 1.5, "color": "#CCCCCC"}
 )
 
+# Annotate longest-range arc as focal point
+mid_x = (x_positions[0] + x_positions[8]) / 2
+peak_y = abs(8 - 0) * 0.45
+fig.add_annotation(
+    x=mid_x,
+    y=peak_y,
+    text="longest range",
+    showarrow=True,
+    arrowhead=0,
+    arrowwidth=1.2,
+    arrowcolor="#888888",
+    ax=50,
+    ay=-20,
+    font={"size": 14, "color": "#666666", "family": "Arial"},
+)
+
 # Layout
 fig.update_layout(
     title={
-        "text": "arc-basic · plotly · pyplots.ai",
+        "text": "arc-basic \u00b7 plotly \u00b7 pyplots.ai",
         "font": {"size": 30, "color": "#2a2a2a"},
         "x": 0.5,
         "xanchor": "center",
         "y": 0.96,
     },
     xaxis={"showgrid": False, "zeroline": False, "showticklabels": False, "showline": False, "range": [-0.5, 10.5]},
-    yaxis={"showgrid": False, "zeroline": False, "showticklabels": False, "showline": False, "range": [-0.6, 4.5]},
+    yaxis={"showgrid": False, "zeroline": False, "showticklabels": False, "showline": False, "range": [-0.35, 4.5]},
     hovermode="closest",
-    hoverlabel={"bgcolor": "white", "font_size": 14, "font_color": "#306998"},
+    hoverlabel={"bgcolor": "white", "font_size": 16, "font_color": "#306998", "bordercolor": "#306998"},
     template="plotly_white",
     plot_bgcolor="white",
     paper_bgcolor="white",
     margin={"l": 30, "r": 30, "t": 70, "b": 30},
+    legend={
+        "title": {"text": "Connection Strength", "font": {"size": 16, "color": "#2a2a2a"}},
+        "font": {"size": 14},
+        "x": 0.98,
+        "y": 0.98,
+        "xanchor": "right",
+        "yanchor": "top",
+        "bgcolor": "rgba(255, 255, 255, 0.85)",
+        "bordercolor": "#CCCCCC",
+        "borderwidth": 1,
+    },
 )
 
 # Save outputs
