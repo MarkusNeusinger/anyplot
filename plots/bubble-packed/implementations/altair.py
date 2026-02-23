@@ -1,7 +1,7 @@
-""" pyplots.ai
+"""pyplots.ai
 bubble-packed: Basic Packed Bubble Chart
-Library: altair 6.0.0 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-23
+Library: altair 6.0.0 | Python 3.14.3
+Quality: /100 | Updated: 2026-02-23
 """
 
 import altair as alt
@@ -9,34 +9,52 @@ import numpy as np
 import pandas as pd
 
 
-# Data - Department budget allocation
+# Data - Department budget allocation with group clusters
 np.random.seed(42)
-data = {
+departments = {
     "label": [
         "Engineering",
+        "R&D",
+        "Data Science",
+        "QA",
         "Marketing",
         "Sales",
-        "Operations",
-        "HR",
-        "Finance",
-        "R&D",
         "Support",
+        "Finance",
+        "HR",
         "Legal",
+        "Operations",
         "IT",
+        "Security",
         "Design",
         "Product",
-        "Data Science",
-        "Security",
-        "QA",
     ],
-    "value": [850, 420, 680, 320, 180, 290, 750, 210, 150, 380, 240, 550, 460, 170, 195],
+    "value": [850, 750, 460, 195, 420, 680, 210, 290, 180, 150, 320, 380, 170, 240, 550],
+    "group": [
+        "Technology",
+        "Technology",
+        "Technology",
+        "Technology",
+        "Revenue",
+        "Revenue",
+        "Revenue",
+        "Corporate",
+        "Corporate",
+        "Corporate",
+        "Operations",
+        "Operations",
+        "Operations",
+        "Product",
+        "Product",
+    ],
 }
 
-labels = data["label"]
-values = data["value"]
+labels = departments["label"]
+values = departments["value"]
+groups = departments["group"]
 n = len(labels)
 
-# Scale values to radius (using sqrt for area-proportional sizing)
+# Scale values to radius (sqrt for area-proportional sizing)
 min_radius = 30
 max_radius = 120
 values_array = np.array(values)
@@ -49,39 +67,30 @@ order = np.argsort(-radii)
 radii = radii[order]
 labels = [labels[i] for i in order]
 values = [values[i] for i in order]
+groups = [groups[i] for i in order]
 
 # Circle packing - place circles one by one, finding best position
 x_pos = np.zeros(n)
 y_pos = np.zeros(n)
 
-# Place first circle at center
-x_pos[0] = 0
-y_pos[0] = 0
-
-# Place remaining circles
 for i in range(1, n):
-    best_x, best_y = 0, 0
+    best_x, best_y = 0.0, 0.0
     best_dist = float("inf")
 
-    # Try positions around existing circles
     for j in range(i):
         for angle in np.linspace(0, 2 * np.pi, 36, endpoint=False):
-            # Position touching circle j
             test_x = x_pos[j] + (radii[j] + radii[i] + 2) * np.cos(angle)
             test_y = y_pos[j] + (radii[j] + radii[i] + 2) * np.sin(angle)
 
-            # Check for overlaps with all placed circles
             valid = True
             for k in range(i):
                 dx = test_x - x_pos[k]
                 dy = test_y - y_pos[k]
-                dist = np.sqrt(dx**2 + dy**2)
-                if dist < radii[i] + radii[k] + 1:
+                if np.sqrt(dx**2 + dy**2) < radii[i] + radii[k] + 1:
                     valid = False
                     break
 
             if valid:
-                # Prefer positions closer to center
                 center_dist = np.sqrt(test_x**2 + test_y**2)
                 if center_dist < best_dist:
                     best_dist = center_dist
@@ -90,14 +99,10 @@ for i in range(1, n):
     x_pos[i] = best_x
     y_pos[i] = best_y
 
-# Fine-tune with physics simulation
+# Physics simulation for tighter packing
 for _ in range(200):
     for i in range(n):
-        fx, fy = 0, 0
-        # Gentle centering force
-        fx -= x_pos[i] * 0.01
-        fy -= y_pos[i] * 0.01
-        # Repulsion from overlapping circles
+        fx, fy = -x_pos[i] * 0.01, -y_pos[i] * 0.01
         for j in range(n):
             if i != j:
                 dx = x_pos[i] - x_pos[j]
@@ -111,44 +116,80 @@ for _ in range(200):
         x_pos[i] += fx
         y_pos[i] += fy
 
-# Color palette - colorblind-safe colors with Python Blue and Yellow as primary
-colors_list = ["#306998", "#FFD43B", "#4A90A4", "#7B9E89", "#E07A5F"]
-colors = [colors_list[i % len(colors_list)] for i in range(n)]
+# Center the layout
+x_center = (x_pos.min() + x_pos.max()) / 2
+y_center = (y_pos.min() + y_pos.max()) / 2
+x_pos -= x_center
+y_pos -= y_center
 
-# Create DataFrame with computed positions
+# Group color palette - colorblind-safe
+group_colors = {
+    "Technology": "#306998",
+    "Revenue": "#E07A5F",
+    "Corporate": "#7B9E89",
+    "Operations": "#4A90A4",
+    "Product": "#FFD43B",
+}
+
 df = pd.DataFrame(
     {
         "label": labels,
         "value": values,
+        "group": groups,
         "x": x_pos,
         "y": y_pos,
         "radius": radii,
-        "color": colors,
-        "formatted_value": [f"${v}K" for v in values],
+        "budget": [f"${v}K" for v in values],
     }
 )
 
-# Create circles using mark_circle with computed positions
+# Group ordering for consistent legend
+group_order = ["Technology", "Revenue", "Operations", "Corporate", "Product"]
+
+# Circles layer
 circles = (
     alt.Chart(df)
     .mark_circle(opacity=0.85, stroke="white", strokeWidth=2)
     .encode(
-        x=alt.X("x:Q", axis=None),
-        y=alt.Y("y:Q", axis=None),
+        x=alt.X("x:Q", axis=None, scale=alt.Scale(padding=max_radius * 1.4)),
+        y=alt.Y("y:Q", axis=None, scale=alt.Scale(padding=max_radius * 1.4)),
         size=alt.Size("radius:Q", scale=alt.Scale(range=[min_radius**2 * 3, max_radius**2 * 3]), legend=None),
-        color=alt.Color("color:N", scale=None, legend=None),
-        tooltip=[alt.Tooltip("label:N", title="Department"), alt.Tooltip("formatted_value:N", title="Budget")],
+        color=alt.Color(
+            "group:N",
+            scale=alt.Scale(domain=group_order, range=[group_colors[g] for g in group_order]),
+            legend=alt.Legend(
+                title="Division",
+                titleFontSize=18,
+                titleFontWeight="bold",
+                labelFontSize=15,
+                symbolSize=300,
+                orient="none",
+                legendX=1400,
+                legendY=680,
+                direction="vertical",
+            ),
+        ),
+        tooltip=[
+            alt.Tooltip("label:N", title="Department"),
+            alt.Tooltip("budget:N", title="Budget"),
+            alt.Tooltip("group:N", title="Division"),
+        ],
     )
 )
 
-# Create labels for larger bubbles
-df_large = df[df["radius"] > 55].copy()
-df_large["display_text"] = df_large["label"] + "\n" + df_large["formatted_value"]
+# Labels inside larger bubbles
+df_large = df[df["radius"] > 50].copy()
+df_large["display_text"] = df_large["label"] + "\n" + df_large["budget"]
 
 labels_layer = (
     alt.Chart(df_large)
-    .mark_text(color="white", fontWeight="bold", fontSize=14, lineBreak="\n")
-    .encode(x=alt.X("x:Q"), y=alt.Y("y:Q"), text="display_text:N")
+    .mark_text(fontWeight="bold", fontSize=13, lineBreak="\n")
+    .encode(
+        x=alt.X("x:Q"),
+        y=alt.Y("y:Q"),
+        text="display_text:N",
+        color=alt.condition(alt.datum.group == "Product", alt.value("#333333"), alt.value("white")),
+    )
 )
 
 # Combine layers
@@ -167,6 +208,6 @@ chart = (
     .configure_view(strokeWidth=0)
 )
 
-# Save outputs
+# Save
 chart.save("plot.png", scale_factor=3.0)
 chart.save("plot.html")
