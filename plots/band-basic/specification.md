@@ -16,7 +16,7 @@ A band plot displays a filled region between two boundary lines, commonly used t
 - `x` (numeric) - Independent variable, often representing time or sequence
 - `y_lower` (numeric) - Lower boundary values defining the bottom of the band
 - `y_upper` (numeric) - Upper boundary values defining the top of the band
-- `y_center` (numeric, optional) - Central trend line values (mean/median)
+- `y_center` (numeric) - Central trend line values (mean/median), shown as a contrasting line
 - Size: 20-200 data points
 - Example: Time series with 95% confidence interval bounds
 
