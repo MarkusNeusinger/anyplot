@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 arc-basic: Basic Arc Diagram
 Library: plotnine 0.15.3 | Python 3.14.3
 Quality: 87/100 | Updated: 2026-02-23
@@ -15,7 +15,6 @@ from plotnine import (  # noqa: E402
     aes,
     annotate,
     coord_cartesian,
-    element_blank,
     element_rect,
     element_text,
     geom_path,
@@ -27,6 +26,7 @@ from plotnine import (  # noqa: E402
     scale_color_gradient,
     scale_size_identity,
     theme,
+    theme_void,
 )
 
 
@@ -77,8 +77,8 @@ for arc_id, (start, end, weight) in enumerate(edges):
             "y": y_arc,
             "arc_id": arc_id,
             "weight": float(weight),
-            "size": 0.6 + weight * 0.8,
-            "alpha": 0.40 + weight * 0.18,
+            "size": 1.2 + weight * 0.7,
+            "alpha": 0.50 + weight * 0.15,
         }
     )
     arc_rows.append(arc_df_chunk)
@@ -101,28 +101,24 @@ plot = (
     + annotate(
         "text",
         x=0.5,
-        y=0.78,
+        y=0.76,
         label="Stronger connections shown in darker blue",
-        size=12,
+        size=14,
         color="#666666",
         ha="center",
         fontstyle="italic",
     )
-    + coord_cartesian(xlim=(-0.06, 1.06), ylim=(-0.10, 0.85))
+    + coord_cartesian(xlim=(-0.06, 1.06), ylim=(-0.08, 0.82))
     + labs(
         title="Character Interactions \u00b7 arc-basic \u00b7 plotnine \u00b7 pyplots.ai",
         subtitle="Narrative connections in Chapter 1 — arc thickness and color encode interaction strength",
     )
+    + theme_void()
     + theme(
         figure_size=(16, 9),
         plot_title=element_text(size=24, ha="center", weight="bold"),
         plot_subtitle=element_text(size=14, ha="center", color="#555555"),
         plot_margin=0.02,
-        axis_title=element_blank(),
-        axis_text=element_blank(),
-        axis_ticks=element_blank(),
-        panel_grid=element_blank(),
-        panel_background=element_rect(fill="white", color="white"),
         plot_background=element_rect(fill="white", color="white"),
         legend_position="none",
     )
