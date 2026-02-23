@@ -1,7 +1,6 @@
-""" pyplots.ai
+"""pyplots.ai
 band-basic: Basic Band Plot
 Library: pygal 3.1.0 | Python 3.14
-Quality: 85/100 | Updated: 2026-02-23
 """
 
 import numpy as np
@@ -32,17 +31,22 @@ uncertainty = 1.2 + 0.8 * np.sin(2 * np.pi * hours / 24) ** 2 + 0.04 * hours
 y_lower = y_center - uncertainty
 y_upper = y_center + uncertainty
 
-# Custom style — refined palette with low-opacity band
+# Custom style — polished palette with strong band-vs-trend color hierarchy
 custom_style = Style(
     background="white",
     plot_background="white",
     foreground="#2C3E50",
     foreground_strong="#1A252F",
-    foreground_subtle="#BDC3C7",
-    guide_stroke_color="#E0E0E0",
-    colors=("#306998", "#D4880F"),
-    opacity=".30",
-    opacity_hover=".45",
+    foreground_subtle="#95A5A6",
+    guide_stroke_color="#ECECEC",
+    guide_stroke_dasharray="2,6",
+    major_guide_stroke_color="#D5D5D5",
+    major_guide_stroke_dasharray="4,4",
+    colors=("#306998", "#B8860B"),
+    opacity=".20",
+    opacity_hover=".35",
+    stroke_opacity="1",
+    stroke_opacity_hover="1",
     stroke_width=4,
     title_font_size=60,
     label_font_size=42,
@@ -51,14 +55,14 @@ custom_style = Style(
     value_font_size=36,
     value_colors=("transparent",),
     tooltip_font_size=32,
-    major_guide_stroke_dasharray="6,3",
 )
 
-# Create XY chart
+# Create XY chart with fine-tuned layout and pygal-specific formatters
 chart = pygal.XY(
     style=custom_style,
     width=4800,
     height=2700,
+    explicit_size=True,
     title="band-basic \u00b7 pygal \u00b7 pyplots.ai",
     x_title="Time (hours)",
     y_title="Soil Moisture (%)",
@@ -68,6 +72,7 @@ chart = pygal.XY(
     fill=True,
     stroke=True,
     legend_at_bottom=True,
+    legend_box_size=28,
     truncate_legend=-1,
     x_label_rotation=0,
     range=(min(y_lower) - 1, max(y_upper) + 2),
@@ -76,8 +81,14 @@ chart = pygal.XY(
     show_minor_x_labels=True,
     show_minor_y_labels=True,
     print_values=False,
-    formatter=lambda x: f"{x:.1f}%",
-    tooltip_border_radius=6,
+    x_value_formatter=lambda x: f"{x:.0f}h",
+    value_formatter=lambda x: f"{x:.1f}%",
+    tooltip_border_radius=8,
+    margin_top=30,
+    margin_bottom=50,
+    margin_left=30,
+    margin_right=50,
+    spacing=18,
     js=[],
 )
 
@@ -86,11 +97,11 @@ band_polygon = [(float(h), float(y)) for h, y in zip(hours, y_upper, strict=True
 for h, y in zip(reversed(hours), reversed(y_lower), strict=True):
     band_polygon.append((float(h), float(y)))
 
-chart.add("95% Confidence Band", band_polygon, stroke_style={"width": 0.5, "dasharray": "0"}, show_dots=False)
+chart.add("95% Confidence Band", band_polygon, stroke_style={"width": 1.0, "dasharray": "0"}, show_dots=False)
 
-# Central trend line — thicker stroke, no fill, contrasting gold
+# Central trend line — bold stroke, no fill, contrasting dark goldenrod
 center_data = [(float(h), float(y)) for h, y in zip(hours, y_center, strict=True)]
-chart.add("Sensor Mean", center_data, fill=False, stroke=True, dots_size=0, stroke_style={"width": 8})
+chart.add("Sensor Mean", center_data, fill=False, stroke=True, dots_size=0, stroke_style={"width": 32})
 
 # Save
 chart.render_to_png("plot.png")
