@@ -1,166 +1,196 @@
 library: plotly
 specification_id: arc-basic
 created: '2025-12-23T08:49:38Z'
-updated: '2025-12-23T09:04:32Z'
-generated_by: claude-opus-4-5-20251101
+updated: '2026-02-23T21:59:34Z'
+generated_by: claude-opus-4-6
 workflow_run: 20455961277
 issue: 0
-python_version: 3.13.11
-library_version: 6.5.0
+python_version: 3.14.3
+library_version: 6.5.2
 preview_url: https://storage.googleapis.com/pyplots-images/plots/arc-basic/plotly/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/arc-basic/plotly/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/arc-basic/plotly/plot.html
-quality_score: 91
+quality_score: 90
 impl_tags:
   dependencies: []
   techniques:
-    - html-export
+  - annotations
+  - hover-tooltips
+  - custom-legend
+  - html-export
   patterns:
-    - data-generation
-    - iteration-over-groups
+  - data-generation
+  - iteration-over-groups
   dataprep: []
   styling:
-    - alpha-blending
+  - alpha-blending
+  - minimal-chrome
 review:
   strengths:
-  - Excellent visual implementation of arc diagram with proportional arc heights based
-    on node distance
-  - Clean use of semi-transparency (0.6 opacity) for overlapping arcs improves readability
-  - Good color scheme with high contrast between nodes (yellow) and arcs (blue)
-  - Proper use of weight-based line widths to distinguish connection strength
-  - Generates both static PNG and interactive HTML outputs
+  - 'Perfect spec compliance with all required features: proportional arc heights,
+    semi-transparency, weight-based color coding and thickness'
+  - Expert Plotly usage with interactive filter buttons (updatemenus), rich hovertemplates
+    with customdata, and dual PNG/HTML output
+  - Cohesive three-level blue palette encoding weight through color intensity, opacity,
+    and line width simultaneously
+  - Strong data storytelling with longest range annotation as focal point and clear
+    visual hierarchy through weight styling
+  - Clean, deterministic code following KISS principles with idiomatic Plotly patterns
+    throughout
   weaknesses:
-  - Layout has excessive whitespace below the baseline that could be reduced by adjusting
-    y-axis range
-  - Could add hover information showing connection details (source, target, weight)
-    for better interactivity
-  - Missing edge color coding by type or weight as suggested in spec notes
-  image_description: The plot displays a basic arc diagram with 10 nodes (Alice, Bob,
-    Carol, David, Eve, Frank, Grace, Henry, Iris, Jack) arranged horizontally along
-    a gray baseline. Each node is represented by a yellow circular marker with a blue
-    border. The nodes are connected by semi-transparent blue parabolic arcs above
-    the baseline. Arc heights vary based on the distance between connected nodes -
-    short-range connections (e.g., Alice-Bob) have lower arcs while long-range connections
-    (e.g., Alice-Iris) have higher arcs. The arcs have varying thicknesses based on
-    connection weights. The title "arc-basic · plotly · pyplots.ai" appears centered
-    at the top in dark text on a clean white background.
+  - Weakest arcs (weight=1, alpha 0.50) are somewhat faint in the static PNG output
+  - Some vertical canvas space wasted below the baseline area
+  - VQ-06 limited by plot type — arc diagrams do not have traditional axis labels
+    with units
+  image_description: 'The plot displays a basic arc diagram with 10 character nodes
+    (Alice, Bob, Carol, David, Eve, Frank, Grace, Henry, Iris, Jack) arranged along
+    a subtle gray horizontal baseline near the bottom of the canvas. Parabolic arcs
+    connect pairs of nodes above the line, with arc height proportional to the distance
+    between connected nodes. Three weight levels are distinguished through a graduated
+    blue color scheme: dark navy blue with high opacity (0.90) and thick width (5.0)
+    for Strong (3) connections, medium blue with moderate opacity (0.65) and width
+    (3.5) for Medium (2), and light pale blue with lower opacity (0.50) and width
+    (3.0) for Weak (1). Yellow circular node markers (size 26) with dark blue outlines
+    sit on the baseline. An annotation arrow points to the tallest arc (Alice–Iris)
+    labeled "longest range" in 20pt font. A legend titled "Connection Strength" in
+    the upper right classifies the three weight levels. Interactive filter buttons
+    (All, Strong, Medium, Weak) appear in the upper left via Plotly updatemenus. The
+    title "arc-basic · plotly · pyplots.ai" is centered at the top with a subtitle
+    "Character interactions in a story narrative." Clean white background with no
+    grid lines or axis elements.'
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 27
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 32pt and node labels at 18pt are clearly readable
+        comment: 'All font sizes explicitly set: title=30pt, subtitle=18px, node labels=22pt,
+          legend title=18pt, legend items=16pt, annotation=20pt. All text perfectly
+          readable at 4800x2700.'
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text, all labels clearly spaced
+        comment: All text fully readable with no collisions. Node labels well-spaced.
+          Legend positioned clear of arcs.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Nodes (size=24) and arcs are well-sized, semi-transparency (0.6)
-          handles overlapping arcs nicely
+        comment: Nodes and strong/medium arcs well-sized. Weakest arcs (alpha 0.50,
+          width 3.0) distinguishable but somewhat faint in static image.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Blue (#306998) and yellow (#FFD43B) provide good contrast, colorblind-safe
+        comment: Single-hue blue scheme with intensity/opacity variation is colorblind-safe.
+          Yellow nodes contrast well against blue arcs.
       - id: VQ-05
-        name: Layout Balance
+        name: Layout & Canvas
         score: 3
-        max: 5
+        max: 4
         passed: true
-        comment: Good proportions but significant whitespace below the baseline
+        comment: Good horizontal spread. Some vertical dead space below baseline and
+          at canvas edges.
       - id: VQ-06
-        name: Axis Labels
-        score: 0
+        name: Axis Labels & Title
+        score: 1
         max: 2
         passed: true
-        comment: No axis labels (acceptable for arc diagrams which hide axes)
-      - id: VQ-07
-        name: Grid & Legend
-        score: 2
-        max: 2
+        comment: Title in correct format with descriptive subtitle. Axes appropriately
+          hidden for arc diagram. No units concept applicable.
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
         passed: true
-        comment: No grid shown (appropriate), no legend needed
+        comment: 'Strong design: custom three-level blue palette with intentional
+          weight encoding through color intensity, opacity, and line width. Python-themed
+          yellow/blue nodes.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Good refinement: axis elements hidden, subtle baseline, styled legend
+          with transparency, filter buttons, tight margins. Above defaults.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Weight encoding creates clear visual hierarchy. Longest range annotation
+          provides focal point. Filter buttons enable exploration by strength.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct arc diagram with nodes on horizontal line and curved arcs
-          above
+        comment: 'Correct arc diagram: nodes on horizontal line, curved parabolic
+          arcs above.'
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Nodes correctly positioned, edges correctly connect source/target
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: arc height proportional to distance,
-          varying weights affect thickness, semi-transparent arcs'
-      - id: SC-04
-        name: Data Range
+        comment: 'All spec features present: proportional arc heights, semi-transparency,
+          readable labels, color coding by weight, weight-based thickness.'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All nodes and connections visible within the plot area
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Nodes correctly positioned with linspace. Arcs connect correct pairs.
+          Heights scale with node distance.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No legend needed, node labels accurate
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses correct format "arc-basic · plotly · pyplots.ai"
+        comment: Title arc-basic · plotly · pyplots.ai in correct format. Legend shows
+          Connection Strength with three labeled weight levels.
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Shows short-range, medium-range, and long-range arcs with varying
-          weights, but could show more variation in edge types
+        comment: 'Shows all arc diagram aspects: short/long-range connections, three
+          weight levels, overlapping arcs, varying densities.'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Character interactions in a story narrative is a plausible and comprehensible
-          scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: 10 nodes is within the recommended 10-50 range, weights 1-3 provide
-          clear differentiation
+        comment: Character interactions in a story narrative — neutral, comprehensible
+          real-world scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 10 nodes and 12 edges provide good density. Weights 1-3 sensible
+          for interaction strength.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -168,34 +198,53 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple sequential structure: imports → data → plot → save'
+        comment: 'Clean linear flow: imports, data, figure, arcs, legend, nodes, baseline,
+          annotation, buttons, layout, save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
-        max: 3
-        passed: false
-        comment: Uses deterministic data (no random), but no explicit seed set for
-          any random operations
+        max: 2
+        passed: true
+        comment: 'Fully deterministic: hardcoded nodes, edges, and positions. No random
+          generation.'
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy and plotly.graph_objects used
+        comment: Only numpy and plotly.graph_objects imported; both actively used.
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Plotly API
+        comment: Clean arc_styles dictionary, concise loop, standard Plotly dummy
+          trace legend pattern. No fake functionality.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
-      items: []
+        comment: Saves as plot.png (4800x2700) and plot.html with CDN. Current Plotly
+          6.x API.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert Plotly usage: go.Figure, hovertemplate with HTML and extra
+          tag, customdata, updatemenus, add_shape, add_annotation, dual write_image/write_html
+          output with config.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Leverages Plotly-distinctive features: updatemenus filter buttons,
+          custom hovertemplate with HTML, hoverlabel styling, write_html with CDN
+          and modeBar config.'
   verdict: APPROVED
