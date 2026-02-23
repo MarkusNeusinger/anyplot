@@ -1,7 +1,7 @@
-""" pyplots.ai
+"""pyplots.ai
 bubble-packed: Basic Packed Bubble Chart
-Library: letsplot 4.8.2 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-23
+Library: letsplot 4.8.2 | Python 3.14.3
+Quality: /100 | Updated: 2026-02-23
 """
 
 import numpy as np
@@ -16,6 +16,7 @@ from lets_plot import (
     ggplot,
     ggsize,
     labs,
+    layer_tooltips,
     scale_color_manual,
     scale_size,
     theme,
@@ -28,7 +29,7 @@ from lets_plot.export import ggsave as export_ggsave
 
 LetsPlot.setup_html()
 
-# Data - department budget allocation
+# Data - department budget allocation ($M)
 np.random.seed(42)
 categories = [
     "Engineering",
@@ -66,9 +67,9 @@ groups = [
     "Tech",
 ]
 
-# Circle packing using force simulation (inline)
+# Circle packing using force simulation
 n = len(values)
-radii = np.sqrt(values / np.pi) * 3.5  # Scale by area for accurate visual perception
+radii = np.sqrt(values / np.pi) * 3.5
 
 # Initialize positions
 np.random.seed(42)
@@ -77,11 +78,9 @@ y = np.random.uniform(-100, 100, n)
 
 # Force-directed packing simulation
 for _ in range(600):
-    # Pull toward center
     x *= 0.99
     y *= 0.99
 
-    # Push overlapping circles apart
     for i in range(n):
         for j in range(i + 1, n):
             dx = x[j] - x[i]
@@ -98,33 +97,25 @@ for _ in range(600):
                 x[j] += move_x
                 y[j] += move_y
 
-df = pd.DataFrame({"label": categories, "value": values, "group": groups, "x": x, "y": y})
+df = pd.DataFrame(
+    {"label": categories, "value": values, "group": groups, "x": x, "y": y, "budget": [f"${v}M" for v in values]}
+)
 
-# Abbreviate long labels to fit inside bubbles
-label_map = {
-    "Customer Support": "Support",
-    "Engineering": "Engineering",
-    "Marketing": "Marketing",
-    "Sales": "Sales",
-    "Operations": "Ops",
-    "Finance": "Finance",
-    "R&D": "R&D",
-    "HR": "HR",
-    "Legal": "Legal",
-    "IT": "IT",
-    "Product": "Product",
-    "Design": "Design",
-    "Analytics": "Analytics",
-    "QA": "QA",
-    "Security": "Security",
-}
-df["short_label"] = df["label"].map(label_map)
+# Show labels only on bubbles large enough to fit text
+df["display_label"] = df.apply(lambda row: row["label"] if row["value"] >= 35 else "", axis=1)
+# Abbreviate long labels
+abbrev = {"Customer Support": "Support", "Operations": "Ops"}
+df["display_label"] = df["display_label"].replace(abbrev)
 
 # Plot
 plot = (
     ggplot(df, aes(x="x", y="y"))
-    + geom_point(aes(size="value", color="group"), alpha=0.85)
-    + geom_text(aes(label="short_label"), size=7, color="white", fontface="bold")
+    + geom_point(
+        aes(size="value", color="group"),
+        alpha=0.85,
+        tooltips=layer_tooltips().title("@label").line("Budget|@budget").line("Division|@group"),
+    )
+    + geom_text(aes(label="display_label"), size=7, color="white", fontface="bold")
     + scale_size(range=[20, 85], guide="none")
     + scale_color_manual(values=["#FFD43B", "#4ECDC4", "#306998"])
     + labs(title="Department Budget Allocation · bubble-packed · letsplot · pyplots.ai", color="Division")
@@ -141,8 +132,5 @@ plot = (
     + ggsize(1600, 900)
 )
 
-# Save PNG (scale 3x to get 4800x2700 px)
+# Save
 export_ggsave(plot, "plot.png", path=".", scale=3)
-
-# Save HTML for interactive version
-export_ggsave(plot, "plot.html", path=".")
