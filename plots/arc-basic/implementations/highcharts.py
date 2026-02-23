@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 arc-basic: Basic Arc Diagram
 Library: highcharts 1.10.3 | Python 3.14.3
 Quality: 85/100 | Created: 2026-02-23
@@ -64,12 +64,12 @@ for name in nodes:
         {
             "id": name,
             "color": node_colors[name],
-            "marker": {"radius": 44 + degree[name] * 7, "lineWidth": 4, "lineColor": "#ffffff"},
+            "marker": {"radius": 95 + degree[name] * 14, "lineWidth": 5, "lineColor": "#ffffff"},
         }
     )
 
 # Scale weights up for visual node sizing (arc diagram sizes nodes by total weight flow)
-weight_scale = 10
+weight_scale = 14
 links_data = [{"from": src, "to": tgt, "weight": w * weight_scale} for src, tgt, w in edges]
 
 # Chart options (raw JS — highcharts_core doesn't support arcdiagram type)
@@ -80,8 +80,8 @@ chart_options = {
         "backgroundColor": "#ffffff",
         "marginTop": 150,
         "marginBottom": 10,
-        "marginLeft": 100,
-        "marginRight": 100,
+        "marginLeft": 200,
+        "marginRight": 200,
         "spacingTop": 20,
         "spacingBottom": 0,
     },
@@ -111,27 +111,23 @@ chart_options = {
             "centeredLinks": True,
             "linkColorMode": "from",
             "linkOpacity": 0.5,
-            "linkWeight": 14,
+            "linkWeight": 18,
             "equalNodes": False,
-            "nodeWidth": 55,
-            "minLinkWidth": 6,
-            "marker": {"radius": 50, "lineWidth": 5, "lineColor": "#ffffff"},
+            "nodeWidth": 110,
+            "minLinkWidth": 8,
+            "marker": {"radius": 110, "lineWidth": 5, "lineColor": "#ffffff"},
             "dataLabels": [
                 {
                     "enabled": True,
                     "rotation": 0,
                     "y": 80,
                     "align": "center",
-                    "nodeFormat": "{point.name}",
-                    "format": "",
-                    "linkFormat": "",
                     "style": {
                         "fontSize": "48px",
                         "fontWeight": "bold",
                         "textOutline": "3px #ffffff",
                         "color": "#333333",
                     },
-                    "linkTextPath": {"enabled": False},
                 }
             ],
         }
@@ -170,38 +166,18 @@ highcharts_js = js_scripts["highcharts"]
 sankey_js = js_scripts["sankey"]
 arcdiagram_js = js_scripts["arcdiagram"]
 
-# Post-render JS: remove link labels and enlarge node circles
-cleanup_js = """
-setTimeout(function() {
-    // Remove link labels (internal IDs rendered on arc paths)
-    document.querySelectorAll('.highcharts-data-label textPath').forEach(function(el) {
-        el.parentNode.parentNode.style.display = 'none';
-    });
-    document.querySelectorAll('.highcharts-data-label text').forEach(function(el) {
-        if (el.textContent && el.textContent.indexOf('highcharts-') === 0) {
-            el.parentNode.style.display = 'none';
-        }
-    });
-    // Enlarge node paths (rendered as SVG arcs, not circles) via transform scale
-    var chart = Highcharts.charts[0];
-    if (chart && chart.series[0] && chart.series[0].nodes) {
-        chart.series[0].nodes.forEach(function(node) {
-            if (node.graphic) {
-                var el = node.graphic.element;
-                var bbox = el.getBBox();
-                var cx = bbox.x + bbox.width / 2;
-                var cy = bbox.y + bbox.height / 2;
-                var scale = 2.5;
-                el.setAttribute('transform',
-                    'translate(' + cx + ',' + cy + ') scale(' + scale + ') translate(' + (-cx) + ',' + (-cy) + ')');
-                el.setAttribute('stroke-width', '2');
-            }
-        });
-    }
-}, 2500);
+# Chart init JS: use formatter function to show only node names (no DOM manipulation)
+chart_init_js = f"""
+(function() {{
+    var opts = {options_json};
+    opts.series[0].dataLabels[0].formatter = function() {{
+        return this.point.isNode ? this.point.name : '';
+    }};
+    Highcharts.chart('container', opts);
+}})();
 """
 
-# Build HTML with inline JS
+# Build HTML with inline JS (no post-render DOM manipulation)
 html_content = f"""<!DOCTYPE html>
 <html>
 <head>
@@ -212,10 +188,7 @@ html_content = f"""<!DOCTYPE html>
 </head>
 <body style="margin:0;">
     <div id="container" style="width: 4800px; height: 2700px;"></div>
-    <script>
-        Highcharts.chart('container', {options_json});
-        {cleanup_js}
-    </script>
+    <script>{chart_init_js}</script>
 </body>
 </html>"""
 
@@ -230,10 +203,7 @@ standalone_html = f"""<!DOCTYPE html>
 </head>
 <body style="margin:0; overflow:auto;">
     <div id="container" style="width: 4800px; height: 2700px;"></div>
-    <script>
-        Highcharts.chart('container', {options_json});
-        {cleanup_js}
-    </script>
+    <script>{chart_init_js}</script>
 </body>
 </html>"""
 
@@ -254,7 +224,7 @@ chrome_options.add_argument("--window-size=4800,2900")
 
 driver = webdriver.Chrome(options=chrome_options)
 driver.get(f"file://{temp_path}")
-time.sleep(6)
+time.sleep(5)
 driver.save_screenshot("plot_raw.png")
 driver.quit()
 
