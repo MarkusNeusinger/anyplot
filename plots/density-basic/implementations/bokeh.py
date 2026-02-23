@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 density-basic: Basic Density Plot
 Library: bokeh 3.8.2 | Python 3.14.3
-Quality: 88/100 | Updated: 2026-02-23
+Quality: 91/100 | Updated: 2026-02-23
 """
 
 import numpy as np
