@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 bubble-packed: Basic Packed Bubble Chart
 Library: matplotlib 3.10.8 | Python 3.14.3
-Quality: 82/100 | Updated: 2026-02-23
+Quality: 87/100 | Updated: 2026-02-23
 """
 
 import matplotlib.collections as mcoll

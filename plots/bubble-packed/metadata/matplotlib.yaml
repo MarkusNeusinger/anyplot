@@ -1,7 +1,7 @@
 library: matplotlib
 specification_id: bubble-packed
 created: '2025-12-23T09:16:10Z'
-updated: '2026-02-23T15:48:01Z'
+updated: '2026-02-23T15:59:59Z'
 generated_by: claude-opus-4-6
 workflow_run: 20456558183
 issue: 0
@@ -10,14 +10,15 @@ library_version: 3.10.8
 preview_url: https://storage.googleapis.com/pyplots-images/plots/bubble-packed/matplotlib/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/bubble-packed/matplotlib/plot_thumb.png
 preview_html: null
-quality_score: 82
+quality_score: 87
 impl_tags:
   dependencies: []
   techniques:
   - patches
-  - custom-legend
   - annotations
+  - custom-legend
   patterns:
+  - data-generation
   - iteration-over-groups
   dataprep:
   - normalization
@@ -27,34 +28,33 @@ impl_tags:
   - edge-highlighting
 review:
   strengths:
-  - Well-implemented physics simulation for circle packing produces a clean, non-overlapping
-    layout
-  - Adaptive text sizing and contrast (dark text on yellow, white text on dark backgrounds)
-    shows attention to readability
-  - Efficient use of PatchCollection for rendering demonstrates matplotlib knowledge
-  - Realistic department budget context with meaningful value range ($130K-$950K)
-  - Clean, deterministic code that produces identical output every run
+  - Excellent physics simulation with group-aware clustering produces a professional
+    packed bubble layout with natural grouping
+  - 'Smart adaptive labeling system: font sizes scale with circle radius, text color
+    adapts to background brightness, and leader lines handle small circles gracefully'
+  - Area-proportional sizing correctly implemented with sqrt scaling for accurate
+    visual perception
+  - Perfect spec compliance with all required features implemented including optional
+    grouping
+  - Realistic department budget data with logical organizational structure
   weaknesses:
-  - Support (teal) and Compliance (muted green) colors are too similar, hurting colorblind
-    accessibility
-  - Two smallest circles (Security, Legal) are unlabeled and unidentifiable without
-    external reference
-  - Groups are colored but not spatially clustered, weakening the group narrative
-  - Some group assignments are unrealistic (Sales in Tech, Data Science in Creative)
-  - Design lacks a strong data insight or storytelling emphasis beyond relative sizes
-  image_description: 'The plot displays a packed bubble chart of department budget
-    allocations. Fifteen circles of varying sizes are packed together in the center
-    of the canvas. The largest circle is Engineering ($950K, dark blue), followed
-    by R&D ($820K, yellow), Sales ($680K, dark blue), and Product ($580K, dark blue).
-    Medium circles include Data Science ($470K, yellow), Marketing ($420K, yellow),
-    IT ($370K, dark blue), Operations ($310K, teal), and Finance ($280K, teal). Smaller
-    labeled circles include Design ($230K, yellow), Customer Support ($200K, teal),
-    QA ($175K, muted green), and HR ($160K, teal). Two very small circles (Security
-    and Legal) are present but unlabeled. Colors encode four groups: Tech (dark steel
-    blue), Creative (golden yellow), Support (teal), and Compliance (muted sage green).
-    White edges separate circles. A legend in the lower-right shows group colors.
+  - External labels (9pt) and smallest internal labels are at the lower end of legibility
+    for 4800x2700 output
+  - Layout is slightly asymmetric with the large Engineering bubble pulling the visual
+    center of mass downward
+  image_description: The plot shows a packed bubble chart depicting department budget
+    allocation for 15 departments grouped into 4 organizational categories. The largest
+    circle is Engineering ($950K) in steel blue at the bottom-center, followed by
+    R&D ($820K) in the same blue at the right. Business group circles (Product $580K,
+    Sales $680K, Marketing $420K, Design $230K) appear in bright gold/yellow, clustered
+    in the upper-left area. Operations group (Operations $310K, Finance $280K, Customer
+    Support $200K, HR $160K) uses coral/salmon. Compliance group (Legal $130K, Security
+    $145K, QA $175K) uses purple. Circles are packed together with visible separation
+    between groups. Larger circles have white bold text labels and dollar values inside;
+    smaller circles (Legal, Security) have external labels with thin gray leader lines.
     The title reads "Department Budget Allocation · bubble-packed · matplotlib · pyplots.ai"
-    in bold black at the top. Axes are turned off.'
+    in bold black at the top. A legend in the lower-right corner shows the four group
+    colors with labels. Background is white, axes are hidden.
   criteria_checklist:
     visual_quality:
       score: 26
@@ -62,71 +62,74 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: Title at 24pt bold, legend at 16pt, circle labels 9-15pt. Two smallest
-          circles unlabeled.
+        comment: All font sizes explicitly set. Title 24pt, legend 16pt, internal
+          labels 9-15pt. External and smallest internal text at 9pt borderline for
+          4800x2700.
       - id: VQ-02
         name: No Overlap
-        score: 6
-        max: 6
-        passed: true
-        comment: No overlapping text or circles. Physics simulation ensures separation.
-      - id: VQ-03
-        name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: All 15 circles visible. Two smallest are tiny and unlabeled.
+        comment: No text-on-text overlap. Middle cluster (Finance, Customer Support,
+          HR, QA) has tight spacing but remains readable.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All 15 circles clearly visible with strong size differentiation via
+          sqrt-based area-proportional scaling.
       - id: VQ-04
         name: Color Accessibility
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Blue and yellow distinguishable. Support teal and Compliance green
-          too similar for colorblind.
+        comment: Blue, yellow, coral, purple all distinguishable for colorblind users.
+          No red-green sole distinction.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Circles fill center well. Some empty corners but appropriate for
-          chart type.
+        comment: Good canvas utilization but slightly asymmetric — Engineering bubble
+          extends below center creating unbalanced whitespace.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive title with context. Axes appropriately off for packed
+        comment: Descriptive title with context. Axes correctly hidden for packed
           bubble chart.
     design_excellence:
-      score: 12
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Custom palette, adaptive text colors, white circle edges. Above defaults
-          but not publication-level.
+        comment: Custom 4-color palette, white circle edges with alpha 0.90, adaptive
+          text color. Yellow slightly over-saturated relative to other colors.
       - id: DE-02
         name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Axes hidden, white edge borders polished, alpha blending, custom
+          legend styling with fancybox and framealpha.
+      - id: DE-03
+        name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Clean axis removal, white edge highlighting, alpha blending. Some
-          refinement visible.
-      - id: DE-03
-        name: Data Storytelling
-        score: 3
-        max: 6
-        passed: false
-        comment: Size hierarchy creates focal point but groups are spatially scattered,
-          weakening group narrative.
+        comment: Size hierarchy shows Engineering and R&D dominate. Group clustering
+          adds organizational narrative. Dollar values provide context.
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -134,30 +137,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct packed bubble chart with physics-based packing.
+        comment: Correct packed bubble chart with physics simulation for circle packing.
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Most features present. Groups colored but not spatially clustered
-          as spec suggests.
+        comment: 'All features: area-proportional sizing, force simulation, adaptive
+          labels, color grouping, group clustering.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Values correctly mapped to area via sqrt scaling. All 15 data points
-          represented.
+        comment: Values correctly mapped to circle area via sqrt scaling. Groups correctly
+          clustered.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows required format. Legend shows all four group colors
-          correctly.
+        comment: Title follows format with descriptive prefix. Legend correctly labels
+          all 4 groups.
     data_quality:
-      score: 13
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -165,21 +168,21 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: 15 departments with wide value range and 4 groups. Good demonstration
-          of packed bubble features.
+        comment: 15 departments across 4 groups with good size variation ($130K-$950K).
+          Both internal and external labeling demonstrated.
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Department budgets are realistic and neutral. Some group assignments
-          questionable (Sales in Tech).
+        comment: Department budget allocation is a real, comprehensible, neutral business
+          scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Budget values $130K-$950K are realistic for department budgets.
+        comment: Budget values ($130K-$950K) realistic for department-level allocations.
     code_quality:
       score: 10
       max: 10
@@ -189,33 +192,36 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear script: imports, data, physics simulation, plot, save. No
-          functions or classes.'
+        comment: 'Linear flow: imports, data, scaling, sorting, physics simulation,
+          plotting, save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic. No random elements.
+        comment: 'Fully deterministic: hard-coded data, spiral initial positions from
+          linspace, deterministic physics.'
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All four imports used: matplotlib.collections, matplotlib.patches,
-          matplotlib.pyplot, numpy.'
+        comment: 'All 4 imports used: mcoll (PatchCollection), mpatches (Circle/Patch),
+          plt (figure/save), np (math).'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-structured. Physics simulation is appropriately complex.
+        comment: Physics simulation complexity appropriate for plot type. Well-commented.
+          Adaptive labeling logic clean.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300 and bbox_inches tight. Current API.
+        comment: Saves as plot.png at 300 DPI with bbox_inches='tight'. No deprecated
+          API.
     library_mastery:
       score: 7
       max: 10
@@ -225,12 +231,14 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: PatchCollection for efficient rendering, proper ax methods, custom
-          legend handles.
+        comment: Uses PatchCollection for efficient batch rendering, mpatches.Circle,
+          ax.annotate with arrowprops. Expert approach for a chart type with no high-level
+          API.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: PatchCollection and Circle patches are distinctive matplotlib patterns.
+        comment: PatchCollection for efficient patch rendering is distinctly matplotlib.
+          Combination with mpatches.Circle and annotate arrowprops is library-specific.
   verdict: REJECTED
