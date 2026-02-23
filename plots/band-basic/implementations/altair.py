@@ -1,6 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 band-basic: Basic Band Plot
 Library: altair 6.0.0 | Python 3.14
+Quality: 94/100 | Updated: 2026-02-23
 """
 
 import altair as alt
