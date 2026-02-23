@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 arc-basic: Basic Arc Diagram
 Library: altair 6.0.0 | Python 3.14.3
 Quality: 86/100 | Updated: 2026-02-23
@@ -78,23 +78,27 @@ arcs_df = pd.DataFrame(arc_data)
 
 # Y-domain: tight around data for better canvas use
 max_arc_height = 7 * max_span / 2
-y_domain = [-4, max_arc_height + 4]
+y_domain = [-5, max_arc_height + 4]
+x_domain = [-4, 104]
 
-# Arcs: weight drives both thickness and opacity for visual hierarchy
+# Hover selection for interactive arc highlighting (HTML export)
+hover = alt.selection_point(on="pointerover", empty=False, fields=["edge_id"])
+
+# Arcs: weight drives color, thickness, and opacity for visual hierarchy
 arcs = (
     alt.Chart(arcs_df)
     .mark_line()
     .encode(
-        x=alt.X("x:Q", axis=None),
+        x=alt.X("x:Q", axis=None, scale=alt.Scale(domain=x_domain)),
         y=alt.Y("y:Q", axis=None, scale=alt.Scale(domain=y_domain)),
         detail="edge_id:N",
         strokeWidth=alt.StrokeWidth(
             "weight:Q",
-            scale=alt.Scale(domain=[1, 3], range=[1.5, 5]),
+            scale=alt.Scale(domain=[1, 3], range=[1.5, 6]),
             legend=alt.Legend(
                 title="Interaction Strength",
                 titleFontSize=16,
-                labelFontSize=14,
+                labelFontSize=16,
                 orient="top-right",
                 offset=10,
                 values=[1, 2, 3],
@@ -102,20 +106,27 @@ arcs = (
                 labelExpr="datum.value == 1 ? 'Weak' : datum.value == 2 ? 'Moderate' : 'Strong'",
             ),
         ),
-        strokeOpacity=alt.StrokeOpacity("weight:Q", scale=alt.Scale(domain=[1, 3], range=[0.35, 0.7]), legend=None),
-        color=alt.value("#306998"),
+        strokeOpacity=alt.condition(
+            hover,
+            alt.value(0.95),
+            alt.StrokeOpacity("weight:Q", scale=alt.Scale(domain=[1, 3], range=[0.3, 0.8]), legend=None),
+        ),
+        color=alt.Color(
+            "weight:Q", scale=alt.Scale(domain=[1, 2, 3], range=["#7daed4", "#306998", "#152d4a"]), legend=None
+        ),
         tooltip=[alt.Tooltip("pair:N", title="Connection"), alt.Tooltip("weight:Q", title="Strength")],
     )
+    .add_params(hover)
 )
 
 # Nodes: size proportional to total connection weight
 node_points = (
     alt.Chart(nodes_df)
-    .mark_circle(color="#FFD43B", stroke="#306998", strokeWidth=2.5)
+    .mark_circle(color="#FFD43B", stroke="#152d4a", strokeWidth=2.5)
     .encode(
-        x=alt.X("x:Q", axis=None),
+        x=alt.X("x:Q", axis=None, scale=alt.Scale(domain=x_domain)),
         y=alt.Y("y:Q", axis=None, scale=alt.Scale(domain=y_domain)),
-        size=alt.Size("connections:Q", scale=alt.Scale(domain=[2, 11], range=[300, 800]), legend=None),
+        size=alt.Size("connections:Q", scale=alt.Scale(domain=[2, 11], range=[500, 1200]), legend=None),
         tooltip=[alt.Tooltip("name:N", title="Character"), alt.Tooltip("connections:Q", title="Total Weight")],
     )
 )
@@ -123,7 +134,7 @@ node_points = (
 # Node labels below baseline
 node_labels = (
     alt.Chart(nodes_df)
-    .mark_text(dy=26, fontSize=18, fontWeight="bold", color="#306998")
+    .mark_text(dy=30, fontSize=18, fontWeight="bold", color="#152d4a")
     .encode(x=alt.X("x:Q"), y=alt.Y("y:Q"), text="name:N")
 )
 
@@ -133,12 +144,10 @@ chart = (
     .properties(
         width=1600,
         height=900,
-        title=alt.Title(
-            "Character Interactions · arc-basic · altair · pyplots.ai", fontSize=28, anchor="middle", offset=15
-        ),
+        title=alt.Title("arc-basic · altair · pyplots.ai", fontSize=28, anchor="middle", offset=15),
     )
     .configure_view(strokeWidth=0)
-    .configure_legend(strokeColor="transparent", padding=12)
+    .configure_legend(strokeColor="transparent", padding=12, titleColor="#152d4a", labelColor="#333333")
 )
 
 # Save
