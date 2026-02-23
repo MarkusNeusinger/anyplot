@@ -6,7 +6,7 @@ A density plot (also known as Kernel Density Estimation or KDE plot) visualizes 
 
 ## Applications
 
-- Comparing distributions of different groups overlaid on the same plot
+- Visualizing the shape of a single variable's distribution for exploratory data analysis
 - Identifying distribution characteristics like skewness, bimodality, or outliers
 - Statistical analysis and exploratory data analysis in research
 - Quality control monitoring to detect process shifts or anomalies

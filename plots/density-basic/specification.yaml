@@ -6,7 +6,7 @@ title: Basic Density Plot
 
 # Specification tracking
 created: 2025-12-15T15:14:45Z
-updated: 2025-12-15T15:14:45Z
+updated: 2026-02-23T12:00:00Z
 issue: 912
 suggested: MarkusNeusinger
 
@@ -18,9 +18,11 @@ tags:
   data_type:
     - numeric
     - continuous
+    - univariate
   domain:
     - statistics
     - general
   features:
     - basic
     - distribution
+    - smoothing
