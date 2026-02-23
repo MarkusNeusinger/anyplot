@@ -1,164 +1,182 @@
 library: letsplot
 specification_id: band-basic
 created: '2025-12-23T09:08:23Z'
-updated: '2025-12-23T09:10:30Z'
-generated_by: claude-opus-4-5-20251101
+updated: '2026-02-23T14:20:45Z'
+generated_by: claude-opus-4-6
 workflow_run: 20456388290
 issue: 0
-python_version: 3.13.11
+python_version: '3.14'
 library_version: 4.8.2
 preview_url: https://storage.googleapis.com/pyplots-images/plots/band-basic/letsplot/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/band-basic/letsplot/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/band-basic/letsplot/plot.html
-quality_score: 93
+quality_score: 91
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
+  - layer-composition
+  - hover-tooltips
   - html-export
   patterns:
   - data-generation
   dataprep: []
   styling:
   - alpha-blending
+  - grid-styling
 review:
   strengths:
-  - Excellent implementation of band plot with proper geom_ribbon for confidence interval
-  - Data shows increasing uncertainty over time (heteroscedasticity) which is realistic
-    and educational
-  - Perfect title format and axis labels with units
-  - Clean KISS code structure following library guidelines
-  - Appropriate alpha (0.3) for band transparency as per spec recommendation
-  - Correct use of 1600x900 base size with scale=3 for 4800x2700 output
+  - Excellent data storytelling with Growing uncertainty annotation and arrow highlighting
+    the key insight
+  - Strong color contrast between blue band and orange line with colorblind-safe palette
+  - Clean professional visual design with refined text hierarchy and subtle grid
+  - Perfect spec compliance with all required features present
+  - Idiomatic letsplot usage with proper ggplot grammar patterns
+  - Realistic sensor temperature data with physically plausible growing uncertainty
   weaknesses:
-  - Grid lines are solid gray rather than using subtle alpha for better visual subtlety
-  - Does not leverage lets-plot distinctive interactive features or tooltips
-  image_description: The plot displays a band plot with a light blue semi-transparent
-    filled region (confidence band) spanning from approximately -2 to 9 on the y-axis,
-    covering the full x-axis range of 0 to 10 seconds. A darker blue central trend
-    line follows a sinusoidal pattern with upward linear trend (sin wave superimposed
-    on positive slope). The band width increases from left to right, illustrating
-    growing uncertainty over time. The title "band-basic · letsplot · pyplots.ai"
-    appears at the top left. Axis labels show "Time (s)" on x-axis and "Value (units)"
-    on y-axis. The background uses a minimal theme with subtle gray grid lines. All
-    text is clearly readable.
+  - Annotation text size (12) is slightly small relative to other text elements (axis
+    text=16)
+  - Grid lines visible in both directions; y-only grid would further refine the design
+  - np.random.seed(42) is unnecessary as no random functions are actually called
+  - Tooltips via layer_tooltips() are only visible in HTML export, not in the static
+    PNG being evaluated
+  image_description: The plot displays a band plot showing sensor temperature readings
+    with a 95% confidence interval over 10 seconds. A light blue semi-transparent
+    ribbon (alpha=0.2) represents the confidence band, with a dark orange/rust-colored
+    central trend line (#C75B2E) showing the mean temperature. The band clearly widens
+    over time, illustrating growing uncertainty. A dashed gray horizontal baseline
+    at 0°C provides reference. An annotation "Growing uncertainty" with an arrow connector
+    points to the widening band region near t=9.5s. The title "band-basic · letsplot
+    · pyplots.ai" appears top-left. X-axis is "Time (s)" ranging from -0.5 to ~11,
+    Y-axis is "Temperature (°C)" ranging from -2 to 9. The theme is minimal with subtle
+    gray grid lines on a white background. The sinusoidal trend oscillates between
+    roughly 0 and 6°C with a positive drift.
   criteria_checklist:
     visual_quality:
-      score: 38
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 7
+        max: 8
         passed: true
-        comment: Title, axis labels, and tick marks are all clearly readable at full
-          resolution with appropriate font sizes (24pt title, 20pt labels, 16pt ticks)
+        comment: Title=24, axis titles=20, axis text=16 all explicitly set. Annotation
+          text at size=12 slightly small relative to other elements.
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements anywhere in the plot
+        comment: No overlapping text. Annotation positioned clear of data and labels.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Central line has good thickness (size=1.5), band is appropriately
-          filled with alpha=0.3
+        comment: Line size=2.0 well-visible, ribbon alpha=0.2 clearly shows band,
+          dashed baseline appropriately subtle.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Single color scheme (#306998 blue) with good contrast, colorblind-safe
+        comment: Blue (#306998) and orange (#C75B2E) provide excellent colorblind-safe
+          contrast.
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Good proportions, data fills the plot area well with appropriate
-          margins
+        comment: Good canvas utilization with balanced margins. Data fills plot area
+          well.
       - id: VQ-06
-        name: Axis Labels
+        name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Both axes have descriptive labels with units: "Time (s)" and "Value
-          (units)"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
-        max: 2
-        passed: false
-        comment: Grid uses solid gray lines rather than subtle alpha; no legend needed
-          but grid could be more subtle
+        comment: Time (s) and Temperature (°C) both descriptive with units.
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom palette with intentional text color hierarchy. Annotation
+          with arrow adds professional touch. Clearly above configured defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: theme_minimal() removes spines, minor grid removed, major grid subtle.
+          Grid lines still visible in both directions.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Growing uncertainty annotation with arrow highlights key insight.
+          Color contrast creates visual hierarchy. Baseline adds context.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct band plot using geom_ribbon for the filled region
+        comment: Correct band plot with filled region between boundaries and central
+          trend line.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X mapped correctly, y_lower/y_upper define band, y_center shown as
-          line
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: semi-transparent fill, central line in
-          contrasting style, smooth interpolation'
-      - id: SC-04
-        name: Data Range
+        comment: Semi-transparent fill, central line in contrasting color, 100 data
+          points, smooth rendering.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes show all data without clipping
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X=time, Y=temperature with lower/upper bounds and center correctly
+          mapped.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No legend needed for single-series band plot
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses exact format "band-basic · letsplot · pyplots.ai"
+        comment: Title band-basic · letsplot · pyplots.ai in correct format. No legend
+          needed for single-series.
     data_quality:
-      score: 20
-      max: 20
+      score: 14
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Shows widening confidence interval (heteroscedasticity), sinusoidal
-          pattern with trend, 100 data points
+        comment: Shows band with varying width, sinusoidal trend, values crossing
+          zero. Could show slightly more complexity.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Time series with 95% CI is a realistic scenario (sensor data, forecasts,
-          etc.)
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Values in sensible range (-2 to 9), time in seconds (0-10s)
+        comment: Sensor temperature readings with 95% CI is a real-world plausible,
+          neutral scientific scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Temperature -2 to 9°C and time 0-10s are sensible for sensor readings.
     code_quality:
       score: 10
       max: 10
@@ -168,41 +186,50 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure, no functions/classes
+        comment: Clean Imports → Data → Plot → Save structure with no functions or
+          classes.
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set. Data generation is deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports are used in the code.
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current lets_plot API
+        comment: Clean, Pythonic. Appropriate complexity for the visualization.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 0
-      max: 5
+        comment: Saves as plot.png via ggsave(scale=3). Also exports HTML. Current
+          API.
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 0
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
-        passed: false
-        comment: Uses basic geom_ribbon and geom_line, which are standard ggplot features.
-          Could leverage lets_plot's tooltips, interactivity, or geom_smooth for more
-          distinctive usage
+        passed: true
+        comment: Expert ggplot grammar with proper aes() mappings, layer composition,
+          geom_ribbon/geom_line, theme customization, ggsave(scale=3), ggsize(1600,
+          900).
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses layer_tooltips() with format/line chaining (letsplot-distinctive),
+          arrow(), and to_html() export. Tooltips invisible in PNG.
   verdict: APPROVED
