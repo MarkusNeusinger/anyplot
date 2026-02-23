@@ -1,6 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 bubble-packed: Basic Packed Bubble Chart
 Library: plotnine 0.15.3 | Python 3.14.3
+Quality: 90/100 | Updated: 2026-02-23
 """
 
 import numpy as np
