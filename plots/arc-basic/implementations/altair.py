@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 arc-basic: Basic Arc Diagram
 Library: altair 6.0.0 | Python 3.14.3
-Quality: /100 | Updated: 2026-02-23
+Quality: 86/100 | Updated: 2026-02-23
 """
 
 import altair as alt
