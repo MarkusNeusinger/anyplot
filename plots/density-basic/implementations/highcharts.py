@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 density-basic: Basic Density Plot
 Library: highcharts 1.10.3 | Python 3.14.3
 Quality: 88/100 | Updated: 2026-02-23
@@ -39,6 +39,13 @@ for xi in values:
     density += np.exp(-0.5 * ((x_grid - xi) / bandwidth) ** 2)
 density /= n * bandwidth * np.sqrt(2 * np.pi)
 
+# Find the two peak positions for annotation
+midpoint = len(x_grid) // 2
+peak1_idx = np.argmax(density[:midpoint])
+peak2_idx = midpoint + np.argmax(density[midpoint:])
+peak1_x = float(x_grid[peak1_idx])
+peak2_x = float(x_grid[peak2_idx])
+
 # Create chart
 chart = Chart(container="container")
 chart.options = HighchartsOptions()
@@ -66,7 +73,7 @@ chart.options.title = {
 # Disable credits
 chart.options.credits = {"enabled": False}
 
-# X-axis - clean L-shaped frame
+# X-axis - clean L-shaped frame with plotBands/plotLines for peak emphasis
 chart.options.x_axis = {
     "title": {"text": "Height (cm)", "style": {"fontSize": "48px", "color": "#444444"}, "margin": 24},
     "labels": {"style": {"fontSize": "36px", "color": "#666666"}},
@@ -75,6 +82,38 @@ chart.options.x_axis = {
     "tickWidth": 0,
     "tickInterval": 5,
     "gridLineWidth": 0,
+    "plotBands": [
+        {"from": peak1_x - 8, "to": peak1_x + 8, "color": "rgba(48, 105, 152, 0.06)", "zIndex": 0},
+        {"from": peak2_x - 8, "to": peak2_x + 8, "color": "rgba(48, 105, 152, 0.06)", "zIndex": 0},
+    ],
+    "plotLines": [
+        {
+            "value": peak1_x,
+            "color": "rgba(48, 105, 152, 0.45)",
+            "width": 3,
+            "dashStyle": "Dash",
+            "zIndex": 4,
+            "label": {
+                "text": f"Peak: {peak1_x:.0f} cm",
+                "style": {"fontSize": "32px", "color": "#306998", "fontWeight": "600"},
+                "rotation": 0,
+                "y": 16,
+            },
+        },
+        {
+            "value": peak2_x,
+            "color": "rgba(48, 105, 152, 0.45)",
+            "width": 3,
+            "dashStyle": "Dash",
+            "zIndex": 4,
+            "label": {
+                "text": f"Peak: {peak2_x:.0f} cm",
+                "style": {"fontSize": "32px", "color": "#306998", "fontWeight": "600"},
+                "rotation": 0,
+                "y": 16,
+            },
+        },
+    ],
 }
 
 # Y-axis - subtle horizontal grid only
@@ -102,7 +141,7 @@ chart.options.plot_options = {
         "states": {"hover": {"lineWidth": 5}},
     },
     "scatter": {
-        "marker": {"radius": 5, "fillColor": "rgba(48, 105, 152, 0.6)", "symbol": "diamond", "lineWidth": 0},
+        "marker": {"radius": 15, "fillColor": "rgba(48, 105, 152, 0.55)", "symbol": "diamond", "lineWidth": 0},
         "states": {"hover": {"enabled": False}},
     },
     "series": {"animation": False},
@@ -141,7 +180,7 @@ rug_data = [[round(float(v), 2), round(float(rug_y), 6)] for v in sorted(rug_sam
 rug_series = ScatterSeries()
 rug_series.data = rug_data
 rug_series.name = "Observations"
-rug_series.marker = {"symbol": "diamond", "fillColor": "rgba(48, 105, 152, 0.55)", "lineWidth": 0, "radius": 10}
+rug_series.marker = {"symbol": "diamond", "fillColor": "rgba(48, 105, 152, 0.55)", "lineWidth": 0, "radius": 15}
 chart.add_series(rug_series)
 
 # Download Highcharts JS for inline embedding
