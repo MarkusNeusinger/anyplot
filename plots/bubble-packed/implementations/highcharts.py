@@ -1,7 +1,6 @@
-""" pyplots.ai
+"""pyplots.ai
 bubble-packed: Basic Packed Bubble Chart
 Library: highcharts 1.10.3 | Python 3.14.3
-Quality: 74/100 | Updated: 2026-02-23
 """
 
 import tempfile
@@ -16,7 +15,7 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
 
-# Data - Company market share by sector
+# Data - Company market value by sector ($B)
 data = [
     {
         "name": "Technology",
@@ -33,17 +32,17 @@ data = [
         "data": [
             {"name": "Banking", "value": 720},
             {"name": "Insurance", "value": 480},
-            {"name": "Asset Management", "value": 350},
+            {"name": "Asset Mgmt", "value": 350},
             {"name": "Fintech", "value": 260},
         ],
     },
     {
         "name": "Healthcare",
         "data": [
-            {"name": "Pharmaceuticals", "value": 580},
-            {"name": "Medical Devices", "value": 320},
+            {"name": "Pharma", "value": 580},
+            {"name": "Med Devices", "value": 320},
             {"name": "Biotech", "value": 420},
-            {"name": "Healthcare Services", "value": 240},
+            {"name": "Health Svcs", "value": 240},
         ],
     },
     {
@@ -58,76 +57,107 @@ data = [
         "name": "Consumer",
         "data": [
             {"name": "Retail", "value": 460},
-            {"name": "Food & Beverage", "value": 340},
+            {"name": "Food & Bev", "value": 340},
             {"name": "Automotive", "value": 510},
             {"name": "Entertainment", "value": 270},
         ],
     },
 ]
 
-# Colorblind-safe palette for sectors
-colors = ["#306998", "#E5A02E", "#9467BD", "#17BECF", "#8C564B"]
+# Refined colorblind-safe palette — muted tones with strong contrast
+colors = ["#306998", "#D4920B", "#7B4F9E", "#0E9AA7", "#C05746"]
 
 # Create chart
 chart = Chart(container="container")
 chart.options = HighchartsOptions()
 
-# Chart configuration
+# Render at 900x900 CSS px, capture at 4x device scale → 3600x3600 output
+# Smaller internal size forces bubbles to fill more of the canvas
 chart.options.chart = {
     "type": "packedbubble",
-    "width": 4800,
-    "height": 2700,
-    "backgroundColor": "#ffffff",
-    "margin": [100, 50, 100, 50],
+    "width": 900,
+    "height": 900,
+    "backgroundColor": {
+        "linearGradient": {"x1": 0, "y1": 0, "x2": 0, "y2": 1},
+        "stops": [[0, "#FAFBFD"], [1, "#F0F2F5"]],
+    },
+    "style": {"fontFamily": "'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif"},
+    "spacing": [12, 8, 20, 8],
 }
 
-# Title
+# Title — sizes at 1/4 of target since 4x device scale factor
 chart.options.title = {
     "text": "bubble-packed \u00b7 highcharts \u00b7 pyplots.ai",
-    "style": {"fontSize": "64px", "fontWeight": "bold"},
+    "style": {"fontSize": "16px", "fontWeight": "700", "color": "#1a1a2e"},
+    "margin": 6,
 }
 
 # Subtitle
-chart.options.subtitle = {"text": "Market value by sector ($B)", "style": {"fontSize": "36px", "color": "#666666"}}
+chart.options.subtitle = {
+    "text": "Market value by sector ($B)",
+    "style": {"fontSize": "9px", "color": "#555555", "fontWeight": "400"},
+}
+
+# Hide watermark
+chart.options.credits = {"enabled": False}
 
 # Tooltip
 chart.options.tooltip = {
     "useHTML": True,
-    "style": {"fontSize": "28px"},
+    "style": {"fontSize": "8px"},
     "pointFormat": "<b>{point.name}</b>: ${point.value}B",
 }
 
-# Legend
-chart.options.legend = {"enabled": True, "itemStyle": {"fontSize": "36px"}, "symbolHeight": 24, "symbolWidth": 24}
+# Legend — floating at bottom
+chart.options.legend = {
+    "enabled": True,
+    "layout": "horizontal",
+    "align": "center",
+    "verticalAlign": "bottom",
+    "floating": True,
+    "y": -6,
+    "itemStyle": {"fontSize": "9px", "fontWeight": "500", "color": "#333333"},
+    "symbolHeight": 6,
+    "symbolWidth": 6,
+    "symbolRadius": 3,
+    "itemDistance": 16,
+}
 
-# Plot options for packed bubble
+# Plot options — split series creates sector clusters across the canvas
 chart.options.plot_options = {
     "packedbubble": {
-        "minSize": "80%",
-        "maxSize": "250%",
+        "minSize": "50%",
+        "maxSize": "280%",
         "zMin": 0,
         "zMax": 1000,
         "layoutAlgorithm": {
-            "gravitationalConstant": 0.05,
-            "splitSeries": False,
+            "gravitationalConstant": 0.02,
+            "splitSeries": True,
             "seriesInteraction": True,
             "dragBetweenSeries": False,
-            "parentNodeLimit": False,
+            "parentNodeLimit": True,
+            "parentNodeOptions": {"reingold": {"gravitationalConstant": 0.05}},
+            "bubblePadding": 5,
         },
         "dataLabels": {
             "enabled": True,
             "format": "{point.name}",
-            "filter": {"property": "y", "operator": ">", "value": 260},
-            "style": {"fontSize": "28px", "fontWeight": "bold", "color": "white", "textOutline": "2px contrast"},
+            "filter": {"property": "y", "operator": ">", "value": 320},
+            "style": {"fontSize": "8px", "fontWeight": "600", "color": "white", "textOutline": "1px rgba(0,0,0,0.4)"},
         },
+        "marker": {"lineWidth": 1, "lineColor": "rgba(255,255,255,0.35)"},
     }
 }
 
-# Add series with colors
+# Add series with colors and per-bubble opacity for visual hierarchy
 series_list = []
 for i, sector in enumerate(data):
+    enriched_data = []
+    for item in sector["data"]:
+        opacity = 0.7 + 0.3 * (item["value"] / 850)
+        enriched_data.append({"name": item["name"], "value": item["value"], "marker": {"fillOpacity": opacity}})
     series_list.append(
-        {"type": "packedbubble", "name": sector["name"], "data": sector["data"], "color": colors[i % len(colors)]}
+        {"type": "packedbubble", "name": sector["name"], "data": enriched_data, "color": colors[i % len(colors)]}
     )
 
 chart.options.series = series_list
@@ -151,8 +181,8 @@ html_content = f"""<!DOCTYPE html>
     <script>{highcharts_js}</script>
     <script>{highcharts_more_js}</script>
 </head>
-<body style="margin:0;">
-    <div id="container" style="width: 4800px; height: 2700px;"></div>
+<body style="margin:0; overflow:hidden; background:#F0F2F5;">
+    <div id="container" style="width: 900px; height: 900px;"></div>
     <script>{html_str}</script>
 </body>
 </html>"""
@@ -183,17 +213,18 @@ chrome_options.add_argument("--headless")
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
 chrome_options.add_argument("--disable-gpu")
-chrome_options.add_argument("--window-size=4800,2900")
+chrome_options.add_argument("--window-size=1200,1200")
+chrome_options.add_argument("--force-device-scale-factor=4")
 
 driver = webdriver.Chrome(options=chrome_options)
 driver.get(f"file://{temp_path}")
-time.sleep(5)
+time.sleep(10)
 driver.save_screenshot("plot_raw.png")
 driver.quit()
 
 # Crop to exact 4800x2700 dimensions
 img = Image.open("plot_raw.png")
-img_cropped = img.crop((0, 0, 4800, 2700))
+img_cropped = img.crop((0, 0, 3600, 3600))
 img_cropped.save("plot.png")
 Path("plot_raw.png").unlink()
 
