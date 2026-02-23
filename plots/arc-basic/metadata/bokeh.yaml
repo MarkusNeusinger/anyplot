@@ -1,16 +1,16 @@
 library: bokeh
 specification_id: arc-basic
 created: '2025-12-23T08:49:26Z'
-updated: '2025-12-23T09:11:15Z'
-generated_by: claude-opus-4-5-20251101
+updated: '2026-02-23T12:00:00+00:00'
+generated_by: claude-opus-4-6
 workflow_run: 20455962917
 issue: 0
-python_version: 3.13.11
-library_version: 3.8.1
+python_version: '3.14.3'
+library_version: 3.8.2
 preview_url: https://storage.googleapis.com/pyplots-images/plots/arc-basic/bokeh/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/arc-basic/bokeh/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/arc-basic/bokeh/plot.html
-quality_score: 91
+quality_score: null
 impl_tags:
   dependencies: []
   techniques:
