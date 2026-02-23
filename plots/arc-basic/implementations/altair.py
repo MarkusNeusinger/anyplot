@@ -1,7 +1,7 @@
-""" pyplots.ai
+"""pyplots.ai
 arc-basic: Basic Arc Diagram
-Library: altair 6.0.0 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-23
+Library: altair 6.0.0 | Python 3.14.3
+Quality: /100 | Updated: 2026-02-23
 """
 
 import altair as alt
@@ -15,9 +15,8 @@ np.random.seed(42)
 nodes = ["Alice", "Bob", "Carol", "David", "Eve", "Frank", "Grace", "Henry", "Iris", "Jack"]
 n_nodes = len(nodes)
 
-# Edges: pairs of connected nodes with weights
 edges = [
-    (0, 1, 3),  # Alice-Bob (strong connection)
+    (0, 1, 3),  # Alice-Bob (strong)
     (0, 3, 2),  # Alice-David
     (1, 2, 2),  # Bob-Carol
     (2, 4, 1),  # Carol-Eve
@@ -36,30 +35,33 @@ edges = [
 
 # Node positions along x-axis
 x_positions = np.linspace(0, 100, n_nodes)
-y_baseline = 10
+y_baseline = 0
 
-# Create node dataframe
-nodes_df = pd.DataFrame({"x": x_positions, "y": [y_baseline] * n_nodes, "name": nodes})
+# Node dataframe with connection count for sizing
+connection_count = [0] * n_nodes
+for s, e, w in edges:
+    connection_count[s] += w
+    connection_count[e] += w
 
-# Create arc paths - each arc as a series of points following a semicircle
+nodes_df = pd.DataFrame({"x": x_positions, "y": [y_baseline] * n_nodes, "name": nodes, "connections": connection_count})
+
+# Build arc paths as semicircular curves
 arc_data = []
 points_per_arc = 50
+max_span = max(abs(e - s) for s, e, _ in edges)
 
 for edge_id, (start, end, weight) in enumerate(edges):
     x_start = x_positions[start]
     x_end = x_positions[end]
+    span = abs(end - start)
+    height = 7 * span
 
-    # Arc height proportional to distance between nodes
-    distance = abs(end - start)
-    height = 8 * distance
-
-    # Generate points along a semicircle arc
     angles = np.linspace(0, np.pi, points_per_arc)
-
     x_center = (x_start + x_end) / 2
     radius_x = abs(x_end - x_start) / 2
     radius_y = height / 2
 
+    pair = f"{nodes[start]}–{nodes[end]}"
     for i, angle in enumerate(angles):
         arc_data.append(
             {
@@ -67,37 +69,61 @@ for edge_id, (start, end, weight) in enumerate(edges):
                 "x": x_center - radius_x * np.cos(angle),
                 "y": y_baseline + radius_y * np.sin(angle),
                 "weight": weight,
+                "pair": pair,
                 "order": i,
             }
         )
 
 arcs_df = pd.DataFrame(arc_data)
 
-# Create arc chart with lines
+# Y-domain: tight around data for better canvas use
+max_arc_height = 7 * max_span / 2
+y_domain = [-4, max_arc_height + 4]
+
+# Arcs: weight drives both thickness and opacity for visual hierarchy
 arcs = (
     alt.Chart(arcs_df)
-    .mark_line(strokeWidth=2, opacity=0.6)
+    .mark_line()
     .encode(
         x=alt.X("x:Q", axis=None),
-        y=alt.Y("y:Q", axis=None),
+        y=alt.Y("y:Q", axis=None, scale=alt.Scale(domain=y_domain)),
         detail="edge_id:N",
-        strokeWidth=alt.StrokeWidth("weight:Q", scale=alt.Scale(domain=[1, 3], range=[2, 6]), legend=None),
+        strokeWidth=alt.StrokeWidth(
+            "weight:Q",
+            scale=alt.Scale(domain=[1, 3], range=[1.5, 5]),
+            legend=alt.Legend(
+                title="Interaction Strength",
+                titleFontSize=16,
+                labelFontSize=14,
+                orient="top-right",
+                offset=10,
+                values=[1, 2, 3],
+                symbolStrokeWidth=3,
+                labelExpr="datum.value == 1 ? 'Weak' : datum.value == 2 ? 'Moderate' : 'Strong'",
+            ),
+        ),
+        strokeOpacity=alt.StrokeOpacity("weight:Q", scale=alt.Scale(domain=[1, 3], range=[0.35, 0.7]), legend=None),
         color=alt.value("#306998"),
+        tooltip=[alt.Tooltip("pair:N", title="Connection"), alt.Tooltip("weight:Q", title="Strength")],
     )
-    .properties(width=1600, height=900)
 )
 
-# Create node points
+# Nodes: size proportional to total connection weight
 node_points = (
     alt.Chart(nodes_df)
-    .mark_circle(size=600, color="#FFD43B", stroke="#306998", strokeWidth=3)
-    .encode(x=alt.X("x:Q", axis=None), y=alt.Y("y:Q", axis=None))
+    .mark_circle(color="#FFD43B", stroke="#306998", strokeWidth=2.5)
+    .encode(
+        x=alt.X("x:Q", axis=None),
+        y=alt.Y("y:Q", axis=None, scale=alt.Scale(domain=y_domain)),
+        size=alt.Size("connections:Q", scale=alt.Scale(domain=[2, 11], range=[300, 800]), legend=None),
+        tooltip=[alt.Tooltip("name:N", title="Character"), alt.Tooltip("connections:Q", title="Total Weight")],
+    )
 )
 
-# Create node labels
+# Node labels below baseline
 node_labels = (
     alt.Chart(nodes_df)
-    .mark_text(dy=30, fontSize=18, fontWeight="bold", color="#306998")
+    .mark_text(dy=26, fontSize=18, fontWeight="bold", color="#306998")
     .encode(x=alt.X("x:Q"), y=alt.Y("y:Q"), text="name:N")
 )
 
@@ -107,11 +133,14 @@ chart = (
     .properties(
         width=1600,
         height=900,
-        title=alt.Title("Character Interactions · arc-basic · altair · pyplots.ai", fontSize=28, anchor="middle"),
+        title=alt.Title(
+            "Character Interactions · arc-basic · altair · pyplots.ai", fontSize=28, anchor="middle", offset=15
+        ),
     )
     .configure_view(strokeWidth=0)
+    .configure_legend(strokeColor="transparent", padding=12)
 )
 
-# Save outputs
+# Save
 chart.save("plot.png", scale_factor=3.0)
 chart.save("plot.html")
