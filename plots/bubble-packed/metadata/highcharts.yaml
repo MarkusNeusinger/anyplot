@@ -1,169 +1,187 @@
 library: highcharts
 specification_id: bubble-packed
 created: '2025-12-23T09:16:17Z'
-updated: 2026-02-23T15:35:00+00:00
+updated: '2026-02-23T15:47:46Z'
 generated_by: claude-opus-4-6
 workflow_run: 20456562080
 issue: 0
-python_version: "3.14.3"
-library_version: "1.10.3"
+python_version: 3.14.3
+library_version: 1.10.3
 preview_url: https://storage.googleapis.com/pyplots-images/plots/bubble-packed/highcharts/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/bubble-packed/highcharts/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/bubble-packed/highcharts/plot.html
-quality_score: null
+quality_score: 74
 impl_tags:
   dependencies:
-  - pillow
   - selenium
+  - pillow
   techniques:
   - html-export
+  - hover-tooltips
   patterns:
-  - data-generation
+  - iteration-over-groups
   dataprep: []
   styling: []
 review:
   strengths:
-  - Excellent use of Highcharts packedbubble chart type with proper physics simulation
-  - Colorblind-safe palette with good contrast between sectors
-  - Smart data label filtering to show labels only on larger bubbles (value > 230)
-  - Realistic market sector data that perfectly demonstrates the packed bubble use
-    case
-  - Clean separation of sectors in the legend with appropriate grouping
-  - Proper inline JavaScript embedding for headless Chrome rendering
+  - Correct use of Highcharts-specific packedbubble chart type with physics layout
+    algorithm
+  - Realistic, neutral data context (market values by industry sector) with well-structured
+    sub-categories
+  - 'Perfect code quality: clean KISS structure, deterministic data, proper HTML +
+    PNG export'
+  - Good use of data label filtering to hide labels on smaller bubbles
+  - Proper inline JS embedding for headless Chrome rendering
   weaknesses:
-  - Large whitespace around the packed bubble cluster could be reduced by adjusting
-    layout parameters
-  - Title includes extra descriptor which deviates slightly from the pure spec-id
-    format
-  - Some smaller bubbles have no visible labels even though they are part of the visualization
-  image_description: 'The plot displays a packed bubble chart showing market sectors
-    with circles of varying sizes representing market value in billions of dollars.
-    The visualization uses 5 distinct colors: blue (Technology sector with Software,
-    Hardware, Cloud Services, Semiconductors, Cybersecurity), yellow (Finance sector
-    with Banking, Insurance, Asset Management, Fintech), purple (Healthcare with Pharmaceuticals,
-    Medical Devices, Biotech, Healthcare Services), cyan (Energy with Oil & Gas, Renewables,
-    Utilities), and brown/tan (Consumer with Retail, Food & Beverage, Automotive,
-    Entertainment). The largest bubbles are Software (850B), Banking (720B), and Cloud
-    Services (680B). Labels appear inside larger bubbles with white text and contrast
-    outline. The title follows the correct format, subtitle explains the size encoding,
-    and a legend at the bottom identifies each sector.'
+  - Bubble cluster is tiny relative to the 4800x2700 canvas, with massive whitespace
+    on all sides
+  - Several data labels overlap in the densely packed center area (Cybersecurity,
+    Medical Devices, Entertainment, Utilities, Food & Beverage)
+  - Generic visual design with no sophistication, storytelling, or focal point
+  - Groups are mixed together rather than clustered separately, weakening the grouping
+    feature
+  image_description: 'The plot shows a packed bubble chart titled "bubble-packed ·
+    highcharts · pyplots.ai" in bold black text at the top, with a subtitle "Market
+    value by sector ($B)" in gray beneath it. The bubble cluster is centered in the
+    middle of the canvas and occupies a relatively small portion of the 4800×2700
+    image. There are 20 bubbles colored by 5 sectors: steel blue (Technology), gold/amber
+    (Finance), light purple (Healthcare), cyan/teal (Energy), and dusty rose/brown
+    (Consumer). The largest bubbles include Software (850), Banking (720), Cloud Services
+    (680), Pharmaceuticals (580), and Oil & Gas (550). Data labels in white bold text
+    with contrast outline appear inside the larger bubbles (filtered for values >
+    260). Several labels in the densely packed center area overlap — particularly
+    "Cybersecurity", "Medical Devices", "Entertainment", "Utilities", and "Food &
+    Beverage" which are difficult to distinguish. The legend at the bottom displays
+    the 5 sector names with small colored dots. Massive whitespace surrounds the bubble
+    cluster on all sides.'
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 20
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title and labels are clearly readable, though some smaller bubble
-          labels are slightly small
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: Bubbles are properly packed without overlap, labels filtered to show
-          only on larger bubbles
-      - id: VQ-03
-        name: Element Visibility
         score: 7
         max: 8
         passed: true
-        comment: Bubble sizes are well-proportioned, though the central packing leaves
-          large white space around edges
+        comment: All font sizes explicitly set (title 64px, subtitle 36px, labels
+          28px, legend 36px). Readable at full size, data labels slightly small but
+          acceptable.
+      - id: VQ-02
+        name: No Overlap
+        score: 3
+        max: 6
+        passed: false
+        comment: 'Several data labels overlap in densely packed center: Cybersecurity,
+          Medical Devices, Entertainment, Utilities, Food & Beverage collide.'
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Bubbles well-sized with clear differentiation. Minor deduction for
+          some mid-size bubbles being very similar.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 3
+        max: 4
         passed: true
-        comment: Uses colorblind-safe palette (blue, yellow, purple, cyan, brown)
-          avoiding red-green
+        comment: Custom colorblind-safe palette avoids red-green. Blue and purple
+          somewhat close but distinguishable.
       - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Bubbles centered but significant whitespace on all sides
+        name: Layout & Canvas
+        score: 0
+        max: 4
+        passed: false
+        comment: Bubble cluster occupies ~15-20% of canvas width. Massive whitespace
+          on all sides. Legend isolated far below cluster.
       - id: VQ-06
-        name: Axis Labels
+        name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: N/A for packed bubble, but subtitle explains size meaning with units
-          ($B)
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
-        max: 2
-        passed: true
-        comment: Legend present and clear, no grid needed for this chart type
+        comment: Title format correct. Subtitle descriptive with units. No axes needed
+          for packed bubble.
+    design_excellence:
+      score: 8
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Custom color palette but overall looks like a well-configured library
+          default with no design innovation.
+      - id: DE-02
+        name: Visual Refinement
+        score: 2
+        max: 6
+        passed: false
+        comment: White background is clean. Data labels have text outline. But massive
+          whitespace and basic legend show minimal refinement.
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Data displayed but not interpreted. No visual hierarchy, emphasis,
+          or focal point.
     spec_compliance:
-      score: 24
-      max: 25
+      score: 14
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct packed bubble chart using physics simulation
+        comment: Correct packedbubble chart type with physics-based layout algorithm.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Size correctly represents value, grouping by sector
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 3
+        max: 4
         passed: true
-        comment: Has labels, values, groups, size encoding, packing
-      - id: SC-04
-        name: Data Range
+        comment: Size encodes value, labels inside larger circles, color encodes group.
+          splitSeries=False means groups mixed rather than clustered.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within the packed layout
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Values correctly mapped to bubble sizes. Groups correctly color-coded.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies all 5 sectors
-      - id: SC-06
-        name: Title Format
-        score: 1
-        max: 2
-        passed: true
-        comment: Title is "bubble-packed · Market Sectors · highcharts · pyplots.ai"
-          - includes extra descriptor but follows pattern
+        comment: Title format correct. Legend shows all 5 sectors with matching labels.
     data_quality:
-      score: 18
-      max: 20
+      score: 14
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Shows grouping, varying sizes, labels; could show more size variation
+        comment: Multiple groups with sub-categories, clear size variation. Could
+          benefit from wider value range.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Market sector/industry data is a perfect real-world use case
+        comment: Market values by industry sector — real-world plausible, neutral
+          business topic.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values in billions are reasonable for market caps
+        comment: Values 240-850 ($B) are sensible for market value comparisons.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -171,41 +189,49 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → chart config → render → save'
+        comment: 'Linear flow: imports, data, chart config, HTML export, screenshot.
+          No functions or classes.'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Deterministic data, no random elements
+        comment: All data hardcoded/deterministic. No random elements.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used.
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, appropriate complexity. Nice interactive HTML export alongside
+          PNG.
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current highcharts-core API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Creates both plot.png and plot.html correctly
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot.png and plot.html. Current API usage.
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Uses Highcharts packedbubble type with layoutAlgorithm, dataLabels
-          filter, but doesn't leverage advanced interactivity features in the static
-          output
-  verdict: APPROVED
+        comment: Proper use of Chart, HighchartsOptions, packedbubble type with layoutAlgorithm.
+          Correctly inlines JS.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: packedbubble is Highcharts-specific with built-in physics simulation,
+          gravitationalConstant, and data label filtering.
+  verdict: REJECTED
