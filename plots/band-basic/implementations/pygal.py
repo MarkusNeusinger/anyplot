@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 band-basic: Basic Band Plot
 Library: pygal 3.1.0 | Python 3.14
-Quality: /100 | Updated: 2026-02-23
+Quality: 78/100 | Updated: 2026-02-23
 """
 
 import numpy as np
