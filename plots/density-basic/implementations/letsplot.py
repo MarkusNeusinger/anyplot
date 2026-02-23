@@ -1,7 +1,7 @@
-""" pyplots.ai
+"""pyplots.ai
 density-basic: Basic Density Plot
 Library: letsplot 4.8.2 | Python 3.14.3
-Quality: 89/100 | Updated: 2026-02-23
+Quality: repair-2 | Updated: 2026-02-23
 """
 
 import numpy as np
@@ -27,11 +27,11 @@ df = pd.DataFrame({"time": finish_minutes})
 # Rug data: small vertical ticks at each observation
 rug_df = pd.DataFrame({"x": finish_minutes, "y0": 0.0, "y1": 0.0004})
 
-# Runner group centroids for storytelling annotations
+# Runner group centroids for storytelling annotations (staggered y to avoid crowding)
 group_labels = pd.DataFrame(
     {
-        "x": [200, 240, 300],
-        "y": [0.0123, 0.0123, 0.0123],
+        "x": [195, 243, 300],
+        "y": [0.0131, 0.0119, 0.0131],
         "label": ["Competitive (~3:20)", "Main Pack (~4:00)", "Casual (~5:00)"],
     }
 )
@@ -58,9 +58,9 @@ plot = (
         alpha=0.15,
         size=0.4,
     )
-    + geom_vline(xintercept=200, linetype="dashed", color="#888888", alpha=0.5, size=0.6)  # noqa: F405
-    + geom_vline(xintercept=240, linetype="dashed", color="#888888", alpha=0.5, size=0.6)  # noqa: F405
-    + geom_vline(xintercept=300, linetype="dashed", color="#888888", alpha=0.5, size=0.6)  # noqa: F405
+    + geom_vline(xintercept=200, linetype="dashed", color="#1a5276", alpha=0.4, size=0.7)  # noqa: F405
+    + geom_vline(xintercept=240, linetype="dashed", color="#306998", alpha=0.4, size=0.7)  # noqa: F405
+    + geom_vline(xintercept=300, linetype="dashed", color="#5d8aa8", alpha=0.4, size=0.7)  # noqa: F405
     + geom_text(  # noqa: F405
         data=group_labels,
         mapping=aes(x="x", y="y", label="label"),  # noqa: F405
@@ -68,11 +68,11 @@ plot = (
         color="#444444",
     )
     + labs(  # noqa: F405
-        x="Finish Time (minutes)", y="Density", title="density-basic · letsplot · pyplots.ai"
+        x="Finish Time (minutes)", y="Density (×10⁻³)", title="density-basic · letsplot · pyplots.ai"
     )
     + scale_x_continuous(breaks=list(range(150, 401, 50)))  # noqa: F405
     + scale_y_continuous(  # noqa: F405
-        breaks=[0.002, 0.004, 0.006, 0.008, 0.010], expand=[0.02, 0, 0.25, 0]
+        breaks=[0.002, 0.004, 0.006, 0.008, 0.010], labels=["2", "4", "6", "8", "10"], expand=[0.02, 0, 0.38, 0]
     )
     + theme_minimal()  # noqa: F405
     + theme(  # noqa: F405
