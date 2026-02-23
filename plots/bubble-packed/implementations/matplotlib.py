@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 bubble-packed: Basic Packed Bubble Chart
 Library: matplotlib 3.10.8 | Python 3.14.3
 Quality: 87/100 | Updated: 2026-02-23
@@ -6,6 +6,7 @@ Quality: 87/100 | Updated: 2026-02-23
 
 import matplotlib.collections as mcoll
 import matplotlib.patches as mpatches
+import matplotlib.patheffects as pe
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -147,12 +148,19 @@ for i in range(n):
     min_r_for_label = 0.48 + label_chars * 0.018
     if radii_sorted[i] > min_r_for_label:
         font_scale = min(1.0, radii_sorted[i] / 1.4)
-        label_fontsize = max(11, int(15 * font_scale))
-        value_fontsize = max(10, int(13 * font_scale))
+        label_fontsize = max(12, int(15 * font_scale))
+        value_fontsize = max(12, int(13 * font_scale))
 
-        # Determine text color based on background brightness
+        # Determine text color based on background luminance (WCAG relative luminance)
         bg_color = colors_sorted[i]
-        text_color = "#1a1a2e" if bg_color == "#FFD43B" else "white"
+        rgb = [int(bg_color[j : j + 2], 16) / 255 for j in (1, 3, 5)]
+        luminance = 0.2126 * rgb[0] + 0.7152 * rgb[1] + 0.0722 * rgb[2]
+        text_color = "#1a1a2e" if luminance > 0.45 else "white"
+        text_outline = (
+            pe.withStroke(linewidth=3, foreground="#00000033")
+            if luminance <= 0.45
+            else pe.withStroke(linewidth=3, foreground="#ffffff33")
+        )
 
         # Wrap long labels for smaller circles
         display_label = labels_sorted[i]
@@ -174,6 +182,7 @@ for i in range(n):
             fontsize=label_fontsize,
             fontweight="bold",
             color=text_color,
+            path_effects=[text_outline],
             zorder=3,
         )
         ax.text(
@@ -185,6 +194,7 @@ for i in range(n):
             fontsize=value_fontsize,
             color=text_color,
             alpha=0.85,
+            path_effects=[text_outline],
             zorder=3,
         )
     else:
@@ -205,7 +215,7 @@ for i in small_circles:
         f"{labels_sorted[i]}\n${values_sorted[i]}K",
         xy=(cx, cy),
         xytext=(lx, ly),
-        fontsize=11,
+        fontsize=12,
         fontweight="bold",
         color="#333333",
         ha="center",
@@ -218,15 +228,19 @@ for i in small_circles:
 all_x = positions[:, 0]
 all_y = positions[:, 1]
 max_r = radii_sorted.max()
-padding = 1.2
+padding = 0.9
 ax.set_xlim(all_x.min() - max_r - padding, all_x.max() + max_r + padding)
 ax.set_ylim(all_y.min() - max_r - padding, all_y.max() + max_r + padding)
 ax.set_aspect("equal")
 ax.axis("off")
 
-# Title
+# Title with total budget subtitle for context
+total_budget = sum(values)
 ax.set_title(
-    "Department Budget Allocation · bubble-packed · matplotlib · pyplots.ai", fontsize=24, fontweight="bold", pad=20
+    f"Department Budget Allocation (${total_budget / 1000:.1f}M Total)\nbubble-packed · matplotlib · pyplots.ai",
+    fontsize=24,
+    fontweight="bold",
+    pad=20,
 )
 
 # Legend for group colors
