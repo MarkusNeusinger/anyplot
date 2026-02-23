@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 bubble-packed: Basic Packed Bubble Chart
 Library: matplotlib 3.10.8 | Python 3.14.3
 Quality: 82/100 | Updated: 2026-02-23
@@ -30,25 +30,27 @@ labels = [
 ]
 values = [950, 420, 680, 310, 160, 280, 820, 200, 130, 370, 230, 580, 470, 145, 175]
 
-# Group assignments and colors (colorblind-safe palette)
+# Group assignments - realistic organizational structure
 group_map = {
-    "Engineering": "Tech",
-    "IT": "Tech",
-    "Product": "Tech",
-    "Sales": "Tech",
-    "Marketing": "Creative",
-    "R&D": "Creative",
-    "Design": "Creative",
-    "Data Science": "Creative",
-    "Operations": "Support",
-    "HR": "Support",
-    "Finance": "Support",
-    "Customer Support": "Support",
+    "Engineering": "Engineering",
+    "IT": "Engineering",
+    "Data Science": "Engineering",
+    "R&D": "Engineering",
+    "Marketing": "Business",
+    "Sales": "Business",
+    "Product": "Business",
+    "Design": "Business",
+    "Operations": "Operations",
+    "HR": "Operations",
+    "Finance": "Operations",
+    "Customer Support": "Operations",
     "Legal": "Compliance",
     "Security": "Compliance",
     "QA": "Compliance",
 }
-group_colors = {"Tech": "#306998", "Creative": "#FFD43B", "Support": "#4A90A4", "Compliance": "#7B9E89"}
+
+# Colorblind-safe palette with high hue separation
+group_colors = {"Engineering": "#306998", "Business": "#FFD43B", "Operations": "#D4654A", "Compliance": "#8B6DB0"}
 colors = [group_colors[group_map[label]] for label in labels]
 
 # Scale values to radius (sqrt for area-proportional sizing)
@@ -66,28 +68,50 @@ radii_sorted = radii[order]
 labels_sorted = [labels[i] for i in order]
 values_sorted = [values[i] for i in order]
 colors_sorted = [colors[i] for i in order]
+groups_sorted = [group_map[labels[i]] for i in order]
+
+# Assign group IDs for clustering
+unique_groups = list(group_colors.keys())
+group_ids = np.array([unique_groups.index(g) for g in groups_sorted])
 
 # Initial positions in spiral pattern for tighter convergence
 angles = np.linspace(0, 4 * np.pi, n)
 spiral_r = np.linspace(0, 3, n)
 positions = np.column_stack([spiral_r * np.cos(angles), spiral_r * np.sin(angles)])
 
-# Physics simulation for packing
-for iteration in range(400):
-    pull_strength = 0.07 * (1 - iteration / 450)
+# Physics simulation with group-aware clustering
+for iteration in range(500):
+    progress = iteration / 500
+    pull_strength = 0.06 * (1 - progress * 0.8)
+    group_pull = 0.04 * (1 - progress * 0.5)
 
-    # Pull toward center
+    # Compute group centers of mass
+    group_centers = {}
+    for gid in range(len(unique_groups)):
+        mask = group_ids == gid
+        if np.any(mask):
+            group_centers[gid] = positions[mask].mean(axis=0)
+
+    # Pull toward center + pull toward own group center
     for i in range(n):
         dist = np.linalg.norm(positions[i])
         if dist > 0.01:
             positions[i] -= pull_strength * positions[i] / dist
+
+        gc = group_centers[group_ids[i]]
+        to_group = gc - positions[i]
+        gd = np.linalg.norm(to_group)
+        if gd > 0.01:
+            positions[i] += group_pull * to_group / gd
 
     # Push apart overlapping circles
     for i in range(n):
         for j in range(i + 1, n):
             delta = positions[j] - positions[i]
             dist = np.linalg.norm(delta)
-            min_dist = radii_sorted[i] + radii_sorted[j] + 0.06
+            same_group = group_ids[i] == group_ids[j]
+            gap = 0.04 if same_group else 0.15
+            min_dist = radii_sorted[i] + radii_sorted[j] + gap
 
             if dist < min_dist and dist > 0.001:
                 overlap = (min_dist - dist) / 2
@@ -111,7 +135,8 @@ collection = mcoll.PatchCollection(
 )
 ax.add_collection(collection)
 
-# Add labels inside circles that are large enough
+# Add labels inside circles that are large enough, external labels for small ones
+small_circles = []
 for i in range(n):
     label_chars = len(labels_sorted[i])
     min_r_for_label = 0.48 + label_chars * 0.018
@@ -157,12 +182,38 @@ for i in range(n):
             alpha=0.85,
             zorder=3,
         )
+    else:
+        small_circles.append(i)
+
+# External labels with leader lines for small circles
+for i in small_circles:
+    cx, cy = positions[i, 0], positions[i, 1]
+    r = radii_sorted[i]
+
+    # Find direction away from center for label placement
+    angle = np.arctan2(cy, cx)
+    offset_dist = r + 0.6
+    lx = cx + offset_dist * np.cos(angle)
+    ly = cy + offset_dist * np.sin(angle)
+
+    ax.annotate(
+        f"{labels_sorted[i]}\n${values_sorted[i]}K",
+        xy=(cx, cy),
+        xytext=(lx, ly),
+        fontsize=9,
+        fontweight="bold",
+        color="#333333",
+        ha="center",
+        va="center",
+        arrowprops={"arrowstyle": "-", "color": "#666666", "lw": 1.2, "shrinkA": 0, "shrinkB": 2},
+        zorder=4,
+    )
 
 # Axis limits with padding
 all_x = positions[:, 0]
 all_y = positions[:, 1]
 max_r = radii_sorted.max()
-padding = 0.8
+padding = 1.2
 ax.set_xlim(all_x.min() - max_r - padding, all_x.max() + max_r + padding)
 ax.set_ylim(all_y.min() - max_r - padding, all_y.max() + max_r + padding)
 ax.set_aspect("equal")
