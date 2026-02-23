@@ -1,6 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 band-basic: Basic Band Plot
 Library: seaborn 0.13.2 | Python 3.14
+Quality: 94/100 | Updated: 2026-02-23
 """
 
 import matplotlib.pyplot as plt
