@@ -1,25 +1,25 @@
 library: seaborn
 specification_id: density-basic
 created: '2025-12-23T10:00:16Z'
-updated: '2025-12-23T10:02:21Z'
-generated_by: claude-opus-4-5-20251101
+updated: '2026-02-23T22:38:00+00:00'
+generated_by: claude-opus-4-6
 workflow_run: 20457532266
 issue: 0
-python_version: 3.13.11
+python_version: 3.14.3
 library_version: 0.13.2
 preview_url: https://storage.googleapis.com/pyplots-images/plots/density-basic/seaborn/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/density-basic/seaborn/plot_thumb.png
 preview_html: null
-quality_score: 93
+quality_score: null
 impl_tags:
   dependencies: []
   techniques: []
   patterns:
-    - data-generation
+  - data-generation
   dataprep:
-    - kde
+  - kde
   styling:
-    - alpha-blending
+  - alpha-blending
 review:
   strengths:
   - Excellent use of seaborn kdeplot with fill and rugplot combination for statistical
