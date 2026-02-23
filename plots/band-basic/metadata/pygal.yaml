@@ -1,38 +1,229 @@
 library: pygal
 specification_id: band-basic
 created: '2025-12-23T09:10:07Z'
-updated: '2025-12-23T09:33:20Z'
-generated_by: claude-opus-4-5-20251101
+updated: '2026-02-23T14:52:49Z'
+generated_by: claude-opus-4-6
 workflow_run: 20456388584
 issue: 0
-python_version: 3.13.11
+python_version: '3.14'
 library_version: 3.1.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/band-basic/pygal/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/band-basic/pygal/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/band-basic/pygal/plot.html
-quality_score: 88
+quality_score: 89
 impl_tags:
   dependencies: []
   techniques:
   - html-export
   patterns:
   - data-generation
-  - iteration-over-groups
-  dataprep: []
+  dataprep:
+  - rolling-window
   styling:
   - alpha-blending
+  - grid-styling
 review:
   strengths:
-  - Excellent color contrast between blue band and yellow center line, colorblind-safe
-    palette
-  - Creative polygon approach to create band effect in pygal which lacks native fill_between
-  - Widening confidence interval clearly demonstrates increasing uncertainty over
-    time
-  - Clean, readable code following KISS principles with proper seed for reproducibility
-  - Proper axis labels with units and descriptive legend
+  - Excellent data storytelling with soil moisture scenario, wilting point reference,
+    and varying confidence band width conveying uncertainty changes
+  - Custom color palette with intentional Python Blue / Dark Goldenrod harmony and
+    accessible colorblind-safe choices
+  - Perfect spec compliance with all required features implemented
+  - Clean, well-structured code with appropriate complexity for the visualization
+  - Subtle grid styling with custom dasharray and refined guide colors
   weaknesses:
-  - Visual artifact at right edge where the polygon closes creates a sharp triangular
-    taper
-  - 'Title format should start with spec-id pattern: band-basic · 95% Confidence Interval
-    · pygal · pyplots.ai'
-  - Grid lines are quite light/subtle, could be more visible for reference
+  - Vertical fill artifact at x=0 where the polygon fill extends down to the chart
+    baseline, creating a visible blue line on the left edge
+  - Y-axis shows only two labels (20.0% and 40.0%) — too sparse for the data range
+    of approximately 18-48%
+  image_description: 'The plot displays a band chart of soil moisture (%) over a 48-hour
+    period. A semi-transparent light blue filled region represents the 95% confidence
+    band, with a dark goldenrod/yellow center line showing the sensor mean. A gray
+    dashed horizontal line at ~25% marks the wilting point threshold. The x-axis is
+    labeled "Time (hours)" with ticks at 0h, 6h, 12h, 18h, 24h, 30h, 36h, 42h, 48h.
+    The y-axis is labeled "Soil Moisture (%)" with labels at 20.0% and 40.0%. The
+    title reads "band-basic · pygal · pyplots.ai". A legend at the bottom shows three
+    entries: "95% Confidence Band", "Sensor Mean", and "Wilting Point (25%)". The
+    moisture starts high (~38-42%), drops with a diurnal pattern, reaches a low around
+    18h, recovers with a secondary rain event around hour 40, then drops again. The
+    confidence band widens over time. A visible vertical fill artifact appears at
+    x=0 on the left edge where the polygon fill extends to the chart baseline.'
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title=60, labels=42, legend=40, value=36).
+          All text clearly readable.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text elements. Legend at bottom well-separated.
+      - id: VQ-03
+        name: Element Visibility
+        score: 4
+        max: 6
+        passed: false
+        comment: Band and center line visible but vertical fill artifact at x=0 drops
+          to chart bottom.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue band, dark goldenrod center, gray reference — colorblind-safe
+          with good contrast.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: false
+        comment: Good canvas utilization but y-axis shows only 2 labels (20.0%, 40.0%)
+          — too sparse.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Time (hours) and Soil Moisture (%) with units. Title in correct format.
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom palette with Python Blue and Dark Goldenrod. White background,
+          sans-serif typography, thoughtful stroke config.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid with custom dasharray, refined guide colors. Sparse y-labels
+          and artifact are polish issues.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Soil moisture story with wilting point creates clear narrative. Varying
+          band width communicates uncertainty changes.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct band plot with filled region and central trend line.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Semi-transparent fill, contrasting center line, smooth data, CI context
+          in legend.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=time, Y=moisture with correct upper/lower/center mapping.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct. Legend labels descriptive and matching data
+          series.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows varying band width, diurnal patterns, central trend, reference
+          threshold.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Soil moisture with 95% CI — real, neutral agricultural/environmental
+          science scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Soil moisture 20-45% over 48 hours is realistic for agricultural
+          sensors.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Flat structure: imports, data, style, chart, series, save. No functions
+          or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set at beginning.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only numpy, pygal, pygal.style.Style imported; all used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic. Polygon approach appropriate for pygal band plots.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png and plot.html. Current pygal API.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good pygal usage with XY chart, custom Style, stroke_style dicts,
+          formatters. Polygon approach is correct pygal pattern.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: SVG stroke styling, formatters, js=[] for static render, tooltip
+          config, legend_at_bottom_columns, HTML export.
+  verdict: REJECTED
