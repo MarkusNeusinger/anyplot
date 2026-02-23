@@ -1,159 +1,180 @@
 library: seaborn
 specification_id: band-basic
 created: '2025-12-23T09:08:43Z'
-updated: '2025-12-23T09:11:13Z'
-generated_by: claude-opus-4-5-20251101
+updated: '2026-02-23T14:08:56Z'
+generated_by: claude-opus-4-6
 workflow_run: 20456382170
 issue: 0
-python_version: 3.13.11
+python_version: '3.14'
 library_version: 0.13.2
 preview_url: https://storage.googleapis.com/pyplots-images/plots/band-basic/seaborn/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/band-basic/seaborn/plot_thumb.png
 preview_html: null
-quality_score: 98
+quality_score: 94
 impl_tags:
   dependencies: []
   techniques:
-  - grid-styling
+  - custom-legend
   patterns:
   - data-generation
   - explicit-figure
-  dataprep: []
+  dataprep:
+  - cumulative-sum
   styling:
   - alpha-blending
+  - grid-styling
 review:
   strengths:
-  - Excellent visual design with perfect text legibility and color accessibility
-  - Data demonstrates expanding uncertainty over time, showcasing band plot capabilities
-    effectively
-  - Clean, readable code following KISS principles with proper reproducibility
-  - Title format and legend labels are accurate and informative
-  - Appropriate use of transparency (alpha=0.3) allowing visibility of overlapping
-    elements
+  - Expert use of seaborn native statistical aggregation (errorbar with prediction
+    intervals) from ensemble long-format data
+  - Realistic weather forecast context with physically plausible ensemble divergence
+  - Intentional blue/gold color scheme with clear visual hierarchy (z-ordered gold
+    mean above blue band)
+  - 'Thorough styling: removed spines, subtle dashed grid, explicit font sizes, polished
+    legend'
   weaknesses:
-  - The fill_between function is from matplotlib rather than a seaborn-specific function;
-    while seaborn does not have a native band/fill_between equivalent, the implementation
-    correctly uses sns.lineplot for the central line
-  image_description: The plot displays a band chart showing a 95% confidence interval
-    around a mean trend line. The band is rendered in a semi-transparent light blue
-    (#306998 with alpha 0.3), representing the confidence interval that expands over
-    time (heteroscedastic behavior). The central trend line is rendered in bright
-    yellow/gold (#FFD43B) with a linewidth of 3. The data shows a sinusoidal pattern
-    with an upward linear trend, ranging from approximately -1 to 8 on the amplitude
-    axis and 0 to 10 on the time axis. The title "band-basic · seaborn · pyplots.ai"
-    is clearly visible at the top. Axis labels "Time (s)" and "Amplitude" are well-sized.
-    A legend in the upper left corner identifies both elements. The grid uses subtle
-    dashed lines. Overall, the layout is clean and professional with excellent readability.
+  - LM-02 could reach 5/5 by incorporating additional distinctive seaborn features
+    (e.g., sns.set_context or objects interface)
+  - DE-01 could reach 7-8 with more refined typography (e.g., font family selection)
+    or additional design elements
+  image_description: The plot shows a band chart depicting a 7-day ensemble weather
+    forecast. A semi-transparent steel-blue band represents the 95% prediction interval,
+    widening progressively from left to right as forecast uncertainty grows with horizon.
+    A contrasting golden-yellow center line traces the ensemble mean temperature,
+    following a sinusoidal diurnal cycle with a gradual warming trend. The title reads
+    "band-basic · seaborn · pyplots.ai" at the top. The x-axis is labeled "Forecast
+    Horizon (days)" and the y-axis "Temperature (°C)". A legend in the upper left
+    identifies "Ensemble Mean" (gold line) and "95% Prediction Interval" (blue band).
+    Top and right spines are removed, and a subtle dashed grid at low alpha provides
+    reference without clutter. The plot uses a 16:9 landscape layout with good canvas
+    utilization.
   criteria_checklist:
     visual_quality:
-      score: 40
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: 'All text perfectly readable: title 24pt, labels 20pt, ticks 16pt'
+        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt,
+          legend 16pt'
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements anywhere
+        comment: No overlapping text or elements; legend positioned cleanly in upper
+          left
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Band with alpha=0.3 and line with linewidth=3 are perfectly visible
+        comment: Band alpha=0.3 appropriate for data density; linewidth=3 center line
+          clearly visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Blue/yellow color scheme is colorblind-safe with excellent contrast
+        comment: Blue/gold scheme is colorblind-safe with excellent contrast
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Excellent proportions and whitespace distribution
+        comment: 16:9 figsize with tight_layout; plot fills canvas well with balanced
+          margins
       - id: VQ-06
-        name: Axis Labels
+        name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive with units: "Time (s)", "Amplitude"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 2
-        max: 2
+        comment: 'Descriptive labels with units: Forecast Horizon (days), Temperature
+          (°C)'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
         passed: true
-        comment: Subtle grid (alpha=0.3, dashed), well-placed legend
+        comment: Intentional blue/gold color scheme; custom legend styling; coherent
+          visual identity above defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Top/right spines removed; dashed grid at alpha=0.15; generous whitespace;
+          z-ordering on mean line
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Growing band width communicates increasing forecast uncertainty;
+          gold center line creates clear visual hierarchy
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct band plot using fill_between
+        comment: Correct band plot with filled region and contrasting center line
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: x, y_lower, y_upper, y_center all correctly implemented
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Band with transparency, central line in contrasting color
-      - id: SC-04
-        name: Data Range
+        comment: Semi-transparent fill alpha=0.3, contrasting center line, smooth
+          continuous data
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, axes appropriately scaled
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X=forecast horizon, Y=temperature; band shows uncertainty, center
+          shows mean
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend accurately describes "95% Confidence Interval" and "Mean Trend"
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: band-basic · seaborn · pyplots.ai'
+        comment: Title format correct; legend labels Ensemble Mean and 95% Prediction
+          Interval are descriptive
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows expanding uncertainty over time (heteroscedasticity), demonstrates
-          band behavior excellently
+        comment: Widening band, sinusoidal central trend, varying band width, mean
+          vs interval relationship
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Time series with 95% CI bounds is a realistic scientific application
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Sensible amplitude and time values
+        comment: 200-member ensemble weather forecast with diurnal temperature cycle;
+          scientifically grounded and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Temperature 9-21°C for diurnal cycle is realistic; 7-day forecast
+          horizon is standard meteorology
     code_quality:
       score: 10
       max: 10
@@ -163,33 +184,49 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure
+        comment: 'Linear flow: imports, data generation, plot, styling, save; no functions
+          or classes'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) set at the start
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used (matplotlib.pyplot, numpy, seaborn)
+        comment: All four imports (matplotlib, numpy, pandas, seaborn) are used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current seaborn API
+        comment: Clean and Pythonic; leverages seaborn native aggregation; appropriate
+          complexity
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 3
-      max: 5
-      items: []
+        comment: Saves as plot.png with dpi=300; uses modern errorbar parameter
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert use of sns.lineplot with long-format DataFrame, estimator=mean,
+          errorbar=(pi,95); axes-level API with sns.set_theme
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: errorbar=(pi,95) natively computes prediction intervals from 200
+          ensemble members; distinctive seaborn feature
   verdict: APPROVED

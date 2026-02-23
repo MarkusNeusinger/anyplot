@@ -1,166 +1,182 @@
 library: altair
 specification_id: band-basic
 created: '2025-12-23T09:10:02Z'
-updated: '2025-12-23T09:12:07Z'
-generated_by: claude-opus-4-5-20251101
+updated: '2026-02-23T14:27:15Z'
+generated_by: claude-opus-4-6
 workflow_run: 20456385370
 issue: 0
-python_version: 3.13.11
+python_version: '3.14'
 library_version: 6.0.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/band-basic/altair/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/band-basic/altair/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/band-basic/altair/plot.html
-quality_score: 92
+quality_score: 94
 impl_tags:
   dependencies: []
   techniques:
-  - html-export
+  - annotations
   - layer-composition
+  - hover-tooltips
+  - html-export
   patterns:
   - data-generation
   dataprep: []
   styling:
   - alpha-blending
+  - grid-styling
 review:
   strengths:
-  - Excellent use of Altair declarative grammar with mark_area and y/y2 encoding for
-    the band
-  - Clean layered composition combining band and line charts
-  - Realistic uncertainty growth pattern (band widens over time) demonstrates practical
-    use case
-  - Proper 95% confidence interval calculation using 1.96 * uncertainty
-  - Good visual hierarchy with semi-transparent band (opacity=0.3) and prominent center
-    line (strokeWidth=4)
-  - Correct output format with both PNG and HTML for Altair
+  - Cohesive monochromatic blue palette with three intentional tones creates visual
+    depth and professional polish
+  - Dual confidence bands (50% + 95% CI) exceed spec requirements and add analytical
+    value
+  - Growing uncertainty narrative is immediately apparent and reinforced by the red
+    annotation callout
+  - Interactive features (tooltips, hover guide) work in HTML export without polluting
+    static PNG output
+  - All text sizes explicitly set with appropriate hierarchy (28/22/18/16pt)
   weaknesses:
-  - Y-axis label Signal Amplitude lacks units (should include units like mV)
-  - No legend or annotation explaining what the band represents (e.g. 95% CI)
-  image_description: The plot displays a band plot with a light blue semi-transparent
-    confidence band between two boundary lines, with a solid dark blue central trend
-    line running through the middle. The band shows a sinusoidal pattern with linear
-    upward growth, with amplitude ranging from approximately -3 to 10 on the y-axis.
-    The x-axis shows "Time (s)" from 0.0 to 10.0, and the y-axis shows "Signal Amplitude".
-    The confidence band appropriately widens over time (from ~1.0 at t=0 to ~3.5 at
-    t=10), demonstrating realistic uncertainty growth. The title "band-basic · altair
-    · pyplots.ai" is displayed at the top. The plot has a clean white background with
-    subtle gray gridlines.
+  - Axis line/tick styling remains at Altair defaults rather than being refined (DE-02)
+  - Interactive features (selection, tooltips) are invisible in the static PNG — only
+    benefit the HTML export (LM-02)
+  image_description: 'The plot displays a band chart with an oscilloscope signal theme
+    over a 0-10 second time range. A dark navy center line traces a sinusoidal wave
+    with upward linear drift (approximately 2*sin(x) + 0.5x), ranging from about -2.5
+    mV to 6 mV. Two semi-transparent blue confidence bands surround it: a lighter
+    outer band (95% CI, teal-blue at 0.25 opacity) and a darker inner band (50% CI,
+    deeper blue at 0.3 opacity). Both bands visibly widen from left to right, illustrating
+    growing uncertainty over time. At x approximately 9.1 seconds, a red dashed vertical
+    rule spans the full 95% CI width, with bold red annotation text "95% CI: +/-3.7
+    mV" offset to the right. The title reads "band-basic - altair - pyplots.ai" in
+    large font at the top. Axes are labeled "Time (s)" (x-axis) and "Oscilloscope
+    Signal (mV)" (y-axis). Grid lines are very subtle with light gray color. The view
+    border is removed. The layout fills the 4800x2700 canvas well with balanced margins.'
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 28pt, axis labels at 22pt, tick labels at 18pt - all perfectly
-          readable
+        comment: 'All font sizes explicitly set: title 28pt, axis titles 22pt, tick
+          labels 18pt, annotation 16pt bold. All perfectly readable.'
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: No overlapping text elements. Annotation positioned with dx=10 to
+          avoid collision.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Band opacity (0.3) allows visibility, line width (4) makes central
-          trend clear
+        comment: Center line clearly visible against bands. Bands distinguishable
+          via different blue tones and opacity. Smooth monotone interpolation.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Single color scheme (#306998 blue) with good contrast
+        comment: Monochromatic blue scheme is colorblind-safe. Red accent for annotation
+          only, good contrast.
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Good proportions, 16:9 aspect ratio, no cut-off content
+        comment: 4800x2700 canvas well utilized with balanced margins.
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Y-axis "Signal Amplitude" is descriptive but lacks units
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
-        max: 2
+        comment: Time (s) and Oscilloscope Signal (mV) both descriptive with units.
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
         passed: true
-        comment: Grid is subtle (alpha 0.3) but no legend explaining what the band
-          represents
+        comment: Cohesive monochromatic blue palette with three intentional tones
+          creating visual depth. Red accent for annotation provides strong contrast.
+          Clearly above defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid (0.15 opacity), view border removed. Axis line styling
+          remains at Altair defaults.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Widening band communicates growing uncertainty. Dual-band approach
+          adds depth. Red annotation creates focal point.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct band/area plot with central trend line
+        comment: Correct band plot with filled region between boundary lines.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: x mapped to time, y_lower/y_upper define band, y_center defines trend
-          line
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Has band with semi-transparent fill, central trend line in contrasting
-          style, smooth interpolation
-      - id: SC-04
-        name: Data Range
+        comment: Semi-transparent fill, contrasting center line, smooth interpolation.
+          Exceeds spec with inner 50% CI band.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data points visible within axes
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y correctly mapped, 100 data points within range, axes show full
+          data extent.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: N/A for single-color band plot (no legend needed for basic version)
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "band-basic · altair · pyplots.ai"'
+        comment: Title matches required format. No legend needed for single-series
+          band plot.
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows widening uncertainty over time, sinusoidal pattern with linear
-          growth - demonstrates most band plot features but could show additional
-          scenarios
+        comment: Shows widening uncertainty, sinusoidal + linear trend, dual CI bands,
+          and annotated callout.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Time series with 95% confidence interval - plausible scientific/engineering
-          scenario
+        comment: Oscilloscope voltage measurement with sensor drift uncertainty. Neutral
+          scientific context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values are reasonable for signal amplitude but units are abstract
+        comment: Millivolt range and 0-10s timespan realistic for oscilloscope measurements.
     code_quality:
       score: 10
       max: 10
@@ -170,40 +186,50 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure, no functions/classes
+        comment: 'Linear flow: imports, data, plot layers, combine, save. No functions
+          or classes.'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) ensures reproducibility
+        comment: Deterministic data generation with np.linspace and np.sin.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only altair, numpy, pandas imported - all used
+        comment: All three imports (altair, numpy, pandas) are used.
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Altair API
+        comment: Clean, well-structured. Interactive features are legitimate Altair
+          capabilities.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves plot.png with scale_factor=3.0. Uses current Altair 6.x API.
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 5
         max: 5
         passed: true
-        comment: Excellent use of Altair's declarative approach with mark_area, y/y2
-          encoding for bands, layered composition (band + line), configure_* for styling
+        comment: 'Declarative grammar: mark_area, mark_line, mark_rule, mark_text,
+          mark_point. Proper encoding with type shorthand. Layer composition with
+          + operator.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: alt.selection_point with nearest, alt.condition for conditional encoding,
+          rich tooltips, HTML export. Core visualization uses standard marks.
   verdict: APPROVED

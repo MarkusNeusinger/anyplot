@@ -1,16 +1,16 @@
 library: bokeh
 specification_id: band-basic
 created: '2025-12-23T09:09:02Z'
-updated: '2025-12-23T09:11:03Z'
-generated_by: claude-opus-4-5-20251101
+updated: '2026-02-23T14:06:51Z'
+generated_by: claude-opus-4-6
 workflow_run: 20456384474
 issue: 0
-python_version: 3.13.11
-library_version: 3.8.1
+python_version: '3.14'
+library_version: 3.8.2
 preview_url: https://storage.googleapis.com/pyplots-images/plots/band-basic/bokeh/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/band-basic/bokeh/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/band-basic/bokeh/plot.html
-quality_score: 91
+quality_score: 93
 impl_tags:
   dependencies: []
   techniques:
@@ -24,137 +24,160 @@ impl_tags:
   - grid-styling
 review:
   strengths:
-  - Excellent implementation of growing uncertainty band that widens over time
-  - Good color contrast between blue band and yellow center line (colorblind-safe)
-  - Proper use of ColumnDataSource for data management
-  - Clean KISS code structure with appropriate font sizing for high-resolution output
-  - Both PNG and HTML outputs generated correctly
+  - 'Excellent data storytelling: asymmetric uncertainty band (tight midday, wide
+    afternoon) creates a natural narrative about cloud-driven forecast uncertainty'
+  - 'Professional warm/cool color scheme: amber forecast line against blue confidence
+    band with intentional text color hierarchy'
+  - 'Thorough visual refinement: very subtle grid (alpha 0.12), removed ticks, removed
+    outline, clean borderless legend'
+  - Realistic, physically-grounded data with correct irradiance values and non-negative
+    clipping
+  - 'Idiomatic Bokeh: varea() glyph, ColumnDataSource, dual HTML+PNG export'
   weaknesses:
-  - Axis labels lack units (e.g., "Time (s)" or "Value (units)")
-  - Could use Bokeh native varea() glyph instead of patch() for cleaner band implementation
-  - Legend text appears slightly small relative to the canvas size
-  image_description: The plot shows a band plot with a light blue semi-transparent
-    filled region representing a 95% confidence interval. A yellow/gold center line
-    runs through the middle of the band representing the mean trend. The band starts
-    narrow on the left (around x=0) and progressively widens toward the right (x=10),
-    demonstrating growing uncertainty over time. The title "band-basic · bokeh · pyplots.ai"
-    appears at the top left. The x-axis is labeled "Time" (0-10) and y-axis is labeled
-    "Value" (approximately 1-10). A legend in the top-left corner shows "95% Confidence
-    Interval" and "Mean Trend". The background is white with subtle gray grid lines.
+  - Library Mastery could leverage more Bokeh-distinctive features (e.g., HoverTool
+    for interactive tooltips in HTML export, Band annotation model)
+  - 'Design Excellence not yet at publication-tier: could benefit from more refined
+    typography or a more distinctive color palette'
+  image_description: The plot shows a band chart of solar irradiance forecast over
+    the course of a day (6 AM to 8 PM). A light steel-blue semi-transparent band represents
+    the 95% confidence interval, with an amber/orange center line showing the forecast
+    mean. The band follows a bell-curve shape peaking around hour 13 (1 PM) at approximately
+    880 W/m². The confidence band is notably asymmetric — tight around midday where
+    conditions are predictable, and widening significantly in the late afternoon (after
+    3 PM) where convective cloud development increases uncertainty. The lower bound
+    clips at 0 near sunrise and sunset since irradiance cannot be negative. The background
+    is a subtle off-white (#FAFBFD), grid lines are very faint dashed lines, tick
+    marks are removed, and axis lines are a light gray. The legend in the top-right
+    shows "95% Confidence Interval" (blue swatch) and "Forecast Mean" (orange line).
+    Title reads "band-basic · bokeh · pyplots.ai". Y-axis is labeled "Solar Irradiance
+    (W/m²)" and X-axis is "Hour of Day."
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title, axis labels, and tick marks are readable, though legend text
-          appears slightly small relative to the high-resolution canvas
+        comment: 'All font sizes explicitly set: title 96pt, axis labels 72pt, tick
+          labels 56pt, legend 56pt. All perfectly readable at 4800x2700.'
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: No overlapping text elements. Legend in top-right clear of data.
+          Tick labels well-spaced.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Band and center line are clearly visible with appropriate alpha and
-          line width
+        comment: Band clearly visible at alpha 0.25, center line at width 7 is prominent.
+          Amber on blue provides strong contrast.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue band and yellow line provide excellent contrast and are colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Good proportions, though slight whitespace imbalance on right edge
+        comment: Blue (#306998) and amber (#E8910C) is a colorblind-safe complementary
+          pairing with excellent contrast.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills approximately 65% of canvas with balanced margins. Legend
+          positioned near relevant data.
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Labels are descriptive ("Time", "Value") but lack units
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
-        max: 2
+        comment: Solar Irradiance (W/m²) includes units, Hour of Day is descriptive.
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
         passed: true
-        comment: Grid is subtle (alpha 0.3), legend is well-placed but could have
-          better background contrast
+        comment: Custom background, intentional text color hierarchy, warm/cool amber-blue
+          contrast. Clearly above defaults — cohesive professional design.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Very subtle dashed grid (alpha 0.12), tick marks removed, outline
+          removed, axis lines styled, borderless legend. Polished.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Asymmetric uncertainty band creates natural narrative: tight midday,
+          wide afternoon. Warm amber on cool blue guides eye to central trend.'
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct band plot implementation
+        comment: Correct band plot with filled region between two boundary lines and
+          central trend line.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X (time), y_lower, y_upper, and y_center correctly mapped
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: semi-transparent band, center line in
-          contrasting color'
-      - id: SC-04
-        name: Data Range
+        comment: Semi-transparent fill, central line in contrasting color, smooth
+          interpolation, confidence interval context.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within axes
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X = hours, Y = irradiance. Band boundaries and center correctly mapped.
+          All data visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend labels correctly describe the elements
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correctly uses "band-basic · bokeh · pyplots.ai"
+        comment: Title matches required format. Legend labels descriptive and accurate.
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows growing uncertainty well, though could demonstrate more variation
-          in the trend
+        comment: Varying band width (asymmetric uncertainty), center line, physical
+          clipping at zero. Comprehensive band plot features.
       - id: DQ-02
         name: Realistic Context
-        score: 6
-        max: 7
-        passed: true
-        comment: Time series with 95% CI is plausible, generic but appropriate
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Values are sensible for the context
+        comment: Solar irradiance forecast with 95% CI. Afternoon cloud uncertainty
+          is real meteorological phenomenon. Neutral topic.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Peak ~880 W/m² matches realistic clear-sky irradiance. Hours 6-20
+          cover daylight.
     code_quality:
       score: 10
       max: 10
@@ -164,40 +187,50 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure
+        comment: 'Linear flow: imports, data generation, figure, band, line, styling,
+          save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: Data is deterministic (np.exp, np.linspace). Seed set defensively.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports included
+        comment: 'All imports used: numpy, export_png, save, ColumnDataSource, figure.'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Modern Bokeh API used
-      - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 2
-      max: 5
-      items:
-      - id: LF-01
-        name: Uses distinctive library features
+        name: Code Elegance
         score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-commented code. Comments explain the why. Appropriate
+          complexity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png via export_png and plot.html via save. Current
+          Bokeh API.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
-        passed: false
-        comment: Uses ColumnDataSource appropriately but patch() for band is basic;
-          could use varea() for cleaner band implementation
+        passed: true
+        comment: ColumnDataSource, varea() for band, figure() with config, line()
+          for center. Styling via Bokeh model properties.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: varea() is Bokeh-specific band glyph. Dual HTML+PNG export via save()
+          showcases Bokeh interactive+static capability.
   verdict: APPROVED
