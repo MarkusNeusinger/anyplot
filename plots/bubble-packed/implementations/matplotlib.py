@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 bubble-packed: Basic Packed Bubble Chart
 Library: matplotlib 3.10.8 | Python 3.14.3
 Quality: 87/100 | Updated: 2026-02-23
@@ -50,7 +50,7 @@ group_map = {
 }
 
 # Colorblind-safe palette with high hue separation
-group_colors = {"Engineering": "#306998", "Business": "#FFD43B", "Operations": "#D4654A", "Compliance": "#8B6DB0"}
+group_colors = {"Engineering": "#306998", "Business": "#E8C33A", "Operations": "#D4654A", "Compliance": "#8B6DB0"}
 colors = [group_colors[group_map[label]] for label in labels]
 
 # Scale values to radius (sqrt for area-proportional sizing)
@@ -119,6 +119,11 @@ for iteration in range(500):
                 positions[i] -= overlap * direction
                 positions[j] += overlap * direction
 
+# Center the layout: shift all positions so the bounding box is centered at origin
+bbox_min = positions.min(axis=0) - radii_sorted.max()
+bbox_max = positions.max(axis=0) + radii_sorted.max()
+positions -= (bbox_min + bbox_max) / 2
+
 # Plot (4800x2700 px at 300 dpi)
 fig, ax = plt.subplots(figsize=(16, 9))
 
@@ -142,8 +147,8 @@ for i in range(n):
     min_r_for_label = 0.48 + label_chars * 0.018
     if radii_sorted[i] > min_r_for_label:
         font_scale = min(1.0, radii_sorted[i] / 1.4)
-        label_fontsize = max(9, int(15 * font_scale))
-        value_fontsize = max(8, int(13 * font_scale))
+        label_fontsize = max(11, int(15 * font_scale))
+        value_fontsize = max(10, int(13 * font_scale))
 
         # Determine text color based on background brightness
         bg_color = colors_sorted[i]
@@ -200,7 +205,7 @@ for i in small_circles:
         f"{labels_sorted[i]}\n${values_sorted[i]}K",
         xy=(cx, cy),
         xytext=(lx, ly),
-        fontsize=9,
+        fontsize=11,
         fontweight="bold",
         color="#333333",
         ha="center",
