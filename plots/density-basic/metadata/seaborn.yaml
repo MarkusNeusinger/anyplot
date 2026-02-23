@@ -1,7 +1,7 @@
 library: seaborn
 specification_id: density-basic
 created: '2025-12-23T10:00:16Z'
-updated: '2026-02-23T22:46:54Z'
+updated: '2026-02-23T22:58:27Z'
 generated_by: claude-opus-4-6
 workflow_run: 20457532266
 issue: 0
@@ -10,10 +10,11 @@ library_version: 0.13.2
 preview_url: https://storage.googleapis.com/pyplots-images/plots/density-basic/seaborn/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/density-basic/seaborn/plot_thumb.png
 preview_html: null
-quality_score: 87
+quality_score: 91
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - annotations
   patterns:
   - data-generation
   - explicit-figure
@@ -24,28 +25,28 @@ impl_tags:
   - grid-styling
 review:
   strengths:
-  - Perfect spec compliance implementing all recommended features (KDE fill, rug plot)
-  - Bimodal test score data effectively demonstrates density plot capabilities and
-    modality
-  - Clean, well-structured code with explicit font sizes and reproducibility seed
-  - Good visual refinement with spine removal and subtle grid styling
+  - Perfect spec compliance with all recommended features (KDE fill, rug plot, bandwidth
+    tuning)
+  - 'Effective data storytelling: annotations labeling the bimodal peaks guide the
+    viewer to the insight immediately'
+  - Cohesive monochromatic blue palette with intentional hierarchy between elements
+  - Clean code structure with reproducibility seed and explicit font sizing throughout
   weaknesses:
-  - Rug plot marks are very subtle (height=0.03, alpha=0.3) — barely visible at normal
-    viewing
-  - No visual storytelling beyond the natural data shape — the bimodal insight goes
-    unemphasized
-  - Single-color approach without additional design accents limits aesthetic sophistication
+  - KDE line data extraction approach (fill=False then fill_between) is slightly roundabout
+    vs seaborn native fill=True
+  - Rug plot marks, while improved, are still thin and dense in the core range
   image_description: 'The plot displays a bimodal kernel density estimation (KDE)
-    curve of test scores. The curve is filled with a semi-transparent steel blue color
-    (#306998) with a darker blue outline (linewidth=3). Two distinct peaks are visible:
-    a taller primary peak centered around 68 points and a secondary peak centered
-    around 90 points, with a valley dipping near 82 points. A rug plot of individual
-    observations is shown as thin vertical marks along the x-axis, concentrated between
-    ~45 and ~105. The x-axis is labeled "Test Score (points)" and the y-axis "Density"
-    (ranging 0.000-0.035). The title reads "density-basic · seaborn · pyplots.ai".
-    Top and right spines are removed, and a subtle y-axis grid (alpha=0.2) provides
-    reference lines. The overall layout is clean with good proportions on a white
-    background.'
+    curve of test scores with a semi-transparent steel blue fill (#306998) and a darker
+    blue outline (linewidth=3). Two distinct peaks are clearly visible: a taller primary
+    peak centered around 68 points labeled "Main group" with an arrow annotation,
+    and a secondary peak centered around 90 points labeled "High achievers" with an
+    arrow annotation. Subtle dashed vertical reference lines mark each peak location
+    (alpha=0.15). A rug plot of individual observations runs along the x-axis as thin
+    dark marks, concentrated between ~45 and ~105. The x-axis reads "Test Score (points)"
+    and the y-axis "Density" (ranging 0.000 to 0.035). Title: "density-basic · seaborn
+    · pyplots.ai" in medium weight. Top and right spines are removed, with a subtle
+    y-axis grid (alpha=0.2). The monochromatic blue color scheme (#306998 fill, #1a3a5c
+    accents) is cohesive and professional.'
   criteria_checklist:
     visual_quality:
       score: 29
@@ -56,32 +57,34 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt'
+        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt,
+          annotations 16pt'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements anywhere
+        comment: No overlapping elements; annotations well-positioned away from curve
+          and each other
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: KDE curve clearly visible; rug plot slightly too subtle (height=0.03,
-          alpha=0.3)
+        comment: KDE curve bold, fill prominent, rug plot visible but marks are still
+          thin
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Single color, good contrast, no colorblind issues
+        comment: Monochromatic blue scheme, no colorblind issues, good contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions with tight_layout, nothing cut off
+        comment: 16:9 proportions with tight_layout, well-balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -89,30 +92,30 @@ review:
         passed: true
         comment: Test Score (points) with units, Density descriptive
     design_excellence:
-      score: 12
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Python Blue with spine removal and subtle grid is above defaults
-          but not publication-ready
+        comment: Cohesive monochromatic palette, intentional color hierarchy, professional
+          annotations — clearly above defaults
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Spines removed, subtle y-grid, good whitespace; clear evidence of
-          refinement
+        comment: Spines removed, subtle y-grid, dashed reference lines, generous whitespace,
+          consistent styling
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Bimodal data creates natural interest but no visual emphasis techniques
-          to guide the viewer
+        passed: true
+        comment: Annotations labeling peaks guide viewer to bimodal insight; dashed
+          reference lines add emphasis
     spec_compliance:
       score: 15
       max: 15
@@ -128,20 +131,20 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: 'All spec recommendations: smooth curve, fill with transparency,
-          rug plot'
+        comment: 'All spec features: smooth KDE, fill with transparency, rug plot,
+          bandwidth tuning'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Continuous variable on x-axis, density on y-axis, all data visible
+        comment: Continuous variable on x-axis, density on y-axis, full range visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct format, no legend needed for single series
+        comment: Correct format density-basic · seaborn · pyplots.ai; no legend needed
     data_quality:
       score: 14
       max: 15
@@ -151,8 +154,7 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Bimodal distribution demonstrates modality well; could show additional
-          features
+        comment: Bimodal distribution shows modality, different group sizes and variances
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -164,7 +166,7 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Score centers at 68 and 90 are realistic; 400 observations appropriate
+        comment: Score centers at 68 and 90 realistic; 400 observations appropriate
           for KDE
     code_quality:
       score: 10
@@ -175,7 +177,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports, data, plot, style, save'
+        comment: 'Clean linear flow: imports → data → plot → annotations → style →
+          save'
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -187,19 +190,19 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All three imports used
+        comment: 'All imports used: matplotlib, numpy, seaborn'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Concise, Pythonic, appropriate complexity
+        comment: Concise, Pythonic; KDE data extraction for annotations is reasonable
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300, uses current seaborn API
+        comment: Saves as plot.png with dpi=300, current seaborn API
     library_mastery:
       score: 7
       max: 10
@@ -209,12 +212,12 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of axes-level kdeplot and rugplot with ax= parameter
+        comment: Good use of axes-level kdeplot and rugplot; fill_between slightly
+          less idiomatic than fill=True
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: kdeplot with fill=True and rugplot are seaborn-specific; could leverage
-          bw_adjust or hue
-  verdict: REJECTED
+        comment: kdeplot, rugplot, and bw_adjust are seaborn-specific conveniences
+  verdict: APPROVED
