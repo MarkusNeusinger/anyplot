@@ -1,26 +1,26 @@
 library: bokeh
 specification_id: density-basic
 created: '2025-12-23T10:03:19Z'
-updated: '2025-12-23T10:10:15Z'
-generated_by: claude-opus-4-5-20251101
+updated: '2026-02-23T22:38:00+00:00'
+generated_by: claude-opus-4-6
 workflow_run: 20457534046
 issue: 0
-python_version: 3.13.11
-library_version: 3.8.1
+python_version: 3.14.3
+library_version: 3.8.2
 preview_url: https://storage.googleapis.com/pyplots-images/plots/density-basic/bokeh/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/density-basic/bokeh/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/density-basic/bokeh/plot.html
-quality_score: 92
+quality_score: null
 impl_tags:
   dependencies: []
   techniques: []
   patterns:
-    - data-generation
-    - columndatasource
+  - data-generation
+  - columndatasource
   dataprep:
-    - kde
+  - kde
   styling:
-    - alpha-blending
+  - alpha-blending
 review:
   strengths:
   - Excellent manual KDE implementation using Silverman's rule for bandwidth selection
