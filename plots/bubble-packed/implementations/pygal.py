@@ -1,7 +1,7 @@
-""" pyplots.ai
+"""pyplots.ai
 bubble-packed: Basic Packed Bubble Chart
-Library: pygal 3.1.0 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-23
+Library: pygal 3.1.0 | Python 3.14.3
+Quality: /100 | Updated: 2026-02-23
 """
 
 import math
@@ -120,6 +120,7 @@ chart = pygal.Pie(
     legend_at_bottom_columns=4,
     inner_radius=0,
     margin=100,
+    no_data_text="",
 )
 
 # Add legend entries (empty slices just for legend)
@@ -142,25 +143,55 @@ def add_packed_bubbles(root):
         circle_elem.set("r", f"{r:.1f}")
         circle_elem.set("fill", color)
         circle_elem.set("fill-opacity", "0.85")
-        circle_elem.set("stroke", "#333")
-        circle_elem.set("stroke-width", "3")
+        circle_elem.set("stroke", "white")
+        circle_elem.set("stroke-width", "4")
 
         # Tooltip
         title = etree.SubElement(circle_elem, "title")
         title.text = f"{item['label']}: ${item['value']}K"
 
-        # Value label for large circles
-        if r > 80:
-            text = etree.SubElement(g, "text")
-            text.set("x", f"{x:.1f}")
-            text.set("y", f"{y:.1f}")
-            text.set("text-anchor", "middle")
-            text.set("dominant-baseline", "middle")
-            text.set("fill", "white")
-            text.set("font-size", f"{int(r * 0.32)}")
-            text.set("font-family", "sans-serif")
-            text.set("font-weight", "bold")
-            text.text = f"${item['value']}K"
+        # Text color: dark for light backgrounds (yellow), white otherwise
+        text_color = "#333" if item["group"] == "Marketing" else "white"
+
+        # Large circles: show category name + value on two lines
+        if r > 120:
+            font_size = int(r * 0.24)
+            # Category name (above center)
+            name_text = etree.SubElement(g, "text")
+            name_text.set("x", f"{x:.1f}")
+            name_text.set("y", f"{y - font_size * 0.6:.1f}")
+            name_text.set("text-anchor", "middle")
+            name_text.set("dominant-baseline", "middle")
+            name_text.set("fill", text_color)
+            name_text.set("font-size", f"{font_size}")
+            name_text.set("font-family", "sans-serif")
+            name_text.set("font-weight", "bold")
+            name_text.text = item["label"].split()[0]
+
+            # Value (below center)
+            val_text = etree.SubElement(g, "text")
+            val_text.set("x", f"{x:.1f}")
+            val_text.set("y", f"{y + font_size * 0.7:.1f}")
+            val_text.set("text-anchor", "middle")
+            val_text.set("dominant-baseline", "middle")
+            val_text.set("fill", text_color)
+            val_text.set("font-size", f"{int(font_size * 0.85)}")
+            val_text.set("font-family", "sans-serif")
+            val_text.text = f"${item['value']}K"
+
+        # Medium circles: value only
+        elif r > 70:
+            font_size = int(r * 0.30)
+            val_text = etree.SubElement(g, "text")
+            val_text.set("x", f"{x:.1f}")
+            val_text.set("y", f"{y:.1f}")
+            val_text.set("text-anchor", "middle")
+            val_text.set("dominant-baseline", "middle")
+            val_text.set("fill", text_color)
+            val_text.set("font-size", f"{font_size}")
+            val_text.set("font-family", "sans-serif")
+            val_text.set("font-weight", "bold")
+            val_text.text = f"${item['value']}K"
 
     return root
 
