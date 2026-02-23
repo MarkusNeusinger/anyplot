@@ -1,7 +1,7 @@
 library: pygal
 specification_id: arc-basic
 created: 2025-12-17 10:58:08+00:00
-updated: '2026-02-23T21:34:25Z'
+updated: '2026-02-23T21:48:33Z'
 generated_by: claude-opus-4-6
 workflow_run: 20300358253
 issue: 991
@@ -10,47 +10,49 @@ library_version: 3.1.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/arc-basic/pygal/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/arc-basic/pygal/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/arc-basic/pygal/plot.html
-quality_score: 79
+quality_score: 84
 impl_tags:
   dependencies: []
   techniques:
+  - custom-legend
   - html-export
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
+  - minimal-chrome
   - alpha-blending
 review:
   strengths:
-  - Correct arc diagram implementation with all spec features (proportional height,
-    weight encoding, semi-transparency)
-  - Cohesive Python Blue/Yellow color palette with intentional weight-based color
-    hierarchy
-  - 'Perfect code quality: clean KISS structure, deterministic data, all imports used'
-  - Realistic neutral data context directly matching the spec suggested applications
-  - Multi-format output (SVG, PNG, HTML) leveraging pygal interactive capabilities
+  - 'Perfect spec compliance: all required arc diagram features implemented correctly'
+  - Clean, well-structured code with excellent KISS adherence and full 10/10 code
+    quality
+  - Effective dual-encoding of weight through both color intensity and line width
+  - Clever use of pygal CSS inline styling to create clean, minimal chrome
+  - Good data storytelling through visual hierarchy with strong connections standing
+    out
   weaknesses:
-  - Visible y-axis spine artifact on the left edge of the plot area breaks the clean
-    design
-  - Arc weight differentiation is subtle — three blue shades too close and thickness
-    differences hard to distinguish
-  - No weight legend to help viewers understand arc color/thickness meaning
-  - Design lacks publication-level polish — needs more visual refinement and stronger
-    focal point
+  - Weak connections (#A8D0E6 at 3px width, 0.7 opacity) nearly invisible against
+    white background
+  - Lightest blue shade provides insufficient contrast for effective color differentiation
+  - Title right-aligned by pygal default rather than centered or left-aligned
+  - Design polish good but not yet publication-quality sophistication
   improvements: []
-  image_description: 'The plot displays a basic arc diagram with 10 character nodes
-    (Alice, Bob, Carol, David, Eve, Frank, Grace, Henry, Iris, Jack) arranged as yellow
-    circular dots along a horizontal baseline. Curved arcs in varying shades of blue
-    connect pairs of nodes above the baseline, with arc height proportional to the
-    distance between connected nodes — the tallest arc spans from Alice to Jack (the
-    full width). Arc thickness and color darkness encode connection weight: heavier
-    connections (weight 3) are darker (#1B3F5C) and thicker, while lighter connections
-    (weight 1) are paler (#7BA7C9) and thinner. The title "Character Interactions
-    · arc-basic · pygal · pyplots.ai" appears at the top center. Node name labels
-    are positioned below the baseline. The background is white with no grid lines.
-    A subtle vertical line is visible along the left edge of the plot area (y-axis
-    spine artifact). No legend is shown.'
+  image_description: 'The plot displays an arc diagram with 10 character nodes (Alice,
+    Bob, Carol, David, Eve, Frank, Grace, Henry, Iris, Jack) arranged as yellow/gold
+    dots along a horizontal baseline. Curved arcs above the baseline connect pairs
+    of characters. Arc height is proportional to the distance between connected nodes
+    — the Alice-Jack arc spans the full width and reaches the top of the plot, while
+    adjacent-node arcs (e.g., Alice-Bob) form small, tight curves near the baseline.
+    Three weight levels are encoded via both color intensity and line width: Strong
+    connections appear as thick, dark navy arcs; Moderate connections as medium-blue,
+    mid-weight arcs; Weak connections as thin, very light blue arcs. The title "Character
+    Interactions · arc-basic · pygal · pyplots.ai" appears at the top right in a monospace
+    font. Node labels are positioned below the baseline. A three-item legend at the
+    bottom shows "Strong connection", "Moderate connection", and "Weak connection"
+    with corresponding color squares. The background is clean white with no grid lines
+    or axis borders visible.'
   verdict: REJECTED
   criteria_checklist:
     visual_quality:
@@ -59,73 +61,72 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=72, labels=40, major_labels=40,
-          value=32), all clearly readable
+        comment: Font sizes explicitly set (title=72, label=40, legend=36, value=32);
+          all text readable; legend text slightly small relative to canvas
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; node labels well-spaced; arc overlap handled
-          with semi-transparency
+        comment: No text collisions; node labels well-spaced; arcs overlap naturally
+          as expected
       - id: VQ-03
         name: Element Visibility
         score: 4
         max: 6
         passed: false
-        comment: Yellow nodes clearly visible; arc thickness differentiation between
-          weights is subtle (widths 4/6/8px), lighter arcs appear thin
+        comment: Weak connections (#A8D0E6 at 0.7 opacity with 3px stroke) very faint
+          against white background
       - id: VQ-04
         name: Color Accessibility
         score: 3
         max: 4
-        passed: false
-        comment: Blue-yellow colorblind-safe; three blue shades close enough that
-          weight distinction is difficult
+        passed: true
+        comment: Blue monochromatic palette is colorblind-safe; lightest shade too
+          close to white
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
-        passed: false
-        comment: Good horizontal distribution; visible y-axis spine artifact on left
-          edge detracts
+        passed: true
+        comment: Good layout; title right-aligned (pygal default); some unused space
+          below legend
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Title format correct with descriptive prefix; no axis titles though
-          units not applicable for arc diagrams
+        passed: true
+        comment: Descriptive title with context; node labels appropriate for arc diagram
     design_excellence:
-      score: 11
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: false
-        comment: Cohesive Python Blue/Yellow palette with weight-based encoding; above
-          defaults but not publication-ready due to spine artifact and limited differentiation
+        passed: true
+        comment: Custom three-tone blue palette with yellow node contrast; clean CSS-driven
+          minimal chrome; above defaults but not publication-level
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Grid removed, y-labels hidden, clean background; visible left border/spine
-          persists
+        passed: true
+        comment: Grid/axes/borders hidden via CSS; clean white background; good whitespace;
+          effective chrome removal
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Weight-based thickness/color creates some hierarchy; Alice as hub
-          provides focal point; slightly above default
+        passed: true
+        comment: Weight dual-encoded via color+width creates visual hierarchy; arc
+          height shows distance; hub characters identifiable
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -133,29 +134,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct arc diagram: nodes on horizontal line, curved arcs above
-          baseline'
+        comment: 'Correct arc diagram: nodes on horizontal line, curved arcs above'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: proportional height, semi-transparency,
-          readable labels, weight encoding'
+        comment: 'All spec features present: arcs above axis, height proportional,
+          semi-transparent, color-coded, readable labels'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Nodes correctly positioned; arcs connect correct pairs; heights proportional
-          to distance
+        comment: 10 nodes correctly positioned; 15 edges correctly rendered; weights
+          mapped to color and width
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Title format correct; legend hidden (reasonable for 15 series) but
-          no weight legend
+        passed: true
+        comment: Title follows format with descriptive prefix; legend shows three
+          weight categories
     data_quality:
       score: 14
       max: 15
@@ -164,22 +164,21 @@ review:
         name: Feature Coverage
         score: 5
         max: 6
-        passed: false
-        comment: Shows short/medium/long-range connections, three weight levels, varying
-          connectivity; could benefit from more extreme density contrast
+        passed: true
+        comment: Shows short/long range connections, three weight levels, hub nodes;
+          could include isolated node
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Character interactions in a story chapter — directly matches spec
-          application; neutral scenario
+        comment: Character interactions in a story chapter — realistic, neutral, comprehensible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 10 nodes within recommended range; 15 edges reasonable; weights 1-3
+        comment: 10 nodes within spec range; 15 edges good density; 3 weight levels
           sensible
     code_quality:
       score: 10
@@ -190,13 +189,14 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat structure with appropriate loop for arc generation; no functions/classes
+        comment: 'Linear flow: imports, data, style, chart config, arc loop, legend,
+          nodes, save'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set; data is deterministic
+        comment: np.random.seed(42) set; data is fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -208,28 +208,29 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized; no over-engineering or fake functionality
+        comment: Clean arc generation loop; CSS-based chrome removal; no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png via render_to_png; also SVG and HTML; current API
+        comment: Saves plot.png via render_to_png(); also outputs SVG and HTML; current
+          API
     library_mastery:
-      score: 5
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
-        passed: false
-        comment: Uses pygal.XY() with Style, chart.add(), x_labels dicts — idiomatic;
-          arc diagram is workaround since no native arc chart
+        passed: true
+        comment: Good use of pygal.XY, Style(), CSS customization, x_labels with value/label
+          dicts
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Interactive SVG with opacity_hover, HTML export, multi-format output
-          — leverages pygal strengths but core viz not uniquely pygal
+        passed: true
+        comment: CSS inline styling and selective legend hiding via nth-child are
+          pygal-distinctive features
