@@ -1,7 +1,7 @@
-""" pyplots.ai
+"""pyplots.ai
 bubble-packed: Basic Packed Bubble Chart
-Library: highcharts unknown | Python 3.13.11
-Quality: 90/100 | Created: 2025-12-23
+Library: highcharts 1.10.3 | Python 3.14.3
+Quality: /100 | Updated: 2026-02-23
 """
 
 import tempfile
@@ -17,9 +17,7 @@ from selenium.webdriver.chrome.options import Options
 
 
 # Data - Company market share by sector
-# Packed bubbles group by sector with size representing market value
 data = [
-    # Technology sector
     {
         "name": "Technology",
         "data": [
@@ -30,7 +28,6 @@ data = [
             {"name": "Cybersecurity", "value": 280},
         ],
     },
-    # Finance sector
     {
         "name": "Finance",
         "data": [
@@ -40,7 +37,6 @@ data = [
             {"name": "Fintech", "value": 260},
         ],
     },
-    # Healthcare sector
     {
         "name": "Healthcare",
         "data": [
@@ -50,7 +46,6 @@ data = [
             {"name": "Healthcare Services", "value": 240},
         ],
     },
-    # Energy sector
     {
         "name": "Energy",
         "data": [
@@ -59,7 +54,6 @@ data = [
             {"name": "Utilities", "value": 290},
         ],
     },
-    # Consumer sector
     {
         "name": "Consumer",
         "data": [
@@ -72,23 +66,29 @@ data = [
 ]
 
 # Colorblind-safe palette for sectors
-colors = ["#306998", "#FFD43B", "#9467BD", "#17BECF", "#8C564B"]
+colors = ["#306998", "#E5A02E", "#9467BD", "#17BECF", "#8C564B"]
 
 # Create chart
 chart = Chart(container="container")
 chart.options = HighchartsOptions()
 
 # Chart configuration
-chart.options.chart = {"type": "packedbubble", "width": 4800, "height": 2700, "backgroundColor": "#ffffff"}
+chart.options.chart = {
+    "type": "packedbubble",
+    "width": 4800,
+    "height": 2700,
+    "backgroundColor": "#ffffff",
+    "margin": [100, 50, 100, 50],
+}
 
 # Title
 chart.options.title = {
-    "text": "bubble-packed · Market Sectors · highcharts · pyplots.ai",
+    "text": "bubble-packed \u00b7 highcharts \u00b7 pyplots.ai",
     "style": {"fontSize": "64px", "fontWeight": "bold"},
 }
 
 # Subtitle
-chart.options.subtitle = {"text": "Circle size represents market value ($B)", "style": {"fontSize": "36px"}}
+chart.options.subtitle = {"text": "Market value by sector ($B)", "style": {"fontSize": "36px", "color": "#666666"}}
 
 # Tooltip
 chart.options.tooltip = {
@@ -103,12 +103,12 @@ chart.options.legend = {"enabled": True, "itemStyle": {"fontSize": "36px"}, "sym
 # Plot options for packed bubble
 chart.options.plot_options = {
     "packedbubble": {
-        "minSize": "60%",
-        "maxSize": "180%",
+        "minSize": "80%",
+        "maxSize": "250%",
         "zMin": 0,
         "zMax": 1000,
         "layoutAlgorithm": {
-            "gravitationalConstant": 0.02,
+            "gravitationalConstant": 0.05,
             "splitSeries": False,
             "seriesInteraction": True,
             "dragBetweenSeries": False,
@@ -117,7 +117,7 @@ chart.options.plot_options = {
         "dataLabels": {
             "enabled": True,
             "format": "{point.name}",
-            "filter": {"property": "y", "operator": ">", "value": 230},
+            "filter": {"property": "y", "operator": ">", "value": 260},
             "style": {"fontSize": "28px", "fontWeight": "bold", "color": "white", "textOutline": "2px contrast"},
         },
     }
@@ -126,19 +126,15 @@ chart.options.plot_options = {
 # Add series with colors
 series_list = []
 for i, sector in enumerate(data):
-    series_config = {
-        "type": "packedbubble",
-        "name": sector["name"],
-        "data": sector["data"],
-        "color": colors[i % len(colors)],
-    }
-    series_list.append(series_config)
+    series_list.append(
+        {"type": "packedbubble", "name": sector["name"], "data": sector["data"], "color": colors[i % len(colors)]}
+    )
 
 chart.options.series = series_list
 
 # Download Highcharts JS and highcharts-more.js for packed bubble support
-highcharts_url = "https://code.highcharts.com/highcharts.js"
-highcharts_more_url = "https://code.highcharts.com/highcharts-more.js"
+highcharts_url = "https://cdn.jsdelivr.net/npm/highcharts/highcharts.js"
+highcharts_more_url = "https://cdn.jsdelivr.net/npm/highcharts/highcharts-more.js"
 
 with urllib.request.urlopen(highcharts_url, timeout=30) as response:
     highcharts_js = response.read().decode("utf-8")
@@ -167,8 +163,8 @@ with open("plot.html", "w", encoding="utf-8") as f:
 <html>
 <head>
     <meta charset="utf-8">
-    <script src="https://code.highcharts.com/highcharts.js"></script>
-    <script src="https://code.highcharts.com/highcharts-more.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/highcharts/highcharts.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/highcharts/highcharts-more.js"></script>
 </head>
 <body style="margin:0;">
     <div id="container" style="width: 100%; height: 100vh;"></div>
@@ -191,7 +187,7 @@ chrome_options.add_argument("--window-size=4800,2900")
 
 driver = webdriver.Chrome(options=chrome_options)
 driver.get(f"file://{temp_path}")
-time.sleep(5)  # Wait for chart to render
+time.sleep(5)
 driver.save_screenshot("plot_raw.png")
 driver.quit()
 
@@ -201,4 +197,4 @@ img_cropped = img.crop((0, 0, 4800, 2700))
 img_cropped.save("plot.png")
 Path("plot_raw.png").unlink()
 
-Path(temp_path).unlink()  # Clean up temp file
+Path(temp_path).unlink()
