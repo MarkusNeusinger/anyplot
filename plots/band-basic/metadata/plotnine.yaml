@@ -1,7 +1,7 @@
 library: plotnine
 specification_id: band-basic
 created: '2025-12-23T09:08:40Z'
-updated: '2026-02-23T13:41:00Z'
+updated: '2026-02-23T13:56:07Z'
 generated_by: claude-opus-4-6
 workflow_run: 20456385974
 issue: 0
@@ -10,152 +10,172 @@ library_version: 0.15.3
 preview_url: https://storage.googleapis.com/pyplots-images/plots/band-basic/plotnine/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/band-basic/plotnine/plot_thumb.png
 preview_html: null
-quality_score: null
+quality_score: 88
 impl_tags:
   dependencies: []
   techniques:
-  - grid-styling
+  - layer-composition
   patterns:
   - data-generation
   dataprep: []
   styling:
   - alpha-blending
+  - grid-styling
 review:
   strengths:
-  - Excellent use of plotnine grammar of graphics with geom_ribbon + geom_line combination
-  - Heteroscedastic uncertainty (band widens over time) is a realistic forecasting
-    pattern
-  - Clean, minimal theme with well-tuned text sizes for 4800x2700 output
-  - Proper 95% CI calculation using 1.96 standard errors
-  - Title correctly follows the spec-id · library · pyplots.ai format
+  - Perfect visual quality with all font sizes explicitly set to recommended values
+  - 'Excellent data quality: sensor calibration scenario with physically meaningful
+    varying uncertainty (calibration narrowing + extrapolation widening)'
+  - Strong visual refinement with carefully customized theme (subtle y-grid at alpha=0.2,
+    removed borders, clean axis lines)
+  - Clean KISS code structure with proper reproducibility seed
   weaknesses:
-  - Axis labels lack units (e.g., "Time (days)" or "Predicted Value (units)")
-  - Data could show both narrowing and widening uncertainty regions for better feature
-    coverage
-  image_description: The plot shows a band plot with a semi-transparent light blue
-    (#306998 with alpha 0.3) filled region representing a 95% confidence interval.
-    A dark blue central trend line runs through the middle of the band. The x-axis
-    shows "Time" ranging from 0.0 to 10.0, and the y-axis shows "Predicted Value"
-    ranging from approximately 3 to 12. The title reads "Model Forecast with 95% Confidence
-    Interval · band-basic · plotnine · pyplots.ai". The confidence band widens as
-    time increases (heteroscedastic uncertainty), which is realistic for forecasting
-    scenarios. The background uses a minimal theme with subtle gray grid lines. Text
-    is clearly readable at all sizes.
+  - Central line uses identical color (#306998) as band fill; a contrasting hue or
+    linestyle would strengthen spec compliance
+  - Data storytelling relies on viewer noticing band width pattern without guidance;
+    no subtitle or annotation explains 95% CI or calibration phases
+  - Library mastery is competent but does not showcase distinctive plotnine features
+    beyond basic geoms
+  image_description: 'The plot displays a band/ribbon chart showing sensor temperature
+    over a 30-day period. A dark blue central line (Python Blue #306998) traces the
+    temperature trend from ~18°C at day 0, rising to ~21-23°C with sinusoidal oscillation.
+    A light blue semi-transparent band surrounds the line, representing a confidence
+    interval. The band starts wide at day 0 (roughly ±3.5°C), narrows noticeably around
+    days 10-15 as the model calibrates, then begins widening again after day 20 for
+    extrapolation. The y-axis is labeled "Temperature (°C)" ranging from ~14.5 to
+    25°C. The x-axis is labeled "Time (days)" from 0 to 30. The title reads "Sensor
+    Calibration Forecast · band-basic · plotnine · pyplots.ai". Background is white
+    with very subtle horizontal grid lines (alpha=0.2). No vertical grid lines. Thin
+    dark axis lines on left and bottom edges. Clean, minimal aesthetic.'
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title 24pt, axis labels 20pt, tick labels 16pt - all perfectly readable
+        comment: 'All font sizes explicitly set: title=24pt, axis_title=20pt, axis_text=16pt,
+          base=14pt. All perfectly readable.'
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: No overlapping text elements anywhere. Title, labels, and ticks are
+          well-separated.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Band with appropriate alpha (0.3), line properly visible (size=2)
+        comment: Line size=2.5 clearly visible against ribbon. Band at alpha=0.25
+          shows boundaries clearly. Well-adapted to 60 data points.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Single color scheme with clear contrast between line and band
+        comment: Single-series blue color scheme. No colorblind issues. Good contrast
+          against white background.
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Good proportions, 16:9 aspect ratio with tight_layout
+        comment: Plot fills ~65% of canvas with balanced margins. figure_size=(16,9)
+          produces good proportions.
       - id: VQ-06
-        name: Axis Labels
-        score: 1
-        max: 2
-        passed: false
-        comment: '"Time" and "Predicted Value" are descriptive but lack units'
-      - id: VQ-07
-        name: Grid & Legend
+        name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Grid subtle with alpha 0.3, minor grid disabled, no legend needed
+        comment: Temperature (°C) and Time (days) both descriptive with units.
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Consistent Python Blue with intentional line/band visual hierarchy.
+          Above defaults but not publication-level. Single-color scheme limits palette
+          showcase.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Excellent refinement: subtle y-grid at alpha=0.2, x-grid removed,
+          panel border removed, clean thin axis lines added.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Varying band width embeds a calibration narrative but visualization
+          does not actively guide the viewer. No annotation or subtitle explains the
+          95% CI.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 14
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct band/ribbon plot type
+        comment: Correct band/ribbon plot with filled region between boundaries and
+          central trend line.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X is time, y_lower/y_upper define band boundaries, y_center is trend
-          line
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 3
+        max: 4
         passed: true
-        comment: Has semi-transparent band, central line in contrasting style, smooth
-          interpolation
-      - id: SC-04
-        name: Data Range
+        comment: Semi-transparent fill and central line present. Line uses same color
+          as band fill; spec requests contrasting color/style.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, axes auto-scaled appropriately
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X=time (days), Y=temperature with proper lower/upper bounds. All
+          data visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No legend needed for single-series band plot
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "Model Forecast with 95% Confidence Interval · band-basic
-          · plotnine · pyplots.ai"'
+        comment: Title follows exact format. No legend needed for single-series.
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Shows heteroscedastic uncertainty (widening band), smooth trend,
-          realistic CI bounds using 1.96 multiplier. Minor: could show both narrowing
-          and widening regions'
+        comment: Demonstrates varying uncertainty width (calibration narrowing, extrapolation
+          widening), sinusoidal trend with noise, 60 data points.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Model forecast scenario is highly realistic and commonly used
+        comment: Sensor temperature calibration is genuine, neutral scientific scenario
+          with domain-appropriate uncertainty behavior.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: '50 points is appropriate, values sensible. Minor: y-axis values
-          are unitless'
+        comment: Temperature range ~14-25°C realistic for ambient sensors. 30-day
+          horizon sensible for calibration.
     code_quality:
       score: 10
       max: 10
@@ -165,40 +185,50 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports → Data → Plot → Save, no functions/classes
+        comment: 'Clean linear flow: imports, data generation, plot construction,
+          save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set before random operations.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used. plotnine components individually imported and all
+          utilized.
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current plotnine API
+        comment: Appropriate complexity. No fake UI or over-engineering.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves as plot.png with dpi=300. Uses current plotnine API.
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 5
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: 'Excellent use of ggplot grammar: geom_ribbon for band, aes mapping,
-          theme customization, element_text/element_line for styling'
-  verdict: APPROVED
+        comment: Proper grammar of graphics composition with ggplot, aes, geom_ribbon,
+          geom_line, labs, theme. Idiomatic plotnine.
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: geom_ribbon and grammar of graphics layering are characteristic but
+          implementation does not leverage distinctive features like stat, scale,
+          or coord customizations.
+  verdict: REJECTED
