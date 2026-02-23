@@ -1,16 +1,16 @@
 library: plotly
 specification_id: bubble-packed
 created: '2025-12-23T09:16:37Z'
-updated: '2025-12-23T09:19:10Z'
-generated_by: claude-opus-4-5-20251101
+updated: '2026-02-23T16:50:07Z'
+generated_by: claude-opus-4-6
 workflow_run: 20456557994
 issue: 0
-python_version: 3.13.11
-library_version: 6.5.0
+python_version: 3.14.3
+library_version: 6.5.2
 preview_url: https://storage.googleapis.com/pyplots-images/plots/bubble-packed/plotly/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/bubble-packed/plotly/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/bubble-packed/plotly/plot.html
-quality_score: 93
+quality_score: 91
 impl_tags:
   dependencies: []
   techniques:
@@ -19,157 +19,171 @@ impl_tags:
   - html-export
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep: []
   styling:
+  - minimal-chrome
+  - edge-highlighting
   - alpha-blending
 review:
   strengths:
-  - Excellent force-directed circle packing algorithm implementation that correctly
-    avoids overlap
-  - Proper area scaling (sqrt) for accurate visual perception as specified
-  - Clean, readable labels positioned inside bubbles with dynamic font sizing
-  - Rich hover templates with formatted budget values
-  - Good color palette starting with Python colors
-  - Both PNG and interactive HTML outputs provided
-  - Realistic department budget data with appropriate value range
+  - Excellent force simulation with weighted centering for tight non-overlapping packing
+  - Colorblind-safe palette with luminance-based text contrast calculation
+  - Rich hover tooltips with budget amounts and share percentages via hovertemplate
+    and customdata
+  - Pixel-to-data coordinate conversion for accurate bubble marker sizing
+  - Size-adaptive labels prevent cramped text in smaller bubbles
+  - Both PNG and HTML output maximize utility
   weaknesses:
-  - No legend showing total budget or providing a size reference scale
-  - Text in smallest bubbles (Admin, Legal, Design) appears slightly cramped
-  - Optional grouping feature from spec not demonstrated (though marked optional)
-  image_description: The plot displays a packed bubble chart with 15 circles representing
-    department budget allocations. Each circle is labeled with the department name
-    (bold) and budget value (in $M or $K format). The circles are packed tightly together
-    without overlap, with the largest circles being Engineering ($4.5M), R&D ($3.8M),
-    Sales ($3.2M), and Marketing ($2.8M). Smaller departments like Admin ($450K),
-    Legal ($650K), and Design ($720K) appear as smaller circles. The color palette
-    is diverse - Python blue for R&D, yellow for Engineering, various other colors
-    including pink, orange, teal, brown, and purple. The title "Department Budget
-    Allocation · bubble-packed · plotly · pyplots.ai" appears at the top center in
-    dark gray text. The background is clean white with no grid lines or axes shown.
+  - Force simulation packing could be slightly tighter for a more compact overall
+    shape
+  - Minor asymmetry in the bubble cluster positioning due to force-directed approach
+  image_description: 'The plot shows a packed bubble chart titled "Department Budget
+    Allocation · bubble-packed · plotly · pyplots.ai" centered at the top in large
+    dark text. Fifteen circles of varying sizes represent department budgets, packed
+    tightly together without overlap in the center of a white canvas. Four color groups
+    are used: steel blue (#306998) for Technology departments (Engineering $4.5M,
+    R&D $3.8M, IT $2.1M, Data Science $1.6M, QA $880K), gold/amber (#E69F00) for Revenue
+    (Sales $3.2M, Marketing $2.8M), teal (#009E73) for Operations (Operations $1.8M,
+    Finance $1.2M, Support $1.1M, Admin $450K), and pink/mauve (#CC79A7) for Corporate
+    (Product $1.5M, HR $950K, Design $720K, Legal $650K). Each bubble contains the
+    department name in bold white or dark text (contrast-adjusted), with budget amounts
+    shown for larger bubbles. White borders (2.5px) separate the circles visually.
+    A "Total: $27.3M" annotation appears below the cluster, and a horizontal legend
+    at the bottom identifies the four groups. The bubble cluster fills roughly 60-65%
+    of the canvas, with balanced margins.'
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 28
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: All text is clearly readable. Title is large and prominent. Department
-          names and values are legible inside each bubble with white text that contrasts
-          well against the colored backgrounds.
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: Circles are properly packed without overlapping. Text is contained
-          within each bubble.
-      - id: VQ-03
-        name: Element Visibility
         score: 7
         max: 8
         passed: true
-        comment: 'Bubble sizes are well-proportioned to show the data differences.
-          The force simulation effectively packed the circles. Minor: some smaller
-          bubbles (Admin, Legal) have slightly cramped text.'
+        comment: 'All font sizes explicitly set: title 32pt, bubble labels 14-20pt
+          adaptive, legend 16pt, total annotation 18pt. All readable at full resolution.
+          Minor deduction for tight fit in smallest bubbles.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Force simulation with padding ensures no bubble overlap. All labels
+          contained within circles. No text collisions.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All 15 bubbles clearly visible with 10x size range. White borders
+          provide clean separation. Opacity 0.9 gives appropriate visual weight.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Uses a colorblind-safe palette with sufficient variation. Python
-          blue and yellow featured prominently, other colors well-differentiated.
+        comment: 'Colorblind-safe palette: steel blue, gold, teal, pink. All distinguishable
+          under common color vision deficiencies.'
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 3
+        max: 4
         passed: true
-        comment: Good proportions with circles centered in the plot area. White space
-          around the packed bubbles is balanced.
+        comment: Bubble cluster fills ~60-65% of canvas. Minor deduction for slight
+          asymmetry and uneven corner spacing inherent to force-directed packing.
       - id: VQ-06
-        name: Axis Labels
+        name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: N/A for packed bubble chart - correctly hidden as position has no
-          meaning.
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
-        max: 2
+        comment: Axes appropriately hidden for packed bubble chart. Title is descriptive
+          with context. Budget values inside bubbles provide quantitative context.
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
         passed: true
-        comment: No legend shown. While a legend isn't strictly necessary since labels
-          are on bubbles, a small legend or group indicator could enhance understanding.
+        comment: Custom colorblind-safe palette, contrast-aware text colors via luminance
+          calculation, white marker borders, consistent Arial typography. Clearly
+          above defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Axes and gridlines hidden, clean white background, white marker borders,
+          opacity 0.9, horizontal legend, generous whitespace.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Size hierarchy communicates budget dominance. Color grouping reveals
+          Technology as largest spending category. Budget labels and total annotation
+          provide context.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct packed bubble chart where position has no meaning, only size
-          matters.
+        comment: Correct packed bubble chart with force simulation, size-mapped circles,
+          hidden axes.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Size correctly represents budget value, scaled by area (sqrt) as
-          spec requires.
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Labels inside circles, force simulation for packing, color encoding
-          categories.
-      - id: SC-04
-        name: Data Range
+        comment: Area-scaled circles, force packing, adaptive labels, color-coded
+          groups, hover tooltips all present.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 15 departments visible with appropriate size range.
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Values correctly mapped to circle areas via sqrt. Groups mapped to
+          colors. 15 items within recommended range.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Labels directly on bubbles, no separate legend needed.
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correctly uses "{description} · bubble-packed · plotly · pyplots.ai"
-          format.
+        comment: Title includes spec-id, library, pyplots.ai format. Legend labels
+          match group data exactly.
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Shows good variation in circle sizes from $450K to $4.5M (10x range).
-          However, the spec mentions optional grouping which isn't demonstrated.
+        comment: Wide size variation (10x range), four distinct groups with varying
+          membership, size-adaptive labels.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Department budget allocation is a perfect, real-world scenario for
-          packed bubble charts.
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Budget values are realistic for a medium-to-large company.
+        comment: Department budgets at a tech company — real, comprehensible, neutral
+          business scenario with recognizable department names.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Budget values $450K-$4.5M and total $27.3M are realistic for a mid-to-large
+          company.
     code_quality:
       score: 10
       max: 10
@@ -179,42 +193,50 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear flow: imports → data → simulation → plot → save.'
+        comment: 'Clean linear flow: imports, data, packing, formatting, figure, layout,
+          save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42).
+        comment: np.random.seed(42) set before random operations. Deterministic simulation.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy and plotly.graph_objects used.
+        comment: Only numpy and plotly.graph_objects imported, both fully utilized.
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current plotly API.
+        comment: Well-structured force simulation, weighted centering, luminance-based
+          text contrast. Appropriate complexity.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html.
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot.png via write_image at 4800x2700 and plot.html. Current
+          Plotly API.
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Uses go.Scatter with annotations for labels and hover templates for
-          interactivity. The HTML export enables Plotly's interactive features. Could
-          leverage Plotly's animation capabilities for the force simulation or use
-          custom shapes.
+        comment: Idiomatic go.Figure with per-group traces, hovertemplate with customdata,
+          add_annotation, update_layout, sizemode=diameter.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Rich hover tooltips via hovertemplate+customdata, HTML export, scaleanchor/scaleratio,
+          itemsizing=constant in legend.
   verdict: APPROVED

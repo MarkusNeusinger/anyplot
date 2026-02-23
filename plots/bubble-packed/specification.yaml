@@ -6,7 +6,7 @@ title: Basic Packed Bubble Chart
 
 # Specification tracking
 created: 2025-12-15T20:43:45Z
-updated: 2025-12-15T20:43:45Z
+updated: 2026-02-23T12:00:00Z
 issue: 992
 suggested: MarkusNeusinger
 
@@ -15,13 +15,15 @@ tags:
   plot_type:
     - bubble
     - packed
+    - circlepacking
   data_type:
     - categorical
     - numeric
+    - proportional
   domain:
     - general
     - business
   features:
     - basic
     - comparison
-    - hierarchical
+    - proportional
