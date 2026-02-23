@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 density-basic: Basic Density Plot
 Library: bokeh 3.8.2 | Python 3.14.3
 Quality: 88/100 | Updated: 2026-02-23
@@ -6,7 +6,7 @@ Quality: 88/100 | Updated: 2026-02-23
 
 import numpy as np
 from bokeh.io import export_png
-from bokeh.models import ColumnDataSource, HoverTool, NumeralTickFormatter
+from bokeh.models import ColumnDataSource, HoverTool, Label, NumeralTickFormatter
 from bokeh.plotting import figure
 
 
@@ -32,8 +32,20 @@ for xi in response_times:
     density += np.exp(-0.5 * ((x_range - xi) / bandwidth) ** 2)
 density /= n * bandwidth * np.sqrt(2 * np.pi)
 
+# Identify peaks for visual storytelling
+peak1_idx = np.argmax(density[:250])
+peak2_idx = 250 + np.argmax(density[250:])
+peak1_x, peak1_y = x_range[peak1_idx], density[peak1_idx]
+peak2_x, peak2_y = x_range[peak2_idx], density[peak2_idx]
+
 # Create data source
 source = ColumnDataSource(data={"x": x_range, "density": density})
+
+# Highlight regions around each peak (for visual emphasis)
+mask1 = (x_range > peak1_x - 60) & (x_range < peak1_x + 60)
+mask2 = (x_range > peak2_x - 55) & (x_range < peak2_x + 55)
+highlight1 = ColumnDataSource(data={"x": x_range[mask1], "density": density[mask1]})
+highlight2 = ColumnDataSource(data={"x": x_range[mask2], "density": density[mask2]})
 
 # Rug plot data (individual observations)
 rug_y_pos = -0.0006
@@ -60,6 +72,36 @@ p.varea(x="x", y1=0, y2="density", source=source, fill_color="#306998", fill_alp
 # Density curve
 density_line = p.line(x="x", y="density", source=source, line_color="#306998", line_width=6, line_alpha=0.9)
 
+# Emphasize peak regions with darker fill
+p.varea(x="x", y1=0, y2="density", source=highlight1, fill_color="#306998", fill_alpha=0.15)
+p.varea(x="x", y1=0, y2="density", source=highlight2, fill_color="#306998", fill_alpha=0.15)
+
+# Annotate peaks for data storytelling
+p.add_layout(
+    Label(
+        x=peak1_x,
+        y=peak1_y,
+        text="Fast Responses",
+        text_font_size="22pt",
+        text_color="#1a3d5c",
+        text_font_style="bold",
+        text_align="center",
+        y_offset=18,
+    )
+)
+p.add_layout(
+    Label(
+        x=peak2_x,
+        y=peak2_y,
+        text="Slower Responses",
+        text_font_size="22pt",
+        text_color="#1a3d5c",
+        text_font_style="bold",
+        text_align="center",
+        y_offset=18,
+    )
+)
+
 # Hover tool showing density values at cursor position
 hover = HoverTool(
     renderers=[density_line],
@@ -70,7 +112,7 @@ hover = HoverTool(
 p.add_tools(hover)
 
 # Rug plot - vertical segments at bottom
-p.segment(x0="x", y0="y0", x1="x", y1="y1", source=rug_source, line_color="#306998", line_width=3, line_alpha=0.5)
+p.segment(x0="x", y0="y0", x1="x", y1="y1", source=rug_source, line_color="#306998", line_width=3, line_alpha=0.65)
 
 # Text sizes for large canvas
 p.title.text_font_size = "36pt"
@@ -82,9 +124,11 @@ p.yaxis.major_label_text_font_size = "22pt"
 # Y-axis tick format
 p.yaxis.formatter = NumeralTickFormatter(format="0.0000")
 
-# Axis styling
-p.xaxis.axis_line_width = 2
-p.yaxis.axis_line_width = 2
+# Axis styling - softened to match minimalist chrome
+p.xaxis.axis_line_width = 1
+p.yaxis.axis_line_width = 1
+p.xaxis.axis_line_alpha = 0.5
+p.yaxis.axis_line_alpha = 0.5
 p.xaxis.minor_tick_line_color = None
 p.yaxis.minor_tick_line_color = None
 p.xaxis.major_tick_line_color = None
