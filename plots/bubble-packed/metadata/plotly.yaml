@@ -1,16 +1,16 @@
 library: plotly
 specification_id: bubble-packed
 created: '2025-12-23T09:16:37Z'
-updated: 2026-02-23T15:35:00+00:00
+updated: '2026-02-23T15:47:58Z'
 generated_by: claude-opus-4-6
 workflow_run: 20456557994
 issue: 0
-python_version: "3.14.3"
-library_version: "6.5.2"
+python_version: 3.14.3
+library_version: 6.5.2
 preview_url: https://storage.googleapis.com/pyplots-images/plots/bubble-packed/plotly/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/bubble-packed/plotly/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/bubble-packed/plotly/plot.html
-quality_score: null
+quality_score: 88
 impl_tags:
   dependencies: []
   techniques:
@@ -19,157 +19,173 @@ impl_tags:
   - html-export
   patterns:
   - data-generation
-  dataprep: []
+  - iteration-over-groups
+  dataprep:
+  - normalization
   styling:
+  - minimal-chrome
   - alpha-blending
+  - edge-highlighting
 review:
   strengths:
-  - Excellent force-directed circle packing algorithm implementation that correctly
-    avoids overlap
-  - Proper area scaling (sqrt) for accurate visual perception as specified
-  - Clean, readable labels positioned inside bubbles with dynamic font sizing
-  - Rich hover templates with formatted budget values
-  - Good color palette starting with Python colors
-  - Both PNG and interactive HTML outputs provided
-  - Realistic department budget data with appropriate value range
+  - Custom force simulation for circle packing works well with no overlaps and good
+    visual spacing
+  - Smart label strategy with larger bubbles showing name plus dollar value and smaller
+    ones showing just name
+  - Good use of plotly-specific features including hover tooltips via hovertemplate,
+    HTML export, and layout shapes for crisp circles
+  - Realistic department budget data with appropriate scale and good 10x value range
+  - Clean visual design with custom color palette, white borders, and subtle opacity
   weaknesses:
-  - No legend showing total budget or providing a size reference scale
-  - Text in smallest bubbles (Admin, Legal, Design) appears slightly cramped
-  - Optional grouping feature from spec not demonstrated (though marked optional)
-  image_description: The plot displays a packed bubble chart with 15 circles representing
-    department budget allocations. Each circle is labeled with the department name
-    (bold) and budget value (in $M or $K format). The circles are packed tightly together
-    without overlap, with the largest circles being Engineering ($4.5M), R&D ($3.8M),
-    Sales ($3.2M), and Marketing ($2.8M). Smaller departments like Admin ($450K),
-    Legal ($650K), and Design ($720K) appear as smaller circles. The color palette
-    is diverse - Python blue for R&D, yellow for Engineering, various other colors
-    including pink, orange, teal, brown, and purple. The title "Department Budget
-    Allocation · bubble-packed · plotly · pyplots.ai" appears at the top center in
-    dark gray text. The background is clean white with no grid lines or axes shown.
+  - Text in smallest bubbles (Admin, Design, Legal) is borderline small — minimum
+    font size of 9pt could be increased
+  - Bubble cluster is slightly off-center with empty canvas space in the lower-right
+    area
+  - Some similar hues in the palette (two blues, teal vs green) may cause colorblind
+    accessibility issues
+  - Could push design further to reach publication quality
+  image_description: 'The plot displays a packed bubble chart titled "Department Budget
+    Allocation · bubble-packed · plotly · pyplots.ai". It shows 15 colored circles
+    of varying sizes packed together without overlap, representing department budgets.
+    The largest circle is Engineering ($4.5M) in bright yellow, followed by R&D ($3.8M)
+    in green, Sales ($3.2M) in steel blue, and Marketing ($2.8M) in dark teal. Mid-sized
+    bubbles include IT ($2.1M) in pink, Operations ($1.8M) in orange, Data Science
+    ($1.6M) in slate, and Product ($1.5M) in brown. Smaller bubbles include Finance
+    ($1.2M), Support ($1.1M), HR ($950K) in coral, QA ($880K) in beige, Design ($720K)
+    in olive, Legal ($650K) in purple, and Admin ($450K) in pale green (showing only
+    the name, no value). Each bubble has a white border (2.5px) and slight transparency
+    (0.88 opacity). White text labels appear inside each bubble. The background is
+    clean white with no axes or gridlines. A "Total: $27.3M" annotation appears at
+    the bottom center. The bubble cluster sits slightly left of center with some unused
+    canvas space below and to the right.'
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 26
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: All text is clearly readable. Title is large and prominent. Department
-          names and values are legible inside each bubble with white text that contrasts
-          well against the colored backgrounds.
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: Circles are properly packed without overlapping. Text is contained
-          within each bubble.
-      - id: VQ-03
-        name: Element Visibility
-        score: 7
-        max: 8
-        passed: true
-        comment: 'Bubble sizes are well-proportioned to show the data differences.
-          The force simulation effectively packed the circles. Minor: some smaller
-          bubbles (Admin, Legal) have slightly cramped text.'
-      - id: VQ-04
-        name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Uses a colorblind-safe palette with sufficient variation. Python
-          blue and yellow featured prominently, other colors well-differentiated.
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good proportions with circles centered in the plot area. White space
-          around the packed bubbles is balanced.
-      - id: VQ-06
-        name: Axis Labels
-        score: 2
-        max: 2
-        passed: true
-        comment: N/A for packed bubble chart - correctly hidden as position has no
-          meaning.
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
-        max: 2
-        passed: true
-        comment: No legend shown. While a legend isn't strictly necessary since labels
-          are on bubbles, a small legend or group indicator could enhance understanding.
-    spec_compliance:
-      score: 25
-      max: 25
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct packed bubble chart where position has no meaning, only size
-          matters.
-      - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Size correctly represents budget value, scaled by area (sqrt) as
-          spec requires.
-      - id: SC-03
-        name: Required Features
-        score: 5
-        max: 5
-        passed: true
-        comment: Labels inside circles, force simulation for packing, color encoding
-          categories.
-      - id: SC-04
-        name: Data Range
-        score: 3
-        max: 3
-        passed: true
-        comment: All 15 departments visible with appropriate size range.
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
-        passed: true
-        comment: Labels directly on bubbles, no separate legend needed.
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correctly uses "{description} · bubble-packed · plotly · pyplots.ai"
-          format.
-    data_quality:
-      score: 18
-      max: 20
-      items:
-      - id: DQ-01
-        name: Feature Coverage
         score: 6
         max: 8
         passed: true
-        comment: Shows good variation in circle sizes from $450K to $4.5M (10x range).
-          However, the spec mentions optional grouping which isn't demonstrated.
-      - id: DQ-02
-        name: Realistic Context
-        score: 7
-        max: 7
+        comment: Font sizes explicitly set (title=32, labels=9-18 dynamic, total=18).
+          Smallest labels borderline small on Admin/Design/Legal bubbles.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
         passed: true
-        comment: Department budget allocation is a perfect, real-world scenario for
-          packed bubble charts.
-      - id: DQ-03
-        name: Appropriate Scale
+        comment: Force simulation prevents all bubble overlaps. All text labels within
+          circles.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All 15 bubbles clearly visible and distinguishable. White borders
+          separate adjacent bubbles.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 3
+        max: 4
+        passed: true
+        comment: Custom palette generally colorblind-friendly but includes similar
+          hues (two blues, teal vs green).
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Bubble cluster slightly left-of-center with empty space in lower-right
+          region.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No axis labels needed for packed bubble chart. Title is descriptive
+          with domain context.
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom color palette, white borders, opacity, dynamic labels. Clearly
+          above defaults with intentional design choices.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Axes/grid/ticks hidden. White background, circle borders, plotly_white
+          template. Very clean minimal chrome.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Size encoding creates natural visual hierarchy. Dollar values and
+          total annotation provide clear context.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
         score: 5
         max: 5
         passed: true
-        comment: Budget values are realistic for a medium-to-large company.
+        comment: Correct packed bubble chart with physics-based packing and area-proportional
+          sizing.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Area scaling, force simulation, conditional labels, color encoding,
+          hover tooltips all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Values correctly mapped to circle area via sqrt scaling. 15 items
+          in recommended range.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title follows exact format. No legend needed with inline labels and
+          per-category colors.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Good value range (10x), 15 items, adaptive labels. Optional grouping
+          not demonstrated.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Department budget allocation is realistic, neutral, and relatable.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Budget values ($450K-$4.5M, total $27.3M) realistic for mid-to-large
+          company.
     code_quality:
       score: 10
       max: 10
@@ -179,42 +195,49 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear flow: imports → data → simulation → plot → save.'
+        comment: 'Clean linear flow: imports, data, scaling, simulation, figure, save.
+          No functions or classes.'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42).
+        comment: np.random.seed(42) set before random operations.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy and plotly.graph_objects used.
+        comment: Only numpy and plotly.graph_objects imported, both used.
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current plotly API.
+        comment: Force simulation appropriately complex. Dynamic font sizing and conditional
+          labels are clean.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html.
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot.png at 4800x2700 and plot.html. Uses current plotly API.
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Uses go.Scatter with annotations for labels and hover templates for
-          interactivity. The HTML export enables Plotly's interactive features. Could
-          leverage Plotly's animation capabilities for the force simulation or use
-          custom shapes.
-  verdict: APPROVED
+        comment: 'Correctly builds from plotly primitives: layout shapes, invisible
+          scatter for hover, annotations for labels, scaleanchor for aspect ratio.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Leverages hovertemplate, write_html(), layout shapes, and scaleanchor
+          — distinctively plotly features.
+  verdict: REJECTED
