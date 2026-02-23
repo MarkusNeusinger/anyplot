@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 arc-basic: Basic Arc Diagram
 Library: bokeh 3.8.2 | Python 3.14.3
-Quality: 85/100 | Updated: 2026-02-23
+Quality: 90/100 | Updated: 2026-02-23
 """
 
 import numpy as np
