@@ -1,7 +1,6 @@
-""" pyplots.ai
+"""pyplots.ai
 band-basic: Basic Band Plot
 Library: pygal 3.1.0 | Python 3.14
-Quality: 85/100 | Updated: 2026-02-23
 """
 
 import numpy as np
@@ -32,18 +31,23 @@ uncertainty = 1.2 + 0.8 * np.sin(2 * np.pi * hours / 24) ** 2 + 0.04 * hours
 y_lower = y_center - uncertainty
 y_upper = y_center + uncertainty
 
-# Custom style — polished palette with strong band-vs-trend color hierarchy
+# Explicit y-axis labels at clean intervals for precise grid control
+y_lo = 4 * (int(min(y_lower)) // 4)
+y_hi = 4 * (int(max(y_upper)) // 4 + 1)
+y_label_values = list(range(y_lo, y_hi + 1, 4))
+
+# Custom style — sans-serif typography, polished palette, refined visual hierarchy
 custom_style = Style(
     background="white",
     plot_background="white",
     foreground="#2C3E50",
     foreground_strong="#1A252F",
-    foreground_subtle="#95A5A6",
-    guide_stroke_color="#ECECEC",
-    guide_stroke_dasharray="2,6",
-    major_guide_stroke_color="#D5D5D5",
-    major_guide_stroke_dasharray="4,4",
-    colors=("#306998", "#B8860B"),
+    foreground_subtle="#BDC3C7",
+    guide_stroke_color="#F0F0F0",
+    guide_stroke_dasharray="2,8",
+    major_guide_stroke_color="#E8E8E8",
+    major_guide_stroke_dasharray="4,6",
+    colors=("#306998", "#B8860B", "#7F8C8D"),
     opacity=".20",
     opacity_hover=".35",
     stroke_opacity="1",
@@ -52,13 +56,14 @@ custom_style = Style(
     title_font_size=60,
     label_font_size=42,
     major_label_font_size=42,
-    legend_font_size=42,
+    legend_font_size=40,
     value_font_size=36,
     value_colors=("transparent",),
     tooltip_font_size=32,
+    font_family='Helvetica, Arial, "DejaVu Sans", sans-serif',
 )
 
-# Create XY chart with fine-tuned layout and pygal-specific formatters
+# Create XY chart with fine-tuned layout and pygal-specific configuration
 chart = pygal.XY(
     style=custom_style,
     width=4800,
@@ -73,14 +78,16 @@ chart = pygal.XY(
     fill=True,
     stroke=True,
     legend_at_bottom=True,
+    legend_at_bottom_columns=3,
     legend_box_size=28,
     truncate_legend=-1,
     x_label_rotation=0,
-    range=(min(y_lower) - 1, max(y_upper) + 2),
+    range=(y_lo - 1, y_hi + 1),
+    y_labels=y_label_values,
     x_labels=[0, 6, 12, 18, 24, 30, 36, 42, 48],
     x_labels_major=[0, 12, 24, 36, 48],
     show_minor_x_labels=True,
-    show_minor_y_labels=True,
+    show_minor_y_labels=False,
     print_values=False,
     x_value_formatter=lambda x: f"{x:.0f}h",
     value_formatter=lambda x: f"{x:.1f}%",
@@ -98,11 +105,34 @@ band_polygon = [(float(h), float(y)) for h, y in zip(hours, y_upper, strict=True
 for h, y in zip(reversed(hours), reversed(y_lower), strict=True):
     band_polygon.append((float(h), float(y)))
 
-chart.add("95% Confidence Band", band_polygon, stroke_style={"width": 1.0, "dasharray": "0"}, show_dots=False)
+chart.add(
+    "95% Confidence Band",
+    band_polygon,
+    stroke_style={"width": 0.5, "color": "#306998", "opacity": 0.15},
+    show_dots=False,
+)
 
-# Central trend line — bold stroke, no fill, contrasting dark goldenrod
+# Central trend line — bold stroke with rounded SVG caps for smooth rendering
 center_data = [(float(h), float(y)) for h, y in zip(hours, y_center, strict=True)]
-chart.add("Sensor Mean", center_data, fill=False, stroke=True, dots_size=0, stroke_style={"width": 32})
+chart.add(
+    "Sensor Mean",
+    center_data,
+    fill=False,
+    stroke=True,
+    dots_size=0,
+    stroke_style={"width": 48, "linecap": "round", "linejoin": "round"},
+)
+
+# Wilting point reference — threshold below which plants cannot extract moisture
+chart.add(
+    "Wilting Point (25%)",
+    [(0.0, 25.0), (48.0, 25.0)],
+    fill=False,
+    stroke=True,
+    dots_size=0,
+    formatter=lambda x: f"{x:.0f}%",
+    stroke_style={"width": 5, "dasharray": "16,10", "linecap": "round"},
+)
 
 # Save
 chart.render_to_png("plot.png")
