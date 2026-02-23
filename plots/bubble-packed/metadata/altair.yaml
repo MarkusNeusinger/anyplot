@@ -1,7 +1,7 @@
 library: altair
 specification_id: bubble-packed
 created: '2025-12-23T09:16:07Z'
-updated: '2026-02-23T16:01:36Z'
+updated: '2026-02-23T16:30:54Z'
 generated_by: claude-opus-4-6
 workflow_run: 20456560761
 issue: 0
@@ -10,12 +10,13 @@ library_version: 6.0.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/bubble-packed/altair/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/bubble-packed/altair/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/bubble-packed/altair/plot.html
-quality_score: 84
+quality_score: 89
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
   - hover-tooltips
+  - custom-legend
   - html-export
   patterns:
   - data-generation
@@ -24,88 +25,85 @@ impl_tags:
   styling:
   - minimal-chrome
   - edge-highlighting
-  - alpha-blending
 review:
   strengths:
-  - Excellent spec compliance — all required features implemented correctly with area-proportional
-    sizing and force-based packing
-  - Strong data storytelling with subtitle highlighting key insight about Technology
-    division dominance
-  - Custom color palette with conditional text coloring (dark on yellow, white on
-    dark colors)
-  - Proper interactive tooltips with department name, budget, and division
-  - Clean visual design with hidden axes, removed view strokes, and white circle borders
+  - Custom colorblind-safe palette with intentional design choices (teal for deuteranopia
+    safety)
+  - Interactive legend selection is a strong Altair-distinctive feature
+  - Informative subtitle with specific data insight (39% of total budget)
+  - Labels inside larger bubbles showing both department name and budget value
+  - Clean visual presentation with white stroke separation and hidden axes
+  - Realistic neutral business data context
   weaknesses:
-  - In-bubble label font size (16pt) is below the 20pt recommendation for labels
-  - Circle packing has visible gaps — the physics simulation could produce tighter
-    packing
-  - Salmon and sage green colors may be confusable for deuteranopic viewers
-  - Heavy reliance on manual numpy packing computation rather than leveraging Altair
-    declarative strengths
+  - Circle packing is noticeably loose — bubbles spread out rather than tightly packed
+    as expected for a packed bubble chart
+  - Three smallest bubbles are unlabeled in PNG output making them unidentifiable
+    without HTML tooltips
+  - Manual packing algorithm is complex and verbose (~35 lines of nested numerical
+    code)
   image_description: 'The plot displays a packed bubble chart titled "Department Budget
     Allocation · bubble-packed · altair · pyplots.ai" with a subtitle "Technology
     division leads at 39% of total budget — Engineering alone accounts for $850K".
     Fifteen circles of varying sizes represent department budgets ranging from $150K
-    (Legal) to $850K (Engineering). The circles are colored by five divisions: Technology
-    (steel blue #306998 — Engineering, R&D, Data Science, QA), Revenue (salmon #E07A5F
-    — Sales, Marketing, Support), Corporate (sage green #7B9E89 — Finance, HR, Legal),
-    Operations (purple #8B6DA8 — Operations, IT, Security), and Product (yellow #FFD43B
-    — Product, Design). Larger circles display department names and budget amounts
-    in bold white text (or dark text for Product/yellow). Smaller circles (HR, Security,
-    Legal with radius ≤50) are unlabeled but visible. A legend titled "Division" is
-    positioned on the right. White strokes separate the circles, and the background
-    is clean with no axes or gridlines. The packing is somewhat loose with noticeable
-    gaps between circles, and one small Corporate circle appears near the far right
-    edge.'
+    (Legal) to $850K (Engineering). The bubbles are colored by 5 divisions: Technology
+    (steel blue — Engineering, R&D, Data Science, QA), Revenue (salmon/coral — Marketing,
+    Sales, Support), Operations (lavender/purple — Operations, IT, Security), Corporate
+    (teal — Finance, HR, Legal), and Product (gold/yellow — Design, Product). Larger
+    bubbles display department name and budget value inside (e.g., "Engineering $850K",
+    "R&D $750K"). Three smallest bubbles (HR, Legal, Security) are unlabeled but identifiable
+    by color. The legend on the right shows all 5 divisions with large symbols. White
+    strokes around each bubble provide visual separation. Axes are hidden (appropriate
+    for this chart type). The bubbles are arranged in a loosely packed cluster that
+    fills the canvas, with Engineering as the natural center of attention.'
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set. In-bubble labels at 16pt are below
-          recommended 20pt but readable with bold weight at 4800x2700.
+        comment: 'All font sizes explicitly set: title 28pt, subtitle 18pt, legend
+          title 20pt, legend labels 18pt, bubble labels 20pt bold'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlap. Labels fit within circles. White strokes cleanly
-          separate adjacent bubbles.
+        comment: No text overlap, no bubble overlap, legend does not interfere with
+          data
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: All 15 circles visible with distinct colors. Packing has noticeable
-          gaps reducing visual cohesion.
+        comment: All 15 bubbles visible with good size differentiation. Three smallest
+          bubbles unlabeled in PNG
       - id: VQ-04
         name: Color Accessibility
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Five distinct hues. Salmon and sage green could be confused under
-          deuteranopia.
+        comment: Custom 5-color palette designed for colorblind safety with teal replacing
+          sage green for deuteranopia
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Bubbles occupy roughly 55-60% of canvas. Some wasted space at edges.
-          One small circle appears isolated near right edge.
+        comment: Bubbles spread across canvas but packing is looser than expected
+          for packed bubble chart
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Axes correctly hidden for packed bubble chart. Title descriptive
-          with subtitle.
+        comment: Axes appropriately hidden. Descriptive title with spec-id format
+          and informative subtitle
     design_excellence:
-      score: 14
+      score: 16
       max: 20
       items:
       - id: DE-01
@@ -113,24 +111,24 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom 5-color palette, white circle strokes, conditional text color,
-          data-driven subtitle. Clearly above defaults.
+        comment: Custom harmonious palette, white strokes, intentional typography
+          hierarchy, professional appearance above defaults
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: View strokes removed, axes hidden, clean background, custom legend
-          positioning. Packing gaps reduce tightness.
+        comment: View strokes removed, axes hidden, white stroke on bubbles, well-styled
+          legend, clean background
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Subtitle creates narrative about Technology division dominance. Color
-          grouping and size variation create visual hierarchy.
+        comment: Subtitle delivers clear insight. Size hierarchy draws attention to
+          Engineering. Color grouping reveals structure
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -138,28 +136,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct packed bubble chart with force simulation packing.
+        comment: Correct packed bubble chart with physics simulation layout
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: 'All spec features present: label, value, group, area-proportional
-          sizing, force packing, tooltips.'
+        comment: All features present but packing is noticeably loose compared to
+          typical packed bubble charts
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Size maps to value via sqrt scaling. Color maps to group. Position
-          from packing algorithm.
+        comment: Circle area proportional to value via sqrt scaling, color maps to
+          division
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title includes required format with descriptive prefix. Legend shows
-          all 5 divisions.
+        comment: Title follows exact format with descriptive prefix. Legend labels
+          match divisions
     data_quality:
       score: 14
       max: 15
@@ -169,21 +167,21 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: 15 items across 5 groups with varied sizes. Group sizes vary. Shows
-          both labeled and unlabeled circles.
+        comment: 15 departments across 5 divisions with good size variation from 150K
+          to 850K
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Department budget allocation is real-world, neutral business scenario
-          with plausible values.
+        comment: Department budget allocation is a perfect real-world business scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Budget values $150K-$850K are realistic for department spending.
+        comment: Budget values from 150K to 850K are plausible for department-level
+          budgets
     code_quality:
       score: 9
       max: 10
@@ -193,51 +191,49 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Follows imports-data-packing-chart-save structure. No functions or
-          classes.
+        comment: Linear imports-data-plot-save structure, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set at start.
+        comment: np.random.seed(42) set at the top
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports (altair, numpy, pandas) are used.
+        comment: All three imports (altair, numpy, pandas) are used
       - id: CQ-04
         name: Code Elegance
         score: 1
         max: 2
         passed: false
-        comment: Packing algorithm is verbose (~50 lines of nested loops). Functional
-          but could be cleaner.
+        comment: Manual packing algorithm is verbose and complex but necessary since
+          Altair lacks built-in pack layout
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with scale_factor=3.0 and plot.html. Current API.
+        comment: Saves as plot.png with scale_factor=3.0 and plot.html, uses current
+          Altair API
     library_mastery:
-      score: 6
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
-        passed: false
-        comment: Altair rendering is idiomatic (declarative encoding, layer composition,
-          alt.condition). But majority of code is manual numpy computation for circle
-          packing.
+        passed: true
+        comment: Good idiomatic Altair with mark_circle, encode, type annotations,
+          alt.condition, alt.layer. Core layout is manual Python/numpy
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
-        passed: false
-        comment: Uses tooltips, alt.condition(), alt.layer(), dual PNG+HTML export.
-          Does not deeply leverage Altair-unique features like selections or Vega-Lite
-          transforms.
+        passed: true
+        comment: Interactive legend selection via selection_point with bind=legend
+          and conditional opacity is distinctive Altair feature
   verdict: REJECTED
