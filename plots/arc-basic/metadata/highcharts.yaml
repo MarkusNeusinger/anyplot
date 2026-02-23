@@ -1,26 +1,232 @@
 library: highcharts
 specification_id: arc-basic
 created: '2026-02-23T12:00:00+00:00'
-updated: '2026-02-23T12:00:00+00:00'
+updated: '2026-02-23T21:33:55Z'
 generated_by: claude-opus-4-6
 workflow_run: null
 issue: 991
-python_version: '3.14.3'
+python_version: 3.14.3
 library_version: 1.10.3
 preview_url: https://storage.googleapis.com/pyplots-images/plots/arc-basic/highcharts/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/arc-basic/highcharts/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/arc-basic/highcharts/plot.html
-quality_score: null
+quality_score: 82
 impl_tags:
-  dependencies: []
-  techniques: []
+  dependencies:
+  - selenium
+  - pillow
+  techniques:
+  - hover-tooltips
+  - html-export
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep: []
-  styling: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
 review:
-  strengths: []
-  weaknesses: []
-  image_description: null
-  criteria_checklist: null
-  verdict: null
+  strengths:
+  - Correct use of Highcharts arcdiagram module with proper sankey dependency chain
+  - Colorblind-safe custom palette with 10 distinct, well-chosen colors
+  - Perfect spec compliance — all required features from the specification implemented
+  - Creative, neutral data context (character interactions in a story chapter)
+  - Interactive HTML export alongside static PNG for standalone viewing
+  weaknesses:
+  - Node circles too small for 4800x2700 canvas despite cleanup JS adjustment
+  - Bottom ~25% of canvas is wasted empty space
+  - Debug code (node_info print) left in the implementation
+  - Arc thickness variation not visually distinct enough to convey weight differences
+  - No strong visual hierarchy or focal point in the data presentation
+  image_description: The plot displays a basic arc diagram on a white background.
+    Ten character nodes (Alice, Bob, David, Carol, Eve, Frank, Grace, Henry, Iris,
+    Jack) are arranged along a horizontal line near the bottom two-thirds of the canvas.
+    Each node is represented by a small colored circle — Alice in dark blue (#306998),
+    Bob in gold/amber, David in purple, Carol in cyan, Eve in green, Frank in orange,
+    Grace in brown, Henry in bright blue, Iris in pink, and Jack in teal. Curved arcs
+    connect pairs of nodes above the horizontal line, with arc height roughly proportional
+    to the distance between connected nodes. Arc colors inherit from the source node
+    with 50% opacity. The title "Character Interactions · arc-basic · highcharts ·
+    pyplots.ai" appears at the top in bold dark text, with a gray subtitle "Dialogue
+    exchanges between characters in a story chapter" below it. Node name labels appear
+    below each circle in bold dark text with white outline. The bottom ~25% of the
+    canvas is empty white space. Arc thickness appears relatively uniform despite
+    varying weights in the data.
+  criteria_checklist:
+    visual_quality:
+      score: 25
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 56px, subtitle 36px, labels
+          40px, tooltip 32px). All text clearly readable.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlaps. Node labels well-spaced. Arc transparency handles
+          visual overlap.
+      - id: VQ-03
+        name: Element Visibility
+        score: 4
+        max: 6
+        passed: false
+        comment: Node circles too small for 4800x2700 canvas. Arcs thin with subtle
+          weight variation.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Custom colorblind-safe palette with 10 distinct, well-contrasted
+          colors.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 2
+        max: 4
+        passed: false
+        comment: Bottom ~25% of canvas wasted. Nodes positioned too far up.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive title with context. Subtitle describes data. No axes
+          needed for arc diagram.
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Custom palette, white node borders, semi-transparent arcs. Above
+          default but not publication-ready.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Clean background, credits removed, subtle styling. Small nodes and
+          thin arcs reduce polish.
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Story context clear from title. Link colors show directionality.
+          No strong focal point or visual hierarchy.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct arc diagram using Highcharts arcdiagram module with sankey
+          dependency.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: curved arcs, semi-transparency, color
+          coding, labels, weights.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct node arrangement, edge connections, and weight encoding.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title follows required format. No legend needed for directly labeled
+          arc diagram.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Varying connectivity degrees, short/long-range arcs, weight variation.
+          All arcs above only.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Character interactions in story chapter - creative, plausible, neutral.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 10 nodes, 15 edges, weights 1-5. Good complexity for readability.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports, data, config, download, render, save.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic data. No random elements.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 1
+        max: 2
+        passed: false
+        comment: Debug code left in (lines 256-273). Cleanup JS is a necessary workaround.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot.png and plot.html. Uses current Highcharts API 11.4.8.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
+        max: 5
+        passed: false
+        comment: 'Raw JSON config instead of highcharts_core API (justified: arcdiagram
+          not supported). Correct options structure.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses arcdiagram module, centeredLinks, linkColorMode, equalNodes.
+          Interactive HTML export.
+  verdict: REJECTED
