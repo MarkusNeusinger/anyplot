@@ -1,168 +1,186 @@
 library: plotnine
 specification_id: arc-basic
 created: '2025-12-23T08:49:49Z'
-updated: '2025-12-23T09:04:36Z'
-generated_by: claude-opus-4-5-20251101
+updated: '2026-02-23T22:06:39Z'
+generated_by: claude-opus-4-6
 workflow_run: 20455963275
 issue: 0
-python_version: 3.13.11
-library_version: 0.15.2
+python_version: 3.14.3
+library_version: 0.15.3
 preview_url: https://storage.googleapis.com/pyplots-images/plots/arc-basic/plotnine/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/arc-basic/plotnine/plot_thumb.png
 preview_html: null
-quality_score: 91
+quality_score: 90
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
   - layer-composition
+  - colorbar
   patterns:
   - data-generation
   - iteration-over-groups
-  - matrix-construction
   dataprep: []
   styling:
+  - minimal-chrome
+  - custom-colormap
   - alpha-blending
 review:
   strengths:
-  - Excellent implementation of arc diagram using plotnine grammar of graphics with
-    geom_path for arcs
-  - Arc heights proportional to node distance as specified, making long-range vs short-range
-    connections visually distinct
-  - Clean visual design with intentionally hidden axes creating a professional network
-    visualization look
-  - Good use of semi-transparency (alpha=0.6) to handle overlapping arcs
-  - Weight-based arc thickness adds meaningful data encoding
-  - Realistic character interaction scenario with meaningful connection patterns
+  - Cohesive navy blue monochromatic design with professional typography hierarchy
+  - Perfect spec compliance with all required features implemented correctly
+  - Excellent data choice with character interactions showing varied weights and connection
+    distances
+  - Clean grammar-of-graphics code structure with expert plotnine layering
+  - Effective visual encoding with arc thickness, color, and alpha reinforcing weight
   weaknesses:
-  - The sys.path manipulation at the top is a workaround that could be cleaner
-  - Some thin arcs (weight=1) are harder to distinguish from each other
-  image_description: The plot displays a basic arc diagram with 10 nodes (Alice, Bob,
-    Carol, David, Eve, Frank, Grace, Henry, Iris, Jack) arranged horizontally along
-    a baseline. Yellow circular nodes mark each character's position. Blue semi-transparent
-    arcs curve above the baseline connecting various character pairs. Arc heights
-    vary proportionally to the distance between connected nodes - the Alice-Jack arc
-    spans the full width with the highest peak, while adjacent connections like Bob-Carol
-    have small, tight arcs. Arc thickness varies based on connection weight, with
-    some arcs thicker than others. The title "Character Interactions · arc-basic ·
-    plotnine · pyplots.ai" appears centered at the top. The background is clean white
-    with no axis markings or grid.
+  - Legend somewhat isolated from main plot area on far right
+  - Weaker/shorter arcs (weight=1) could be slightly more prominent
+  - Node labels at size=16 could be slightly larger
+  image_description: The plot displays a basic arc diagram with 10 character names
+    (Alice, Bob, Carol, David, Eve, Frank, Grace, Henry, Iris, Jack) arranged along
+    a horizontal baseline on a clean white background. Curved arcs connect pairs of
+    characters above the line, with arc height proportional to the distance between
+    connected nodes. The arcs use a monochromatic navy blue color scheme — darker,
+    thicker arcs represent stronger interactions (weight 3, e.g., Alice-Bob, Carol-David)
+    while lighter, thinner arcs represent weaker ones (weight 1, e.g., Carol-Eve).
+    Nodes appear as white circles with dark navy blue borders. A color gradient legend
+    on the right shows "Interaction Strength" from Weak (light blue) to Strong (dark
+    navy). The title "Character Interactions · arc-basic · plotnine · pyplots.ai"
+    is centered at the top in bold navy, with a subtitle "Narrative connections in
+    Chapter 1 — arc thickness and color encode interaction strength." An italicized
+    gray annotation reads "Stronger connections shown with darker, thicker arcs."
+    The longest arc spans from Alice to Jack across the entire width.
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 27
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title is large and clear at 24pt, node labels are readable in bold
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No text overlap, nodes and labels well-spaced
-      - id: VQ-03
-        name: Element Visibility
         score: 7
         max: 8
         passed: true
-        comment: 'Arcs visible with alpha=0.6, nodes clearly marked; minor: some thin
-          arcs harder to see'
+        comment: All font sizes explicitly set (title 24pt, subtitle 16pt, labels
+          size=16, legend 14/12pt). All readable. Node labels slightly below 20pt
+          guideline.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlap. Node labels evenly spaced, arcs don't obscure any
+          text.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Arcs well-differentiated by thickness and alpha. Weaker arcs slightly
+          thin but visible.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Blue (#306998) and yellow (#FFD43B) combination is colorblind-safe
+        comment: Monochromatic blue gradient is colorblind-safe with good contrast
+          on white.
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 3
+        max: 4
         passed: true
-        comment: Good proportions, arc heights fill space well without being cut off
+        comment: Good layout (~60% utilization). Legend somewhat isolated on far right.
       - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: true
-        comment: N/A for arc diagrams, axes intentionally hidden (no deduction appropriate)
-      - id: VQ-07
-        name: Grid & Legend
+        name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Clean design, no grid needed for this visualization type
+        comment: Descriptive title with proper format. No axis labels needed with
+          theme_void.
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Cohesive navy blue scheme, intentional typography hierarchy, white-stroke
+          nodes, custom gradient. Clearly above defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: theme_void perfectly removes chrome. Subtle baseline, generous whitespace,
+          styled legend.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Visual hierarchy through arc color/thickness guides viewer. Long-range
+          arcs create visual drama. Annotation provides context.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct arc diagram with nodes on horizontal line and curved arcs
-          above
+        comment: 'Correct arc diagram: nodes along horizontal line, curved arcs above.'
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Nodes correctly positioned sequentially, arcs connect correct pairs
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Has arcs above baseline, height proportional to distance, semi-transparent
-          arcs, readable labels, weight-based thickness
-      - id: SC-04
-        name: Data Range
+        comment: 'All spec features present: proportional arc height, semi-transparency,
+          readable labels, color/thickness by weight.'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All nodes and arcs visible
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 10 nodes correctly positioned, 15 edges correctly mapped, weights
+          properly encoded.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No legend needed, data is self-explanatory
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: "Character Interactions · arc-basic · plotnine
-          · pyplots.ai"'
+        comment: Title follows spec-id · library · pyplots.ai format. Legend labels
+          Weak/Medium/Strong match data.
     data_quality:
-      score: 17
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Shows short-range and long-range connections, varying weights; could
-          show more edge cases
+        comment: Shows short-range and long-range arcs, multiple weights (1-3), varied
+          connectivity patterns.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: '"Character interactions in a story chapter" is a realistic, comprehensible
-          scenario'
+        comment: Character interactions in a story chapter — realistic literary analysis
+          with neutral names.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: 10 nodes is within the 10-50 recommended range; weights 1-3 are sensible
+        comment: 10 nodes (within spec range), 15 edges, weights 1-3 — sensible and
+          readable.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -170,41 +188,48 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: imports → data → plot → save'
+        comment: Clean imports → data → plot → save. No functions or classes.
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
-        passed: true
-        comment: Uses np.random.seed(42)
-      - id: CQ-03
-        name: Clean Imports
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: sys import used for path manipulation, slightly unusual
+        comment: Fully deterministic with hardcoded nodes, edges, positions.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used.
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current plotnine API
+        comment: Clean, readable, appropriate complexity.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot.png with dpi=300. Current plotnine API.
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert grammar-of-graphics usage: ggplot() + geom layering, aes(),
+          scale_color_gradient, guide_colorbar, scale_*_identity, coord_cartesian,
+          theme_void.'
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses ggplot grammar with geom_path and geom_point effectively; however,
-          arc diagrams aren't a native plotnine feature so this is a creative workaround
-          rather than leveraging library strengths
+        comment: Uses plotnine-distinctive features (identity scales, guide_colorbar,
+          grammar layering) but core arc rendering is manual.
   verdict: APPROVED
