@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 arc-basic: Basic Arc Diagram
 Library: pygal 3.1.0 | Python 3.14.3
-Quality: 80/100 | Created: 2026-02-23
+Quality: 90/100 | Created: 2026-02-23
 """
 
 import math
