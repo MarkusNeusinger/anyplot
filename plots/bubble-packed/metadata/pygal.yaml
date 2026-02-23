@@ -1,7 +1,7 @@
 library: pygal
 specification_id: bubble-packed
 created: '2025-12-23T09:17:15Z'
-updated: '2026-02-23T16:38:00Z'
+updated: '2026-02-23T16:54:40Z'
 generated_by: claude-opus-4-6
 workflow_run: 20456561911
 issue: 0
@@ -10,55 +10,52 @@ library_version: 3.1.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/bubble-packed/pygal/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/bubble-packed/pygal/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/bubble-packed/pygal/plot.html
-quality_score: 85
+quality_score: 86
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - custom-legend
+  - hover-tooltips
   - html-export
   patterns:
   - iteration-over-groups
   dataprep: []
   styling:
-  - alpha-blending
+  - gradient-fill
   - edge-highlighting
 review:
   strengths:
-  - Excellent circle packing algorithm with group-affinity clustering that produces
-    well-organized visual layout
-  - 'Sophisticated visual design: dashed group boundaries, adaptive text coloring,
-    white circle strokes, carefully chosen colorblind-safe palette'
-  - Perfect spec compliance — all required features implemented including area-based
-    sizing, packing, labels, grouping, and color encoding
-  - Realistic, neutral business data context with plausible budget values
-  - Creative use of pygal XML filter pipeline to implement a chart type not natively
-    supported
+  - Excellent use of pygal add_xml_filter pipeline for custom SVG rendering of a chart
+    type pygal does not natively support
+  - Polished visual design with radial gradients, white stroke borders, dashed group
+    boundaries, and highlight ring on largest bubble
+  - Effective group-affinity packing algorithm that clusters related departments with
+    area-weighted recentering
+  - Realistic department budget context with appropriate dollar values and meaningful
+    labels
+  - Correct area-based scaling (sqrt) ensures honest visual perception of values
   weaknesses:
-  - Text rendering code has three similar branches (large/medium/small circles) that
-    could be consolidated
-  - The actual visualization is largely built with raw SVG elements rather than pygal
-    high-level charting API
-  - Group label placement could be more consistent — some labels are above clusters,
-    some below, and the Technology label is positioned in a visually tight area between
-    clusters
+  - Technology group label sits close to Sales cluster creating minor visual crowding
+  - All four groups have exactly 4 items each - varying group sizes would better demonstrate
+    the chart flexibility
+  - Core visualization relies on custom SVG rather than pygal native charting reducing
+    library mastery score
   image_description: 'The plot displays a packed bubble chart titled "bubble-packed
-    · pygal · pyplots.ai". Sixteen circles of varying sizes represent department budget
-    allocations ($K) across four color-coded groups. Technology (dark blue #306998):
-    Software Development ($450K, largest circle), Cloud Infrastructure ($280K), Data
-    Analytics ($180K), Security ($120K). Marketing (golden #CC8400): Digital Marketing
-    ($350K), Brand & Creative ($220K), Events ($150K), PR ($90K, smallest). Operations
-    (teal-green #1A8A72): Facilities ($280K), HR & Recruiting ($200K), Legal ($160K),
-    Admin ($100K). Sales (coral-red #C94D46): Enterprise ($380K), SMB ($250K), Partners
-    ($170K), Support ($110K). Circles are packed together with white strokes separating
-    them, and each group has a subtle dashed circular boundary with low-opacity fill.
-    Group labels with totals appear above/below their clusters. A four-item legend
-    at the bottom shows each group with its total budget. The white background is
-    clean, and circle labels show department names and values inside larger circles
-    and values only inside smaller ones.'
+    · pygal · pyplots.ai" showing department budget allocations across four color-coded
+    groups. Technology (steel blue): Software Development ($450K, largest central
+    bubble with highlight ring), Cloud Infrastructure ($280K), Data Analytics ($180K),
+    Security ($120K). Marketing (amber/gold): Digital Marketing ($350K), Brand & Creative
+    ($220K), Events ($150K), PR ($90K). Operations (teal): Facilities ($280K), HR
+    & Recruiting ($200K), Legal ($160K), Admin ($100K). Sales (salmon/coral): Enterprise
+    ($380K), SMB ($250K), Partners ($170K), Support ($110K). Each bubble has a polished
+    radial gradient fill with white stroke borders. Groups are clustered together
+    with subtle dashed boundary circles. Group labels with totals appear above or
+    below each cluster. A four-column legend at the bottom shows group names with
+    totals. The layout is centered on a white background.'
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -66,44 +63,44 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=72, legend=42, group labels=38,
-          circle labels with dynamic minimums 22-28px). All text readable at full
-          resolution.
+        comment: Font sizes explicitly set throughout (title 72px, legend 42px, group
+          labels 38px, bubble labels scaled by radius). All text readable; smallest
+          labels slightly tight but legible.
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No text overlaps. Circle labels fit within bubbles. Group labels
-          positioned to avoid collisions.
+        comment: Bubbles well-separated with padding. Technology group label sits
+          close to Sales cluster creating minor crowding.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All 16 circles clearly visible with good size differentiation via
-          sqrt-based area scaling.
+        comment: All 16 bubbles clearly visible with distinct gradient fills and white
+          stroke borders. Good size variation.
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Colorblind-safe palette (blue, golden, teal-green, coral-red) with
-          strong contrast on white.
+        comment: Blue, amber, teal, coral provide excellent hue and luminance contrast.
+          Colorblind-safe.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Bubble cluster fills ~55-60% of canvas. Minor left-side whitespace
-          imbalance.
+        comment: Packed bubbles well-centered filling ~60-65% of canvas. Slight wasted
+          space on left and right edges.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title correctly formatted. Circle labels include units ($K). Group
-          labels with totals.
+        comment: No traditional axes (appropriate for packed bubble). Title correct
+          format. Group and bubble labels include $K units.
     design_excellence:
       score: 14
       max: 20
@@ -113,22 +110,22 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom colorblind-safe palette, white stroke separation, adaptive
-          text coloring, subtle dashed group boundaries with 6% opacity fill.
+        comment: Custom palette, radial gradient fills, white stroke borders, dashed
+          group boundaries, highlight ring, custom font family. Clearly above defaults.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Dashed group boundaries with subtle opacity, white stroke borders,
-          letter-spacing on group labels.
+        comment: Gradient fills, white strokes, dashed boundaries, generous padding,
+          clean white background. Multiple intentional design touches.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Size variation creates clear hierarchy. Group clustering with totals
-          communicates relative spending. Technology $1030K dominates visually.
+        comment: 'Good visual hierarchy: largest budget centered with highlight ring,
+          group clustering shows relationships, group totals enable comparison.'
     spec_compliance:
       score: 15
       max: 15
@@ -138,28 +135,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct packed bubble chart with greedy packing and group-affinity
-          clustering.
+        comment: Correct packed bubble chart with circles packed without overlap using
+          greedy group-affinity packing.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Area-based sizing, packing without overlap, labels inside circles,
-          color encoding, group clustering all implemented.
+        comment: Area-based scaling, labels inside circles, SVG tooltips, color encodes
+          group, group clustering with boundaries.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Values correctly mapped to circle area via sqrt scaling. All 16 items
-          visible.
+        comment: Values correctly determine circle area via sqrt scaling. All 16 items
+          represented. Groups correctly clustered.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format. Legend shows all 4 groups with totals.
+        comment: Title in correct format. Legend shows all four groups with formatted
+          totals.
     data_quality:
       score: 14
       max: 15
@@ -169,24 +167,24 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: 16 items across 4 groups with values $90K-$450K. Good range and group
-          variation.
+        comment: 16 items across 4 groups with good value range ($90K-$450K). All
+          groups have exactly 4 items; varying sizes would show more flexibility.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Department budget allocation — real-world neutral business scenario
-          with realistic department names.
+        comment: Department budget allocation is a real, neutral business scenario
+          with specific realistic labels.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values $90K-$450K, total ~$3.5M — plausible for mid-size company
-          budget.
+        comment: Budget values $90K-$450K realistic for department allocations. Group
+          totals $740K-$1,030K sensible.
     code_quality:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -194,36 +192,36 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: One function required by pygal add_xml_filter callback API. Packing
-          algorithm is necessarily complex.
+        comment: add_packed_bubbles function required by pygal XML filter API. Nested
+          _text helper adds thin layer of structure.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: 'Fully deterministic: hardcoded data, deterministic sorting and greedy
-          placement.'
+        comment: All data hardcoded and deterministic. Packing algorithm uses no randomness.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All four imports used: math, pygal, pygal.etree.etree, pygal.style.Style.'
+        comment: 'All imports used: math, pygal, pygal.etree.etree, pygal.style.Style.'
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: Text rendering has three repetitive branches for large/medium/small
-          circles.
+        comment: Clean, well-commented code. Packing algorithm appropriately complex.
+          No fake UI elements.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png via render_to_png. Current pygal API.
+        comment: Saves as plot.png via render_to_png. Also produces plot.html. Uses
+          current pygal API.
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -231,13 +229,14 @@ review:
         score: 3
         max: 5
         passed: true
-        comment: Uses pygal Style, Pie scaffold for title/legend, and add_xml_filter.
-          Creative but most visualization is raw SVG.
+        comment: Uses pygal Style system, chart configuration, legend infrastructure,
+          and render methods. Core visualization is custom SVG via XML filter since
+          pygal lacks native packed bubble support.
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: add_xml_filter SVG pipeline, pygal.etree for SVG construction, tooltip_fancy_mode,
-          legend_at_bottom_columns are pygal-specific.
+        comment: Leverages pygal add_xml_filter pipeline, pygal.etree for SVG creation,
+          native SVG title tooltips, dual render PNG+HTML.
   verdict: REJECTED
