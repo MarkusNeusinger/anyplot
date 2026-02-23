@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 arc-basic: Basic Arc Diagram
 Library: pygal 3.1.0 | Python 3.14.3
 Quality: 84/100 | Created: 2026-02-23
@@ -41,20 +41,21 @@ edges = [
 x_positions = np.linspace(1, 10, n_nodes)
 y_baseline = 0.5
 
-# Color palette: wider range for clear weight differentiation
-arc_colors = {1: "#A8D0E6", 2: "#306998", 3: "#0D2137"}
+# Color palette: all three levels clearly distinguishable against white
+arc_colors = {1: "#4292C6", 2: "#2171B5", 3: "#08306B"}
 
 # Thickness: wider range for immediate visual distinction
-arc_widths = {1: 3, 2: 8, 3: 14}
+arc_widths = {1: 6, 2: 10, 3: 16}
 
 # Weight labels for tooltip context
 weight_labels = {1: "Weak", 2: "Moderate", 3: "Strong"}
 
-# Build colors tuple: one entry per edge + 3 legend entries + node series
+# Build colors tuple: one entry per edge + 3 legend entries + node outline + node fill
 colors = tuple(
     [arc_colors[w] for _, _, w in edges]
     + [arc_colors[3], arc_colors[2], arc_colors[1]]  # Legend entries
-    + ["#FFD43B"]  # Node color
+    + ["#B8860B"]  # Node outline (dark goldenrod)
+    + ["#FFD43B"]  # Node fill (Python Yellow)
 )
 
 # Custom style — clean white background, no borders
@@ -62,16 +63,16 @@ custom_style = Style(
     background="white",
     plot_background="white",
     foreground="#333333",
-    foreground_strong="#306998",
+    foreground_strong="#08306B",
     foreground_subtle="transparent",
     colors=colors,
     title_font_size=72,
     label_font_size=40,
     major_label_font_size=40,
-    legend_font_size=36,
+    legend_font_size=40,
     value_font_size=32,
     stroke_width=3,
-    opacity=0.7,
+    opacity=0.85,
     opacity_hover=1.0,
 )
 
@@ -85,7 +86,7 @@ chart = pygal.XY(
     show_legend=True,
     legend_at_bottom=True,
     legend_at_bottom_columns=3,
-    legend_box_size=24,
+    legend_box_size=30,
     x_title="",
     y_title="",
     show_x_guides=False,
@@ -94,7 +95,7 @@ chart = pygal.XY(
     show_y_labels=False,
     stroke=True,
     dots_size=0,
-    stroke_style={"width": 3, "linecap": "round"},
+    stroke_style={"width": 6, "linecap": "round"},
     range=(0, 4.6),
     xrange=(0, 11),
     x_labels=[{"value": float(x_positions[i]), "label": nodes[i]} for i in range(n_nodes)],
@@ -106,7 +107,7 @@ chart = pygal.XY(
         "inline:.axis .guides .line {stroke: none !important;}",
         "inline:.plot .axis {stroke: none !important;}",
         "inline:.series .line {fill: none !important;}",
-        # Hide edge series (1-15) and node series (19) from legend, keep weight legend (16-18)
+        # Hide edge series (1-15) and node series (19-20) from legend, keep weight legend (16-18)
         "inline:.legends > g:nth-child(-n+15), .legends > g:nth-child(n+19) {display: none !important;}",
     ],
     js=[],
@@ -152,7 +153,7 @@ for w_val, w_label in [(3, "Strong"), (2, "Moderate"), (1, "Weak")]:
         stroke_style={"width": arc_widths[w_val], "linecap": "round"},
     )
 
-# Add nodes as final series (Python Yellow dots)
+# Add node outline ring (dark goldenrod border effect)
 node_points = [
     {
         "value": (float(x_positions[i]), y_baseline),
@@ -160,7 +161,10 @@ node_points = [
     }
     for i in range(n_nodes)
 ]
-chart.add("Characters", node_points, stroke=False, dots_size=35)
+chart.add("", node_points, stroke=False, dots_size=42)
+
+# Add node fill on top (Python Yellow)
+chart.add("Characters", node_points, stroke=False, dots_size=32)
 
 # Save outputs
 chart.render_to_file("plot.svg")
