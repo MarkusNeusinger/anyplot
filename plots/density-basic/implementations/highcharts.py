@@ -1,7 +1,7 @@
 """ pyplots.ai
 density-basic: Basic Density Plot
-Library: highcharts unknown | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-23
+Library: highcharts 1.10.3 | Python 3.14.3
+Quality: 92/100 | Updated: 2026-02-23
 """
 
 import tempfile
@@ -18,27 +18,33 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
 
-# Data - simulating heights (cm) with realistic distribution
+# Data - simulating heights (cm) with bimodal distribution
 np.random.seed(42)
-# Mix of two normal distributions to show bimodal feature (male/female heights)
 n_samples = 500
-values_a = np.random.normal(165, 7, n_samples // 2)  # Female heights
-values_b = np.random.normal(178, 8, n_samples // 2)  # Male heights
+values_a = np.random.normal(162, 6, n_samples // 2)  # Female heights
+values_b = np.random.normal(178, 6, n_samples // 2)  # Male heights
 values = np.concatenate([values_a, values_b])
 
-# Kernel Density Estimation (Gaussian kernel) - inline calculation
-x_min, x_max = values.min() - 10, values.max() + 10
-x_grid = np.linspace(x_min, x_max, 200)
+# Kernel Density Estimation (Gaussian kernel)
+x_min, x_max = values.min() - 12, values.max() + 12
+x_grid = np.linspace(x_min, x_max, 300)
 
 # Silverman's rule of thumb for bandwidth
 n = len(values)
-bandwidth = 1.06 * np.std(values) * n ** (-1 / 5)
+bandwidth = 0.9 * min(np.std(values), np.subtract(*np.percentile(values, [75, 25])) / 1.34) * n ** (-1 / 5)
 
 # Compute Gaussian KDE
 density = np.zeros_like(x_grid)
 for xi in values:
     density += np.exp(-0.5 * ((x_grid - xi) / bandwidth) ** 2)
 density /= n * bandwidth * np.sqrt(2 * np.pi)
+
+# Find the two peak positions for annotation
+midpoint = len(x_grid) // 2
+peak1_idx = np.argmax(density[:midpoint])
+peak2_idx = midpoint + np.argmax(density[midpoint:])
+peak1_x = float(x_grid[peak1_idx])
+peak2_x = float(x_grid[peak2_idx])
 
 # Create chart
 chart = Chart(container="container")
@@ -50,79 +56,131 @@ chart.options.chart = {
     "width": 4800,
     "height": 2700,
     "backgroundColor": "#ffffff",
-    "marginBottom": 200,
-    "marginLeft": 200,
+    "marginBottom": 180,
+    "marginLeft": 180,
+    "marginRight": 60,
+    "marginTop": 140,
+    "style": {"fontFamily": "Arial, Helvetica, sans-serif"},
 }
 
 # Title
 chart.options.title = {
-    "text": "density-basic · highcharts · pyplots.ai",
-    "style": {"fontSize": "72px", "fontWeight": "bold"},
+    "text": "density-basic \u00b7 highcharts \u00b7 pyplots.ai",
+    "style": {"fontSize": "64px", "fontWeight": "600", "color": "#2c3e50"},
+    "margin": 40,
 }
 
-# X-axis
+# Disable credits
+chart.options.credits = {"enabled": False}
+
+# X-axis - clean L-shaped frame with plotBands/plotLines for peak emphasis
 chart.options.x_axis = {
-    "title": {"text": "Height (cm)", "style": {"fontSize": "48px"}},
-    "labels": {"style": {"fontSize": "36px"}},
-    "gridLineWidth": 1,
-    "gridLineColor": "rgba(0, 0, 0, 0.25)",
+    "title": {"text": "Height (cm)", "style": {"fontSize": "48px", "color": "#444444"}, "margin": 24},
+    "labels": {"style": {"fontSize": "36px", "color": "#666666"}},
+    "lineColor": "#cccccc",
+    "lineWidth": 2,
+    "tickWidth": 0,
+    "tickInterval": 5,
+    "gridLineWidth": 0,
+    "plotBands": [
+        {"from": peak1_x - 8, "to": peak1_x + 8, "color": "rgba(48, 105, 152, 0.06)", "zIndex": 0},
+        {"from": peak2_x - 8, "to": peak2_x + 8, "color": "rgba(48, 105, 152, 0.06)", "zIndex": 0},
+    ],
+    "plotLines": [
+        {
+            "value": peak1_x,
+            "color": "rgba(48, 105, 152, 0.45)",
+            "width": 3,
+            "dashStyle": "Dash",
+            "zIndex": 4,
+            "label": {
+                "text": f"Peak: {peak1_x:.0f} cm",
+                "style": {"fontSize": "32px", "color": "#306998", "fontWeight": "600"},
+                "rotation": 0,
+                "y": 16,
+            },
+        },
+        {
+            "value": peak2_x,
+            "color": "rgba(48, 105, 152, 0.45)",
+            "width": 3,
+            "dashStyle": "Dash",
+            "zIndex": 4,
+            "label": {
+                "text": f"Peak: {peak2_x:.0f} cm",
+                "style": {"fontSize": "32px", "color": "#306998", "fontWeight": "600"},
+                "rotation": 0,
+                "y": 16,
+            },
+        },
+    ],
 }
 
-# Y-axis - start at 0 for proper density representation
+# Y-axis - subtle horizontal grid only
 chart.options.y_axis = {
-    "title": {"text": "Density", "style": {"fontSize": "48px"}},
-    "labels": {"style": {"fontSize": "36px"}},
+    "title": {"text": "Density", "style": {"fontSize": "48px", "color": "#444444"}, "margin": 24},
+    "labels": {"style": {"fontSize": "36px", "color": "#666666"}},
     "gridLineWidth": 1,
-    "gridLineColor": "rgba(0, 0, 0, 0.25)",
+    "gridLineColor": "rgba(0, 0, 0, 0.10)",
+    "lineColor": "#cccccc",
+    "lineWidth": 2,
+    "tickAmount": 7,
     "min": 0,
 }
 
-# Plot options with semi-transparent fill
+# Plot options
 chart.options.plot_options = {
     "area": {
         "fillColor": {
             "linearGradient": {"x1": 0, "y1": 0, "x2": 0, "y2": 1},
-            "stops": [[0, "rgba(48, 105, 152, 0.6)"], [1, "rgba(48, 105, 152, 0.1)"]],
+            "stops": [[0, "rgba(48, 105, 152, 0.45)"], [1, "rgba(48, 105, 152, 0.03)"]],
         },
         "lineWidth": 5,
         "marker": {"enabled": False},
         "color": "#306998",
+        "states": {"hover": {"lineWidth": 5}},
     },
     "scatter": {
-        "marker": {"radius": 8, "fillColor": "#FFD43B", "symbol": "diamond", "lineWidth": 2, "lineColor": "#D4AA00"}
+        "marker": {"radius": 15, "fillColor": "rgba(48, 105, 152, 0.55)", "symbol": "diamond", "lineWidth": 0},
+        "states": {"hover": {"enabled": False}},
     },
+    "series": {"animation": False},
 }
 
-# Legend - enabled with clear styling
+# Disable tooltip for static export
+chart.options.tooltip = {"enabled": False}
+
+# Legend
 chart.options.legend = {
     "enabled": True,
     "layout": "horizontal",
     "align": "right",
     "verticalAlign": "top",
     "floating": True,
-    "x": -50,
-    "y": 80,
-    "itemStyle": {"fontSize": "36px"},
-    "symbolHeight": 24,
-    "symbolWidth": 40,
+    "x": -40,
+    "y": 60,
+    "itemStyle": {"fontSize": "34px", "fontWeight": "normal", "color": "#555555"},
+    "symbolHeight": 20,
+    "symbolWidth": 32,
+    "itemDistance": 40,
+    "borderWidth": 0,
 }
 
 # Add density curve as area series
 area_series = AreaSeries()
-area_series.data = [[float(x), float(y)] for x, y in zip(x_grid, density, strict=True)]
-area_series.name = "Density Curve"
+area_series.data = [[round(float(x), 2), round(float(y), 6)] for x, y in zip(x_grid, density, strict=True)]
+area_series.name = "Density"
 chart.add_series(area_series)
 
-# Add rug plot as small vertical tick marks at y=0
-# Sample every 5th point to show distribution without overcrowding
-rug_sample = values[::5]
-rug_y = 0.0005  # Small positive value just above x-axis
-rug_data = [[float(v), rug_y] for v in sorted(rug_sample)]
+# Add rug plot - vertical tick marks along x-axis
+rug_sample = values[::3]  # Show every 3rd observation for good coverage
+rug_y = max(density) * 0.008  # Small positive value near axis
+rug_data = [[round(float(v), 2), round(float(rug_y), 6)] for v in sorted(rug_sample)]
 
 rug_series = ScatterSeries()
 rug_series.data = rug_data
-rug_series.name = "Observations (Rug)"
-rug_series.marker = {"symbol": "diamond", "fillColor": "#FFD43B", "lineColor": "#D4AA00", "lineWidth": 2, "radius": 10}
+rug_series.name = "Observations"
+rug_series.marker = {"symbol": "diamond", "fillColor": "rgba(48, 105, 152, 0.55)", "lineWidth": 0, "radius": 15}
 chart.add_series(rug_series)
 
 # Download Highcharts JS for inline embedding
@@ -149,9 +207,8 @@ with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False, encodin
     f.write(html_content)
     temp_path = f.name
 
-# Also save HTML for interactive version
+# Save standalone HTML for interactive version
 with open("plot.html", "w", encoding="utf-8") as f:
-    # For standalone HTML, use CDN link
     standalone_html = f"""<!DOCTYPE html>
 <html>
 <head>
@@ -170,15 +227,14 @@ chrome_options.add_argument("--headless")
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
 chrome_options.add_argument("--disable-gpu")
-chrome_options.add_argument("--window-size=5000,3000")
+chrome_options.add_argument("--window-size=4900,2800")
 
 driver = webdriver.Chrome(options=chrome_options)
 driver.get(f"file://{temp_path}")
-time.sleep(5)  # Wait for chart to render
+time.sleep(5)
 
-# Screenshot the chart element specifically for exact 4800x2700
 container = driver.find_element("id", "container")
 container.screenshot("plot.png")
 driver.quit()
 
-Path(temp_path).unlink()  # Clean up temp file
+Path(temp_path).unlink()
