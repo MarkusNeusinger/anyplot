@@ -1,161 +1,183 @@
 library: bokeh
 specification_id: density-basic
 created: '2025-12-23T10:03:19Z'
-updated: '2025-12-23T10:10:15Z'
-generated_by: claude-opus-4-5-20251101
+updated: '2026-02-23T22:59:49Z'
+generated_by: claude-opus-4-6
 workflow_run: 20457534046
 issue: 0
-python_version: 3.13.11
-library_version: 3.8.1
+python_version: 3.14.3
+library_version: 3.8.2
 preview_url: https://storage.googleapis.com/pyplots-images/plots/density-basic/bokeh/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/density-basic/bokeh/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/density-basic/bokeh/plot.html
-quality_score: 92
+quality_score: 91
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - annotations
+  - hover-tooltips
   patterns:
-    - data-generation
-    - columndatasource
+  - data-generation
+  - columndatasource
   dataprep:
-    - kde
+  - kde
   styling:
-    - alpha-blending
+  - minimal-chrome
+  - alpha-blending
+  - grid-styling
 review:
   strengths:
-  - Excellent manual KDE implementation using Silverman's rule for bandwidth selection
-  - Clean rug plot implementation showing individual observations as vertical segments
-  - Professional styling with appropriate font sizes for large canvas
-  - Bimodal data effectively demonstrates distribution analysis use case
-  - Realistic web service response time scenario with meaningful context
+  - Complete spec compliance with all four requested features (smooth curve, filled
+    area, rug plot, appropriate bandwidth)
+  - Strong data storytelling with bimodal distribution, labeled peaks, and highlighted
+    regions
+  - 'Excellent visual refinement: removed ticks, softened axes, subtle y-only grid,
+    clean background'
+  - Realistic web service response time context with appropriate scale
+  - Clean, well-structured code with proper reproducibility seed
   weaknesses:
-  - Does not leverage Bokeh's interactive capabilities (hover tooltips showing density
-    values)
-  - Grid styling could be more prominent for better readability
-  - The rug plot ticks could be slightly more visible (currently line_width=2 with
-    alpha=0.5)
-  image_description: The plot displays a bimodal density curve (KDE) showing web service
-    response times in milliseconds. The main peak is around 150ms (fast responses)
-    with a secondary smaller peak around 280ms (slower responses). The curve is filled
-    with a semi-transparent blue color (#306998) with a solid blue outline. A rug
-    plot showing individual observations appears as small vertical lines along the
-    x-axis at the bottom. The title "density-basic · bokeh · pyplots.ai" is positioned
-    at the top left. X-axis is labeled "Response Time (ms)" and Y-axis is labeled
-    "Density". The background is a light gray (#fafafa) with subtle dashed grid lines.
-    The layout uses the full 16:9 landscape format.
+  - Library Mastery could be improved by leveraging more Bokeh-distinctive features
+  - Rug plot segments are quite dense in the primary cluster, slightly reducing individual
+    visibility
+  - Canvas vertical space slightly underutilized
+  image_description: The plot displays a bimodal kernel density estimation curve of
+    web service response times in milliseconds. A smooth steel blue (#306998) density
+    line (line_width=6) fills the canvas width from ~40ms to ~400ms, with a light
+    blue transparent fill (alpha=0.25) beneath the curve. The primary peak at ~140ms
+    reaches a density of ~0.0088 and is labeled "Fast Responses" in bold dark blue
+    text above the peak. A secondary shorter peak at ~280ms reaches ~0.0024 and is
+    labeled "Slower Responses". Two slightly darker shaded regions highlight the areas
+    around each peak for visual emphasis. A rug plot of individual observations runs
+    along the bottom x-axis as thin vertical blue line segments (400 observations).
+    The x-axis reads "Response Time (ms)" from 0 to ~400, the y-axis reads "Density"
+    from 0.0000 to ~0.0080. Title "density-basic · bokeh · pyplots.ai" appears in
+    the upper left. The background is off-white (#fafafa) with very subtle horizontal
+    gridlines (alpha=0.15), no vertical grid, softened axis lines, no tick marks,
+    and no toolbar.
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 28
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 36pt, axis labels at 28pt, tick labels at 22pt - all clearly
-          readable
+        comment: 'All font sizes explicitly set: title 36pt, axis labels 28pt, tick
+          labels 22pt, annotations 22pt'
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: Peak annotations well-separated, rug plot doesn't interfere with
+          main curve, no tick label collisions
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Density curve and rug plot are well-sized and visible
+        comment: Density line prominent at width=6, fill alpha appropriate. Rug segments
+          somewhat dense in primary cluster
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Single blue color scheme, no colorblind issues
-      - id: VQ-05
-        name: Layout Balance
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Good proportions, slight excess whitespace on right side
+        comment: Single-series monochromatic Python Blue scheme, no colorblind issues
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good width utilization, some vertical space underutilized due to
+          density curve shape
       - id: VQ-06
-        name: Axis Labels
+        name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '"Response Time (ms)" and "Density" are descriptive with units'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
-        max: 2
-        passed: false
-        comment: Grid is subtle (alpha 0.3), but no legend present (acceptable for
-          single-series density plot, but could note the distribution)
+        comment: Response Time (ms) with units, Density is unitless by nature
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Intentional monochromatic scheme with opacity gradation, highlighted
+          peak regions, clean annotation styling. Strong design above defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Ticks removed, axes softened, y-only subtle grid, outline removed,
+          toolbar removed, custom background. Nearly perfect.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Bimodal data with labeled peaks and highlighted regions tells clear
+          story of two response-time populations
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct KDE/density plot type
+        comment: Correct density/KDE plot with smooth probability density curve
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Continuous variable correctly mapped to density
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Smooth curve with fill, rug plot included as suggested in spec
-      - id: SC-04
-        name: Data Range
+        comment: Smooth curve, filled area with transparency, rug plot, Silverman
+          bandwidth - all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Full data range visible with appropriate padding
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X=continuous response times, Y=density. Correct mapping.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: N/A for single series, no legend needed
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "density-basic · bokeh · pyplots.ai"'
+        comment: Title in correct format, no legend needed for single-series density
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows bimodality effectively, demonstrates distribution characteristics
-          well. Could show more extreme values/outliers
+        comment: Bimodal distribution demonstrates KDE multimodality detection, different
+          group sizes show density proportions
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Web service response times is an excellent, realistic scenario
+        comment: 'Web service response times: real-world, comprehensible, neutral
+          technical scenario'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values 50-400ms are realistic for web response times, though the
-          bimodal distribution is somewhat idealized
+        comment: 150ms and 280ms response times with 30ms/40ms std devs are realistic
+          for web services
     code_quality:
       score: 10
       max: 10
@@ -165,42 +187,50 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports → data → KDE calculation → plot → save'
+        comment: 'Flat linear flow: Imports, Data, KDE, Peak detection, Plot, Style,
+          Save'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set at the start
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: 'All imports used: numpy, export_png, ColumnDataSource, HoverTool,
+          Label, NumeralTickFormatter, figure'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Using current Bokeh APIs
-      - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 2
-      max: 5
-      items:
-      - id: LF-01
-        name: Uses distinctive library features
+        name: Code Elegance
         score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-structured, appropriate complexity. Manual KDE necessary
+          since Bokeh has no built-in.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png via export_png, no deprecated API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
-        passed: false
-        comment: Uses ColumnDataSource and varea/line/segment glyphs correctly, but
-          doesn't leverage Bokeh's interactive features (hover tooltips, interactive
-          HTML output). For static PNG export, the implementation is solid but doesn't
-          showcase Bokeh's unique strengths
+        passed: true
+        comment: Good ColumnDataSource usage, multiple glyph types, Label layout,
+          HoverTool, NumeralTickFormatter
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: HoverTool with vline mode, ColumnDataSource pattern, Label layout
+          system. KDE computed manually with numpy.
   verdict: APPROVED
