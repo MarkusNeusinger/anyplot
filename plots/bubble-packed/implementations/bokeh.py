@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 bubble-packed: Basic Packed Bubble Chart
 Library: bokeh 3.8.2 | Python 3.14.3
 Quality: 88/100 | Updated: 2026-02-23
@@ -6,7 +6,7 @@ Quality: 88/100 | Updated: 2026-02-23
 
 import numpy as np
 from bokeh.io import export_png
-from bokeh.models import ColumnDataSource, LabelSet
+from bokeh.models import ColumnDataSource, HoverTool, LabelSet
 from bokeh.plotting import figure
 
 
@@ -33,7 +33,7 @@ categories = [
 values = [45, 32, 38, 25, 12, 18, 42, 8, 22, 15, 28, 14, 10, 20, 6]
 
 # Calculate radii from values (area-scaled for accurate visual perception)
-max_radius = 380
+max_radius = 420
 radii = np.sqrt(np.array(values, dtype=float)) / np.sqrt(max(values)) * max_radius
 
 # Circle packing via force-directed simulation
@@ -87,21 +87,25 @@ p = figure(
 # Budget tier palette — 4 distinct hue families, colorblind-safe, dark for white text
 tier_defs = [
     (">$35M", "#1B4F72", [i for i in range(n) if values[i] > 35]),
-    ("$20\u201335M", "#0E6655", [i for i in range(n) if 20 <= values[i] <= 35]),
+    ("$20\u201335M", "#7D6608", [i for i in range(n) if 20 <= values[i] <= 35]),
     ("$10\u201319M", "#A04000", [i for i in range(n) if 10 <= values[i] < 20]),
     ("<$10M", "#6C3483", [i for i in range(n) if values[i] < 10]),
 ]
 
 # Render circles by tier — each tier is a separate renderer with Bokeh Legend entry
+circle_renderers = []
 for tier_name, tier_color, tier_idx in tier_defs:
     src = ColumnDataSource(
         data={
             "x": [x_pos[i] for i in tier_idx],
             "y": [y_pos[i] for i in tier_idx],
             "radius": [radii[i] for i in tier_idx],
+            "dept": [categories[i] for i in tier_idx],
+            "budget": [f"${values[i]}M" for i in tier_idx],
+            "tier": [tier_name for _ in tier_idx],
         }
     )
-    p.circle(
+    r = p.circle(
         x="x",
         y="y",
         radius="radius",
@@ -112,14 +116,15 @@ for tier_name, tier_color, tier_idx in tier_defs:
         line_width=3,
         legend_label=tier_name,
     )
+    circle_renderers.append(r)
 
 # Adaptive labels for ALL circles — font size scales with radius
 brackets = [
     (300, float("inf"), "24pt", "20pt", 20),
-    (240, 300, "20pt", "16pt", 16),
-    (190, 240, "16pt", "13pt", 14),
-    (150, 190, "14pt", "11pt", 10),
-    (0, 150, "12pt", "10pt", 8),
+    (240, 300, "20pt", "17pt", 16),
+    (190, 240, "17pt", "14pt", 14),
+    (150, 190, "15pt", "13pt", 12),
+    (0, 150, "14pt", "12pt", 10),
 ]
 for min_r, max_r, name_font, val_font, y_off in brackets:
     idx = [i for i in range(n) if min_r <= radii[i] < max_r]
@@ -184,6 +189,12 @@ p.legend.border_line_width = 2
 p.legend.padding = 20
 p.legend.spacing = 12
 p.legend.label_standoff = 12
+
+# HoverTool — Bokeh-distinctive interactive feature (preserved for HTML output)
+hover = HoverTool(
+    tooltips=[("Department", "@dept"), ("Budget", "@budget"), ("Tier", "@tier")], renderers=circle_renderers
+)
+p.add_tools(hover)
 
 # Save
 export_png(p, filename="plot.png")
