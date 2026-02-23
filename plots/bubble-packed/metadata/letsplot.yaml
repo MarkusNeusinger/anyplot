@@ -1,7 +1,7 @@
 library: letsplot
 specification_id: bubble-packed
 created: '2025-12-23T09:15:56Z'
-updated: '2026-02-23T15:48:06Z'
+updated: '2026-02-23T16:04:09Z'
 generated_by: claude-opus-4-6
 workflow_run: 20456562981
 issue: 0
@@ -10,7 +10,7 @@ library_version: 4.8.2
 preview_url: https://storage.googleapis.com/pyplots-images/plots/bubble-packed/letsplot/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/bubble-packed/letsplot/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/bubble-packed/letsplot/plot.html
-quality_score: 85
+quality_score: 87
 impl_tags:
   dependencies: []
   techniques:
@@ -19,38 +19,44 @@ impl_tags:
   - annotations
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep: []
   styling:
   - minimal-chrome
   - alpha-blending
+  - edge-highlighting
 review:
   strengths:
-  - Attractive harmonious custom color palette (yellow, teal, navy) with good contrast
-  - Clean force simulation that successfully packs 15 bubbles without overlap
-  - Smart conditional labeling with abbreviations for long names
-  - Realistic department budget scenario with appropriate values
-  - 'Perfect code quality: clean structure, reproducible, all imports used'
+  - Excellent force-directed packing algorithm with group-based spatial clustering
+    and inter-group spacing
+  - Polished visual design with custom harmonious color palette, white-bordered circles,
+    and bold white labels
+  - Perfect spec compliance — every required feature is implemented correctly
+  - Realistic, neutral business data context with appropriate value ranges
+  - Clean, well-structured code with thoughtful details (abbreviations for long names,
+    conditional labeling)
   weaknesses:
-  - Empty whitespace at bottom of canvas due to asymmetric ylim(-70, 55)
-  - Bubbles from different groups are interspersed rather than spatially clustered
-    as spec suggests
-  - Legend title font size at 18pt is slightly below the 20pt guideline
-  - Limited use of letsplot-distinctive features beyond layer_tooltips
-  image_description: 'The plot displays a packed bubble chart titled "Department Budget
-    Allocation · bubble-packed · letsplot · pyplots.ai". Fifteen circles of varying
-    sizes represent department budgets ranging from $22M to $85M. Circles are colored
-    by division: golden yellow (#FFD43B) for Tech (Engineering, R&D, Product, IT,
-    Design, Analytics, QA, Security), teal (#4ECDC4) for Business (Marketing, Sales),
-    and dark navy (#306998) for Operations (Operations/Ops, HR, Finance, Customer
-    Support/Support, Legal). White bold labels appear inside larger bubbles; smaller
-    bubbles (HR, Legal, QA, Security) are wisely left unlabeled. A legend on the right
-    identifies "Division" with three categories. The chart uses theme_void() with
-    no axes or grid. Engineering is the largest circle, centrally positioned at bottom-center.
-    Significant empty whitespace exists at the bottom of the canvas. Bubbles from
-    different groups are interspersed rather than spatially clustered.'
+  - Canvas utilization is poor (~40-45%) with significant empty space in corners;
+    bubbles feel scattered rather than tightly packed
+  - Legend is isolated far from the data in the right margin
+  - Budget values are not visible in the static PNG output (tooltips only work in
+    interactive mode)
+  image_description: 'The plot displays a packed bubble chart on a white/void background
+    titled "Department Budget Allocation · bubble-packed · letsplot · pyplots.ai".
+    Fifteen circles of varying sizes represent department budgets in millions of dollars.
+    The circles are colored by division: Tech (golden yellow, #FFD43B), Business (teal/cyan,
+    #4ECDC4), and Operations (dark navy blue, #306998). Each circle has a white border
+    (stroke). Larger bubbles display bold white labels inside: Engineering (largest),
+    R&D, Product, Marketing, Sales, IT, Finance, Ops, Support, Design, Analytics.
+    Smaller bubbles (HR, Legal, QA, Security) are unlabeled. A legend on the right
+    side labeled "Division" shows the three group colors in a bordered box. The bubbles
+    are spatially clustered by group — Tech bubbles are generally center-right, Business
+    upper-left, Operations lower-left. There are notable gaps between bubbles, and
+    the packed area occupies roughly 40-45% of the square canvas, leaving significant
+    empty space in corners.'
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 26
       max: 30
       items:
       - id: VQ-01
@@ -58,43 +64,44 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=24, legend_title=18, legend_text=16,
-          bubble_text=7). Legend title slightly below 20pt guideline.
+        comment: Font sizes explicitly set (title=24, legend_title=20, legend_text=16,
+          geom_text=7 bold). All text readable. Bubble labels slightly small on smallest
+          labeled circles.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or bubbles. Force simulation separates all circles.
-          Smart conditional labeling.
+        comment: No overlapping elements. Force simulation prevents bubble collisions.
+          Text labels well-contained inside bubbles.
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Excellent size differentiation with scale_size range [20, 85]. Alpha=0.85
-          keeps bubbles visible.
+        comment: All bubbles clearly visible with distinct colors and white borders.
+          Smallest unlabeled bubbles lack in-chart identification.
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Yellow, teal, and dark navy distinguishable for most color vision
-          deficiencies.
+        comment: Yellow, teal, and dark blue palette is colorblind-safe with strong
+          luminance contrast.
       - id: VQ-05
         name: Layout & Canvas
         score: 2
         max: 4
         passed: false
-        comment: Asymmetric ylim(-70, 55) leaves ~25% empty whitespace at bottom of
-          canvas.
+        comment: Bubbles occupy roughly 40-45% of canvas. Significant empty space
+          in corners. Legend pushed far to right edge.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive title with budget context. No axes needed for packed
-          bubble chart.
+        comment: Descriptive title. No axis labels needed (theme_void appropriate
+          for packed bubble chart). Legend labeled Division.
     design_excellence:
       score: 14
       max: 20
@@ -104,24 +111,24 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom harmonious palette, white bold text on bubbles, clean void
-          theme. Above defaults.
+        comment: Custom harmonious palette, white circle borders via shape=21, bold
+          white labels, void theme. Clearly above library defaults.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: theme_void() clean, alpha=0.85 adds depth, coord_fixed ensures circles.
-          Whitespace imbalance at bottom.
+        comment: theme_void appropriate, legend has styled background/border, alpha=0.88.
+          Loose packing creates scatter impression; legend isolated.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Size hierarchy shows Engineering dominance. Color grouping reveals
-          Tech budget concentration.
+        comment: Good visual hierarchy through size variation and group clustering.
+          Engineering dominates as clear focal point. Tech cluster is largest division.
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -129,51 +136,53 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct packed bubble chart with force simulation packing.
+        comment: Correct packed bubble chart with force simulation, size encoding,
+          and group clustering.
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: Color grouping present but no spatial clustering by group as spec
-          suggests.
+        passed: true
+        comment: 'All spec features present: size represents value, force simulation,
+          grouping, labels, group clustering with spacing.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Size correctly maps to value via area. Color maps to group. All 15
-          points visible.
+        comment: Size mapped to budget value, fill mapped to group, labels conditionally
+          displayed based on value threshold.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title includes required format with descriptive prefix. Legend correctly
-          labeled.
+        comment: Title follows exact format. Legend Division with correct labels.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Good size variation, three groups, conditional labeling. Could show
-          more group structure.
+        comment: 15 departments across 3 groups with wide value range (22-85). Demonstrates
+          size variation, grouping, label handling.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Department budget allocation is realistic neutral business scenario.
+        comment: Department budget allocation is realistic, neutral business scenario
+          with plausible names and groupings.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Budget values $22M-$85M realistic for department-level figures.
+        comment: Budget values ($22M-$85M) realistic for mid-to-large company. Relative
+          proportions make sense.
     code_quality:
       score: 10
       max: 10
@@ -183,33 +192,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean Imports → Data → Force Sim → Plot → Save. No functions/classes.
+        comment: 'Linear structure: imports, data, packing algorithm, DataFrame, plot,
+          save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set for data and positions.
+        comment: np.random.seed(42) set before random operations.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used, no unused imports.
+        comment: All imports used. Individual lets_plot imports are specific and purposeful.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean force simulation, smart label handling. No fake UI.
+        comment: Well-implemented force-directed packing with group attraction and
+          collision resolution. Abbreviation dictionary is a nice touch.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with export_ggsave, scale=3. Current API.
+        comment: Saves as plot.png via export_ggsave with scale=3. Current API.
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -217,12 +228,13 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Proper ggplot grammar with aes, geom_point, geom_text, scale_*, theme_void.
+        comment: Correct ggplot grammar with aes mappings, scale_fill_manual, scale_size,
+          theme_void, ggsize. Solid standard usage.
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: layer_tooltips() is letsplot-specific but only works in HTML mode.
-          Core packing done in numpy.
+        passed: true
+        comment: layer_tooltips() with .title() and .line() builder pattern is distinctive
+          to letsplot. shape=21 with stroke for bordered circles.
   verdict: REJECTED
