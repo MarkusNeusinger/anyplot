@@ -1,23 +1,23 @@
 """ pyplots.ai
 arc-basic: Basic Arc Diagram
-Library: matplotlib 3.10.8 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-23
+Library: matplotlib 3.10.8 | Python 3.14.3
+Quality: 91/100 | Updated: 2026-02-23
 """
 
+import matplotlib.colors as mcolors
 import matplotlib.patches as mpatches
+import matplotlib.path as mpath
 import matplotlib.pyplot as plt
 import numpy as np
 
 
 # Data: Character interactions in a story chapter
-np.random.seed(42)
-
 nodes = ["Alice", "Bob", "Carol", "David", "Eve", "Frank", "Grace", "Henry", "Iris", "Jack"]
 n_nodes = len(nodes)
 
-# Edges: pairs of connected nodes with weights (start, end, weight)
+# Edges: (source_index, target_index, weight)
 edges = [
-    (0, 1, 3),  # Alice-Bob (strong connection)
+    (0, 1, 3),  # Alice-Bob (strong)
     (0, 3, 2),  # Alice-David
     (1, 2, 2),  # Bob-Carol
     (2, 4, 1),  # Carol-Eve
@@ -34,62 +34,126 @@ edges = [
     (8, 9, 2),  # Iris-Jack
 ]
 
-# Create plot
+weights = [w for _, _, w in edges]
+weight_min, weight_max = min(weights), max(weights)
+
+# Weighted node degrees for size variation (data storytelling)
+node_degrees = [0] * n_nodes
+for s, e, w in edges:
+    node_degrees[s] += w
+    node_degrees[e] += w
+
+# Truncated Blues colormap — avoids near-white so weight-1 arcs stay clearly visible
+blues_raw = plt.cm.Blues(np.linspace(0.35, 0.95, 256))
+arc_cmap = mcolors.LinearSegmentedColormap.from_list("TruncBlues", blues_raw)
+norm = mcolors.Normalize(vmin=weight_min, vmax=weight_max)
+
+# Plot
 fig, ax = plt.subplots(figsize=(16, 9))
 
-# Node positions along x-axis
-x_positions = np.linspace(0.05, 0.95, n_nodes)
-y_baseline = 0.15
+x_positions = np.linspace(0.06, 0.90, n_nodes)
+y_baseline = 0.08
 
-# Draw arcs
-for start, end, weight in edges:
+# Arcs via PathPatch with cubic Bézier curves (distinctive matplotlib feature)
+for start, end, weight in sorted(edges, key=lambda e: e[2]):
     x_start = x_positions[start]
     x_end = x_positions[end]
-
-    # Arc height proportional to distance between nodes
     distance = abs(end - start)
-    height = 0.07 * distance
+    peak = 0.065 * distance
 
-    # Center and width of the arc
-    x_center = (x_start + x_end) / 2
-    arc_width = abs(x_end - x_start)
-
-    # Arc thickness based on weight
-    linewidth = 2.0 + weight * 1.2
-
-    # Semi-transparent arcs
-    alpha = 0.55
-
-    # Create arc using Arc patch
-    arc = mpatches.Arc(
-        (x_center, y_baseline),
-        width=arc_width,
-        height=height * 2,
-        angle=0,
-        theta1=0,
-        theta2=180,
-        color="#306998",
-        linewidth=linewidth,
-        alpha=alpha,
+    path = mpath.Path(
+        [
+            (x_start, y_baseline),
+            (x_start, y_baseline + peak * 1.35),
+            (x_end, y_baseline + peak * 1.35),
+            (x_end, y_baseline),
+        ],
+        [mpath.Path.MOVETO, mpath.Path.CURVE4, mpath.Path.CURVE4, mpath.Path.CURVE4],
     )
-    ax.add_patch(arc)
 
-# Draw nodes
-ax.scatter(x_positions, [y_baseline] * n_nodes, s=500, c="#FFD43B", edgecolors="#306998", linewidths=2.5, zorder=5)
+    patch = mpatches.PathPatch(
+        path,
+        facecolor="none",
+        edgecolor=arc_cmap(norm(weight)),
+        linewidth=1.5 + weight * 1.8,
+        alpha=0.8,
+        capstyle="round",
+    )
+    ax.add_patch(patch)
 
-# Add node labels
-for x, name in zip(x_positions, nodes, strict=True):
-    ax.text(x, y_baseline - 0.06, name, ha="center", va="top", fontsize=16, fontweight="bold", color="#306998")
+# Node sizes proportional to weighted degree (reveals hub characters)
+max_degree = max(node_degrees)
+node_sizes = [300 + 350 * (d / max_degree) for d in node_degrees]
 
-# Styling
-ax.set_xlim(-0.02, 1.02)
-ax.set_ylim(-0.05, 0.85)
-ax.set_aspect("equal")
+# Highlight protagonist Alice with distinct accent color
+node_colors = ["#FF6B35" if i == 0 else "#FFD43B" for i in range(n_nodes)]
+node_edge_colors = ["#B8441A" if i == 0 else "#306998" for i in range(n_nodes)]
 
-# Remove axes
+ax.scatter(
+    x_positions,
+    [y_baseline] * n_nodes,
+    s=node_sizes,
+    c=node_colors,
+    edgecolors=node_edge_colors,
+    linewidths=2.5,
+    zorder=5,
+)
+
+# Node labels with typographic hierarchy
+for i, (x, name) in enumerate(zip(x_positions, nodes, strict=True)):
+    ax.text(
+        x,
+        y_baseline - 0.04,
+        name,
+        ha="center",
+        va="top",
+        fontsize=16,
+        fontweight="heavy" if i == 0 else "bold",
+        color="#306998",
+    )
+
+# Colorbar for connection strength
+sm = plt.cm.ScalarMappable(cmap=arc_cmap, norm=norm)
+sm.set_array([])
+cbar = fig.colorbar(sm, ax=ax, shrink=0.4, aspect=15, pad=0.02)
+cbar.set_label("Connection Strength", fontsize=16)
+cbar.set_ticks([1, 2, 3])
+cbar.ax.tick_params(labelsize=16)
+
+# Subtle baseline
+ax.plot(
+    [x_positions[0] - 0.02, x_positions[-1] + 0.02],
+    [y_baseline, y_baseline],
+    color="#306998",
+    linewidth=0.8,
+    alpha=0.2,
+    zorder=1,
+)
+
+# Layout
+ax.set_xlim(-0.02, 0.98)
+ax.set_ylim(-0.06, 0.68)
 ax.axis("off")
 
-ax.set_title("Character Interactions · arc-basic · matplotlib · pyplots.ai", fontsize=24, pad=20)
+# Title with narrative subtitle
+ax.set_title(
+    "Character Interactions \u00b7 arc-basic \u00b7 matplotlib \u00b7 pyplots.ai",
+    fontsize=24,
+    fontweight="medium",
+    pad=36,
+)
+
+ax.text(
+    0.5,
+    1.01,
+    "Node size reflects connection activity \u00b7 Alice (orange) is the central character",
+    ha="center",
+    va="bottom",
+    fontsize=13,
+    color="#888888",
+    fontstyle="italic",
+    transform=ax.transAxes,
+)
 
 plt.tight_layout()
 plt.savefig("plot.png", dpi=300, bbox_inches="tight")

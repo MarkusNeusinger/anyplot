@@ -1,166 +1,193 @@
 library: altair
 specification_id: arc-basic
 created: '2025-12-23T08:49:37Z'
-updated: '2025-12-23T09:04:22Z'
-generated_by: claude-opus-4-5-20251101
+updated: '2026-02-23T21:51:16Z'
+generated_by: claude-opus-4-6
 workflow_run: 20455963635
 issue: 0
-python_version: 3.13.11
+python_version: 3.14.3
 library_version: 6.0.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/arc-basic/altair/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/arc-basic/altair/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/arc-basic/altair/plot.html
-quality_score: 91
+quality_score: 90
 impl_tags:
   dependencies: []
   techniques:
-    - layer-composition
-    - html-export
+  - layer-composition
+  - hover-tooltips
+  - custom-legend
+  - html-export
   patterns:
-    - data-generation
-    - iteration-over-groups
-    - matrix-construction
+  - data-generation
+  - iteration-over-groups
   dataprep: []
   styling:
-    - alpha-blending
+  - minimal-chrome
+  - alpha-blending
+  - edge-highlighting
 review:
   strengths:
-  - Excellent implementation of arc diagram using Altairs declarative grammar with
-    custom path generation
-  - Beautiful color scheme using Python blue (#306998) and yellow (#FFD43B) brand
-    colors
-  - Arc height correctly proportional to node distance as specified
-  - Semi-transparency (0.6) handles overlapping arcs well
-  - Edge weight encoding via strokeWidth provides visual differentiation
-  - Clean code structure with clear data preparation and chart layering
-  - 'Appropriate data context: character interactions in a story chapter'
+  - Effective triple encoding of edge weight through color, thickness, and opacity
+    creates clear visual hierarchy
+  - Cohesive Python-themed color palette (blue gradient arcs + yellow nodes) with
+    strong contrast
+  - Full spec compliance with all required features including proportional arc height,
+    semi-transparency, and color coding
+  - Excellent use of Altair declarative grammar with interactive hover selection and
+    conditional encoding
+  - Node sizing by connection weight adds an extra data dimension that aids storytelling
   weaknesses:
-  - Layout has excessive whitespace below the baseline; nodes are positioned at y=10
-    in a 900px height canvas
-  - Missing legend for edge weight interpretation (strokeWidth encoding has legend=None)
-  image_description: The plot displays an arc diagram showing character interactions.
-    Ten nodes (Alice, Bob, Carol, David, Eve, Frank, Grace, Henry, Iris, Jack) are
-    arranged horizontally along the bottom of the chart, represented as yellow circles
-    with blue outlines. The character names appear below each node in bold blue text.
-    Curved blue arcs connect pairs of nodes above the horizontal line, with arc height
-    proportional to the distance between connected nodes. The longest arcs span from
-    Alice to Jack and Alice to Henry, reaching nearly to the top of the plot. Shorter
-    arcs connect adjacent or nearby characters. The arcs use semi-transparent blue
-    (#306998) with varying thicknesses based on edge weights. The title "Character
-    Interactions · arc-basic · altair · pyplots.ai" appears at the top center.
+  - Node label font size (18pt) is slightly below the 20pt guideline for labels
+  - Weakest arcs (weight=1, opacity 0.3) are quite faint and could benefit from a
+    higher minimum opacity
+  - Legend positioned somewhat far from the main data area with empty space in the
+    upper-left
+  image_description: 'The plot displays a basic arc diagram with 10 character nodes
+    (Alice, Bob, Carol, David, Eve, Frank, Grace, Henry, Iris, Jack) arranged along
+    a horizontal baseline near the bottom. Nodes are rendered as yellow (#FFD43B)
+    circles with dark blue (#152d4a) strokes, with sizes proportional to each character''s
+    total connection weight — Alice and David are visibly the largest. Curved semicircular
+    arcs connect pairs of nodes above the baseline, with arc height proportional to
+    the distance between connected nodes. Arc thickness ranges from thin (~1.5px)
+    for weight-1 connections to thick (~6px) for weight-3 connections. Arc color uses
+    a blue gradient: light steel blue (#7daed4) for weak connections, medium blue
+    (#306998) for moderate, and dark navy (#152d4a) for strong. Arc opacity also varies
+    (0.3–0.8) by weight. A legend in the top-right labeled "Interaction Strength"
+    shows Weak, Moderate, and Strong categories. The title "arc-basic · altair · pyplots.ai"
+    is centered at the top in bold 28pt font. The background is clean white with no
+    axes, grid, or chart border.'
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 26
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 7
+        max: 8
         passed: true
-        comment: Title is large (28pt), node labels are 18pt bold, all clearly readable
+        comment: Title 28pt, node labels 18pt bold (slightly below 20pt guideline),
+          legend title/labels 16pt. All text readable and explicitly sized.
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text or elements
+        comment: No text collisions. Node labels well-spaced. Arc overlaps mitigated
+          by transparency.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Nodes are appropriately sized (600), arcs visible with opacity 0.6
+        comment: Nodes clearly visible. Strong/moderate arcs prominent. Weakest arcs
+          (opacity 0.3) somewhat faint but distinguishable by shape.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Blue/yellow color scheme is colorblind-safe
+        comment: Monochromatic blue palette is colorblind-safe. Yellow nodes contrast
+          well. Weight uses thickness and opacity in addition to color.
       - id: VQ-05
-        name: Layout Balance
+        name: Layout & Canvas
         score: 3
-        max: 5
+        max: 4
         passed: true
-        comment: Good overall, but nodes positioned low with much empty space below
-          baseline
+        comment: Plot fills ~60-65% of canvas. Some empty space in upper-left. Legend
+          slightly separated from data area.
       - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: false
-        comment: No axes present (appropriate for this chart type, but no units shown)
-      - id: VQ-07
-        name: Grid & Legend
-        score: 2
+        name: Axis Labels & Title
+        score: 1
         max: 2
         passed: true
-        comment: Clean design, no unnecessary grid, strokeWidth encoding is self-explanatory
+        comment: Title correctly formatted. Arc diagrams don't use traditional axes;
+          node labels serve as positional identifiers.
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom blue gradient palette with contrasting yellow nodes. Python-themed
+          color scheme. Bold typography with intentional visual hierarchy.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: View stroke removed, axes hidden, legend styled with transparent
+          stroke and custom colors, clean background. Every detail deliberately configured.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Triple encoding of weight creates effective visual hierarchy. Node
+          sizing identifies central characters. Long-range vs short-range connections
+          visible by arc height.
     spec_compliance:
-      score: 23
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct arc diagram type
+        comment: 'Correct arc diagram: nodes on horizontal line, semicircular arcs
+          above.'
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Nodes correctly arranged horizontally, arcs connect pairs
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Arc heights proportional to distance, semi-transparency, stroke width
-          for weights
-      - id: SC-04
-        name: Data Range
+        comment: 'All spec features present: proportional arc height, semi-transparency,
+          readable labels, color coding, weight-based thickness.'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All nodes and connections visible
-      - id: SC-05
-        name: Legend Accuracy
-        score: 0
-        max: 2
+        comment: Nodes correctly positioned. Arcs connect specified pairs. Heights
+          scale with span distance.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No legend for edge weights (strokeWidth legend is disabled)
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "Character Interactions · arc-basic · altair · pyplots.ai"'
+        comment: Title 'arc-basic · altair · pyplots.ai' correct. Legend 'Interaction
+          Strength' with Weak/Moderate/Strong labels.
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows short-range and long-range connections, varying weights (1-3)
+        comment: Short-range, medium-range, and long-range connections. All three
+          weight levels. Varying node connectivity.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Character interactions in a story is a perfect real-world scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: 10 nodes with 15 edges is ideal for readability
+        comment: Character interactions in a story chapter. Plausible neutral scenario
+          from spec applications.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 10 nodes within recommended 10-50 range. 15 edges with weights 1-3.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -168,40 +195,49 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear structure: imports → data → plot → save'
+        comment: 'Linear flow: imports, data, arc computation, chart layers, save.
+          No functions or classes.'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set. Edge data is hardcoded and deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports (altair, numpy, pandas)
+        comment: All three imports (altair, numpy, pandas) are used.
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for arc path generation. No fake UI or over-engineering.
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current Altair API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves both plot.png and plot.html (correct)
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot.png with scale_factor=3.0 and plot.html. Current Altair
+          6.x API.
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses declarative layering, encoding system, but arc diagrams are
-          not native to Altair so required manual path generation
+        comment: Declarative grammar with Chart.mark_*.encode(). Layer composition,
+          proper encoding types, Scale/Legend/Title/condition/configure usage.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Interactive hover selection, conditional encoding, native tooltips,
+          labelExpr for legend labels, HTML export via Vega-Lite.
   verdict: APPROVED

@@ -6,7 +6,7 @@ title: Basic Arc Diagram
 
 # Specification tracking
 created: 2025-12-15T20:43:43Z
-updated: 2025-12-15T20:43:43Z
+updated: 2026-02-23T12:00:00Z
 issue: 991
 suggested: MarkusNeusinger
 
@@ -18,8 +18,10 @@ tags:
   data_type:
     - network
     - relational
+    - categorical
+    - ordinal
   domain:
     - general
   features:
     - basic
-    - connection-visualization
+    - 2d
