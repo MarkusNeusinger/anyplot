@@ -1,7 +1,6 @@
-""" pyplots.ai
+"""pyplots.ai
 density-basic: Basic Density Plot
 Library: plotly 6.5.2 | Python 3.14.3
-Quality: 87/100 | Updated: 2026-02-23
 """
 
 import numpy as np
@@ -23,6 +22,13 @@ sat_scores = np.clip(sat_scores, 200, 800)  # SAT range
 kde = gaussian_kde(sat_scores)
 x_grid = np.linspace(350, 800, 500)
 density = kde(x_grid)
+
+# Identify peaks for annotations (split at valley ~620 pts)
+split = int(500 * (620 - 350) / (800 - 350))
+peak1_idx = np.argmax(density[:split])
+peak2_idx = split + np.argmax(density[split:])
+peak1_x, peak1_y = x_grid[peak1_idx], density[peak1_idx]
+peak2_x, peak2_y = x_grid[peak2_idx], density[peak2_idx]
 
 # Plot
 fig = go.Figure()
@@ -46,10 +52,42 @@ fig.add_trace(
         x=sat_scores,
         y=np.zeros(len(sat_scores)),
         mode="markers",
-        marker={"symbol": "line-ns", "size": 12, "color": "#306998", "opacity": 0.35, "line": {"width": 1.5}},
+        marker={"symbol": "line-ns", "size": 14, "color": "#306998", "opacity": 0.5, "line": {"width": 1.5}},
         name="Observations",
         hovertemplate="Score: %{x:.0f}<extra></extra>",
     )
+)
+
+# Peak annotations to highlight bimodal structure
+fig.add_annotation(
+    x=peak1_x,
+    y=peak1_y,
+    text=f"<b>Primary Peak</b><br>~{peak1_x:.0f} pts",
+    showarrow=True,
+    arrowhead=2,
+    arrowsize=1.2,
+    arrowwidth=2,
+    arrowcolor="#306998",
+    font={"size": 18, "color": "#306998"},
+    ax=-80,
+    ay=-50,
+    bgcolor="rgba(255, 255, 255, 0.9)",
+    borderpad=6,
+)
+fig.add_annotation(
+    x=peak2_x,
+    y=peak2_y,
+    text=f"<b>High Achievers</b><br>~{peak2_x:.0f} pts",
+    showarrow=True,
+    arrowhead=2,
+    arrowsize=1.2,
+    arrowwidth=2,
+    arrowcolor="#306998",
+    font={"size": 18, "color": "#306998"},
+    ax=80,
+    ay=-40,
+    bgcolor="rgba(255, 255, 255, 0.9)",
+    borderpad=6,
 )
 
 # Layout
@@ -60,6 +98,11 @@ fig.update_layout(
         "tickfont": {"size": 22},
         "showgrid": False,
         "zeroline": False,
+        "showspikes": True,
+        "spikemode": "across",
+        "spikethickness": 1,
+        "spikecolor": "rgba(48, 105, 152, 0.3)",
+        "spikedash": "dot",
     },
     yaxis={
         "title": {"text": "Density", "font": {"size": 28}},
@@ -80,10 +123,11 @@ fig.update_layout(
         "bgcolor": "rgba(255, 255, 255, 0.8)",
         "borderwidth": 0,
     },
+    hovermode="x",
     margin={"l": 90, "r": 40, "t": 90, "b": 90},
     plot_bgcolor="white",
 )
 
 # Save
 fig.write_image("plot.png", width=1600, height=900, scale=3)
-fig.write_html("plot.html", include_plotlyjs="cdn")
+fig.write_html("plot.html", include_plotlyjs="cdn", config={"displayModeBar": True, "scrollZoom": True})
