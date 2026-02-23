@@ -1,16 +1,16 @@
 library: matplotlib
 specification_id: bubble-packed
 created: '2025-12-23T09:16:10Z'
-updated: '2025-12-23T09:18:25Z'
-generated_by: claude-opus-4-5-20251101
+updated: 2026-02-23T15:35:00+00:00
+generated_by: claude-opus-4-6
 workflow_run: 20456558183
 issue: 0
-python_version: 3.13.11
-library_version: 3.10.8
+python_version: "3.14.3"
+library_version: "3.10.8"
 preview_url: https://storage.googleapis.com/pyplots-images/plots/bubble-packed/matplotlib/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/bubble-packed/matplotlib/plot_thumb.png
 preview_html: null
-quality_score: 92
+quality_score: null
 impl_tags:
   dependencies: []
   techniques:
