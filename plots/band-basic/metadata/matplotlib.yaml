@@ -1,7 +1,7 @@
 library: matplotlib
 specification_id: band-basic
 created: '2025-12-23T09:08:22Z'
-updated: '2026-02-23T13:40:00Z'
+updated: '2026-02-23T13:54:51Z'
 generated_by: claude-opus-4-6
 workflow_run: 20456381970
 issue: 0
@@ -10,149 +10,164 @@ library_version: 3.10.8
 preview_url: https://storage.googleapis.com/pyplots-images/plots/band-basic/matplotlib/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/band-basic/matplotlib/plot_thumb.png
 preview_html: null
-quality_score: null
+quality_score: 86
 impl_tags:
   dependencies: []
-  techniques:
-  - grid-styling
+  techniques: []
   patterns:
   - data-generation
   - explicit-figure
   dataprep: []
   styling:
   - alpha-blending
+  - grid-styling
 review:
   strengths:
-  - Excellent implementation of band plot with widening confidence interval demonstrating
-    real-world forecasting behavior
-  - Clean visual design with appropriate alpha values (0.3 for band, 0.7 for boundary
-    lines)
-  - Proper use of matplotlib fill_between for the band with clear central trend line
-  - Good code structure following KISS principles with reproducible random seed
+  - Excellent spec compliance with all required features and correct title format
+  - Realistic neutral data context (temperature forecast) with plausible values
+  - Clean well-structured code with explicit font sizing throughout
+  - 'Good visual hierarchy: solid center line, semi-transparent fill, faint dashed
+    boundaries'
+  - Widening confidence interval effectively demonstrates forecast uncertainty growth
   weaknesses:
-  - Y-axis label Value is generic and lacks units - could be more descriptive like
-    Measurement (units)
-  - Data scenario is plausible but generic - could use a more concrete real-world
-    context (e.g., stock price forecast, temperature prediction)
-  image_description: The plot displays a band plot with a sinusoidal central trend
-    line (dark blue, solid) oscillating between approximately 4 and 11 on the y-axis,
-    with an overlaid semi-transparent light blue band representing the 95% confidence
-    interval. The band visibly widens as x (time) increases from 0 to 10 seconds,
-    demonstrating forecasting uncertainty that grows over time. Dashed boundary lines
-    subtly mark the upper and lower bounds. The title reads "band-basic · matplotlib
-    · pyplots.ai" in a large font at the top. Axis labels show "Time (s)" on the x-axis
-    and "Value" on the y-axis. A legend in the upper left identifies both the confidence
-    interval band and mean trend line. A subtle grid with dashed lines provides reference.
+  - Monochromatic scheme with single color and only alpha variations limits visual
+    interest
+  - No strong data storytelling focal point to draw the eye to the key insight
+  - Boundary dashed lines are somewhat faint at alpha=0.5 with linewidth=1.5
+  - Does not leverage distinctive matplotlib features beyond fill_between
+  image_description: The plot displays a band chart showing a 30-day temperature forecast
+    with a 95% confidence interval. The x-axis is labeled "Day of Month" (1-30) and
+    the y-axis "Temperature (°C)" (roughly 11-23°C). A solid dark blue line (#306998,
+    linewidth=3) represents the forecast mean, following a sinusoidal pattern peaking
+    around day 15-20 at approximately 19.5°C. A semi-transparent light blue filled
+    region (alpha=0.25) represents the 95% confidence interval, bounded by faint dashed
+    blue lines. The band widens progressively from left to right, showing increasing
+    forecast uncertainty. The title reads "band-basic · matplotlib · pyplots.ai" in
+    medium-weight font. A legend in the upper left identifies "95% Confidence Interval"
+    and "Forecast Mean." Top and right spines are removed. Subtle y-axis gridlines
+    (alpha=0.2) are visible. The color scheme is monochromatic blue throughout.
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 24pt, labels at 20pt, ticks at 16pt - all perfectly readable
+        comment: 'All font sizes explicitly set: title=24, labels=20, ticks=16, legend=16'
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: No overlapping text; legend in upper-left does not conflict with
+          data
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Band and line clearly visible with appropriate alpha and linewidth
+        comment: Fill and center line clearly visible; boundary dashed lines (alpha=0.5,
+          lw=1.5) are somewhat faint
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Single blue color scheme, no colorblind issues
+        comment: Monochromatic blue scheme, no colorblind issues
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Good proportions, tight_layout applied
+        comment: 16:9 figure, tight_layout, well-balanced canvas utilization
       - id: VQ-06
-        name: Axis Labels
-        score: 1
-        max: 2
-        passed: false
-        comment: '"Value" lacks units (could be more descriptive)'
-      - id: VQ-07
-        name: Grid & Legend
+        name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Grid at alpha 0.3, legend well placed
+        comment: Temperature (°C) with units, Day of Month descriptive
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Cohesive single-color scheme with alpha variations, removed spines,
+          subtle grid; above defaults but not publication-standout
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Top/right spines removed, subtle y-axis grid (alpha=0.2), dashed
+          boundary edges add definition
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Widening band conveys uncertainty growth and visual hierarchy exists
+          but no strong focal point or annotation
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
         comment: Correct band plot using fill_between
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X is time, y_lower/y_upper define band correctly
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Has band, central line, and boundary lines as spec suggests
-      - id: SC-04
-        name: Data Range
+        comment: Semi-transparent fill (alpha=0.25), central trend line, smooth interpolation,
+          all data fields present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within axes
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X=days, Y=temperature correctly mapped, axes show full data range
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies elements
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: band-basic · matplotlib · pyplots.ai'
+        comment: Exact title format, clear legend labels
     data_quality:
-      score: 18
-      max: 20
+      score: 14
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Shows widening uncertainty over time (good), sinusoidal pattern shows
-          variation
+        comment: Good band width variation showing uncertainty growth; could demonstrate
+          additional aspects like asymmetric intervals
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Time series with confidence interval is a plausible scenario
+        comment: Temperature forecast with 95% CI is a real-world, neutral weather
+          scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values are sensible but somewhat generic
+        comment: Temperatures 11-23°C realistic; uncertainty 0.8-4.4°C plausible for
+          weather models
     code_quality:
       score: 10
       max: 10
@@ -162,40 +177,47 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple imports → data → plot → save structure
+        comment: Clean Imports → Data → Plot → Style → Save; no functions/classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: Deterministic data (mathematically defined); seed present
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib.pyplot and numpy imported
+        comment: Only matplotlib.pyplot and numpy imported, both used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current matplotlib APIs
+        comment: Clean, Pythonic, appropriate complexity
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot.png, dpi=300, bbox_inches=tight, no deprecated API
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Proper ax.fill_between, ax methods throughout, standard figure/axes
+          pattern
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
         max: 5
         passed: false
-        comment: fill_between is matplotlib's core feature for bands, but no advanced
-          features used
-  verdict: APPROVED
+        comment: fill_between is somewhat distinctive but implementation remains fairly
+          standard overall
+  verdict: REJECTED

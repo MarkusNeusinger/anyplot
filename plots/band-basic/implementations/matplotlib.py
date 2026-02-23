@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 band-basic: Basic Band Plot
 Library: matplotlib 3.10.8 | Python 3.14
-Quality: /100 | Updated: 2026-02-23
+Quality: 86/100 | Updated: 2026-02-23
 """
 
 import matplotlib.pyplot as plt
