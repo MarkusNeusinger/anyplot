@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 density-basic: Basic Density Plot
 Library: letsplot 4.8.2 | Python 3.14.3
-Quality: repair-2 | Updated: 2026-02-23
+Quality: 91/100 | Updated: 2026-02-23
 """
 
 import numpy as np
