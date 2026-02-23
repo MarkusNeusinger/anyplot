@@ -1,26 +1,26 @@
 library: plotnine
 specification_id: density-basic
 created: '2025-12-23T10:00:30Z'
-updated: '2025-12-23T10:04:55Z'
-generated_by: claude-opus-4-5-20251101
+updated: '2026-02-23T22:38:00+00:00'
+generated_by: claude-opus-4-6
 workflow_run: 20457535942
 issue: 0
-python_version: 3.13.11
-library_version: 0.15.2
+python_version: 3.14.3
+library_version: 0.15.3
 preview_url: https://storage.googleapis.com/pyplots-images/plots/density-basic/plotnine/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/density-basic/plotnine/plot_thumb.png
 preview_html: null
-quality_score: 91
+quality_score: null
 impl_tags:
   dependencies: []
   techniques:
-    - layer-composition
+  - layer-composition
   patterns:
-    - data-generation
+  - data-generation
   dataprep:
-    - kde
+  - kde
   styling:
-    - alpha-blending
+  - alpha-blending
 review:
   strengths:
   - Clean plotnine grammar of graphics implementation using geom_density with appropriate
