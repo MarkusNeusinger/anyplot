@@ -1,7 +1,6 @@
-""" pyplots.ai
+"""pyplots.ai
 bubble-packed: Basic Packed Bubble Chart
 Library: plotly 6.5.2 | Python 3.14.3
-Quality: 85/100 | Updated: 2026-02-23
 """
 
 import numpy as np
@@ -56,90 +55,76 @@ for _ in range(600):
         x_pos[i] += fx
         y_pos[i] += fy
 
-# Center the bubble cluster on canvas
-x_center = (x_pos.min() + x_pos.max()) / 2
-y_center = (y_pos.min() + y_pos.max()) / 2
-x_pos -= x_center
-y_pos -= y_center
+# Weight-based centering for better visual balance (larger bubbles pull center)
+area_weights = radii**2
+x_pos -= np.average(x_pos, weights=area_weights)
+y_pos -= np.average(y_pos, weights=area_weights)
 
-# Color palette - Python colors first, then colorblind-safe
-colors = [
-    "#306998",
-    "#FFD43B",
-    "#CE6DBD",
-    "#F28E2B",
-    "#E15759",
-    "#76B7B2",
-    "#59A14F",
-    "#EDC948",
-    "#B07AA1",
-    "#FF9DA7",
-    "#9C755F",
-    "#BAB0AC",
-    "#8CD17D",
-    "#A0CBE8",
-    "#DECBE4",
-]
+# Axis ranges — symmetric with generous padding for balanced layout
+x_ext = max(abs((x_pos - radii).min()), abs((x_pos + radii).max())) + 50
+y_ext = max(abs((y_pos - radii).min()), abs((y_pos + radii).max())) + 50
 
-# Adaptive text color: dark on light backgrounds, white on dark
-text_colors = [
-    "#333" if (int(c[1:3], 16) * 299 + int(c[3:5], 16) * 587 + int(c[5:7], 16) * 114) > 153000 else "white"
-    for c in colors
-]
+# Convert data-coordinate radii to pixel marker diameters
+# With scaleanchor y=x, the smaller dimension constrains the scale
+fig_w, fig_h = 1600, 900
+m_l, m_r, m_t, m_b = 50, 50, 100, 60
+plot_w, plot_h = fig_w - m_l - m_r, fig_h - m_t - m_b
+px_per_unit = min(plot_w / (2 * x_ext), plot_h / (2 * y_ext))
+marker_diameters = 2 * radii * px_per_unit
+
+# Sequential blue palette — adaptive text color for readability
+norm_vals = (values - values.min()) / (values.max() - values.min())
+text_colors = ["white" if nv > 0.3 else "#333" for nv in norm_vals]
 
 # Format values for display
 formatted = [f"${v / 1e6:.1f}M" if v >= 1e6 else f"${v / 1e3:.0f}K" for v in values]
+shares = [f"{v / values.sum() * 100:.1f}" for v in values]
 total = f"${values.sum() / 1e6:.1f}M"
 
-# Build figure with shapes for precise circles
+# Build figure — go.Scatter with sized markers as primary visualization
 fig = go.Figure()
 
-# Draw circles as layout shapes for crisp rendering
-shapes = []
-for i in range(n):
-    shapes.append(
-        {
-            "type": "circle",
-            "x0": x_pos[i] - radii[i],
-            "y0": y_pos[i] - radii[i],
-            "x1": x_pos[i] + radii[i],
-            "y1": y_pos[i] + radii[i],
-            "fillcolor": colors[i],
-            "opacity": 0.88,
-            "line": {"color": "white", "width": 2.5},
-        }
-    )
-
-# Invisible scatter for hover interactivity
 fig.add_trace(
     go.Scatter(
         x=x_pos,
         y=y_pos,
         mode="markers",
-        marker={"size": radii * 2, "color": "rgba(0,0,0,0)"},
-        hovertemplate=[f"<b>{lbl}</b><br>{fval}<extra></extra>" for lbl, fval in zip(labels, formatted, strict=True)],
+        marker={
+            "size": marker_diameters,
+            "sizemode": "diameter",
+            "color": values,
+            "colorscale": [
+                [0, "#C6DBEF"],
+                [0.2, "#9ECAE1"],
+                [0.4, "#6BAED6"],
+                [0.6, "#3182BD"],
+                [0.8, "#1565A0"],
+                [1, "#08306B"],
+            ],
+            "showscale": False,
+            "opacity": 0.9,
+            "line": {"color": "white", "width": 2.5},
+        },
+        text=labels,
+        customdata=np.column_stack([formatted, shares]),
+        hovertemplate="<b>%{text}</b><br>Budget: %{customdata[0]}<br>Share: %{customdata[1]}%<extra></extra>",
         showlegend=False,
     )
 )
 
-# Add text labels — only inside bubbles that are large enough
+# Text labels inside bubbles
 for i in range(n):
     font_size = max(12, min(20, int(radii[i] * 0.20)))
-    if radii[i] > 35:
-        text = f"<b>{labels[i]}</b><br>{formatted[i]}"
-    else:
-        text = f"<b>{labels[i]}</b>"
+    label_text = f"<b>{labels[i]}</b><br>{formatted[i]}" if radii[i] > 35 else f"<b>{labels[i]}</b>"
     fig.add_annotation(
         x=x_pos[i],
         y=y_pos[i],
-        text=text,
+        text=label_text,
         showarrow=False,
         font={"size": font_size, "color": text_colors[i], "family": "Arial"},
     )
 
-# Layout — symmetric ranges for balanced centering
-x_ext = max(abs((x_pos - radii).min()), abs((x_pos + radii).max())) + 30
-y_ext = max(abs((y_pos - radii).min()), abs((y_pos + radii).max())) + 30
+# Layout
 fig.update_layout(
     title={
         "text": "Department Budget Allocation · bubble-packed · plotly · pyplots.ai",
@@ -157,15 +142,14 @@ fig.update_layout(
         "scaleratio": 1,
         "range": [-y_ext, y_ext],
     },
-    shapes=shapes,
     template="plotly_white",
     showlegend=False,
-    margin={"l": 50, "r": 50, "t": 100, "b": 60},
+    margin={"l": m_l, "r": m_r, "t": m_t, "b": m_b},
     paper_bgcolor="white",
     plot_bgcolor="white",
 )
 
-# Add total budget annotation just below the cluster
+# Total budget annotation below the cluster
 fig.add_annotation(
     text=f"Total: {total}",
     x=0,
@@ -175,5 +159,5 @@ fig.add_annotation(
 )
 
 # Save
-fig.write_image("plot.png", width=1600, height=900, scale=3)
+fig.write_image("plot.png", width=fig_w, height=fig_h, scale=3)
 fig.write_html("plot.html", include_plotlyjs=True, full_html=True)
