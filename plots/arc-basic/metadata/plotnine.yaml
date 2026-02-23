@@ -1,7 +1,7 @@
 library: plotnine
 specification_id: arc-basic
 created: '2025-12-23T08:49:49Z'
-updated: '2026-02-23T21:34:36Z'
+updated: '2026-02-23T21:44:37Z'
 generated_by: claude-opus-4-6
 workflow_run: 20455963275
 issue: 0
@@ -10,10 +10,11 @@ library_version: 0.15.3
 preview_url: https://storage.googleapis.com/pyplots-images/plots/arc-basic/plotnine/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/arc-basic/plotnine/plot_thumb.png
 preview_html: null
-quality_score: 81
+quality_score: 87
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
   - layer-composition
   patterns:
   - data-generation
@@ -22,104 +23,106 @@ impl_tags:
   styling:
   - minimal-chrome
   - alpha-blending
+  - custom-colormap
 review:
   strengths:
-  - Perfect spec compliance with all required arc diagram features implemented correctly
-  - Clean minimal aesthetic with appropriately hidden axes and no visual clutter
-  - Realistic data context (character interactions) with good feature coverage showing
-    varied connection weights and distances
-  - Excellent code quality with clean KISS structure and vectorized arc construction
-  - Effective weight encoding through both arc thickness and transparency
+  - Excellent spec compliance — all required features implemented correctly
+  - Professional monochromatic navy blue palette with intentional color gradient for
+    weight encoding
+  - Clean refined canvas with all chart chrome removed — very polished appearance
+  - Strong code quality with clean linear structure and vectorized arc computation
+  - Effective data storytelling through arc thickness and color creating clear visual
+    hierarchy
   weaknesses:
-  - Node label font size at 12pt is below the recommended 16pt minimum for text elements
-    at this canvas size
-  - Design is functional but not visually exceptional — single color scheme lacks
-    differentiation for connection types
-  - No clear visual focal point or narrative emphasis — all connections appear equally
-    important beyond weight differences
-  - Library mastery is generic — does not leverage distinctive plotnine features beyond
-    basic grammar-of-graphics
-  image_description: 'The plot displays a basic arc diagram with 10 character names
+  - Weight-1 arcs are too faint — low alpha combined with thin stroke makes them barely
+    visible
+  - Annotation text at 12pt is slightly small relative to other text elements
+  - Some vertical canvas space is underutilized
+  - Library mastery limited — does not leverage deeply distinctive plotnine features
+  image_description: 'The plot displays a basic arc diagram with 10 character nodes
     (Alice, Bob, Carol, David, Eve, Frank, Grace, Henry, Iris, Jack) arranged along
-    a horizontal baseline at the bottom. Curved arcs in Python Blue (#306998) connect
-    character pairs above the baseline. Arc height is proportional to the distance
-    between connected nodes — the tallest arc spans Alice to Jack (the full width).
-    Arc thickness and opacity vary by connection weight: stronger connections (weight
-    3) appear as thicker, more opaque arcs, while weaker connections (weight 1) are
-    thinner and more transparent. Nodes are rendered as white circles with blue outlines.
-    The title "Character Interactions · arc-basic · plotnine · pyplots.ai" is displayed
-    at top center in bold 24pt text. The background is clean white with no grid, axes,
-    or ticks — appropriate for this diagram type.'
+    a horizontal baseline from left to right. Curved arcs connect pairs of nodes above
+    the baseline. Arc height is proportional to the distance between connected nodes
+    — the tallest arc spans from Alice to Jack across the entire diagram. Arc thickness
+    and color encode connection weight: stronger connections (weight 3) appear as
+    thick, dark navy blue arcs (e.g., Alice-Bob, Carol-David), while weaker connections
+    (weight 1) are thin and pale light blue. Nodes are rendered as white circles with
+    dark navy outlines. Bold dark navy labels sit below each node. The title reads
+    "Character Interactions · arc-basic · plotnine · pyplots.ai" in large bold text
+    at the top. A subtitle reads "Narrative connections in Chapter 1 — arc thickness
+    and color encode interaction strength." An italic gray annotation near the top
+    says "Stronger connections shown in darker blue." The background is clean white
+    with no grid, axes, or ticks.'
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Title explicitly set at 24pt bold. Node labels set at 12pt bold —
-          readable but below the 16pt minimum recommendation.
+        comment: Title 24pt bold, subtitle 14pt, node labels 16pt bold all explicitly
+          set. Annotation at 12pt is slightly small but readable.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlap. Arc overlaps are natural and expected for arc diagrams.
+        comment: No text overlaps. Node labels well-spaced. Semi-transparent arcs
+          remain distinguishable.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Arcs clearly visible with thickness/alpha variation. Lightest arcs
-          (weight=1) are somewhat faint.
+        comment: Strong arcs are prominent. Weight-1 arcs are quite faint due to low
+          alpha and thin stroke.
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Single blue color scheme with no colorblind issues. Weight encoded
-          via thickness and alpha.
+        comment: Monochromatic blue gradient is inherently colorblind-safe with good
+          contrast.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good horizontal span. Node baseline concentrated at bottom with some
-          wasted vertical space.
+        comment: Good horizontal span but some vertical space underutilized.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive title present. Axes correctly hidden for arc diagram.
+        comment: Axes appropriately hidden. Title is descriptive with correct format.
     design_excellence:
-      score: 11
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: Clean single-color scheme with Python Blue. White-filled nodes with
-          blue outline. Looks like a well-configured default.
+        passed: true
+        comment: Custom navy blue palette, polished typography with title/subtitle/annotation
+          hierarchy. Clearly above defaults.
       - id: DE-02
         name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: All chrome removed, clean white canvas, subtle italic annotation.
+          Near-perfect refinement.
+      - id: DE-03
+        name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Spines, grid, and ticks all removed. Clean white background with
-          good whitespace.
-      - id: DE-03
-        name: Data Storytelling
-        score: 3
-        max: 6
-        passed: false
-        comment: Weight encoding creates some visual hierarchy but no clear focal
-          point or narrative emphasis.
+        comment: Visual hierarchy through arc thickness and color. Strong connections
+          draw the eye. Could be stronger with more focal emphasis.
     spec_compliance:
       score: 15
       max: 15
@@ -129,29 +132,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct arc diagram with nodes along horizontal line and curved arcs
+        comment: Correct arc diagram with nodes on horizontal line and curved arcs
           above.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: arc height proportional to distance,
-          semi-transparent arcs, weight encoding, readable labels.'
+        comment: 'All spec features present: ordered nodes, weighted arcs, semi-transparency,
+          color coding.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X positions correctly mapped, arc heights proportional, weights mapped
-          to visual properties.
+        comment: Node positions and arc geometry computed correctly.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title contains all required elements with descriptive context. No
-          legend needed.
+        comment: Title follows format with descriptive prefix. Annotation explains
+          color encoding.
     data_quality:
       score: 14
       max: 15
@@ -161,22 +163,22 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: 10 nodes, 15 edges with weights 1-3. Good mix of short and long-range
-          connections.
+        comment: Short-range and long-range connections, three weight levels, varying
+          connectivity density.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
         comment: Character interactions in a story chapter — real, neutral, comprehensible
-          context.
+          scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 10 nodes appropriate for readability. Weights 1-3 create clear visual
-          differentiation.
+        comment: 10 nodes and 15 edges within recommended range. Weight values 1-3
+          are sensible.
     code_quality:
       score: 10
       max: 10
@@ -186,49 +188,48 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: Imports, Data, Arc construction, Plot, Save.
-          No functions/classes.'
+        comment: 'Clean linear flow: imports, data, arc generation, plot, save.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic with hardcoded nodes and edges.
+        comment: All data deterministic — hardcoded nodes, edges, and weights.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used.
+        comment: All imports used. numpy, pandas, plotnine components all utilized.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriate complexity. Vectorized numpy operations for arc
-          path construction.
+        comment: Clean arc generation with vectorized numpy. pd.concat for efficient
+          assembly.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png at 300 dpi using current plotnine API.
+        comment: Saves as plot.png with dpi=300. Current plotnine API.
     library_mastery:
-      score: 5
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
-        passed: false
-        comment: Correct grammar-of-graphics usage with layered geoms, aes mappings,
-          identity scales. Manual arc computation necessary.
+        passed: true
+        comment: 'Good grammar of graphics usage: layered geoms, aes mappings, scale_*_identity,
+          theme with element_blank, coord_cartesian.'
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Uses scale_*_identity() and layered composition but nothing uniquely
-          distinctive to plotnine.
+        comment: Uses scale_color_gradient and grammar layering but fundamental technique
+          could be replicated in matplotlib similarly.
   verdict: REJECTED
