@@ -1,48 +1,238 @@
 library: highcharts
 specification_id: candlestick-basic
 created: '2025-12-23T10:02:49Z'
-updated: '2025-12-23T10:05:12Z'
-generated_by: claude-opus-4-5-20251101
+updated: '2026-02-24T21:10:03Z'
+generated_by: claude-opus-4-6
 workflow_run: 20457533754
 issue: 0
-python_version: 3.13.11
-library_version: unknown
+python_version: 3.14.3
+library_version: 1.10.3
 preview_url: https://storage.googleapis.com/pyplots-images/plots/candlestick-basic/highcharts/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/candlestick-basic/highcharts/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/candlestick-basic/highcharts/plot.html
-quality_score: 92
+quality_score: 90
 impl_tags:
   dependencies:
   - selenium
   techniques:
+  - hover-tooltips
   - html-export
   patterns:
   - data-generation
-  dataprep: []
+  - iteration-over-groups
+  dataprep:
+  - rolling-window
+  - time-series
   styling:
   - grid-styling
 review:
   strengths:
-  - Excellent colorblind-safe palette using Python Blue (#306998) for bullish and
-    warm amber (#E67E22) for bearish candles
-  - Proper use of Highcharts Stock module which is designed for financial charts with
-    native candlestick support
-  - Realistic OHLC data generation with appropriate daily volatility and market behavior
-  - Clean layout with well-proportioned margins and properly scaled text sizes for
-    4800x2700
-  - Correctly skips weekends in date generation for realistic trading day simulation
-  - Subtle dashed grid lines that aid price level reading without being distracting
+  - Custom cohesive color palette (blue/orange/purple) that is colorblind-accessible
+    and visually harmonious
+  - SMA overlay and trough plotBand add analytical depth and storytelling beyond basic
+    candlestick display
+  - Excellent typography system with intentional weight/size hierarchy across title,
+    subtitle, axis labels, and ticks
+  - 'Clean visual refinement: dotted y-grid only, no spines, no tick marks, subtle
+    crosshair'
+  - Realistic stock data with both bullish and bearish candles, weekends skipped,
+    sensible price range
   weaknesses:
-  - Grid line alpha (0.15) could be slightly higher for better price level readability
-    at this resolution
-  image_description: The plot displays a candlestick chart titled "Stock Price Movement
-    · candlestick-basic · highcharts · pyplots.ai". The chart shows 30 trading days
-    of OHLC data from October 1 to November 9, 2024. Bullish candles (close > open)
-    are rendered in Python Blue (#306998), while bearish candles (close < open) are
-    rendered in warm amber/orange (#E67E22). The Y-axis shows "Price (USD)" ranging
-    from $140 to $151 with $1 intervals. The X-axis displays dates in "Mon DD" format.
-    Wicks are clearly visible with darker tones (dark blue for bullish, reddish-brown
-    for bearish). The chart shows an initial decline from ~$150 to ~$142-143, followed
-    by choppy trading and a slight recovery at the end. Grid lines are dashed and
-    subtle. The layout is clean with good proportions.
+  - Uses raw JSON configuration instead of the highcharts-core Python library API
+  - Minor wasted vertical space — bottom margin could be tighter
+  image_description: The chart displays a candlestick plot of 30 trading days (Oct
+    1 – Nov 9, 2024) on a light gray (#FAFBFC) background. Bullish candles are rendered
+    in a deep blue (#306998) and bearish candles in orange (#E67E22), with darker-toned
+    wicks. A purple dashed 5-day SMA line overlays the candlesticks, smoothly tracing
+    the downtrend from ~$150 to ~$142 and the subsequent recovery. A subtle peach
+    plotBand highlights the trough region around $142.17 with an italic label on the
+    right side. The y-axis shows "Price (USD)" with dollar-formatted tick labels ($140–$150,
+    interval of 2). The x-axis shows "Date" with labels formatted as "Oct DD" at every-other
+    date. A legend in the top-right identifies "OHLC" (orange square) and "5-day SMA"
+    (purple dashed). The title reads "Stock Price Movement · candlestick-basic · highcharts
+    · pyplots.ai" with a lighter subtitle below. Typography uses Segoe UI with varied
+    weights and sizes. Grid is dotted on y-axis only, with no axis lines or tick marks.
   verdict: APPROVED
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 64px, subtitle 38px, axis titles
+          44px, tick labels 34px, legend 30px. All text clearly readable.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text. X-axis labels spaced with step:2 to prevent
+          crowding.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Candlestick bodies have pointWidth:70, wicks at lineWidth:4. SMA
+          line at lineWidth:5. All elements clearly visible.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue/orange candlestick palette is colorblind-safe. Purple SMA is
+          distinct. Good contrast against light background.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Well-balanced layout with explicit margins. Minor wasted vertical
+          space at bottom. Chart fills ~60% of canvas.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Y-axis: Price (USD) with units. X-axis: Date is self-evident for
+          datetime.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom cohesive palette (blue/orange/purple), Segoe UI typography
+          with varied weights, intentional background color. Clearly above defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Dotted y-axis-only grid at low opacity, no axis lines or tick marks,
+          generous whitespace. Good refinement.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: SMA overlay provides trend context. Trough plotBand creates focal
+          point. Subtitle adds narrative framing.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct candlestick chart using Highstock native candlestick type.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: OHLC data, color-coded candles, visible
+          wicks, date formatting, subtle grid. Plus SMA overlay and trough highlight.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 'X-axis: datetime timestamps. Y-axis: price values. OHLC correctly
+          mapped.'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title includes required format with descriptive prefix. Legend labels
+          OHLC and 5-day SMA are clear and accurate.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Both bullish and bearish candles with varying sizes. Clear trend
+          (downtrend then recovery). Wicks of different lengths.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Realistic stock price data. 30 trading days with weekends skipped.
+          Neutral, comprehensible topic.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Prices in $140-$151 range are realistic. Daily changes of $1-3 are
+          plausible.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports, data generation, chart config, HTML rendering,
+          screenshot. No functions or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) ensures deterministic data.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports are used: json, tempfile, time, urllib.request, datetime,
+          pathlib, numpy, selenium.'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, straightforward code. No over-engineering or fake functionality.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png via Selenium screenshot. Uses current Highstock
+          API.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
+        max: 5
+        passed: false
+        comment: Builds raw JSON config instead of using highcharts-core Python library.
+          Functional but bypasses recommended API pattern.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses Highstock for native candlestick, plotBands for trough highlight,
+          crosshair with dash styling, candlestick-specific color properties.

@@ -1,7 +1,7 @@
 """ pyplots.ai
 candlestick-basic: Basic Candlestick Chart
-Library: altair 6.0.0 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-23
+Library: altair 6.0.0 | Python 3.14.3
+Quality: 93/100 | Updated: 2026-02-24
 """
 
 import altair as alt
@@ -12,8 +12,7 @@ import pandas as pd
 # Data - Simulated 30 days of stock price data
 np.random.seed(42)
 n_days = 30
-start_date = pd.Timestamp("2024-01-01")
-dates = pd.date_range(start=start_date, periods=n_days, freq="B")  # Business days
+dates = pd.date_range(start="2024-01-01", periods=n_days, freq="B")
 
 # Generate realistic OHLC data with random walk
 prices = [100.0]
@@ -42,22 +41,19 @@ for i, date in enumerate(dates):
     )
 
 df = pd.DataFrame(data)
+df["direction"] = np.where(df["close"] >= df["open"], "Bullish", "Bearish")
+df["sma5"] = df["close"].rolling(window=5).mean()
 
-# Add direction column for color encoding
-df["direction"] = df.apply(lambda row: "Bullish" if row["close"] >= row["open"] else "Bearish", axis=1)
-
-# Color scale: green for bullish, red for bearish (most common convention)
-color_scale = alt.Scale(domain=["Bullish", "Bearish"], range=["#26A69A", "#EF5350"])
+# Colors - colorblind-safe: teal for bullish, warm orange for bearish
+color_scale = alt.Scale(domain=["Bullish", "Bearish"], range=["#26A69A", "#FF8F00"])
 
 # Candlestick wicks (high-low lines)
 wicks = (
     alt.Chart(df)
-    .mark_rule(strokeWidth=3)
+    .mark_rule(strokeWidth=1.5)
     .encode(
-        x=alt.X("date:T", title="Date", axis=alt.Axis(labelFontSize=18, titleFontSize=22, format="%b %d")),
-        y=alt.Y(
-            "low:Q", title="Price ($)", scale=alt.Scale(zero=False), axis=alt.Axis(labelFontSize=18, titleFontSize=22)
-        ),
+        x=alt.X("date:T", title="Date", axis=alt.Axis(format="%b %d")),
+        y=alt.Y("low:Q", title="Price ($)", scale=alt.Scale(zero=False)),
         y2="high:Q",
         color=alt.Color("direction:N", scale=color_scale, legend=None),
     )
@@ -66,7 +62,7 @@ wicks = (
 # Candlestick bodies (open-close bars)
 bodies = (
     alt.Chart(df)
-    .mark_bar(size=24)
+    .mark_bar(size=20)
     .encode(
         x="date:T",
         y="open:Q",
@@ -84,16 +80,44 @@ bodies = (
     )
 )
 
-# Layer wicks and bodies
-chart = (
-    alt.layer(wicks, bodies)
-    .properties(
-        width=1600, height=900, title=alt.Title("candlestick-basic · altair · pyplots.ai", fontSize=28, anchor="middle")
-    )
-    .configure_axis(labelFontSize=18, titleFontSize=22, gridOpacity=0.3)
-    .configure_view(strokeWidth=0)
+# 5-day moving average trend line — guides the eye along the price trend
+sma_df = df.dropna(subset=["sma5"])
+sma_line = (
+    alt.Chart(sma_df)
+    .mark_line(strokeWidth=2.5, strokeDash=[6, 3], opacity=0.75)
+    .encode(x="date:T", y="sma5:Q", color=alt.value("#5C6BC0"))
 )
 
-# Save as PNG and HTML
+# SMA label positioned at mid-chart for clear visibility
+sma_mid = sma_df.iloc[[len(sma_df) // 3]]
+sma_label = (
+    alt.Chart(sma_mid)
+    .mark_text(align="left", dy=-12, fontSize=15, fontWeight="bold", fontStyle="italic")
+    .encode(x="date:T", y="sma5:Q", text=alt.value("5-day MA"), color=alt.value("#5C6BC0"))
+)
+
+# Layer wicks, bodies, and trend line with interactive zoom/pan
+chart = (
+    alt.layer(wicks, bodies, sma_line, sma_label)
+    .resolve_scale(color="independent")
+    .properties(
+        width=1600,
+        height=900,
+        title=alt.Title(
+            "candlestick-basic \u00b7 altair \u00b7 pyplots.ai",
+            fontSize=28,
+            anchor="middle",
+            subtitle="30-day price action with 5-day moving average",
+            subtitleFontSize=16,
+            subtitleColor="#78909C",
+        ),
+    )
+    .configure_axis(labelFontSize=18, titleFontSize=22, gridOpacity=0.15)
+    .configure_legend(labelFontSize=16, titleFontSize=18)
+    .configure_view(strokeWidth=0)
+    .interactive()
+)
+
+# Save
 chart.save("plot.png", scale_factor=3.0)
 chart.save("plot.html")
