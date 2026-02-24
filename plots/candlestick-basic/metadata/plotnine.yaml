@@ -1,161 +1,181 @@
 library: plotnine
 specification_id: candlestick-basic
 created: '2025-12-23T10:01:36Z'
-updated: '2026-02-24T20:50:21+00:00'
+updated: '2026-02-24T20:57:45Z'
 generated_by: claude-opus-4-6
 workflow_run: 20457533627
 issue: 0
-python_version: "3.14.3"
-library_version: "0.15.3"
+python_version: 3.14.3
+library_version: 0.15.3
 preview_url: https://storage.googleapis.com/pyplots-images/plots/candlestick-basic/plotnine/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/candlestick-basic/plotnine/plot_thumb.png
 preview_html: null
-quality_score: null
+quality_score: 86
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
+  - manual-ticks
   patterns:
   - data-generation
-  dataprep: []
+  - iteration-over-groups
+  dataprep:
+  - time-series
   styling:
   - grid-styling
+  - edge-highlighting
 review:
   strengths:
-  - Excellent implementation using geom_segment for wicks and geom_rect for bodies
-    - creative use of plotnine grammar
-  - Clean readable code with proper KISS structure
-  - Realistic stock price simulation with random walk model
-  - Good visual styling with appropriate font sizes and subtle grid
-  - Proper title format and axis labels with units
+  - Excellent data quality with realistic stock prices showing both bullish and bearish
+    candles, clear trend, and appropriate scale
+  - Clean code structure with proper seed, all imports used, and elegant plotnine
+    grammar of graphics chain
+  - Colorblind-safe blue/amber palette with darker edge colors for candle body definition
+  - Good text legibility with all font sizes explicitly set to appropriate values
+  - Subtle horizontal grid with alpha=0.4 and no vertical grid is a good design choice
+    for price reading
   weaknesses:
-  - Green/red color scheme is standard for finance but not colorblind-accessible;
-    consider using blue/orange or shapes
-  - X-axis shows numeric Trading Day instead of actual dates which would be more informative
-  image_description: 'The plot displays a candlestick chart with 30 trading days of
-    simulated stock data. Green (teal, #22ab94) candles represent bullish days (close
-    >= open) and red (#f23645) candles represent bearish days (close < open). Each
-    candlestick has a rectangular body showing the open-close range and thin black
-    wicks showing the high-low range. The x-axis shows "Trading Day" (0-30), the y-axis
-    shows "Price ($)" ranging approximately from 132 to 155. The title "candlestick-basic
-    · plotnine · pyplots.ai" is displayed at the top. The background is minimal with
-    subtle gray gridlines. The overall trend shows a price decline from ~150 to ~135
-    over the 30-day period.'
+  - No legend explaining that blue=bullish and amber=bearish color coding
+  - Wick color is uniform grey rather than matching candle direction colors, reducing
+    visual coherence
+  - Design could be elevated with stronger typographic hierarchy (bold title, weight
+    variation)
+  - Library mastery could be improved by leveraging more plotnine-distinctive features
+    like annotate()
+  image_description: The plot displays a candlestick chart titled "candlestick-basic
+    · plotnine · pyplots.ai" showing 30 trading days of simulated stock price data
+    from Jan 02 to Feb 10, 2024. Bullish (up) candles are rendered in blue (#2196F3)
+    and bearish (down) candles in amber/orange (#FF6F00), each with darker edge colors
+    for definition. Thin grey wicks extend vertically from each candle body showing
+    the high-low range. The y-axis is labeled "Price ($)" with dollar-formatted values
+    ranging from $130 to $155. The x-axis shows date labels every 5 trading days (Jan
+    02, Jan 09, Jan 16, Jan 23, Jan 30, Feb 06). The overall trend is downward from
+    ~$150 to ~$135. The background is clean white with subtle horizontal grid lines
+    and no vertical grid lines. The layout uses a 16:9 aspect ratio with balanced
+    margins.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title, axis labels, and tick marks are all clearly readable at appropriate
-          sizes
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements
+        comment: 'All font sizes explicitly set: title=24pt, axis_title=20pt, axis_text=16pt,
+          base=14pt'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text; date labels spaced every 5 trading days
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Candlesticks are well-sized and clearly visible; some very small
-          body candles (doji-like) are a bit hard to see but this is realistic
+        comment: Bodies clearly visible; wicks are thin grey lines that could be slightly
+          more prominent for small-body candles
       - id: VQ-04
         name: Color Accessibility
-        score: 3
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Uses green/red which is common for finance but not ideal for colorblind
-          users
+        comment: Blue/amber colorblind-safe palette with good contrast
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Good proportions, no cut-off content
+        comment: Good 16:9 proportions, balanced margins, nothing cut off
       - id: VQ-06
-        name: Axis Labels
+        name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '"Price ($)" includes units, "Trading Day" is descriptive'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
-        max: 2
+        comment: Y-axis Price ($) with units; dates on x-axis are self-explanatory
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
         passed: true
-        comment: Grid is subtle and helpful; no legend shown but guide=None is intentional
-          since colors are self-explanatory for candlesticks
+        comment: Custom blue/amber palette with darker edge variants; clean minimal
+          theme above defaults but not publication-ready
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: theme_minimal removes spines; vertical grid removed; horizontal grid
+          subtle with alpha=0.4
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Data shows clear downward trend; blue/amber contrast distinguishes
+          direction; no special emphasis or focal point
     spec_compliance:
-      score: 25
-      max: 25
+      score: 14
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct candlestick chart with OHLC data
+        comment: Correct candlestick chart with bodies (geom_rect) and wicks (geom_segment)
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Date on X, price on Y, OHLC correctly mapped to candle components
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Shows body (open-close), wicks (high-low), color coding for direction
-      - id: SC-04
-        name: Data Range
+        comment: 'All spec features present: OHLC display, color coding, thinner wicks,
+          date formatting, subtle grid'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within axes
-      - id: SC-05
-        name: Legend Accuracy
+        comment: X=date, Y=price; bodies show open-close range; wicks show high-low
+          range
+      - id: SC-04
+        name: Title & Legend
         score: 2
-        max: 2
+        max: 3
         passed: true
-        comment: Legend hidden as colors are standard financial convention
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses correct format "candlestick-basic · plotnine · pyplots.ai"
+        comment: Title format correct; no legend explaining blue=bullish/amber=bearish
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows both bullish and bearish candles, varying body sizes, clear
-          wicks; good mix but could have more dramatic movements
+        comment: Both bullish and bearish candles; varying body sizes and wick lengths;
+          clear overall trend
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Stock price simulation is a realistic, comprehensible scenario
+        comment: Realistic stock price scenario starting at $150; neutral financial
+          context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Price around $135-155 is realistic for stocks; the downward trend
-          is perhaps slightly monotonic
+        comment: Stock at ~$150 with ~$3 daily volatility; realistic 30-day trading
+          range
     code_quality:
       score: 10
       max: 10
@@ -165,41 +185,48 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear structure: imports → data → plot → save'
+        comment: 'Clean linear flow: imports, data generation, derived columns, plot,
+          save'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All 15 plotnine imports are used; numpy and pandas used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current plotnine API
+        comment: Clean, Pythonic; appropriate complexity for the visualization
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 2
-      max: 5
+        comment: Saves as plot.png with dpi=300; current plotnine API
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Good grammar of graphics usage: layer composition, aes mapping,
+          scale_*_manual, theme system'
+      - id: LM-02
+        name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Uses plotnine's grammar of graphics (ggplot + geom_segment + geom_rect)
-          but this is a workaround approach rather than leveraging plotnine's statistical
-          transformations or faceting capabilities
-  verdict: APPROVED
+        comment: Uses grammar of graphics layering and theme element system but approach
+          could be replicated in matplotlib
+  verdict: REJECTED
