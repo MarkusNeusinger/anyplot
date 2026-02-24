@@ -1,7 +1,7 @@
 """ pyplots.ai
 candlestick-basic: Basic Candlestick Chart
 Library: altair 6.0.0 | Python 3.14.3
-Quality: /100 | Updated: 2026-02-24
+Quality: 89/100 | Updated: 2026-02-24
 """
 
 import altair as alt
