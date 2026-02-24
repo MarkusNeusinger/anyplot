@@ -1,187 +1,239 @@
 library: pygal
 specification_id: candlestick-basic
 created: '2025-12-23T10:04:16Z'
-updated: '2025-12-23T10:21:13Z'
-generated_by: claude-opus-4-5-20251101
+updated: '2026-02-24T21:45:01Z'
+generated_by: claude-opus-4-6
 workflow_run: 20457533941
 issue: 0
-python_version: 3.13.11
+python_version: 3.14.3
 library_version: 3.1.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/candlestick-basic/pygal/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/candlestick-basic/pygal/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/candlestick-basic/pygal/plot.html
-quality_score: 91
+quality_score: 87
 impl_tags:
-  dependencies: []
+  dependencies:
+  - cairosvg
   techniques:
+  - manual-ticks
+  - layer-composition
   - html-export
-  - custom-legend
   patterns:
   - data-generation
   - iteration-over-groups
-  dataprep: []
-  styling: []
+  dataprep:
+  - rolling-window
+  styling:
+  - grid-styling
 review:
   strengths:
-  - Clean implementation of candlesticks using XY chart with varying stroke widths
-    for bodies vs wicks
-  - Proper color coding with appropriate green/red palette for bullish/bearish candles
-  - Well-sized fonts and elements for the 4800x2700 canvas
-  - Good use of pygal Style class for consistent theming
-  - Realistic OHLC data generation with proper price continuity
-  - Legend correctly identifies only one entry per category
+  - Creative candlestick implementation using pygal XY chart with stroke width differentiation
+    for wick vs body
+  - Excellent colorblind-safe blue/orange palette instead of red/green
+  - Strong data storytelling with peak/trough markers and 5-Day MA trend line
+  - Warm cream plot background and subtle Y-only grid show design refinement
+  - Dual output (PNG + HTML interactive) leverages pygal SVG nature
+  - Well-documented code with clear section comments explaining workarounds
   weaknesses:
-  - Wicks could be slightly thicker for better visibility at smaller display sizes
-  - Bottom legend creates extra whitespace below the chart
-  image_description: The plot displays a candlestick chart showing 30 trading days
-    of stock price data. Green candlesticks indicate bullish (up) days where close
-    > open, while red/coral candlesticks indicate bearish (down) days. Each candlestick
-    has a body showing the open-close range and wicks (thin lines) extending to show
-    the high-low range. The price axis ranges from approximately 128 to 172 dollars,
-    showing a general downward trend over the period. The title "candlestick-basic
-    · pygal · pyplots.ai" appears at the top, with "Trading Day" on the x-axis and
-    "Price ($)" on the y-axis. A legend at the bottom identifies "Bullish (Up)" in
-    green and "Bearish (Down)" in red.
+  - SVG regex post-processing adds complexity (necessary but impacts code simplicity)
+  - Legend positioned in far upper-left corner, slightly disconnected from data
+  - Some very small candlesticks near end of series when open and close prices are
+    close
+  image_description: 'The plot displays a candlestick chart titled "candlestick-basic
+    · pygal · pyplots.ai" rendered at 4800x2700 px. Blue candlesticks represent bullish
+    (up) days and orange candlesticks represent bearish (down) days across 30 trading
+    days from Jan 02 to Feb 12. Each candlestick has clearly visible thin wicks (high-low
+    range) and thicker bodies (open-close range). A gray 5-Day Moving Average line
+    weaves through the candlesticks providing trend context. A purple dot marks the
+    peak at $170.71 around Jan 15, and a teal dot marks the low at $127.61 near Feb
+    12. The Y-axis shows "Price ($)" ranging from ~$127 to ~$170 with horizontal grid
+    lines. The X-axis shows "Date" with formatted date labels. The plot background
+    is a warm cream (#f4f4f0) against a white outer background. A legend in the upper-left
+    lists: 5-Day MA, Bullish (Up), Bearish (Down), Peak $170.71, Low $127.61. The
+    data tells a clear story of price appreciation peaking mid-January followed by
+    a sustained decline.'
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 27
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title, axis labels, and tick marks are all clearly readable at the
-          large canvas size
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text elements; all labels are well-spaced
-      - id: VQ-03
-        name: Element Visibility
         score: 7
         max: 8
         passed: true
-        comment: Candlesticks are well-sized with clearly visible bodies and wicks;
-          wicks could be slightly more prominent
+        comment: 'All font sizes explicitly set (title=72, labels=44, major_labels=40,
+          legend=44, values=34). All text readable. Minor: legend text slightly small
+          relative to chart area.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlap. Date labels well-spaced. Price labels clear. Legend
+          does not collide with data.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Candlestick bodies and wicks clearly distinguishable with width differentiation
+          (wick=20, body=76). Some small candles near end when open≈close.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Green (#22A06B) and red (#EF4444) have good contrast and are distinguishable
+        comment: 'Excellent colorblind-safe palette: blue (#2271B3) bullish, orange
+          (#D66B27) bearish, purple peak, teal low.'
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 3
+        max: 4
         passed: true
-        comment: Good proportions with appropriate margins and spacing
+        comment: 'Good canvas utilization. Minor: legend in far upper-left slightly
+          disconnected from main data area.'
       - id: VQ-06
-        name: Axis Labels
+        name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '"Price ($)" includes units; "Trading Day" is descriptive'
+        comment: Y-axis 'Price ($)' has units. X-axis 'Date' appropriate. Title follows
+          required format.
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom blue/orange palette, warm cream background, well-chosen marker
+          colors. Professional appearance above defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Y-axis grid only, subtle grid with foreground_subtle=#dedede, custom
+          background, configured margins/spacing.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Peak/trough markers create focal points, 5-Day MA provides trend
+          context, clear rise-then-fall narrative.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct candlestick chart implementation using XY lines for bodies
-          and wicks
+        comment: Correct candlestick chart with OHLC data, creatively implemented
+          using XY chart with stroke widths.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: OHLC data correctly mapped to candlestick elements
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: OHLC display, color coding for up/down,
-          visible wicks'
-      - id: SC-04
-        name: Data Range
+        comment: 'All spec features present: OHLC, colorblind colors, wicks thinner
+          than bodies, date axis, grid. Plus MA and markers.'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis shows full price range with appropriate padding
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X-axis dates, Y-axis price. All 30 trading days visible with weekends
+          skipped.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly labels "Bullish (Up)" and "Bearish (Down)"
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "candlestick-basic · pygal · pyplots.ai"'
+        comment: Title matches required format. Legend labels descriptive and accurate.
     data_quality:
-      score: 18
-      max: 20
+      score: 14
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows both bullish and bearish candles with varying sizes; good mix
-          of trend patterns
+        comment: Both bullish and bearish candles, varying body sizes, wicks of varying
+          lengths, uptrend then downtrend.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Realistic stock price scenario with plausible volatility and price
-          movements
-      - id: DQ-03
-        name: Appropriate Scale
         score: 4
         max: 5
         passed: true
-        comment: Price range ~$130-170 is realistic; could have a cleaner starting
-          price
+        comment: Plausible stock price data starting at $150 with realistic daily
+          movements. Neutral financial context.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Price range $127-$171 realistic for a stock. Sensible daily returns
+          and volatility.
     code_quality:
       score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → chart config → render'
+        comment: Linear flow without functions/classes. SVG regex post-processing
+          adds necessary but noticeable complexity.
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) set for deterministic data generation.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy, pygal, and Style are imported and used
+        comment: 'All imports used: re, datetime, cairosvg, numpy, pygal, Style.'
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-organized with clear comments. Regex workaround documented with
+          justification. No fake UI.
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current pygal API
-    library_features:
-      score: 3
-      max: 5
-      items: []
-  verdict: APPROVED
+        comment: Saves as plot.png via cairosvg. Also outputs plot.html. Current pygal
+          API.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Strong pygal API usage: allow_interruptions, stroke_style, value_formatter,
+          x_value_formatter, truncate_legend.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses allow_interruptions (pygal-specific), stroke_style with linecap,
+          dual HTML+PNG output, tooltip_border_radius.
+  verdict: REJECTED

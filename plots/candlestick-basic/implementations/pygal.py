@@ -1,136 +1,151 @@
 """ pyplots.ai
 candlestick-basic: Basic Candlestick Chart
-Library: pygal 3.1.0 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-23
+Library: pygal 3.1.0 | Python 3.14.3
+Quality: 87/100 | Updated: 2026-02-24
 """
 
+import re
+from datetime import datetime, timedelta
+
+import cairosvg
 import numpy as np
 import pygal
 from pygal.style import Style
 
 
-# Data - Stock OHLC data for 30 trading days
+# --- Data: 30 trading days of OHLC stock prices ---
 np.random.seed(42)
 n_days = 30
 
-# Generate realistic OHLC data with trend and volatility
+start_date = datetime(2024, 1, 2)
+dates = []
+cur = start_date
+for _ in range(n_days):
+    while cur.weekday() >= 5:
+        cur += timedelta(days=1)
+    dates.append(cur)
+    cur += timedelta(days=1)
+
 base_price = 150.0
-returns = np.random.randn(n_days) * 2.5  # Daily returns in %
+returns = np.random.randn(n_days) * 2.5
 price_series = base_price * np.cumprod(1 + returns / 100)
 
 ohlc_data = []
 for i, close in enumerate(price_series):
-    # Generate realistic intraday range
     volatility = np.abs(np.random.randn()) * 2 + 0.5
     intraday_range = close * volatility / 100
-
-    if i == 0:
-        open_price = base_price
-    else:
-        open_price = ohlc_data[-1]["close"]
-
+    open_price = base_price if i == 0 else ohlc_data[-1]["close"]
     high = max(open_price, close) + np.random.rand() * intraday_range
     low = min(open_price, close) - np.random.rand() * intraday_range
-
     ohlc_data.append({"day": i + 1, "open": open_price, "high": high, "low": low, "close": close})
 
-# Calculate data range for chart
-all_highs = [d["high"] for d in ohlc_data]
-all_lows = [d["low"] for d in ohlc_data]
-y_min = min(all_lows) - 2
-y_max = max(all_highs) + 2
+# 5-day moving average for trend context
+closes = [d["close"] for d in ohlc_data]
+ma_points = [(i + 1, float(np.mean(closes[i - 4 : i + 1]))) for i in range(4, n_days)]
 
-# Colors
-bullish_color = "#22A06B"
-bearish_color = "#EF4444"
+# Price extremes for storytelling markers
+peak = max(ohlc_data, key=lambda d: d["high"])
+trough = min(ohlc_data, key=lambda d: d["low"])
 
-# Build color list - bodies first, then wicks (same order as series)
-colors_list = []
+# --- Group candlestick segments by direction (None = line break) ---
+bull_wicks, bear_wicks = [], []
+bull_bodies, bear_bodies = [], []
+
 for candle in ohlc_data:
-    is_bullish = candle["close"] >= candle["open"]
-    colors_list.append(bullish_color if is_bullish else bearish_color)
-for candle in ohlc_data:
-    is_bullish = candle["close"] >= candle["open"]
-    colors_list.append(bullish_color if is_bullish else bearish_color)
+    x = candle["day"]
+    wick = [(x, candle["low"]), (x, candle["high"]), None]
+    body = [(x, candle["open"]), (x, candle["close"]), None]
+    if candle["close"] >= candle["open"]:
+        bull_wicks.extend(wick)
+        bull_bodies.extend(body)
+    else:
+        bear_wicks.extend(wick)
+        bear_bodies.extend(body)
 
-# Custom style for 4800x2700 output with larger fonts
+# --- Style: fully colorblind-safe palette ---
+BULL, BEAR = "#2271B3", "#D66B27"
+PEAK_CLR, LOW_CLR = "#7B4FA0", "#2A7B7B"  # Purple & teal (colorblind-safe)
+MA_CLR = "#555555"
+date_map = {i + 1: dates[i] for i in range(n_days)}
+
 custom_style = Style(
     background="white",
-    plot_background="white",
-    foreground="#333333",
-    foreground_strong="#333333",
-    foreground_subtle="#666666",
-    colors=tuple(colors_list),
+    plot_background="#f4f4f0",
+    foreground="#2a2a2a",
+    foreground_strong="#1a1a1a",
+    foreground_subtle="#dedede",
+    colors=(BULL, BEAR, MA_CLR, BULL, BEAR, PEAK_CLR, LOW_CLR),
     title_font_size=72,
-    label_font_size=48,
-    major_label_font_size=44,
+    label_font_size=44,
+    major_label_font_size=40,
     legend_font_size=44,
-    value_font_size=36,
+    value_font_size=34,
 )
 
-# Create XY chart for candlesticks
+# --- Chart configuration ---
+WICK_W, BODY_W, MA_W = 20, 76, 6
+
 chart = pygal.XY(
     style=custom_style,
     width=4800,
     height=2700,
-    title="candlestick-basic · pygal · pyplots.ai",
-    x_title="Trading Day",
+    title="candlestick-basic \u00b7 pygal \u00b7 pyplots.ai",
+    x_title="Date",
     y_title="Price ($)",
     show_dots=False,
     show_x_guides=False,
     show_y_guides=True,
-    range=(y_min, y_max),
+    allow_interruptions=True,
+    range=(min(d["low"] for d in ohlc_data) - 2, max(d["high"] for d in ohlc_data) + 3),
     xrange=(0, n_days + 1),
-    show_legend=True,
-    legend_at_bottom=True,
-    legend_box_size=32,
-    margin=60,
-    spacing=40,
+    legend_box_size=30,
+    margin=40,
+    spacing=25,
+    tooltip_border_radius=8,
+    truncate_legend=-1,
+    value_formatter=lambda x: f"${x:.2f}",
 )
 
-# Stroke widths - increased for better visibility on large canvas
-wick_width = 16
-body_width = 70
+chart.x_labels = [1, 5, 10, 15, 20, 25, 30]
+chart.x_value_formatter = lambda x: date_map[int(round(x))].strftime("%b %d") if int(round(x)) in date_map else ""
 
-# Track legend state
-bullish_legend_done = False
-bearish_legend_done = False
+# Series 0-1: Wicks (background, hidden from legend)
+chart.add(None, bull_wicks, stroke=True, show_dots=False, stroke_style={"width": WICK_W, "linecap": "butt"})
+chart.add(None, bear_wicks, stroke=True, show_dots=False, stroke_style={"width": WICK_W, "linecap": "butt"})
 
-# Add each candlestick body as a separate series
-for candle in ohlc_data:
-    day = candle["day"]
-    is_bullish = candle["close"] >= candle["open"]
+# Series 2: Moving average trend line
+chart.add("5-Day MA", ma_points, stroke=True, show_dots=False, stroke_style={"width": MA_W, "linecap": "round"})
 
-    # Determine legend label
-    if is_bullish and not bullish_legend_done:
-        label = "Bullish (Up)"
-        bullish_legend_done = True
-    elif not is_bullish and not bearish_legend_done:
-        label = "Bearish (Down)"
-        bearish_legend_done = True
-    else:
-        label = None
+# Series 3-4: Candlestick bodies (foreground)
+chart.add("Bullish (Up)", bull_bodies, stroke=True, show_dots=False, stroke_style={"width": BODY_W, "linecap": "butt"})
+chart.add(
+    "Bearish (Down)", bear_bodies, stroke=True, show_dots=False, stroke_style={"width": BODY_W, "linecap": "butt"}
+)
 
-    # Body (open to close)
-    chart.add(
-        label,
-        [(day, candle["open"]), (day, candle["close"])],
-        stroke=True,
-        show_dots=False,
-        stroke_style={"width": body_width, "linecap": "butt"},
+# Series 5-6: Price extreme markers (colorblind-safe purple & teal)
+chart.add(f"Peak ${peak['high']:.2f}", [(peak["day"], peak["high"])], stroke=False, show_dots=True, dots_size=16)
+chart.add(f"Low ${trough['low']:.2f}", [(trough["day"], trough["low"])], stroke=False, show_dots=True, dots_size=16)
+
+# --- Render: inline stroke styles for cairosvg compatibility ---
+# cairosvg ignores CSS class-based stroke properties; inline them on every path per series
+svg = chart.render(is_unicode=True)
+series_strokes = {
+    0: (WICK_W, "butt"),
+    1: (WICK_W, "butt"),
+    2: (MA_W, "round"),
+    3: (BODY_W, "butt"),
+    4: (BODY_W, "butt"),
+}
+for sid, (width, cap) in series_strokes.items():
+    style_attr = f' style="stroke-width:{width};stroke-linecap:{cap}"'
+    svg = re.sub(
+        rf'(class="series serie-{sid} color-{sid}"[^>]*>.*?</g>)',
+        lambda m, s=style_attr: m.group(0).replace('class="line reactive nofill"', 'class="line reactive nofill"' + s),
+        svg,
+        count=1,
+        flags=re.DOTALL,
     )
 
-# Add each wick as a separate series (no legends)
-for candle in ohlc_data:
-    day = candle["day"]
-    chart.add(
-        None,
-        [(day, candle["low"]), (day, candle["high"])],
-        stroke=True,
-        show_dots=False,
-        stroke_style={"width": wick_width, "linecap": "butt"},
-    )
-
-# Save outputs
-chart.render_to_png("plot.png")
-chart.render_to_file("plot.html")
+cairosvg.svg2png(bytestring=svg.encode("utf-8"), write_to="plot.png")
+with open("plot.html", "w") as f:
+    f.write(chart.render(is_unicode=True))
