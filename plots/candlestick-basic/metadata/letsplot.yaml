@@ -1,7 +1,7 @@
 library: letsplot
 specification_id: candlestick-basic
 created: '2025-12-23T10:01:30Z'
-updated: '2026-02-24T20:58:46Z'
+updated: '2026-02-24T21:11:55Z'
 generated_by: claude-opus-4-6
 workflow_run: 20457535627
 issue: 0
@@ -10,11 +10,12 @@ library_version: 4.8.2
 preview_url: https://storage.googleapis.com/pyplots-images/plots/candlestick-basic/letsplot/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/candlestick-basic/letsplot/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/candlestick-basic/letsplot/plot.html
-quality_score: 88
+quality_score: 91
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
+  - annotations
   - hover-tooltips
   - html-export
   - manual-ticks
@@ -23,34 +24,40 @@ impl_tags:
   - iteration-over-groups
   dataprep:
   - time-series
+  - rolling-window
   styling:
   - grid-styling
+  - alpha-blending
 review:
   strengths:
-  - Perfect visual quality with explicit font sizes, colorblind-safe palette, no overlap,
-    and good canvas utilization
-  - Excellent data generation with realistic stock price movement showing both bullish
-    and bearish patterns
-  - Good use of letsplot-specific features (layer_tooltips, HTML export)
-  - Clean well-structured code following KISS principles with proper reproducibility
+  - Colorblind-safe blue/orange palette from the Okabe-Ito family — strong accessibility
+    choice
+  - Peak annotation with diamond marker and bold label creates effective storytelling
+    focal point
+  - 5-day SMA trend line guides the viewer through the price narrative
+  - Refined typography hierarchy with 4 distinct color levels for visual depth
+  - Dual PNG/HTML export leveraging lets-plot interactive capability
+  - Subtle differentiated grid styling (x vs y grid weights)
+  - Clean KISS code structure with excellent reproducibility
   weaknesses:
-  - Design excellence needs improvement — above defaults but not publication-ready
-    aesthetic sophistication
-  - No data storytelling or visual hierarchy to guide the viewer eye through the price
-    trend
-  - Bull/bear geoms duplicated rather than consolidated via color aesthetic mapping
-  image_description: The plot displays a candlestick chart with 30 trading days of
-    simulated stock price data spanning Jan 02 to Feb 06, 2024. Blue rectangles represent
-    bullish (up) candles and orange rectangles represent bearish (down) candles. Thin
-    vertical lines (wicks) extend above and below each candle body showing the high-low
-    range. The price starts around $100, rises to approximately $108-109 in the first
-    trading week, then gradually trends downward to around $99 by early February.
-    The y-axis is labeled "Price ($)" ranging from approximately $93 to $112, and
-    the x-axis is labeled "Trading Day (Jan–Feb 2024)" with date labels every 5 trading
-    days (Jan 02, Jan 09, Jan 16, Jan 23, Jan 30, Feb 06). The background is white
-    with subtle horizontal grid lines and very faint vertical grid lines at tick positions.
-    The title "candlestick-basic · letsplot · pyplots.ai" appears at the top left
-    in dark text.
+  - Legend hidden without any color key — viewers unfamiliar with the blue/orange
+    convention may be momentarily confused
+  - Grid could be further refined (y-axis-only grid would be cleaner for financial
+    charts)
+  - Data is generic simulated stock without specific real-world context
+  image_description: The plot displays a candlestick chart of 30 simulated trading
+    days spanning January 2 to approximately February 8, 2024. Blue rectangles represent
+    bullish (up) days and orange rectangles represent bearish (down) days — a colorblind-safe
+    palette. Each candlestick has a clearly visible body (open-close range) with thinner
+    wicks extending to the high and low prices. A dashed gray 5-day simple moving
+    average line threads through the candles showing a general downtrend from ~$107
+    to ~$98. At the top-left area, a bold "Peak $112" annotation with a diamond marker
+    highlights the highest price point around January 6-7. The title reads "candlestick-basic
+    · letsplot · pyplots.ai" in bold, with a subtitle "Simulated 30-day equity prices
+    — 5-day moving average (dashed)". The X-axis is labeled "Trading Day (Jan–Feb
+    2024)" with date ticks every 5 trading days; the Y-axis is labeled "Price ($)"
+    ranging from ~$92 to ~$113. The background is white with very subtle gray gridlines,
+    no spines, and no axis ticks — clean minimal appearance. No legend is shown.
   criteria_checklist:
     visual_quality:
       score: 30
@@ -61,62 +68,71 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'Font sizes explicitly set: title=24, axis_title=20, axis_text=16.
-          All clearly readable.'
+        comment: 'All font sizes explicitly set: title 24pt bold, subtitle 17pt, axis
+          titles 20pt, axis text 16pt. All text clearly readable.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements. X-axis labels spaced every 5 days.
+        comment: X-axis labels spaced every 5 trading days with no overlap. All text
+          elements fully readable without collision.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Candle bodies and wicks well-proportioned for 30 data points.
+        comment: Candlestick bodies well-sized, wicks thinner than bodies. SMA line
+          visible at alpha=0.55. Peak diamond marker clear.
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Blue/orange Okabe-Ito colorblind-safe palette.
+        comment: Blue (#2271B5) and orange (#D55E00) from Okabe-Ito colorblind-safe
+          palette. Strong contrast against white background.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills canvas well with balanced margins.
+        comment: Plot fills good proportion of 1600x900 canvas (scaled 3x). Margins
+          balanced. Y-axis expand accommodates peak annotation.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Price ($) with units, Trading Day with date range context.
+        comment: 'X-axis: Trading Day (Jan-Feb 2024) with date context. Y-axis: Price
+          ($) with units.'
     design_excellence:
-      score: 11
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Custom colorblind-safe palette and three-level gray typography hierarchy.
-          Above defaults but not publication-grade.
+        passed: true
+        comment: Custom colorblind-safe palette, intentional typography hierarchy
+          with 4 color levels. Professional clean appearance, above defaults but not
+          FiveThirtyEight-level.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: false
-        comment: Minimal theme, customized grid, removed axis ticks. Good but room
-          for more polish.
+        passed: true
+        comment: theme_minimal removes spines, minor grid disabled, major grid customized
+          with differentiated x/y styling. Axis ticks removed. Could use y-grid-only
+          for cleaner financial chart.
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 5
         max: 6
-        passed: false
-        comment: Data shows rise-then-decline but no visual emphasis or focal points.
+        passed: true
+        comment: Peak annotation creates clear focal point. SMA line guides viewer
+          through price decline narrative. Subtitle contextualizes data. Strong visual
+          hierarchy.
     spec_compliance:
       score: 15
       max: 15
@@ -126,28 +142,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct candlestick chart with bodies and wicks.
+        comment: Correct candlestick chart with bodies (open-close) and wicks (high-low).
+          Both bullish and bearish candles present.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Color-coded bullish/bearish, wicks thinner than bodies, date formatting,
-          subtle grid.
+        comment: Colorblind-safe color scheme, wicks thinner than body, date-formatted
+          axis, subtle grid, 30 trading days.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=date, Y=price. All data visible.
+        comment: X-axis maps dates correctly, Y-axis maps price correctly. All 30
+          candlesticks visible with proper OHLC mapping.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Legend not required for candlestick charts.
+        comment: 'Title format exact: candlestick-basic · letsplot · pyplots.ai. Legend
+          hidden — appropriate for candlestick chart.'
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -155,21 +174,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Both bullish and bearish candles, various body sizes, different wick
-          lengths, clear trend with reversal.
+        comment: Both bullish and bearish candles with varying body sizes and wick
+          lengths. Visible uptrend, peak, and downtrend.
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Realistic stock price starting at $100 with plausible daily movements
-          on business days.
+        comment: Realistic stock price behavior with plausible daily volatility. Business-day
+          frequency. Neutral context but explicitly simulated without specific stock.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Price range $93-$112, daily changes ~$2. Realistic for equities.
+        comment: Prices $92-$113 realistic for a stock. Daily fluctuations plausible.
+          30 trading days appropriate.
     code_quality:
       score: 10
       max: 10
@@ -179,31 +199,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean Imports, Data, Plot, Save. No functions/classes.
+        comment: 'Flat linear flow: imports, seed, data generation, computed columns,
+          plot, save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42) set at start.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used.
+        comment: numpy, pandas, lets_plot all used. No unused imports.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean manual candlestick construction appropriate for letsplot.
+        comment: Clean and well-organized. Tooltip setup for legitimate HTML export.
+          Vectorized operations where appropriate.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png via ggsave() with scale=3.
+        comment: Saves as plot.png via ggsave with scale=3. Also exports HTML. Current
+          lets-plot API.
     library_mastery:
       score: 7
       max: 10
@@ -213,12 +236,13 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good ggplot grammar with per-geom data. Could consolidate with color
-          mapping.
+        comment: 'Expert ggplot2 grammar: layer composition, scale_fill/color_manual,
+          theme_minimal + custom theme, ggsize, ggsave with scale.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses layer_tooltips() for interactive hover, HTML export, ggsize().
-  verdict: REJECTED
+        comment: Uses layer_tooltips() for interactive tooltip configuration and dual
+          PNG/HTML export — distinctive to lets-plot but not deeply advanced.
+  verdict: APPROVED

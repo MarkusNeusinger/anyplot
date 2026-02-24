@@ -1,6 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 candlestick-basic: Basic Candlestick Chart
 Library: letsplot 4.8.2 | Python 3.14.3
+Quality: 91/100 | Updated: 2026-02-24
 """
 
 import numpy as np
