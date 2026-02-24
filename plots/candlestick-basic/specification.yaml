@@ -6,7 +6,7 @@ title: Basic Candlestick Chart
 
 # Specification tracking
 created: 2025-12-14T18:19:59Z
-updated: 2025-12-14T18:19:59Z
+updated: 2026-02-24T12:00:00Z
 issue: 812
 suggested: MarkusNeusinger
 
@@ -17,8 +17,10 @@ tags:
   data_type:
     - numeric
     - timeseries
+    - datetime
   domain:
     - finance
   features:
     - basic
     - ohlc
+    - temporal
