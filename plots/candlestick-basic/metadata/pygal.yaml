@@ -1,16 +1,16 @@
 library: pygal
 specification_id: candlestick-basic
 created: '2025-12-23T10:04:16Z'
-updated: '2025-12-23T10:21:13Z'
-generated_by: claude-opus-4-5-20251101
+updated: '2026-02-24T20:50:21+00:00'
+generated_by: claude-opus-4-6
 workflow_run: 20457533941
 issue: 0
-python_version: 3.13.11
-library_version: 3.1.0
+python_version: "3.14.3"
+library_version: "3.1.0"
 preview_url: https://storage.googleapis.com/pyplots-images/plots/candlestick-basic/pygal/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/candlestick-basic/pygal/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/candlestick-basic/pygal/plot.html
-quality_score: 91
+quality_score: null
 impl_tags:
   dependencies: []
   techniques:
