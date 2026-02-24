@@ -1,13 +1,13 @@
 """ pyplots.ai
 candlestick-basic: Basic Candlestick Chart
-Library: bokeh 3.8.1 | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-23
+Library: bokeh 3.8.2 | Python 3.14.3
+Quality: 90/100 | Updated: 2026-02-24
 """
 
 import numpy as np
 import pandas as pd
 from bokeh.io import export_png, save
-from bokeh.models import ColumnDataSource
+from bokeh.models import ColumnDataSource, HoverTool, NumeralTickFormatter, Range1d
 from bokeh.plotting import figure
 
 
@@ -17,8 +17,11 @@ n_days = 30
 start_price = 150.0
 dates = pd.date_range(start="2024-01-02", periods=n_days, freq="B")
 
-# Generate realistic price movements
-returns = np.random.randn(n_days) * 0.02  # 2% daily volatility
+# Generate realistic price movements with dip and recovery
+returns = np.random.randn(n_days) * 0.018
+returns[:10] -= 0.002
+returns[10:20] -= 0.005
+returns[20:] += 0.008
 prices = start_price * np.cumprod(1 + returns)
 
 # Generate OHLC data
@@ -33,8 +36,7 @@ for i, close in enumerate(prices):
     else:
         open_price = close_prices[-1]
 
-    # Generate intraday range
-    daily_range = abs(np.random.randn()) * 0.015 * close
+    daily_range = abs(np.random.randn()) * 0.012 * close
     high = max(open_price, close) + daily_range
     low = min(open_price, close) - daily_range
 
@@ -44,12 +46,8 @@ for i, close in enumerate(prices):
     close_prices.append(close)
 
 df = pd.DataFrame({"date": dates, "open": open_prices, "high": high_prices, "low": low_prices, "close": close_prices})
-
-# Determine if bullish (close > open) or bearish
 df["bullish"] = df["close"] >= df["open"]
-
-# Create ColumnDataSource
-source = ColumnDataSource(df)
+df["date_str"] = df["date"].dt.strftime("%b %d, %Y")
 
 # Separate sources for bullish and bearish candles
 bullish_df = df[df["bullish"]].copy()
@@ -57,77 +55,106 @@ bearish_df = df[~df["bullish"]].copy()
 source_bullish = ColumnDataSource(bullish_df)
 source_bearish = ColumnDataSource(bearish_df)
 
-# Create figure (4800 x 2700 px)
+# Colorblind-safe palette: Python Blue for bullish, burnt orange for bearish
+color_bull = "#306998"
+color_bear = "#E8590C"
+
+# Create figure
 p = figure(
     width=4800,
     height=2700,
     x_axis_type="datetime",
-    title="candlestick-basic · bokeh · pyplots.ai",
+    title="ACME Corp Stock · candlestick-basic · bokeh · pyplots.ai",
     x_axis_label="Date",
     y_axis_label="Price ($)",
     tools="",
     toolbar_location=None,
 )
 
-# Candle width in milliseconds (80% of one day)
-candle_width = 0.8 * 24 * 60 * 60 * 1000
+# Tighten x-range to remove excess padding
+x_pad = pd.Timedelta(days=1)
+p.x_range = Range1d(start=dates[0] - x_pad, end=dates[-1] + x_pad)
 
-# Draw wicks (high-low lines) using segment glyph
-p.segment(x0="date", y0="high", x1="date", y1="low", source=source, color="#333333", line_width=3)
+# Candle width in milliseconds (75% of one business day)
+candle_width = 0.75 * 24 * 60 * 60 * 1000
 
-# Draw bullish candle bodies (green)
-p.vbar(
+# Wicks - colored to match candle bodies
+p.segment(x0="date", y0="high", x1="date", y1="low", source=source_bullish, color=color_bull, line_width=5)
+p.segment(x0="date", y0="high", x1="date", y1="low", source=source_bearish, color=color_bear, line_width=5)
+
+# Bullish candle bodies
+bull_bars = p.vbar(
     x="date",
     top="close",
     bottom="open",
     width=candle_width,
     source=source_bullish,
-    fill_color="#22c55e",
-    line_color="#16a34a",
+    fill_color=color_bull,
+    line_color=color_bull,
     line_width=2,
 )
 
-# Draw bearish candle bodies (red)
-p.vbar(
+# Bearish candle bodies
+bear_bars = p.vbar(
     x="date",
     top="open",
     bottom="close",
     width=candle_width,
     source=source_bearish,
-    fill_color="#ef4444",
-    line_color="#dc2626",
+    fill_color=color_bear,
+    line_color=color_bear,
     line_width=2,
 )
 
-# Styling for 4800x2700 px
+# Hover tooltips - distinctive Bokeh interactive feature
+hover = HoverTool(
+    renderers=[bull_bars, bear_bars],
+    tooltips=[
+        ("Date", "@date_str"),
+        ("Open", "@open{$0.00}"),
+        ("High", "@high{$0.00}"),
+        ("Low", "@low{$0.00}"),
+        ("Close", "@close{$0.00}"),
+    ],
+    mode="vline",
+)
+p.add_tools(hover)
+
+# Text sizing for 4800x2700
 p.title.text_font_size = "36pt"
-p.xaxis.axis_label_text_font_size = "24pt"
-p.yaxis.axis_label_text_font_size = "24pt"
-p.xaxis.major_label_text_font_size = "18pt"
-p.yaxis.major_label_text_font_size = "18pt"
+p.title.text_font_style = "normal"
+p.xaxis.axis_label_text_font_size = "28pt"
+p.yaxis.axis_label_text_font_size = "28pt"
+p.xaxis.major_label_text_font_size = "22pt"
+p.yaxis.major_label_text_font_size = "22pt"
 
-# Grid styling (subtle)
-p.xgrid.grid_line_alpha = 0.3
-p.ygrid.grid_line_alpha = 0.3
-p.xgrid.grid_line_dash = [6, 4]
-p.ygrid.grid_line_dash = [6, 4]
+# Y-axis dollar formatting
+p.yaxis.formatter = NumeralTickFormatter(format="$0")
 
-# Remove minor ticks
+# Grid - subtle y-axis only
+p.xgrid.grid_line_color = None
+p.ygrid.grid_line_alpha = 0.15
+p.ygrid.grid_line_width = 1
+
+# Axis styling - softened for minimalist look
+p.outline_line_color = None
+p.xaxis.axis_line_width = 1
+p.yaxis.axis_line_width = 1
+p.xaxis.axis_line_alpha = 0.5
+p.yaxis.axis_line_alpha = 0.5
+
+# Remove tick marks (keep labels)
 p.xaxis.minor_tick_line_color = None
 p.yaxis.minor_tick_line_color = None
+p.xaxis.major_tick_line_color = None
+p.yaxis.major_tick_line_color = None
 
 # Background
-p.background_fill_color = "#ffffff"
+p.background_fill_color = "#fafafa"
 p.border_fill_color = "#ffffff"
-
-# Axis styling
-p.xaxis.axis_line_width = 2
-p.yaxis.axis_line_width = 2
-p.xaxis.major_tick_line_width = 2
-p.yaxis.major_tick_line_width = 2
 
 # Save as PNG
 export_png(p, filename="plot.png")
 
-# Save as HTML (interactive)
+# Save as HTML (interactive with hover tooltips)
 save(p, filename="plot.html", title="candlestick-basic · bokeh · pyplots.ai")
