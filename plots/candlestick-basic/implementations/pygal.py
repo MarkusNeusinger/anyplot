@@ -1,7 +1,6 @@
-""" pyplots.ai
+"""pyplots.ai
 candlestick-basic: Basic Candlestick Chart
 Library: pygal 3.1.0 | Python 3.14.3
-Quality: 86/100 | Updated: 2026-02-24
 """
 
 import re
@@ -62,25 +61,29 @@ for candle in ohlc_data:
         bear_wicks.extend(wick)
         bear_bodies.extend(body)
 
-# --- Style: 7-series palette ---
+# --- Style: fully colorblind-safe palette ---
 BULL, BEAR = "#2271B3", "#D66B27"
+PEAK_CLR, LOW_CLR = "#7B4FA0", "#2A7B7B"  # Purple & teal (colorblind-safe)
+MA_CLR = "#555555"
 date_map = {i + 1: dates[i] for i in range(n_days)}
 
 custom_style = Style(
     background="white",
-    plot_background="#f5f5f5",
+    plot_background="#f4f4f0",
     foreground="#2a2a2a",
     foreground_strong="#1a1a1a",
-    foreground_subtle="#e2e2e2",
-    colors=(BULL, BEAR, "#666666", BULL, BEAR, "#1B7340", "#B33A2E"),
+    foreground_subtle="#dedede",
+    colors=(BULL, BEAR, MA_CLR, BULL, BEAR, PEAK_CLR, LOW_CLR),
     title_font_size=72,
     label_font_size=44,
     major_label_font_size=40,
-    legend_font_size=46,
+    legend_font_size=44,
     value_font_size=34,
 )
 
-# --- Chart ---
+# --- Chart configuration ---
+WICK_W, BODY_W, MA_W = 20, 76, 6
+
 chart = pygal.XY(
     style=custom_style,
     width=4800,
@@ -92,52 +95,56 @@ chart = pygal.XY(
     show_x_guides=False,
     show_y_guides=True,
     allow_interruptions=True,
-    range=(min(d["low"] for d in ohlc_data) - 1.5, max(d["high"] for d in ohlc_data) + 2.0),
+    range=(min(d["low"] for d in ohlc_data) - 2, max(d["high"] for d in ohlc_data) + 3),
     xrange=(0, n_days + 1),
-    legend_box_size=32,
-    margin=50,
-    spacing=30,
+    legend_box_size=30,
+    margin=40,
+    spacing=25,
     tooltip_border_radius=8,
+    truncate_legend=-1,
     value_formatter=lambda x: f"${x:.2f}",
 )
 
 chart.x_labels = [1, 5, 10, 15, 20, 25, 30]
 chart.x_value_formatter = lambda x: date_map[int(round(x))].strftime("%b %d") if int(round(x)) in date_map else ""
 
-WICK_W, BODY_W = 20, 72
-
-# Layer 1: Wicks (background)
+# Series 0-1: Wicks (background, hidden from legend)
 chart.add(None, bull_wicks, stroke=True, show_dots=False, stroke_style={"width": WICK_W, "linecap": "butt"})
 chart.add(None, bear_wicks, stroke=True, show_dots=False, stroke_style={"width": WICK_W, "linecap": "butt"})
 
-# Layer 2: Moving average trend line
-chart.add("5-Day MA", ma_points, stroke=True, show_dots=False, stroke_style={"width": 6, "linecap": "round"})
+# Series 2: Moving average trend line
+chart.add("5-Day MA", ma_points, stroke=True, show_dots=False, stroke_style={"width": MA_W, "linecap": "round"})
 
-# Layer 3: Bodies (foreground)
+# Series 3-4: Candlestick bodies (foreground)
 chart.add("Bullish (Up)", bull_bodies, stroke=True, show_dots=False, stroke_style={"width": BODY_W, "linecap": "butt"})
 chart.add(
     "Bearish (Down)", bear_bodies, stroke=True, show_dots=False, stroke_style={"width": BODY_W, "linecap": "butt"}
 )
 
-# Layer 4: Price extreme markers for data storytelling
-chart.add(f"Peak ${peak['high']:.2f}", [(peak["day"], peak["high"])], stroke=False, show_dots=True, dots_size=14)
-chart.add(f"Low ${trough['low']:.2f}", [(trough["day"], trough["low"])], stroke=False, show_dots=True, dots_size=14)
+# Series 5-6: Price extreme markers (colorblind-safe purple & teal)
+chart.add(f"Peak ${peak['high']:.2f}", [(peak["day"], peak["high"])], stroke=False, show_dots=True, dots_size=16)
+chart.add(f"Low ${trough['low']:.2f}", [(trough["day"], trough["low"])], stroke=False, show_dots=True, dots_size=16)
 
 # --- Render: inline stroke styles for cairosvg compatibility ---
-svg_content = chart.render(is_unicode=True)
-css_block = re.search(r"<style[^>]*>(.*?)</style>", svg_content, re.DOTALL)
-if css_block:
-    for m in re.finditer(r"\.serie-(\d+)\{stroke-width:(\d+);stroke-linecap:(\w+)\}", css_block.group(1)):
-        sid, sw, lc = m.groups()
-        inline = f' style="stroke-width:{sw};stroke-linecap:{lc}"'
-        svg_content = re.sub(
-            rf'class="series serie-{sid} color-{sid}">.*?</g>',
-            lambda g, s=inline: g.group(0).replace('class="line reactive nofill"', 'class="line reactive nofill"' + s),
-            svg_content,
-            count=1,
-            flags=re.DOTALL,
-        )
+# cairosvg ignores CSS class-based stroke properties; inline them on every path per series
+svg = chart.render(is_unicode=True)
+series_strokes = {
+    0: (WICK_W, "butt"),
+    1: (WICK_W, "butt"),
+    2: (MA_W, "round"),
+    3: (BODY_W, "butt"),
+    4: (BODY_W, "butt"),
+}
+for sid, (width, cap) in series_strokes.items():
+    style_attr = f' style="stroke-width:{width};stroke-linecap:{cap}"'
+    svg = re.sub(
+        rf'(class="series serie-{sid} color-{sid}"[^>]*>.*?</g>)',
+        lambda m, s=style_attr: m.group(0).replace('class="line reactive nofill"', 'class="line reactive nofill"' + s),
+        svg,
+        count=1,
+        flags=re.DOTALL,
+    )
 
-cairosvg.svg2png(bytestring=svg_content.encode("utf-8"), write_to="plot.png")
+cairosvg.svg2png(bytestring=svg.encode("utf-8"), write_to="plot.png")
 with open("plot.html", "w") as f:
-    f.write(svg_content)
+    f.write(chart.render(is_unicode=True))
