@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 candlestick-basic: Basic Candlestick Chart
 Library: altair 6.0.0 | Python 3.14.3
 Quality: 89/100 | Updated: 2026-02-24
@@ -42,6 +42,7 @@ for i, date in enumerate(dates):
 
 df = pd.DataFrame(data)
 df["direction"] = np.where(df["close"] >= df["open"], "Bullish", "Bearish")
+df["sma5"] = df["close"].rolling(window=5).mean()
 
 # Colors - colorblind-safe: teal for bullish, warm orange for bearish
 color_scale = alt.Scale(domain=["Bullish", "Bearish"], range=["#26A69A", "#FF8F00"])
@@ -79,14 +80,37 @@ bodies = (
     )
 )
 
-# Layer wicks and bodies with interactive zoom/pan
+# 5-day moving average trend line — guides the eye along the price trend
+sma_df = df.dropna(subset=["sma5"])
+sma_line = (
+    alt.Chart(sma_df)
+    .mark_line(strokeWidth=2.5, strokeDash=[6, 3], opacity=0.75)
+    .encode(x="date:T", y="sma5:Q", color=alt.value("#5C6BC0"))
+)
+
+# SMA label positioned at mid-chart for clear visibility
+sma_mid = sma_df.iloc[[len(sma_df) // 3]]
+sma_label = (
+    alt.Chart(sma_mid)
+    .mark_text(align="left", dy=-12, fontSize=15, fontWeight="bold", fontStyle="italic")
+    .encode(x="date:T", y="sma5:Q", text=alt.value("5-day MA"), color=alt.value("#5C6BC0"))
+)
+
+# Layer wicks, bodies, and trend line with interactive zoom/pan
 chart = (
-    alt.layer(wicks, bodies)
+    alt.layer(wicks, bodies, sma_line, sma_label)
     .resolve_scale(color="independent")
     .properties(
         width=1600,
         height=900,
-        title=alt.Title("candlestick-basic \u00b7 altair \u00b7 pyplots.ai", fontSize=28, anchor="middle"),
+        title=alt.Title(
+            "candlestick-basic \u00b7 altair \u00b7 pyplots.ai",
+            fontSize=28,
+            anchor="middle",
+            subtitle="30-day price action with 5-day moving average",
+            subtitleFontSize=16,
+            subtitleColor="#78909C",
+        ),
     )
     .configure_axis(labelFontSize=18, titleFontSize=22, gridOpacity=0.15)
     .configure_legend(labelFontSize=16, titleFontSize=18)
