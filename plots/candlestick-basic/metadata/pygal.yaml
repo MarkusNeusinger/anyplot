@@ -1,7 +1,7 @@
 library: pygal
 specification_id: candlestick-basic
 created: '2025-12-23T10:04:16Z'
-updated: '2026-02-24T20:57:52Z'
+updated: '2026-02-24T21:11:27Z'
 generated_by: claude-opus-4-6
 workflow_run: 20457533941
 issue: 0
@@ -10,7 +10,7 @@ library_version: 3.1.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/candlestick-basic/pygal/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/candlestick-basic/pygal/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/candlestick-basic/pygal/plot.html
-quality_score: 81
+quality_score: 83
 impl_tags:
   dependencies:
   - cairosvg
@@ -20,37 +20,42 @@ impl_tags:
   patterns:
   - data-generation
   - iteration-over-groups
-  dataprep: []
+  dataprep:
+  - rolling-window
   styling:
   - grid-styling
 review:
   strengths:
-  - Creative use of pygal XY chart with stroke_style to simulate candlesticks despite
-    no native support
-  - Excellent colorblind-safe blue/orange palette with strong contrast
-  - Realistic stock price data with clear trend narrative showing both bullish and
-    bearish candles
-  - Proper OHLC data generation with internally consistent relationships
-  - Dual output (PNG + interactive HTML) leveraging pygal SVG nature
+  - Creative candlestick implementation using XY chart with differentiated stroke
+    widths for bodies and wicks — impressive given pygal lacks native candlestick
+    support
+  - Colorblind-safe blue/orange palette with good contrast against light gray background
+  - 5-day moving average adds trend context and data storytelling
+  - Perfect spec compliance and data quality — realistic stock data with weekend-skipping
+    dates
+  - Both interactive HTML and static PNG output leveraging pygal dual-format capability
   weaknesses:
-  - Regex SVG post-processing for cairosvg compatibility is complex and fragile
-  - X-axis uses numbered trading days instead of actual date labels
-  - Design refinement could improve with more polished grid, whitespace, and visual
-    hierarchy
-  - Limited library mastery given pygal lack of native candlestick support
-  image_description: The plot shows a candlestick chart with 30 trading days on the
-    x-axis ("Trading Day") and price in dollars on the y-axis ("Price ($)"). The title
-    reads "candlestick-basic · pygal · pyplots.ai" at the top center. A legend in
-    the top-left displays "Bullish (Up)" in blue and "Bearish (Down)" in orange. Each
-    trading day has a candlestick with a thinner wick (high-low range) and a thicker
-    body (open-close range). The price starts around $150, rises to approximately
-    $170 around days 7-10, then steadily declines to about $130 by day 30. Both bullish
-    (blue) and bearish (orange) candles appear throughout the series. Subtle horizontal
-    y-axis gridlines are visible against a white background. All text is readable
-    and there are no overlapping elements.
+  - Regex SVG post-processing for cairosvg stroke compatibility adds code complexity
+    and fragility
+  - Color list construction (61 separate colors for wicks, MA, and bodies) is hard
+    to follow
+  - Some wasted vertical whitespace below the data range
+  - Legend font size could be larger for better readability at full resolution
+  image_description: 'The plot displays a candlestick chart of 30 trading days of
+    stock price data. Blue candlesticks represent bullish (up) days and orange candlesticks
+    represent bearish (down) days. Each candlestick has a thick body showing the open-close
+    range and thinner wicks showing the high-low range. A gray 5-day moving average
+    line runs through the candlesticks, smoothing the trend. The price starts around
+    $150, rises to approximately $170 in the first two weeks (Jan 2-15), then declines
+    steadily to around $130 by mid-February. The title reads "candlestick-basic ·
+    pygal · pyplots.ai" at the top. The y-axis is labeled "Price ($)" with dollar-formatted
+    tick labels ($130-$170), and the x-axis is labeled "Date" with formatted dates
+    (Jan 02 through Feb 12). A legend in the top-left shows three entries: "5-Day
+    MA", "Bullish (Up)", and "Bearish (Down)". The plot has a light gray (#f8f8f8)
+    background with subtle horizontal dotted grid lines, set against a white canvas.'
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 26
       max: 30
       items:
       - id: VQ-01
@@ -58,43 +63,44 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=72, label=48, major_label=44,
-          legend=44, value=36). All text clearly readable.
+        comment: All font sizes explicitly set (title=72, label=44, major_label=40,
+          legend=40, value=32). Legend text slightly small relative to other elements.
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No overlapping text or data elements anywhere in the chart.
+        comment: No text overlap. Candlesticks in dense Jan 10-17 region closely spaced
+          but individually distinguishable.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Candlestick bodies and wicks clearly visible. Wick/body width ratio
-          (24/80) is appropriate. A few candles where open≈close have very small bodies.
+        comment: Bodies and wicks clearly differentiated. Near-flat candles appear
+          as thin lines, slightly reducing visibility.
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Blue/orange colorblind-safe palette with strong contrast against
-          white background.
+        comment: Blue/orange colorblind-safe palette with good contrast against light
+          gray background.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Plot fills ~60-65% of canvas. Some excess whitespace at bottom. Legend
-          slightly isolated in top-left.
+        comment: Plot fills ~60-65% of canvas with balanced margins. Some wasted vertical
+          space below data range.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: Trading Day and Price ($).'
+        comment: Price ($) with units, Date descriptive, correct title format.
     design_excellence:
-      score: 11
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -102,24 +108,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom blue/orange palette, clean white background, intentional font
-          sizing. Above defaults but not publication-ready.
+        comment: Intentional blue/orange palette, light gray plot background, custom
+          typography. Above defaults but not publication-level.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Subtle y-axis grid with foreground_subtle=#e0e0e0, x-guides disabled.
-          Margins configured. Some refinement visible.
+        comment: Only y-guides shown, subtle dotted grid, clean background separation.
+          Could improve grid opacity.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Data naturally tells a rise-and-fall narrative. Color coding communicates
-          sentiment. No additional emphasis or visual hierarchy.
+        comment: 5-day MA creates visual hierarchy showing trend. Rise-then-decline
+          narrative immediately apparent.
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -127,27 +133,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct candlestick chart showing OHLC data with bodies and wicks.
+        comment: Correct candlestick chart with bodies and wicks showing OHLC data.
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 'Bodies, wicks, color coding, subtle grid all present. Minor: numbered
-          days instead of date formatting.'
+        comment: 'All features present: OHLC data, bullish/bearish color coding, wicks
+          thinner than body, date-formatted x-axis, subtle grid.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=time, Y=price. All 30 candles visible. Correct OHLC mapping.
+        comment: X=dates, Y=price, all 30 trading days visible and correctly mapped.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format. Legend labels Bullish (Up) and Bearish
-          (Down) are descriptive.
+        comment: Title format correct. Legend shows 5-Day MA, Bullish (Up), Bearish
+          (Down).
     data_quality:
       score: 15
       max: 15
@@ -157,31 +163,33 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows bullish and bearish candles, varying body sizes, different
-          wick lengths, clear price trend.
+        comment: Both bullish and bearish candles, varying sizes, wicks extending
+          beyond bodies, clear trend.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic stock price data starting at $150. Plausible daily movements.
-          Neutral financial context.
+        comment: Realistic stock price data ($130-$170), proper weekend-skipping trading
+          dates, neutral financial topic.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Price range $128-$170 is realistic. Daily volatility of 1-3% is plausible.
+        comment: Stock prices in realistic range, appropriate daily volatility, 30
+          trading days as specified.
     code_quality:
-      score: 9
+      score: 8
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: Follows imports, data, chart, save pattern. No functions or classes.
+        comment: Follows imports-data-plot-save flow, but regex SVG post-processing
+          adds structural complexity.
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -193,37 +201,37 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: re, cairosvg, numpy, pygal, Style.'
+        comment: 'All imports used: re, datetime/timedelta, cairosvg, numpy, pygal,
+          Style.'
       - id: CQ-04
         name: Code Elegance
         score: 1
         max: 2
         passed: false
-        comment: Regex SVG post-processing for cairosvg compatibility is complex and
-          fragile.
+        comment: Regex SVG manipulation for cairosvg compatibility is a workaround.
+          Color list construction (61 entries) is convoluted.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png via cairosvg and plot.html for interactive SVG.
+        comment: Saves plot.png via cairosvg and plot.html, uses current pygal API.
     library_mastery:
-      score: 5
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 3
         max: 5
-        passed: false
-        comment: Creative use of XY chart with stroke_style to simulate candlesticks.
-          Uses Style for customization. Essentially a workaround for missing native
-          support.
+        passed: true
+        comment: Uses pygal.XY, Style, chart.add() correctly. Simulating candlesticks
+          via thick-stroke XY lines is creative but not standard pygal pattern.
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Uses stroke_style with linecap, SVG rendering pipeline, and dual
-          HTML/PNG output. Still largely a workaround approach.
+        passed: true
+        comment: Leverages pygal interactive SVG output (HTML export), tooltip styling,
+          and comprehensive Style class theming.
   verdict: REJECTED
