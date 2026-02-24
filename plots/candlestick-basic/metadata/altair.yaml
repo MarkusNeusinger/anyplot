@@ -1,7 +1,7 @@
 library: altair
 specification_id: candlestick-basic
 created: '2025-12-23T10:01:24Z'
-updated: '2026-02-24T20:58:11Z'
+updated: '2026-02-24T21:10:52Z'
 generated_by: claude-opus-4-6
 workflow_run: 20457531337
 issue: 0
@@ -10,46 +10,47 @@ library_version: 6.0.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/candlestick-basic/altair/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/candlestick-basic/altair/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/candlestick-basic/altair/plot.html
-quality_score: 89
+quality_score: 93
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
   - hover-tooltips
+  - annotations
   - html-export
   patterns:
   - data-generation
-  - iteration-over-groups
   dataprep:
+  - rolling-window
   - time-series
   styling:
   - grid-styling
 review:
   strengths:
-  - Perfect visual quality with all font sizes explicitly set and colorblind-safe
-    teal/orange palette
-  - Clean, idiomatic Altair code using layered composition (mark_rule + mark_bar)
-  - Realistic 30-day stock price data with natural trend arc and both bullish/bearish
-    candles
-  - 'Excellent use of Altair-specific features: formatted tooltips, interactivity,
-    resolve_scale'
-  - Subtle grid and borderless view show intentional refinement
+  - Colorblind-safe teal/orange palette with excellent contrast
+  - All font sizes explicitly and thoughtfully set with clear hierarchy
+  - 5-day moving average overlay with label adds analytical depth and data storytelling
+  - Very subtle grid (0.15 opacity) and removed view stroke give a clean refined look
+  - Idiomatic Altair usage with proper layer composition tooltips and interactivity
+  - Realistic OHLC data with good feature coverage including bullish/bearish and varying
+    volatility
   weaknesses:
-  - Data storytelling is at default level — chart displays data without creating visual
-    emphasis or a focal point
-  - Aesthetic sophistication is good but not publication-level — could be pushed further
+  - SMA label fontSize=15 is slightly smaller than tick labels at 18 creating minor
+    inconsistency
+  - No annotation for notable price events like peak or correction that could enhance
+    storytelling
   image_description: The plot displays a candlestick chart titled "candlestick-basic
-    · altair · pyplots.ai" on a clean white background. The x-axis shows "Date" with
-    business-day labels from Jan 01 through Feb 08 formatted as "Mon DD". The y-axis
-    shows "Price ($)" ranging from approximately 84 to 112. Candlestick bodies are
-    colored teal (#26A69A) for bullish (close >= open) days and warm orange (#FF8F00)
-    for bearish days. Thin wicks extend above and below each body to mark the high
-    and low prices. A legend in the upper-right corner labeled "Direction" shows teal
-    for Bullish and orange for Bearish. The data shows a price rising from ~$100 to
-    a peak around $110 in mid-January, then declining to ~$89 by early February. Both
-    bullish and bearish candles are well represented throughout. The grid is extremely
-    subtle (barely visible), and there are no border strokes around the chart area.
-    All text is clearly readable at large font sizes.
+    · altair · pyplots.ai" with a subtitle "30-day price action with 5-day moving
+    average" in muted gray. The x-axis shows dates from Jan 01 to Feb 08 labeled "Date"
+    with "%b %d" formatting. The y-axis shows prices from ~84 to ~112 labeled "Price
+    ($)". Candlestick bodies are teal (#26A69A) for bullish days and warm orange (#FF8F00)
+    for bearish days, with thin wicks extending to high/low values. A dashed indigo
+    (#5C6BC0) line traces the 5-day simple moving average, labeled "5-day MA" in bold
+    italic at roughly the first third of the SMA data. A "Direction" legend in the
+    upper right shows Bullish (teal) and Bearish (orange). The data depicts a price
+    rise from ~$100 to ~$110 in the first two weeks, followed by a decline to ~$89
+    by the end. The grid is extremely subtle, and the chart border (view stroke) has
+    been removed, giving a clean appearance.
   criteria_checklist:
     visual_quality:
       score: 30
@@ -60,65 +61,69 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 28pt, axis titles 22pt, tick
-          labels 18pt, legend labels 16pt'
+        comment: 'All font sizes explicitly set: title=28, subtitle=16, axis titles=22,
+          tick labels=18, legend labels=16, legend title=18, SMA label=15. All clearly
+          readable.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data elements. X-axis labels well-spaced
+        comment: No overlapping elements. Date labels well-spaced, SMA label clear
+          of data, legend does not overlap candles.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Candle bodies well-sized (mark_bar size=20), wicks thinner (strokeWidth=1.5)
-          but clearly visible
+        comment: Candle bodies (size=20) prominent, wicks (strokeWidth=1.5) thinner
+          but visible, SMA line (strokeWidth=2.5) distinct.
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Teal/orange palette is colorblind-safe, excellent contrast
+        comment: Teal and warm orange are colorblind-safe, distinguishable under protanopia
+          and deuteranopia.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Chart fills canvas well at 1600x900 with scale_factor=3.0, balanced
-          margins
+        comment: 1600x900 at 3x scale = 4800x2700 px. Plot fills ~65% of canvas with
+          balanced margins.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis 'Price ($)' includes units, title follows correct format
+        comment: Y-axis 'Price ($)' includes units. X-axis 'Date' is descriptive with
+          formatted tick labels.
     design_excellence:
-      score: 11
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Custom teal/orange palette above defaults, explicit typography, but
-          not FiveThirtyEight-level
+        comment: Custom colorblind-safe palette, intentional typography hierarchy,
+          SMA overlay in distinct indigo. Clearly above defaults.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Subtle grid (gridOpacity=0.15), no view border (strokeWidth=0), good
-          whitespace
+        comment: Grid opacity 0.15, view stroke removed, subtitle in muted color,
+          SMA line with controlled opacity and dashed pattern.
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Standard candlestick coloring without active storytelling choices.
-          No visual emphasis or focal point
+        passed: true
+        comment: SMA line guides viewer along price trend. Labeled SMA and informative
+          subtitle provide context. Clear rise-and-decline narrative.
     spec_compliance:
       score: 15
       max: 15
@@ -128,27 +133,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct candlestick chart with bodies and wicks
+        comment: Correct candlestick chart with bodies (open-close) and wicks (high-low).
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: OHLC data, colorblind-safe colors, thin
-          wicks, date formatting, subtle grid'
+        comment: OHLC data, bullish/bearish colors, wicks thinner than bodies, date
+          formatting, subtle grid — all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Date on x-axis (temporal), price on y-axis (quantitative), all data
-          visible
+        comment: X=date temporal, Y=price quantitative with zero=False. Open/close
+          to bar, high/low to wicks.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches format, legend labeled Direction with Bullish/Bearish
+        comment: Title matches required format. Legend shows Direction with Bullish/Bearish
+          labels.
     data_quality:
       score: 15
       max: 15
@@ -158,22 +164,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Both bullish and bearish candles, varying body sizes, different wick
-          lengths, clear overall trend
+        comment: Both bullish and bearish candles, varying body sizes and wick lengths,
+          clear uptrend and downtrend.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Stock price data around $100 with business-day frequency. Realistic
-          volatility. Neutral financial context
+        comment: Stock price at ~$100 with realistic daily movements, business days,
+          plausible volatility. Neutral financial topic.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Prices in $84-$112 range with daily volatility of $1-3. Sensible
-          for a stock
+        comment: Price range $84-$112 realistic for a stock. 30 business days is standard.
+          zero=False correct for financial data.
     code_quality:
       score: 10
       max: 10
@@ -183,33 +189,36 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean Import-Data-Plot-Save structure, no functions or classes
+        comment: 'Linear flow: imports, data generation, chart layers, composition,
+          save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set at start
+        comment: np.random.seed(42) ensures deterministic output.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: altair, numpy, pandas all used, no unused imports
+        comment: All three imports (altair, numpy, pandas) are used. No unused imports.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized, color scale defined once and reused
+        comment: Clean, well-organized. Appropriate complexity for OHLC data generation.
+          Elegant layer composition.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html, uses current Altair 6.x API
+        comment: Saves plot.png with scale_factor=3.0 and plot.html. Current Altair
+          6.x API.
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
@@ -217,13 +226,13 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Expertly uses layered composition, proper encoding types, configure
-          methods, resolve_scale
+        comment: 'Expertly uses declarative grammar: layered composition, proper encoding
+          types, alt.Scale, alt.Tooltip, alt.Title, configure methods, resolve_scale.'
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Formatted tooltips, .interactive(), resolve_scale(color=independent),
-          HTML export. Library-specific but similar exists in other libs
-  verdict: REJECTED
+        comment: Interactive zoom/pan, formatted tooltips, HTML export, declarative
+          layer composition with resolve_scale. Distinctive to Altair/Vega-Lite.
+  verdict: APPROVED
