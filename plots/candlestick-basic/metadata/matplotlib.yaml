@@ -1,168 +1,186 @@
 library: matplotlib
 specification_id: candlestick-basic
 created: '2025-12-23T10:01:17Z'
-updated: '2025-12-23T10:07:02Z'
-generated_by: claude-opus-4-5-20251101
+updated: '2026-02-24T21:09:22Z'
+generated_by: claude-opus-4-6
 workflow_run: 20457529084
 issue: 0
-python_version: 3.13.11
+python_version: 3.14.3
 library_version: 3.10.8
 preview_url: https://storage.googleapis.com/pyplots-images/plots/candlestick-basic/matplotlib/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/candlestick-basic/matplotlib/plot_thumb.png
 preview_html: null
-quality_score: 92
+quality_score: 91
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
+  - custom-legend
   - manual-ticks
   patterns:
   - data-generation
-  - iteration-over-groups
-  dataprep: []
+  dataprep:
+  - time-series
+  - rolling-window
   styling:
   - grid-styling
+  - alpha-blending
 review:
   strengths:
-  - Excellent candlestick implementation with proper anatomy (bodies and wicks clearly
-    distinguished)
-  - Clean, readable code following KISS principles with proper data generation
-  - Professional appearance with appropriate colors, font sizes, and subtle grid
-  - Realistic stock price simulation with proper business day handling
-  - Correct title format and descriptive axis labels with units
+  - 'All four issues from Attempt 1 fully addressed: colorblind-safe blue/orange palette,
+    Price (USD) label, SMA + annotation for storytelling'
+  - Strong visual refinement with custom spines, subtle grid, warm background, and
+    polished legend
+  - Perfect spec compliance with all required features plus meaningful extras (SMA,
+    annotation)
+  - Clean, well-structured code with vectorized operations and proper reproducibility
+  - Good data storytelling through SMA trend line and largest-drop annotation creating
+    visual hierarchy
   weaknesses:
-  - Missing legend to explain green=bullish/red=bearish (helpful for non-financial
-    audiences)
-  - Wick linewidth (2) could be thinner (1-1.5) relative to body for better visual
-    distinction per spec note
-  image_description: The plot displays a candlestick chart showing 30 trading days
-    of stock price data from January 2 to mid-February 2024. Green/teal candlesticks
-    indicate bullish (price increase) days while red candlesticks indicate bearish
-    (price decrease) days. Each candlestick clearly shows the body (open-close range)
-    and wicks/shadows (high-low range). The price ranges from approximately $130 to
-    $165, showing an initial uptrend peaking around Jan 10-15 followed by a downtrend.
-    The title correctly displays "candlestick-basic · matplotlib · pyplots.ai". The
-    x-axis shows dates formatted as "Jan 01", "Jan 08", etc. with weekly major ticks,
-    and the y-axis shows "Price ($)". A subtle dashed grid helps read price levels.
+  - Some candle bodies near series end are very thin vertically, almost indistinguishable
+    from wicks
+  - Annotation text Largest drop $-2.54 has slightly awkward formatting (dollar sign
+    before negative)
+  - SMA line could use slightly more distinctive styling to stand out from the gray
+    spine colors
+  image_description: The plot displays a candlestick chart titled "candlestick-basic
+    · matplotlib · pyplots.ai" showing 30 trading days of stock price data from early
+    January to mid-February 2024. Blue (#1976d2) candlesticks represent bullish days
+    (Close ≥ Open) and orange (#e65100) candlesticks represent bearish days (Close
+    < Open). The y-axis shows "Price (USD)" with dollar formatting ($130–$170) and
+    the x-axis shows "Date" with weekly Monday labels rotated 45°. A dark gray 5-day
+    SMA line overlays the candlesticks, tracing the trend from ~$150 up to ~$162 then
+    declining to ~$135. An orange annotation below a mid-chart candle reads "Largest
+    drop $-2.54" with a thin connecting line. The legend in the upper right identifies
+    Bullish, Bearish, and 5-day SMA. Top and right spines are removed; left and bottom
+    spines are thin and gray. A subtle y-axis grid (alpha=0.15) aids price reading.
+    The background is a warm off-white (#fafafa). Candle bodies vary in height with
+    thin wicks extending above and below. Overall layout is clean with good canvas
+    utilization.
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 24pt, axis labels at 20pt, tick labels at 16pt - all perfectly
-          readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements, x-axis labels rotated 45° to avoid
-          collision
+        comment: 'All font sizes explicitly set: title 24pt, axis labels 20pt, ticks
+          16pt, legend 16pt, annotation 13pt'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: X-axis labels rotated 45° and spaced by week, legend and annotation
+          positioned without collisions
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Candlesticks are clearly visible with good width and distinct wicks,
-          though wick linewidth could be slightly thinner relative to body for more
-          contrast
+        comment: Candle bodies visible with width=0.6, wicks at linewidth=1.5. Some
+          bodies thin vertically for small price movements
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Green (#26a69a) and red (#ef5350) have good contrast and are distinguishable
-          for most colorblind types
+        comment: Blue/orange palette is fully colorblind-safe with good contrast against
+          off-white background
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Good proportions with appropriate padding on all sides
+        comment: 16x9 figure with tight_layout, plot fills ~65% of canvas, balanced
+          margins
       - id: VQ-06
-        name: Axis Labels
+        name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '"Date" and "Price ($)" - descriptive with units'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
-        max: 2
+        comment: Date and Price (USD) are descriptive with currency unit
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
         passed: true
-        comment: Grid is subtle (alpha 0.3 for y, 0.15 for x), but no legend explaining
-          green=bullish, red=bearish
+        comment: Custom blue/orange palette, warm off-white background, styled spines,
+          fontweight medium title, dollar formatting, refined legend
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines removed/styled, subtle grid alpha=0.15, set_axisbelow, generous
+          padding, minor tick locators
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 5-day SMA provides trend context, largest drop annotation creates
+          focal point, clear visual hierarchy
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct candlestick chart implementation
+        comment: Correct candlestick chart with OHLC bodies and wicks
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: OHLC data correctly mapped to candlestick elements
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: OHLC display, color coding for up/down,
-          visible wicks thinner than body, date formatting, subtle grid'
-      - id: SC-04
-        name: Data Range
+        comment: Color coding, thin wicks, date formatting, subtle grid - all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis shows full price range with 10% padding
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Dates on x-axis, prices on y-axis, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No legend needed for this basic implementation (colors are self-explanatory
-          in financial context)
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: "candlestick-basic · matplotlib · pyplots.ai"'
+        comment: Correct title format, legend accurately labels Bullish, Bearish,
+          and 5-day SMA
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows both bullish and bearish candles, various body sizes, visible
-          wicks; good mix but data happens to show more of a downtrend pattern
+        comment: Both bullish and bearish candles, varying body sizes, different wick
+          lengths, uptrend and downtrend
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Stock price starting at $150 with ~2% daily volatility is realistic;
-          business days correctly used
+        comment: Realistic stock prices ~$150 with 2% daily volatility, business day
+          range, neutral financial context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Price values realistic, though 30 days is on the shorter end of the
-          20-100 range specified
+        comment: Prices in $130-170 range realistic for a stock, sensible daily movements
     code_quality:
       score: 10
       max: 10
@@ -172,11 +190,11 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure, no functions/classes
+        comment: Clean Imports → Data → Plot → Save flow, no functions or classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
         comment: np.random.seed(42) set
       - id: CQ-03
@@ -184,29 +202,36 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports used (matplotlib.dates, matplotlib.pyplot, numpy, pandas)
+        comment: All six imports used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Current API usage
-      - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 2
-      max: 5
-      items:
-      - id: LF-01
-        name: Distinctive Features
+        name: Code Elegance
         score: 2
+        max: 2
+        passed: true
+        comment: Vectorized numpy operations, clean DataFrame construction, appropriate
+          complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with dpi=300, bbox_inches=tight, no deprecated
+          API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
-        passed: false
-        comment: Uses matplotlib primitives (Rectangle, plot) to build candlesticks
-          manually; functional but doesn't leverage mplfinance or other specialized
-          tools; appropriate for "basic" spec though
+        passed: true
+        comment: Consistent ax-level API, good use of mdates, mticker, mpatches submodules
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Matplotlib-specific date locators/formatters, manual candlestick
+          via vlines+bar with zorder, patches for legend
   verdict: APPROVED

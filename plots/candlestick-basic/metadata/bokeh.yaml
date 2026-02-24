@@ -1,166 +1,182 @@
 library: bokeh
 specification_id: candlestick-basic
 created: '2025-12-23T09:59:54Z'
-updated: '2025-12-23T10:02:06Z'
-generated_by: claude-opus-4-5-20251101
+updated: '2026-02-24T20:58:53Z'
+generated_by: claude-opus-4-6
 workflow_run: 20457531098
 issue: 0
-python_version: 3.13.11
-library_version: 3.8.1
+python_version: 3.14.3
+library_version: 3.8.2
 preview_url: https://storage.googleapis.com/pyplots-images/plots/candlestick-basic/bokeh/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/candlestick-basic/bokeh/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/candlestick-basic/bokeh/plot.html
-quality_score: 92
+quality_score: 90
 impl_tags:
   dependencies: []
   techniques:
+  - hover-tooltips
   - html-export
   patterns:
-  - columndatasource
   - data-generation
-  dataprep: []
+  - columndatasource
+  dataprep:
+  - time-series
   styling:
   - grid-styling
 review:
   strengths:
-  - Excellent visual clarity with properly sized candles and wicks for the data density
-  - Realistic OHLC data generation with appropriate volatility modeling
-  - Clean separation of bullish/bearish data sources for proper rendering
-  - Proper use of Bokeh segment glyph for wicks and vbar for candle bodies
-  - Correct 4800x2700 resolution with appropriately scaled text sizes
-  - Subtle grid styling that aids readability without distraction
+  - Excellent visual refinement with removed grid/ticks/outline creating a clean minimalist
+    aesthetic
+  - Colorblind-safe palette (Python Blue + burnt orange) with strong contrast
+  - Idiomatic Bokeh code using ColumnDataSource, vbar/segment, and HoverTool
+  - Dual output (PNG + HTML) leverages Bokeh interactive capabilities
+  - Intentional data narrative with dip-and-recovery pattern showing varied candle
+    types
+  - All font sizes explicitly set well above minimums for the 4800x2700 canvas
   weaknesses:
-  - Green/red color scheme is not optimal for colorblind accessibility - consider
-    blue/orange alternative
-  - HTML output does not include hover tooltips to show OHLC values - missed opportunity
-    for Bokeh interactivity
-  image_description: The plot displays a candlestick chart showing 30 trading days
-    of stock price data from January 2024 to February 2024. Green candles indicate
-    bullish days (close >= open) and red candles indicate bearish days (close < open).
-    The chart shows a clear downward trend from approximately $165 to $135 over the
-    period. Each candlestick has visible wicks (shadows) extending above and below
-    the body, representing the high-low range. The title "candlestick-basic · bokeh
-    · pyplots.ai" appears in the top-left corner. The X-axis displays dates with labels
-    like "Jan 01 2024", "Jan 08", "Jan 15", etc. The Y-axis shows "Price ($)" ranging
-    from about 130 to 170. A subtle dashed grid helps read price levels. The candles
-    are well-proportioned with appropriate spacing.
+  - Title format prepends ACME Corp Stock to the standard spec-id/library/pyplots.ai
+    format
+  - Wick line_width=5 is visible but relatively thin at 4800px scale
+  - Data storytelling relies on natural price pattern without explicit visual emphasis
+    or annotations
+  image_description: The plot displays a candlestick chart titled "ACME Corp Stock
+    · candlestick-basic · bokeh · pyplots.ai" on a light gray (#fafafa) background
+    with a white border. The x-axis is labeled "Date" spanning from Jan 01 2024 to
+    approximately Feb 08, with major tick labels at weekly intervals. The y-axis is
+    labeled "Price ($)" with dollar-formatted values from $130 to $165 at $5 intervals.
+    Bullish (up) candles are rendered in Python Blue (#306998) and bearish (down)
+    candles in burnt orange (#E8590C). The wicks are colored to match their respective
+    candle bodies and are thinner than the bodies. The data shows an initial stable
+    period around $150, a rise to ~$160 by mid-January, followed by a steep decline
+    to ~$129 around late January, and a partial recovery stabilizing around $135.
+    Both bullish and bearish candles are clearly visible throughout. The x-grid is
+    removed entirely, and the y-grid is very subtle (barely visible). Axis lines are
+    softened, tick marks are removed, and the outline is absent — creating a clean,
+    minimalist appearance. No legend is present. Candle bodies are well-proportioned
+    with appropriate width for the 30-day trading period.
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 28
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 36pt, axis labels at 24pt, tick labels at 18pt - all clearly
-          readable
+        comment: 'All font sizes explicitly set: title 36pt, axis labels 28pt, tick
+          labels 22pt. All clearly readable.'
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements, dates are well-spaced
+        comment: No overlapping text anywhere. Date labels well-spaced, y-axis labels
+          clear.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Candle bodies and wicks are perfectly sized for 30 data points, clear
-          distinction between elements
+        comment: Candle bodies well-sized. Wicks visible but relatively thin at line_width=5
+          on 4800px canvas.
       - id: VQ-04
         name: Color Accessibility
-        score: 3
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Uses green (#22c55e) and red (#ef4444) which is the most common convention
-          but not ideal for colorblind users
+        comment: Colorblind-safe Python Blue and burnt orange. Excellent contrast.
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 3
+        max: 4
         passed: true
-        comment: Good proportions, no cut-off content, appropriate margins
+        comment: Plot fills canvas well with balanced margins. Minor excess vertical
+          space.
       - id: VQ-06
-        name: Axis Labels
+        name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '"Date" and "Price ($)" are descriptive with units'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
-        max: 2
+        comment: Price ($) with units, Date is descriptive for datetime axis.
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
         passed: true
-        comment: Grid is subtle (alpha 0.3) with dashed lines; no legend needed for
-          this plot type
+        comment: Strong design with custom palette, intentional typography, softened
+          axes, custom background.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Excellent refinement: x-grid removed, y-grid subtle, outline removed,
+          tick marks removed, custom background.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Intentional data narrative through return adjustments. Color contrast
+          provides some hierarchy but no explicit emphasis.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 14
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct candlestick chart with bodies and wicks
+        comment: Correct candlestick chart with OHLC data.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Date on X-axis, OHLC correctly mapped to candle components
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: OHLC representation, color-coded bullish/bearish,
-          visible wicks thinner than bodies'
-      - id: SC-04
-        name: Data Range
+        comment: 'All spec features present: color coding, thin wicks, datetime axis,
+          subtle grid.'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis shows full price range from ~130 to 170
-      - id: SC-05
-        name: Legend Accuracy
+        comment: X=dates, Y=prices, 30 trading days within specified range.
+      - id: SC-04
+        name: Title & Legend
         score: 2
-        max: 2
+        max: 3
         passed: true
-        comment: No legend needed; color coding is self-explanatory for candlesticks
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Exactly matches "{spec-id} · {library} · pyplots.ai"
+        comment: Title contains required format but prepends ACME Corp Stock. No legend
+          (conventional for candlestick).
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows both bullish AND bearish candles with good variety; demonstrates
-          trend (downward), volatility, and different candle sizes
+        comment: Shows bullish and bearish candles, varying body/wick sizes, clear
+          trend patterns.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Stock price scenario with realistic 2% daily volatility, plausible
-          price range ($130-$170)
+        comment: ACME Corp Stock - plausible neutral context with business-day frequency.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Good price values, though the consistent downtrend might be slightly
-          exaggerated for a typical 30-day period
+        comment: Prices $130-$165, 1-2% daily moves - realistic stock behavior.
     code_quality:
       score: 10
       max: 10
@@ -170,41 +186,47 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean flow: imports → data generation → plot → save'
+        comment: 'Clean linear flow: Imports, Data, Plot, Save. No functions/classes.'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses `np.random.seed(42)`
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used (numpy, pandas, bokeh components)
+        comment: All imports used.
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Uses current Bokeh API
-      - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as `plot.png` and `plot.html`
-    library_features:
-      score: 2
-      max: 5
-      items:
-      - id: LF-01
-        name: Distinctive Features
+        name: Code Elegance
         score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-organized. Separate bullish/bearish data sources is idiomatic.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot.png via export_png. Also saves HTML. Current API.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
-        passed: false
-        comment: Uses ColumnDataSource and segment/vbar glyphs appropriately, but
-          doesn't leverage Bokeh's interactive features (hover tooltips showing OHLC
-          values would be a great addition for the HTML version)
+        passed: true
+        comment: 'Expert Bokeh patterns: ColumnDataSource, figure(), vbar/segment,
+          HoverTool, NumeralTickFormatter, Range1d.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: HoverTool with formatted tooltips, HTML export, NumeralTickFormatter
+          - leverages Bokeh interactive model.
   verdict: APPROVED
