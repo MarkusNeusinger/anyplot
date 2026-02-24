@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 candlestick-basic: Basic Candlestick Chart
 Library: highcharts 1.10.3 | Python 3.14.3
-Quality: 86/100 | Updated: 2026-02-24
+Quality: 90/100 | Updated: 2026-02-24
 """
 
 import json
