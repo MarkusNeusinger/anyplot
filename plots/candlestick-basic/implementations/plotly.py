@@ -1,7 +1,7 @@
 """ pyplots.ai
 candlestick-basic: Basic Candlestick Chart
-Library: plotly 6.5.0 | Python 3.13.11
-Quality: 93/100 | Created: 2025-12-23
+Library: plotly 6.5.2 | Python 3.14.3
+Quality: /100 | Updated: 2026-02-24
 """
 
 import numpy as np
@@ -11,21 +11,20 @@ import plotly.graph_objects as go
 
 # Data - 30 trading days of simulated stock prices
 np.random.seed(42)
-dates = pd.date_range(start="2024-01-02", periods=30, freq="B")  # Business days
+dates = pd.date_range(start="2024-01-02", periods=30, freq="B")
 
-# Generate realistic price movement starting at $100
-price = 100.0
+# Generate realistic price movement starting at $150 (rally, pullback, recovery)
+price = 150.0
+drift = [0.4] * 8 + [-0.5] * 12 + [0.35] * 10
 opens, highs, lows, closes = [], [], [], []
 
-for _ in range(30):
+for i in range(30):
     open_price = price
-    # Random daily change with slight upward bias
-    change = np.random.randn() * 2 + 0.1
+    change = np.random.randn() * 2.5 + drift[i]
     close_price = open_price + change
 
-    # High is above both open and close, low is below both
-    high_price = max(open_price, close_price) + abs(np.random.randn()) * 1.5
-    low_price = min(open_price, close_price) - abs(np.random.randn()) * 1.5
+    high_price = max(open_price, close_price) + abs(np.random.randn()) * 1.8
+    low_price = min(open_price, close_price) - abs(np.random.randn()) * 1.8
 
     opens.append(open_price)
     highs.append(high_price)
@@ -47,29 +46,51 @@ fig = go.Figure(
             close=df["close"],
             increasing={"line": {"color": "#26A69A", "width": 2}, "fillcolor": "#26A69A"},
             decreasing={"line": {"color": "#EF5350", "width": 2}, "fillcolor": "#EF5350"},
+            hovertemplate=(
+                "<b>%{x|%b %d, %Y}</b><br>"
+                "Open: $%{open:.2f}<br>"
+                "High: $%{high:.2f}<br>"
+                "Low: $%{low:.2f}<br>"
+                "Close: $%{close:.2f}<br>"
+                "<extra></extra>"
+            ),
         )
     ]
 )
 
-# Layout with proper sizing for 4800x2700
+# Layout
 fig.update_layout(
-    title={"text": "candlestick-basic · plotly · pyplots.ai", "font": {"size": 28}, "x": 0.5, "xanchor": "center"},
+    title={
+        "text": (
+            "ACME Corp Daily Prices"
+            "<br><sup style='color:#888;font-size:16px'>"
+            "candlestick-basic · plotly · pyplots.ai</sup>"
+        ),
+        "font": {"size": 28},
+        "x": 0.5,
+        "xanchor": "center",
+    },
     xaxis={
         "title": {"text": "Date", "font": {"size": 22}},
         "tickfont": {"size": 18},
+        "tickformat": "%b %d",
         "rangeslider": {"visible": False},
-        "gridcolor": "rgba(128, 128, 128, 0.3)",
-        "gridwidth": 1,
+        "rangebreaks": [{"bounds": ["sat", "mon"]}],
+        "gridcolor": "rgba(128, 128, 128, 0.15)",
+        "showgrid": False,
     },
     yaxis={
-        "title": {"text": "Price ($)", "font": {"size": 22}},
+        "title": {"text": "Price (USD)", "font": {"size": 22}},
         "tickfont": {"size": 18},
-        "gridcolor": "rgba(128, 128, 128, 0.3)",
+        "tickprefix": "$",
+        "gridcolor": "rgba(128, 128, 128, 0.15)",
         "gridwidth": 1,
+        "zeroline": False,
     },
     template="plotly_white",
     plot_bgcolor="white",
-    margin={"l": 80, "r": 40, "t": 80, "b": 80},
+    margin={"l": 90, "r": 40, "t": 100, "b": 80},
+    hoverlabel={"bgcolor": "white", "font_size": 14, "bordercolor": "#ccc"},
 )
 
 # Save as PNG (4800x2700)

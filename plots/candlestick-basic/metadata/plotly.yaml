@@ -1,16 +1,16 @@
 library: plotly
 specification_id: candlestick-basic
 created: '2025-12-23T10:01:32Z'
-updated: '2025-12-23T10:07:57Z'
-generated_by: claude-opus-4-5-20251101
+updated: '2026-02-24T20:50:21+00:00'
+generated_by: claude-opus-4-6
 workflow_run: 20457529753
 issue: 0
-python_version: 3.13.11
-library_version: 6.5.0
+python_version: "3.14.3"
+library_version: "6.5.2"
 preview_url: https://storage.googleapis.com/pyplots-images/plots/candlestick-basic/plotly/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/candlestick-basic/plotly/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/candlestick-basic/plotly/plot.html
-quality_score: 93
+quality_score: null
 impl_tags:
   dependencies: []
   techniques:
