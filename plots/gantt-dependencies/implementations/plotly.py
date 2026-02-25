@@ -1,7 +1,6 @@
-""" pyplots.ai
+"""pyplots.ai
 gantt-dependencies: Gantt Chart with Dependencies
 Library: plotly 6.5.2 | Python 3.14
-Quality: 83/100 | Updated: 2026-02-25
 """
 
 import pandas as pd
@@ -147,120 +146,137 @@ df = pd.DataFrame(tasks)
 df["start"] = pd.to_datetime(df["start"])
 df["end"] = pd.to_datetime(df["end"])
 
-# Color palette for groups
+# Colorblind-safe palette (avoids red-green pairing)
 group_colors = {
     "Requirements": "#306998",
     "Design": "#FFD43B",
     "Development": "#4ECDC4",
-    "Testing": "#FF6B6B",
-    "Deployment": "#95E1A3",
+    "Testing": "#AB63FA",
+    "Deployment": "#FF7F0E",
 }
 
-# Calculate group summary bars
-groups = df.groupby("group").agg({"start": "min", "end": "max"}).reset_index()
+# Compute critical path by backward traversal from project end
+task_deps = {row["task"]: row["depends_on"] for _, row in df.iterrows()}
+task_ends = {row["task"]: row["end"] for _, row in df.iterrows()}
+
+all_predecessors = {dep for deps in task_deps.values() for dep in deps}
+terminal_tasks = [t for t in task_deps if t not in all_predecessors]
+last_task = max(terminal_tasks, key=lambda t: task_ends[t])
+
+critical_path = set()
+critical_edges = set()
+current = last_task
+while current:
+    critical_path.add(current)
+    deps = task_deps[current]
+    if not deps:
+        break
+    binding = max(deps, key=lambda d: task_ends[d])
+    critical_edges.add((binding, current))
+    current = binding
+
+# Build ordered task list (group headers + indented tasks)
 group_order = ["Requirements", "Design", "Development", "Testing", "Deployment"]
+groups_agg = df.groupby("group").agg({"start": "min", "end": "max"}).reset_index()
 
-# Build task list with groups (groups first, then their tasks)
-ordered_tasks = []
+ordered_items = []
 task_y_labels = {}
+for group in group_order:
+    ordered_items.append({"label": f"\u25bc {group}", "is_group": True, "group": group})
+    for _, row in df[df["group"] == group].sort_values("start").iterrows():
+        label = f"   {row['task']}"
+        ordered_items.append({"label": label, "is_group": False, "task": row})
+        task_y_labels[row["task"]] = label
 
-for group_name in group_order:
-    # Add group summary bar
-    label = f"\u25bc {group_name}"
-    ordered_tasks.append({"name": label, "is_group": True, "group": group_name})
-    # Add tasks in this group
-    group_tasks = df[df["group"] == group_name].sort_values("start")
-    for _, task in group_tasks.iterrows():
-        label = f"   {task['task']}"
-        ordered_tasks.append({"name": label, "is_group": False, "task_data": task})
-        task_y_labels[task["task"]] = label
-
-# Build y-axis category order (reversed so first task appears at top)
-y_categories = [item["name"] for item in ordered_tasks]
+y_categories = [item["label"] for item in ordered_items]
 
 # Create figure
 fig = go.Figure()
 
-# Add task bars
-for item in ordered_tasks:
-    if item["is_group"]:
-        group_name = item["group"]
-        group_data = groups[groups["group"] == group_name].iloc[0]
-        fig.add_trace(
-            go.Scatter(
-                x=[group_data["start"], group_data["end"]],
-                y=[item["name"], item["name"]],
-                mode="lines",
-                line={"color": group_colors[group_name], "width": 20},
-                name=group_name,
-                showlegend=True,
-                legendgroup=group_name,
-                hovertemplate=(
-                    f"<b>{group_name}</b><br>"
-                    f"Start: {group_data['start'].strftime('%Y-%m-%d')}<br>"
-                    f"End: {group_data['end'].strftime('%Y-%m-%d')}<extra></extra>"
-                ),
-            )
+# Draw bars using go.Bar with horizontal orientation and base parameter
+for group in group_order:
+    color = group_colors[group]
+    g = groups_agg[groups_agg["group"] == group].iloc[0]
+    dur_ms = (g["end"] - g["start"]).total_seconds() * 1000
+
+    # Group summary bar (wider, shown in legend)
+    fig.add_trace(
+        go.Bar(
+            y=[f"\u25bc {group}"],
+            x=[dur_ms],
+            base=[g["start"]],
+            orientation="h",
+            name=group,
+            legendgroup=group,
+            marker={"color": color, "line": {"width": 0}},
+            width=0.7,
+            hovertemplate=(
+                f"<b>{group} Phase</b><br>"
+                f"Start: {g['start'].strftime('%b %d, %Y')}<br>"
+                f"End: {g['end'].strftime('%b %d, %Y')}<extra></extra>"
+            ),
         )
-    else:
-        task = item["task_data"]
-        group_name = task["group"]
-        duration = (task["end"] - task["start"]).days
+    )
+
+    # Individual task bars (narrower, hidden from legend)
+    for _, task in df[df["group"] == group].sort_values("start").iterrows():
+        is_cp = task["task"] in critical_path
+        label = task_y_labels[task["task"]]
+        dur_ms = (task["end"] - task["start"]).total_seconds() * 1000
+        dur_days = (task["end"] - task["start"]).days
+
         fig.add_trace(
-            go.Scatter(
-                x=[task["start"], task["end"]],
-                y=[item["name"], item["name"]],
-                mode="lines",
-                line={"color": group_colors[group_name], "width": 14},
-                opacity=0.85,
+            go.Bar(
+                y=[label],
+                x=[dur_ms],
+                base=[task["start"]],
+                orientation="h",
                 showlegend=False,
-                legendgroup=group_name,
+                legendgroup=group,
+                marker={
+                    "color": color,
+                    "opacity": 0.95 if is_cp else 0.55,
+                    "line": {"width": 1.5 if is_cp else 0, "color": "rgba(0,0,0,0.25)" if is_cp else "rgba(0,0,0,0)"},
+                },
+                width=0.45,
                 hovertemplate=(
-                    f"<b>{task['task']}</b><br>"
-                    f"Start: {task['start'].strftime('%Y-%m-%d')}<br>"
-                    f"End: {task['end'].strftime('%Y-%m-%d')}<br>"
-                    f"Duration: {duration} days<extra></extra>"
+                    f"<b>{task['task']}</b>" + (" \u26a1 Critical Path" if is_cp else "") + f"<br>Phase: {group}<br>"
+                    f"Start: {task['start'].strftime('%b %d, %Y')}<br>"
+                    f"End: {task['end'].strftime('%b %d, %Y')}<br>"
+                    f"Duration: {dur_days} days<extra></extra>"
                 ),
             )
         )
 
-# Add dependency arrows as annotations with arrowheads
-for item in ordered_tasks:
-    if not item["is_group"]:
-        task = item["task_data"]
-        depends_on = task["depends_on"]
-        if depends_on:
-            for dep in depends_on:
-                if dep in task_y_labels:
-                    pred_task = df[df["task"] == dep].iloc[0]
-                    pred_end = pred_task["end"]
-                    curr_start = task["start"]
-                    pred_y = task_y_labels[dep]
-                    curr_y = task_y_labels[task["task"]]
+# Dependency arrows (critical path edges highlighted)
+for _, task in df.iterrows():
+    for dep in task["depends_on"]:
+        if dep in task_y_labels:
+            pred = df[df["task"] == dep].iloc[0]
+            is_cp_edge = (dep, task["task"]) in critical_edges
 
-                    # Annotation arrow from predecessor end to successor start
-                    fig.add_annotation(
-                        x=curr_start,
-                        y=curr_y,
-                        ax=pred_end,
-                        ay=pred_y,
-                        xref="x",
-                        yref="y",
-                        axref="x",
-                        ayref="y",
-                        showarrow=True,
-                        arrowhead=3,
-                        arrowsize=1.2,
-                        arrowwidth=1.5,
-                        arrowcolor="#555555",
-                        opacity=0.7,
-                    )
+            fig.add_annotation(
+                x=task["start"],
+                y=task_y_labels[task["task"]],
+                ax=pred["end"],
+                ay=task_y_labels[dep],
+                xref="x",
+                yref="y",
+                axref="x",
+                ayref="y",
+                showarrow=True,
+                arrowhead=3,
+                arrowsize=1.3,
+                arrowwidth=2.8 if is_cp_edge else 1.3,
+                arrowcolor="#C0392B" if is_cp_edge else "#BBBBBB",
+                opacity=0.9 if is_cp_edge else 0.4,
+            )
 
 # Layout
 fig.update_layout(
     title={
         "text": "gantt-dependencies \u00b7 plotly \u00b7 pyplots.ai",
-        "font": {"size": 32, "color": "#333333"},
+        "font": {"size": 32, "color": "#2C3E50"},
         "x": 0.5,
         "xanchor": "center",
     },
@@ -269,18 +285,13 @@ fig.update_layout(
         "tickfont": {"size": 16},
         "type": "date",
         "tickformat": "%b %d",
-        "gridcolor": "rgba(0,0,0,0.08)",
+        "gridcolor": "rgba(0,0,0,0.06)",
         "showgrid": True,
         "dtick": 7 * 24 * 60 * 60 * 1000,
         "tickangle": 45,
     },
-    yaxis={
-        "title": {"text": "", "font": {"size": 22}},
-        "tickfont": {"size": 15},
-        "categoryorder": "array",
-        "categoryarray": y_categories[::-1],
-        "showgrid": False,
-    },
+    yaxis={"tickfont": {"size": 16}, "categoryorder": "array", "categoryarray": y_categories[::-1], "showgrid": False},
+    barmode="overlay",
     template="plotly_white",
     legend={
         "title": {"text": "Project Phases", "font": {"size": 20}},
@@ -292,20 +303,30 @@ fig.update_layout(
         "x": 0.5,
         "itemwidth": 30,
     },
-    margin={"l": 230, "r": 40, "t": 120, "b": 90},
+    margin={"l": 240, "r": 50, "t": 120, "b": 110},
     height=900,
     width=1600,
 )
 
-# Dependency legend annotation
+# Dependency legend annotations
 fig.add_annotation(
-    x=1.0,
-    y=-0.1,
+    x=0.99,
+    y=-0.12,
     xref="paper",
     yref="paper",
-    text="\u2192 Dependency (finish-to-start)",
+    text="\u2501\u2501\u25b6 Critical Path",
     showarrow=False,
-    font={"size": 15, "color": "#555555"},
+    font={"size": 15, "color": "#C0392B"},
+    xanchor="right",
+)
+fig.add_annotation(
+    x=0.99,
+    y=-0.16,
+    xref="paper",
+    yref="paper",
+    text="\u2500\u2500\u25b6 Dependency (finish-to-start)",
+    showarrow=False,
+    font={"size": 15, "color": "#999999"},
     xanchor="right",
 )
 
