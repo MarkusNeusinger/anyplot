@@ -1,214 +1,244 @@
 library: matplotlib
 specification_id: gantt-dependencies
 created: '2026-01-15T21:03:31Z'
-updated: '2026-01-15T21:06:15Z'
-generated_by: claude-opus-4-5-20251101
+updated: '2026-02-25T15:19:43Z'
+generated_by: claude-opus-4-6
 workflow_run: 21046151669
 issue: 3830
-python_version: 3.13.11
+python_version: '3.14'
 library_version: 3.10.8
 preview_url: https://storage.googleapis.com/pyplots-images/plots/gantt-dependencies/matplotlib/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/gantt-dependencies/matplotlib/plot_thumb.png
 preview_html: null
-quality_score: 91
+quality_score: 90
 review:
   strengths:
-  - Excellent dependency visualization using FancyArrowPatch with curved connectionstyle
-  - Clear visual hierarchy with phase summary bars (darker, smaller) vs individual
-    tasks (lighter, taller)
-  - Task indentation in Y-axis labels clearly shows parent-child relationships
-  - Color scheme effectively distinguishes 4 phases while remaining colorblind-friendly
-  - Comprehensive data example covering multiple dependency types (single and multiple
-    dependencies)
-  - Clean, readable code structure following KISS principles
+  - Critical path computation and red highlighting creates excellent data storytelling
+  - Comprehensive feature set including curved dependency arrows, phase groupings,
+    aggregate bars, and milestone marker
+  - Professional visual design with phase-specific color palette, removed spines,
+    subtle grid, and off-white background
+  - Differentiated bar heights for phases vs tasks creates clear visual hierarchy
+  - Realistic software development project data covers all aspects of the Gantt chart
+    with dependencies
   weaknesses:
-  - Dependency legend uses annotation text instead of being integrated into the legend
-    handles
-  - Axis labels could be more descriptive (e.g., Date instead of Timeline)
-  image_description: 'The plot displays a horizontal Gantt chart showing a software
-    development project timeline spanning from January to late April 2024. The chart
-    contains 18 tasks organized into 4 phases: Requirements Phase (blue), Design Phase
-    (yellow), Development Phase (green), and Testing Phase (pink/magenta). Phase summary
-    bars are shown with darker colors and black borders, while individual child tasks
-    are indented in the Y-axis labels and displayed with lighter colors. Dependency
-    arrows connect related tasks using curved gray lines with arrowheads, showing
-    finish-to-start relationships between tasks. The X-axis shows dates in "Mon DD"
-    format with bi-weekly intervals. A legend in the upper right explains the phase
-    colors, with a separate "→ Dependency" annotation. The title follows the correct
-    format: "gantt-dependencies · matplotlib · pyplots.ai".'
+  - Gold and orange phase colors are somewhat similar, may challenge deuteranopia
+    users
+  - Function definition for critical path breaks flat KISS script pattern
+  - np.random.seed(42) set but no random data generated (unnecessary)
+  - Uses plt.xticks() instead of axes method for tick rotation
+  image_description: 'The plot displays a horizontal Gantt chart for a software development
+    project spanning January through May 2024. Eighteen tasks are organized into four
+    color-coded phases: Requirements Phase (steel blue), Design Phase (gold/yellow),
+    Development Phase (orange), and Testing Phase (purple). Phase headers appear as
+    bold labels with thinner aggregate bars, while child tasks are indented with full-height
+    bars. Curved dependency arrows connect predecessor task endpoints to successor
+    task start points, with critical path edges highlighted in red (#B22222) and non-critical
+    dependencies in gray. A red diamond milestone marker appears at the project completion
+    date (May 10). The title reads "gantt-dependencies · matplotlib · pyplots.ai"
+    in bold dark text. The x-axis shows biweekly date ticks labeled "Timeline (2024)",
+    and the y-axis is labeled "Project Tasks". Top and right spines are removed, remaining
+    spines are light gray, and a subtle dashed vertical grid assists timeline reading.
+    A comprehensive legend in the upper right identifies all four phases, critical
+    path arrows, dependency arrows, and the milestone marker. The background is a
+    soft off-white (#FAFAFA).'
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 28
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 24pt, axis labels at 20pt, tick labels at 14pt - all clearly
-          readable
+        comment: Title 24pt, labels 20pt, ticks 16pt all explicitly set. Legend 14pt
+          still legible.
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping elements; task labels, bars, and arrows are well-spaced
+        comment: No text overlap. Y-axis labels well-spaced, x-axis dates rotated,
+          legend clear of data.
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Bars are appropriately sized, arrows are visible but some could be
-          thicker
+        comment: All bars visible with appropriate heights. Some dependency arrows
+          blend where multiple cross same region.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Four distinct phase colors (blue, yellow, green, pink) are colorblind-friendly
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Excellent use of canvas; plot fills the majority of the 16:9 space
-      - id: VQ-06
-        name: Axis Labels
-        score: 1
-        max: 2
-        passed: true
-        comment: Timeline and Tasks are descriptive but lack units
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
-        max: 2
-        passed: true
-        comment: Grid is subtle with alpha=0.3, but legend does not include dependency
-          arrows properly
-    spec_compliance:
-      score: 24
-      max: 25
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct Gantt chart with horizontal bars
-      - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Tasks on Y-axis, timeline on X-axis, correct date ranges
-      - id: SC-03
-        name: Required Features
-        score: 5
-        max: 5
-        passed: true
-        comment: Has dependency arrows, task groupings, group summary bars, indentation
-          for hierarchy
-      - id: SC-04
-        name: Data Range
         score: 3
-        max: 3
+        max: 4
         passed: true
-        comment: All dates visible from Jan to late April
-      - id: SC-05
-        name: Legend Accuracy
-        score: 1
-        max: 2
+        comment: Good 4-color palette but gold and orange may be difficult to distinguish
+          for deuteranopia.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Phase legend is accurate but dependency arrow is shown via annotation
-      - id: SC-06
-        name: Title Format
+        comment: Chart fills canvas well at 16x10 figsize. Balanced margins with tight_layout.
+      - id: VQ-06
+        name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Uses correct format gantt-dependencies · matplotlib · pyplots.ai
-    data_quality:
-      score: 20
+        comment: Timeline (2024) with year context, Project Tasks descriptive label.
+    design_excellence:
+      score: 16
       max: 20
       items:
-      - id: DQ-01
-        name: Feature Coverage
-        score: 8
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
         max: 8
         passed: true
-        comment: 'Shows all aspects: 4 phases, individual tasks, dependencies between
-          tasks, parallel and sequential tasks'
-      - id: DQ-02
-        name: Realistic Context
-        score: 7
-        max: 7
+        comment: Custom 4-color palette, critical path in red, phase/task height differentiation.
+          Clearly above defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
         passed: true
-        comment: Software development project is a perfect, neutral, real-world example
-      - id: DQ-03
-        name: Appropriate Scale
+        comment: Spines removed, light gray remaining spines, subtle dashed grid at
+          alpha=0.15, off-white background.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Critical path in red creates immediate visual narrative. Milestone
+          diamond draws eye to completion. Bold phase headers establish hierarchy.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
         score: 5
         max: 5
         passed: true
-        comment: Task durations are realistic (1-6 weeks), project spans 4 months
+        comment: Correct Gantt chart with horizontal bars representing task timelines.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: dependency arrows, groupings, aggregate
+          bars, indentation, color coding, legend, correct scheduling.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Y-axis maps tasks, x-axis maps timeline. Bar widths represent duration.
+          Dependencies connect correct endpoints.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title follows exact format. Legend identifies all phases, critical
+          path, dependency arrows, and milestone.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows 4 phases, sequential/parallel tasks, single/multiple dependencies,
+          cross-phase dependencies, critical path, milestone.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Software development lifecycle is an ideal neutral real-world scenario
+          with recognizable task names.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 5-month project timeline is realistic. Task durations of 1-2 weeks
+          are plausible.
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: 'Linear script: imports → data → plot → save (no functions/classes)'
+        comment: Follows Import-Data-Plot-Save but defines longest_path() recursive
+          function for critical path.
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42) though data is deterministic
+        comment: np.random.seed(42) set and all data is deterministic via hardcoded
+          timestamps.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used (matplotlib, numpy, pandas)
+        comment: 'All imports used: matplotlib.dates, pyplot, numpy, pandas, Line2D,
+          FancyArrowPatch, Patch.'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current matplotlib API
+        comment: Complexity appropriate for visualization. Critical path serves storytelling.
+          No fake UI.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300, bbox_inches='tight'
-    library_features:
-      score: 0
-      max: 5
+        comment: Saves as plot.png with dpi=300 bbox_inches=tight. Current matplotlib
+          API.
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 0
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
-        passed: false
-        comment: Uses matplotlib effectively with FancyArrowPatch, barh, custom patches;
-          standard usage without advanced features
+        passed: true
+        comment: 'Good axes methods, mdates formatting, FancyArrowPatch. Minor: plt.xticks()
+          instead of axes method.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: FancyArrowPatch with arc3 connectionstyle, mdates formatters/locators,
+          custom legend with Patch/Line2D.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - patches
-  - annotations
   - custom-legend
+  - patches
   - manual-ticks
   patterns:
   - data-generation
   - iteration-over-groups
+  - explicit-figure
   dataprep:
   - time-series
   styling:
   - alpha-blending
-  - grid-styling
   - edge-highlighting
+  - grid-styling

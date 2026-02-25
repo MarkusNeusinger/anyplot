@@ -1,14 +1,15 @@
 """ pyplots.ai
 gantt-dependencies: Gantt Chart with Dependencies
-Library: matplotlib 3.10.8 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-15
+Library: matplotlib 3.10.8 | Python 3.14
+Quality: 90/100 | Updated: 2026-02-25
 """
 
-import matplotlib.patches as mpatches
+import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from matplotlib.patches import FancyArrowPatch
+from matplotlib.lines import Line2D
+from matplotlib.patches import FancyArrowPatch, Patch
 
 
 # Data - Software development project with phases and dependencies
@@ -48,20 +49,20 @@ tasks_data = {
         # Design Phase
         pd.Timestamp("2024-01-22"),
         pd.Timestamp("2024-01-22"),
-        pd.Timestamp("2024-01-29"),
-        pd.Timestamp("2024-01-29"),
-        pd.Timestamp("2024-02-12"),
+        pd.Timestamp("2024-02-05"),
+        pd.Timestamp("2024-02-05"),
+        pd.Timestamp("2024-02-19"),
         # Development Phase
-        pd.Timestamp("2024-02-19"),
-        pd.Timestamp("2024-02-19"),
+        pd.Timestamp("2024-02-26"),
         pd.Timestamp("2024-02-26"),
         pd.Timestamp("2024-03-11"),
         pd.Timestamp("2024-03-25"),
-        # Testing Phase
-        pd.Timestamp("2024-04-01"),
-        pd.Timestamp("2024-04-01"),
         pd.Timestamp("2024-04-08"),
+        # Testing Phase
         pd.Timestamp("2024-04-15"),
+        pd.Timestamp("2024-04-15"),
+        pd.Timestamp("2024-04-22"),
+        pd.Timestamp("2024-04-29"),
     ],
     "end": [
         # Requirements Phase
@@ -70,22 +71,22 @@ tasks_data = {
         pd.Timestamp("2024-01-14"),
         pd.Timestamp("2024-01-19"),
         # Design Phase
-        pd.Timestamp("2024-02-16"),
+        pd.Timestamp("2024-02-23"),
         pd.Timestamp("2024-02-02"),
-        pd.Timestamp("2024-02-09"),
-        pd.Timestamp("2024-02-09"),
         pd.Timestamp("2024-02-16"),
+        pd.Timestamp("2024-02-16"),
+        pd.Timestamp("2024-02-23"),
         # Development Phase
-        pd.Timestamp("2024-03-29"),
+        pd.Timestamp("2024-04-12"),
         pd.Timestamp("2024-03-08"),
-        pd.Timestamp("2024-03-15"),
         pd.Timestamp("2024-03-22"),
-        pd.Timestamp("2024-03-29"),
+        pd.Timestamp("2024-04-05"),
+        pd.Timestamp("2024-04-12"),
         # Testing Phase
-        pd.Timestamp("2024-04-26"),
-        pd.Timestamp("2024-04-07"),
-        pd.Timestamp("2024-04-14"),
-        pd.Timestamp("2024-04-26"),
+        pd.Timestamp("2024-05-10"),
+        pd.Timestamp("2024-04-21"),
+        pd.Timestamp("2024-04-28"),
+        pd.Timestamp("2024-05-10"),
     ],
     "group": [
         # Requirements Phase
@@ -145,20 +146,74 @@ df["duration"] = (df["end"] - df["start"]).dt.days
 # Create task index mapping for y-position
 task_to_idx = {task: i for i, task in enumerate(df["task"])}
 
-# Define colors for each phase
+# Define colorblind-safe palette for each phase
 phase_colors = {
-    "Requirements Phase": "#306998",  # Python Blue
-    "Design Phase": "#FFD43B",  # Python Yellow
-    "Development Phase": "#4CAF50",  # Green
-    "Testing Phase": "#E91E63",  # Pink
+    "Requirements Phase": "#306998",
+    "Design Phase": "#D4A017",
+    "Development Phase": "#E67E22",
+    "Testing Phase": "#8E44AD",
 }
 
-# Create figure
-fig, ax = plt.subplots(figsize=(16, 9))
+# Compute critical path (longest path through dependency network)
+# Build adjacency with implicit phase↔child edges for a connected graph
+task_successors = {t: [] for t in df["task"]}
+for _, r in df.iterrows():
+    for dep in r["depends_on"]:
+        if dep in task_successors:
+            task_successors[dep].append(r["task"])
+
+# Add implicit edges: phase header → child tasks with no in-phase deps,
+# and last-finishing child → next phase header
+for phase_name in phase_colors:
+    children = df[df["group"] == phase_name]
+    # Children with no explicit dependencies → phase header leads to them
+    for _, child in children.iterrows():
+        if not child["depends_on"]:
+            task_successors[phase_name].append(child["task"])
+    # Find last-finishing child and connect to next phase(s)
+    if not children.empty:
+        last_child = children.loc[children["end"].idxmax(), "task"]
+        # Find phases that depend on this phase
+        for _, r in df.iterrows():
+            if phase_name in r["depends_on"] and r["task"] in phase_colors:
+                task_successors[last_child].append(r["task"])
+
+# Longest path from each task using DFS with memoization
+longest_from = {}
+
+
+def longest_path(task):
+    if task in longest_from:
+        return longest_from[task]
+    succs = task_successors[task]
+    if not succs:
+        longest_from[task] = [task]
+        return [task]
+    best = []
+    for s in succs:
+        path = longest_path(s)
+        if len(path) > len(best):
+            best = path
+    longest_from[task] = [task] + best
+    return longest_from[task]
+
+
+# Find the globally longest path
+critical_path = []
+for task in df["task"]:
+    path = longest_path(task)
+    if len(path) > len(critical_path):
+        critical_path = path
+critical_set = set(critical_path)
+
+# Create figure with subtle background — taller for 18 tasks
+fig, ax = plt.subplots(figsize=(16, 10))
+fig.patch.set_facecolor("#FAFAFA")
+ax.set_facecolor("#FAFAFA")
 
 # Plot bars
 bar_height = 0.6
-group_bar_height = 0.4
+group_bar_height = 0.35
 
 for _idx, row in df.iterrows():
     task = row["task"]
@@ -167,26 +222,45 @@ for _idx, row in df.iterrows():
     group = row["group"]
     y_pos = len(df) - 1 - task_to_idx[task]
 
-    # Determine if this is a group header (phase summary)
     is_group = group is None and task in phase_colors
+    on_critical = task in critical_set
 
     if is_group:
-        # Group header bar - darker color, smaller height
         color = phase_colors[task]
+        edge_clr = "#B22222" if on_critical else "#2C3E50"
+        edge_w = 2.5 if on_critical else 1.5
         ax.barh(
-            y_pos, duration, left=start, height=group_bar_height, color=color, alpha=0.9, edgecolor="black", linewidth=2
+            y_pos,
+            duration,
+            left=start,
+            height=group_bar_height,
+            color=color,
+            alpha=0.95,
+            edgecolor=edge_clr,
+            linewidth=edge_w,
+            zorder=3,
         )
     else:
-        # Regular task bar
         if group and group in phase_colors:
             color = phase_colors[group]
         else:
             color = "#306998"
-        ax.barh(y_pos, duration, left=start, height=bar_height, color=color, alpha=0.7, edgecolor="black", linewidth=1)
+        edge_clr = "#B22222" if on_critical else "#2C3E50"
+        edge_w = 2.2 if on_critical else 0.6
+        task_alpha = 0.85 if on_critical else 0.7
+        ax.barh(
+            y_pos,
+            duration,
+            left=start,
+            height=bar_height,
+            color=color,
+            alpha=task_alpha,
+            edgecolor=edge_clr,
+            linewidth=edge_w,
+            zorder=3,
+        )
 
 # Draw dependency arrows
-arrow_style = "Simple, head_width=8, head_length=6"
-
 for _idx, row in df.iterrows():
     task = row["task"]
     depends = row["depends_on"]
@@ -200,73 +274,134 @@ for _idx, row in df.iterrows():
             dep_row = df[df["task"] == dep].iloc[0]
             dep_end = dep_row["end"]
 
-            # Calculate arrow positions
-            # Arrow starts from end of dependency task
+            # Arrow from right edge (end date) of predecessor to left edge (start date) of successor
             start_x = dep_end
             start_y = dep_y_pos
-
-            # Arrow ends at start of current task
             end_x = task_start
             end_y = y_pos
 
-            # Draw connecting arrow with curved path
+            # Curvature based on vertical distance
+            dy = abs(end_y - start_y)
+            rad = 0.15 if dy <= 2 else (0.1 if dy <= 5 else 0.08)
+
+            # Highlight arrows on the critical path
+            is_critical_edge = dep in critical_set and task in critical_set
+            arr_color = "#B22222" if is_critical_edge else "#4A4A4A"
+            arr_lw = 2.4 if is_critical_edge else 1.8
+            arr_alpha = 0.85 if is_critical_edge else 0.5
+
             arrow = FancyArrowPatch(
                 (start_x, start_y),
                 (end_x, end_y),
-                arrowstyle="->",
-                color="#555555",
-                linewidth=2,
-                connectionstyle="arc3,rad=0.15",
-                alpha=0.7,
-                mutation_scale=15,
+                arrowstyle="-|>",
+                color=arr_color,
+                linewidth=arr_lw,
+                connectionstyle=f"arc3,rad={rad}",
+                alpha=arr_alpha,
+                mutation_scale=14,
+                zorder=5 if is_critical_edge else 4,
             )
             ax.add_patch(arrow)
 
 # Format y-axis with task names
-task_labels = df["task"].tolist()[::-1]  # Reverse to match bar positions
+task_labels = df["task"].tolist()[::-1]
 y_positions = range(len(task_labels))
 
-# Style task labels - indent child tasks
 styled_labels = []
 for label in task_labels:
     row = df[df["task"] == label].iloc[0]
     if row["group"] is not None:
-        styled_labels.append(f"    {label}")  # Indent child tasks
+        styled_labels.append(f"    {label}")
     else:
         styled_labels.append(label)
 
 ax.set_yticks(y_positions)
-ax.set_yticklabels(styled_labels, fontsize=14)
+ax.set_yticklabels(styled_labels)
+
+# Bold phase labels
+for i, label in enumerate(task_labels):
+    row = df[df["task"] == label].iloc[0]
+    if row["group"] is None and label in phase_colors:
+        ax.get_yticklabels()[i].set_fontweight("bold")
 
 # Format x-axis with dates
-ax.xaxis.set_major_formatter(plt.matplotlib.dates.DateFormatter("%b %d"))
-ax.xaxis.set_major_locator(plt.matplotlib.dates.WeekdayLocator(interval=2))
-plt.xticks(rotation=45, ha="right", fontsize=14)
+ax.xaxis.set_major_formatter(mdates.DateFormatter("%b %d"))
+ax.xaxis.set_major_locator(mdates.WeekdayLocator(interval=2))
+ax.tick_params(axis="both", labelsize=16)
+plt.xticks(rotation=45, ha="right")
 
 # Labels and title
-ax.set_xlabel("Timeline", fontsize=20)
-ax.set_ylabel("Tasks", fontsize=20)
-ax.set_title("gantt-dependencies · matplotlib · pyplots.ai", fontsize=24)
+ax.set_xlabel("Timeline (2024)", fontsize=20)
+ax.set_ylabel("Project Tasks", fontsize=20)
+ax.set_title("gantt-dependencies · matplotlib · pyplots.ai", fontsize=24, fontweight="bold", color="#2C3E50", pad=20)
 
 # Grid - subtle vertical lines for timeline
-ax.grid(True, axis="x", alpha=0.3, linestyle="--")
+ax.grid(True, axis="x", alpha=0.15, linewidth=0.6, linestyle="--", color="#999999")
 ax.set_axisbelow(True)
 
-# Create legend for phases
-legend_patches = [mpatches.Patch(color=color, alpha=0.7, label=phase) for phase, color in phase_colors.items()]
-legend_patches.append(mpatches.FancyArrow(0, 0, 1, 0, color="#555555", width=0.1, label="Dependency"))
-ax.legend(
-    handles=legend_patches[:4],  # Just phase colors
-    loc="upper right",
-    fontsize=14,
-    framealpha=0.9,
+# Remove top and right spines, style remaining
+ax.spines["top"].set_visible(False)
+ax.spines["right"].set_visible(False)
+ax.spines["left"].set_color("#CCCCCC")
+ax.spines["bottom"].set_color("#CCCCCC")
+
+# Add milestone diamond at project completion
+project_end = df["end"].max()
+last_task_y = len(df) - 1 - task_to_idx["User Acceptance Testing"]
+ax.plot(
+    project_end,
+    last_task_y,
+    marker="D",
+    markersize=12,
+    color="#B22222",
+    markeredgecolor="#2C3E50",
+    markeredgewidth=1.2,
+    zorder=6,
 )
 
-# Add dependency arrow to legend manually via annotation
-ax.annotate("→ Dependency", xy=(0.88, 0.72), xycoords="axes fraction", fontsize=14, color="#555555")
+# Create legend with critical path and dependency entries
+legend_patches = [
+    Patch(facecolor=color, alpha=0.8, edgecolor="#2C3E50", linewidth=0.6, label=phase)
+    for phase, color in phase_colors.items()
+]
+critical_legend = Line2D(
+    [0],
+    [0],
+    color="#B22222",
+    linewidth=2.5,
+    alpha=0.85,
+    marker=">",
+    markersize=8,
+    markeredgecolor="#B22222",
+    label="Critical Path",
+)
+arrow_legend = Line2D(
+    [0],
+    [0],
+    color="#4A4A4A",
+    linewidth=2,
+    alpha=0.5,
+    marker=">",
+    markersize=8,
+    markeredgecolor="#4A4A4A",
+    label="Dependency",
+)
+milestone_legend = Line2D(
+    [0], [0], color="#B22222", marker="D", markersize=10, markeredgecolor="#2C3E50", linestyle="None", label="Milestone"
+)
+legend_patches.extend([critical_legend, arrow_legend, milestone_legend])
+ax.legend(
+    handles=legend_patches,
+    loc="upper right",
+    fontsize=14,
+    framealpha=0.95,
+    edgecolor="#CCCCCC",
+    fancybox=True,
+    shadow=False,
+)
 
 # Adjust layout
 ax.set_xlim(df["start"].min() - pd.Timedelta(days=3), df["end"].max() + pd.Timedelta(days=3))
 
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+plt.savefig("plot.png", dpi=300, bbox_inches="tight", facecolor=fig.get_facecolor())
