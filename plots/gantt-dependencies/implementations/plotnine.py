@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 gantt-dependencies: Gantt Chart with Dependencies
 Library: plotnine 0.15.3 | Python 3.14
 Quality: 89/100 | Updated: 2026-02-25
@@ -302,20 +302,20 @@ plot = (
         lineend="butt",
         alpha=0.85,
     )
-    # Non-critical dependency arrows (lighter but visible)
+    # Non-critical dependency arrows (visible gray)
     + geom_segment(
         data=norm_arrows,
         mapping=aes(x="x_start", xend="x_end", y="y_start", yend="y_end"),
-        color="#888888",
+        color="#666666",
         size=1.0,
-        alpha=0.6,
+        alpha=0.75,
     )
     + geom_segment(
         data=norm_heads,
         mapping=aes(x="x_start", xend="x_end", y="y_start", yend="y_end"),
-        color="#888888",
+        color="#666666",
         size=1.2,
-        alpha=0.6,
+        alpha=0.75,
     )
     # Critical path dependency arrows (bold, dark)
     + geom_segment(
@@ -340,7 +340,7 @@ plot = (
     + scale_color_manual(values=group_colors, name="Project Phase", limits=group_order)
     + scale_y_continuous(breaks=y_breaks, labels=y_labels_list, trans="reverse")
     + scale_x_datetime(
-        date_breaks="1 week", date_labels="%b %d", limits=(datetime(2023, 12, 29), datetime(2024, 3, 23))
+        date_breaks="1 week", date_labels="%b %d", limits=(datetime(2023, 12, 29), datetime(2024, 3, 22))
     )
     # Labels
     + labs(
@@ -354,14 +354,14 @@ plot = (
     + theme(
         figure_size=(16, 9),
         plot_title=element_text(size=26, weight="bold", margin={"b": 5}),
-        plot_subtitle=element_text(size=14, color="#555555", margin={"b": 15}),
+        plot_subtitle=element_text(size=16, color="#555555", margin={"b": 15}),
         axis_title_x=element_text(size=20),
         axis_text_x=element_text(size=16, rotation=45, ha="right"),
         axis_text_y=element_text(size=16, ha="right"),
         legend_title=element_text(size=18, weight="bold"),
         legend_text=element_text(size=16),
         legend_position="right",
-        legend_background=element_rect(fill="white", alpha=0.85, color="#CCCCCC", size=0.5),
+        legend_background=element_rect(fill="white", alpha=0.9, color="#DDDDDD", size=0.3),
         legend_key_size=18,
         panel_grid_major_y=element_blank(),
         panel_grid_minor=element_blank(),
