@@ -1,7 +1,6 @@
-""" pyplots.ai
+"""pyplots.ai
 gantt-dependencies: Gantt Chart with Dependencies
 Library: matplotlib 3.10.8 | Python 3.14
-Quality: 88/100 | Updated: 2026-02-25
 """
 
 import matplotlib.dates as mdates
@@ -149,13 +148,65 @@ task_to_idx = {task: i for i, task in enumerate(df["task"])}
 # Define colorblind-safe palette for each phase
 phase_colors = {
     "Requirements Phase": "#306998",
-    "Design Phase": "#FFD43B",
+    "Design Phase": "#D4A017",
     "Development Phase": "#E67E22",
     "Testing Phase": "#8E44AD",
 }
 
-# Create figure with subtle background
-fig, ax = plt.subplots(figsize=(16, 9))
+# Compute critical path (longest path through dependency network)
+# Build adjacency with implicit phase↔child edges for a connected graph
+task_successors = {t: [] for t in df["task"]}
+for _, r in df.iterrows():
+    for dep in r["depends_on"]:
+        if dep in task_successors:
+            task_successors[dep].append(r["task"])
+
+# Add implicit edges: phase header → child tasks with no in-phase deps,
+# and last-finishing child → next phase header
+for phase_name in phase_colors:
+    children = df[df["group"] == phase_name]
+    # Children with no explicit dependencies → phase header leads to them
+    for _, child in children.iterrows():
+        if not child["depends_on"]:
+            task_successors[phase_name].append(child["task"])
+    # Find last-finishing child and connect to next phase(s)
+    if not children.empty:
+        last_child = children.loc[children["end"].idxmax(), "task"]
+        # Find phases that depend on this phase
+        for _, r in df.iterrows():
+            if phase_name in r["depends_on"] and r["task"] in phase_colors:
+                task_successors[last_child].append(r["task"])
+
+# Longest path from each task using DFS with memoization
+longest_from = {}
+
+
+def longest_path(task):
+    if task in longest_from:
+        return longest_from[task]
+    succs = task_successors[task]
+    if not succs:
+        longest_from[task] = [task]
+        return [task]
+    best = []
+    for s in succs:
+        path = longest_path(s)
+        if len(path) > len(best):
+            best = path
+    longest_from[task] = [task] + best
+    return longest_from[task]
+
+
+# Find the globally longest path
+critical_path = []
+for task in df["task"]:
+    path = longest_path(task)
+    if len(path) > len(critical_path):
+        critical_path = path
+critical_set = set(critical_path)
+
+# Create figure with subtle background — taller for 18 tasks
+fig, ax = plt.subplots(figsize=(16, 10))
 fig.patch.set_facecolor("#FAFAFA")
 ax.set_facecolor("#FAFAFA")
 
@@ -171,9 +222,12 @@ for _idx, row in df.iterrows():
     y_pos = len(df) - 1 - task_to_idx[task]
 
     is_group = group is None and task in phase_colors
+    on_critical = task in critical_set
 
     if is_group:
         color = phase_colors[task]
+        edge_clr = "#B22222" if on_critical else "#2C3E50"
+        edge_w = 2.5 if on_critical else 1.5
         ax.barh(
             y_pos,
             duration,
@@ -181,8 +235,8 @@ for _idx, row in df.iterrows():
             height=group_bar_height,
             color=color,
             alpha=0.95,
-            edgecolor="#2C3E50",
-            linewidth=1.5,
+            edgecolor=edge_clr,
+            linewidth=edge_w,
             zorder=3,
         )
     else:
@@ -190,15 +244,18 @@ for _idx, row in df.iterrows():
             color = phase_colors[group]
         else:
             color = "#306998"
+        edge_clr = "#B22222" if on_critical else "#2C3E50"
+        edge_w = 2.2 if on_critical else 0.6
+        task_alpha = 0.85 if on_critical else 0.7
         ax.barh(
             y_pos,
             duration,
             left=start,
             height=bar_height,
             color=color,
-            alpha=0.7,
-            edgecolor="#2C3E50",
-            linewidth=0.6,
+            alpha=task_alpha,
+            edgecolor=edge_clr,
+            linewidth=edge_w,
             zorder=3,
         )
 
@@ -226,16 +283,22 @@ for _idx, row in df.iterrows():
             dy = abs(end_y - start_y)
             rad = 0.15 if dy <= 2 else (0.1 if dy <= 5 else 0.08)
 
+            # Highlight arrows on the critical path
+            is_critical_edge = dep in critical_set and task in critical_set
+            arr_color = "#B22222" if is_critical_edge else "#4A4A4A"
+            arr_lw = 2.4 if is_critical_edge else 1.8
+            arr_alpha = 0.85 if is_critical_edge else 0.5
+
             arrow = FancyArrowPatch(
                 (start_x, start_y),
                 (end_x, end_y),
                 arrowstyle="-|>",
-                color="#4A4A4A",
-                linewidth=1.8,
+                color=arr_color,
+                linewidth=arr_lw,
                 connectionstyle=f"arc3,rad={rad}",
-                alpha=0.6,
+                alpha=arr_alpha,
                 mutation_scale=14,
-                zorder=4,
+                zorder=5 if is_critical_edge else 4,
             )
             ax.add_patch(arrow)
 
@@ -281,27 +344,55 @@ ax.spines["right"].set_visible(False)
 ax.spines["left"].set_color("#CCCCCC")
 ax.spines["bottom"].set_color("#CCCCCC")
 
-# Create legend with proper dependency arrow entry
+# Add milestone diamond at project completion
+project_end = df["end"].max()
+last_task_y = len(df) - 1 - task_to_idx["User Acceptance Testing"]
+ax.plot(
+    project_end,
+    last_task_y,
+    marker="D",
+    markersize=12,
+    color="#B22222",
+    markeredgecolor="#2C3E50",
+    markeredgewidth=1.2,
+    zorder=6,
+)
+
+# Create legend with critical path and dependency entries
 legend_patches = [
     Patch(facecolor=color, alpha=0.8, edgecolor="#2C3E50", linewidth=0.6, label=phase)
     for phase, color in phase_colors.items()
 ]
+critical_legend = Line2D(
+    [0],
+    [0],
+    color="#B22222",
+    linewidth=2.5,
+    alpha=0.85,
+    marker=">",
+    markersize=8,
+    markeredgecolor="#B22222",
+    label="Critical Path",
+)
 arrow_legend = Line2D(
     [0],
     [0],
-    color="#555555",
+    color="#4A4A4A",
     linewidth=2,
-    alpha=0.7,
+    alpha=0.5,
     marker=">",
     markersize=8,
-    markeredgecolor="#555555",
+    markeredgecolor="#4A4A4A",
     label="Dependency",
 )
-legend_patches.append(arrow_legend)
+milestone_legend = Line2D(
+    [0], [0], color="#B22222", marker="D", markersize=10, markeredgecolor="#2C3E50", linestyle="None", label="Milestone"
+)
+legend_patches.extend([critical_legend, arrow_legend, milestone_legend])
 ax.legend(
     handles=legend_patches,
     loc="upper right",
-    fontsize=16,
+    fontsize=14,
     framealpha=0.95,
     edgecolor="#CCCCCC",
     fancybox=True,
