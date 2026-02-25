@@ -1,0 +1,28 @@
+# Specification-level metadata for bifurcation-basic
+# Auto-synced to PostgreSQL on push to main
+
+spec_id: bifurcation-basic
+title: Bifurcation Diagram for Dynamical Systems
+
+# Specification tracking
+created: "2026-02-25T21:31:17Z"
+updated: null
+issue: 4415
+suggested: MarkusNeusinger
+
+# Classification tags (applies to all library implementations)
+# See docs/reference/tagging-system.md for detailed guidelines
+tags:
+  plot_type:
+    - scatter
+    - point
+  data_type:
+    - numeric
+    - continuous
+  domain:
+    - science
+    - education
+  features:
+    - basic
+    - annotated
+    - 2d
