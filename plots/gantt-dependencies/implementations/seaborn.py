@@ -1,7 +1,6 @@
-""" pyplots.ai
+"""pyplots.ai
 gantt-dependencies: Gantt Chart with Dependencies
 Library: seaborn 0.13.2 | Python 3.14
-Quality: 84/100 | Updated: 2026-02-25
 """
 
 import matplotlib.patches as mpatches
@@ -12,8 +11,8 @@ import seaborn as sns
 from matplotlib.patches import FancyArrowPatch
 
 
-# Set seaborn style
-sns.set_theme(style="whitegrid")
+# Set seaborn theme and context for proper sizing at 4800x2700
+sns.set_theme(style="whitegrid", context="talk", font_scale=1.1)
 
 # Data: Software Development Project with Dependencies
 # All dependent tasks start at or after their predecessors end
@@ -135,7 +134,14 @@ df["duration"] = df["end_num"] - df["start_num"]
 
 # Calculate y positions - groups first, then tasks
 groups = df["group"].unique()
-group_colors = {"Requirements": "#306998", "Design": "#FFD43B", "Development": "#4B8BBE", "Testing": "#6B8E23"}
+# Curated 4-color palette with clearly distinct hues (colorblind-safe)
+phase_palette = sns.color_palette(["#306998", "#FFD43B", "#CC553D", "#6B8E23"])
+group_colors = {
+    "Requirements": phase_palette[0],
+    "Design": phase_palette[1],
+    "Development": phase_palette[2],
+    "Testing": phase_palette[3],
+}
 
 y_positions = {}
 task_to_y = {}
@@ -208,10 +214,10 @@ for _, row in df.iterrows():
                 (start_x, start_y),
                 (end_x, end_y),
                 connectionstyle="arc3,rad=0.1",
-                arrowstyle="->,head_width=0.4,head_length=0.3",
-                color="#555555",
-                linewidth=1.5,
-                alpha=0.7,
+                arrowstyle="->,head_width=0.5,head_length=0.35",
+                color="#444444",
+                linewidth=1.8,
+                alpha=0.75,
                 zorder=5,
             )
             ax.add_patch(arrow)
@@ -229,26 +235,26 @@ for group in groups:
         all_y.append(task_to_y[task])
 
 ax.set_yticks(all_y)
-ax.set_yticklabels(all_labels, fontsize=13)
+ax.set_yticklabels(all_labels, fontsize=16)
 ax.invert_yaxis()
 
 # Bold group labels for hierarchy emphasis
 for label in ax.get_yticklabels():
     if label.get_text().startswith("▪"):
         label.set_fontweight("bold")
-        label.set_fontsize(14)
+        label.set_fontsize(17)
 
 # X-axis formatting (dates)
 max_day = int(df["end_num"].max()) + 7
 date_ticks = np.arange(0, max_day, 14)
 date_labels = [(ref_date + pd.Timedelta(days=int(d))).strftime("%b %d") for d in date_ticks]
 ax.set_xticks(date_ticks)
-ax.set_xticklabels(date_labels, fontsize=14, rotation=45, ha="right")
+ax.set_xticklabels(date_labels, fontsize=16, rotation=45, ha="right")
 ax.set_xlim(-2, max_day)
 
 # Labels and title
-ax.set_xlabel("Timeline", fontsize=20)
-ax.set_ylabel("Tasks", fontsize=20)
+ax.set_xlabel("Project Timeline (2024)", fontsize=20)
+ax.set_ylabel("Tasks by Phase", fontsize=20)
 ax.set_title("gantt-dependencies · seaborn · pyplots.ai", fontsize=24, fontweight="bold")
 
 # Grid (subtle, vertical only)
@@ -259,7 +265,7 @@ ax.set_axisbelow(True)
 # Legend for groups
 legend_patches = [mpatches.Patch(color=color, alpha=0.85, label=group) for group, color in group_colors.items()]
 arrow_legend = plt.Line2D(
-    [0], [0], color="#555555", linewidth=1.5, linestyle="-", marker=">", markersize=8, label="Dependency"
+    [0], [0], color="#444444", linewidth=1.8, linestyle="-", marker=">", markersize=8, label="Dependency"
 )
 legend_patches.append(arrow_legend)
 
