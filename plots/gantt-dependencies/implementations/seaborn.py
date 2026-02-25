@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 gantt-dependencies: Gantt Chart with Dependencies
 Library: seaborn 0.13.2 | Python 3.14
 Quality: 88/100 | Updated: 2026-02-25
@@ -136,7 +136,7 @@ df["duration"] = df["end_num"] - df["start_num"]
 # Calculate y positions - groups first, then tasks
 groups = df["group"].unique()
 # Curated 4-color palette with clearly distinct hues (colorblind-safe)
-phase_palette = sns.color_palette(["#306998", "#FFD43B", "#CC553D", "#6B8E23"])
+phase_palette = sns.color_palette(["#306998", "#FFD43B", "#CC553D", "#2A9D8F"])
 group_colors = {
     "Requirements": phase_palette[0],
     "Design": phase_palette[1],
@@ -199,6 +199,28 @@ for group in groups:
 
     ax.plot([group_start, group_end], [y, y], color=color, linewidth=10, alpha=0.4, solid_capstyle="round")
 
+# Add phase milestone markers at group completion points using scatterplot
+milestone_data = []
+for group in groups:
+    group_df = df[df["group"] == group]
+    milestone_data.append({"x": group_df["end_num"].max(), "y": y_positions[group], "group": group})
+milestone_df = pd.DataFrame(milestone_data)
+
+sns.scatterplot(
+    data=milestone_df,
+    x="x",
+    y="y",
+    hue="group",
+    palette=group_colors,
+    marker="D",
+    s=120,
+    edgecolor="white",
+    linewidth=1.5,
+    zorder=6,
+    ax=ax,
+    legend=False,
+)
+
 # Draw dependency arrows from right edge of predecessor to left edge of successor
 for _, row in df.iterrows():
     if row["depends_on"]:
@@ -215,10 +237,10 @@ for _, row in df.iterrows():
                 (start_x, start_y),
                 (end_x, end_y),
                 connectionstyle="arc3,rad=0.1",
-                arrowstyle="->,head_width=0.5,head_length=0.35",
-                color="#444444",
-                linewidth=1.8,
-                alpha=0.75,
+                arrowstyle="->,head_width=0.6,head_length=0.4",
+                color="#333333",
+                linewidth=2.2,
+                alpha=0.8,
                 zorder=5,
             )
             ax.add_patch(arrow)
@@ -266,7 +288,7 @@ ax.set_axisbelow(True)
 # Legend for groups
 legend_patches = [mpatches.Patch(color=color, alpha=0.85, label=group) for group, color in group_colors.items()]
 arrow_legend = plt.Line2D(
-    [0], [0], color="#444444", linewidth=1.8, linestyle="-", marker=">", markersize=8, label="Dependency"
+    [0], [0], color="#333333", linewidth=2.2, linestyle="-", marker=">", markersize=9, label="Dependency"
 )
 legend_patches.append(arrow_legend)
 
