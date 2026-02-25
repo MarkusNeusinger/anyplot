@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 gantt-dependencies: Gantt Chart with Dependencies
 Library: seaborn 0.13.2 | Python 3.14
-Quality: 88/100 | Updated: 2026-02-25
+Quality: 89/100 | Updated: 2026-02-25
 """
 
 import matplotlib.patches as mpatches
