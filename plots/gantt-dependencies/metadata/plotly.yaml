@@ -1,203 +1,239 @@
 library: plotly
 specification_id: gantt-dependencies
 created: '2026-01-15T21:03:27Z'
-updated: '2026-01-15T21:06:15Z'
-generated_by: claude-opus-4-5-20251101
+updated: '2026-02-25T15:10:36Z'
+generated_by: claude-opus-4-6
 workflow_run: 21046151828
 issue: 3830
-python_version: 3.13.11
+python_version: '3.14'
 library_version: 6.5.2
 preview_url: https://storage.googleapis.com/pyplots-images/plots/gantt-dependencies/plotly/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/gantt-dependencies/plotly/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/gantt-dependencies/plotly/plot.html
-quality_score: 91
+quality_score: 90
 review:
   strengths:
-  - Excellent hierarchical organization with group summary bars and indented child
-    tasks
-  - Clear dependency visualization using dotted connector lines
-  - Good color palette distinguishing project phases
-  - Rich hover information showing task details and duration
-  - Proper finish-to-start dependency representation as specified
-  - Both PNG and HTML outputs for static and interactive viewing
+  - Critical path computation and visual highlighting creates strong data storytelling,
+    guiding the viewer to the most important scheduling insight
+  - Colorblind-safe palette (blue, yellow, teal, purple, orange) fully addresses previous
+    review feedback
+  - Switched to idiomatic go.Bar with base parameter for proper Gantt bar rendering
+  - Full spec compliance with all required features including dependency arrows, group
+    summaries, hierarchical layout, and dependency type legend
+  - Excellent realistic data with diverse dependency patterns (single, multiple, parallel,
+    sequential, cross-phase)
+  - Rich hover templates with task details, duration, and critical path indicator
+    for the interactive HTML version
   weaknesses:
-  - Dependency lines are somewhat faint (0.5 opacity) and could be more visible
-  - Y-axis index-based referencing for shapes may cause alignment issues with categorical
-    axis
-  image_description: 'The plot shows a Gantt chart displaying a software development
-    project timeline from March to May 2024. Tasks are organized hierarchically by
-    project phases: Requirements (blue), Design (yellow), Development (teal), Testing
-    (coral/red), and Deployment (light green). Each phase has a summary bar at the
-    top (with a down arrow prefix) showing the overall phase duration, followed by
-    indented individual tasks. Dependency arrows are drawn as dotted gray lines connecting
-    the end of predecessor tasks to the start of successor tasks, indicating finish-to-start
-    relationships. The chart has a centered title "gantt-dependencies · plotly · pyplots.ai"
-    at the top, a horizontal legend showing "Project Phases" with color swatches below
-    the title, a timeline x-axis labeled "Timeline (2024)" with weekly tick marks
-    (angled at 45 degrees), and a dependency legend annotation at the bottom right.
-    Task names are clearly readable on the left side.'
+  - Non-critical dependency arrows at 0.4 opacity are borderline faint, making some
+    dependency chains difficult to trace
+  - X-axis date labels rotated at 45 degrees consume vertical space; shorter formatting
+    could allow horizontal labels
+  - Minor visual density where multiple arrows converge in the Development/Testing
+    transition area
+  image_description: 'The plot displays a Gantt chart for a software development project
+    with 18 tasks organized into 5 color-coded phases: Requirements (dark blue #306998),
+    Design (gold/yellow #FFD43B), Development (teal #4ECDC4), Testing (purple #AB63FA),
+    and Deployment (orange #FF7F0E). Each phase has a wider group summary bar spanning
+    its entire duration, with narrower individual task bars indented below. The title
+    "gantt-dependencies · plotly · pyplots.ai" is centered at the top in dark navy.
+    A horizontal legend reading "Project Phases" sits below the title with all 5 phase
+    color swatches. The y-axis lists tasks hierarchically with "▼" markers for group
+    headers and indented individual task names. The x-axis shows weekly dates from
+    Mar 03 to May 12, labeled "Timeline (2024)" with dates rotated 45°. Dependency
+    arrows connect task bars: bold red arrows (width 2.8, opacity 0.9) mark the critical
+    path from Requirements Gathering through to Post-Deployment Review, while lighter
+    gray arrows (width 1.3, opacity 0.4) show non-critical dependencies. Critical
+    path task bars appear at near-full opacity (0.95) with a subtle dark border, while
+    non-critical tasks are semi-transparent (0.55). A dependency legend at the bottom-right
+    shows critical path and dependency line styles. The background is clean white
+    with very subtle vertical grid lines.'
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 27
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title is large and readable, task labels are clear, tick labels readable
-          though could be slightly larger
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements, task bars well separated
+        comment: 'All font sizes explicitly set: title 32pt, axis title 24pt, ticks
+          16pt, legend title 20pt, legend items 16pt, annotations 15pt. All readable
+          at 4800x2700.'
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: No text overlap. X-axis dates rotated 45° prevent collisions. Some
+          dependency arrows cross through task bars creating minor visual density.
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Task bars are clearly visible with good width; dependency lines are
-          somewhat faint (0.5 opacity)
+        comment: Good bar hierarchy with group (0.7) and task (0.45) widths. Critical
+          path bars prominent at 0.95 opacity. Non-critical arrows at 0.4 opacity
+          are borderline faint.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Good colorblind-safe palette, distinct colors for each phase
+        comment: 'Colorblind-safe palette: blue, yellow, teal, purple, orange. No
+          red-green pairing. Good contrast between all phases.'
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 3
+        max: 4
         passed: true
-        comment: Excellent use of canvas space, good margins, legend well-placed at
-          top
+        comment: Good canvas utilization at ~60%. Left margin 240px needed for task
+          names. Minor asymmetry with narrow right margin.
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: X-axis has Timeline (2024) but no Y-axis label (acceptable for Gantt)
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
-        max: 2
+        comment: Title in correct format. X-axis labeled 'Timeline (2024)' with temporal
+          context.
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
         passed: true
-        comment: Legend clear and horizontal at top; grid is subtle; dependency legend
-          at bottom right is good but slightly disconnected
+        comment: Custom colorblind-safe palette, plotly_white template, intentional
+          visual hierarchy between group and task bars, critical path highlighting.
+          Clearly above defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle x-axis grid (0.06 opacity), y-grid disabled, clean template,
+          weekly tick interval. Some room for additional polish.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Strong storytelling through algorithmic critical path computation
+          and highlighting. Bold red arrows and opacity differentiation create clear
+          focal point and visual hierarchy.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct Gantt chart with dependencies
+        comment: Correct Gantt chart with dependency arrows and group hierarchy.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Tasks, start/end dates, groups correctly mapped
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: dependency arrows, group summary bars,
-          hierarchical organization, finish-to-start connectors'
-      - id: SC-04
-        name: Data Range
+        comment: 'All spec features present: task timelines, dependency arrows, group
+          summaries, hierarchical display, color coding, dependency legend.'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All tasks visible, timeline spans full project
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X-axis maps dates, Y-axis maps tasks hierarchically. Dependencies
+          correctly connect predecessors to successors.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly shows all 5 project phases
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: gantt-dependencies · plotly · pyplots.ai'
+        comment: Title in correct format. Phase legend with matching colors. Dependency
+          type legend present.
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows sequential dependencies, parallel tasks, cross-group dependencies,
-          multi-dependency tasks; could show more complex patterns
+        comment: Single/multiple dependencies, parallel tasks, sequential chains,
+          cross-phase dependencies. 18 tasks across 5 groups.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Excellent realistic software development project with sensible phases
-          and task names
+        comment: Software development lifecycle. Realistic task names. Neutral business/technology
+          domain.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Realistic durations (2-18 days), good date range
+        comment: 2.5-month project span, task durations 2-17 days, logically correct
+          dependency scheduling.
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
-        max: 3
-        passed: true
-        comment: Mostly flat structure, uses necessary iteration patterns for complex
-          chart
-      - id: CQ-02
-        name: Reproducibility
         score: 3
         max: 3
         passed: true
-        comment: Deterministic data (no random), fixed dates
+        comment: 'Clean linear flow: imports, data, processing, figure, layout, save.
+          No functions or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: All data deterministic with hardcoded dates. No random elements.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only pandas and plotly.graph_objects imported
+        comment: Only pandas and plotly.graph_objects imported, both fully used.
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-structured critical path computation. Clean hover templates.
+          Appropriate complexity.
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current Plotly API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves both plot.png and plot.html
-    library_features:
-      score: 4
-      max: 5
+        comment: Saves as plot.png (4800x2700) and plot.html. Current Plotly API.
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses go.Bar with horizontal orientation and base parameter for Gantt
+          bars. Proper use of go.Figure, add_trace, update_layout, add_annotation.
+      - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Good use of Plotly shapes for dependency lines, hover templates with
-          custom formatting, interactive HTML export
+        comment: Custom hovertemplate with HTML formatting, legendgroup for grouped
+          legends, write_html for interactive export, annotation system for arrows.
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -205,11 +241,11 @@ impl_tags:
   - annotations
   - hover-tooltips
   - html-export
+  - custom-legend
   patterns:
   - iteration-over-groups
   - groupby-aggregation
-  dataprep:
-  - time-series
+  dataprep: []
   styling:
   - alpha-blending
   - grid-styling
