@@ -1,7 +1,6 @@
-""" pyplots.ai
+"""pyplots.ai
 gantt-dependencies: Gantt Chart with Dependencies
 Library: altair 6.0.0 | Python 3.14
-Quality: 82/100 | Updated: 2026-02-25
 """
 
 import altair as alt
@@ -124,102 +123,81 @@ tasks_data = [
 df = pd.DataFrame(tasks_data)
 df["start"] = pd.to_datetime(df["start"])
 df["end"] = pd.to_datetime(df["end"])
+task_lookup = {r["task_id"]: r for _, r in df.iterrows()}
 
-# Create task lookup for dependency arrows
-task_lookup = {row["task_id"]: row for _, row in df.iterrows()}
-
-# Define colors for groups - colorblind-safe palette
+# Distinct colorblind-safe palette (purple for Development instead of similar blue)
 group_colors = {
     "Requirements": "#306998",
     "Design": "#E69F00",
-    "Development": "#4B8BBE",
+    "Development": "#7B2D8E",
     "Testing": "#56B4E9",
     "Deployment": "#009E73",
 }
-
-# Build ordered list with y positions
+dep_color = "#CC5A71"
 group_order = ["Requirements", "Design", "Development", "Testing", "Deployment"]
-rows = []
-y_pos = 0
-task_to_y = {}
 
+# Build display rows with ordinal task ordering
+task_order = []
+chart_rows = []
 for grp in group_order:
-    grp_df = df[df["group"] == grp]
-    rows.append(
+    grp_tasks = df[df["group"] == grp]
+    label = f"\u25b8 {grp}"
+    task_order.append(label)
+    chart_rows.append(
         {
-            "task": f"▸ {grp}",
-            "start": grp_df["start"].min(),
-            "end": grp_df["end"].max(),
+            "task": label,
+            "start": grp_tasks["start"].min(),
+            "end": grp_tasks["end"].max(),
             "group": grp,
             "is_group": True,
-            "color": "#2C3E50",
-            "y_pos": y_pos,
         }
     )
-    task_to_y[f"▸ {grp}"] = y_pos
-    y_pos += 1
+    for _, r in grp_tasks.iterrows():
+        display = f"  {r['task']}"
+        task_order.append(display)
+        chart_rows.append({"task": display, "start": r["start"], "end": r["end"], "group": grp, "is_group": False})
 
-    for _, row in grp_df.iterrows():
-        display_task = f"  {row['task']}"
-        rows.append(
-            {
-                "task": display_task,
-                "start": row["start"],
-                "end": row["end"],
-                "group": grp,
-                "is_group": False,
-                "color": group_colors[grp],
-                "y_pos": y_pos,
-            }
-        )
-        task_to_y[display_task] = y_pos
-        y_pos += 1
+chart_df = pd.DataFrame(chart_rows)
 
-combined_df = pd.DataFrame(rows)
-max_y = y_pos - 1
+# Dependency data: 2 points per arrow using "task" field for shared ordinal Y scale
+dep_line_rows = []
+dep_arrow_rows = []
+dep_id = 0
+for _, r in df.iterrows():
+    if r["depends_on"] and r["depends_on"] in task_lookup:
+        pred = task_lookup[r["depends_on"]]
+        dep_line_rows.append({"x": pred["end"], "task": f"  {pred['task']}", "dep_id": dep_id})
+        dep_line_rows.append({"x": r["start"], "task": f"  {r['task']}", "dep_id": dep_id})
+        dep_arrow_rows.append({"x": r["start"], "task": f"  {r['task']}"})
+        dep_id += 1
+dep_line_df = pd.DataFrame(dep_line_rows)
+dep_arrow_df = pd.DataFrame(dep_arrow_rows)
 
-# Reverse y for proper display (top to bottom)
-combined_df["y_display"] = max_y - combined_df["y_pos"]
+# Ordinal Y axis with conditional bold for group headers
+y_axis = alt.Axis(
+    labelFontSize=alt.ExprRef("indexof(datum.value, '\u25b8') >= 0 ? 17 : 16"),
+    labelFontWeight=alt.ExprRef("indexof(datum.value, '\u25b8') >= 0 ? 'bold' : 'normal'"),
+    labelLimit=300,
+    ticks=False,
+    domain=False,
+    labelPadding=10,
+)
 
-# Add y bounds for rect marks
-combined_df["y_min"] = combined_df["y_display"] - 0.35
-combined_df["y_max"] = combined_df["y_display"] + 0.35
-
-# Thinner bounds for group bars
-combined_df.loc[combined_df["is_group"], "y_min"] = combined_df.loc[combined_df["is_group"], "y_display"] - 0.2
-combined_df.loc[combined_df["is_group"], "y_max"] = combined_df.loc[combined_df["is_group"], "y_display"] + 0.2
-
-# Build dependency arrow data
-dep_data = []
-for _, row in df.iterrows():
-    if row["depends_on"] and row["depends_on"] in task_lookup:
-        pred = task_lookup[row["depends_on"]]
-        from_task = f"  {pred['task']}"
-        to_task = f"  {row['task']}"
-        dep_data.append(
-            {
-                "from_x": pred["end"],
-                "to_x": row["start"],
-                "from_y": max_y - task_to_y[from_task],
-                "to_y": max_y - task_to_y[to_task],
-            }
-        )
-dep_df = pd.DataFrame(dep_data) if dep_data else pd.DataFrame()
-
-# Shared scales
-y_scale = alt.Scale(domain=[-0.5, max_y + 0.5])
-
-# Task bars
-task_df = combined_df[~combined_df["is_group"]]
+# Task bars with color encoding per group
 task_bars = (
-    alt.Chart(task_df)
-    .mark_rect(cornerRadius=4)
+    alt.Chart(chart_df[~chart_df["is_group"]])
+    .mark_bar(cornerRadius=4)
     .encode(
-        x=alt.X("start:T", title="Timeline", axis=alt.Axis(format="%b %d", labelFontSize=16, titleFontSize=20)),
-        x2=alt.X2("end:T"),
-        y=alt.Y("y_min:Q", scale=y_scale, axis=None),
-        y2=alt.Y2("y_max:Q"),
-        color=alt.Color("color:N", scale=None),
+        x=alt.X(
+            "start:T",
+            title="Project Timeline (2024)",
+            axis=alt.Axis(format="%b %d", labelFontSize=16, titleFontSize=20),
+        ),
+        x2="end:T",
+        y=alt.Y("task:N", sort=task_order, title=None, axis=y_axis),
+        color=alt.Color(
+            "group:N", scale=alt.Scale(domain=group_order, range=[group_colors[g] for g in group_order]), legend=None
+        ),
         tooltip=[
             "task:N",
             alt.Tooltip("start:T", format="%Y-%m-%d"),
@@ -229,66 +207,38 @@ task_bars = (
     )
 )
 
-# Group bars (thinner, dark)
-group_df = combined_df[combined_df["is_group"]]
+# Group summary bars (thinner, dark charcoal)
 group_bars = (
-    alt.Chart(group_df)
-    .mark_rect(cornerRadius=3, opacity=0.8)
+    alt.Chart(chart_df[chart_df["is_group"]])
+    .mark_bar(cornerRadius=3, size=14, opacity=0.85)
     .encode(
-        x=alt.X("start:T"),
-        x2=alt.X2("end:T"),
-        y=alt.Y("y_min:Q", scale=y_scale, axis=None),
-        y2=alt.Y2("y_max:Q"),
+        x="start:T",
+        x2="end:T",
+        y=alt.Y("task:N", sort=task_order),
         color=alt.value("#2C3E50"),
         tooltip=["task:N", alt.Tooltip("start:T", format="%Y-%m-%d"), alt.Tooltip("end:T", format="%Y-%m-%d")],
     )
 )
 
-# Y-axis labels - groups
-group_label_data = combined_df[combined_df["is_group"]][["task", "y_display", "start"]].copy()
-group_labels = (
-    alt.Chart(group_label_data)
-    .mark_text(align="right", dx=-15, fontSize=17, fontWeight="bold")
-    .encode(x=alt.value(0), y=alt.Y("y_display:Q", scale=y_scale), text="task:N")
+# Dependency lines (prominent dashed, shared ordinal Y)
+dep_lines = (
+    alt.Chart(dep_line_df)
+    .mark_line(strokeWidth=3.5, opacity=0.85, color=dep_color, strokeDash=[8, 4])
+    .encode(x="x:T", y=alt.Y("task:N", sort=task_order), detail="dep_id:N")
 )
 
-# Y-axis labels - tasks
-task_label_data = combined_df[~combined_df["is_group"]][["task", "y_display", "start"]].copy()
-task_labels = (
-    alt.Chart(task_label_data)
-    .mark_text(align="right", dx=-15, fontSize=16)
-    .encode(x=alt.value(0), y=alt.Y("y_display:Q", scale=y_scale), text="task:N")
+# Arrowheads at successor start
+arrow_heads = (
+    alt.Chart(dep_arrow_df)
+    .mark_point(shape="triangle-right", size=200, filled=True, color=dep_color, opacity=0.9)
+    .encode(x="x:T", y=alt.Y("task:N", sort=task_order))
 )
 
-# Dependency arrows
-if not dep_df.empty:
-    dep_rules = (
-        alt.Chart(dep_df)
-        .mark_rule(strokeWidth=2.5, opacity=0.6, color="#CC5A71", strokeDash=[6, 3])
-        .encode(x=alt.X("from_x:T"), x2=alt.X2("to_x:T"), y=alt.Y("from_y:Q", scale=y_scale), y2=alt.Y2("to_y:Q"))
-    )
-
-    arrow_points = (
-        alt.Chart(dep_df)
-        .mark_point(shape="triangle-right", size=110, filled=True, color="#CC5A71", opacity=0.75)
-        .encode(x=alt.X("to_x:T"), y=alt.Y("to_y:Q", scale=y_scale))
-    )
-else:
-    dep_rules = alt.Chart(pd.DataFrame()).mark_rule()
-    arrow_points = alt.Chart(pd.DataFrame()).mark_point()
-
-# Legend data with proper spacing
+# Custom legend with phases and dependency indicator
 legend_data = pd.DataFrame(
-    [
-        {"phase": "Requirements", "color": group_colors["Requirements"], "order": 0},
-        {"phase": "Design", "color": group_colors["Design"], "order": 1},
-        {"phase": "Development", "color": group_colors["Development"], "order": 2},
-        {"phase": "Testing", "color": group_colors["Testing"], "order": 3},
-        {"phase": "Deployment", "color": group_colors["Deployment"], "order": 4},
-        {"phase": "Dependency", "color": "#CC5A71", "order": 5},
-    ]
+    [{"phase": g, "color": group_colors[g], "order": i} for i, g in enumerate(group_order)]
+    + [{"phase": "Dependency", "color": dep_color, "order": 5}]
 )
-
 legend_marks = (
     alt.Chart(legend_data)
     .mark_rect(width=22, height=16, cornerRadius=3)
@@ -297,32 +247,25 @@ legend_marks = (
         color=alt.Color("color:N", scale=None),
     )
 )
-
-legend_labels = (
+legend_text = (
     alt.Chart(legend_data)
-    .mark_text(dy=24, fontSize=14)
+    .mark_text(dy=24, fontSize=16)
     .encode(x=alt.X("phase:N", sort=alt.EncodingSortField(field="order"), axis=None, title=None), text="phase:N")
 )
+legend = alt.layer(legend_marks, legend_text).properties(width=600, height=50)
 
-legend = alt.layer(legend_marks, legend_labels).properties(width=600, height=50)
-
-# Combine main chart layers
-main_chart = (
-    alt.layer(group_bars, task_bars, dep_rules, arrow_points, group_labels, task_labels)
-    .properties(
-        width=1400,
-        height=700,
-        title=alt.Title("gantt-dependencies · altair · pyplots.ai", fontSize=28, anchor="middle"),
-    )
-    .resolve_scale(x="shared", y="shared")
+# Combine layers
+main = alt.layer(group_bars, task_bars, dep_lines, arrow_heads).properties(
+    width=1400,
+    height=700,
+    title=alt.Title("gantt-dependencies \u00b7 altair \u00b7 pyplots.ai", fontSize=28, anchor="middle"),
 )
 
-# Vertical concat with legend
-final_chart = (
-    alt.vconcat(main_chart, legend, spacing=20)
-    .configure_axis(labelFontSize=14, titleFontSize=18, grid=True, gridOpacity=0.2, gridDash=[3, 3])
+chart = (
+    alt.vconcat(main, legend, spacing=20)
+    .configure_axisX(grid=True, gridOpacity=0.15, gridDash=[3, 3])
+    .configure_axisY(grid=False)
     .configure_view(strokeWidth=0)
 )
 
-# Save
-final_chart.save("plot.png", scale_factor=3.0)
+chart.save("plot.png", scale_factor=3.0)
