@@ -6,7 +6,7 @@ title: Gantt Chart with Dependencies
 
 # Specification tracking
 created: 2026-01-15T20:43:22Z
-updated: 2026-01-15T20:43:22Z
+updated: 2026-02-25T12:00:00Z
 issue: 3830
 suggested: Eifi1
 
@@ -27,3 +27,5 @@ tags:
     - grouped
     - hierarchical
     - annotated
+    - temporal
+    - dependencies

@@ -1,16 +1,16 @@
 library: matplotlib
 specification_id: gantt-dependencies
 created: '2026-01-15T21:03:31Z'
-updated: '2026-01-15T21:06:15Z'
-generated_by: claude-opus-4-5-20251101
+updated: '2026-02-25T14:40:00Z'
+generated_by: claude-opus-4-6
 workflow_run: 21046151669
 issue: 3830
-python_version: 3.13.11
+python_version: '3.14'
 library_version: 3.10.8
 preview_url: https://storage.googleapis.com/pyplots-images/plots/gantt-dependencies/matplotlib/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/gantt-dependencies/matplotlib/plot_thumb.png
 preview_html: null
-quality_score: 91
+quality_score: null
 review:
   strengths:
   - Excellent dependency visualization using FancyArrowPatch with curved connectionstyle
