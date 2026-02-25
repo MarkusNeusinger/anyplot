@@ -1,6 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 gantt-dependencies: Gantt Chart with Dependencies
 Library: plotly 6.5.2 | Python 3.14
+Quality: 90/100 | Updated: 2026-02-25
 """
 
 import pandas as pd
