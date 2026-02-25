@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 gantt-dependencies: Gantt Chart with Dependencies
 Library: letsplot 4.8.2 | Python 3.14
 Quality: 88/100 | Updated: 2026-02-25
@@ -205,7 +205,7 @@ for i, group in enumerate(group_order):
     y_hi = max(group_task_ys) + 0.45
     band_color = "#F0F4F8" if i % 2 == 0 else "#FAFBFC"
     band_df = pd.DataFrame(
-        [{"xmin": x_min - pd.Timedelta(days=18), "xmax": x_max + pd.Timedelta(days=5), "ymin": y_lo, "ymax": y_hi}]
+        [{"xmin": x_min - pd.Timedelta(days=22), "xmax": x_max + pd.Timedelta(days=5), "ymin": y_lo, "ymax": y_hi}]
     )
     plot += geom_rect(aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax"), data=band_df, fill=band_color, alpha=0.8)
 
@@ -256,7 +256,7 @@ task_labels_df = tasks_df.assign(label_x=tasks_df["start"] - label_offset)
 plot += geom_text(
     aes(x="label_x", y="y", label="task"), data=group_labels, hjust=0, size=14, fontface="bold", color="#1a365d"
 )
-plot += geom_text(aes(x="label_x", y="y", label="task"), data=task_labels_df, hjust=1, size=13, color="#2D3748")
+plot += geom_text(aes(x="label_x", y="y", label="task"), data=task_labels_df, hjust=1, size=14, color="#2D3748")
 
 # Dependency type legend (compact)
 legend_x = x_max - pd.Timedelta(days=12)
@@ -288,12 +288,21 @@ for label, dep_type, y in legend_entries:
     )
 
 legend_lbl_df = pd.DataFrame([{"x": legend_text_x, "y": y, "label": label} for label, _, y in legend_entries])
-plot += geom_text(aes(x="x", y="y", label="label"), data=legend_lbl_df, hjust=0, size=12, color="#2D3748")
+plot += geom_text(aes(x="x", y="y", label="label"), data=legend_lbl_df, hjust=0, size=13, color="#2D3748")
 
 # Native datetime axis and refined theme
-plot += scale_x_datetime(format="%b %d", limits=[x_min - pd.Timedelta(days=18), x_max + pd.Timedelta(days=12)])
+# Explicit weekly breaks starting from first task date (avoids empty Dec labels)
+x_breaks = pd.date_range(start=x_min, end=x_max + pd.Timedelta(days=10), freq="W-MON").tolist()
+plot += scale_x_datetime(
+    format="%b %d", limits=[x_min - pd.Timedelta(days=22), x_max + pd.Timedelta(days=12)], breaks=x_breaks
+)
 plot += scale_y_continuous(breaks=[], labels=[], limits=[-3.8, n + 0.5])
-plot += labs(x="Timeline", y="", title="gantt-dependencies \u00b7 letsplot \u00b7 pyplots.ai")
+plot += labs(
+    x="Project Timeline (2024)",
+    y="",
+    title="gantt-dependencies \u00b7 letsplot \u00b7 pyplots.ai",
+    subtitle="Software development lifecycle \u2014 task dependencies and critical path across phases",
+)
 plot += theme_minimal()
 plot += theme(
     axis_title_x=element_text(size=22, color="#4A5568"),
@@ -301,9 +310,11 @@ plot += theme(
     axis_text_x=element_text(size=18, angle=45, color="#4A5568"),
     axis_text_y=element_blank(),
     plot_title=element_text(size=32, face="bold", color="#1a365d"),
+    plot_subtitle=element_text(size=20, color="#4A5568"),
     panel_grid_major_y=element_blank(),
     panel_grid_minor=element_blank(),
     panel_grid_major_x=element_line(color="#E2E8F0", size=0.4),
+    plot_margin=[30, 20, 20, 120],
 )
 plot += ggsize(1600, 900)
 
