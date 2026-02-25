@@ -1,7 +1,7 @@
-""" pyplots.ai
+"""pyplots.ai
 gantt-dependencies: Gantt Chart with Dependencies
-Library: plotnine 0.15.2 | Python 3.13.11
-Quality: 90/100 | Created: 2026-01-15
+Library: plotnine 0.15.3 | Python 3.14
+Quality: /100 | Updated: 2026-02-25
 """
 
 from datetime import datetime, timedelta
@@ -11,6 +11,7 @@ from plotnine import (
     aes,
     element_blank,
     element_line,
+    element_rect,
     element_text,
     geom_segment,
     ggplot,
@@ -24,6 +25,7 @@ from plotnine import (
 
 
 # Data - Software development project with dependencies
+# All dependent tasks start at or after the end of their predecessors (finish-to-start)
 tasks_data = [
     # Requirements Phase
     {
@@ -35,81 +37,81 @@ tasks_data = [
     },
     {
         "task": "Document Specs",
-        "start": datetime(2024, 1, 8),
-        "end": datetime(2024, 1, 15),
+        "start": datetime(2024, 1, 10),
+        "end": datetime(2024, 1, 17),
         "group": "Requirements",
         "depends_on": ["Gather Requirements"],
     },
     {
         "task": "Review & Approve",
-        "start": datetime(2024, 1, 15),
-        "end": datetime(2024, 1, 18),
+        "start": datetime(2024, 1, 17),
+        "end": datetime(2024, 1, 20),
         "group": "Requirements",
         "depends_on": ["Document Specs"],
     },
     # Design Phase
     {
         "task": "System Architecture",
-        "start": datetime(2024, 1, 18),
-        "end": datetime(2024, 1, 28),
+        "start": datetime(2024, 1, 20),
+        "end": datetime(2024, 1, 30),
         "group": "Design",
         "depends_on": ["Review & Approve"],
     },
     {
         "task": "Database Design",
-        "start": datetime(2024, 1, 25),
-        "end": datetime(2024, 2, 2),
+        "start": datetime(2024, 1, 30),
+        "end": datetime(2024, 2, 7),
         "group": "Design",
         "depends_on": ["System Architecture"],
     },
     {
         "task": "UI/UX Mockups",
         "start": datetime(2024, 1, 20),
-        "end": datetime(2024, 2, 5),
+        "end": datetime(2024, 2, 3),
         "group": "Design",
         "depends_on": ["Review & Approve"],
     },
     # Development Phase
     {
         "task": "Backend API",
-        "start": datetime(2024, 2, 3),
-        "end": datetime(2024, 2, 25),
+        "start": datetime(2024, 2, 7),
+        "end": datetime(2024, 2, 28),
         "group": "Development",
         "depends_on": ["Database Design"],
     },
     {
         "task": "Frontend Components",
-        "start": datetime(2024, 2, 6),
-        "end": datetime(2024, 2, 28),
+        "start": datetime(2024, 2, 3),
+        "end": datetime(2024, 2, 25),
         "group": "Development",
         "depends_on": ["UI/UX Mockups"],
     },
     {
         "task": "Integration",
-        "start": datetime(2024, 2, 26),
-        "end": datetime(2024, 3, 5),
+        "start": datetime(2024, 2, 28),
+        "end": datetime(2024, 3, 8),
         "group": "Development",
         "depends_on": ["Backend API", "Frontend Components"],
     },
     # Testing Phase
     {
         "task": "Unit Testing",
-        "start": datetime(2024, 2, 20),
-        "end": datetime(2024, 3, 2),
+        "start": datetime(2024, 2, 28),
+        "end": datetime(2024, 3, 8),
         "group": "Testing",
         "depends_on": ["Backend API"],
     },
     {
         "task": "Integration Testing",
-        "start": datetime(2024, 3, 5),
-        "end": datetime(2024, 3, 12),
+        "start": datetime(2024, 3, 8),
+        "end": datetime(2024, 3, 15),
         "group": "Testing",
         "depends_on": ["Integration"],
     },
     {
         "task": "User Acceptance",
-        "start": datetime(2024, 3, 12),
-        "end": datetime(2024, 3, 18),
+        "start": datetime(2024, 3, 15),
+        "end": datetime(2024, 3, 21),
         "group": "Testing",
         "depends_on": ["Integration Testing"],
     },
@@ -194,7 +196,7 @@ phase_order = pd.CategoricalDtype(categories=group_order, ordered=True)
 tasks_df["group"] = tasks_df["group"].astype(phase_order)
 groups_df["group"] = groups_df["group"].astype(phase_order)
 
-# Build dependency arrows with arrowheads
+# Build dependency arrows as L-shaped connectors (vertical then horizontal)
 arrows_data = []
 arrowheads_data = []
 arrow_size_days = 1.5  # Size of arrowhead in days
@@ -209,22 +211,23 @@ for _, row in df.iterrows():
                 y_start = task_positions[dep_name]
                 y_end = task_positions[row["task"]]
 
-                # Main arrow line (slightly shorter to make room for arrowhead)
+                # Vertical segment: from predecessor end down to successor row
+                arrows_data.append({"x_start": x_start, "x_end": x_start, "y_start": y_start, "y_end": y_end})
+                # Horizontal segment: from corner to successor start (shortened for arrowhead)
                 arrows_data.append(
                     {
                         "x_start": x_start,
-                        "x_end": x_end - timedelta(days=arrow_size_days * 0.5),
-                        "y_start": y_start,
+                        "x_end": x_end - timedelta(days=arrow_size_days * 0.4),
+                        "y_start": y_end,
                         "y_end": y_end,
                     }
                 )
 
-                # Create arrowhead (two lines forming a V pointing right)
+                # Arrowhead (V pointing right at successor start)
                 arrow_tip_x = x_end
                 arrow_base_x = x_end - timedelta(days=arrow_size_days)
-                arrow_wing_offset = 0.25  # Y offset for arrowhead wings
+                arrow_wing_offset = 0.25
 
-                # Upper wing of arrowhead
                 arrowheads_data.append(
                     {
                         "x_start": arrow_base_x,
@@ -233,7 +236,6 @@ for _, row in df.iterrows():
                         "y_end": y_end,
                     }
                 )
-                # Lower wing of arrowhead
                 arrowheads_data.append(
                     {
                         "x_start": arrow_base_x,
@@ -269,22 +271,20 @@ plot = (
 
 # Add dependency arrows with arrowheads
 if arrows_df is not None and len(arrows_df) > 0:
-    # Main arrow lines
     plot = plot + geom_segment(
         data=arrows_df,
         mapping=aes(x="x_start", xend="x_end", y="y_start", yend="y_end"),
-        color="#444444",
-        size=1.2,
-        alpha=0.8,
+        color="#333333",
+        size=1.0,
+        alpha=0.7,
     )
-    # Arrowheads
     if arrowheads_df is not None and len(arrowheads_df) > 0:
         plot = plot + geom_segment(
             data=arrowheads_df,
             mapping=aes(x="x_start", xend="x_end", y="y_start", yend="y_end"),
-            color="#444444",
-            size=1.5,
-            alpha=0.9,
+            color="#333333",
+            size=1.4,
+            alpha=0.85,
         )
 
 # Add scales, labels, and theme
@@ -301,16 +301,18 @@ plot = (
     + theme_minimal()
     + theme(
         figure_size=(16, 9),
-        plot_title=element_text(size=24, weight="bold"),
+        plot_title=element_text(size=24, weight="bold", margin={"b": 15}),
         axis_title_x=element_text(size=18),
         axis_text_x=element_text(size=14, rotation=45, ha="right"),
         axis_text_y=element_text(size=12, ha="right"),
-        legend_title=element_text(size=16),
+        legend_title=element_text(size=16, weight="bold"),
         legend_text=element_text(size=14),
         legend_position="right",
+        legend_background=element_rect(fill="white", alpha=0.8),
         panel_grid_major_y=element_blank(),
         panel_grid_minor=element_blank(),
-        panel_grid_major_x=element_line(color="#CCCCCC", size=0.5, alpha=0.3),
+        panel_grid_major_x=element_line(color="#DDDDDD", size=0.4, alpha=0.4),
+        plot_background=element_rect(fill="white", color="white"),
     )
 )
 

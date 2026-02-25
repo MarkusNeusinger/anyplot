@@ -1,16 +1,16 @@
 library: plotnine
 specification_id: gantt-dependencies
 created: '2026-01-15T21:04:49Z'
-updated: '2026-01-15T21:14:06Z'
-generated_by: claude-opus-4-5-20251101
+updated: '2026-02-25T14:40:00Z'
+generated_by: claude-opus-4-6
 workflow_run: 21046151866
 issue: 3830
-python_version: 3.13.11
-library_version: 0.15.2
+python_version: '3.14'
+library_version: 0.15.3
 preview_url: https://storage.googleapis.com/pyplots-images/plots/gantt-dependencies/plotnine/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/gantt-dependencies/plotnine/plot_thumb.png
 preview_html: null
-quality_score: 90
+quality_score: null
 review:
   strengths:
   - Excellent implementation of dependency arrows with custom arrowheads using geom_segment
