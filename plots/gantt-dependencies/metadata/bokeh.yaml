@@ -1,7 +1,7 @@
 library: bokeh
 specification_id: gantt-dependencies
 created: '2026-01-15T21:03:23Z'
-updated: '2026-02-25T14:40:00Z'
+updated: '2026-02-25T14:53:05Z'
 generated_by: claude-opus-4-6
 workflow_run: 21046152112
 issue: 3830
@@ -10,148 +10,168 @@ library_version: 3.8.2
 preview_url: https://storage.googleapis.com/pyplots-images/plots/gantt-dependencies/bokeh/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/gantt-dependencies/bokeh/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/gantt-dependencies/bokeh/plot.html
-quality_score: null
+quality_score: 87
 review:
   strengths:
-  - Excellent use of Bokeh-specific features (ColumnDataSource, multi_line, patches,
-    LabelSet)
-  - Clear hierarchical organization with group headers and indented tasks
-  - Dependency arrows route intelligently around task bars
-  - Good color scheme with distinct, colorblind-friendly colors
-  - Proper 4800x2700 canvas with appropriately scaled fonts
+  - 'Comprehensive spec compliance with all required features: dependency arrows,
+    group spans, hierarchical organization, and legend'
+  - Excellent data design showing sequential, parallel, and convergent dependencies
+    across realistic project phases
+  - Clean dependency arrow routing with right-angle path segments and triangular arrowheads
+  - Well-structured code with clear organization and all Bokeh-idiomatic patterns
+    (ColumnDataSource, LabelSet, BoxAnnotation)
+  - 'Polished visual details: alternating row bands, bold group headers, subtle grid,
+    off-white background'
   weaknesses:
-  - Missing dependency line type legend (spec mentions including legend for dependency
-    styles)
-  - Title uses regular hyphen/dot instead of middle-dot separator
-  image_description: 'The plot displays a Gantt chart with task dependencies for a
-    software development project. The chart shows 4 phases (Requirements, Design,
-    Development, Testing) color-coded with distinct colors: blue (#306998) for Requirements,
-    yellow (#FFD43B) for Design, green (#4CAF50) for Development, and pink (#E91E63)
-    for Testing. Each phase has a lighter aggregate bar showing the span, with individual
-    task bars below in darker shades. Tasks are organized hierarchically with group
-    headers and indented task names on the left. Dependency arrows (gray lines with
-    arrowheads) connect predecessor task ends to successor task starts, routing around
-    bars to avoid overlap. The x-axis shows a timeline from Jan 01 2026 to Mar 01
-    with "Timeline" label. A legend in the top-right corner identifies each phase
-    color. The title reads "gantt-dependencies · bokeh · pyplots.ai".'
+  - Yellow (#FFD43B) bars have low contrast against the light background, reducing
+    visual prominence of the Design phase
+  - No visual emphasis on critical path — all dependency arrows look identical regardless
+    of scheduling importance
+  - HTML export disables all Bokeh interactive tools, missing a key strength of the
+    library
+  - Design palette is functional but not refined — colors feel arbitrary rather than
+    part of a cohesive professional palette
+  image_description: 'The plot displays a Gantt chart for a software development project
+    with 12 tasks organized into 4 color-coded phases. Requirements (steel blue #306998):
+    Requirements Gathering, Stakeholder Review, Requirements Sign-off shown in the
+    leftmost portion of the timeline. Design (golden yellow #FFD43B): System Architecture,
+    Database Design, UI/UX Design in mid-January. Development (green #4CAF50): Backend
+    Core, Frontend Core, API Integration spanning early-to-mid February. Testing (pink
+    #E91E63): Unit Testing, Integration Testing, User Acceptance in late February
+    through early March. Group headers are bold with lighter aggregate span bars behind
+    them. Gray dependency arrows with right-angle routing connect predecessor end-dates
+    to successor start-dates with triangular arrowheads. Alternating light gray row
+    bands improve readability. The x-axis shows dates from Jan 01, 2026 to Mar 01,
+    labeled "Timeline (Weeks)". The title reads "gantt-dependencies · bokeh · pyplots.ai"
+    in the top-left. A legend in the top-right lists all four phases and "Dependency
+    (finish-to-start)". Background is off-white (#FAFAFA).'
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 28
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 42pt, axis labels at 28pt, task labels at 22pt - all clearly
-          readable, slightly small for full marks
+        comment: 'All font sizes explicitly set: title 42pt, axis label 28pt, tick
+          labels 22pt, group headers 24pt bold, task labels 20pt, legend 20pt'
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text or elements, arrows route around bars effectively
+        comment: No overlapping text; labels, bars, arrows, and legend clearly separated
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Task bars and group spans are well-sized and visible, arrows could
-          be slightly thicker
+        comment: Task bars well-sized, group spans appropriately lighter, dependency
+          arrows visible with clear arrowheads
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Colors are distinct and colorblind-friendly (blue, yellow, green,
-          pink)
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good use of canvas space, balanced margins, plot fills appropriate
-          area
-      - id: VQ-06
-        name: Axis Labels
-        score: 1
-        max: 2
-        passed: true
-        comment: X-axis has Timeline label but no units specification
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
-        max: 2
-        passed: true
-        comment: Legend well-placed in top-right, grid is subtle on x-axis only
-    spec_compliance:
-      score: 23
-      max: 25
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct Gantt chart with dependencies
-      - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Tasks mapped correctly to timeline, dependencies shown
-      - id: SC-03
-        name: Required Features
-        score: 4
-        max: 5
-        passed: true
-        comment: Has dependencies arrows, group headers with spans, hierarchical organization;
-          missing legend for dependency line styles
-      - id: SC-04
-        name: Data Range
         score: 3
-        max: 3
-        passed: true
-        comment: Full timeline visible from Jan to Mar 2026
-      - id: SC-05
-        name: Legend Accuracy
+        max: 4
+        passed: false
+        comment: Yellow (#FFD43B) has reduced contrast against light background; palette
+          not specifically colorblind-optimized
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: false
+        comment: Good proportions; minor empty space at bottom-right, legend slightly
+          isolated
+      - id: VQ-06
+        name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Phase legend correctly identifies colors
-      - id: SC-06
-        name: Title Format
-        score: 1
-        max: 2
-        passed: true
-        comment: Uses correct format but separator is not the exact middle-dot character
-    data_quality:
-      score: 18
+        comment: Title correct format, x-axis labeled Timeline (Weeks), y-axis uses
+          descriptive task/group names
+    design_excellence:
+      score: 12
       max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Above defaults with custom palette, row bands, off-white background,
+          typography hierarchy. Professional but not publication-quality
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: 'Good: hidden y-axis with custom LabelSet, subtle dashed x-grid,
+          no outline/toolbar, BoxAnnotation row bands'
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Natural flow with color-coded phases and dependency arrows but no
+          emphasis on critical path or bottleneck tasks
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Gantt chart with bars, dependency arrows, and group aggregation
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: dependency arrows, group spans, hierarchy,
+          color coding, legend'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Datetime x-axis, categorical y-axis, correct bar spans, proper dependency
+          linking
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct, legend includes all groups and dependency explanation
+    data_quality:
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows multiple phases, sequential and parallel dependencies, but
-          could show more complex dependency patterns
+        comment: Shows sequential, parallel, convergent, and cross-phase dependencies
+          with varied task durations
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Software development project with realistic phases and tasks
+        comment: Authentic software development lifecycle with standard phases and
+          realistic task descriptions
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Dates are realistic, task durations sensible, though some gaps between
-          tasks seem arbitrary
+        comment: 2-month project span, 2-12 day task durations, plausible scheduling
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -159,49 +179,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → plot → save'
+        comment: Clean Import-Data-Plot-Save structure with no functions or classes
       - id: CQ-02
         name: Reproducibility
-        score: 1
-        max: 3
-        passed: false
-        comment: Data is deterministic but no explicit seed statement present
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic with hardcoded dates and task names
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: 'All imports used: pandas, bokeh.io, bokeh.models, bokeh.plotting'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Bokeh API
+        comment: Well-organized sections, appropriate complexity, no fake elements
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves plot.png via export_png and plot.html; uses current Bokeh 3.x
+          API
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 5
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
-        passed: true
-        comment: Uses ColumnDataSource, multi_line for arrows, patches for arrowheads,
-          LabelSet for custom labels, Legend with LegendItem, hbar for Gantt bars
-  verdict: APPROVED
+        passed: false
+        comment: 'Good Bokeh patterns: ColumnDataSource, hbar, multi_line, patches,
+          LabelSet, BoxAnnotation, Legend. Could add interactive tools for HTML'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Uses Bokeh-specific features (ColumnDataSource, BoxAnnotation, LabelSet,
+          multi_line, patches, HTML export) but disables all interactive tools
+  verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
   - custom-legend
-  - patches
   - annotations
+  - patches
   - html-export
   patterns:
   - columndatasource
@@ -211,3 +239,4 @@ impl_tags:
   styling:
   - alpha-blending
   - grid-styling
+  - edge-highlighting
