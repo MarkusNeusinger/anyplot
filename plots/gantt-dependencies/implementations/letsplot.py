@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 gantt-dependencies: Gantt Chart with Dependencies
 Library: letsplot 4.8.2 | Python 3.14
 Quality: 81/100 | Updated: 2026-02-25
@@ -138,9 +138,8 @@ for group in group_order:
 n = len(reading_order)
 for i, name in enumerate(reading_order):
     y_positions[name] = n - 1 - i
-y_pos = n
 
-# Prepare plot dataframes
+# Prepare plot dataframes using native datetimes (no timestamp conversion)
 plot_data = []
 for name, y in y_positions.items():
     info = task_info[name]
@@ -152,8 +151,7 @@ for name, y in y_positions.items():
             "end": info["end"],
             "is_group": info["is_group"],
             "group": info["group"],
-            "start_num": info["start"].timestamp(),
-            "end_num": info["end"].timestamp(),
+            "duration": (info["end"] - info["start"]).days,
         }
     )
 
@@ -161,10 +159,10 @@ plot_df = pd.DataFrame(plot_data)
 groups_df = plot_df[plot_df["is_group"]]
 tasks_df = plot_df[~plot_df["is_group"]]
 
-# Dependency arrow colors
-dep_colors = {"finish-to-start": "#E74C3C", "start-to-start": "#3498DB", "finish-to-finish": "#27AE60"}
+# Colorblind-safe dependency arrow colors (orange/blue/purple instead of red/blue/green)
+dep_colors = {"finish-to-start": "#D95F02", "start-to-start": "#3498DB", "finish-to-finish": "#7570B3"}
 
-# Build arrow data
+# Build arrow data with native datetimes
 arrows_data = []
 for task_name, info in task_info.items():
     if info["is_group"] or not info.get("depends_on"):
@@ -174,14 +172,11 @@ for task_name, info in task_info.items():
             continue
         dep_info = task_info[dep_name]
         if dep_type == "start-to-start":
-            x_from = dep_info["start"].timestamp()
-            x_to = info["start"].timestamp()
+            x_from, x_to = dep_info["start"], info["start"]
         elif dep_type == "finish-to-finish":
-            x_from = dep_info["end"].timestamp()
-            x_to = info["end"].timestamp()
+            x_from, x_to = dep_info["end"], info["end"]
         else:
-            x_from = dep_info["end"].timestamp()
-            x_to = info["start"].timestamp()
+            x_from, x_to = dep_info["end"], info["start"]
         arrows_data.append(
             {
                 "x": x_from,
@@ -189,44 +184,58 @@ for task_name, info in task_info.items():
                 "xend": x_to,
                 "yend": y_positions[task_name],
                 "dep_type": dep_type,
+                "from_task": dep_name,
+                "to_task": task_name,
             }
         )
 
 arrows_df = pd.DataFrame(arrows_data) if arrows_data else None
 
 # Build plot
-x_range = plot_df["end_num"].max() - plot_df["start_num"].min()
-x_min = plot_df["start_num"].min()
-x_max = plot_df["end_num"].max()
+x_min = plot_df["start"].min()
+x_max = plot_df["end"].max()
+y_pos = n
 
 plot = ggplot()
 
 # Alternating group background bands for visual separation
-for group in group_order:
-    group_y = y_positions[group]
+for i, group in enumerate(group_order):
     group_task_ys = [y_positions[t] for t, info in task_info.items() if info["group"] == group]
     y_lo = min(group_task_ys) - 0.45
     y_hi = max(group_task_ys) + 0.45
-    band_color = "#F7F9FC" if group_order.index(group) % 2 == 0 else "#FFFFFF"
+    band_color = "#F7F9FC" if i % 2 == 0 else "#FFFFFF"
     band_df = pd.DataFrame(
-        [{"xmin": x_min - x_range * 0.25, "xmax": x_max + x_range * 0.05, "ymin": y_lo, "ymax": y_hi}]
+        [{"xmin": x_min - pd.Timedelta(days=18), "xmax": x_max + pd.Timedelta(days=5), "ymin": y_lo, "ymax": y_hi}]
     )
     plot += geom_rect(aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax"), data=band_df, fill=band_color, alpha=0.8)
 
-# Group header bars
+# Group header bars with interactive tooltips
 plot += geom_segment(
-    aes(x="start_num", xend="end_num", y="y", yend="y"), data=groups_df, size=14, color="#1a365d", alpha=0.95
+    aes(x="start", xend="end", y="y", yend="y"),
+    data=groups_df,
+    size=14,
+    color="#1a365d",
+    alpha=0.95,
+    tooltips=layer_tooltips().title("@task").line("@start — @end").line("Duration: @duration days"),
 )
 
-# Task bars colored by group
+# Task bars colored by group with interactive tooltips
+task_tooltips = (
+    layer_tooltips().title("@task").line("@start — @end").line("Group: @group").line("Duration: @duration days")
+)
 for group in group_order:
     gdf = tasks_df[tasks_df["group"] == group]
     if not gdf.empty:
         plot += geom_segment(
-            aes(x="start_num", xend="end_num", y="y", yend="y"), data=gdf, size=8, color=group_colors[group], alpha=0.85
+            aes(x="start", xend="end", y="y", yend="y"),
+            data=gdf,
+            size=8,
+            color=group_colors[group],
+            alpha=0.85,
+            tooltips=task_tooltips,
         )
 
-# Dependency arrows by type
+# Dependency arrows by type with interactive tooltips
 if arrows_df is not None and not arrows_df.empty:
     for dep_type, color in dep_colors.items():
         type_df = arrows_df[arrows_df["dep_type"] == dep_type]
@@ -234,91 +243,58 @@ if arrows_df is not None and not arrows_df.empty:
             plot += geom_segment(
                 aes(x="x", xend="xend", y="y", yend="yend"),
                 data=type_df,
-                size=1.2,
+                size=1.5,
                 color=color,
                 alpha=0.85,
                 arrow=arrow(angle=25, length=10, type="closed"),
+                tooltips=layer_tooltips().line("@from_task → @to_task").line("Type: @dep_type"),
             )
 
-# Labels on the left side of bars for tasks, right for groups
-label_offset = x_range * 0.008
-
-group_labels = groups_df.copy()
-group_labels["label_x"] = group_labels["end_num"] + label_offset
-
-task_labels = tasks_df.copy()
-task_labels["label_x"] = task_labels["start_num"] - label_offset
+# Labels: task names on left, group names on right
+label_offset = pd.Timedelta(days=1)
+group_labels = groups_df.assign(label_x=groups_df["end"] + label_offset)
+task_labels_df = tasks_df.assign(label_x=tasks_df["start"] - label_offset)
 
 plot += geom_text(
     aes(x="label_x", y="y", label="task"), data=group_labels, hjust=0, size=12, fontface="bold", color="#1a365d"
 )
-plot += geom_text(aes(x="label_x", y="y", label="task"), data=task_labels, hjust=1, size=10, color="#333333")
+plot += geom_text(aes(x="label_x", y="y", label="task"), data=task_labels_df, hjust=1, size=12, color="#333333")
 
-# Date axis
-date_range = pd.date_range("2024-01-01", "2024-03-18", freq="2W")
-date_breaks = [d.timestamp() for d in date_range]
-date_labels_fmt = [d.strftime("%b %d") for d in date_range]
-
-# Legend for dependency types (bottom right)
-legend_y = -2.0
-legend_x = x_max - x_range * 0.15
-legend_items = pd.DataFrame(
-    [
-        {
-            "x": legend_x,
-            "xend": legend_x + x_range * 0.05,
-            "y": legend_y,
-            "label": "Finish-to-Start",
-            "color": "#E74C3C",
-        },
-        {
-            "x": legend_x,
-            "xend": legend_x + x_range * 0.05,
-            "y": legend_y - 0.9,
-            "label": "Start-to-Start",
-            "color": "#3498DB",
-        },
-        {
-            "x": legend_x,
-            "xend": legend_x + x_range * 0.05,
-            "y": legend_y - 1.8,
-            "label": "Finish-to-Finish",
-            "color": "#27AE60",
-        },
-    ]
-)
+# Dependency type legend (data-driven)
+legend_x = x_max - pd.Timedelta(days=12)
+legend_xend = legend_x + pd.Timedelta(days=5)
+legend_text_x = legend_xend + pd.Timedelta(days=1)
+legend_items = [
+    ("Finish-to-Start", "finish-to-start", -2.0),
+    ("Start-to-Start", "start-to-start", -2.9),
+    ("Finish-to-Finish", "finish-to-finish", -3.8),
+]
 
 plot += geom_text(
     aes(x="x", y="y", label="label"),
-    data=pd.DataFrame([{"x": legend_x, "y": legend_y + 0.9, "label": "Dependencies:"}]),
+    data=pd.DataFrame([{"x": legend_x, "y": -1.1, "label": "Dependencies:"}]),
     hjust=0,
     size=12,
     fontface="bold",
     color="#222222",
 )
 
-for _, row in legend_items.iterrows():
+legend_seg_df = pd.DataFrame([{"x": legend_x, "xend": legend_xend, "y": y} for _, _, y in legend_items])
+legend_lbl_df = pd.DataFrame([{"x": legend_text_x, "y": y, "label": label} for label, _, y in legend_items])
+
+for (label, dep_type, y), (_, seg_row) in zip(legend_items, legend_seg_df.iterrows()):
     plot += geom_segment(
         aes(x="x", xend="xend", y="y", yend="y"),
-        data=pd.DataFrame([row]),
-        size=1.2,
-        color=row["color"],
+        data=pd.DataFrame([seg_row]),
+        size=1.5,
+        color=dep_colors[dep_type],
         arrow=arrow(angle=25, length=10, type="closed"),
     )
 
-plot += geom_text(
-    aes(x="xend", y="y", label="label"),
-    data=legend_items.assign(xend=legend_items["xend"] + x_range * 0.008),
-    hjust=0,
-    size=10,
-    color="#333333",
-)
+plot += geom_text(aes(x="x", y="y", label="label"), data=legend_lbl_df, hjust=0, size=11, color="#333333")
 
-# Theme and formatting
-x_left_pad = x_range * 0.25
-x_right_pad = x_range * 0.15
-
-plot += scale_x_continuous(breaks=date_breaks, labels=date_labels_fmt, limits=[x_min - x_left_pad, x_max + x_right_pad])
+# Native datetime axis and theme
+plot += scale_x_datetime(format="%b %d", limits=[x_min - pd.Timedelta(days=18), x_max + pd.Timedelta(days=12)])
 plot += scale_y_continuous(breaks=[], labels=[], limits=[-5.0, y_pos + 0.5])
 plot += labs(x="Timeline", y="", title="gantt-dependencies \u00b7 letsplot \u00b7 pyplots.ai")
 plot += theme_minimal()
