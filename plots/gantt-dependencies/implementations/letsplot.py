@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 gantt-dependencies: Gantt Chart with Dependencies
 Library: letsplot 4.8.2 | Python 3.14
-Quality: 84/100 | Updated: 2026-02-25
+Quality: 88/100 | Updated: 2026-02-25
 """
 
 import pandas as pd
