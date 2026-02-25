@@ -1,12 +1,12 @@
 """ pyplots.ai
 gantt-dependencies: Gantt Chart with Dependencies
-Library: bokeh 3.8.2 | Python 3.13.11
-Quality: 90/100 | Created: 2026-01-15
+Library: bokeh 3.8.2 | Python 3.14
+Quality: 93/100 | Updated: 2026-02-25
 """
 
 import pandas as pd
 from bokeh.io import export_png, output_file, save
-from bokeh.models import ColumnDataSource, LabelSet, Legend, LegendItem
+from bokeh.models import BoxAnnotation, ColumnDataSource, HoverTool, LabelSet, Legend, LegendItem
 from bokeh.plotting import figure
 
 
@@ -106,13 +106,50 @@ tasks_data = [
 df = pd.DataFrame(tasks_data)
 df["start"] = pd.to_datetime(df["start"])
 df["end"] = pd.to_datetime(df["end"])
+df["duration"] = (df["end"] - df["start"]).dt.days
 
 # Create task lookup for dependencies
 task_lookup = {row["task"]: idx for idx, row in df.iterrows()}
 
-# Define groups and colors
+# Compute critical path (longest path through dependency graph)
+successors = {row["task"]: [] for _, row in df.iterrows()}
+for _, row in df.iterrows():
+    for dep in row["depends_on"]:
+        if dep in successors:
+            successors[dep].append(row["task"])
+
+# Forward pass: longest path from any root to each task's end
+lp_to = {}
+for _, row in df.iterrows():
+    task = row["task"]
+    dur = row["duration"]
+    if not row["depends_on"]:
+        lp_to[task] = dur
+    else:
+        lp_to[task] = max(lp_to[dep] for dep in row["depends_on"] if dep in lp_to) + dur
+
+# Backward pass: longest path from each task's start to project end
+lp_from = {}
+for _, row in df.sort_values("end", ascending=False).iterrows():
+    task = row["task"]
+    dur = row["duration"]
+    if not successors[task]:
+        lp_from[task] = dur
+    else:
+        lp_from[task] = dur + max(lp_from[s] for s in successors[task])
+
+# Critical tasks: longest path through task equals overall longest path
+max_lp = max(lp_to.values())
+critical_tasks = {t for t in lp_to if lp_to[t] + lp_from[t] - df.iloc[task_lookup[t]]["duration"] == max_lp}
+
+# Refined color palette — cohesive muted tones with strong contrast on #FAFAFA
 groups = ["Requirements", "Design", "Development", "Testing"]
-group_colors = {"Requirements": "#306998", "Design": "#FFD43B", "Development": "#4CAF50", "Testing": "#E91E63"}
+group_colors = {
+    "Requirements": "#2B6C94",  # Deep steel blue
+    "Design": "#BF8B2E",  # Warm amber (replaces low-contrast yellow)
+    "Development": "#3A7D44",  # Forest green
+    "Testing": "#A3567D",  # Muted rose
+}
 
 # Calculate group spans
 group_spans = {}
@@ -120,148 +157,256 @@ for group in groups:
     group_df = df[df["group"] == group]
     group_spans[group] = {"start": group_df["start"].min(), "end": group_df["end"].max()}
 
-# Build y-positions using numeric indices
+# Build y-positions with group headers
 y_positions = {}
 y_labels = []
+y_is_group = []
 current_y = 0
 
 for group in groups:
-    # Group header
     y_positions[f"__group__{group}"] = current_y
     y_labels.append((current_y, group))
+    y_is_group.append(True)
     current_y += 1
-    # Tasks in this group (indented)
     group_tasks = df[df["group"] == group]["task"].tolist()
     for task in group_tasks:
         y_positions[task] = current_y
-        y_labels.append((current_y, f"    {task}"))
+        y_labels.append((current_y, f"   {task}"))
+        y_is_group.append(False)
         current_y += 1
 
 max_y = current_y
 
-# Create figure with numeric y-axis
+# Create figure
 p = figure(
     width=4800,
     height=2700,
     x_axis_type="datetime",
     y_range=(max_y + 0.5, -0.5),
-    title="gantt-dependencies · bokeh · pyplots.ai",
-    x_axis_label="Timeline",
+    title="gantt-dependencies \u00b7 bokeh \u00b7 pyplots.ai",
+    x_axis_label="Timeline (Weeks)",
     tools="",
 )
 
-# Style - larger fonts for 4800x2700 canvas
+# Style
 p.title.text_font_size = "42pt"
+p.title.text_color = "#2A2A2A"
 p.xaxis.axis_label_text_font_size = "28pt"
 p.xaxis.major_label_text_font_size = "22pt"
 p.yaxis.visible = False
-p.xgrid.grid_line_alpha = 0.3
+p.xgrid.grid_line_alpha = 0.15
+p.xgrid.grid_line_dash = [6, 4]
 p.ygrid.grid_line_alpha = 0.0
+p.outline_line_color = None
+p.background_fill_color = "#FAFAFA"
 
-# Draw group span bars (lighter background)
+# Alternating row bands
+for i in range(max_y):
+    if i % 2 == 0:
+        p.add_layout(
+            BoxAnnotation(
+                bottom=i - 0.5, top=i + 0.5, fill_color="#F0F0F0", fill_alpha=0.5, level="underlay", line_color=None
+            )
+        )
+
+# Draw group span bars
 group_renderers = {}
 for group in groups:
     span = group_spans[group]
     y = y_positions[f"__group__{group}"]
     source = ColumnDataSource(data={"y": [y], "left": [span["start"]], "right": [span["end"]], "height": [0.7]})
-    r = p.hbar(y="y", left="left", right="right", height="height", color=group_colors[group], alpha=0.35, source=source)
+    r = p.hbar(y="y", left="left", right="right", height="height", color=group_colors[group], alpha=0.25, source=source)
     group_renderers[group] = r
 
-# Draw task bars
+# Build task bar data with hover metadata
+task_ys, task_lefts, task_rights = [], [], []
+task_colors, task_names, task_groups = [], [], []
+task_starts, task_ends, task_durations, task_deps, task_crit = [], [], [], [], []
+
 for _, row in df.iterrows():
-    y = y_positions[row["task"]]
-    source = ColumnDataSource(data={"y": [y], "left": [row["start"]], "right": [row["end"]], "height": [0.55]})
-    p.hbar(
-        y="y", left="left", right="right", height="height", color=group_colors[row["group"]], alpha=0.9, source=source
-    )
+    task_ys.append(y_positions[row["task"]])
+    task_lefts.append(row["start"])
+    task_rights.append(row["end"])
+    task_colors.append(group_colors[row["group"]])
+    task_names.append(row["task"])
+    task_groups.append(row["group"])
+    task_starts.append(row["start"].strftime("%b %d, %Y"))
+    task_ends.append(row["end"].strftime("%b %d, %Y"))
+    task_durations.append(f"{row['duration']} days")
+    deps = row["depends_on"]
+    task_deps.append(", ".join(deps) if deps else "None")
+    task_crit.append("\u2605 Critical Path" if row["task"] in critical_tasks else "")
 
-# Draw dependency arrows using multi_line with arrowheads
-# Route arrows to avoid passing through task bars by going below/above them
-arrow_xs = []
-arrow_ys = []
-arrowhead_xs = []
-arrowhead_ys = []
+task_source = ColumnDataSource(
+    data={
+        "y": task_ys,
+        "left": task_lefts,
+        "right": task_rights,
+        "bar_color": task_colors,
+        "task_name": task_names,
+        "group_name": task_groups,
+        "start_str": task_starts,
+        "end_str": task_ends,
+        "duration": task_durations,
+        "dependencies": task_deps,
+        "critical": task_crit,
+    }
+)
 
-bar_offset = 0.4  # Offset to route around bars
+# Draw task bars (single source for HoverTool)
+task_renderer = p.hbar(
+    y="y",
+    left="left",
+    right="right",
+    height=0.5,
+    fill_color="bar_color",
+    fill_alpha=0.9,
+    line_color="white",
+    line_width=1,
+    source=task_source,
+)
+
+# Critical path border overlay (dark outline on critical tasks)
+for _, row in df.iterrows():
+    if row["task"] in critical_tasks:
+        y = y_positions[row["task"]]
+        src = ColumnDataSource(data={"y": [y], "left": [row["start"]], "right": [row["end"]]})
+        p.hbar(
+            y="y", left="left", right="right", height=0.54, fill_alpha=0, line_color="#1A1A1A", line_width=3, source=src
+        )
+
+# Draw dependency arrows with critical path emphasis
+crit_arrow_xs, crit_arrow_ys = [], []
+norm_arrow_xs, norm_arrow_ys = [], []
+crit_head_xs, crit_head_ys = [], []
+norm_head_xs, norm_head_ys = [], []
 
 for _, row in df.iterrows():
     task_name = row["task"]
     task_y = y_positions[task_name]
-    task_start = row["start"].value / 1e6  # Convert to ms for plotting
+    task_start_ms = row["start"].value / 1e6
+    is_task_critical = task_name in critical_tasks
 
     for dep_name in row["depends_on"]:
         if dep_name in task_lookup:
             dep_row = df.iloc[task_lookup[dep_name]]
-            dep_end = dep_row["end"].value / 1e6
+            dep_end_ms = dep_row["end"].value / 1e6
             dep_y = y_positions[dep_name]
 
-            # Route around bars: go from end of dep bar, drop down/up outside bar area, then connect
-            if task_y > dep_y:
-                # Target is below: route via bottom edges of bars
-                route_y = max(dep_y, task_y) + bar_offset
-                arrow_xs.append([dep_end, dep_end, task_start, task_start])
-                arrow_ys.append([dep_y + bar_offset * 0.7, route_y, route_y, task_y])
-            elif task_y < dep_y:
-                # Target is above: route via top edges
-                route_y = min(dep_y, task_y) - bar_offset
-                arrow_xs.append([dep_end, dep_end, task_start, task_start])
-                arrow_ys.append([dep_y - bar_offset * 0.7, route_y, route_y, task_y])
+            is_crit_dep = is_task_critical and dep_name in critical_tasks
+            h_offset = 1.0 * 24 * 60 * 60 * 1000  # 1 day in ms
+
+            if task_y != dep_y:
+                mid_x = dep_end_ms + h_offset
+                xs = [dep_end_ms, mid_x, mid_x, task_start_ms]
+                ys = [dep_y, dep_y, task_y, task_y]
             else:
-                # Same row (shouldn't happen)
-                arrow_xs.append([dep_end, task_start])
-                arrow_ys.append([dep_y, task_y])
+                xs = [dep_end_ms, task_start_ms]
+                ys = [dep_y, task_y]
 
-            # Arrowhead (small triangle pointing right)
-            arrow_size = 2 * 24 * 60 * 60 * 1000  # 2 days in ms for arrowhead
-            arrowhead_xs.append([task_start - arrow_size, task_start, task_start - arrow_size])
-            arrowhead_ys.append([task_y - 0.12, task_y, task_y + 0.12])
+            arrow_size = 1.5 * 24 * 60 * 60 * 1000
+            hxs = [task_start_ms - arrow_size, task_start_ms, task_start_ms - arrow_size]
+            hys = [task_y - 0.12, task_y, task_y + 0.12]
 
-# Draw dependency lines
-if arrow_xs:
-    p.multi_line(xs=arrow_xs, ys=arrow_ys, line_color="#555555", line_width=2.5, line_alpha=0.7)
+            if is_crit_dep:
+                crit_arrow_xs.append(xs)
+                crit_arrow_ys.append(ys)
+                crit_head_xs.append(hxs)
+                crit_head_ys.append(hys)
+            else:
+                norm_arrow_xs.append(xs)
+                norm_arrow_ys.append(ys)
+                norm_head_xs.append(hxs)
+                norm_head_ys.append(hys)
 
-# Draw arrowheads
-if arrowhead_xs:
+# Non-critical arrows (light, drawn first)
+dep_renderer = None
+if norm_arrow_xs:
+    dep_renderer = p.multi_line(xs=norm_arrow_xs, ys=norm_arrow_ys, line_color="#BBBBBB", line_width=2, line_alpha=0.45)
     p.patches(
-        xs=arrowhead_xs, ys=arrowhead_ys, fill_color="#555555", fill_alpha=0.8, line_color="#555555", line_width=1
+        xs=norm_head_xs, ys=norm_head_ys, fill_color="#BBBBBB", fill_alpha=0.45, line_color="#BBBBBB", line_width=1
     )
 
-# Add y-axis labels manually with larger font for 4800x2700 canvas
-label_source = ColumnDataSource(
-    data={
-        "y": [y for y, _ in y_labels],
-        "text": [label for _, label in y_labels],
-        "x": [df["start"].min() - pd.Timedelta(days=1)] * len(y_labels),
-    }
-)
-labels = LabelSet(
-    x="x",
-    y="y",
-    text="text",
-    source=label_source,
-    text_font_size="22pt",
-    text_align="right",
-    x_offset=-10,
-    y_offset=0,
-    text_baseline="middle",
-)
-p.add_layout(labels)
+# Critical path arrows (bold, drawn on top)
+crit_dep_renderer = None
+if crit_arrow_xs:
+    crit_dep_renderer = p.multi_line(
+        xs=crit_arrow_xs, ys=crit_arrow_ys, line_color="#1A1A1A", line_width=4, line_alpha=0.8
+    )
+    p.patches(
+        xs=crit_head_xs, ys=crit_head_ys, fill_color="#1A1A1A", fill_alpha=0.8, line_color="#1A1A1A", line_width=1
+    )
 
-# Adjust x range to make room for labels
-x_min = df["start"].min() - pd.Timedelta(days=12)
-x_max = df["end"].max() + pd.Timedelta(days=3)
+# Y-axis labels
+group_label_ys, group_label_texts = [], []
+task_label_ys, task_label_texts = [], []
+
+for (y, label), is_group in zip(y_labels, y_is_group, strict=True):
+    if is_group:
+        group_label_ys.append(y)
+        group_label_texts.append(label)
+    else:
+        task_label_ys.append(y)
+        task_label_texts.append(label)
+
+label_x = df["start"].min() - pd.Timedelta(days=1)
+
+# Group header labels (bold, larger)
+group_label_source = ColumnDataSource(
+    data={"y": group_label_ys, "text": group_label_texts, "x": [label_x] * len(group_label_ys)}
+)
+p.add_layout(
+    LabelSet(
+        x="x",
+        y="y",
+        text="text",
+        source=group_label_source,
+        text_font_size="24pt",
+        text_font_style="bold",
+        text_align="right",
+        x_offset=-10,
+        text_baseline="middle",
+        text_color="#1A1A1A",
+    )
+)
+
+# Task labels (regular, slightly smaller)
+task_label_source = ColumnDataSource(
+    data={"y": task_label_ys, "text": task_label_texts, "x": [label_x] * len(task_label_ys)}
+)
+p.add_layout(
+    LabelSet(
+        x="x",
+        y="y",
+        text="text",
+        source=task_label_source,
+        text_font_size="20pt",
+        text_align="right",
+        x_offset=-10,
+        text_baseline="middle",
+        text_color="#444444",
+    )
+)
+
+# X range
+x_min = df["start"].min() - pd.Timedelta(days=14)
+x_max = df["end"].max() + pd.Timedelta(days=2)
 p.x_range.start = x_min
 p.x_range.end = x_max
 
-# Add legend inside the plot area (top right corner) for better proximity to content
+# Legend with phase colors, dependency, and critical path
 legend_items = []
 for group in groups:
     legend_items.append(LegendItem(label=group, renderers=[group_renderers[group]]))
+if dep_renderer:
+    legend_items.append(LegendItem(label="Dependency", renderers=[dep_renderer]))
+if crit_dep_renderer:
+    legend_items.append(LegendItem(label="Critical Path", renderers=[crit_dep_renderer]))
 
 legend = Legend(
     items=legend_items,
     location="top_right",
-    label_text_font_size="22pt",
+    label_text_font_size="20pt",
     spacing=12,
     padding=20,
     background_fill_alpha=0.85,
@@ -270,12 +415,28 @@ legend = Legend(
 )
 p.add_layout(legend)
 
-# Remove toolbar
+# Remove toolbar for PNG
 p.toolbar_location = None
 
 # Save PNG
 export_png(p, filename="plot.png")
 
-# Save HTML (interactive)
-output_file("plot.html", title="gantt-dependencies · bokeh · pyplots.ai")
+# Add HoverTool and enable toolbar for interactive HTML
+hover = HoverTool(
+    renderers=[task_renderer],
+    tooltips=[
+        ("Task", "@task_name"),
+        ("Phase", "@group_name"),
+        ("Start", "@start_str"),
+        ("End", "@end_str"),
+        ("Duration", "@duration"),
+        ("Dependencies", "@dependencies"),
+        ("Status", "@critical"),
+    ],
+)
+p.add_tools(hover)
+p.toolbar_location = "above"
+
+# Save HTML
+output_file("plot.html", title="gantt-dependencies \u00b7 bokeh \u00b7 pyplots.ai")
 save(p)
