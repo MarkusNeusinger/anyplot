@@ -1,0 +1,27 @@
+# Specification-level metadata for line-stress-strain
+# Auto-synced to PostgreSQL on push to main
+
+spec_id: line-stress-strain
+title: Engineering Stress-Strain Curve
+
+# Specification tracking
+created: "2026-02-25T21:31:04Z"
+updated: null
+issue: 4413
+suggested: MarkusNeusinger
+
+# Classification tags (applies to all library implementations)
+# See docs/reference/tagging-system.md for detailed guidelines
+tags:
+  plot_type:
+    - line
+  data_type:
+    - numeric
+    - continuous
+  domain:
+    - engineering
+    - science
+    - education
+  features:
+    - annotated
+    - comparison
