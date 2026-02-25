@@ -1,7 +1,7 @@
 library: altair
 specification_id: gantt-dependencies
 created: '2026-01-15T21:08:15Z'
-updated: '2026-02-25T14:53:17Z'
+updated: '2026-02-25T15:09:02Z'
 generated_by: claude-opus-4-6
 workflow_run: 21046152021
 issue: 3830
@@ -10,43 +10,45 @@ library_version: 6.0.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/gantt-dependencies/altair/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/gantt-dependencies/altair/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/gantt-dependencies/altair/plot.html
-quality_score: 82
+quality_score: 90
 review:
   strengths:
-  - 'Perfect spec compliance with all required features: dependency arrows, group
-    headers, aggregate bars, hierarchical task layout'
-  - Excellent data quality with a realistic software project showing parallel tasks,
+  - 'Excellent spec compliance with all required features: dependency arrows, group
+    headers with aggregate bars, hierarchical task layout, custom legend'
+  - Colorblind-safe palette with 5 distinct hues — successfully fixed the similar-blues
+    issue from attempt 1
+  - Idiomatic Altair code using ordinal Y encoding with sort, ExprRef, layer composition,
+    and vconcat — major improvement from attempt 1
+  - Strong data quality with realistic software project demonstrating parallel tasks,
     cross-phase dependencies, and varied durations
-  - 'Good design refinement: subtle grid, removed frame, custom color palette, rounded
-    corners, distinct group/task styling'
-  - Clean visual hierarchy through bold group headers, color coding, and dependency
-    flow
+  - 'Good visual refinement: subtle grid, removed frame/ticks, rounded corners, intentional
+    hierarchy through typography'
   weaknesses:
-  - Requirements (#306998) and Development (#4B8BBE) colors are too similar — hard
-    to distinguish, especially for colorblind viewers
-  - Dependency arrows are faint (opacity=0.6, thin dashed lines, small arrowheads)
-    — should be more prominent as they are a key feature
-  - Heavy manual y-positioning with quantitative scales is non-idiomatic for Altair
-    — consider using ordinal Y encoding
-  - Legend text at 14pt is below the recommended 16pt minimum for tick-level text
-  - X-axis label Timeline is generic — could include year context
+  - Dependency arrowheads (size=200) are visible but could be slightly larger for
+    better emphasis given they are a key feature
+  - Legend at bottom via vconcat creates slight visual separation from the main chart
+  - Legend text and tick labels are at the 16pt minimum rather than comfortably above
+    it
   image_description: 'The plot displays a Gantt chart for a software development project
-    with 13 tasks organized across 5 phases (Requirements, Design, Development, Testing,
-    Deployment). The title "gantt-dependencies · altair · pyplots.ai" is centered
-    at the top in large font. Task names are listed on the left side, with group headers
-    prefixed by a triangle marker in bold. Horizontal bars represent task durations:
-    Requirements tasks in dark blue (#306998), Design in amber/orange (#E69F00), Development
-    in medium blue (#4B8BBE), Testing in light blue (#56B4E9), and Deployment in teal
-    (#009E73). Group summary bars are rendered in dark charcoal (#2C3E50), thinner
-    than task bars. Dashed pink/rose (#CC5A71) lines with small triangle arrowheads
-    connect predecessor bar ends to successor bar starts, showing dependency relationships.
-    The x-axis shows dates from early January to mid-May 2024 labeled "Timeline."
-    A legend at the bottom shows colored rectangles for each phase plus "Dependency."
-    The grid is subtle (dashed, low opacity) and the chart frame is removed. Parallel
-    tasks (Database Design / UI/UX Design) and cross-phase dependencies are visible.'
+    with 13 tasks organized across 5 phases. The title "gantt-dependencies · altair
+    · pyplots.ai" is centered at the top in large font (28pt). Task names are listed
+    along the Y-axis with group headers prefixed by "▸" in bold (17pt) and individual
+    tasks indented with 2 spaces (16pt). Five color-coded groups are shown: Requirements
+    in dark blue (#306998), Design in amber/gold (#E69F00), Development in purple
+    (#7B2D8E), Testing in light blue (#56B4E9), and Deployment in teal (#009E73).
+    Group summary bars are rendered in dark charcoal (#2C3E50), thinner than task
+    bars, spanning the full duration of each phase. Prominent dashed rose-colored
+    (#CC5A71) lines with filled triangle arrowheads connect predecessor bar ends to
+    successor bar starts, clearly showing dependency relationships. The X-axis shows
+    "Project Timeline (2024)" with dates from early January to mid-May formatted as
+    "Mon DD". A custom legend at the bottom shows colored rectangles for each phase
+    plus "Dependency". The grid is subtle (dashed, opacity 0.15, x-axis only), view
+    frame is removed, and y-axis ticks/domain are hidden. Parallel tasks (Database
+    Design & UI/UX Design branching from System Architecture) and cross-phase dependencies
+    are clearly visible.'
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -54,67 +56,72 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set throughout (title=28, axis=16/20, task
-          text=16-17). Legend text at 14pt slightly below ideal.
+        comment: All font sizes explicitly set (title=28, axis title=20, labels=16,
+          y-axis=16-17 conditional). Legend and tick text at 16pt minimum threshold.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or elements. Tasks well-spaced vertically.
+        comment: No overlapping text or elements. Tasks well-spaced vertically. X-axis
+          dates clear.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Task bars clearly visible. Dependency arrows (opacity=0.6, small
-          arrowheads) could be more prominent.
+        comment: Task bars and group bars clearly visible. Dependency arrows prominent
+          (strokeWidth=3.5, opacity=0.85). Arrowheads (size=200) visible but relatively
+          small compared to bar widths.
       - id: VQ-04
         name: Color Accessibility
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Partially Okabe-Ito based. Requirements (#306998) and Development
-          (#4B8BBE) are too similar blue shades.
+        comment: Excellent colorblind-safe palette with 5 distinct hues. Development
+          changed from similar blue to purple (#7B2D8E), fixing attempt 1 issue.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good layout (~55% canvas utilization). Legend slightly disconnected
-          via vconcat.
+        comment: Good canvas utilization (~55-60%). Legend via vconcat creates slight
+          visual gap from main chart.
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: X-axis label 'Timeline' is descriptive but generic. Could include
-          year context.
+        comment: 'X-axis: ''Project Timeline (2024)'' is descriptive with temporal
+          context. Task names are self-explanatory.'
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Custom palette, rounded corners, group/task distinction, dashed dependency
-          arrows. Above defaults but two similar blues detract.
+        comment: 'Strong design: custom colorblind-safe palette, intentional visual
+          hierarchy through bold group headers, dark charcoal summary bars, rose dependency
+          arrows, rounded corners.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Subtle dashed grid, view stroke removed, custom text labels, rounded
-          corners, thinner group bars.
+        comment: 'Good refinements: subtle dashed grid at 0.15 opacity (x-axis only),
+          view stroke removed, axis domain/ticks hidden on Y, cornerRadius on bars,
+          labelPadding.'
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Clear hierarchy through group headers, color coding, dependency flow.
-          Viewer can follow project lifecycle.
+        comment: Clear visual hierarchy guides the reader through the project lifecycle.
+          Bold group headers, color coding, dependency flow, and parallel task branching
+          are immediately visible.
     spec_compliance:
       score: 15
       max: 15
@@ -124,28 +131,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Gantt chart with dependency connectors.
+        comment: Correct Gantt chart with horizontal task bars and dependency connectors.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: dependency arrows, group headers, aggregate
-          bars, hierarchical layout, legend.'
+        comment: 'All spec features present: dependency arrows, group headers with
+          aggregate bars, hierarchical task organization, color coding, legend with
+          dependency indicator.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Dates on X, tasks on Y, dependencies correctly connect predecessor
-          ends to successor starts.
+        comment: X-axis correctly maps temporal dates, Y-axis shows ordinal task list
+          with correct hierarchical ordering.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title in correct format. Legend shows all phases plus dependency
-          indicator.
+        comment: Title in correct format at 28pt. Custom legend shows all 5 phase
+          colors plus dependency indicator.
     data_quality:
       score: 15
       max: 15
@@ -155,23 +163,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows sequential and parallel dependencies, cross-phase links, varying
-          durations, 5 groups with 13 tasks.
+        comment: 'Demonstrates all key Gantt dependency patterns: sequential, parallel
+          tasks, cross-phase dependencies, varying durations, 5 groups with 13 tasks.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Software development lifecycle with specific, comprehensible task
-          names.
+        comment: Software development lifecycle is a real-world, neutral scenario
+          with specific, domain-appropriate task names.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Jan-May 2024 span with realistic task durations for a software project.
+        comment: Project spans Jan-May 2024, realistic for a medium software project.
+          Task durations are plausible.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -179,14 +188,14 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Follows imports → data → processing → chart layers → combine → save.
-          No functions or classes.
+        comment: 'Clean flat script: imports, data, processing, chart layers, combine,
+          save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data hardcoded/deterministic.
+        comment: All data is hardcoded/deterministic. No random generation.
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -195,36 +204,38 @@ review:
         comment: Only altair and pandas imported, both used.
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Well-organized but verbose. Manual y-position calculation is somewhat
-          over-engineered.
+        passed: true
+        comment: Much cleaner than attempt 1. Ordinal Y encoding with sort is elegant.
+          No over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with scale_factor=3.0. Current Altair API.
+        comment: Saves as plot.png with scale_factor=3.0. Uses current Altair 6.x
+          API.
     library_mastery:
-      score: 5
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 5
         max: 5
-        passed: false
-        comment: Uses layer, vconcat, encodings, tooltips. Heavy manual y-position
-          calculation with Q scales is non-idiomatic.
+        passed: true
+        comment: 'Expert use of Altair''s declarative grammar: ordinal Y encoding
+          with sort, layer composition, vconcat, ExprRef, configure methods, tooltips.'
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 4
         max: 5
-        passed: false
-        comment: Layer composition, vconcat, resolve_scale, EncodingSortField. Core
-          approach could be replicated in any library.
-  verdict: REJECTED
+        passed: true
+        comment: 'Uses Altair-distinctive features: ExprRef for conditional label
+          styling, declarative layer composition, vconcat layout, EncodingSortField,
+          Color with scale=None.'
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -236,4 +247,3 @@ impl_tags:
   dataprep: []
   styling:
   - grid-styling
-  - edge-highlighting
