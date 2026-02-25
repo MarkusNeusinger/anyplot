@@ -1,7 +1,7 @@
-""" pyplots.ai
+"""pyplots.ai
 gantt-dependencies: Gantt Chart with Dependencies
-Library: altair 6.0.0 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-15
+Library: altair 6.0.0 | Python 3.14
+Quality: /100 | Updated: 2026-02-25
 """
 
 import altair as alt
@@ -128,13 +128,13 @@ df["end"] = pd.to_datetime(df["end"])
 # Create task lookup for dependency arrows
 task_lookup = {row["task_id"]: row for _, row in df.iterrows()}
 
-# Define colors for groups
+# Define colors for groups - colorblind-safe palette
 group_colors = {
     "Requirements": "#306998",
-    "Design": "#FFD43B",
+    "Design": "#E69F00",
     "Development": "#4B8BBE",
-    "Testing": "#646464",
-    "Deployment": "#FFE873",
+    "Testing": "#56B4E9",
+    "Deployment": "#009E73",
 }
 
 # Build ordered list with y positions
@@ -144,7 +144,6 @@ y_pos = 0
 task_to_y = {}
 
 for grp in group_order:
-    # Group header
     grp_df = df[df["group"] == grp]
     rows.append(
         {
@@ -160,7 +159,6 @@ for grp in group_order:
     task_to_y[f"▸ {grp}"] = y_pos
     y_pos += 1
 
-    # Tasks in this group
     for _, row in grp_df.iterrows():
         display_task = f"  {row['task']}"
         rows.append(
@@ -191,7 +189,7 @@ combined_df["y_max"] = combined_df["y_display"] + 0.35
 combined_df.loc[combined_df["is_group"], "y_min"] = combined_df.loc[combined_df["is_group"], "y_display"] - 0.2
 combined_df.loc[combined_df["is_group"], "y_max"] = combined_df.loc[combined_df["is_group"], "y_display"] + 0.2
 
-# Build dependency data with y positions
+# Build dependency arrow data
 dep_data = []
 for _, row in df.iterrows():
     if row["depends_on"] and row["depends_on"] in task_lookup:
@@ -211,7 +209,7 @@ dep_df = pd.DataFrame(dep_data) if dep_data else pd.DataFrame()
 # Shared scales
 y_scale = alt.Scale(domain=[-0.5, max_y + 0.5])
 
-# Task bars using rect
+# Task bars
 task_df = combined_df[~combined_df["is_group"]]
 task_bars = (
     alt.Chart(task_df)
@@ -231,11 +229,11 @@ task_bars = (
     )
 )
 
-# Group bars using rect (thinner, dark)
+# Group bars (thinner, dark)
 group_df = combined_df[combined_df["is_group"]]
 group_bars = (
     alt.Chart(group_df)
-    .mark_rect(cornerRadius=3, opacity=0.75)
+    .mark_rect(cornerRadius=3, opacity=0.8)
     .encode(
         x=alt.X("start:T"),
         x2=alt.X2("end:T"),
@@ -246,19 +244,19 @@ group_bars = (
     )
 )
 
-# Y-axis labels - groups (position at leftmost point of chart)
+# Y-axis labels - groups
 group_label_data = combined_df[combined_df["is_group"]][["task", "y_display", "start"]].copy()
 group_labels = (
     alt.Chart(group_label_data)
-    .mark_text(align="right", dx=-15, fontSize=15, fontWeight="bold")
+    .mark_text(align="right", dx=-15, fontSize=17, fontWeight="bold")
     .encode(x=alt.value(0), y=alt.Y("y_display:Q", scale=y_scale), text="task:N")
 )
 
-# Y-axis labels - tasks (position at leftmost point of chart)
+# Y-axis labels - tasks
 task_label_data = combined_df[~combined_df["is_group"]][["task", "y_display", "start"]].copy()
 task_labels = (
     alt.Chart(task_label_data)
-    .mark_text(align="right", dx=-15, fontSize=14)
+    .mark_text(align="right", dx=-15, fontSize=16)
     .encode(x=alt.value(0), y=alt.Y("y_display:Q", scale=y_scale), text="task:N")
 )
 
@@ -266,40 +264,47 @@ task_labels = (
 if not dep_df.empty:
     dep_rules = (
         alt.Chart(dep_df)
-        .mark_rule(strokeWidth=2.5, opacity=0.65, color="#E74C3C", strokeDash=[6, 3])
+        .mark_rule(strokeWidth=2.5, opacity=0.6, color="#CC5A71", strokeDash=[6, 3])
         .encode(x=alt.X("from_x:T"), x2=alt.X2("to_x:T"), y=alt.Y("from_y:Q", scale=y_scale), y2=alt.Y2("to_y:Q"))
     )
 
     arrow_points = (
         alt.Chart(dep_df)
-        .mark_point(shape="triangle-right", size=100, filled=True, color="#E74C3C", opacity=0.8)
+        .mark_point(shape="triangle-right", size=110, filled=True, color="#CC5A71", opacity=0.75)
         .encode(x=alt.X("to_x:T"), y=alt.Y("to_y:Q", scale=y_scale))
     )
 else:
     dep_rules = alt.Chart(pd.DataFrame()).mark_rule()
     arrow_points = alt.Chart(pd.DataFrame()).mark_point()
 
-# Create legend
+# Legend data with proper spacing
 legend_data = pd.DataFrame(
     [
-        {"phase": "Requirements", "color": "#306998", "x": 0},
-        {"phase": "Design", "color": "#FFD43B", "x": 1},
-        {"phase": "Development", "color": "#4B8BBE", "x": 2},
-        {"phase": "Testing", "color": "#646464", "x": 3},
-        {"phase": "Deployment", "color": "#FFE873", "x": 4},
-        {"phase": "Dependencies", "color": "#E74C3C", "x": 5},
+        {"phase": "Requirements", "color": group_colors["Requirements"], "order": 0},
+        {"phase": "Design", "color": group_colors["Design"], "order": 1},
+        {"phase": "Development", "color": group_colors["Development"], "order": 2},
+        {"phase": "Testing", "color": group_colors["Testing"], "order": 3},
+        {"phase": "Deployment", "color": group_colors["Deployment"], "order": 4},
+        {"phase": "Dependency", "color": "#CC5A71", "order": 5},
     ]
 )
 
 legend_marks = (
     alt.Chart(legend_data)
-    .mark_rect(width=20, height=16, cornerRadius=3)
-    .encode(x=alt.X("x:O", title=None, axis=None), color=alt.Color("color:N", scale=None))
+    .mark_rect(width=22, height=16, cornerRadius=3)
+    .encode(
+        x=alt.X("phase:N", sort=alt.EncodingSortField(field="order"), axis=None, title=None),
+        color=alt.Color("color:N", scale=None),
+    )
 )
 
-legend_labels = alt.Chart(legend_data).mark_text(dy=22, fontSize=13).encode(x="x:O", text="phase:N")
+legend_labels = (
+    alt.Chart(legend_data)
+    .mark_text(dy=24, fontSize=14)
+    .encode(x=alt.X("phase:N", sort=alt.EncodingSortField(field="order"), axis=None, title=None), text="phase:N")
+)
 
-legend = alt.layer(legend_marks, legend_labels).properties(width=450, height=45)
+legend = alt.layer(legend_marks, legend_labels).properties(width=600, height=50)
 
 # Combine main chart layers
 main_chart = (
@@ -315,10 +320,9 @@ main_chart = (
 # Vertical concat with legend
 final_chart = (
     alt.vconcat(main_chart, legend, spacing=20)
-    .configure_axis(labelFontSize=14, titleFontSize=18, grid=True, gridOpacity=0.25, gridDash=[3, 3])
+    .configure_axis(labelFontSize=14, titleFontSize=18, grid=True, gridOpacity=0.2, gridDash=[3, 3])
     .configure_view(strokeWidth=0)
 )
 
 # Save
 final_chart.save("plot.png", scale_factor=3.0)
-final_chart.save("plot.html")

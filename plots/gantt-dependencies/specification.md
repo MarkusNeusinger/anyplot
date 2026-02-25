@@ -23,10 +23,11 @@ A Gantt chart that visualizes project schedules with task dependencies and group
 
 ## Notes
 
-- Draw dependency arrows/connectors from the end of predecessor tasks to the start of successor tasks
+- Draw dependency arrows from the right edge (end date) of each predecessor bar to the left edge (start date) of the successor bar
 - Use different visual styles for dependency types (finish-to-start is most common)
 - Group headers should show aggregate timeline spanning from earliest to latest task in the group
 - Consider indentation or color coding to distinguish groups from individual tasks
 - Arrows should avoid overlapping task bars where possible
 - Include a legend explaining dependency line styles if multiple types are used
+- Dependent tasks must be scheduled to start at or after the end of their predecessor — never before
 - Vertical alignment should clearly show task hierarchy (groups above their child tasks)
