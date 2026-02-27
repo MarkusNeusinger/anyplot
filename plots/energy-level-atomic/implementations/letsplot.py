@@ -1,7 +1,7 @@
-""" pyplots.ai
+"""pyplots.ai
 energy-level-atomic: Atomic Energy Level Diagram
 Library: letsplot 4.8.2 | Python 3.14.3
-Quality: 88/100 | Created: 2026-02-27
+Quality: repair-2 | Created: 2026-02-27
 """
 
 import pandas as pd
@@ -51,9 +51,9 @@ level_df = pd.DataFrame(
     }
 )
 
-# Spectral series colors and emphasis
-lyman_color = "#7B2FBE"
-balmer_color = "#1976D2"  # Brighter blue, distinct from purple
+# Spectral series colors (colorblind-safe: teal, blue, red - all highly distinguishable)
+lyman_color = "#009688"
+balmer_color = "#1976D2"
 paschen_color = "#C0392B"
 
 # Series config: arrow thickness varies to emphasize Balmer (visible spectrum)
@@ -78,8 +78,8 @@ transitions = [
 ]
 
 # Stagger arrows horizontally within each series
-series_base_x = {"Lyman": 0.15, "Balmer": 0.30, "Paschen": 0.44}
-within_series_gap = 0.04
+series_base_x = {"Lyman": 0.14, "Balmer": 0.28, "Paschen": 0.43}
+within_series_gap = 0.05
 
 arrow_rows = []
 series_counter = {"Lyman": 0, "Balmer": 0, "Paschen": 0}
@@ -107,9 +107,9 @@ for from_lvl, to_lvl, series, color, wavelength in transitions:
 
 arrow_df = pd.DataFrame(arrow_rows)
 
-# Arrowheads (V-shape at bottom of each arrow)
-head_len = 0.12
-head_width = 0.012
+# Arrowheads (V-shape at bottom of each arrow, compact to reduce crowding)
+head_len = 0.08
+head_width = 0.010
 head_rows = []
 for _, row in arrow_df.iterrows():
     head_rows.append(
@@ -138,8 +138,8 @@ legend_items = [
 ]
 legend_seg_df = pd.DataFrame(
     {
-        "x": [0.76] * 3,
-        "xend": [0.82] * 3,
+        "x": [0.68] * 3,
+        "xend": [0.74] * 3,
         "y": [item[2] for item in legend_items],
         "yend": [item[2] for item in legend_items],
         "color": [item[1] for item in legend_items],
@@ -147,7 +147,7 @@ legend_seg_df = pd.DataFrame(
 )
 legend_text_df = pd.DataFrame(
     {
-        "x": [0.835] * 3,
+        "x": [0.755] * 3,
         "y": [item[2] for item in legend_items],
         "label": [item[0] for item in legend_items],
         "color": [item[1] for item in legend_items],
@@ -172,19 +172,19 @@ plot = (
         data=level_df,
         mapping=aes(x="x_start", y="y", label="label"),
         hjust=1.3,
-        size=14,
+        size=16,
         color="#2C3E50",
         fontface="bold",
     )
     # Energy values (right side, positioned at x_label_right for clear gap from line)
     + geom_text(
-        data=level_df, mapping=aes(x="x_label_right", y="y", label="energy_label"), hjust=0, size=14, color="#555555"
+        data=level_df, mapping=aes(x="x_label_right", y="y", label="energy_label"), hjust=0, size=16, color="#555555"
     )
     # Ionization limit (dashed)
     + geom_segment(
         data=ion_df, mapping=aes(x="x", xend="xend", y="y", yend="yend"), size=1.2, color="#AAAAAA", linetype="dashed"
     )
-    + geom_text(data=ion_label_df, mapping=aes(x="x", y="y", label="label"), hjust=-0.05, size=14, color="#999999")
+    + geom_text(data=ion_label_df, mapping=aes(x="x", y="y", label="label"), hjust=-0.05, size=16, color="#999999")
 )
 
 # Add transition arrows per series (Balmer thicker to emphasize visible spectrum)
@@ -216,7 +216,7 @@ plot = plot + geom_text(
     data=alpha_arrows,
     mapping=aes(x="x_label", y="y_mid", label="wavelength"),
     hjust=0,
-    size=12,
+    size=14,
     color="#444444",
     fontface="italic",
 )
@@ -227,8 +227,8 @@ plot = (
     + scale_color_identity()
     # Legend
     + geom_segment(data=legend_seg_df, mapping=aes(x="x", xend="xend", y="y", yend="yend", color="color"), size=2.5)
-    + geom_text(data=legend_text_df, mapping=aes(x="x", y="y", label="label", color="color"), hjust=0, size=14)
-    + scale_x_continuous(limits=[-0.05, 1.18], expand=[0, 0])
+    + geom_text(data=legend_text_df, mapping=aes(x="x", y="y", label="label", color="color"), hjust=0, size=16)
+    + scale_x_continuous(limits=[-0.05, 1.05], expand=[0, 0])
     + scale_y_continuous(breaks=y_breaks, labels=y_labels)
     + labs(x="", y="Energy (eV)", title="Hydrogen Atom Energy Levels · energy-level-atomic · letsplot · pyplots.ai")
     + ggsize(1600, 900)
