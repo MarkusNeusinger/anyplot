@@ -1,11 +1,17 @@
-""" pyplots.ai
+"""pyplots.ai
 energy-level-atomic: Atomic Energy Level Diagram
 Library: seaborn 0.13.2 | Python 3.14.3
 Quality: 79/100 | Created: 2026-02-27
 """
 
 import matplotlib.pyplot as plt
+import pandas as pd
+import seaborn as sns
 
+
+# Seaborn theming
+sns.set_style("white")
+sns.set_context("talk", font_scale=1.2)
 
 # Data — Hydrogen atom energy levels E_n = -13.6 / n² eV
 energy_values = {"n=1": -13.60, "n=2": -3.40, "n=3": -1.51, "n=4": -0.85, "n=5": -0.54, "n=6": -0.38}
@@ -27,8 +33,10 @@ transitions = [
     ("n=6", "n=3", "Paschen", 1094),
 ]
 
-# Colors per series
-series_colors = {"Lyman": "#7B2FBE", "Balmer": "#306998", "Paschen": "#C0392B"}
+# Colors per series (spectrum-inspired: UV=purple, visible=blue, IR=red)
+series_palette = sns.color_palette(["#7B2FBE", "#306998", "#C0392B"])
+series_names = ["Lyman", "Balmer", "Paschen"]
+series_colors = dict(zip(series_names, series_palette, strict=True))
 
 # X positions for each series column
 series_x_base = {"Lyman": 0.18, "Balmer": 0.42, "Paschen": 0.64}
@@ -40,15 +48,29 @@ fig, ax = plt.subplots(figsize=(16, 9))
 line_xmin = 0.06
 line_xmax = 0.84
 
-# Draw energy level lines
+# Build DataFrame for energy level endpoints and plot with sns.scatterplot
+level_rows = []
+for label, y_pos in visual_y.items():
+    level_rows.append({"x": line_xmin, "y": y_pos, "level": label})
+    level_rows.append({"x": line_xmax, "y": y_pos, "level": label})
+level_df = pd.DataFrame(level_rows)
+
+# Use sns.lineplot to draw each energy level as a horizontal line
+for label in visual_y:
+    subset = level_df[level_df["level"] == label]
+    sns.lineplot(data=subset, x="x", y="y", color="#2C3E50", linewidth=2.5, ax=ax, legend=False, zorder=3)
+
+# Mark level endpoints with sns.scatterplot
+sns.scatterplot(data=level_df, x="x", y="y", color="#2C3E50", s=40, zorder=4, ax=ax, legend=False, edgecolor="none")
+
+# Energy value labels on the right
 for label, y_pos in visual_y.items():
     energy = energy_values[label]
-    ax.hlines(y_pos, line_xmin, line_xmax, colors="#2C3E50", linewidth=2.5, zorder=3)
     ax.text(
         line_xmax + 0.015,
         y_pos,
         f"{label}   ({energy:.2f} eV)",
-        fontsize=15,
+        fontsize=18,
         va="center",
         ha="left",
         color="#2C3E50",
@@ -61,7 +83,7 @@ ax.text(
     line_xmax + 0.015,
     ionization_y,
     "Ionization  (0.00 eV)",
-    fontsize=15,
+    fontsize=18,
     va="center",
     ha="left",
     color="#888888",
@@ -93,7 +115,7 @@ for upper, lower, series, wavelength_nm in transitions:
         x_pos + 0.012,
         mid_y,
         f"{wavelength_nm} nm",
-        fontsize=10,
+        fontsize=13,
         color=color,
         va="center",
         ha="left",
@@ -108,7 +130,7 @@ for series, x_base in series_x_base.items():
         x_center,
         ionization_y + 0.7,
         f"{series} series",
-        fontsize=15,
+        fontsize=18,
         fontweight="bold",
         ha="center",
         color=series_colors[series],
@@ -118,18 +140,17 @@ for series, x_base in series_x_base.items():
 ax.annotate(
     "", xy=(0.02, 11.0), xytext=(0.02, -0.5), arrowprops={"arrowstyle": "-|>", "color": "#999999", "linewidth": 1.5}
 )
-ax.text(0.025, 5.25, "Energy", fontsize=16, rotation=90, va="center", ha="left", color="#999999")
+ax.text(0.025, 5.25, "Energy", fontsize=20, rotation=90, va="center", ha="left", color="#999999")
 
-# Style
+# Style — use seaborn's despine for clean removal
 ax.set_xlim(-0.01, 1.15)
 ax.set_ylim(-1.0, 12.0)
-ax.set_title("Hydrogen Atom · energy-level-atomic · seaborn · pyplots.ai", fontsize=24, fontweight="medium", pad=20)
+ax.set_title("energy-level-atomic · seaborn · pyplots.ai", fontsize=26, fontweight="medium", pad=20)
 ax.set_xticks([])
 ax.set_yticks([])
-ax.spines["top"].set_visible(False)
-ax.spines["right"].set_visible(False)
-ax.spines["bottom"].set_visible(False)
-ax.spines["left"].set_visible(False)
+ax.set_xlabel("")
+ax.set_ylabel("")
+sns.despine(ax=ax, left=True, bottom=True)
 
 plt.tight_layout()
 plt.savefig("plot.png", dpi=300, bbox_inches="tight")
