@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 mohr-circle: Mohr's Circle for Stress Analysis
 Library: altair 6.0.0 | Python 3.14.3
-Quality: 88/100 | Created: 2026-02-27
+Quality: 91/100 | Created: 2026-02-27
 """
 
 import altair as alt
