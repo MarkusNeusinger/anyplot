@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 energy-level-atomic: Atomic Energy Level Diagram
 Library: plotnine 0.15.3 | Python 3.14.3
-Quality: 84/100 | Created: 2026-02-27
+Quality: 86/100 | Created: 2026-02-27
 """
 
 import numpy as np
