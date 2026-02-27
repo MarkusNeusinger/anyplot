@@ -1,6 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 energy-level-atomic: Atomic Energy Level Diagram
 Library: altair 6.0.0 | Python 3.14.3
+Quality: 90/100 | Created: 2026-02-27
 """
 
 import altair as alt

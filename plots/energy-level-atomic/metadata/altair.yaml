@@ -1,7 +1,7 @@
 library: altair
 specification_id: energy-level-atomic
 created: '2026-02-27T20:50:29Z'
-updated: '2026-02-27T20:55:27Z'
+updated: '2026-02-27T21:59:15Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 22502879486
 issue: 4434
@@ -10,36 +10,40 @@ library_version: 6.0.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/energy-level-atomic/altair/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/energy-level-atomic/altair/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/energy-level-atomic/altair/plot.html
-quality_score: 86
+quality_score: 90
 review:
   strengths:
-  - Excellent physics accuracy with correct hydrogen energy levels and spectral series
-  - Colorblind-safe palette (Wong blue/amber/pink) with intentional dark slate for
-    structural elements
-  - Spatial grouping of arrow series along x-axis creates clear visual organization
-  - Clean idiomatic Altair layer composition with tooltips and HTML export
-  - All spec requirements met including ionization limit, partial-width lines, and
-    emission arrows
+  - Scientifically accurate data using real hydrogen atom energy levels and Rydberg
+    formula for wavelengths
+  - Excellent use of symlog scale to handle the wide energy range while keeping converging
+    upper levels distinguishable
+  - Strong visual design with colorblind-safe Okabe-Ito palette, consistent typography,
+    and refined grid/layout
+  - Complete spec compliance with all required features including ionization limit,
+    nonlinear scale, and three spectral series
+  - Clean, elegant code structure with deterministic physics-based data generation
   weaknesses:
-  - Upper energy levels (n=3 through n=6 and ionization) are crowded due to linear
-    scale — spec suggests considering nonlinear scale
-  - Large empty region between n=1 (-13.6 eV) and n=2 (-3.4 eV) wastes canvas space
-  - Design could be pushed further toward publication quality with background tinting,
-    series bracket annotations, or wavelength labels on arrows
+  - Wavelength annotation font size (12pt) is small relative to other text, slightly
+    reducing readability
+  - Y-axis tick labels (14pt) fall slightly below the 16pt ideal threshold
   image_description: 'The plot displays a hydrogen atom energy level diagram on a
-    light background. Six solid dark horizontal lines represent energy levels n=1
-    (at -13.6 eV) through n=6 (near -0.38 eV), with a grey dashed line at 0 eV for
-    the ionization limit (n=infinity). Each level is labeled at its right endpoint
-    with bold dark text. Nine vertical arrows with triangle-down arrowheads represent
-    emission transitions grouped into three spectral series: Lyman (UV) in steel blue
-    targeting n=1, Balmer (Visible) in amber/gold targeting n=2, and Paschen (IR)
-    in pink/mauve targeting n=3. Arrows are spatially separated along the x-axis by
-    series. The y-axis is labeled "Energy (eV)" with tick marks at even intervals
-    from -14 to 0. A legend titled "Spectral Series" appears in the upper right. The
-    title reads "energy-level-atomic · altair · pyplots.ai" centered at the top. Subtle
-    horizontal gridlines at low opacity are visible. The upper energy levels (n=3
-    through n=6) are closely spaced due to the 1/n-squared convergence, creating some
-    crowding in that region.'
+    light gray (#fafbfc) background. Six horizontal dark lines represent energy levels
+    from n=1 (−13.60 eV) at the bottom to n=6 (−0.38 eV) near the top, with a dashed
+    ionization limit line at 0.00 eV labeled "n = ∞". Bold quantum number labels (n
+    = 1 through n = ∞) appear at the right end of each level line, with staggered
+    endpoints for clarity at converging upper levels. Nine vertical downward-pointing
+    transition arrows are color-coded into three spectral series: Lyman (UV) in steel
+    blue (#306998) targeting n=1, Balmer (Visible) in amber/gold (#E69F00) targeting
+    n=2, and Paschen (IR) in pink (#CC79A7) targeting n=3. Each arrow has a filled
+    triangular arrowhead pointing down (emission direction) and a rotated 90° italic
+    wavelength annotation (e.g., 122 nm, 656 nm, 1875 nm). The y-axis shows "Energy
+    (eV)" using a symlog scale with custom tick values at each energy level (-13.60,
+    -3.40, -1.51, -0.85, -0.54, -0.38, 0.00). A legend titled "Spectral Series" appears
+    in the upper right corner. The title reads "energy-level-atomic · altair · pyplots.ai"
+    with subtitle "Hydrogen atom emission lines · energy levels: −13.6/n² eV". The
+    grid is extremely subtle (8% opacity). The x-axis is hidden. Overall the chart
+    has a clean, professional appearance with consistent dark text color and well-chosen
+    colorblind-safe palette.'
   criteria_checklist:
     visual_quality:
       score: 26
@@ -47,71 +51,71 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (title 28pt, axis title 22pt, axis
-          labels 18pt, level labels 18pt, legend title 18pt, legend labels 16pt).
-          All readable. Minor: upper level labels could benefit from differentiation.'
+        comment: Most font sizes explicitly set (title 28pt, axis title 22pt, level
+          labels 18pt, legend 16-18pt), but y-axis tick labels at 14pt and wavelength
+          annotations at 12pt fall below ideal thresholds
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Staggered line endpoints help but n=5/n=6 and n=infinity labels remain
-          visually close. No actual overlap but crowding is noticeable.
+        comment: Minor congestion around Paschen series wavelength labels due to close
+          vertical spacing of upper levels; all text remains readable
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Energy lines and arrow shafts at strokeWidth=3, arrowheads at size=300.
-          Paschen series arrows are short due to small energy gaps.
+        comment: Energy lines and arrow shafts at strokeWidth=3, arrowheads size=350,
+          all perfectly adapted
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: 'Excellent colorblind-safe Wong palette: blue, amber, pink. All easily
-          distinguishable.'
+        comment: Colorblind-safe Okabe-Ito palette with excellent contrast on light
+          background
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good proportions but linear scale creates large empty gap between
-          n=1 and n=2, leaving central area sparse.
+        comment: Good vertical coverage of energy range; some unused horizontal space
+          on the left
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis labeled Energy (eV) with units. X-axis appropriately hidden.
+        comment: Energy (eV) with units on y-axis
     design_excellence:
-      score: 13
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Thoughtful custom palette with colorblind-safe colors. Dark slate
-          for structural elements. Clearly above defaults but not publication-ready.
+        comment: 'Custom colorblind-safe palette, consistent #2C3E50 typography, italic
+          wavelength annotations, informative subtitle with physics formula'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: View border removed, subtle grid at 0.15 opacity, x-axis hidden.
-          Good attention to detail.
+        comment: Grid opacity 0.08, view stroke removed, custom background, x-axis
+          hidden, staggered endpoints, custom tick values
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Spectral series spatially grouped along x-axis with color coding.
-          Viewer can follow emission series narrative.
+        comment: Three spectral series create clear visual hierarchy; directional
+          arrows convey emission physics; symlog scale aids interpretation
     spec_compliance:
       score: 15
       max: 15
@@ -121,27 +125,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct energy level diagram with horizontal lines and vertical arrows.
+        comment: Correct energy level diagram with horizontal level lines and vertical
+          transition arrows
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: partial-width lines, labels, emission arrows,
-          color by series, ionization limit, clear energy axis.'
+        comment: 'All spec features present: partial-width lines, labels, emission
+          arrows, color-coding, ionization limit, nonlinear scale'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Energy values correctly computed from E_n = -13.6/n^2 eV. Transitions
-          correctly mapped.
+        comment: Energy values from E_n = -13.6/n², wavelengths from Rydberg formula
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Legend labels match spectral series data.
+        comment: Title format correct, Spectral Series legend with matching labels
     data_quality:
       score: 15
       max: 15
@@ -151,22 +155,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 6 levels, ionization limit, 3 series with 3 transitions each. Demonstrates
-          convergence and multiple series.
+        comment: Six energy levels, three spectral series with nine transitions, ionization
+          limit
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real hydrogen atom energy levels with correct physics. Named spectral
-          series. Neutral science context.
+        comment: Real hydrogen atom physics with correct Rydberg constant, neutral
+          science domain
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Physically correct energy values matching textbook hydrogen atom
-          data.
+        comment: Correct physical values matching known hydrogen spectrum
     code_quality:
       score: 10
       max: 10
@@ -176,61 +179,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports, data, layers, combine, save. No functions
-          or classes.'
+        comment: 'Clean linear structure: Imports, Data, Layers, Combine, Save'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic data from formula. No random elements.
+        comment: Fully deterministic; data computed from physics formulae
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only altair and pandas imported, both used.
+        comment: Only altair and pandas imported, both used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-organized layer composition with list comprehensions. Appropriate
-          complexity.
+        comment: Clean Pythonic code with good list comprehensions
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png (scale_factor=3.0) and plot.html. Current Altair API.
+        comment: Saves plot.png and plot.html, current Altair 6.0 API
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Good use of alt.layer(), multiple mark types, encoding channels,
-          and configuration system. Idiomatic pattern.
+        comment: Expert use of alt.layer(), proper encoding types, mark_rule/mark_point/mark_text,
+          declarative configuration
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses tooltips, HTML export, and declarative layer composition. Could
-          leverage selections/parameters.
-  verdict: REJECTED
+        comment: Tooltips, HTML export, layer composition, symlog scale — distinctly
+          Altair patterns but standard usage
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
+  - annotations
   - hover-tooltips
   - html-export
+  - manual-ticks
   patterns:
   - data-generation
   dataprep: []
   styling:
   - grid-styling
-  - alpha-blending
+  - minimal-chrome
