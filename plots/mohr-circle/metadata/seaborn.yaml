@@ -1,7 +1,7 @@
 library: seaborn
 specification_id: mohr-circle
 created: '2026-02-27T22:09:10Z'
-updated: '2026-02-27T22:28:58Z'
+updated: '2026-02-27T22:41:00Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 22505482745
 issue: 4432
@@ -13,38 +13,37 @@ preview_html: null
 quality_score: 87
 review:
   strengths:
-  - Perfect spec compliance with all required features correctly computed and displayed
-    (circle, principal stresses, max shear, stress points, angle arc, reference lines)
-  - Excellent data quality with realistic engineering context (beam under combined
-    loading, 80/-40/30 MPa)
-  - Strong visual hierarchy through intentional 5-color semantic palette and 4 distinct
-    marker shapes
-  - Clean, deterministic code with explicit font sizes and well-organized structure
-  - Good design refinement with removed spines, subtle grid, white marker edges, and
-    light circle fill
+  - Perfect spec compliance - all eight specification requirements implemented correctly
+    with accurate math
+  - Strong design with intentional five-color coding system and distinct marker shapes
+    for each element category
+  - Excellent data choice - stress values create a circle spanning both positive and
+    negative normal stress regions
+  - Professional annotation system with color-matched arrows and clear labels including
+    computed values
   weaknesses:
-  - Library mastery remains the primary weakness — seaborn is used for styling and
-    one scatterplot while ~90% of the drawing uses direct matplotlib calls
-  - Red-green color combination for stress states vs principal stresses is not fully
-    colorblind-safe
-  - Repair from attempt 1 did not meaningfully address the seaborn usage or colorblind
-    accessibility feedback
+  - Library mastery is the main gap - seaborn is used minimally (styling + one scatterplot),
+    with most work done through matplotlib
+  - Red-green color pair between stress states and principal stresses is suboptimal
+    for colorblind accessibility
+  - Minor annotation crowding in the upper-right quadrant where three labels converge
   image_description: The plot displays a Mohr's Circle for stress analysis on a square
-    canvas (12x12) with equal aspect ratio. A large dark blue (#306998) circle with
-    very light blue fill (alpha=0.05) is centered at (20, 0) on Normal Stress σ (MPa)
-    vs Shear Stress τ (MPa) axes. Two red (#C0392B) circular markers indicate stress
-    points A (80, 30) and B (-40, -30), connected by a red dashed diameter line. Green
-    (#27AE60) diamond markers show principal stresses σ₁ = 87.1 MPa and σ₂ = -47.1
-    MPa on the horizontal axis. Orange (#E67E22) square markers denote maximum shear
-    stress τmax = 67.1 MPa at the top and bottom of the circle. A small blue dot marks
-    the center C (20, 0). A purple (#8E44AD) arc shows the principal angle 2θp = 26.6°.
-    All key values are annotated with arrows and bold text. A 5-entry custom legend
-    sits in the lower left with semi-transparent background. Top and right spines
-    are removed, grid is subtle (alpha=0.2). Title reads "mohr-circle · seaborn ·
-    pyplots.ai" at 24pt.
+    canvas with a light grid background. A large dark blue circle (#306998) with a
+    very faint blue fill is centered at (20, 0) on the Normal Stress σ vs. Shear Stress
+    τ plane. Two red circular markers represent stress states A (80, 30) and B (-40,
+    -30), connected by a red dashed diameter line. Two cyan diamond markers show principal
+    stresses σ₁ = 87.1 MPa and σ₂ = -47.1 MPa on the horizontal axis. Two orange square
+    markers indicate maximum shear stress τmax = 67.1 MPa at the top and bottom of
+    the circle. A small purple arc near the center annotates the principal angle 2θp
+    = 26.6°. A dark blue center point is labeled C (20, 0). All annotations use colored
+    arrows matching their respective element types. A legend in the lower left lists
+    all five element categories. Top and right spines are removed, the grid is subtle
+    (alpha=0.2), and the aspect ratio is equal so the circle appears as a true circle.
+    Axis labels read "Normal Stress σ (MPa)" and "Shear Stress τ (MPa)" with the title
+    "mohr-circle · seaborn · pyplots.ai" at the top.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -52,44 +51,43 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title=24pt, labels=20pt, ticks=16pt,
-          annotations=14-15pt, legend=14pt. All clearly readable.'
+        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt,
+          annotations 14-15pt. set_context talk with font_scale=1.2.'
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: All annotations well-separated with no collisions. Labels distributed
-          across all quadrants.
+        comment: Minor crowding in upper-right quadrant where A, sigma1, and taumax
+          annotations converge. No actual text overlap.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Markers at s=200-300 clearly visible. Different shapes (circle, diamond,
-          square) aid distinction. Lines at lw=2-3 are prominent.
+        comment: Circle linewidth=3, markers s=200-300 with white edges, distinct
+          shapes for each category.
       - id: VQ-04
         name: Color Accessibility
         score: 3
         max: 4
         passed: true
-        comment: Five distinct hues with good contrast. Red-green pair for stress
-          states vs principal stresses is problematic for deuteranopia, partially
-          mitigated by shape differentiation.
+        comment: Red-green pair for stress states vs principal stresses. Mitigated
+          by marker shape redundancy but annotation text relies on color.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square canvas ideal for circle with equal aspect ratio. Plot fills
-          canvas well with balanced margins.
+        comment: Square 3600x3600px canvas, circle fills well, equal aspect ratio,
+          tight_layout applied.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with Greek symbols and units: Normal Stress σ
-          (MPa) and Shear Stress τ (MPa).'
+        comment: 'Descriptive labels with units and Greek symbols: Normal Stress σ
+          (MPa), Shear Stress τ (MPa).'
     design_excellence:
       score: 15
       max: 20
@@ -99,22 +97,22 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Intentional 5-color semantic palette, white edge highlights, subtle
-          circle fill, bold annotations with arrows. Clearly above defaults.
+        comment: Intentional five-color system, distinct marker shapes, light fill,
+          white edge highlighting. Above defaults but not publication-ready.
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: 'Spines removed, subtle grid (alpha=0.2), white marker edges, generous
-          whitespace. Minor: annotation arrow styling functional but not exceptional.'
+        comment: Top/right spines removed, grid alpha=0.2, edge highlighting, subtle
+          fill. Grid on both axes rather than y-only.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Color-coded hierarchy separates input states from results. Annotations
-          guide viewer through analysis. Good hierarchy but not exceptional storytelling.
+        comment: Good visual hierarchy through color-coded categories and marker shapes.
+          Storytelling primarily through labeling rather than visual emphasis.
     spec_compliance:
       score: 15
       max: 15
@@ -124,29 +122,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Mohr's Circle on σ-τ plane with proper center and radius
-          calculation.
+        comment: Mohr's Circle correctly drawn on sigma-tau plane with correct center
+          and radius.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: circle, principal stresses, max shear,
-          stress points A/B, 2θp angle, equal aspect, grid, reference lines.'
+        comment: 'All eight spec requirements present: circle, principal stresses,
+          max shear, stress points, 2theta_p, equal aspect, labeled axes, grid.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=Normal Stress, Y=Shear Stress. All values correctly computed. Center=20,
-          radius≈67.1.
+        comment: X=normal stress, Y=shear stress. Center=20 MPa, radius=67.1 MPa,
+          mathematically correct.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches format. Legend includes all 5 element types with descriptive
-          labels and matching markers.
+        comment: Title in correct format. Legend with five entries matching all element
+          categories.
     data_quality:
       score: 15
       max: 15
@@ -156,22 +154,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Stress state spans positive and negative normal stresses with non-zero
-          shear. All derived quantities shown.
+        comment: Stress state spans positive and negative normal stress with positive
+          shear, demonstrating all Mohr's Circle features.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Beam under combined loading — realistic structural engineering scenario
-          with MPa units.
+        comment: Beam under combined loading, realistic engineering stress values
+          (80, -40, 30 MPa).
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values (80, -40, 30 MPa) typical for structural steel under combined
-          loading.
+        comment: MPa values typical for structural mechanics. Circle proportions visually
+          clear.
     code_quality:
       score: 10
       max: 10
@@ -181,53 +179,52 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: Imports → Style → Data → Calculations → Plot
-          → Save. No functions or classes.'
+        comment: 'Clean linear flow: imports, style, data, calculations, plot, save.
+          No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic with hardcoded stress values and analytical calculations.
+        comment: Fully deterministic with hardcoded stress values.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All 5 imports used: matplotlib.pyplot, numpy, pandas, seaborn, Line2D.'
+        comment: 'All five imports used: matplotlib.pyplot, numpy, pandas, seaborn,
+          Line2D.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized code with appropriate complexity for geometric
-          construction.
+        comment: Appropriate complexity for geometric visualization. Well-organized.
+          No fake functionality.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png at dpi=300 with bbox_inches='tight'. Current API
-          throughout.
+        comment: Saves as plot.png at 300 dpi. No deprecated API.
     library_mastery:
-      score: 3
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Uses sns.set_style, sns.set_context, and one sns.scatterplot with
-          DataFrame. But ~90% of drawing uses direct matplotlib calls.
+        passed: true
+        comment: Uses set_style, set_context, and scatterplot with DataFrame. Majority
+          of plot is pure matplotlib.
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
         passed: false
-        comment: Only basic seaborn features (set_style, set_context). No sns.despine(),
-          sns.color_palette(), or other distinctive utilities. Could be replicated
-          with pure matplotlib.
+        comment: Generic usage. set_style/set_context are convenience wrappers, single
+          scatterplot trivially replaceable. No distinctive seaborn feature.
   verdict: REJECTED
 impl_tags:
   dependencies: []
@@ -235,7 +232,6 @@ impl_tags:
   - annotations
   - custom-legend
   patterns:
-  - data-generation
   - explicit-figure
   dataprep: []
   styling:
