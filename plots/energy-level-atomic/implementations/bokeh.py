@@ -1,12 +1,11 @@
-""" pyplots.ai
+"""pyplots.ai
 energy-level-atomic: Atomic Energy Level Diagram
 Library: bokeh 3.8.2 | Python 3.14.3
-Quality: 84/100 | Created: 2026-02-27
 """
 
 import numpy as np
 from bokeh.io import export_png, output_file, save
-from bokeh.models import Arrow, Label, NormalHead, Range1d
+from bokeh.models import Arrow, ColumnDataSource, HoverTool, Label, NormalHead, Range1d
 from bokeh.plotting import figure
 
 
@@ -14,19 +13,17 @@ from bokeh.plotting import figure
 levels = [1, 2, 3, 4, 5, 6]
 energies = {n: -13.6 / n**2 for n in levels}
 
-# Visual y-positions: compress the large gap to n=1 using a nonlinear mapping
-# Map energy to visual position: sign-preserving sqrt compression
+# Visual y-positions: sqrt compression for nonlinear mapping
 visual_y = {}
 for n in levels:
     e = energies[n]
     visual_y[n] = -np.sqrt(abs(e)) * np.sign(-e)
 
-# Ionization limit at 0 eV
 ionization_visual_y = 0.0
 
 # Transitions: (upper_level, lower_level, color, label)
-# Lyman series (n -> 1, ultraviolet)
-lyman = [(2, 1, "#6C2383", "Lyα 121.6 nm"), (3, 1, "#8E44AD", "Lyβ 102.6 nm"), (4, 1, "#A569BD", "Lyγ 97.3 nm")]
+# Lyman series (n -> 1, ultraviolet) - well-differentiated purple gradient
+lyman = [(2, 1, "#3C1874", "Lyα 121.6 nm"), (3, 1, "#7D3AC1", "Lyβ 102.6 nm"), (4, 1, "#C76BE0", "Lyγ 97.3 nm")]
 
 # Balmer series (n -> 2, visible light)
 balmer = [
@@ -36,46 +33,63 @@ balmer = [
     (6, 2, "#512E5F", "Hδ 410.2 nm"),
 ]
 
+# Paschen series (n -> 3, infrared)
+paschen = [(4, 3, "#D35400", "Paα 1875 nm"), (5, 3, "#922B21", "Paβ 1282 nm"), (6, 3, "#641E16", "Paγ 1094 nm")]
+
 # Layout positions
 level_x0, level_x1 = -1.0, 1.0
 lyman_x_start = -2.8
 balmer_x_start = 1.8
-arrow_spacing = 0.6
+paschen_x_start = 4.4
+arrow_spacing = 0.55
 
 # Custom y-axis tick positions and labels
-tick_energies = [0, -0.5, -1, -1.5, -3.4, -5, -10, -13.6]
+tick_energies = [0, -0.5, -1.0, -1.5, -3.4, -5.0, -10.0, -13.6]
 tick_visual = [-np.sqrt(abs(e)) * np.sign(-e) if e != 0 else 0.0 for e in tick_energies]
 tick_labels = [f"{e:.1f}" for e in tick_energies]
+
+# Energy level data as ColumnDataSource (Bokeh best practice)
+level_source = ColumnDataSource(
+    data={
+        "x0": [level_x0] * len(levels),
+        "y0": [visual_y[n] for n in levels],
+        "x1": [level_x1] * len(levels),
+        "y1": [visual_y[n] for n in levels],
+        "quantum_n": [f"n = {n}" for n in levels],
+        "energy": [f"{energies[n]:.2f} eV" for n in levels],
+        "degeneracy": [f"{n**2}-fold" for n in levels],
+    }
+)
 
 # Plot
 p = figure(
     width=4800,
     height=2700,
-    title="Hydrogen Emission Spectrum · energy-level-atomic · bokeh · pyplots.ai",
-    x_range=Range1d(-5.0, 6.5),
-    y_range=Range1d(visual_y[1] - 0.3, ionization_visual_y + 0.95),
+    title="energy-level-atomic · bokeh · pyplots.ai",
+    x_range=Range1d(-5.0, 7.5),
+    y_range=Range1d(visual_y[1] - 0.3, ionization_visual_y + 0.8),
     toolbar_location=None,
 )
 
-# Custom y-axis: override ticks with real energy values
+# Custom y-axis
 p.yaxis.ticker = tick_visual
 p.yaxis.major_label_overrides = dict(zip(tick_visual, tick_labels, strict=True))
 p.yaxis.axis_label = "Energy (eV)"
 
-# Energy level lines
-for n in levels:
-    vy = visual_y[n]
-    p.segment(x0=[level_x0], y0=[vy], x1=[level_x1], y1=[vy], line_width=6, line_color="#306998")
+# Energy level lines via ColumnDataSource
+level_glyph = p.segment(x0="x0", y0="y0", x1="x1", y1="y1", source=level_source, line_width=6, line_color="#306998")
 
-# Level labels - use pixel y_offset for n=5,6 to avoid overlap
+# HoverTool for interactive HTML output
+hover = HoverTool(
+    renderers=[level_glyph], tooltips=[("Level", "@quantum_n"), ("Energy", "@energy"), ("Degeneracy", "@degeneracy")]
+)
+p.add_tools(hover)
+
+# Level labels
 for n in levels:
     vy = visual_y[n]
     e = energies[n]
-    y_off = 0
-    if n == 6:
-        y_off = 18
-    elif n == 5:
-        y_off = -18
+    y_off = 18 if n == 6 else (-18 if n == 5 else 0)
     p.add_layout(
         Label(
             x=level_x1 + 0.15,
@@ -108,66 +122,70 @@ p.add_layout(
     )
 )
 
-# Lyman series transitions (left side, downward arrows = emission)
-for i, (n_upper, n_lower, color, label_text) in enumerate(lyman):
-    x_pos = lyman_x_start + i * arrow_spacing
-    p.add_layout(
-        Arrow(
-            end=NormalHead(size=25, fill_color=color, line_color=color),
-            x_start=x_pos,
-            y_start=visual_y[n_upper],
-            x_end=x_pos,
-            y_end=visual_y[n_lower],
-            line_color=color,
-            line_width=4,
-        )
-    )
-    mid_y = (visual_y[n_upper] + visual_y[n_lower]) / 2
-    p.add_layout(
-        Label(
-            x=x_pos, y=mid_y, text=label_text, text_font_size="20pt", text_color=color, text_align="right", x_offset=-15
-        )
-    )
+# Draw all transition arrows and labels for each spectral series
+all_series = [(lyman, lyman_x_start, "left"), (balmer, balmer_x_start, "right"), (paschen, paschen_x_start, "right")]
 
-# Balmer series transitions (right side, downward arrows = emission)
-for i, (n_upper, n_lower, color, label_text) in enumerate(balmer):
-    x_pos = balmer_x_start + i * arrow_spacing
-    p.add_layout(
-        Arrow(
-            end=NormalHead(size=25, fill_color=color, line_color=color),
-            x_start=x_pos,
-            y_start=visual_y[n_upper],
-            x_end=x_pos,
-            y_end=visual_y[n_lower],
-            line_color=color,
-            line_width=4,
+for transitions, x_start, label_side in all_series:
+    for i, (n_upper, n_lower, color, label_text) in enumerate(transitions):
+        x_pos = x_start + i * arrow_spacing
+        p.add_layout(
+            Arrow(
+                end=NormalHead(size=25, fill_color=color, line_color=color),
+                x_start=x_pos,
+                y_start=visual_y[n_upper],
+                x_end=x_pos,
+                y_end=visual_y[n_lower],
+                line_color=color,
+                line_width=4,
+            )
         )
-    )
-    mid_y = (visual_y[n_upper] + visual_y[n_lower]) / 2
-    p.add_layout(Label(x=x_pos, y=mid_y, text=label_text, text_font_size="20pt", text_color=color, x_offset=15))
+        mid_y = (visual_y[n_upper] + visual_y[n_lower]) / 2
+        align = "right" if label_side == "left" else "left"
+        x_off = -15 if label_side == "left" else 15
+        p.add_layout(
+            Label(
+                x=x_pos,
+                y=mid_y,
+                text=label_text,
+                text_font_size="20pt",
+                text_color=color,
+                text_align=align,
+                x_offset=x_off,
+            )
+        )
 
-# Series labels at top
-lyman_center_x = lyman_x_start + arrow_spacing
-balmer_center_x = balmer_x_start + 1.5 * arrow_spacing
+# Series header labels
+header_y = ionization_visual_y + 0.55
 p.add_layout(
     Label(
-        x=lyman_center_x,
-        y=ionization_visual_y + 0.65,
+        x=lyman_x_start + arrow_spacing,
+        y=header_y,
         text="Lyman Series (UV)",
-        text_font_size="28pt",
+        text_font_size="26pt",
         text_font_style="bold",
-        text_color="#6C2383",
+        text_color="#3C1874",
         text_align="center",
     )
 )
 p.add_layout(
     Label(
-        x=balmer_center_x,
-        y=ionization_visual_y + 0.65,
+        x=balmer_x_start + 1.5 * arrow_spacing,
+        y=header_y,
         text="Balmer Series (Visible)",
-        text_font_size="28pt",
+        text_font_size="26pt",
         text_font_style="bold",
         text_color="#C0392B",
+        text_align="center",
+    )
+)
+p.add_layout(
+    Label(
+        x=paschen_x_start + arrow_spacing,
+        y=header_y,
+        text="Paschen Series (IR)",
+        text_font_size="26pt",
+        text_font_style="bold",
+        text_color="#D35400",
         text_align="center",
     )
 )
