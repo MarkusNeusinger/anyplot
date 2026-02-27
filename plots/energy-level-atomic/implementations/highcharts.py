@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 energy-level-atomic: Atomic Energy Level Diagram
 Library: highcharts unknown | Python 3.14.3
 Quality: 80/100 | Created: 2026-02-27
@@ -24,6 +24,13 @@ lyman_series = [(n, 1) for n in range(2, 7)]
 balmer_series = [(n, 2) for n in range(3, 7)]
 paschen_series = [(n, 3) for n in range(4, 7)]
 
+# Wavelength labels for alpha transitions: λ = 1240 / ΔE (nm)
+alpha_wavelengths = {}
+for series in [lyman_series, balmer_series, paschen_series]:
+    n_u, n_l = series[0]
+    delta_e = abs(energy_levels[n_u] - energy_levels[n_l])
+    alpha_wavelengths[(n_u, n_l)] = f"{1240 / delta_e:.0f} nm"
+
 # Chart setup
 chart = Chart(container="container")
 chart.options = HighchartsOptions()
@@ -31,37 +38,38 @@ chart.options = HighchartsOptions()
 chart.options.chart = {
     "width": 4800,
     "height": 2700,
-    "backgroundColor": "#ffffff",
-    "style": {"fontFamily": "Arial, Helvetica, sans-serif"},
-    "marginRight": 350,
-    "marginLeft": 160,
+    "backgroundColor": "#fafafa",
+    "style": {"fontFamily": "'Segoe UI', Arial, Helvetica, sans-serif"},
+    "marginRight": 380,
+    "marginLeft": 200,
     "marginTop": 200,
     "marginBottom": 200,
 }
 
 chart.options.title = {
     "text": "energy-level-atomic \u00b7 highcharts \u00b7 pyplots.ai",
-    "style": {"fontSize": "64px", "fontWeight": "bold", "color": "#333333"},
+    "style": {"fontSize": "64px", "fontWeight": "bold", "color": "#2c3e50"},
 }
 
 chart.options.subtitle = {
     "text": "Hydrogen Atom Energy Levels and Spectral Transitions",
-    "style": {"fontSize": "40px", "color": "#666666"},
+    "style": {"fontSize": "40px", "color": "#7f8c8d"},
 }
 
 chart.options.x_axis = {"visible": False, "min": 0, "max": 11}
 
 chart.options.y_axis = {
-    "title": {"text": "Energy (eV)", "style": {"fontSize": "40px", "color": "#333333"}},
-    "labels": {"style": {"fontSize": "32px", "color": "#333333"}, "format": "{value}"},
+    "title": {"text": "Energy (eV)", "style": {"fontSize": "40px", "color": "#2c3e50"}},
+    "labels": {"style": {"fontSize": "32px", "color": "#2c3e50"}, "format": "{value}"},
     "gridLineWidth": 0,
     "lineWidth": 2,
-    "lineColor": "#cccccc",
+    "lineColor": "#bdc3c7",
     "min": -14.5,
     "max": 0.8,
-    "tickInterval": 2,
+    "tickPositions": [-14, -13, -3, -2, -1, 0],
     "startOnTick": False,
     "endOnTick": False,
+    "breaks": [{"from": -12, "to": -4, "breakSize": 0.5}],
 }
 
 chart.options.legend = {
@@ -69,7 +77,7 @@ chart.options.legend = {
     "layout": "horizontal",
     "align": "center",
     "verticalAlign": "bottom",
-    "itemStyle": {"fontSize": "36px", "fontWeight": "normal", "color": "#333333"},
+    "itemStyle": {"fontSize": "36px", "fontWeight": "normal", "color": "#2c3e50"},
     "symbolWidth": 50,
     "symbolHeight": 4,
     "itemMarginBottom": 10,
@@ -87,7 +95,7 @@ level_x_start = 1.0
 level_x_end = 9.5
 
 # Y-offsets (px) to prevent label overlap for closely-spaced upper levels
-label_y_offsets = {1: 0, 2: 0, 3: 0, 4: 20, 5: 0, 6: -20}
+label_y_offsets = {1: 0, 2: 0, 3: 0, 4: 12, 5: 0, 6: -12}
 
 for n, energy in energy_levels.items():
     label_text = f"n={n}  ({energy:.2f} eV)"
@@ -109,11 +117,11 @@ for n, energy in energy_levels.items():
                         "y": label_y_offsets[n],
                         "crop": False,
                         "overflow": "allow",
-                        "style": {"fontSize": "30px", "fontWeight": "bold", "color": "#333333", "textOutline": "none"},
+                        "style": {"fontSize": "30px", "fontWeight": "bold", "color": "#2c3e50", "textOutline": "none"},
                     },
                 },
             ],
-            "color": "#2c3e50",
+            "color": "#34495e",
             "lineWidth": 5,
             "marker": {"enabled": False},
             "enableMouseTracking": False,
@@ -121,7 +129,7 @@ for n, energy in energy_levels.items():
         }
     )
 
-# Ionization limit at 0 eV (dashed red line)
+# Ionization limit at 0 eV (dashed gray line - clearly a reference, not a series)
 chart.add_series(
     {
         "type": "line",
@@ -140,11 +148,11 @@ chart.add_series(
                     "y": -10,
                     "crop": False,
                     "overflow": "allow",
-                    "style": {"fontSize": "30px", "fontWeight": "bold", "color": "#e74c3c", "textOutline": "none"},
+                    "style": {"fontSize": "30px", "fontWeight": "bold", "color": "#95a5a6", "textOutline": "none"},
                 },
             },
         ],
-        "color": "#e74c3c",
+        "color": "#95a5a6",
         "lineWidth": 3,
         "dashStyle": "Dash",
         "marker": {"enabled": False},
@@ -157,7 +165,7 @@ chart.add_series(
 transition_groups = [
     ("Lyman Series (UV)", lyman_series, "#8e44ad", 2.5, "lyman"),
     ("Balmer Series (Visible)", balmer_series, "#306998", 5.0, "balmer"),
-    ("Paschen Series (IR)", paschen_series, "#c0392b", 7.5, "paschen"),
+    ("Paschen Series (IR)", paschen_series, "#e67e22", 7.5, "paschen"),
 ]
 
 for group_name, transitions, color, base_x, group_id in transition_groups:
@@ -168,36 +176,59 @@ for group_name, transitions, color, base_x, group_id in transition_groups:
         upper_e = energy_levels[n_upper]
         lower_e = energy_levels[n_lower]
         is_first = j == 0
+        is_alpha = (n_upper, n_lower) in alpha_wavelengths
         delta_e = abs(upper_e - lower_e)
+
+        upper_point = {
+            "x": x_pos,
+            "y": upper_e,
+            "marker": {
+                "enabled": True,
+                "symbol": "circle",
+                "radius": 10 if is_alpha else 7,
+                "fillColor": color,
+                "lineColor": color,
+            },
+        }
+
+        # Add wavelength label to alpha transitions for storytelling
+        if is_alpha:
+            upper_point["dataLabels"] = {
+                "enabled": True,
+                "format": f"\u03bb = {alpha_wavelengths[(n_upper, n_lower)]}",
+                "align": "left",
+                "verticalAlign": "middle",
+                "x": 18,
+                "y": -15,
+                "crop": False,
+                "overflow": "allow",
+                "style": {
+                    "fontSize": "26px",
+                    "fontStyle": "italic",
+                    "fontWeight": "bold",
+                    "color": color,
+                    "textOutline": "2px #ffffff",
+                },
+            }
+
+        lower_point = {
+            "x": x_pos,
+            "y": lower_e,
+            "marker": {
+                "enabled": True,
+                "symbol": "triangle-down",
+                "radius": 16 if is_alpha else 12,
+                "fillColor": color,
+                "lineColor": color,
+            },
+        }
+
         entry = {
             "type": "line",
             "name": group_name,
-            "data": [
-                {
-                    "x": x_pos,
-                    "y": upper_e,
-                    "marker": {
-                        "enabled": True,
-                        "symbol": "circle",
-                        "radius": 8,
-                        "fillColor": color,
-                        "lineColor": color,
-                    },
-                },
-                {
-                    "x": x_pos,
-                    "y": lower_e,
-                    "marker": {
-                        "enabled": True,
-                        "symbol": "triangle-down",
-                        "radius": 14,
-                        "fillColor": color,
-                        "lineColor": color,
-                    },
-                },
-            ],
+            "data": [upper_point, lower_point],
             "color": color,
-            "lineWidth": 4,
+            "lineWidth": 5 if is_alpha else 3,
             "showInLegend": is_first,
             "tooltip": {
                 "headerFormat": "",
@@ -224,15 +255,33 @@ for url in cdn_urls:
 if highcharts_js is None:
     raise RuntimeError("Failed to download Highcharts JS from all CDNs")
 
+# Download broken-axis module for y-axis break
+broken_axis_urls = [
+    "https://cdn.jsdelivr.net/npm/highcharts@11/modules/broken-axis.js",
+    "https://code.highcharts.com/modules/broken-axis.js",
+]
+broken_axis_js = None
+for url in broken_axis_urls:
+    try:
+        with urllib.request.urlopen(url, timeout=30) as response:
+            broken_axis_js = response.read().decode("utf-8")
+        break
+    except urllib.error.HTTPError:
+        time.sleep(2)
+        continue
+if broken_axis_js is None:
+    raise RuntimeError("Failed to download broken-axis.js from all CDNs")
+
 # Generate JS literal
 js_literal = chart.to_js_literal()
 
-# Inline HTML for rendering
+# Inline HTML for rendering (embedded scripts for headless Chrome)
 html_content = f"""<!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
     <script>{highcharts_js}</script>
+    <script>{broken_axis_js}</script>
 </head>
 <body style="margin:0;">
     <div id="container" style="width: 4800px; height: 2700px;"></div>
@@ -246,6 +295,7 @@ standalone_html = f"""<!DOCTYPE html>
 <head>
     <meta charset="utf-8">
     <script src="https://cdn.jsdelivr.net/npm/highcharts@11/highcharts.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/highcharts@11/modules/broken-axis.js"></script>
 </head>
 <body style="margin:0; overflow:auto;">
     <div id="container" style="width: 4800px; height: 2700px;"></div>
