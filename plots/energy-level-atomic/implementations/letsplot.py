@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 energy-level-atomic: Atomic Energy Level Diagram
 Library: letsplot 4.8.2 | Python 3.14.3
-Quality: 86/100 | Created: 2026-02-27
+Quality: 90/100 | Created: 2026-02-27
 """
 
 import pandas as pd
