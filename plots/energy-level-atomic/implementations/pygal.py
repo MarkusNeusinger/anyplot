@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 energy-level-atomic: Atomic Energy Level Diagram
 Library: pygal 3.1.0 | Python 3.14.3
-Quality: 83/100 | Created: 2026-02-27
+Quality: 87/100 | Created: 2026-02-27
 """
 
 import pygal
