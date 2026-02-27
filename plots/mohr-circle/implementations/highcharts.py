@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 mohr-circle: Mohr's Circle for Stress Analysis
-Library: highcharts | Python 3.13
-Quality: pending | Created: 2026-02-27
+Library: highcharts unknown | Python 3.14.3
+Quality: 85/100 | Created: 2026-02-27
 """
 
 import tempfile
