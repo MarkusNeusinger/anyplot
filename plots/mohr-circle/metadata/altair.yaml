@@ -1,7 +1,7 @@
 library: altair
 specification_id: mohr-circle
 created: '2026-02-27T22:11:27Z'
-updated: '2026-02-27T22:26:35Z'
+updated: '2026-02-27T22:36:49Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 22505482758
 issue: 4432
@@ -10,43 +10,46 @@ library_version: 6.0.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/mohr-circle/altair/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/mohr-circle/altair/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/mohr-circle/altair/plot.html
-quality_score: 86
+quality_score: 88
 review:
   strengths:
-  - 'All spec features correctly implemented: circle, principal stresses, max shear,
-    stress points A/B, 2θp angle arc, equal aspect ratio'
-  - Clean engineering data with realistic stress values showing both tensile and compressive
-    behavior
-  - Thoughtful color-coding system (blue/red/orange/gray) distinguishing stress categories
-  - Well-positioned labels with directional offsets avoiding all overlaps
-  - Subtle grid (0.15 opacity) and styled reference lines demonstrate visual refinement
-  - Deterministic data with clear parametric circle generation
-  - Dual output (PNG + HTML) leveraging Altair strengths
+  - Perfect spec compliance — every requirement implemented (circle, principal stresses,
+    max shear, stress points A/B, 2θp arc, equal aspect ratio, reference lines, grid)
+  - Clean professional color scheme with intentional Python Blue palette and meaningful
+    red/orange accents for different stress categories
+  - Excellent code quality — deterministic, flat KISS structure, well-commented, clean
+    imports
+  - Thoughtful label positioning with directional offsets avoiding all text collisions
+  - Leverages Altair interactivity (hover highlighting, tooltips) for HTML output
+    while maintaining clean PNG export
+  - Realistic engineering data with proper units and conventions
   weaknesses:
-  - No color legend despite three color-coded categories — readers must infer meaning
-    from labels alone
-  - 'Asymmetric labeling: τmax shows value but −τmax does not'
-  - Principal stress point color appears somewhat muted; could use higher saturation
-    for better contrast
-  - Excess whitespace from +50 unit domain padding could be reduced
-  - Center label fontSize=14 is slightly smaller than other annotations
-  - Altair interactive features (selections, params) not utilized
-  image_description: 'The plot displays a Mohr''s Circle for stress analysis on a
-    square 1:1 canvas. A blue (#306998) circle is drawn on a Normal Stress σ (MPa)
-    vs Shear Stress τ (MPa) plane, centered at approximately (20, 0) with a radius
-    of ~67.1 MPa. Key stress points are marked: A (80, 30) and B (-40, -30) in blue
-    representing the original stress state, σ₁ = 87.1 MPa and σ₂ = -47.1 MPa in a
-    muted red/mauve color for principal stresses, and τmax = 67.1 MPa and −τmax in
-    orange for maximum shear stress. A gray center point C (20, 0) is shown. A dashed
-    blue diameter line connects A to B. An orange arc with bold label shows the principal
-    plane angle 2θp = 26.6°. Subtle grid lines (opacity 0.15) and reference lines
-    (horizontal at τ=0 and vertical dashed through center) provide context. The title
-    reads "mohr-circle · altair · pyplots.ai" in large font at the top. All annotations
-    include numerical values. The circle appears as a true circle due to equal aspect
-    ratio.'
+  - Legend label font size (14pt) is slightly small compared to other text elements
+  - Red (#D63031) and orange (#E67E22) could be closer for some colorblind users —
+    consider wider hue separation
+  - Multiple separate chart layers for label positioning is verbose — could explore
+    Altair text mark with calculated offsets
+  - Could add more library-distinctive features (e.g., interactive parameter exploration
+    in HTML version)
+  image_description: 'The plot displays a Mohr''s Circle for 2D stress analysis on
+    a light gray (#FAFBFC) background. A dark blue circle (#306998) is drawn with
+    center at C(20, 0) and radius ~67.1 MPa. The horizontal axis is labeled "Normal
+    Stress σ (MPa)" ranging from about -80 to 120, and the vertical axis is labeled
+    "Shear Stress τ (MPa)" ranging from -100 to 100. The title reads "mohr-circle
+    · altair · pyplots.ai" in bold dark text (28pt) with a subtitle "2D Stress Transformation
+    — σx=80, σy=−40, τxy=30 MPa" in gray. Six key points are marked with filled circles
+    and white stroke: stress state points A(80, 30) and B(-40, -30) in blue, principal
+    stress points σ₁=87.1 MPa and σ₂=-47.1 MPa in red on the horizontal axis, and
+    maximum shear points τmax=67.1 MPa and −τmax=−67.1 MPa in orange at the top and
+    bottom. A dashed diameter line connects A to B. An orange arc shows the 2θp=26.6°
+    angle near the center. The center point C(20, 0) is marked in gray. A color-coded
+    legend in the bottom-right distinguishes Stress State (blue), Principal (red),
+    and Max Shear (orange). The grid is very subtle (opacity 0.12), reference lines
+    pass through the center, and the view frame is removed. The circle appears as
+    a true circle with equal aspect ratio.'
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -54,69 +57,69 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=28, axis=22, ticks=18, annotations=15-16,
-          center=14). All readable. Center label slightly small at 14pt.
+        comment: All font sizes explicitly set (title 28, axes 22, ticks 18, annotations
+          15-16). Legend labels at 14pt slightly small.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Labels carefully positioned with directional dx/dy offsets. No collisions.
+        comment: All labels carefully positioned with directional offsets. No collisions
+          anywhere.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Circle strokeWidth=2.5, points size=300 with white stroke halos,
-          arc strokeWidth=2.5. All clearly visible.
+        comment: Circle line clear at strokeWidth 2.5. Points large (300-420) with
+          white stroke. All elements well-visible.
       - id: VQ-04
         name: Color Accessibility
         score: 3
         max: 4
         passed: true
-        comment: Blue/red/orange/gray palette avoids red-green distinction. Principal
-          stress points appear somewhat muted.
+        comment: Blue/red/orange distinguishable for most types. Red-orange somewhat
+          close for deuteranopia but positional context helps.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Square canvas with equal aspect ratio. Circle fills ~55-60% of plot
-          area. +50 unit padding creates some excess whitespace.
+        comment: Square 1200x1200 (3600x3600 at scale 3). Circle fills ~60-70% of
+          canvas. Balanced margins.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units and symbols: Normal Stress σ (MPa),
-          Shear Stress τ (MPa).'
+        comment: Descriptive labels with proper units and Greek symbols.
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Thoughtful three-color coding, white stroke halos, clean reference
-          lines. Above defaults but not publication-ready.
+        comment: Strong design with custom palette, intentional hierarchy, custom
+          background, white stroke on points. Clearly above defaults.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: View stroke removed, grid at 0.15 opacity, reference lines with opacity
-          and dash patterns. Good refinement.
+        comment: View stroke removed, subtle grid (0.12 opacity), custom grid/domain
+          colors, careful reference line opacity.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Color coding creates clear categories. 2θp angle highlighted in orange.
-          Center de-emphasized. Asymmetric labeling weakens narrative.
+        comment: Color-coded categories guide reader through stress transformation.
+          2θp arc shows rotation. Subtitle provides context.
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -124,52 +127,53 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Mohr's Circle on σ-τ plane.
+        comment: Correct Mohr's Circle on sigma-tau plane with proper center and radius.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: circle, principal stresses, max shear,
-          stress points, 2θp angle, equal aspect ratio, labeled axes, grid, reference
-          lines.'
+        comment: 'All spec requirements present: circle, principal stresses, max shear,
+          stress points A/B, 2θp arc, equal aspect ratio, reference lines, grid.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=Normal Stress σ, Y=Shear Stress τ correctly assigned. All data
-          visible.
+        comment: X=Normal Stress, Y=Shear Stress. All points correctly positioned.
+          Full data range displayed.
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Title correct. Legend suppressed despite three color-coded categories.
+        comment: Title matches required format. Legend correctly labels all three
+          categories.
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Stress state includes positive and negative normal stresses with
-          non-zero shear. Both tensile and compressive principal stresses shown.
+        comment: Shows tensile and compressive stresses, non-zero shear, principal
+          stresses, max shear, and angle. Single stress state only.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic structural engineering stress values (80, -40, 30 MPa).
-          Neutral domain.
+        comment: Stress values (80, -40, 30 MPa) realistic for structural steel under
+          combined loading. Standard engineering domain.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values in tens-of-MPa range, sensible for structural engineering.
+        comment: Values in tens of MPa sensible for structural materials. Tension-positive
+          convention follows standard practice.
     code_quality:
       score: 10
       max: 10
@@ -179,33 +183,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports → data → chart layers → composition →
-          save.'
+        comment: 'Flat structure: imports, data computation, DataFrames, chart layers,
+          combine, save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data deterministic, computed from fixed stress values.
+        comment: Fully deterministic. Hardcoded stress values with mathematical derivations.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: altair, numpy, pandas — all used.
+        comment: Three imports (altair, numpy, pandas) all actively used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-organized layer composition. Pragmatic label grouping by offset
-          direction.
+        comment: Well-organized with section comments. Appropriate complexity. Interactive
+          features are legitimate Altair capabilities.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png and plot.html. Current Altair 6.0 API.
+        comment: Saves as plot.png (scale_factor=3.0) and plot.html. Uses current
+          Altair API.
     library_mastery:
       score: 7
       max: 10
@@ -215,16 +220,16 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of alt.layer(), Scale/Color/Tooltip encodings, properties/configure
-          chain, order encoding.
+        comment: Good use of alt.layer(), proper encoding types, Scale/Legend/Title
+          config, configure_axis/configure_view. Parametric circle necessary.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses tooltips and HTML export for interactivity. Does not leverage
-          selections/params.
-  verdict: REJECTED
+        comment: Uses selection_point for interactive hover with conditional size/opacity.
+          Tooltip encoding. HTML export alongside PNG.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -232,6 +237,7 @@ impl_tags:
   - layer-composition
   - hover-tooltips
   - html-export
+  - custom-legend
   patterns:
   - data-generation
   dataprep: []
