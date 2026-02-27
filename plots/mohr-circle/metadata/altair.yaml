@@ -1,0 +1,241 @@
+library: altair
+specification_id: mohr-circle
+created: '2026-02-27T22:11:27Z'
+updated: '2026-02-27T22:48:23Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22505482758
+issue: 4432
+python_version: 3.14.3
+library_version: 6.0.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/mohr-circle/altair/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/mohr-circle/altair/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/mohr-circle/altair/plot.html
+quality_score: 91
+review:
+  strengths:
+  - Complete spec implementation with all required Mohr's Circle elements (circle,
+    principal stresses, max shear, stress points, 2θp angle arc, center)
+  - Professional color palette with clear visual hierarchy separating stress categories
+  - 'Strong visual refinement: removed spines, subtle grid, clean background, white-bordered
+    points'
+  - Excellent use of Altair interactive features (selections, conditions, tooltips)
+    for enhanced HTML output
+  - Mathematically correct computations with realistic engineering stress values
+  - Clean, well-organized code following KISS principles
+  weaknesses:
+  - Annotation label font size (15pt) is slightly small relative to axis titles (22pt),
+    could be bumped to 16-17pt for consistency
+  - Color palette red-purple distinction could be challenging for some colorblind
+    users; a blue-orange-green scheme might be more universally accessible
+  image_description: 'The plot shows a Mohr''s Circle on a Normal Stress σ (MPa) vs.
+    Shear Stress τ (MPa) plane. A blue circle (#306998) is centered at approximately
+    (20, 0) with a radius of ~67.1 MPa. Six key points are marked with colored dots:
+    Stress State points A (80, 30) and B (-40, -30) in dark blue, Principal stress
+    points σ₁ = 87.1 MPa and σ₂ = -47.1 MPa in red (#C0392B), and Max Shear points
+    τmax = 67.1 MPa and −τmax = −67.1 MPa in purple (#8E44AD). The center point C
+    (20, 0) is shown in gray. A dashed diameter line connects A to B. A bold purple
+    arc near the horizontal axis shows the principal plane angle 2θp = 26.6°. The
+    title reads "mohr-circle · altair · pyplots.ai" with a subtitle "2D Stress Transformation
+    — σx=80, σy=−40, τxy=30 MPa". Axis labels include units. A subtle grid (opacity
+    0.12) and dashed reference lines through the center provide readability. The background
+    is a very light gray (#FAFBFC). A legend in the bottom-right identifies three
+    categories: Stress State, Principal, Max Shear. The square 1200×1200 layout at
+    3× scale (3600×3600 px) provides ample room and equal aspect ratio.'
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title=28, axis title=22, axis labels=18,
+          annotations=15-16). Annotation labels slightly small relative to axis titles.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: All labels cleanly positioned with data-space offsets; no text collisions.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Points at size 300-420 with white stroke borders. Circle outline
+          at strokeWidth=2.5. All elements clearly visible.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 3
+        max: 4
+        passed: true
+        comment: Blue, red, purple provide good hue separation but red-purple distinction
+          could challenge some deuteranopia users.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square 1200x1200 at 3x scale. Circle fills plotting area well. Balanced
+          margins, nothing cut off.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Normal Stress σ (MPa) and Shear Stress τ (MPa) — descriptive with
+          proper engineering units and symbols.
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom color palette, intentional typography hierarchy, white stroke
+          borders, polished background. Clearly above defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Domain removed, view stroke removed, subtle grid (0.12 opacity),
+          clean background fill. Nearly every detail polished.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy through color coding. 2θp arc in contrasting
+          purple draws attention. Labeled computed values guide viewer.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Mohr's Circle on σ-τ plane with proper center and radius
+          computation.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: circle, principal stresses, τmax, stress
+          points, 2θp arc, equal aspect ratio, proper labels, grid.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=Normal Stress, Y=Shear Stress. All computed values mathematically
+          correct.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'mohr-circle · altair · pyplots.ai' matches format. Legend
+          identifies three stress categories.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows tensile and compressive stresses with shear. Demonstrates all
+          Mohr's Circle aspects.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Realistic engineering stress values (80 MPa tension, -40 MPa compression,
+          30 MPa shear). Neutral domain.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: MPa values within typical engineering material ranges. Well-proportioned
+          circle.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean Imports → Data → Chart layers → Combine → Save. No functions
+          or classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Fully deterministic: hardcoded stress values, computed parametric
+          circle, no randomness.'
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: altair, numpy, pandas — all used and necessary.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-organized, clear variable names, smart px_to_data conversion.
+          Interactive features are legitimate Altair capabilities.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot.png (scale_factor=3.0) and plot.html. Current Altair 6.0
+          API.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good declarative grammar usage with alt.layer() composition. Some
+          manual workarounds for label positioning.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses alt.selection_point for hover highlighting, alt.condition for
+          dynamic encoding, alt.Tooltip, dual PNG+HTML export.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - edge-highlighting
+  - grid-styling
