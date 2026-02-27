@@ -1,0 +1,28 @@
+# Specification-level metadata for scatter-pitch-events
+# Auto-synced to PostgreSQL on push to main
+
+spec_id: scatter-pitch-events
+title: Soccer Pitch Event Map
+
+# Specification tracking
+created: "2026-02-27T14:40:05Z"
+updated: null
+issue: 4417
+suggested: MarkusNeusinger
+
+# Classification tags (applies to all library implementations)
+# See docs/reference/tagging-system.md for detailed guidelines
+tags:
+  plot_type:
+    - scatter
+    - map
+  data_type:
+    - numeric
+    - categorical
+    - spatial
+  domain:
+    - general
+  features:
+    - annotated
+    - color-mapped
+    - 2d
