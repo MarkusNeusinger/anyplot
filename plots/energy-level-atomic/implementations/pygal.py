@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 energy-level-atomic: Atomic Energy Level Diagram
 Library: pygal 3.1.0 | Python 3.14.3
 Quality: 87/100 | Created: 2026-02-27
@@ -38,8 +38,8 @@ level_color = "#4A5568"
 all_colors = (
     (level_color,) * 6
     + ("#CC3333",)
-    + ("#2D006E", "#7B2FBE", "#D456D6")  # Lyman: deep indigo, violet, orchid
-    + ("#E01030", "#00B8D4", "#2244EE", "#8B11CC")  # Balmer: red, teal, blue, purple
+    + ("#2D006E", "#7B2FBE", "#CC44AA")  # Lyman: deep indigo, violet, magenta-pink
+    + ("#E01030", "#00B8D4", "#2244EE", "#6A0DAD")  # Balmer: red, teal, blue, deep violet
     + ("#D95F02", "#E6A800", "#8B6914")  # Paschen: burnt orange, gold, bronze
 )
 
@@ -53,10 +53,25 @@ custom_style = Style(
     title_font_size=48,
     label_font_size=24,
     major_label_font_size=24,
-    legend_font_size=24,
+    legend_font_size=28,
     value_font_size=20,
     stroke_width=4,
 )
+
+# Custom value formatter showing energy in eV for tooltips
+energy_lookup = {visual_y[n]: energy_values[n] for n in range(1, 7)}
+energy_lookup[ionization_y] = 0.0
+
+
+def format_energy(val):
+    """Format tooltip values as energy in eV."""
+    if isinstance(val, tuple):
+        y = val[1]
+    else:
+        y = val
+    ev = energy_lookup.get(y, y)
+    return f"{ev:+.2f} eV"
+
 
 # Plot
 chart = pygal.XY(
@@ -75,12 +90,17 @@ chart = pygal.XY(
     stroke=True,
     margin=80,
     margin_left=240,
+    margin_right=100,
     margin_bottom=200,
     margin_top=100,
     range=(0, 11),
-    xrange=(0, 10),
+    xrange=(0, 10.0),
     truncate_legend=-1,
     tooltip_border_radius=8,
+    value_formatter=format_energy,
+    print_values=False,
+    print_labels=False,
+    legend_box_size=20,
 )
 
 # Y-axis labels showing actual energy values at evenly-spaced positions
@@ -121,7 +141,7 @@ chart.add(
 # Lyman series (UV transitions to n=1)
 lyman_widths = [14, 12, 10]
 lyman_lower_nodes = [26, 22, 18]
-lyman_upper_nodes = [10, 9, 8]
+lyman_upper_nodes = [14, 12, 11]
 for i, (upper, lower, label) in enumerate(lyman_transitions):
     x = lyman_x_positions[i]
     chart.add(
@@ -136,7 +156,7 @@ for i, (upper, lower, label) in enumerate(lyman_transitions):
 # Balmer series (visible transitions to n=2) — H-alpha is the focal point
 balmer_widths = [16, 13, 11, 10]
 balmer_lower_nodes = [30, 22, 18, 16]
-balmer_upper_nodes = [10, 8, 7, 6]
+balmer_upper_nodes = [14, 12, 10, 9]
 for i, (upper, lower, label) in enumerate(balmer_transitions):
     x = balmer_x_positions[i]
     chart.add(
@@ -151,7 +171,7 @@ for i, (upper, lower, label) in enumerate(balmer_transitions):
 # Paschen series (IR transitions to n=3) — warm colors for infrared
 paschen_widths = [13, 11, 10]
 paschen_lower_nodes = [24, 20, 16]
-paschen_upper_nodes = [9, 8, 7]
+paschen_upper_nodes = [13, 11, 10]
 for i, (upper, lower, label) in enumerate(paschen_transitions):
     x = paschen_x_positions[i]
     chart.add(
