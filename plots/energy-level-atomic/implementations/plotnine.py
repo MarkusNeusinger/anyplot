@@ -1,17 +1,18 @@
-""" pyplots.ai
+"""pyplots.ai
 energy-level-atomic: Atomic Energy Level Diagram
 Library: plotnine 0.15.3 | Python 3.14.3
-Quality: 82/100 | Created: 2026-02-27
 """
 
 import numpy as np
 import pandas as pd
 from plotnine import (
     aes,
+    annotate,
     arrow,
     coord_cartesian,
     element_blank,
     element_line,
+    element_rect,
     element_text,
     geom_segment,
     geom_text,
@@ -46,9 +47,7 @@ labels_df = pd.DataFrame(
 # Thin connecting lines from level endpoints to label positions
 connectors = pd.DataFrame({"x_start": [0.77] * 6, "x_end": [0.88] * 6, "y_start": list(energies), "y_end": display_y})
 
-# Ionization limit
-ionization_line = pd.DataFrame({"x_start": [0.18], "x_end": [0.76], "y": [0.0], "yend": [0.0]})
-ionization_label = pd.DataFrame({"x": [0.90], "y": [1.25], "label": ["Ionization\nlimit (0 eV)"]})
+# Ionization limit connector (line and label use annotate below)
 ion_connector = pd.DataFrame({"x_start": [0.77], "x_end": [0.88], "y_start": [0.0], "y_end": [1.25]})
 
 # Transitions - Lyman series (UV, to n=1) and Balmer series (visible, to n=2)
@@ -58,7 +57,7 @@ transitions = pd.DataFrame(
         "from_n": [2, 3, 4, 3, 4, 5],
         "to_n": [1, 1, 1, 2, 2, 2],
         "x_pos": [0.30, 0.37, 0.44, 0.54, 0.61, 0.68],
-        "color": ["#7B2FBE", "#6D28D9", "#9333EA", "#DC2626", "#0EA5E9", "#7C3AED"],
+        "color": ["#7B2FBE", "#2563EB", "#DB2777", "#DC2626", "#0EA5E9", "#7C3AED"],
         "label": [
             "Ly-\u03b1\n122 nm",
             "Ly-\u03b2\n103 nm",
@@ -83,19 +82,15 @@ series_labels = pd.DataFrame(
     }
 )
 
-# Plot
+# Plot — uses annotate() for fixed reference elements (plotnine-idiomatic)
 plot = (
     ggplot()
     + geom_segment(
         data=levels, mapping=aes(x="x_start", xend="x_end", y="energy", yend="energy"), color="#306998", size=1.8
     )
-    + geom_segment(
-        data=ionization_line,
-        mapping=aes(x="x_start", xend="x_end", y="y", yend="yend"),
-        color="#9CA3AF",
-        size=1,
-        linetype="dashed",
-    )
+    # Ionization limit via annotate (no DataFrame needed for fixed references)
+    + annotate("segment", x=0.18, xend=0.76, y=0, yend=0, color="#9CA3AF", size=1, linetype="dashed")
+    + annotate("text", x=0.90, y=1.25, label="Ionization\nlimit (0 eV)", size=9, ha="left", color="#9CA3AF")
     + geom_segment(
         data=connectors, mapping=aes(x="x_start", xend="x_end", y="y_start", yend="y_end"), color="#CCCCCC", size=0.3
     )
@@ -103,28 +98,27 @@ plot = (
         data=ion_connector, mapping=aes(x="x_start", xend="x_end", y="y_start", yend="y_end"), color="#CCCCCC", size=0.3
     )
     + geom_text(
-        data=labels_df, mapping=aes(x="label_x", y="display_y", label="label"), size=7, ha="left", color="#333333"
+        data=labels_df, mapping=aes(x="label_x", y="display_y", label="label"), size=9, ha="left", color="#333333"
     )
-    + geom_text(data=ionization_label, mapping=aes(x="x", y="y", label="label"), size=7, ha="left", color="#9CA3AF")
     + geom_segment(
         data=transitions,
         mapping=aes(x="x_pos", xend="x_pos", y="y_start", yend="y_end", color="color"),
-        size=0.8,
+        size=1.1,
         arrow=arrow(length=0.08, type="closed"),
     )
     + geom_text(
-        data=transitions, mapping=aes(x="x_pos", y="label_y", label="label", color="color"), size=5.5, nudge_x=-0.04
+        data=transitions, mapping=aes(x="x_pos", y="label_y", label="label", color="color"), size=8, nudge_x=-0.04
     )
     + geom_text(data=series_labels, mapping=aes(x="x", y="y", label="label", color="color"), size=9)
     + scale_color_identity()
     + scale_x_continuous(limits=(0.0, 1.18), expand=(0, 0))
-    + scale_y_continuous(name="Energy (eV)")
+    + scale_y_continuous(name="Energy (eV)", breaks=[-13.6, -3.4, -1.5, 0], labels=["-13.6", "-3.4", "-1.5", "0"])
     + coord_cartesian(ylim=(-14.5, 2.8))
-    + labs(title="Hydrogen Atom \u00b7 energy-level-atomic \u00b7 plotnine \u00b7 pyplots.ai", x="")
+    + labs(title="energy-level-atomic \u00b7 plotnine \u00b7 pyplots.ai", x="")
     + theme_minimal()
     + theme(
         figure_size=(16, 9),
-        plot_title=element_text(size=24, weight="medium"),
+        plot_title=element_text(size=24, weight="bold", color="#1a1a2e"),
         axis_title_y=element_text(size=20),
         axis_title_x=element_blank(),
         axis_text_y=element_text(size=16),
@@ -134,6 +128,7 @@ plot = (
         panel_grid_minor_x=element_blank(),
         panel_grid_minor_y=element_blank(),
         panel_grid_major_y=element_line(alpha=0.15),
+        plot_background=element_rect(fill="#FAFBFC", color="none"),
     )
 )
 
