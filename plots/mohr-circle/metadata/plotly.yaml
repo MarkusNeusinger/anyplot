@@ -1,7 +1,7 @@
 library: plotly
 specification_id: mohr-circle
 created: '2026-02-27T22:08:29Z'
-updated: '2026-02-27T22:13:34Z'
+updated: '2026-02-27T22:24:10Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 22505482846
 issue: 4432
@@ -10,36 +10,34 @@ library_version: 6.5.2
 preview_url: https://storage.googleapis.com/pyplots-images/plots/mohr-circle/plotly/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/mohr-circle/plotly/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/mohr-circle/plotly/plot.html
-quality_score: 86
+quality_score: 87
 review:
   strengths:
-  - Perfect spec compliance with all required features correctly positioned
-  - Excellent realistic engineering data creating a visually rich circle spanning
-    positive and negative stress regions
-  - Intentional color-coding system with distinct marker shapes for clear visual differentiation
-  - Clean deterministic code with linear structure and no unnecessary complexity
-  - Plotly-specific features (hover text, HTML export, fill mode) utilized effectively
+  - Perfect spec compliance — every required feature correctly implemented
+  - Excellent color-coded visual hierarchy distinguishing element types
+  - Realistic engineering data with correct Mohr's circle mathematics
+  - Clean deterministic code with KISS structure
+  - Good use of Plotly interactivity (hover tooltips, HTML export)
+  - Equal aspect ratio correctly implemented
   weaknesses:
-  - Red-green color pair for stress points vs principal stresses may cause colorblind
-    accessibility issues
-  - Center area slightly crowded with C label and 2θp arc label converging
-  - Annotation font sizes (15-17pt) slightly small relative to axis labels (22pt)
-  - Color palette functional but not maximally harmonious for publication-level polish
-  image_description: The plot displays a Mohr's Circle for stress analysis on a clean
-    white background. A dark blue circle (#306998) with a very light blue fill is
-    centered at (20, 0) with radius approximately 67.1. The title "mohr-circle · plotly
-    · pyplots.ai" is centered at the top in large font. The x-axis is labeled "Normal
-    Stress σ (MPa)" and the y-axis "Shear Stress τ (MPa)" with clearly readable font
-    sizes. Stress points A (80, 30) and B (-40, -30) are marked as red circles with
-    white borders, connected by a dashed blue diameter line. Principal stresses σ₁
-    = 87.1 and σ₂ = -47.1 are marked as green diamonds on the horizontal axis with
-    labels below. Maximum shear stress τmax = 67.1 and −τmax = -67.1 are orange upward
-    triangles at the circle's top and bottom with labels. The center point C (20,
-    0) is marked with an x symbol. A purple arc indicates the 2θp = 26.6° angle from
-    the horizontal to the principal stress direction. Subtle grid lines and light
-    reference lines through the center enhance readability. The circle maintains equal
-    aspect ratio appearing as a true circle. The plot uses a square 3600x3600 canvas
-    format.
+  - Minor label-marker overlap at sigma1 and sigma2 annotations
+  - Center annotation C font size inconsistent with other annotations
+  - Bottom tau_max marker uses triangle-up instead of triangle-down
+  - Red-teal color combination has mild colorblind accessibility concern
+  - Margins slightly generous — canvas space could be used more efficiently
+  image_description: The plot displays Mohr's Circle for stress analysis on a clean
+    white background. A dark blue circle (#306998) with a very subtle light blue fill
+    is centered at approximately (20, 0) with a radius of ~67.1 MPa. Stress point
+    A (80, 30) is shown as a red circle marker in the upper right, and stress point
+    B (-40, -30) as a red circle marker in the lower left, connected by a dashed blue
+    diameter line. Principal stresses σ₁ = 87.1 and σ₂ = -47.1 are marked with teal
+    diamond markers on the horizontal axis with labels below. Maximum shear stress
+    τmax = 67.1 and −τmax = -67.1 are marked with orange upward-triangle markers at
+    the top and bottom of the circle. The center C (20, 0) is marked with a dark cross
+    symbol. A purple arc indicates the angle 2θp = 26.6°. Light gray reference lines
+    cross through the center. Axes are labeled "Normal Stress σ (MPa)" and "Shear
+    Stress τ (MPa)". Title "mohr-circle · plotly · pyplots.ai" is centered at top.
+    The circle uses equal aspect ratio and square format (3600×3600).
   criteria_checklist:
     visual_quality:
       score: 26
@@ -50,67 +48,71 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=28, labels=22, ticks=18, annotations=15-17).
-          Annotation fonts slightly small at 15pt.
+        comment: All font sizes explicitly set (title 28pt, axis labels 22pt, ticks
+          18pt, annotations 15-17pt). Center label C at 15pt slightly smaller than
+          other annotations.
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Minor crowding near center where C label, 2θp arc label, and reference
-          lines converge. σ₂ label close to diamond marker.
+        comment: Minor overlap where sigma1 and sigma2 labels (yshift=-22) sit close
+          to diamond markers. All text readable.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Markers size 14 clearly visible. Circle line width 3.5 bold and clear.
-          Different marker symbols provide excellent differentiation.
+        comment: Markers well-sized (14px) for low data density. Circle line width
+          3.5 prominent. Different marker shapes distinguish element types with white
+          borders.
       - id: VQ-04
         name: Color Accessibility
         score: 3
         max: 4
         passed: true
-        comment: Red and green used for stress points vs principal stresses could
-          be problematic for red-green colorblind. Different marker shapes mitigate.
+        comment: Good multi-color palette with shape redundancy. Red-teal pairing
+          has mild deuteranopia concern mitigated by different marker shapes.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Square format appropriate for circle. Circle fills ~60% of canvas.
-          Some unused corner space.
+        comment: Square format ideal for circle. Plot area fills ~65% of canvas. Margins
+          slightly generous.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis labels with units (MPa). Title in correct format.
+        comment: 'Descriptive labels with units: Normal Stress sigma (MPa), Shear
+          Stress tau (MPa).'
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Custom color palette with intentional color-coding. Above defaults
-          but not publication-level polish.
+        comment: Strong design with intentional color coding per element type. Custom
+          palette, white marker borders, subtle circle fill. Clearly above defaults.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Subtle grid, white background, custom reference lines. Good whitespace
-          management.
+        comment: White background, subtle grid (opacity 0.08), soft reference lines
+          (opacity 0.15), clean appearance. Good but not perfected.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Color coding and distinct marker shapes create clear visual hierarchy.
-          2θp arc adds instructional context.
+        comment: 'Color coding creates clear visual hierarchy: input data (red) vs
+          derived quantities (teal/orange). Dashed diameter and purple arc guide the
+          eye.'
     spec_compliance:
       score: 15
       max: 15
@@ -120,27 +122,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Mohr's Circle on σ-τ plane.
+        comment: Correct Mohr's Circle on sigma-tau plane.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: circle, principal stresses, max shear,
-          stress points A/B, 2θp angle, equal aspect ratio, grid and reference lines.'
+        comment: 'All features present: circle, principal stresses, max shear, stress
+          points A/B, angle 2theta_p, equal aspect ratio, grid, reference lines.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=normal stress, Y=shear stress. All points correctly positioned.
+        comment: X = normal stress, Y = shear stress, all values correctly computed.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows exact format. No legend needed as all elements directly
-          annotated.
+        comment: Title format correct. Annotations serve as labels appropriately for
+          this diagram type.
     data_quality:
       score: 15
       max: 15
@@ -150,22 +152,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all key aspects: principal stresses, max shear, stress points,
-          center, diameter, rotation angle. Mixed positive/negative stresses.'
+        comment: Shows both positive and negative normal stresses, non-zero shear,
+          meaningful angular relationship. Circle spans multiple quadrants.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic combined loading scenario on structural member. Engineering
-          domain, neutral.
+        comment: Engineering stress values (80, -40, 30 MPa) realistic for structural
+          analysis.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: MPa values realistic for engineering materials. Mixed tension/compression
-          demonstrates method well.
+        comment: MPa range appropriate for structural engineering applications.
     code_quality:
       score: 10
       max: 10
@@ -175,32 +176,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports, data, calculations, traces, annotations,
-          layout, save.'
+        comment: Clean Imports, Data, Calculations, Plot, Save structure. No functions
+          or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic with hardcoded stress values.
+        comment: Fully deterministic data, no random values needed.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy and plotly.graph_objects, both used.
+        comment: Only numpy and plotly.graph_objects imported, both used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized. Appropriate complexity.
+        comment: Well-structured, appropriate complexity. No fake UI elements.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html. Current API.
+        comment: Saves as plot.png and plot.html. Current Plotly API.
     library_mastery:
       score: 7
       max: 10
@@ -210,15 +211,15 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good Graph Objects API usage with add_trace, add_annotation, update_layout.
-          Uses scaleanchor for equal aspect ratio.
+        comment: 'Solid idiomatic Plotly: go.Figure with add_trace, add_annotation,
+          update_layout.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: 'Uses Plotly-specific features: hover text, fill=toself, HTML export
-          with CDN, scaleanchor axis linking.'
+        comment: 'Uses Plotly-specific features: hover text, fill=toself, HTML export,
+          scaleanchor/scaleratio.'
   verdict: REJECTED
 impl_tags:
   dependencies: []
@@ -230,6 +231,6 @@ impl_tags:
   - data-generation
   dataprep: []
   styling:
-  - grid-styling
   - edge-highlighting
+  - grid-styling
   - alpha-blending
