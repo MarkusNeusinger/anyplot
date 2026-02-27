@@ -1,7 +1,7 @@
 library: highcharts
 specification_id: mohr-circle
 created: '2026-02-27T22:10:08Z'
-updated: '2026-02-27T22:26:31Z'
+updated: '2026-02-27T22:38:18Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 22505482948
 issue: 4432
@@ -10,45 +10,44 @@ library_version: unknown
 preview_url: https://storage.googleapis.com/pyplots-images/plots/mohr-circle/highcharts/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/mohr-circle/highcharts/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/mohr-circle/highcharts/plot.html
-quality_score: 89
+quality_score: 91
 review:
   strengths:
-  - 'Perfect spec compliance and data quality: every requirement implemented with
-    correct math and realistic engineering values'
-  - 'Colorblind accessibility fixed: red-teal palette with marker shape differentiation
-    replaces previous red-green pairing'
-  - Strong use of Highcharts Annotations API for data labels with text outlines —
-    a distinctive library feature
-  - Typed Series classes (ScatterSeries, LineSeries) used idiomatically instead of
-    raw dicts
-  - Clean, refined visual appearance with removed spines, subtle grid, and disabled
-    UI chrome
+  - 'Perfect spec compliance and data quality: every specification requirement implemented
+    with accurate math and realistic engineering values'
+  - Square canvas format perfectly suits the circular visualization, eliminating previous
+    horizontal whitespace issue
+  - Colorblind-safe teal-red palette with marker shape differentiation
+  - Strong use of Highcharts Annotations API with text outlines and axis-anchored
+    positioning
+  - 'Excellent visual refinement: spines removed, 6% opacity grid, ticks hidden, generous
+    whitespace'
+  - Typed Series classes used idiomatically (ScatterSeries, LineSeries)
   weaknesses:
-  - Landscape 16:9 format creates significant horizontal whitespace for a circular
-    visualization; square canvas (3600x3600) would better utilize space
-  - LineSeries imported from .options.series.area instead of .options.series.line
-    — non-standard import path
-  - Minor annotation crowding near center (C label, 2θp label, diameter line intersection)
-  image_description: The plot shows a Mohr's Circle for a 2D stress state (σx=80 MPa,
-    σy=−30 MPa, τxy=40 MPa) rendered in Highcharts on a white background. A smooth
-    blue circle (#306998) is centered at approximately (25, 0) with a radius of ~68
-    MPa. Two red circular markers label stress points A (80, 40) in the upper-right
-    and B (−30, −40) in the lower-left, connected by a gray dashed diameter line.
-    Teal diamond markers on the horizontal axis mark principal stresses σ₁ = 93.0
-    MPa (right) and σ₂ = −43.0 MPa (left). Purple triangle markers (up/down) indicate
-    τmax = 68.0 MPa at the top and τmin = −68.0 MPa at the bottom. A small dark circle
-    marks center C (25.0, 0). An orange arc near the center shows the angle 2θp =
-    36.0°. Light dashed gray reference lines intersect at the center both horizontally
-    and vertically. The grid is extremely subtle (6% opacity). X-axis "Normal Stress
-    σ (MPa)" ranges from −150 to 200; Y-axis "Shear Stress τ (MPa)" ranges from −95
-    to 95. The title "mohr-circle · highcharts · pyplots.ai" appears in bold dark
-    text, with a gray subtitle showing the input stress state. All annotations have
-    white text outlines for contrast. The circle appears as a true circle due to equal
-    aspect ratio handling. Axis spines are removed. Landscape 16:9 format results
-    in notable horizontal whitespace around the circle.
+  - LineSeries import path from .options.series.area is technically correct but non-obvious
+  - Minor annotation proximity near the center area (C label and 2θp arc region)
+  image_description: The plot displays a Mohr's Circle for a 2D stress state (σx=80
+    MPa, σy=−30 MPa, τxy=40 MPa) rendered in Highcharts on a white background using
+    a square 3600×3600 canvas. A smooth blue circle (#306998) is centered at (25,
+    0) with a radius of ~68 MPa, appearing as a true circle due to equal aspect ratio
+    handling. Two red circular markers label stress points A (80, 40) in the upper-right
+    quadrant and B (−30, −40) in the lower-left, connected by a gray dashed diameter
+    line. Teal diamond markers on the horizontal axis mark principal stresses σ₁ =
+    93.0 MPa (right) and σ₂ = −43.0 MPa (left). Purple triangle markers (up/down)
+    indicate τmax = 68.0 MPa at the top and τmin = −68.0 MPa at the bottom. A small
+    dark circle marks center C (25.0, 0) with its label offset below. An orange arc
+    near the center shows the angle 2θp = 36.0° with label positioned clearly in open
+    space. Very subtle grid lines (6% opacity) and dashed reference lines pass through
+    the center both horizontally and vertically. Axis spines are removed. The x-axis
+    is labeled "Normal Stress σ (MPa)" ranging from about −70 to 120, and the y-axis
+    "Shear Stress τ (MPa)" from −95 to 95. The title "mohr-circle · highcharts · pyplots.ai"
+    appears in bold dark text at top with a gray subtitle showing the input stress
+    state. All annotations have white text outlines for readability. The square canvas
+    eliminates the horizontal whitespace from the previous landscape version, and
+    the circle fills the plot area well with balanced margins.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -57,47 +56,41 @@ review:
         max: 8
         passed: true
         comment: 'All font sizes explicitly set: title 56px, subtitle 38px, axis titles
-          38px, tick labels 30px, annotation labels 28-34px. All perfectly readable.'
+          38px, tick labels 30px, annotations 28-34px'
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Minor crowding near center where C label, 2θp arc label, and diameter
-          line converge. τmin label slightly tight against triangle-down marker. All
-          text still readable.
+        comment: Minor proximity near center area but no actual text collision. All
+          text fully readable
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All markers well-sized (radius 10-16), circle line width 5, different
-          marker shapes clearly distinguishable.
+        comment: All markers well-sized (radius 10-16), distinct shapes clearly distinguishable
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Red-teal palette with marker shape differentiation. Teal (#1abc9c)
-          distinguishable from red under protanopia/deuteranopia. Purple, orange,
-          blue all distinct.
+        comment: 'Colorblind-safe: red vs teal (not green), marker shapes also differ'
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Circle fills vertical space well (~73% of Y range). 16:9 landscape
-          with equal aspect ratio creates significant horizontal whitespace; square
-          canvas would better suit circular visualization.
+        comment: Square 3600x3600 canvas perfectly suits circular visualization with
+          balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Normal Stress σ (MPa) and Shear Stress τ (MPa) — descriptive with
-          units and Greek symbols.
+        comment: Descriptive labels with units and Greek symbols
     design_excellence:
-      score: 14
+      score: 15
       max: 20
       items:
       - id: DE-01
@@ -105,24 +98,22 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Semantically meaningful color palette, custom font family, text outlines
-          for contrast, letter-spacing on title, marker shape coding. Clearly above
-          defaults.
+        comment: 'Strong design: semantic color palette, custom typography, text outlines,
+          marker shape hierarchy'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Axis spines removed, grid 6% opacity, tick widths 0, dashed reference
-          lines, legend/tooltip/credits disabled. Good refinement.
+        comment: Spines removed, 6% opacity grid, ticks hidden, dashed reference lines,
+          generous whitespace
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Color coding and marker shapes create visual hierarchy. Orange angle
-          arc draws attention to 2θp. Subtitle contextualizes input. Numerical annotations
-          complete the engineering story.
+        comment: Color coding and marker shapes create visual hierarchy, angle arc
+          draws attention, subtitle provides context
     spec_compliance:
       score: 15
       max: 15
@@ -132,30 +123,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: Mohr''s Circle on σ vs τ plane using line series for circle
-          and scatter for key points.'
+        comment: Correct Mohr's Circle on sigma vs tau plane
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: circle, principal stresses, max shear, stress
-          points A/B, 2θp angle arc, equal aspect ratio, labeled axes, light grid,
-          reference lines.'
+        comment: 'All spec features present: circle, principal stresses, max shear,
+          stress points A/B, 2theta_p angle, equal aspect ratio'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=normal stress, Y=shear stress. Center (25,0), radius 68. All values
-          mathematically correct.
+        comment: X=normal stress, Y=shear stress. All values mathematically correct
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows exact format. Legend correctly disabled with inline
-          annotations.
+        comment: Title in exact format. Legend correctly disabled with inline annotations
     data_quality:
       score: 15
       max: 15
@@ -165,22 +152,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows positive/negative normal stresses, positive shear, both positive
-          and negative principal stresses, meaningful rotation angle (36°).
+        comment: Shows tension and compression, positive shear, non-trivial rotation
+          angle
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Stress values (80, -30, 40 MPa) realistic for structural member under
-          combined loading. Neutral engineering context.
+        comment: Realistic stress values for structural member under combined loading
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values in MPa typical for structural steel analysis. Combination
-          of tension, compression, and shear is physically plausible.
+        comment: Values in MPa typical for structural steel analysis
     code_quality:
       score: 10
       max: 10
@@ -190,34 +175,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean flat structure: imports → data → calculations → chart config
-          → series → annotations → export. No functions or classes.'
+        comment: Clean flat structure, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic with fixed stress values.
+        comment: Fully deterministic with fixed stress values
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-organized, readable code. NumPy used appropriately. CDN fallback
-          robust.
+        comment: Well-organized with color constants and clear comments
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png via Selenium screenshot with proper 4800x2700 crop.
-          Also generates plot.html.
+        comment: Saves as plot.png via Selenium, uses current highcharts_core API
     library_mastery:
       score: 7
       max: 10
@@ -227,17 +209,16 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Uses typed Series classes and Annotation.from_dict(). Minor: LineSeries
-          imported from .options.series.area instead of .options.series.line.'
+        comment: Typed Series classes, Annotation.from_dict(), proper Chart(container=)
+          and add_series pattern
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Highcharts Annotations API with textOutline, plotLines for reference
-          lines, multiple marker symbol types with lineColor/fillColor, dashStyle.
-          Distinctive Highcharts features.
-  verdict: REJECTED
+        comment: Highcharts Annotations API with axis-anchored points and textOutline,
+          plotLines, multiple marker symbols
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
