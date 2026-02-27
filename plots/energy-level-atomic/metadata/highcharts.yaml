@@ -1,7 +1,7 @@
 library: highcharts
 specification_id: energy-level-atomic
 created: '2026-02-27T20:51:49Z'
-updated: '2026-02-27T20:56:52Z'
+updated: '2026-02-27T21:13:05Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 22502879577
 issue: 4434
@@ -10,44 +10,42 @@ library_version: unknown
 preview_url: https://storage.googleapis.com/pyplots-images/plots/energy-level-atomic/highcharts/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/energy-level-atomic/highcharts/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/energy-level-atomic/highcharts/plot.html
-quality_score: 80
+quality_score: 86
 review:
   strengths:
-  - Excellent data quality with physically accurate hydrogen energy levels and three
-    complete spectral series
-  - Clean code with elegant use of linkedTo pattern for legend grouping of multiple
-    transition series
-  - 'Good visual refinement: grid removed, x-axis hidden, clean typography'
-  - Proper title format and descriptive legend with spectral region labels (UV, Visible,
-    IR)
-  - Thoughtful label y-offsets to mitigate upper-level crowding
+  - Perfect data quality using real hydrogen atom physics with correct Rydberg formula
+    energies and wavelength calculations
+  - Full spec compliance with all required features including ionization limit, three
+    spectral series, and wavelength labels
+  - Excellent use of Highcharts broken-axis module to handle the large energy gap
+    between n=1 and n=2
+  - Clean, elegant code with proper series grouping via linkedTo and emphasis on alpha
+    transitions
+  - Purposeful spectral color coding (purple=UV, blue=visible, orange=IR) with good
+    visual hierarchy
   weaknesses:
-  - Linear energy scale wastes ~60% of the canvas as empty space between n=1 and n=2,
-    while upper levels are compressed into a narrow band
-  - Paschen series red (#c0392b) and ionization limit red (#e74c3c) are confusingly
-    similar colors
-  - Upper level transitions (especially Paschen) are very short and hard to distinguish
-    visually
-  - No visual hierarchy or emphasis to tell a specific story about the data
+  - Purple and blue transition colors lack sufficient contrast for colorblind accessibility
+  - Lower chart area retains significant empty space despite the y-axis break
+  - Non-alpha transition markers are relatively small at the 4800x2700 canvas size
+  - Overall design, while clean, has not reached publication-level polish
   image_description: 'The plot displays a hydrogen atom energy level diagram on a
-    white background. The title "energy-level-atomic · highcharts · pyplots.ai" is
-    centered at the top in bold dark text, with a subtitle "Hydrogen Atom Energy Levels
-    and Spectral Transitions" below it. The Y-axis is labeled "Energy (eV)" and ranges
-    from -14 to 0. Six horizontal dark gray lines represent energy levels: n=1 at
-    -13.60 eV (bottom), n=2 at -3.40 eV, n=3 at -1.51 eV, n=4 at -0.85 eV, n=5 at
-    -0.54 eV, and n=6 at -0.38 eV (near top). A dashed red line at 0 eV marks the
-    ionization limit. Each level is labeled on the right with its quantum number and
-    energy value. Vertical lines with circle markers (top) and triangle-down markers
-    (bottom) represent emission transitions: purple for Lyman Series (UV, transitions
-    to n=1), blue (#306998) for Balmer Series (Visible, transitions to n=2), and red
-    for Paschen Series (IR, transitions to n=3). The Lyman transitions are the tallest,
-    stretching from upper levels down to n=1. A horizontal legend at the bottom identifies
-    the three series. The upper energy levels (n=4, n=5, n=6) and ionization line
-    are tightly clustered near 0 eV, and the large gap between n=1 and n=2 creates
-    substantial empty space in the middle of the chart.'
+    light off-white (#fafafa) background. Six horizontal dark charcoal lines represent
+    energy levels n=1 through n=6, each labeled on the right with quantum number and
+    energy value (e.g., "n=1 (-13.60 eV)"). A dashed gray ionization limit line sits
+    at 0 eV, labeled "Ionization (0 eV)". Three spectral series are shown as vertical
+    transition lines with endpoint markers: Lyman Series (UV) in purple targeting
+    n=1, Balmer Series (Visible) in blue targeting n=2, and Paschen Series (IR) in
+    orange targeting n=3. Triangle-down markers at the lower end indicate emission
+    direction. Alpha transitions are emphasized with larger markers, thicker lines,
+    and wavelength labels (λ = 122 nm, λ = 656 nm, λ = 1879 nm). A y-axis break compresses
+    the large gap between n=1 (-13.6 eV) and n=2 (-3.4 eV). The Y-axis is labeled
+    "Energy (eV)" with tick marks at -14, -13, -3, -2, -1, 0. A horizontal legend
+    at the bottom identifies all three series. The title reads "energy-level-atomic
+    · highcharts · pyplots.ai" with a subtitle "Hydrogen Atom Energy Levels and Spectral
+    Transitions".'
   criteria_checklist:
     visual_quality:
-      score: 22
+      score: 25
       max: 30
       items:
       - id: VQ-01
@@ -55,47 +53,45 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 64px, subtitle 40px, axis labels
-          32-40px, data labels 30px, legend 36px). Readable, though upper-level labels
-          slightly strained.
+        comment: All font sizes explicitly set (title 64px, subtitle 40px, axis 40px/32px,
+          data labels 30px, legend 36px). Wavelength labels at 26px are smallest but
+          legible.
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Upper energy levels (n=4, n=5, n=6) and ionization line packed into
-          ~1 eV band. Label y-offsets help but region is still crowded.
+        comment: Upper levels n=4/5/6 closely spaced; y-offsets prevent overlap but
+          area is somewhat crowded. Lyman transitions cluster near n=1.
       - id: VQ-03
         name: Element Visibility
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Energy level lines and transition arrows visible for lower levels.
-          Paschen series transitions between closely-spaced upper levels are very
-          short and hard to distinguish.
+        comment: Energy level lines and alpha transitions well-sized. Non-alpha transition
+          markers relatively small at canvas size.
       - id: VQ-04
         name: Color Accessibility
         score: 3
         max: 4
         passed: true
-        comment: Purple, blue, red generally distinguishable. Paschen red (#c0392b)
-          and ionization red (#e74c3c) are confusingly similar.
+        comment: Purple/blue/orange generally distinguishable but purple and blue
+          may be confused under some color vision deficiencies.
       - id: VQ-05
         name: Layout & Canvas
-        score: 2
+        score: 3
         max: 4
-        passed: false
-        comment: Linear scale creates ~60% empty space between n=2 and n=1. Data compressed
-          into top 25% and bottom 10% with large void in between.
+        passed: true
+        comment: Good margins and axis break helps, but significant empty space remains
+          in lower chart between break boundaries.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Y-axis: Energy (eV) with units. Title follows required format. Subtitle
-          is descriptive.'
+        comment: Energy (eV) with units on y-axis. X-axis appropriately hidden.
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -103,24 +99,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom color palette for spectral series, clean white background,
-          dark gray for levels. Above defaults but not publication-ready.
+        comment: Purposeful spectral color coding, clean off-white background, custom
+          font, removed gridlines. Above defaults but not publication-ready.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Grid removed, x-axis hidden, credits disabled, clean margins. Paschen/Ionization
-          color similarity shows incomplete attention to detail.
+        comment: Grid lines removed, x-axis hidden, subtle y-axis line, credits disabled.
+          Good refinement.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Color-coding by spectral series guides viewer. Linear scale fails
-          to tell convergence story near ionization limit.
+        comment: Alpha transitions emphasized with larger markers/thicker lines. Wavelength
+          labels add scientific context. Color coding tells spectral story.
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -132,26 +128,24 @@ review:
           arrows.
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Energy levels, emission arrows, color by series, ionization line,
-          partial-width lines all present. Nonlinear scale suggested in spec but not
-          implemented.
+        comment: 'All features present: 6 levels, 3 spectral series, color-coded transitions,
+          ionization limit, wavelength labels, emission markers.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Energy on Y-axis, levels at correct positions, transitions connect
-          correct level pairs.
+        comment: Energy values correctly calculated via Rydberg formula. All levels
+          and transitions positioned correctly.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Legend shows Lyman/Balmer/Paschen series with
-          descriptive names.
+        comment: Title format correct. Legend labels match data series.
     data_quality:
       score: 15
       max: 15
@@ -161,22 +155,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Six energy levels, three complete spectral series with multiple transitions
-          each, ionization limit.
+        comment: 'Comprehensive: 6 energy levels, 3 spectral series with multiple
+          transitions, ionization limit, wavelength labels.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Hydrogen atom energy levels using E_n = -13.6/n² eV. Real physics,
-          neutral scientific domain.
+        comment: Real hydrogen atom physics using Rydberg formula. Neutral scientific
+          context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: All energy values follow correct hydrogen formula. Ground state -13.6
-          eV, excited states match 1/n² scaling.
+        comment: All energy values physically correct. Wavelengths accurately calculated.
     code_quality:
       score: 10
       max: 10
@@ -186,36 +179,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, chart config, series loops, export.
-          No functions or classes.'
+        comment: 'Linear flow: imports, data, chart, levels, transitions, export.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data deterministic from hydrogen energy formula. No random elements.
+        comment: Fully deterministic using mathematical constants.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: tempfile, time, urllib.request, Path, Chart, HighchartsOptions,
-          Image, webdriver, Options.'
+        comment: All imports used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean iteration with list comprehensions. Elegant linkedTo/id pattern
-          for legend grouping. CDN fallback is practical.
+        comment: Clean list comprehensions, proper series linking, elegant wavelength
+          calculation.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png and plot.html. Uses current highcharts-core API.
+        comment: Saves plot.png and plot.html, uses current API.
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -223,15 +214,15 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Proper Chart + HighchartsOptions pattern, add_series with dict config,
-          dataLabels for annotations, plotOptions for hover control.
+        comment: Good use of add_series, linkedTo for legend grouping, dataLabels,
+          to_js_literal().
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Uses linkedTo for legend grouping, dataLabels for inline labels,
-          dashStyle for ionization line, tooltip formatting with delta-E values.
+        comment: Broken-axis module (distinctive Highcharts feature), linkedTo series
+          grouping, dual output (interactive HTML + static PNG).
   verdict: REJECTED
 impl_tags:
   dependencies:
@@ -240,11 +231,12 @@ impl_tags:
   techniques:
   - annotations
   - html-export
-  - hover-tooltips
   - custom-legend
+  - manual-ticks
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
   - minimal-chrome
+  - grid-styling
