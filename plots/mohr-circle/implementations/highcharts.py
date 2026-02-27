@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 mohr-circle: Mohr's Circle for Stress Analysis
 Library: highcharts unknown | Python 3.14.3
 Quality: 89/100 | Created: 2026-02-27
@@ -13,7 +13,7 @@ import numpy as np
 from highcharts_core.chart import Chart
 from highcharts_core.options import HighchartsOptions
 from highcharts_core.options.annotations import Annotation
-from highcharts_core.options.series.area import LineSeries
+from highcharts_core.options.series.area import LineSeries  # LineSeries lives in area module in highcharts_core
 from highcharts_core.options.series.scatter import ScatterSeries
 from PIL import Image
 from selenium import webdriver
@@ -55,14 +55,14 @@ chart = Chart(container="container")
 chart.options = HighchartsOptions()
 
 chart.options.chart = {
-    "width": 4800,
-    "height": 2700,
+    "width": 3600,
+    "height": 3600,
     "backgroundColor": "#ffffff",
     "style": {"fontFamily": "'Segoe UI', Arial, Helvetica, sans-serif"},
-    "marginLeft": 280,
-    "marginRight": 280,
-    "marginTop": 200,
-    "marginBottom": 220,
+    "marginLeft": 240,
+    "marginRight": 240,
+    "marginTop": 260,
+    "marginBottom": 240,
 }
 
 chart.options.title = {
@@ -77,9 +77,9 @@ chart.options.subtitle = {
 }
 
 # Axis ranges for equal aspect ratio
-# Plot area: 4800 - 280 - 280 = 4240 wide, 2700 - 200 - 220 = 2280 tall
+# Plot area: 3600 - 240 - 240 = 3120 wide, 3600 - 260 - 240 = 3100 tall
 y_pad = 95
-x_half_range = y_pad * (4240 / 2280)
+x_half_range = y_pad * (3120 / 3100)
 x_min = center - x_half_range
 x_max = center + x_half_range
 
@@ -266,7 +266,7 @@ chart.add_series(arc_series)
 
 # 2θp angle label position
 mid_angle = np.radians(two_theta_p) / 2
-label_r = arc_r * 1.5
+label_r = arc_r * 1.8
 
 chart.options.annotations = [
     # Stress points A and B labels
@@ -359,7 +359,7 @@ chart.options.annotations = [
             ],
         }
     ),
-    # Center point label
+    # Center point label (offset below to avoid crowding with 2θp arc)
     Annotation.from_dict(
         {
             "draggable": "",
@@ -373,8 +373,9 @@ chart.options.annotations = [
                 {
                     "point": {"x": float(center), "y": 0, "xAxis": 0, "yAxis": 0},
                     "text": f"C ({center:.1f}, 0)",
-                    "align": "center",
-                    "y": 36,
+                    "align": "right",
+                    "x": -14,
+                    "y": 48,
                 }
             ],
         }
@@ -449,7 +450,7 @@ html_content = f"""<!DOCTYPE html>
     <script>{annotations_js}</script>
 </head>
 <body style="margin:0;">
-    <div id="container" style="width: 4800px; height: 2700px;"></div>
+    <div id="container" style="width: 3600px; height: 3600px;"></div>
     <script>{js_literal}</script>
 </body>
 </html>"""
@@ -463,7 +464,7 @@ standalone_html = f"""<!DOCTYPE html>
     <script src="https://cdn.jsdelivr.net/npm/highcharts@11/modules/annotations.js"></script>
 </head>
 <body style="margin:0; overflow:auto;">
-    <div id="container" style="width: 4800px; height: 2700px;"></div>
+    <div id="container" style="width: 3600px; height: 3600px;"></div>
     <script>{js_literal}</script>
 </body>
 </html>"""
@@ -481,7 +482,7 @@ chrome_options.add_argument("--headless")
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
 chrome_options.add_argument("--disable-gpu")
-chrome_options.add_argument("--window-size=4800,2900")
+chrome_options.add_argument("--window-size=3600,3800")
 
 driver = webdriver.Chrome(options=chrome_options)
 driver.get(f"file://{temp_path}")
@@ -489,9 +490,9 @@ time.sleep(5)
 driver.save_screenshot("plot_raw.png")
 driver.quit()
 
-# Crop to exact 4800x2700
+# Crop to exact 3600x3600
 img = Image.open("plot_raw.png")
-img_cropped = img.crop((0, 0, 4800, 2700))
+img_cropped = img.crop((0, 0, 3600, 3600))
 img_cropped.save("plot.png")
 Path("plot_raw.png").unlink()
 
