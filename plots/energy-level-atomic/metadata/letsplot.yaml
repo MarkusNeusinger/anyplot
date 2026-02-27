@@ -1,0 +1,238 @@
+library: letsplot
+specification_id: energy-level-atomic
+created: '2026-02-27T20:44:56Z'
+updated: '2026-02-27T21:24:20Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22502879613
+issue: 4434
+python_version: 3.14.3
+library_version: 4.8.2
+preview_url: https://storage.googleapis.com/pyplots-images/plots/energy-level-atomic/letsplot/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/energy-level-atomic/letsplot/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/energy-level-atomic/letsplot/plot.html
+quality_score: 90
+review:
+  strengths:
+  - 'Excellent physics accuracy: hydrogen energy levels and spectral wavelengths are
+    physically correct'
+  - Power transform (0.33 exponent) elegantly spreads converging upper levels for
+    readability
+  - 'Intentional visual hierarchy: Balmer series thicker to emphasize visible spectrum'
+  - Interactive tooltips on energy levels and transitions via layer_tooltips()
+  - Clean professional color scheme with teal/blue/red palette on white background
+  - Ionization continuum band and dashed limit line add scientific context
+  weaknesses:
+  - Upper energy levels (n=4, n=5, n=6) remain slightly cramped vertically
+  - Legend entries spread across a large vertical span, could be more compact
+  - Ionization continuum band occupies significant vertical space relative to its
+    information content
+  image_description: 'The plot shows a hydrogen atom energy level diagram with six
+    horizontal dark slate lines representing quantum states n=1 through n=6, positioned
+    vertically by a power-transformed energy scale. Energy values range from -13.60
+    eV (n=1, bottom) to -0.38 eV (n=6, near top). A dashed gray line at 0 eV marks
+    the ionization limit, with a subtle lavender-shaded band above representing the
+    ionization continuum. Downward transition arrows are color-coded by spectral series:
+    teal for Lyman (UV), blue for Balmer (Visible), and red/dark-red for Paschen (IR).
+    Balmer arrows are noticeably thicker, emphasizing the visible spectrum. V-shaped
+    arrowheads appear at the bottom of each arrow. Wavelength annotations in italic
+    (121.6 nm, 656.3 nm, 1875.1 nm) label the alpha transitions. A custom legend on
+    the right shows colored segments with labels "Lyman series (UV)", "Balmer series
+    (Visible)", and "Paschen series (IR)". The title reads "energy-level-atomic ·
+    letsplot · pyplots.ai" with subtitle "Hydrogen Atom Energy Levels & Spectral Series".
+    The y-axis is labeled "Energy (eV)" with tick marks at each energy level value.'
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title=24, subtitle=18, axis_title=20,
+          axis_text=16, geom_text=16. All perfectly readable.'
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Upper levels (n=4, n=5, n=6) slightly tight despite power transform.
+          All text readable but spacing not ideal.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Energy level lines (size=2.0), arrows (1.4-2.2), arrowheads all clearly
+          visible. Good Balmer emphasis via thickness.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Teal/blue/red colorblind-safe palette with good contrast against
+          white background.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good layout overall. Legend and ionization band leave some space
+          underutilized on right and top.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Y-axis 'Energy (eV)' with units. X-axis appropriately hidden.
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Strong design: custom teal/blue/red palette, intentional Balmer
+          emphasis, dark slate primary, harmonious grays. Clearly above defaults.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: X-axis hidden, backgrounds blank, subtle grid, subtle y-axis line.
+          Most details polished.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Balmer emphasis, wavelength annotations on alpha lines, series labeled
+          with EM region. Clear visual hierarchy.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct energy level diagram with horizontal lines and vertical transition
+          arrows.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: partial-width lines, labels, emission
+          arrows, color-coded series, nonlinear scale, ionization limit.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Energy increases upward, actual eV values at transformed positions,
+          all levels and transitions visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct. Custom legend with correct series labels.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 6 energy levels, 3 spectral series, 10 transitions with wavelengths,
+          ionization continuum.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real hydrogen atom physics with correct E_n = -13.6/n² values and
+          actual spectral wavelengths.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: All energy values and wavelengths match hydrogen atom exactly. Physically
+          correct.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports, data, plot, save. No functions or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic data from physics formula.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity. Manual arrowheads and legend necessary for
+          lets-plot API.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png via ggsave with scale=3.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good grammar-of-graphics pattern with proper ggplot() + geom layers,
+          aes(), theme(), scale_color_identity().
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses layer_tooltips() with .line() chaining, geom_band() for ionization
+          continuum, HTML export alongside PNG.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  - custom-legend
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - grid-styling

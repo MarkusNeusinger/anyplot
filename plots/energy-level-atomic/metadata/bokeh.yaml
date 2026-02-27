@@ -1,0 +1,243 @@
+library: bokeh
+specification_id: energy-level-atomic
+created: '2026-02-27T20:46:26Z'
+updated: '2026-02-27T21:06:58Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22502879525
+issue: 4434
+python_version: 3.14.3
+library_version: 3.8.2
+preview_url: https://storage.googleapis.com/pyplots-images/plots/energy-level-atomic/bokeh/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/energy-level-atomic/bokeh/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/energy-level-atomic/bokeh/plot.html
+quality_score: 90
+review:
+  strengths:
+  - 'All 5 issues from attempt 1 addressed: title format fixed, ColumnDataSource added,
+    HoverTool integrated, Lyman colors improved, Paschen series added'
+  - Scientifically accurate hydrogen energy levels with correct formula and wavelengths
+    across 3 spectral series
+  - Effective spatial storytelling with left-to-right arrangement corresponding to
+    decreasing transition energy
+  - 'Strong Bokeh feature usage: HoverTool with degeneracy info, ColumnDataSource,
+    dual HTML+PNG output'
+  - Clean typography hierarchy with well-sized, explicitly-set fonts throughout
+  weaknesses:
+  - Lyman series purple shades still somewhat close (lightness-only variation)
+  - Level lines are narrow relative to the canvas width, with some wasted horizontal
+    space
+  - Y-axis spine could be lightened or styled further for additional visual refinement
+  image_description: 'The plot displays a hydrogen atom energy level diagram on a
+    white background. Six horizontal blue (#306998) lines represent energy levels
+    n=1 through n=6, positioned vertically using a sqrt-compressed nonlinear energy
+    scale. Each level is labeled on the right with its quantum number and energy value
+    (e.g., "n=1 (-13.60 eV)"). A dashed gray line at y=0 marks the ionization limit
+    labeled "Ionization (0 eV)". Three spectral series are spatially separated: on
+    the left, three downward purple-gradient arrows represent the Lyman series (UV)
+    transitions (Lyα 121.6 nm, Lyβ 102.6 nm, Lyγ 97.3 nm); center-right, four downward
+    arrows represent the Balmer series (Visible) with distinct colors (Hα 656.3 nm
+    in red, Hβ 486.1 nm in blue, Hγ 434.0 nm in purple, Hδ 410.2 nm in dark purple);
+    far-right, three downward orange/dark-red arrows represent the Paschen series
+    (IR) (Paα 1875 nm, Paβ 1282 nm, Paγ 1094 nm). Bold colored series headers appear
+    at the top. The y-axis shows "Energy (eV)" with custom nonlinear ticks. The x-axis
+    is hidden. The title reads "energy-level-atomic · bokeh · pyplots.ai".'
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 36pt, axis label 28pt, ticks
+          22pt, level labels 22pt, transition labels 20pt, series headers 26pt bold'
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Almost all text well-spaced with y_offset for n=5/n=6. Minor visual
+          density in Balmer/Paschen transition label region but no actual overlap
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Energy level lines thick (line_width=6), arrows clearly visible (line_width=4,
+          NormalHead size=25). All elements well-adapted to canvas
+      - id: VQ-04
+        name: Color Accessibility
+        score: 3
+        max: 4
+        passed: true
+        comment: No red-green confusion. Three distinct color families. Lyman purple
+          shades improved but still rely on lightness variation within same hue
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good horizontal distribution with three series. Canvas utilization
+          ~55%. Level lines narrow relative to full width, some wasted space in lower-right
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Y-axis 'Energy (eV)' with units. X-axis appropriately hidden. Custom
+          nonlinear tick labels
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Physics-motivated color scheme, clean white background, intentional
+          typography hierarchy with bold colored series headers. Clearly above defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: X-axis/x-grid hidden, y-grid subtle (alpha=0.12), outline removed,
+          generous min_border settings. Good polish
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Excellent spatial narrative: left-to-right Lyman→Balmer→Paschen
+          creates reading order matching decreasing transition energy. Three landing
+          levels immediately apparent. Nonlinear axis shows convergence'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct energy level diagram with horizontal lines and vertical emission
+          arrows
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: partial-width lines, labels, emission
+          arrows, color coding, nonlinear scale, ionization line, series grouping'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Energy axis increases upward, levels positioned by E_n = -13.6/n²,
+          transitions connect correct levels
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title correctly formatted as 'energy-level-atomic · bokeh · pyplots.ai'.
+          Bold colored series headers serve as effective legend
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 6 energy levels, 10 transitions across 3 spectral series (Lyman UV,
+          Balmer visible, Paschen IR), ionization limit
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real hydrogen atom data with correct formula E_n = -13.6/n². Physically
+          accurate wavelengths. Textbook-quality physics
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Energy range -13.6 to 0 eV correct for hydrogen. Nonlinear sqrt-compression
+          appropriate for dynamic range
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean linear flow: imports → data → plot → style → save. No functions
+          or classes'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Fully deterministic: energy levels computed from physics formula,
+          no random data'
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: numpy, all bokeh models and io functions'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean organization with data tuples, loop over series, ColumnDataSource
+          usage. Appropriate complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png via export_png and plot.html via output_file/save.
+          Current Bokeh 3.8 API
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: ColumnDataSource for level data, figure with Range1d, segment/add_layout,
+          custom ticker with major_label_overrides. Proper Bokeh patterns
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: HoverTool with custom tooltips for interactive HTML, dual HTML+PNG
+          export, Arrow/NormalHead model, ColumnDataSource-HoverTool integration
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - hover-tooltips
+  - html-export
+  - manual-ticks
+  patterns:
+  - columndatasource
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - grid-styling

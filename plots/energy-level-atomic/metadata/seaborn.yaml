@@ -1,0 +1,238 @@
+library: seaborn
+specification_id: energy-level-atomic
+created: '2026-02-27T20:43:27Z'
+updated: '2026-02-27T21:09:40Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22502879493
+issue: 4434
+python_version: 3.14.3
+library_version: 0.13.2
+preview_url: https://storage.googleapis.com/pyplots-images/plots/energy-level-atomic/seaborn/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/energy-level-atomic/seaborn/plot_thumb.png
+preview_html: null
+quality_score: 90
+review:
+  strengths:
+  - Physically accurate hydrogen atom data with correct Rydberg formula values and
+    wavelengths
+  - Excellent spatial organization with three series in color-coded columns with subtle
+    background tints
+  - 'Strong design choices: custom palette, removed spines, clean typography, light
+    background tints via sns.light_palette'
+  - Spectral region labels (ultraviolet/visible/infrared) add meaningful scientific
+    context
+  - Nonlinear visual spacing keeps upper converging levels readable
+  - Clean, well-structured code with DataFrame-driven approach
+  weaknesses:
+  - Minor crowding of rotated wavelength labels in the Paschen column area
+  - Purple and blue colors could be closer in perception for some CVD types
+  image_description: 'The plot displays a hydrogen atom energy level diagram with
+    six horizontal dark lines (n=1 through n=6) at visually-spaced vertical positions,
+    labeled on the right with quantum numbers and energy values in eV. A dashed ionization
+    limit line sits at the top labeled "Ionization (0.00 eV)". Three spectral series
+    are organized in color-coded columns: Lyman series (purple, ultraviolet) on the
+    left with transitions to n=1, Balmer series (dark blue, visible) in the center
+    with transitions to n=2, and Paschen series (red, infrared) on the right with
+    transitions to n=3. Each transition is a downward arrow with a rotated wavelength
+    label in nm. Subtle background tints distinguish each series column. A vertical
+    "Energy" arrow on the far left indicates the energy direction. The title reads
+    "energy-level-atomic · seaborn · pyplots.ai" at the top. The background is a light
+    off-white (#FAFBFC) with clean, professional typography throughout.'
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 26pt, labels 20pt, wavelengths
+          16pt). Rotated wavelength labels slightly tight in dense areas.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: No severe overlap. Some visual crowding of wavelength labels in Paschen
+          column area.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Lines, arrows, endpoints, and ionization line all clearly visible
+          and well-sized.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 3
+        max: 4
+        passed: true
+        comment: Purple/blue/red palette provides reasonable luminance contrast. Purple
+          and blue could be somewhat close for certain CVD types.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good use of 16:9 canvas. Energy levels span full width, labels well-positioned.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Energy direction arrow with label, eV units on each level. Appropriate
+          for schematic diagram.
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Strong design: custom palette, subtle background tints, clean typography,
+          intentional color hierarchy.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: All spines removed, no grid (appropriate), subtle alpha=0.12 tints,
+          clean endpoint dots, generous whitespace.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Three series spatially grouped and color-coded, spectral region labels
+          add context, energy arrow orients viewer, clear visual hierarchy.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct energy level diagram with horizontal lines and transition
+          arrows.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: partial-width lines, labels, emission
+          arrows, color coding, ionization limit, nonlinear spacing.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Energy increases upward, correct relative positions, transitions
+          connect correct levels.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct title format. Series labels at top serve as legend with matching
+          colors.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Six levels, three spectral series, nine transitions, ionization limit.
+          Comprehensive.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real hydrogen atom physics with correct Rydberg formula values and
+          wavelengths.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: All energy and wavelength values match hydrogen Rydberg formula precisely.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports, theme, data, figure, plot elements, save.
+          No functions or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: All data deterministic (hardcoded physical constants). No random
+          elements.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: matplotlib.pyplot, pandas, seaborn — all used. No unused imports.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean organization, DataFrame for transitions, well-commented. No
+          fake UI.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png at dpi=300. Uses current sns.set_theme() API.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses sns.set_theme, sns.lineplot, sns.scatterplot with DataFrames,
+          sns.despine, sns.color_palette. Some reliance on matplotlib annotate unavoidable
+          for diagram type.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: sns.light_palette for background tints is distinctively seaborn.
+          sns.set_theme with context/font_scale. Core visualization relies on matplotlib
+          annotations.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  - explicit-figure
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - alpha-blending
