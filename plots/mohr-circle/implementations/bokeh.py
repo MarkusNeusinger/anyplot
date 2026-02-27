@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 mohr-circle: Mohr's Circle for Stress Analysis
 Library: bokeh 3.8.2 | Python 3.14.3
 Quality: 81/100 | Created: 2026-02-27
@@ -6,7 +6,7 @@ Quality: 81/100 | Created: 2026-02-27
 
 import numpy as np
 from bokeh.io import export_png, output_file, save
-from bokeh.models import Label, Span
+from bokeh.models import ColumnDataSource, HoverTool, Label, Span
 from bokeh.plotting import figure
 
 
@@ -33,6 +33,37 @@ circle_y = radius * np.sin(theta)
 ax_pt = (sigma_x, tau_xy)  # Point A
 bx_pt = (sigma_y, -tau_xy)  # Point B
 
+# Data sources for interactive features
+principal_source = ColumnDataSource(
+    data={
+        "x": [sigma_1, sigma_2],
+        "y": [0, 0],
+        "label": ["σ₁ (Major Principal)", "σ₂ (Minor Principal)"],
+        "sigma": [f"{sigma_1:.1f}", f"{sigma_2:.1f}"],
+        "tau": ["0.0", "0.0"],
+    }
+)
+
+shear_source = ColumnDataSource(
+    data={
+        "x": [center, center],
+        "y": [tau_max, -tau_max],
+        "label": ["τ_max (Top)", "τ_max (Bottom)"],
+        "sigma": [f"{center:.1f}", f"{center:.1f}"],
+        "tau": [f"{tau_max:.1f}", f"{-tau_max:.1f}"],
+    }
+)
+
+stress_source = ColumnDataSource(
+    data={
+        "x": [ax_pt[0], bx_pt[0]],
+        "y": [ax_pt[1], bx_pt[1]],
+        "label": ["Point A (σx, τxy)", "Point B (σy, -τxy)"],
+        "sigma": [f"{ax_pt[0]:.1f}", f"{bx_pt[0]:.1f}"],
+        "tau": [f"{ax_pt[1]:.1f}", f"{bx_pt[1]:.1f}"],
+    }
+)
+
 # Plot
 padding = radius * 0.55
 p = figure(
@@ -44,7 +75,7 @@ p = figure(
     x_range=(sigma_2 - padding, sigma_1 + padding),
     y_range=(-tau_max - padding, tau_max + padding),
     match_aspect=True,
-    toolbar_location=None,
+    toolbar_location="right",
     tools="",
 )
 
@@ -65,15 +96,25 @@ p.line(
 )
 
 # Principal stresses on horizontal axis
-p.scatter([sigma_1, sigma_2], [0, 0], size=18, color="#E74C3C", marker="diamond", line_color="white", line_width=2)
+principal_r = p.scatter(
+    "x", "y", source=principal_source, size=22, color="#E74C3C", marker="diamond", line_color="white", line_width=2
+)
 
-# Maximum shear stress at top and bottom
-p.scatter(
-    [center, center], [tau_max, -tau_max], size=18, color="#27AE60", marker="triangle", line_color="white", line_width=2
+# Maximum shear stress at top and bottom (colorblind-safe orange)
+shear_r = p.scatter(
+    "x", "y", source=shear_source, size=22, color="#E67E22", marker="triangle", line_color="white", line_width=2
 )
 
 # Stress points A and B
-p.scatter([ax_pt[0], bx_pt[0]], [ax_pt[1], bx_pt[1]], size=20, color="#306998", line_color="white", line_width=2)
+stress_r = p.scatter("x", "y", source=stress_source, size=24, color="#306998", line_color="white", line_width=2)
+
+# HoverTool for interactive stress readouts
+hover = HoverTool(
+    renderers=[principal_r, shear_r, stress_r],
+    tooltips=[("Point", "@label"), ("σ (MPa)", "@sigma"), ("τ (MPa)", "@tau")],
+    mode="mouse",
+)
+p.add_tools(hover)
 
 # Angle arc for 2θp from point A to σ1 axis
 angle_2tp = np.arctan2(tau_xy, sigma_x - center)  # angle from center to point A
@@ -113,7 +154,7 @@ p.add_layout(
         y=tau_max + offset_lg * 0.5,
         text=f"τ_max = {tau_max:.1f} MPa",
         text_font_size="20pt",
-        text_color="#27AE60",
+        text_color="#E67E22",
     )
 )
 p.add_layout(
@@ -122,7 +163,7 @@ p.add_layout(
         y=-tau_max - offset_lg * 0.5,
         text=f"τ_max = {tau_max:.1f} MPa",
         text_font_size="20pt",
-        text_color="#27AE60",
+        text_color="#E67E22",
         text_baseline="top",
     )
 )
@@ -188,13 +229,15 @@ p.ygrid.grid_line_width = 1
 p.outline_line_color = None
 p.background_fill_color = "#FFFFFF"
 
-# Remove top and right spines
 p.xaxis.axis_line_width = 2
 p.yaxis.axis_line_width = 2
 p.xaxis.minor_tick_line_color = None
 p.yaxis.minor_tick_line_color = None
 
-# Save
-export_png(p, filename="plot.png")
+# Save HTML with interactive features (toolbar visible for hover)
 output_file("plot.html")
 save(p)
+
+# Save PNG without toolbar
+p.toolbar_location = None
+export_png(p, filename="plot.png")
