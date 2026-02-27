@@ -1,7 +1,7 @@
 library: plotnine
 specification_id: energy-level-atomic
 created: '2026-02-27T20:49:01Z'
-updated: '2026-02-27T21:15:26Z'
+updated: '2026-02-27T21:34:20Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 22502879662
 issue: 4434
@@ -10,41 +10,44 @@ library_version: 0.15.3
 preview_url: https://storage.googleapis.com/pyplots-images/plots/energy-level-atomic/plotnine/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/energy-level-atomic/plotnine/plot_thumb.png
 preview_html: null
-quality_score: 86
+quality_score: 87
 review:
   strengths:
-  - Perfect spec compliance with all required features (energy levels, transitions,
-    ionization limit, labels)
-  - Physically accurate hydrogen atom data with correct energies and wavelengths
-  - Clever connector-line approach to avoid label overlap in crowded upper levels
-  - Clean, well-organized code with deterministic data generation
-  - Strong design with custom color palette and intentional visual hierarchy between
-    series
-  - Good use of plotnine annotate() for fixed reference elements
+  - Excellent spec compliance with all required features including nonlinear scale,
+    ionization limit, partial-width lines, and color-coded transitions
+  - Strong data storytelling with shaded series bands, color grouping (cool=UV, warm=visible),
+    and contextual wavelength labels
+  - Physically accurate data using real hydrogen atom energy levels and spectral wavelengths
+  - 'Thoughtful visual refinement: subtle grid, removed x-axis, off-white background,
+    connector lines to spread labels'
+  - Colorblind-safe palette with intentional warm/cool distinction between series
   weaknesses:
-  - Linear energy scale causes crowded upper levels (n=4,5,6) and large empty gap
-    between n=1 and n=2
-  - Some blue transition colors (Ly-beta and H-beta) could be difficult to distinguish
-    for colorblind viewers
-  - Annotation text at size=9 could be slightly larger for optimal readability at
-    full resolution
-  image_description: 'The plot displays a hydrogen atom energy level diagram on a
-    light gray (#FAFBFC) background. Six horizontal dark blue (#306998) lines represent
-    energy levels from n=1 (-13.60 eV) at the bottom to n=6 (-0.38 eV) near the top,
-    each terminated with small blue dots. A dashed gray line at 0 eV marks the ionization
-    limit. Right-side labels (e.g., "n = 1 (-13.60 eV)") are connected to their levels
-    via thin gray connector lines, cleverly spread vertically to avoid overlap in
-    the crowded upper region. Six colored downward arrows represent emission transitions:
-    three for the Lyman series (UV) in purple (Ly-alpha 122 nm), blue (Ly-beta 103
-    nm), and pink (Ly-gamma 97 nm) going to n=1; and three for the Balmer series (visible)
-    in red (H-alpha 656 nm), sky blue (H-beta 486 nm), and orange (H-gamma 434 nm)
-    going to n=2. Series group labels at top read "Lyman Series (UV)" in purple and
-    "Balmer Series (Visible)" in red. The y-axis is labeled "Energy (eV)" with ticks
-    at -13.6, -3.4, -1.5, -0.85, and 0. The title follows the required format: "energy-level-atomic
-    · plotnine · pyplots.ai" with a descriptive subtitle.'
+  - Helper function vis() slightly breaks KISS structure (though justified for the
+    nonlinear transformation)
+  - Purple and deep indigo arrows (Ly-alpha, Ly-beta) are somewhat similar perceptually
+  - Annotation text (geom_text size=10) is slightly small relative to 4800x2700 target
+    resolution
+  - Library mastery could be improved by leveraging more plotnine-specific features
+  image_description: 'The plot displays an atomic energy level diagram for the hydrogen
+    atom on a light off-white background (#FAFBFC). Six horizontal blue (#306998)
+    energy level lines span partial width of the plot (from ~15% to ~78% of the canvas),
+    each terminated with blue endpoint dots. The levels are positioned using a nonlinear
+    (signed sqrt) vertical scale, with the y-axis labeled "Energy (eV)" showing tick
+    marks at -13.6, -3.4, -1.5, -0.85, and 0. Right-side labels connected by subtle
+    gray lines identify each level (e.g., "n = 1 (-13.60 eV)" through "n = 6 (-0.38
+    eV)"). A dashed gray line at 0 eV marks the ionization limit. Six downward arrows
+    represent emission transitions: three Lyman series (UV) arrows in purple (#7B2FBE,
+    Ly-α 122 nm), deep indigo (#4338CA, Ly-β 103 nm), and magenta (#DB2777, Ly-γ 97
+    nm); and three Balmer series (Visible) arrows in red (#DC2626, Hα 656 nm), emerald
+    (#059669, Hβ 486 nm), and amber (#D97706, Hγ 434 nm). Each arrow is labeled with
+    its series name and wavelength. Subtle shaded bands (light purple for Lyman, light
+    red for Balmer) group the transitions visually. Series group labels ("Lyman Series
+    (UV)" and "Balmer Series (Visible)") appear at the top in matching colors. The
+    title reads "energy-level-atomic · plotnine · pyplots.ai" in bold, with a subtitle
+    "Hydrogen Atom Emission Spectrum — Lyman (UV) & Balmer (Visible) Series".'
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 26
       max: 30
       items:
       - id: VQ-01
@@ -52,46 +55,45 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=24, subtitle=14, axis_title_y=20,
-          axis_text_y=16). geom_text annotations at size=9 are readable but slightly
-          small.
+        comment: All font sizes explicitly set (title=24, subtitle=15, axis title=20,
+          ticks=16). Annotation text (size=10-11) is readable but slightly small.
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Clever connector-line approach spreads crowded upper-level labels.
-          Minor tightness where n=4/5/6 converge.
+        comment: Minor crowding between n=5/n=6 labels addressed with manual nudging.
+          Hγ label area slightly tight.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Level lines, endpoint dots, and transition arrows clearly visible.
-          Upper three levels nearly overlapping on linear scale.
+        comment: Energy level lines (size=2.0), endpoint dots (size=3), transition
+          arrows (size=1.2) with closed arrowheads all clearly visible.
       - id: VQ-04
         name: Color Accessibility
         score: 3
         max: 4
         passed: true
-        comment: Good color variety but Ly-beta blue and H-beta sky blue could be
-          confused by colorblind viewers.
+        comment: Colorblind-safe palette chosen. Purple and deep indigo somewhat similar
+          perceptually but spatially separated.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good 16:9 utilization. Large vertical gap between n=1 and n=2 due
-          to linear scale.
+        comment: Good 16:9 layout. Minor wasted vertical space around n=1 due to sqrt
+          transformation.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Y-axis: Energy (eV) with units. X-axis appropriately hidden. Title
+        comment: 'Y-axis: Energy (eV) with units. X-axis hidden (appropriate). Title
           in correct format.'
     design_excellence:
-      score: 14
+      score: 16
       max: 20
       items:
       - id: DE-01
@@ -99,22 +101,22 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom color palette, intentional hierarchy, connector-line approach,
-          light gray background. Clearly above defaults.
+        comment: Strong design with custom warm/cool color palette, Python Blue levels,
+          off-white background, color-coded series labels, typography hierarchy.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: theme_minimal base with subtle grid (alpha=0.15), x-axis removed,
-          endpoint dots for polish, light background.
+        comment: theme_minimal base, x-axis removed, y-grid alpha=0.12, off-white
+          background, generous whitespace, subtle connector lines.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Clear hierarchy separating Lyman (UV, cool tones) and Balmer (visible,
-          warm tones) series with group labels.
+        comment: Shaded bands group series, color coding connects arrows to series,
+          wavelength labels add physical meaning, nonlinear scale reveals convergence.
     spec_compliance:
       score: 15
       max: 15
@@ -131,22 +133,22 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: partial-width lines, emission arrows,
-          color-coded transitions, ionization limit.'
+        comment: 'All spec features present: partial-width lines, quantum labels,
+          emission arrows, color-coded transitions, ionization limit, nonlinear scale.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis correctly maps energy in eV. Levels at -13.6/n-squared. Transitions
-          connect correct levels.
+        comment: Y-axis correctly maps energy (eV) with nonlinear transformation.
+          All data visible and correctly placed.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Series group labels and transition labels serve
-          as legend.
+        comment: 'Title: energy-level-atomic · plotnine · pyplots.ai. Inline color-coded
+          labels serve as legend with series group labels.'
     data_quality:
       score: 15
       max: 15
@@ -156,57 +158,62 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Six energy levels, two spectral series (3 transitions each), ionization
-          limit. UV and visible emission.
+        comment: Shows 6 energy levels, two spectral series (Lyman UV + Balmer visible),
+          emission arrows, wavelengths, ionization limit, level convergence.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real hydrogen atom physics with correct formula. Actual spectral
-          series names and wavelengths.
+        comment: 'Real hydrogen atom physics: E = -13.6/n² eV, actual spectral series
+          names and correct wavelengths. Science/education domain.'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Physically correct energy values and transition wavelengths.
+        comment: Energy values follow correct hydrogen formula. Wavelengths match
+          known spectral lines. All values physically accurate.
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: Clean Imports to Data to Plot to Save flow with no functions or classes.
+        comment: Mostly flat structure but defines a vis() helper function for nonlinear
+          transformation. Justified by reuse but breaks strict KISS.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic data from En = -13.6/n-squared formula.
+        comment: 'Fully deterministic: energy levels computed from formula (-13.6/n²),
+          no random data.'
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All plotnine imports used. numpy and pandas imported and used.
+        comment: 'All imports used: numpy, pandas, and all plotnine components referenced
+          in code.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-organized DataFrames, dictionary mapping, appropriate complexity.
+        comment: Clean, well-organized code with good DataFrame usage for plotnine
+          grammar. No fake functionality.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png at 300 dpi. Uses current plotnine 0.15.3 API.
+        comment: Saves as plot.png at 300 dpi. Uses current plotnine API.
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -214,25 +221,26 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good grammar of graphics usage with layered composition, aes(), annotate(),
-          scale_color_identity(), coord_cartesian().
+        comment: 'Good grammar of graphics: layered composition, aes() mappings, scale_*_identity(),
+          annotate(), coord_cartesian(), full theme system.'
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: true
-        comment: Uses annotate() for fixed elements, arrow() in geom_segment, layered
-          grammar composition characteristic of ggplot.
-  verdict: REJECTED
+        passed: false
+        comment: Uses grammar-of-graphics layering and identity scales characteristic
+          of plotnine, but no truly unique features (stat transformations, faceting,
+          etc.).
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - layer-composition
-  - custom-legend
+  - manual-ticks
   patterns:
   - data-generation
   dataprep: []
   styling:
   - grid-styling
-  - minimal-chrome
+  - alpha-blending
