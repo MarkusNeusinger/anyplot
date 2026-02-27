@@ -1,0 +1,239 @@
+library: letsplot
+specification_id: mohr-circle
+created: '2026-02-27T22:07:39Z'
+updated: '2026-02-27T22:34:27Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22505483008
+issue: 4432
+python_version: 3.14.3
+library_version: 4.8.2
+preview_url: https://storage.googleapis.com/pyplots-images/plots/mohr-circle/letsplot/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/mohr-circle/letsplot/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/mohr-circle/letsplot/plot.html
+quality_score: 90
+review:
+  strengths:
+  - Complete spec compliance with all required Mohr's Circle features correctly implemented
+  - Strong visual hierarchy through color-coded stress categories and shape differentiation
+  - Intentional colorblind-safe palette with redundant shape encoding
+  - Excellent use of lets-plot layer_tooltips() for interactive hover details
+  - Realistic engineering context with mathematically correct stress values
+  - Clean, deterministic code with logical organization
+  weaknesses:
+  - Annotation text size (14) is slightly smaller than ideal; center label (13) is
+    inconsistent with other annotations
+  - Minor label proximity in the upper region between point A label and tau_max label
+  - Canvas utilization slightly constrained by coord_fixed() forcing whitespace in
+    corners
+  image_description: 'The plot shows a Mohr''s Circle for stress analysis rendered
+    on a white panel with a light off-white (#FAFAFA) background. The circle is drawn
+    in steel blue (#306998) with a very light blue fill and a solid outline (size
+    1.8, alpha 0.85). The center is at C (25, 0) marked with a small blue X. Two red
+    circular markers represent the input stress points: A (σx, τxy) = (80, 50) in
+    the upper right and B (σy, −τxy) = (−30, −50) in the lower left. Teal diamond
+    markers on the horizontal axis mark the principal stresses σ₁ = 99.3 (right) and
+    σ₂ = −49.3 (left). Orange/amber triangle markers at the top and bottom of the
+    circle mark τ_max = 74.3 and −τ_max = −74.3. A dashed gray diameter line connects
+    points A and B. Dashed light gray reference lines pass through the center both
+    horizontally and vertically. An orange arc near the center shows the principal
+    plane angle 2θp = 42.3°. The title "mohr-circle · letsplot · pyplots.ai" is bold
+    at the top, with an italic subtitle providing the full stress state and computed
+    results. Axes are labeled "Normal Stress σ (MPa)" and "Shear Stress τ (MPa)".
+    A subtle major grid with no minor grid provides readability. The circle appears
+    as a true circle due to coord_fixed(). All annotation labels use color-matched
+    text near their respective points.'
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title=24, subtitle=16, axis_title=20,
+          axis_text=16, annotations=14, center=13). Center label slightly smaller
+          than other annotations.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: All labels readable with no text-on-text collision. Minor proximity
+          between A label and tau_max label area.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All markers well-sized with different shapes (circle, diamond, triangle,
+          X) for excellent differentiation.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Colorblind-safe palette with redundant shape encoding for accessibility.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good use of canvas with coord_fixed(). Some inherent whitespace in
+          corners due to equal aspect ratio constraint.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive labels with units and Unicode symbols.
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Strong design with custom palette, professional typography hierarchy,
+          subtle circle fill, custom background.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Good refinement: minor grid removed, major grid subtle, custom panel
+          background, generous margins.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Excellent visual hierarchy through color-coded stress categories,
+          shape differentiation, contextual subtitle, angle arc.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Mohr's Circle on sigma-tau plane with proper geometric construction.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: circle, principal stresses, max shear,
+          stress points A/B, angle 2theta_p, equal aspect ratio, grid and reference
+          lines.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=Normal Stress, Y=Shear Stress. All points correctly positioned.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct title format. No legend needed; all points labeled directly.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all aspects: principal stresses, max shear, input points,
+          center, diameter, angle. Mixed tension/compression.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Beam under combined loading with plausible MPa values for structural
+          steel.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values in tens-of-MPa range, sensible for structural engineering.
+          All computed values mathematically correct.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports, data, calculations, DataFrames, plot, save.
+          No functions/classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic with hardcoded values and analytical computation.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used. Wildcard import is standard for lets-plot.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-organized. Separate DataFrames per category. No fake
+          functionality.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot.png via export_ggsave with scale=3. Also exports HTML.
+          Current API.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Proper ggplot2-style grammar with multiple geom layers, aes(), coord_fixed(),
+          theme customization, labs(), ggsize().
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses layer_tooltips() with structured .line() calls for interactive
+          hover — distinctive lets-plot feature. Dual PNG+HTML export.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling
