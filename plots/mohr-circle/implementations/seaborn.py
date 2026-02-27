@@ -1,7 +1,6 @@
-""" pyplots.ai
+"""pyplots.ai
 mohr-circle: Mohr's Circle for Stress Analysis
 Library: seaborn 0.13.2 | Python 3.14.3
-Quality: 87/100 | Created: 2026-02-27
 """
 
 import matplotlib.pyplot as plt
@@ -14,6 +13,15 @@ from matplotlib.lines import Line2D
 # Style
 sns.set_style("whitegrid")
 sns.set_context("talk", font_scale=1.2)
+
+# Colorblind-safe palette via seaborn (teal replaces green to avoid red-green pair)
+element_names = ["Stress State (A, B)", "Principal Stress (\u03c3\u2081, \u03c3\u2082)", "Max Shear (\u03c4max)"]
+element_palette = dict(zip(element_names, sns.color_palette(["#C0392B", "#2CA5A5", "#E67E22"]), strict=True))
+element_markers = {
+    "Stress State (A, B)": "o",
+    "Principal Stress (\u03c3\u2081, \u03c3\u2082)": "D",
+    "Max Shear (\u03c4max)": "s",
+}
 
 # Data - stress state for a beam under combined loading
 sigma_x = 80
@@ -33,29 +41,45 @@ theta = np.linspace(0, 2 * np.pi, 360)
 circle_sigma = center + radius * np.cos(theta)
 circle_tau = radius * np.sin(theta)
 
-# Stress points as DataFrame for seaborn
-stress_df = pd.DataFrame({"sigma": [sigma_x, sigma_y], "tau": [tau_xy, -tau_xy], "point": ["A", "B"]})
+# All key points in a single DataFrame for seaborn semantic mapping
+points_df = pd.DataFrame(
+    {
+        "sigma": [sigma_x, sigma_y, sigma_1, sigma_2, center, center],
+        "tau": [tau_xy, -tau_xy, 0, 0, tau_max, -tau_max],
+        "Element": [
+            "Stress State (A, B)",
+            "Stress State (A, B)",
+            "Principal Stress (\u03c3\u2081, \u03c3\u2082)",
+            "Principal Stress (\u03c3\u2081, \u03c3\u2082)",
+            "Max Shear (\u03c4max)",
+            "Max Shear (\u03c4max)",
+        ],
+    }
+)
 
 # Plot
 fig, ax = plt.subplots(figsize=(12, 12))
 
-# Mohr's circle
+# Mohr's circle with subtle fill
 ax.plot(circle_sigma, circle_tau, color="#306998", linewidth=3, zorder=3)
-ax.fill(circle_sigma, circle_tau, color="#306998", alpha=0.05, zorder=1)
+ax.fill(circle_sigma, circle_tau, color="#306998", alpha=0.04, zorder=1)
 
-# Reference lines
+# Reference lines through center
 ax.axhline(y=0, color="#555555", linewidth=1.2, zorder=2)
 ax.axvline(x=center, color="#aaaaaa", linewidth=1, linestyle="--", alpha=0.5, zorder=2)
 
 # Diameter line connecting A and B
-ax.plot([sigma_x, sigma_y], [tau_xy, -tau_xy], color="#C0392B", linewidth=2, linestyle="--", alpha=0.6, zorder=3)
+ax.plot([sigma_x, sigma_y], [tau_xy, -tau_xy], color="#C0392B", linewidth=1.8, linestyle="--", alpha=0.5, zorder=3)
 
-# Stress points A and B
+# All categorized points via seaborn scatterplot with hue + style semantic mapping
 sns.scatterplot(
-    data=stress_df,
+    data=points_df,
     x="sigma",
     y="tau",
-    color="#C0392B",
+    hue="Element",
+    style="Element",
+    markers=element_markers,
+    palette=element_palette,
     s=300,
     edgecolor="white",
     linewidth=2,
@@ -64,89 +88,104 @@ sns.scatterplot(
     legend=False,
 )
 
-# Principal stresses on the horizontal axis
-ax.scatter([sigma_1, sigma_2], [0, 0], s=300, color="#27AE60", edgecolors="white", linewidth=2, zorder=5, marker="D")
+# Center point
+ax.scatter([center], [0], s=180, color="#306998", edgecolors="white", linewidth=2, zorder=5)
 
-# Maximum shear stress points at top and bottom of circle
-ax.scatter(
-    [center, center], [tau_max, -tau_max], s=300, color="#E67E22", edgecolors="white", linewidth=2, zorder=5, marker="s"
+# --- Annotations with graduated visual hierarchy ---
+
+# Input stress state info (data storytelling context)
+info_text = f"\u03c3x = {sigma_x} MPa\n\u03c3y = {sigma_y} MPa\n\u03c4xy = {tau_xy} MPa"
+ax.text(
+    0.98,
+    0.98,
+    info_text,
+    transform=ax.transAxes,
+    fontsize=13,
+    verticalalignment="top",
+    horizontalalignment="right",
+    bbox={"boxstyle": "round,pad=0.5", "facecolor": "#f8f9fa", "edgecolor": "#cccccc", "alpha": 0.85},
+    family="monospace",
+    linespacing=1.5,
 )
 
-# Center point
-ax.scatter([center], [0], s=200, color="#306998", edgecolors="white", linewidth=2, zorder=5)
+# Center label (tertiary emphasis)
 ax.annotate(
     f"C ({center:.0f}, 0)",
     xy=(center, 0),
-    xytext=(center - 5, -radius * 0.25),
-    fontsize=14,
+    xytext=(center - 8, -radius * 0.28),
+    fontsize=13,
     color="#306998",
     ha="right",
-    arrowprops={"arrowstyle": "->", "color": "#306998", "lw": 1.5},
+    arrowprops={"arrowstyle": "->", "color": "#306998", "lw": 1.2},
     zorder=6,
 )
 
-# Annotate stress point A
+# Stress point A (secondary emphasis)
 ax.annotate(
     f"A ({sigma_x}, {tau_xy})",
     xy=(sigma_x, tau_xy),
-    xytext=(sigma_x - 15, tau_xy + 18),
+    xytext=(sigma_x + 12, tau_xy + 22),
     fontsize=15,
     fontweight="bold",
     color="#C0392B",
-    ha="right",
+    ha="left",
     arrowprops={"arrowstyle": "->", "color": "#C0392B", "lw": 1.5},
     zorder=6,
 )
 
-# Annotate stress point B
+# Stress point B (secondary emphasis)
 ax.annotate(
     f"B ({sigma_y}, {-tau_xy})",
     xy=(sigma_y, -tau_xy),
-    xytext=(sigma_y + 20, -tau_xy - 22),
+    xytext=(sigma_y + 18, -tau_xy - 20),
     fontsize=15,
     fontweight="bold",
     color="#C0392B",
+    ha="left",
     arrowprops={"arrowstyle": "->", "color": "#C0392B", "lw": 1.5},
     zorder=6,
 )
 
-# Annotate principal stresses
+# Principal stresses (PRIMARY emphasis - boxed, larger font, prominent arrows)
 ax.annotate(
     f"\u03c3\u2081 = {sigma_1:.1f} MPa",
     xy=(sigma_1, 0),
-    xytext=(sigma_1 - 20, radius * 0.5),
-    fontsize=15,
+    xytext=(center + radius * 0.45, -radius * 0.48),
+    fontsize=16,
     fontweight="bold",
-    color="#27AE60",
+    color="#2CA5A5",
     ha="center",
-    arrowprops={"arrowstyle": "->", "color": "#27AE60", "lw": 1.5},
+    arrowprops={"arrowstyle": "-|>", "color": "#2CA5A5", "lw": 2, "mutation_scale": 15},
+    bbox={"boxstyle": "round,pad=0.3", "facecolor": "white", "edgecolor": "#2CA5A5", "alpha": 0.85},
     zorder=6,
 )
 
 ax.annotate(
     f"\u03c3\u2082 = {sigma_2:.1f} MPa",
     xy=(sigma_2, 0),
-    xytext=(sigma_2 + 20, radius * 0.35),
-    fontsize=15,
+    xytext=(center - radius * 0.45, -radius * 0.48),
+    fontsize=16,
     fontweight="bold",
-    color="#27AE60",
-    arrowprops={"arrowstyle": "->", "color": "#27AE60", "lw": 1.5},
+    color="#2CA5A5",
+    ha="center",
+    arrowprops={"arrowstyle": "-|>", "color": "#2CA5A5", "lw": 2, "mutation_scale": 15},
+    bbox={"boxstyle": "round,pad=0.3", "facecolor": "white", "edgecolor": "#2CA5A5", "alpha": 0.85},
     zorder=6,
 )
 
-# Annotate maximum shear stress
+# Max shear stress (secondary emphasis)
 ax.annotate(
     f"\u03c4max = {tau_max:.1f} MPa",
     xy=(center, tau_max),
-    xytext=(center + radius * 0.55, tau_max - 5),
-    fontsize=15,
+    xytext=(center + radius * 0.6, tau_max + 8),
+    fontsize=14,
     fontweight="bold",
     color="#E67E22",
     arrowprops={"arrowstyle": "->", "color": "#E67E22", "lw": 1.5},
     zorder=6,
 )
 
-# Draw 2theta_p angle arc from horizontal to point A direction
+# 2θp angle arc
 arc_angles = np.linspace(0, np.radians(two_theta_p), 50)
 arc_r = radius * 0.3
 arc_x = center + arc_r * np.cos(arc_angles)
@@ -158,7 +197,7 @@ ax.text(
     center + arc_r * 1.45 * np.cos(mid_angle),
     arc_r * 1.45 * np.sin(mid_angle),
     f"2\u03b8p = {two_theta_p:.1f}\u00b0",
-    fontsize=15,
+    fontsize=14,
     fontweight="bold",
     color="#8E44AD",
     ha="left",
@@ -166,35 +205,57 @@ ax.text(
 )
 
 # Legend
-legend_elements = [
+legend_handles = [
     Line2D([0], [0], color="#306998", linewidth=3, label="Mohr's Circle"),
-    Line2D([0], [0], marker="o", color="w", markerfacecolor="#C0392B", markersize=12, label="Stress States (A, B)"),
+    Line2D(
+        [0],
+        [0],
+        marker="o",
+        color="w",
+        markerfacecolor="#C0392B",
+        markersize=12,
+        markeredgecolor="white",
+        markeredgewidth=1.5,
+        label="Stress State (A, B)",
+    ),
     Line2D(
         [0],
         [0],
         marker="D",
         color="w",
-        markerfacecolor="#27AE60",
+        markerfacecolor="#2CA5A5",
         markersize=12,
-        label="Principal Stresses (\u03c3\u2081, \u03c3\u2082)",
+        markeredgecolor="white",
+        markeredgewidth=1.5,
+        label="Principal Stress (\u03c3\u2081, \u03c3\u2082)",
     ),
     Line2D(
-        [0], [0], marker="s", color="w", markerfacecolor="#E67E22", markersize=12, label="Max Shear Stress (\u03c4max)"
+        [0],
+        [0],
+        marker="s",
+        color="w",
+        markerfacecolor="#E67E22",
+        markersize=12,
+        markeredgecolor="white",
+        markeredgewidth=1.5,
+        label="Max Shear (\u03c4max)",
     ),
     Line2D([0], [0], color="#8E44AD", linewidth=2.5, label="Principal Angle (2\u03b8p)"),
 ]
-ax.legend(handles=legend_elements, fontsize=14, loc="lower left", framealpha=0.9, edgecolor="#cccccc")
+ax.legend(handles=legend_handles, fontsize=14, loc="lower left", framealpha=0.9, edgecolor="#cccccc")
 
-# Style
+# Axis labels and title
 ax.set_xlabel("Normal Stress \u03c3 (MPa)", fontsize=20)
 ax.set_ylabel("Shear Stress \u03c4 (MPa)", fontsize=20)
 ax.set_title("mohr-circle \u00b7 seaborn \u00b7 pyplots.ai", fontsize=24, fontweight="medium", pad=20)
 ax.tick_params(axis="both", labelsize=16)
 ax.set_aspect("equal")
-ax.spines["top"].set_visible(False)
-ax.spines["right"].set_visible(False)
-ax.grid(True, alpha=0.2, linewidth=0.8)
+
+# Seaborn visual refinement: despine + y-axis only grid
+sns.despine(ax=ax)
+ax.yaxis.grid(True, alpha=0.2, linewidth=0.8)
+ax.xaxis.grid(False)
 
 # Save
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+plt.savefig("plot.png", dpi=300, bbox_inches="tight", pad_inches=0.2)
