@@ -1,0 +1,240 @@
+library: matplotlib
+specification_id: energy-level-atomic
+created: '2026-02-27T20:45:31Z'
+updated: '2026-02-27T21:02:04Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22502879587
+issue: 4434
+python_version: 3.14.3
+library_version: 3.10.8
+preview_url: https://storage.googleapis.com/pyplots-images/plots/energy-level-atomic/matplotlib/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/energy-level-atomic/matplotlib/plot_thumb.png
+preview_html: null
+quality_score: 91
+review:
+  strengths:
+  - 'Excellent data storytelling: sqrt-compressed scale elegantly solves the level-convergence
+    problem while custom tick labels preserve real energy values'
+  - Strong spatial organization separating Lyman (left) and Balmer (right) series
+    for immediate visual comprehension
+  - Physically accurate hydrogen atom data with correct formula and spectral wavelengths
+  - Cohesive color scheme with spectral-inspired Balmer colors and warm gold Lyman
+    arrows
+  - Clean, well-structured code with no unnecessary complexity
+  weaknesses:
+  - Minor crowding at upper energy levels (n=4, n=5, n=6) where labels are close together
+  - H-gamma and H-delta arrow colors (blue-violet and purple) are somewhat similar,
+    potentially challenging for some viewers
+  image_description: 'The plot displays a hydrogen atom energy level diagram with
+    six horizontal blue lines representing energy levels n=1 through n=6, positioned
+    vertically using a sqrt-compressed energy scale. Each level is labeled on the
+    right with its quantum number (n = 1 through n = 6) and on the left with its energy
+    value in eV (-13.60 to -0.38 eV). A dashed gray line at 0 eV marks the ionization
+    limit. Lyman series transitions are shown as downward gold/orange arrows on the
+    left side connecting upper levels to n=1, while Balmer series transitions appear
+    on the right side as color-coded downward arrows to n=2: red (H-alpha 656 nm),
+    cyan-blue (H-beta 486 nm), blue-violet (H-gamma 434 nm), and purple (H-delta 410
+    nm). Italic series labels identify each group. A legend in the lower right lists
+    all transition colors with wavelengths. The y-axis is labeled "Energy (eV)" with
+    custom tick values. Top, right, and bottom spines are removed; a subtle y-axis
+    grid is present. The title reads "energy-level-atomic · matplotlib · pyplots.ai".'
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 24pt, axis label 20pt, ticks
+          16pt, level labels 16-18pt. All perfectly readable at full resolution.'
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Minor crowding at upper energy levels (n=4,5,6) where labels are
+          close together, but all text remains readable. Sqrt compression helps spread
+          them.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Energy level lines (linewidth=2.5) and transition arrows (linewidth=2.2)
+          are clearly visible with appropriately sized arrowheads.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 3
+        max: 4
+        passed: true
+        comment: 'Good overall: red, blue, gold well-separated. H-gamma (blue-violet)
+          and H-delta (purple) are somewhat similar but spatially separated.'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good proportions with 16:9 figsize, balanced margins, legend near
+          data, tight_layout applied.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Y-axis 'Energy (eV)' with units. X-axis correctly omitted. Title
+          in correct format.
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Cohesive color scheme with Python blue for levels, spectral colors
+          for Balmer, warm gold for Lyman. Medium-weight title, italic series labels.
+          Clearly above defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines removed (top/right/bottom), subtle grid (alpha=0.15), rounded
+          line caps, generous whitespace, custom y-ticks mapping compressed axis to
+          real values.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Spatial separation of Lyman (left) and Balmer (right) series. Color
+          coding conveys wavelength. Sqrt compression spreads converging levels. Viewer
+          immediately grasps structure.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct energy level diagram with horizontal lines and vertical transition
+          arrows.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features: partial-width lines, quantum labels, downward
+          emission arrows, color-coded by wavelength, grouped by series, nonlinear
+          scale, ionization line.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Y-axis = energy with sqrt-compressed display and real-value tick
+          labels. All 6 levels and 9 transitions visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct. Legend shows all Balmer line identifiers with
+          wavelengths plus Lyman series.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows 6 energy levels, 2 spectral series, 9 transitions, ionization
+          limit. Covers all key aspects.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real hydrogen atom energy levels using E_n = -13.6/n^2 eV. Correct
+          Balmer wavelengths. Authentic atomic physics context.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Physically correct energy values and wavelengths for hydrogen atom.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean Imports -> Data -> Plot -> Save flow. No functions or classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic data from analytical formula.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only three imports, all used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic. Good use of zip with strict=True, dictionary lookup
+          for y-positions.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with dpi=300 and bbox_inches='tight'. No deprecated
+          API.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Consistently uses Axes methods, proper figure/axes pattern, custom
+          tick placement.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses matplotlib-specific annotate with custom arrowprops, mpatches.Patch
+          for hand-crafted legend, solid_capstyle on lines.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  - manual-ticks
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - grid-styling
