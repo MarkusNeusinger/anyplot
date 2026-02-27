@@ -1,0 +1,33 @@
+# Specification-level metadata for bar-diverging-likert
+# Auto-synced to PostgreSQL on push to main
+
+spec_id: bar-diverging-likert
+title: Likert Scale Diverging Bar Chart
+
+# Specification tracking
+created: 2026-02-25T21:32:32Z
+updated: null
+issue: 4429
+suggested: MarkusNeusinger
+
+# Classification tags (applies to all library implementations)
+# See docs/reference/tagging-system.md for detailed guidelines
+tags:
+  plot_type:
+    - bar
+    - diverging
+  data_type:
+    - categorical
+    - ordinal
+    - numeric
+  domain:
+    - research
+    - business
+    - education
+  features:
+    - diverging
+    - stacked
+    - horizontal
+    - comparison
+    - annotated
+    - centered-baseline
