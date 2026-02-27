@@ -1,0 +1,26 @@
+# Specification-level metadata for heatmap-rainflow
+# Auto-synced to PostgreSQL on push to main
+
+spec_id: heatmap-rainflow
+title: Rainflow Counting Matrix for Fatigue Analysis
+
+# Specification tracking
+created: "2026-02-27T21:43:48Z"
+updated: null
+issue: 4465
+suggested: MarkusNeusinger
+
+# Classification tags (applies to all library implementations)
+# See docs/reference/tagging-system.md for detailed guidelines
+tags:
+  plot_type:
+    - heatmap
+  data_type:
+    - numeric
+    - matrix
+  domain:
+    - engineering
+    - science
+  features:
+    - color-mapped
+    - 2d
