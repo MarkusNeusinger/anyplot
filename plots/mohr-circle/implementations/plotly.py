@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 mohr-circle: Mohr's Circle for Stress Analysis
 Library: plotly 6.5.2 | Python 3.14.3
 Quality: 87/100 | Created: 2026-02-27
@@ -35,27 +35,25 @@ theta_2p = np.degrees(np.arctan2(tau_xy, (sigma_x - sigma_y) / 2))
 # Plot
 fig = go.Figure()
 
-# Reference lines through center
+# Reference lines through center (using layout.shapes for cleaner rendering)
 axis_pad = radius * 0.3
-fig.add_trace(
-    go.Scatter(
-        x=[sigma_2 - axis_pad, sigma_1 + axis_pad],
-        y=[0, 0],
-        mode="lines",
-        line=dict(color="rgba(0,0,0,0.15)", width=1.5),
-        showlegend=False,
-        hoverinfo="skip",
-    )
+fig.add_shape(
+    type="line",
+    x0=sigma_2 - axis_pad,
+    y0=0,
+    x1=sigma_1 + axis_pad,
+    y1=0,
+    line={"color": "rgba(0,0,0,0.15)", "width": 1.5},
+    layer="below",
 )
-fig.add_trace(
-    go.Scatter(
-        x=[center, center],
-        y=[-radius - axis_pad, radius + axis_pad],
-        mode="lines",
-        line=dict(color="rgba(0,0,0,0.15)", width=1.5),
-        showlegend=False,
-        hoverinfo="skip",
-    )
+fig.add_shape(
+    type="line",
+    x0=center,
+    y0=-radius - axis_pad,
+    x1=center,
+    y1=radius + axis_pad,
+    line={"color": "rgba(0,0,0,0.15)", "width": 1.5},
+    layer="below",
 )
 
 # Mohr's circle
@@ -64,7 +62,7 @@ fig.add_trace(
         x=sigma_circle,
         y=tau_circle,
         mode="lines",
-        line=dict(color="#306998", width=3.5),
+        line={"color": "#306998", "width": 3.5},
         name="Mohr's Circle",
         showlegend=False,
         fill="toself",
@@ -78,7 +76,7 @@ fig.add_trace(
         x=[point_a[0], point_b[0]],
         y=[point_a[1], point_b[1]],
         mode="lines",
-        line=dict(color="#306998", width=2, dash="dash"),
+        line={"color": "#306998", "width": 2, "dash": "dash"},
         showlegend=False,
         hoverinfo="skip",
     )
@@ -90,7 +88,7 @@ fig.add_trace(
         x=[point_a[0]],
         y=[point_a[1]],
         mode="markers",
-        marker=dict(size=14, color="#D94E41", line=dict(color="white", width=2)),
+        marker={"size": 14, "color": "#D94E41", "line": {"color": "white", "width": 2}},
         showlegend=False,
         hovertext=f"A (σx={sigma_x}, τxy={tau_xy})",
         hoverinfo="text",
@@ -101,7 +99,7 @@ fig.add_trace(
         x=[point_b[0]],
         y=[point_b[1]],
         mode="markers",
-        marker=dict(size=14, color="#D94E41", line=dict(color="white", width=2)),
+        marker={"size": 14, "color": "#D94E41", "line": {"color": "white", "width": 2}},
         showlegend=False,
         hovertext=f"B (σy={sigma_y}, τxy={-tau_xy})",
         hoverinfo="text",
@@ -114,22 +112,35 @@ fig.add_trace(
         x=[sigma_1, sigma_2],
         y=[0, 0],
         mode="markers",
-        marker=dict(size=14, color="#2D8E6F", symbol="diamond", line=dict(color="white", width=2)),
+        marker={"size": 14, "color": "#1F6FB5", "symbol": "diamond", "line": {"color": "white", "width": 2}},
         showlegend=False,
         hovertext=[f"σ₁ = {sigma_1:.1f} MPa", f"σ₂ = {sigma_2:.1f} MPa"],
         hoverinfo="text",
     )
 )
 
-# Maximum shear stress (top and bottom)
+# Maximum shear stress (top - triangle up)
 fig.add_trace(
     go.Scatter(
-        x=[center, center],
-        y=[tau_max, -tau_max],
+        x=[center],
+        y=[tau_max],
         mode="markers",
-        marker=dict(size=14, color="#E8910B", symbol="triangle-up", line=dict(color="white", width=2)),
+        marker={"size": 14, "color": "#E8910B", "symbol": "triangle-up", "line": {"color": "white", "width": 2}},
         showlegend=False,
-        hovertext=[f"τmax = {tau_max:.1f} MPa", f"−τmax = {-tau_max:.1f} MPa"],
+        hovertext=[f"τmax = {tau_max:.1f} MPa"],
+        hoverinfo="text",
+    )
+)
+
+# Maximum shear stress (bottom - triangle down)
+fig.add_trace(
+    go.Scatter(
+        x=[center],
+        y=[-tau_max],
+        mode="markers",
+        marker={"size": 14, "color": "#E8910B", "symbol": "triangle-down", "line": {"color": "white", "width": 2}},
+        showlegend=False,
+        hovertext=[f"−τmax = {-tau_max:.1f} MPa"],
         hoverinfo="text",
     )
 )
@@ -140,7 +151,7 @@ fig.add_trace(
         x=[center],
         y=[0],
         mode="markers",
-        marker=dict(size=10, color="#306998", symbol="x", line=dict(width=2)),
+        marker={"size": 10, "color": "#306998", "symbol": "x", "line": {"width": 2}},
         showlegend=False,
         hovertext=f"C ({center:.0f}, 0)",
         hoverinfo="text",
@@ -154,7 +165,7 @@ arc_x = center + arc_r * np.cos(arc_angles)
 arc_y = arc_r * np.sin(arc_angles)
 fig.add_trace(
     go.Scatter(
-        x=arc_x, y=arc_y, mode="lines", line=dict(color="#8B6AAF", width=2.5), showlegend=False, hoverinfo="skip"
+        x=arc_x, y=arc_y, mode="lines", line={"color": "#8B6AAF", "width": 2.5}, showlegend=False, hoverinfo="skip"
     )
 )
 
@@ -168,7 +179,7 @@ fig.add_annotation(
     arrowcolor="#D94E41",
     ax=40,
     ay=-35,
-    font=dict(size=17, color="#D94E41"),
+    font={"size": 17, "color": "#D94E41"},
 )
 fig.add_annotation(
     x=point_b[0],
@@ -179,16 +190,16 @@ fig.add_annotation(
     arrowcolor="#D94E41",
     ax=-40,
     ay=35,
-    font=dict(size=17, color="#D94E41"),
+    font={"size": 17, "color": "#D94E41"},
 )
 fig.add_annotation(
-    x=sigma_1, y=0, text=f"σ₁ = {sigma_1:.1f}", showarrow=False, yshift=-22, font=dict(size=17, color="#2D8E6F")
+    x=sigma_1, y=0, text=f"σ₁ = {sigma_1:.1f}", showarrow=False, yshift=-30, font={"size": 17, "color": "#1F6FB5"}
 )
 fig.add_annotation(
-    x=sigma_2, y=0, text=f"σ₂ = {sigma_2:.1f}", showarrow=False, yshift=-22, font=dict(size=17, color="#2D8E6F")
+    x=sigma_2, y=0, text=f"σ₂ = {sigma_2:.1f}", showarrow=False, yshift=-30, font={"size": 17, "color": "#1F6FB5"}
 )
 fig.add_annotation(
-    x=center, y=tau_max, text=f"τmax = {tau_max:.1f}", showarrow=False, yshift=18, font=dict(size=17, color="#E8910B")
+    x=center, y=tau_max, text=f"τmax = {tau_max:.1f}", showarrow=False, yshift=18, font={"size": 17, "color": "#E8910B"}
 )
 fig.add_annotation(
     x=center,
@@ -196,7 +207,7 @@ fig.add_annotation(
     text=f"−τmax = {-tau_max:.1f}",
     showarrow=False,
     yshift=-18,
-    font=dict(size=17, color="#E8910B"),
+    font={"size": 17, "color": "#E8910B"},
 )
 fig.add_annotation(
     x=center,
@@ -205,7 +216,7 @@ fig.add_annotation(
     showarrow=False,
     xshift=35,
     yshift=-18,
-    font=dict(size=15, color="#555555"),
+    font={"size": 17, "color": "#555555"},
 )
 
 # 2θp label
@@ -215,40 +226,40 @@ fig.add_annotation(
     y=arc_r * 1.4 * np.sin(mid_angle),
     text=f"2θp = {theta_2p:.1f}°",
     showarrow=False,
-    font=dict(size=16, color="#8B6AAF"),
+    font={"size": 16, "color": "#8B6AAF"},
 )
 
 # Style
 fig.update_layout(
-    title=dict(text="mohr-circle · plotly · pyplots.ai", font=dict(size=28), x=0.5),
-    xaxis=dict(
-        title=dict(text="Normal Stress σ (MPa)", font=dict(size=22)),
-        tickfont=dict(size=18),
-        showgrid=True,
-        gridcolor="rgba(0,0,0,0.08)",
-        gridwidth=1,
-        zeroline=True,
-        zerolinecolor="rgba(0,0,0,0.2)",
-        zerolinewidth=1.5,
-        scaleanchor="y",
-        scaleratio=1,
-    ),
-    yaxis=dict(
-        title=dict(text="Shear Stress τ (MPa)", font=dict(size=22)),
-        tickfont=dict(size=18),
-        showgrid=True,
-        gridcolor="rgba(0,0,0,0.08)",
-        gridwidth=1,
-        zeroline=True,
-        zerolinecolor="rgba(0,0,0,0.2)",
-        zerolinewidth=1.5,
-    ),
+    title={"text": "mohr-circle · plotly · pyplots.ai", "font": {"size": 28}, "x": 0.5},
+    xaxis={
+        "title": {"text": "Normal Stress σ (MPa)", "font": {"size": 22}},
+        "tickfont": {"size": 18},
+        "showgrid": True,
+        "gridcolor": "rgba(0,0,0,0.08)",
+        "gridwidth": 1,
+        "zeroline": True,
+        "zerolinecolor": "rgba(0,0,0,0.2)",
+        "zerolinewidth": 1.5,
+        "scaleanchor": "y",
+        "scaleratio": 1,
+    },
+    yaxis={
+        "title": {"text": "Shear Stress τ (MPa)", "font": {"size": 22}},
+        "tickfont": {"size": 18},
+        "showgrid": True,
+        "gridcolor": "rgba(0,0,0,0.08)",
+        "gridwidth": 1,
+        "zeroline": True,
+        "zerolinecolor": "rgba(0,0,0,0.2)",
+        "zerolinewidth": 1.5,
+    },
     plot_bgcolor="white",
     paper_bgcolor="white",
     showlegend=False,
     width=1200,
     height=1200,
-    margin=dict(l=80, r=80, t=100, b=80),
+    margin={"l": 65, "r": 50, "t": 85, "b": 65},
 )
 
 # Save
