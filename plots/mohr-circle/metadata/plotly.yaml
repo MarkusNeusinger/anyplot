@@ -1,0 +1,234 @@
+library: plotly
+specification_id: mohr-circle
+created: '2026-02-27T22:08:29Z'
+updated: '2026-02-27T22:35:05Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22505482846
+issue: 4432
+python_version: 3.14.3
+library_version: 6.5.2
+preview_url: https://storage.googleapis.com/pyplots-images/plots/mohr-circle/plotly/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/mohr-circle/plotly/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/mohr-circle/plotly/plot.html
+quality_score: 90
+review:
+  strengths:
+  - Excellent spec compliance with every requirement met and mathematically correct
+    computations
+  - Strong color-coded visual hierarchy distinguishing given state, derived quantities,
+    and geometric features
+  - Professional marker styling with white outlines and distinct symbols per element
+    type
+  - Clean, well-structured code with appropriate use of Plotly shapes and annotations
+  - Square format is the ideal choice for a circular diagram
+  weaknesses:
+  - 'Two blue shades (#306998 and #1F6FB5) are similar — could benefit from more differentiation'
+  - Visual refinement could be pushed further with typographic details
+  image_description: The plot displays a Mohr's Circle for stress analysis on a clean
+    white background. A dark blue circle (#306998) with a very subtle light blue fill
+    is centered at approximately (20, 0) with radius ~67. The title "mohr-circle ·
+    plotly · pyplots.ai" is centered at the top. The horizontal axis is labeled "Normal
+    Stress σ (MPa)" and the vertical axis "Shear Stress τ (MPa)". Stress points A
+    (80, 30) and B (-40, -30) are marked with red circle markers connected by a dashed
+    blue diameter line. Principal stresses σ₁ = 87.1 and σ₂ = -47.1 are shown as blue
+    diamonds on the horizontal axis. Maximum shear stress τmax = 67.1 and −τmax =
+    -67.1 are marked with orange triangles (up and down) at the top and bottom of
+    the circle. The center point C (20, 0) is marked with a dark blue "x" marker.
+    A purple arc near the center shows the angle 2θp = 26.6°. All annotations are
+    color-coded to match their markers. Subtle grid lines and very light reference
+    lines through the center are visible. The aspect ratio is equal, making the circle
+    appear as a true circle. The square 3600×3600 format is appropriate for this circular
+    diagram.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 28pt, axis labels 22pt, ticks
+          18pt, annotations 16-17pt'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: All annotations well-positioned with appropriate offsets, no text
+          collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Markers size 14 with white outlines, circle line width 3.5, distinct
+          marker symbols per element type
+      - id: VQ-04
+        name: Color Accessibility
+        score: 3
+        max: 4
+        passed: true
+        comment: 'Good overall but two blues (#306998 and #1F6FB5) are somewhat similar'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square format ideal for circular diagram, balanced margins, no content
+          cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive labels with units: Normal Stress σ (MPa) and Shear Stress
+          τ (MPa)'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Strong design with intentional color palette, white-outlined markers,
+          subtle circle fill, color-matched annotations
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid, faded reference lines, white background, white marker
+          outlines
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Color coding creates clear visual hierarchy: given state (red) to
+          derived quantities (blue, orange)'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Mohr's Circle on sigma-tau plane with proper center and radius
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec requirements met: circle, principal stresses, max shear,
+          stress points, angle arc, equal aspect ratio, grid'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct axis assignments and mathematically verified computations
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title in correct format, no legend needed as elements are individually
+          annotated
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Stress state spans positive and negative normal stresses with non-trivial
+          shear and rotation angle
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Realistic engineering stress values (80, -40, 30 MPa) for structural
+          members under combined loading
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: MPa values appropriate for typical engineering materials and moderate
+          loading conditions
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean linear flow: imports, data, calculations, figure, traces,
+          annotations, layout, save'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic with hardcoded stress values
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only numpy and plotly.graph_objects, both necessary and used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-organized, good use of layout.shapes for reference lines
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot.png and plot.html with current Plotly API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good go.Figure workflow with shapes, annotations, and update_layout
+          pattern
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Hover tooltips, HTML export, marker symbol variety — interactive
+          features unique to Plotly
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - edge-highlighting
+  - grid-styling
+  - alpha-blending
