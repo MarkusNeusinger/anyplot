@@ -1,7 +1,7 @@
 library: bokeh
 specification_id: mohr-circle
 created: '2026-02-27T22:09:16Z'
-updated: '2026-02-27T22:23:51Z'
+updated: '2026-02-27T22:33:17Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 22505482804
 issue: 4432
@@ -10,35 +10,41 @@ library_version: 3.8.2
 preview_url: https://storage.googleapis.com/pyplots-images/plots/mohr-circle/bokeh/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/mohr-circle/bokeh/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/mohr-circle/bokeh/plot.html
-quality_score: 81
+quality_score: 87
 review:
   strengths:
-  - Mathematically accurate Mohr's circle with all spec-required features
-  - Clean professional visual layout with well-positioned annotations
-  - Excellent code quality — deterministic, clean imports, KISS structure
-  - Good data storytelling with visual hierarchy through shapes and colors
-  - Dual PNG + HTML export leverages Bokeh output flexibility
+  - 'Complete spec compliance with all required features: circle, principal stresses,
+    max shear, stress points A/B, 2θp angle, equal aspect ratio, reference lines,
+    and grid'
+  - Effective use of Bokeh-specific HoverTool for interactive stress readouts with
+    formatted tooltips, plus HTML export for interactive viewing
+  - 'Clean color-coded visual hierarchy with semantic meaning: red for principal stresses,
+    orange for max shear, blue for original stress state'
+  - Realistic, well-chosen engineering data spanning tension and compression with
+    meaningful shear
+  - Deterministic, well-organized code following KISS structure
   weaknesses:
-  - Red-green color pairing (principal stress vs max shear) is not colorblind-safe
-  - Does not leverage Bokeh interactive strengths (HoverTool, ColumnDataSource)
-  - Marker sizes could be slightly larger for the 3600px canvas
-  image_description: The plot displays a Mohr's Circle for stress analysis on a 3600x3600
-    white canvas. A blue (#306998) circle is centered at approximately (25, 0) with
-    a radius of ~68 MPa. Red diamond markers indicate the principal stresses σ₁ =
-    93.0 MPa (right intersection with horizontal axis) and σ₂ = -43.0 MPa (left intersection).
-    Orange-green triangle markers at the top and bottom of the circle mark τ_max =
-    68.0 MPa. Blue circle markers denote stress points A(80, 40) and B(-30, -40),
-    connected by a dashed gray diameter line through the center. A red arc near the
-    center indicates the principal plane angle 2θp = 36.0°. Gray reference lines include
-    a solid horizontal line at y=0 and a dashed vertical line through the center.
-    Light grid lines (alpha ~0.2) are visible. All annotations are clearly labeled
-    with values and units. The title reads "Mohr's Circle for Stress Analysis · mohr-circle
-    · bokeh · pyplots.ai" at the top. Axes are labeled "Normal Stress σ (MPa)" and
-    "Shear Stress τ (MPa)". The circle maintains equal aspect ratio and appears as
-    a true circle.
+  - Red and orange markers could be more distinguishable for color-vision-deficient
+    users despite different shapes
+  - Axis spines could be refined (reduced or removed) for a more polished appearance
+  - Some annotation text appears slightly small relative to the 3600x3600 canvas
+  image_description: The plot displays a Mohr's Circle for stress analysis on a square
+    3600x3600 canvas. A blue circle (#306998) is centered at approximately (25, 0)
+    with radius ~68 MPa, representing the stress transformation. The horizontal axis
+    is labeled "Normal Stress σ (MPa)" and the vertical axis "Shear Stress τ (MPa)".
+    Two red diamond markers indicate principal stresses σ₁ ≈ 93.0 MPa (right) and
+    σ₂ ≈ -43.0 MPa (left) on the horizontal axis. Two orange triangle markers show
+    τ_max ≈ 68.0 MPa at the top and bottom of the circle. Blue circular markers denote
+    Point A (80, 40) and Point B (-30, -40) with a dashed gray diameter line connecting
+    them. A red arc near the center shows the angle 2θp = 36.0°. Gray reference lines
+    (solid horizontal at y=0, dashed vertical at x=center) provide orientation. The
+    grid is very subtle (alpha 0.2). An annotation at the bottom shows "Center = (25.0,
+    0) | R = 68.0 MPa". The title reads "Mohr's Circle for Stress Analysis · mohr-circle
+    · bokeh · pyplots.ai". The circle appears as a true circle due to equal aspect
+    ratio.
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 26
       max: 30
       items:
       - id: VQ-01
@@ -47,43 +53,43 @@ review:
         max: 8
         passed: true
         comment: All font sizes explicitly set (title 32pt, labels 22pt, ticks 18pt,
-          annotations 20-22pt). Meet minimum thresholds. Some annotations slightly
-          small for 3600px canvas.
+          annotations 20-22pt). Readable but some annotations slightly small relative
+          to 3600x3600 canvas.
       - id: VQ-02
         name: No Overlap
-        score: 6
-        max: 6
-        passed: true
-        comment: No overlapping text. All annotations well-positioned with no collisions.
-      - id: VQ-03
-        name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Markers (size 18-20) and circle (line_width=4) visible. Markers could
-          be slightly larger for 3600px canvas.
+        comment: No significant overlaps. Minor proximity between some annotations
+          and markers/axis area, all text readable.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Circle line width 4, marker sizes 22-24, distinct shapes (diamond,
+          triangle, circle). All elements clearly visible.
       - id: VQ-04
         name: Color Accessibility
-        score: 2
+        score: 3
         max: 4
-        passed: false
-        comment: Red-green color combination for principal stress vs max shear markers.
-          Shape differentiation exists but color pairing is problematic for colorblind
-          users.
+        passed: true
+        comment: Blue/red/orange has good luminance contrast. Different marker shapes
+          help, but red and orange could be difficult for some CVD.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Square canvas with match_aspect=True appropriate for circle. Good
-          padding. Some corner space inherent to geometry.
+        comment: Square format correct for circle plot with match_aspect. Good utilization,
+          inherent empty corners from circle in square.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: Normal Stress σ (MPa) and Shear Stress
-          τ (MPa).'
+        comment: Normal Stress σ (MPa) and Shear Stress τ (MPa) are descriptive with
+          units.
     design_excellence:
       score: 13
       max: 20
@@ -93,26 +99,25 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Clean professional look with thoughtful multi-color scheme and different
-          marker shapes. Python Blue circle is attractive. Red/green pairing reduces
-          harmony.
+        comment: Intentional color scheme with semantic meaning, white marker outlines,
+          custom sizing. Above defaults but not publication-level.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Subtle grid (alpha=0.2), removed minor ticks, no outline, dashed
-          reference line. Good refinement above defaults.
+        comment: Subtle grid (alpha 0.2), minor ticks removed, outline removed, white
+          background. Axis spines remain at full width.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Good visual hierarchy: blue circle dominates, red diamonds draw
-          attention to principal stresses, angle arc guides viewer, bottom summary
-          provides context.'
+        comment: Effective visual hierarchy with color-coded elements. Red diamonds
+          for principal stresses, orange triangles for shear, blue circles for data.
+          Angle arc guides viewer.
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -120,53 +125,53 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Mohr's Circle on σ-τ plane.
+        comment: Correct Mohr's Circle on σ-τ plane with proper center and radius
+          computation.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
         comment: 'All spec features present: circle, principal stresses, max shear,
-          stress points A/B, angle 2θp, equal aspect ratio, labeled axes, grid and
-          reference lines.'
+          stress points A/B, 2θp angle, equal aspect ratio, reference lines, grid.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'Correct mapping: horizontal=normal stress, vertical=shear stress.
-          Math verified correct.'
+        comment: X/Y correctly assigned. All data visible within range. Circle parameters
+          computed correctly.
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Title includes required format with descriptive prefix. No formal
-          legend but direct annotation appropriate for engineering diagram.
+        comment: Title follows spec-id · library · pyplots.ai format. Color-coded
+          annotations serve as legend.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Stress state spans positive and negative normal stress with non-trivial
-          principal angle. Demonstrates all circle features.
+        comment: Stress state spans tension and compression with significant shear.
+          Shows all aspects of Mohr's circle.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic combined loading stress state in MPa, plausible for structural
-          steel.
+        comment: Typical combined loading scenario. 80 MPa tensile, -30 MPa compressive,
+          40 MPa shear are plausible for structural steel.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values in tens-of-MPa range sensible for engineering stress analysis.
+        comment: Stress values in 30-93 MPa range are realistic for engineering applications.
     code_quality:
       score: 10
       max: 10
@@ -176,14 +181,14 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports → data → calculations → plot → style
-          → save.'
+        comment: 'Clean linear flow: imports, data, calculations, plot, style, save.
+          No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic with hardcoded stress values and computed coordinates.
+        comment: Fully deterministic with fixed input values. No random data.
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -195,41 +200,43 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized code with appropriate complexity and good use
-          of intermediate variables.
+        comment: Clean, well-organized. ColumnDataSource used appropriately for hover
+          interactivity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png via export_png and plot.html via save. Current
-          Bokeh API.
+        comment: Saves as plot.png via export_png and plot.html for interactivity.
+          Current Bokeh API.
     library_mastery:
-      score: 5
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
-        passed: false
-        comment: Standard Bokeh API (figure, line, scatter, Label, Span). Correct
-          but doesn't use ColumnDataSource or leverage higher-level Bokeh features.
+        passed: true
+        comment: 'Good use of Bokeh patterns: ColumnDataSource, figure config, Span/Label
+          models, add_layout/add_tools.'
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 4
         max: 5
-        passed: false
-        comment: Uses Span, Label, match_aspect, dual export. But toolbar/tools disabled;
-          no HoverTool or interactive features that are Bokeh's primary strength.
+        passed: true
+        comment: HoverTool with custom tooltips for interactive stress readouts. HTML
+          export preserves interactivity.
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
+  - hover-tooltips
   - html-export
   patterns:
   - data-generation
+  - columndatasource
   dataprep: []
   styling:
   - grid-styling

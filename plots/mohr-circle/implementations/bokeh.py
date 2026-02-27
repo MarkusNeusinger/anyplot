@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 mohr-circle: Mohr's Circle for Stress Analysis
 Library: bokeh 3.8.2 | Python 3.14.3
-Quality: 81/100 | Created: 2026-02-27
+Quality: 87/100 | Created: 2026-02-27
 """
 
 import numpy as np
