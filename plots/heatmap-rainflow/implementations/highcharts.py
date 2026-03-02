@@ -1,16 +1,17 @@
-""" pyplots.ai
+"""pyplots.ai
 heatmap-rainflow: Rainflow Counting Matrix for Fatigue Analysis
 Library: highcharts unknown | Python 3.14.3
 Quality: 84/100 | Created: 2026-03-02
 """
 
-import json
 import tempfile
 import time
 import urllib.request
 from pathlib import Path
 
 import numpy as np
+from highcharts_core.chart import Chart
+from highcharts_core.options import HighchartsOptions
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
@@ -48,7 +49,7 @@ cycle_counts[cycle_counts < 3] = 0
 amp_labels = [f"{v:.0f}" for v in amplitude_bins]
 mean_labels = [f"{v:.0f}" for v in mean_bins]
 
-# Build heatmap data: [x_index (mean), y_index (amplitude), value]
+# Build heatmap data: [x_index (mean), y_index (amplitude), value or None]
 heatmap_data = []
 max_count = 0
 for y_idx in range(n_amp_bins):
@@ -56,101 +57,110 @@ for y_idx in range(n_amp_bins):
         val = int(cycle_counts[y_idx, x_idx])
         if val > max_count:
             max_count = val
-        heatmap_data.append([x_idx, y_idx, val])
+        heatmap_data.append([x_idx, y_idx, val if val > 0 else None])
 
-# Chart configuration
-chart_options = {
-    "chart": {
-        "type": "heatmap",
-        "width": 4800,
-        "height": 2700,
-        "backgroundColor": "#ffffff",
-        "marginTop": 180,
-        "marginBottom": 200,
-        "marginRight": 440,
-        "marginLeft": 320,
-        "style": {"fontFamily": "'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif"},
-    },
-    "title": {
-        "text": "heatmap-rainflow \u00b7 highcharts \u00b7 pyplots.ai",
-        "style": {"fontSize": "52px", "fontWeight": "600", "color": "#2c3e50"},
-        "y": 30,
-    },
-    "subtitle": {
-        "text": "Rainflow cycle counting matrix \u2014 variable-amplitude fatigue loading",
-        "style": {"fontSize": "30px", "fontWeight": "normal", "color": "#7f8c8d"},
-        "y": 80,
-    },
-    "xAxis": {
-        "categories": mean_labels,
-        "title": {
-            "text": "Cycle Mean (MPa)",
-            "style": {"fontSize": "34px", "fontWeight": "600", "color": "#34495e"},
-            "margin": 20,
-        },
-        "labels": {"style": {"fontSize": "24px", "color": "#34495e"}, "rotation": -45, "y": 30},
-        "lineWidth": 0,
-        "tickLength": 0,
-    },
-    "yAxis": {
-        "categories": amp_labels,
-        "title": {
-            "text": "Cycle Amplitude (MPa)",
-            "style": {"fontSize": "34px", "fontWeight": "600", "color": "#34495e"},
-            "margin": 20,
-        },
-        "labels": {"style": {"fontSize": "24px", "color": "#34495e"}},
-        "reversed": False,
-        "lineWidth": 0,
-        "gridLineWidth": 0,
-    },
-    "colorAxis": {
-        "min": 1,
-        "max": int(max_count),
-        "type": "logarithmic",
-        "stops": [
-            [0, "#f7fbff"],
-            [0.15, "#c6dbef"],
-            [0.30, "#6baed6"],
-            [0.50, "#2171b5"],
-            [0.70, "#08519c"],
-            [1, "#08306b"],
-        ],
-        "labels": {"style": {"fontSize": "26px", "color": "#34495e"}},
-    },
-    "legend": {
-        "title": {"text": "Cycle Count", "style": {"fontSize": "28px", "fontWeight": "600", "color": "#34495e"}},
-        "align": "right",
-        "layout": "vertical",
-        "verticalAlign": "middle",
-        "symbolHeight": 900,
-        "symbolWidth": 36,
-        "itemStyle": {"fontSize": "24px", "color": "#34495e"},
-        "x": -60,
-        "margin": 40,
-    },
-    "tooltip": {
-        "style": {"fontSize": "30px"},
-        "headerFormat": "",
-        "pointFormat": (
-            "Amplitude: <b>{series.yAxis.categories.(point.y)} MPa</b><br>"
-            "Mean: <b>{series.xAxis.categories.(point.x)} MPa</b><br>"
-            "Cycles: <b>{point.value}</b>"
-        ),
-    },
-    "credits": {"enabled": False},
-    "plotOptions": {"heatmap": {"colsize": 1, "rowsize": 1}},
-    "series": [
-        {
+# Build chart using highcharts-core Python wrapper
+chart = Chart(container="container")
+chart.options = HighchartsOptions.from_dict(
+    {
+        "chart": {
             "type": "heatmap",
-            "name": "Cycle Count",
-            "data": heatmap_data,
-            "borderWidth": 2,
-            "borderColor": "#ffffff",
-            "nullColor": "#f0f0f0",
-        }
-    ],
-}
+            "width": 4800,
+            "height": 2700,
+            "backgroundColor": "#fafafa",
+            "marginTop": 180,
+            "marginBottom": 200,
+            "marginRight": 340,
+            "marginLeft": 320,
+            "style": {"fontFamily": "'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif"},
+        },
+        "title": {
+            "text": "heatmap-rainflow \u00b7 highcharts \u00b7 pyplots.ai",
+            "style": {"fontSize": "52px", "fontWeight": "600", "color": "#2c3e50"},
+            "y": 30,
+        },
+        "subtitle": {
+            "text": "Rainflow cycle counting matrix \u2014 low-amplitude cycles near 100 MPa mean dominate the fatigue spectrum",
+            "style": {"fontSize": "30px", "fontWeight": "normal", "color": "#7f8c8d"},
+            "y": 80,
+        },
+        "xAxis": {
+            "categories": mean_labels,
+            "title": {
+                "text": "Cycle Mean (MPa)",
+                "style": {"fontSize": "34px", "fontWeight": "600", "color": "#34495e"},
+                "margin": 20,
+            },
+            "labels": {"style": {"fontSize": "24px", "color": "#34495e"}, "rotation": 315, "y": 30},
+            "lineWidth": 0,
+            "tickLength": 0,
+        },
+        "yAxis": {
+            "categories": amp_labels,
+            "title": {
+                "text": "Cycle Amplitude (MPa)",
+                "style": {"fontSize": "34px", "fontWeight": "600", "color": "#34495e"},
+                "margin": 20,
+            },
+            "labels": {"style": {"fontSize": "24px", "color": "#34495e"}},
+            "reversed": False,
+            "lineWidth": 0,
+            "gridLineWidth": 0,
+        },
+        "colorAxis": {
+            "min": 1,
+            "max": int(max_count),
+            "type": "logarithmic",
+            "stops": [
+                [0, "#ffffcc"],
+                [0.12, "#ffeda0"],
+                [0.24, "#fed976"],
+                [0.38, "#feb24c"],
+                [0.52, "#fd8d3c"],
+                [0.68, "#fc4e2a"],
+                [0.82, "#e31a1c"],
+                [0.92, "#bd0026"],
+                [1, "#800026"],
+            ],
+            "labels": {"style": {"fontSize": "26px", "color": "#34495e"}},
+        },
+        "legend": {
+            "title": {"text": "Cycle Count", "style": {"fontSize": "28px", "fontWeight": "600", "color": "#34495e"}},
+            "align": "right",
+            "layout": "vertical",
+            "verticalAlign": "middle",
+            "symbolHeight": 900,
+            "symbolWidth": 36,
+            "itemStyle": {"fontSize": "24px", "color": "#34495e"},
+            "x": -40,
+            "margin": 40,
+        },
+        "tooltip": {
+            "style": {"fontSize": "30px"},
+            "headerFormat": "",
+            "pointFormat": (
+                "Amplitude: <b>{series.yAxis.categories.(point.y)} MPa</b><br>"
+                "Mean: <b>{series.xAxis.categories.(point.x)} MPa</b><br>"
+                "Cycles: <b>{point.value}</b>"
+            ),
+        },
+        "credits": {"enabled": False},
+        "plotOptions": {"heatmap": {"colsize": 1, "rowsize": 1}},
+        "series": [
+            {
+                "type": "heatmap",
+                "name": "Cycle Count",
+                "data": heatmap_data,
+                "borderWidth": 2,
+                "borderColor": "#fafafa",
+                "nullColor": "#f0f0f0",
+            }
+        ],
+    }
+)
+
+# Generate chart JS literal via highcharts-core wrapper
+js_literal = chart.to_js_literal()
 
 # Download Highcharts JS and heatmap module with retry
 urls = {
@@ -172,10 +182,7 @@ for name, url in urls.items():
 highcharts_js = scripts["highcharts"]
 heatmap_js = scripts["heatmap"]
 
-# Convert options to JSON
-options_json = json.dumps(chart_options)
-
-# Generate HTML with inline scripts, zero-count bins rendered as null
+# Generate HTML with inline scripts and renderer annotation for data storytelling
 html_content = f"""<!DOCTYPE html>
 <html>
 <head>
@@ -183,15 +190,37 @@ html_content = f"""<!DOCTYPE html>
     <script>{highcharts_js}</script>
     <script>{heatmap_js}</script>
 </head>
-<body style="margin:0; padding:0; overflow:hidden; background:#ffffff;">
+<body style="margin:0; padding:0; overflow:hidden; background:#fafafa;">
     <div id="container" style="width:4800px; height:2700px;"></div>
     <script>
-        var opts = {options_json};
-        // Convert zero-count entries to null so they appear as distinct empty cells
-        opts.series[0].data = opts.series[0].data.map(function(p) {{
-            return p[2] === 0 ? [p[0], p[1], null] : p;
+        {js_literal}
+    </script>
+    <script>
+        // Add annotation highlighting the dominant fatigue region
+        // (separate DOMContentLoaded ensures chart is created first)
+        document.addEventListener('DOMContentLoaded', function() {{
+            var ch = Highcharts.charts[Highcharts.charts.length - 1];
+            if (ch) {{
+                ch.renderer.label(
+                    '\\u25B6 Peak region: low-amplitude cycles near<br>' +
+                    '\\u2003 100 MPa mean stress dominate fatigue damage',
+                    ch.plotLeft + ch.plotWidth * 0.38,
+                    ch.plotTop + ch.plotHeight * 0.58
+                ).css({{
+                    fontSize: '28px',
+                    color: '#333',
+                    fontStyle: 'italic',
+                    lineHeight: '40px'
+                }}).attr({{
+                    fill: 'rgba(255, 255, 255, 0.93)',
+                    stroke: '#888',
+                    'stroke-width': 1.5,
+                    padding: 18,
+                    r: 8,
+                    zIndex: 5
+                }}).add();
+            }}
         }});
-        Highcharts.chart('container', opts);
     </script>
 </body>
 </html>"""
