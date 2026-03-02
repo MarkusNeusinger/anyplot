@@ -1,7 +1,6 @@
-""" pyplots.ai
+"""pyplots.ai
 heatmap-rainflow: Rainflow Counting Matrix for Fatigue Analysis
 Library: pygal 3.1.0 | Python 3.14.3
-Quality: 84/100 | Created: 2026-03-02
 """
 
 import math
@@ -10,7 +9,7 @@ import sys
 import numpy as np
 
 
-# This file is named pygal.py; adjust path to import the installed package
+# This file shadows the pygal package; temporarily adjust path for the real package
 sys.path, _saved = sys.path[1:], sys.path[0]
 from pygal.graph.graph import Graph  # noqa: E402
 from pygal.style import Style  # noqa: E402
@@ -31,6 +30,7 @@ class RainflowHeatmap(Graph):
         self.x_axis_title = kwargs.pop("x_axis_title", "")
         self.y_axis_title = kwargs.pop("y_axis_title", "")
         self.colorbar_title = kwargs.pop("colorbar_title", "")
+        self.subtitle_text = kwargs.pop("subtitle_text", "")
         super().__init__(*args, **kwargs)
 
     def _plot(self):
@@ -62,8 +62,14 @@ class RainflowHeatmap(Graph):
             node = self.svg.node(parent, "text", x=x, y=y)
             node.set("text-anchor", kw.get("anchor", "middle"))
             node.set("fill", kw.get("fill", "#333"))
-            weight = "bold" if kw.get("bold") else "500"
-            node.set("style", f"font-size:{size}px;font-weight:{weight};font-family:sans-serif")
+            weight = "bold" if kw.get("bold") else "normal"
+            if kw.get("weight"):
+                weight = kw["weight"]
+            family = kw.get("family", "sans-serif")
+            style_str = f"font-size:{size}px;font-weight:{weight};font-family:{family}"
+            if kw.get("letter_spacing"):
+                style_str += f";letter-spacing:{kw['letter_spacing']}px"
+            node.set("style", style_str)
             if "rotation" in kw:
                 node.set("transform", f"rotate({kw['rotation']}, {x}, {y})")
             node.text = label
@@ -72,16 +78,16 @@ class RainflowHeatmap(Graph):
         nc = len(self.matrix_data[0])
         pw, ph = self.view.width, self.view.height
 
-        # Proportional margins
-        ml = int(pw * 0.11)
-        mr = int(pw * 0.10)  # slightly more for larger colorbar
-        mt = int(ph * 0.02)
-        mb = int(ph * 0.12)
+        # Proportional margins — optimized for canvas utilization
+        ml = int(pw * 0.10)
+        mr = int(pw * 0.10)
+        mt = int(ph * 0.04)
+        mb = int(ph * 0.10)
 
         aw, ah = pw - ml - mr, ph - mt - mb
         cw = aw / nc * 0.97
         ch = ah / nr * 0.97
-        gap = min(cw, ch) * 0.01
+        gap = min(cw, ch) * 0.015
         gw = nc * (cw + gap) - gap
         gh = nr * (ch + gap) - gap
 
@@ -90,38 +96,49 @@ class RainflowHeatmap(Graph):
 
         g = self.svg.node(self.nodes["plot"], class_="heatmap")
 
+        # Subtitle — typographic hierarchy for data storytelling
+        if self.subtitle_text:
+            svg_text(
+                g, pw / 2 + self.view.x(0), y0 - 25, self.subtitle_text, 34, fill="#777", weight="300", letter_spacing=1
+            )
+
+        # Subtle background panel behind heatmap grid
+        pad = 14
+        panel = self.svg.node(g, "rect", x=x0 - pad, y=y0 - pad, width=gw + 2 * pad, height=gh + 2 * pad, rx=6, ry=6)
+        panel.set("fill", "#fafafa")
+        panel.set("stroke", "#e0e0e0")
+        panel.set("stroke-width", "1")
+
         # Y-axis title (rotated)
         if self.y_axis_title:
-            svg_text(g, x0 - int(pw * 0.096), y0 + gh / 2, self.y_axis_title, 52, bold=True, rotation=-90)
+            svg_text(g, x0 - int(pw * 0.082), y0 + gh / 2, self.y_axis_title, 46, bold=True, rotation=-90)
 
         # Row labels — every other to prevent crowding
-        rf = min(36, int(ch * 0.6))
+        rf = min(30, int(ch * 0.5))
         for i, lbl in enumerate(self.row_labels):
             if i % 2 == 0 or i == nr - 1:
-                svg_text(g, x0 - 20, y0 + i * (ch + gap) + ch / 2 + rf * 0.35, lbl, rf, anchor="end")
+                svg_text(g, x0 - 16, y0 + i * (ch + gap) + ch / 2 + rf * 0.35, lbl, rf, anchor="end", fill="#666")
 
-        # Column labels — every other, rotated 45 degrees
-        cf = min(36, int(cw * 0.55))
+        # Column labels — horizontal, every 3rd for clean spacing
+        cf = min(30, int(cw * 0.45))
         for j, lbl in enumerate(self.col_labels):
-            if j % 2 == 0 or j == nc - 1:
+            if j % 3 == 0 or j == nc - 1:
                 x = x0 + j * (cw + gap) + cw / 2
-                y = y0 + gh + gap + 15
-                svg_text(g, x, y, lbl, cf, anchor="start", rotation=45)
+                y = y0 + gh + gap + cf + 10
+                svg_text(g, x, y, lbl, cf, fill="#666")
 
         # X-axis title
         if self.x_axis_title:
-            svg_text(g, x0 + gw / 2, y0 + gh + int(ph * 0.10), self.x_axis_title, 52, bold=True)
+            svg_text(g, x0 + gw / 2, y0 + gh + int(ph * 0.08), self.x_axis_title, 46, bold=True)
 
-        # Find the top 3 peak cells for annotation and emphasis
+        # Find top 3 peak cells for annotation and emphasis
         cell_values = []
         for i in range(nr):
             for j in range(nc):
                 if self.matrix_data[i][j] > 0:
                     cell_values.append((self.matrix_data[i][j], i, j))
         cell_values.sort(reverse=True)
-        top_peaks = set()
-        for _, i, j in cell_values[:3]:
-            top_peaks.add((i, j))
+        top_peaks = {(i, j) for _, i, j in cell_values[:3]}
         peak_cell = (cell_values[0][1], cell_values[0][2]) if cell_values else None
 
         # Draw heatmap cells
@@ -133,32 +150,54 @@ class RainflowHeatmap(Graph):
                 norm = log_norm(val)
 
                 fill = "#ffffff" if norm < 0 else color_at(norm)
-                stroke = "#e0e0e0" if norm < 0 else "none"
+                stroke = "#e8e8e8" if norm < 0 else "none"
                 sw = "0.5"
 
-                # Emphasis border on absolute peak cell
+                # Glow halo on absolute peak cell
                 if (i, j) == peak_cell:
-                    stroke = "#222222"
-                    sw = "3"
+                    glow = self.svg.node(g, "rect", x=cx - 4, y=cy - 4, width=cw + 8, height=ch + 8, rx=5, ry=5)
+                    glow.set("fill", "none")
+                    glow.set("stroke", "#fde725")
+                    glow.set("stroke-width", "5")
+                    glow.set("opacity", "0.5")
+                    stroke = "#1a1a1a"
+                    sw = "2.5"
 
-                rect = self.svg.node(g, "rect", x=cx, y=cy, width=cw, height=ch, rx=2, ry=2)
+                rect = self.svg.node(g, "rect", x=cx, y=cy, width=cw, height=ch, rx=3, ry=3)
                 rect.set("fill", fill)
                 rect.set("stroke", stroke)
                 rect.set("stroke-width", sw)
 
-                # Annotate only top 3 peaks
+                # Annotate top 3 peaks with background pill for readability
                 if (i, j) in top_peaks:
-                    txt = f"{int(val)}" if val < 10000 else f"{val / 1000:.1f}k"
-                    sz = min(int(ch * 0.42), int(cw * 0.36), 30)
-                    ink = "#ffffff" if norm > 0.45 else "#333333"
+                    txt = f"{int(val):,}"
+                    sz = min(int(ch * 0.36), int(cw * 0.30), 26)
+                    ink = "#ffffff" if norm > 0.45 else "#222222"
+
+                    # Background pill for contrast
+                    pill_w = len(txt) * sz * 0.6 + 14
+                    pill_h = sz + 10
+                    pill = self.svg.node(
+                        g,
+                        "rect",
+                        x=cx + cw / 2 - pill_w / 2,
+                        y=cy + ch / 2 - pill_h / 2,
+                        width=pill_w,
+                        height=pill_h,
+                        rx=pill_h / 2,
+                        ry=pill_h / 2,
+                    )
+                    pill.set("fill", "#000000" if norm > 0.45 else "#ffffff")
+                    pill.set("fill-opacity", "0.3" if norm > 0.45 else "0.75")
+
                     svg_text(g, cx + cw / 2, cy + ch / 2 + sz * 0.35, txt, sz, fill=ink, bold=True)
 
-        # Colorbar — slightly larger
+        # --- Colorbar with smooth gradient ---
         cb_w = int(pw * 0.016)
-        cb_h = int(gh * 0.88)
-        cb_x = x0 + gw + int(pw * 0.020)
+        cb_h = int(gh * 0.85)
+        cb_x = x0 + gw + int(pw * 0.025)
         cb_y = y0 + (gh - cb_h) / 2
-        n_seg = 80
+        n_seg = 120
         seg_h = cb_h / n_seg
 
         for si in range(n_seg):
@@ -166,9 +205,9 @@ class RainflowHeatmap(Graph):
             self.svg.node(g, "rect", x=cb_x, y=cb_y + si * seg_h, width=cb_w, height=seg_h + 1, fill=color_at(t))
 
         # Colorbar border
-        border = self.svg.node(g, "rect", x=cb_x, y=cb_y, width=cb_w, height=cb_h, rx=2, ry=2)
+        border = self.svg.node(g, "rect", x=cb_x, y=cb_y, width=cb_w, height=cb_h, rx=3, ry=3)
         border.set("fill", "none")
-        border.set("stroke", "#333")
+        border.set("stroke", "#444")
         border.set("stroke-width", "1.5")
 
         # Colorbar ticks (log scale: 0, 1, 10, 100, 1000, ...)
@@ -176,12 +215,13 @@ class RainflowHeatmap(Graph):
         for tv in [0] + [10**p for p in range(max_pow + 1)]:
             t = 0 if tv == 0 else math.log10(tv + 1) / log_max
             ty = cb_y + cb_h * (1 - t)
-            self.svg.node(g, "line", x1=cb_x + cb_w, y1=ty, x2=cb_x + cb_w + 12, y2=ty, stroke="#333")
-            svg_text(g, cb_x + cb_w + 20, ty + 12, str(int(tv)), 36, anchor="start")
+            self.svg.node(g, "line", x1=cb_x + cb_w, y1=ty, x2=cb_x + cb_w + 10, y2=ty, stroke="#444")
+            label = f"{int(tv):,}" if tv >= 1000 else str(int(tv))
+            svg_text(g, cb_x + cb_w + 16, ty + 10, label, 30, anchor="start", fill="#555")
 
         # Colorbar title
         if self.colorbar_title:
-            svg_text(g, cb_x + cb_w / 2, cb_y - 40, self.colorbar_title, 42, bold=True)
+            svg_text(g, cb_x + cb_w / 2, cb_y - 28, self.colorbar_title, 36, bold=True)
 
     def _compute(self):
         nr = len(self.matrix_data) if self.matrix_data else 1
@@ -217,18 +257,35 @@ for i in range(n_amp_bins):
 matrix = counts[::-1].tolist()
 vmax = int(np.max(counts))
 
-# Viridis: perceptually uniform, colorblind-safe sequential colormap
-viridis = ["#440154", "#482878", "#3e4989", "#31688e", "#26828e", "#1f9e89", "#35b779", "#6ece58", "#b5de2b", "#fde725"]
+# Extended viridis — 16 stops for smoother gradient transitions
+viridis = [
+    "#440154",
+    "#46085c",
+    "#482878",
+    "#3b3f8f",
+    "#3e4989",
+    "#31688e",
+    "#26828e",
+    "#1f9e89",
+    "#2eb37c",
+    "#35b779",
+    "#5ec962",
+    "#6ece58",
+    "#9cd648",
+    "#b5de2b",
+    "#d8e219",
+    "#fde725",
+]
 
 style = Style(
     background="white",
     plot_background="white",
     foreground="#333",
-    foreground_strong="#333",
+    foreground_strong="#222",
     foreground_subtle="#999",
     colors=("#306998",),
-    title_font_size=64,
-    label_font_size=36,
+    title_font_size=58,
+    label_font_size=30,
     font_family="sans-serif",
 )
 
@@ -237,20 +294,23 @@ chart = RainflowHeatmap(
     height=2700,
     style=style,
     title="heatmap-rainflow \u00b7 pygal \u00b7 pyplots.ai",
+    subtitle_text="Wind Turbine Blade Root \u2014 Variable Amplitude Fatigue Spectrum",
     matrix_data=matrix,
     row_labels=[f"{v:.0f}" for v in amp_centers[::-1]],
     col_labels=[f"{v:.0f}" for v in mean_centers],
     colormap=viridis,
     vmax=vmax,
     show_legend=False,
-    margin=100,
-    margin_top=200,
-    margin_bottom=80,
+    margin=80,
+    margin_top=180,
+    margin_bottom=60,
     show_x_labels=False,
     show_y_labels=False,
     x_axis_title="Mean Stress (MPa)",
     y_axis_title="Stress Amplitude (MPa)",
     colorbar_title="Cycle Count",
+    explicit_size=True,
+    pretty_print=True,
 )
 
 # Pygal requires at least one series to enter the rendering pipeline
