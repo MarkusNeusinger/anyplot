@@ -1,0 +1,238 @@
+library: plotly
+specification_id: heatmap-rainflow
+created: '2026-03-02T21:05:10Z'
+updated: '2026-03-02T21:25:26Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22595465969
+issue: 4465
+python_version: 3.14.3
+library_version: 6.5.2
+preview_url: https://storage.googleapis.com/pyplots-images/plots/heatmap-rainflow/plotly/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/heatmap-rainflow/plotly/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/heatmap-rainflow/plotly/plot.html
+quality_score: 90
+review:
+  strengths:
+  - Excellent data storytelling with three domain-specific annotations explaining
+    the engineering significance of loading patterns
+  - Professional typography using Palatino serif font family with intentional text
+    color hierarchy
+  - Plasma colorscale provides excellent colorblind-safe visualization with clear
+    distinction between zero-count and low-count bins
+  - Realistic dual-cluster fatigue loading pattern with appropriate physical units
+  - Clean, well-commented code structure with proper reproducibility (seed=42)
+  - Smart use of NaN for zero-count bins creating white gaps that contrast effectively
+    with the Plasma palette
+  weaknesses:
+  - Minor annotation font size inconsistency (13pt for Rare overload events vs 15pt
+    for other annotations)
+  - Some visual dead space in upper rows (amplitudes 160-200) where most bins are
+    zero
+  - Could leverage Plotly unique interactive capabilities more deeply (custom buttons,
+    dropdown filters, range sliders)
+  image_description: 'The plot displays a 1200x1200 (3600x3600 at scale=3) square
+    heatmap using the Plasma colorscale against a white background. The x-axis shows
+    "Cycle Mean Stress (MPa)" ranging from -50 to 250, and the y-axis shows "Cycle
+    Amplitude (MPa)" ranging from ~15 to 200. Two prominent clusters are visible:
+    a bright yellow primary cluster centered around amplitude ~60 MPa / mean ~100
+    MPa (reaching ~800 cycles), and a secondary pink/magenta cluster at lower amplitude
+    (~25-30 MPa) / higher mean (~160 MPa). Three callout annotations with arrows explain
+    the engineering significance: "Primary loading - High-cycle fatigue from main
+    service loads", "Vibration fatigue - Low-amplitude, high-mean resonance-induced
+    cycles", and "Rare overload events". Zero-count bins render as white gaps. The
+    colorbar on the right is labeled "Cycle Count". The title reads "heatmap-rainflow
+    · plotly · pyplots.ai" with a subtitle. Typography uses Palatino/Georgia serif.
+    Cell gaps (xgap/ygap=1) provide clean visual separation between bins.'
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All major font sizes explicitly set (title 28, axes 22, ticks 18,
+          colorbar 20/16). Minor inconsistency with 13pt annotation font.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: All annotations well-positioned without overlap. Semi-transparent
+          backgrounds prevent collisions.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Heatmap cells clearly visible with good color differentiation. Cell
+          gaps make bins distinguishable.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Plasma is perceptually uniform and colorblind-safe. Good contrast
+          between zero-count and low-count bins.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good layout with balanced margins. Minor dead space in upper amplitude
+          rows (160-200 MPa).
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Both axes include physical units (MPa). Colorbar labeled Cycle Count.
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom serif typography (Palatino), Plasma colorscale, multi-level
+          text color hierarchy, styled HTML subtitle. Clearly above defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: plotly_white template, cell gaps, custom colorbar (no outline), custom
+          margins. Good refinement visible.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Three annotations explain engineering significance of dual-cluster
+          loading pattern. Primary cluster as natural focal point.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct 2D heatmap representation of rainflow counting matrix.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: heatmap with correct axes, sequential
+          colormap, colorbar, units, bin centers, zero-count distinction.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Amplitude on y-axis, mean on x-axis, color represents cycle frequency.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title follows exact format. Colorbar serves as legend with Cycle
+          Count label.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows full range: high-frequency, medium-frequency, low-frequency,
+          and zero-count bins. Two distinct clusters plus sparse overloads.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Fatigue analysis is genuine engineering application. Dual-cluster
+          pattern realistic for mechanical components.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Amplitude 10-200 MPa and mean -50 to 250 MPa realistic for fatigue
+          loading. Cycle counts plausible.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean linear flow: imports, data generation, plot, save. No functions
+          or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) ensures deterministic output.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only numpy and plotly.graph_objects, both fully used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-organized with helpful comments. Appropriate complexity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png and plot.html. Current Plotly API used.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of go.Figure with go.Heatmap, update_layout, add_annotation.
+          Idiomatic GO pattern.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses hovertemplate, xgap/ygap, connectgaps, HTML in title, and dual
+          PNG+HTML output.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - annotations
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep: []
+  styling:
+  - custom-colormap
