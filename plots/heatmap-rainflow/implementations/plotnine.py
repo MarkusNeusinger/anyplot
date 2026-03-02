@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 heatmap-rainflow: Rainflow Counting Matrix for Fatigue Analysis
 Library: plotnine 0.15.3 | Python 3.14.3
 Quality: 85/100 | Created: 2026-03-02
@@ -80,38 +80,40 @@ plot = (
     + geom_tile(
         data=df_nonzero,
         mapping=aes(x="Mean Stress (MPa)", y="Amplitude (MPa)", fill="Log Count"),
+        color="#e8e8e8",
+        size=0.1,
         width=tile_w,
         height=tile_h,
     )
     # Native viridis colormap — perceptually uniform, colorblind-safe
-    + scale_fill_cmap(cmap_name="viridis", name="Cycle Count\n(log₁₀)")
+    + scale_fill_cmap(cmap_name="viridis", name="Cycle Count\n(log₁₀)", limits=(0, df_nonzero["Log Count"].max()))
     # Annotations: guide viewer to fatigue-critical regions
     + annotate(
         "label",
-        x=-80,
-        y=35,
+        x=-75,
+        y=55,
         label="Peak\nconcentration",
-        size=14,
-        color="#222222",
+        size=13,
+        color="#1a1a1a",
         ha="center",
-        fill="white",
-        alpha=0.85,
-        label_size=0,
+        fill="#ffffffdd",
+        label_size=0.5,
+        boxcolor="#555555",
     )
-    + annotate("segment", x=-68, xend=-15, y=22, yend=10, color="white", size=1.0, alpha=0.9)
+    + annotate("segment", x=-55, xend=-10, y=40, yend=15, color="#333333", size=0.8)
     + annotate(
         "label",
-        x=85,
-        y=120,
+        x=80,
+        y=130,
         label="Secondary\nloading cluster",
-        size=14,
-        color="#222222",
+        size=13,
+        color="#1a1a1a",
         ha="center",
-        fill="white",
-        alpha=0.85,
-        label_size=0,
+        fill="#ffffffdd",
+        label_size=0.5,
+        boxcolor="#555555",
     )
-    + annotate("segment", x=75, xend=42, y=105, yend=70, color="white", size=1.0, alpha=0.9)
+    + annotate("segment", x=65, xend=35, y=115, yend=70, color="#333333", size=0.8)
     + scale_x_continuous(expand=(0, 2))
     + scale_y_continuous(expand=(0, 2))
     + labs(x="Mean Stress (MPa)", y="Stress Amplitude (MPa)", title="heatmap-rainflow · plotnine · pyplots.ai")
@@ -131,7 +133,7 @@ plot = (
         legend_key_width=18,
         panel_grid_major=element_blank(),
         panel_grid_minor=element_blank(),
-        panel_background=element_rect(fill="white", color="none"),
+        panel_background=element_rect(fill="white", color="#cccccc", size=0.5),
         plot_background=element_rect(fill="#fafafa", color="none"),
         plot_margin=0.02,
     )
