@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 heatmap-rainflow: Rainflow Counting Matrix for Fatigue Analysis
 Library: seaborn 0.13.2 | Python 3.14.3
 Quality: 87/100 | Created: 2026-03-02
@@ -51,23 +51,40 @@ sns.heatmap(
     ax=ax,
 )
 
+# Invert y-axis so amplitudes increase upward (standard engineering convention)
+ax.invert_yaxis()
+
+# Zero-count bins shown as light background
+ax.set_facecolor("#f0f0f0")
+
 # Style
 ax.set_xlabel("Mean Stress (MPa)", fontsize=20, labelpad=12)
 ax.set_ylabel("Stress Amplitude (MPa)", fontsize=20, labelpad=12)
 ax.set_title("heatmap-rainflow · seaborn · pyplots.ai", fontsize=24, fontweight="medium", pad=16)
-ax.tick_params(axis="both", labelsize=14)
+ax.tick_params(axis="both", labelsize=16)
 
 # Colorbar styling
 cbar = ax.collections[0].colorbar
-cbar.ax.tick_params(labelsize=14)
+cbar.ax.tick_params(labelsize=16)
 cbar.set_label("Cycle Count (log scale)", fontsize=18, labelpad=12)
 
-# Zero-count bins shown as light background
-ax.set_facecolor("#f5f5f5")
+# Annotate peak count region — creates a clear focal point for data storytelling
+peak_idx = np.unravel_index(cycle_counts.argmax(), cycle_counts.shape)
+peak_val = cycle_counts[peak_idx]
+ax.annotate(
+    f"Peak: {peak_val:,} cycles",
+    xy=(peak_idx[1] + 0.5, peak_idx[0] + 0.5),
+    xytext=(peak_idx[1] + 4, peak_idx[0] + 4.5),
+    fontsize=14,
+    fontweight="semibold",
+    color="#2b2b2b",
+    bbox={"boxstyle": "round,pad=0.3", "facecolor": "white", "edgecolor": "#aaaaaa", "alpha": 0.9},
+    arrowprops={"arrowstyle": "-|>", "color": "#555555", "lw": 1.5, "connectionstyle": "arc3,rad=-0.15"},
+    zorder=10,
+)
 
 # Remove spines
-for spine in ax.spines.values():
-    spine.set_visible(False)
+sns.despine(ax=ax, left=True, bottom=True)
 
 plt.tight_layout()
 plt.savefig("plot.png", dpi=300, bbox_inches="tight")
