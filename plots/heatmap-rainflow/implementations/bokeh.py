@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 heatmap-rainflow: Rainflow Counting Matrix for Fatigue Analysis
 Library: bokeh 3.8.2 | Python 3.14.3
 Quality: 88/100 | Created: 2026-03-02
@@ -7,7 +7,7 @@ Quality: 88/100 | Created: 2026-03-02
 import numpy as np
 from bokeh.io import export_png, save
 from bokeh.models import ColumnDataSource, HoverTool, Label, LogColorMapper, LogTicker
-from bokeh.palettes import Viridis256
+from bokeh.palettes import Inferno256
 from bokeh.plotting import figure
 from bokeh.resources import CDN
 
@@ -67,13 +67,13 @@ source = ColumnDataSource(
 amp_bin_width = amplitude_centers[1] - amplitude_centers[0]
 mean_bin_width = mean_centers[1] - mean_centers[0]
 
-# Sequential colormap — Bokeh built-in Viridis256 palette (log scale)
-palette = list(Viridis256)
+# Sequential colormap — Inferno palette for distinctive thermal/engineering aesthetic (log scale)
+palette = list(Inferno256)
 
 # Log color mapper for wide count range
 min_count = max(1, min(count_flat))
 max_count = max(count_flat)
-color_mapper = LogColorMapper(palette=palette, low=min_count, high=max_count, nan_color="#ffffff")
+color_mapper = LogColorMapper(palette=palette, low=min_count, high=max_count, nan_color="#f5f5f5")
 
 # Plot — square format for symmetric heatmap
 p = figure(
@@ -101,15 +101,15 @@ r = p.rect(
 
 # Color bar
 color_bar = r.construct_color_bar(
-    width=60,
+    width=80,
     ticker=LogTicker(),
-    label_standoff=20,
+    label_standoff=24,
     major_label_text_font_size="18pt",
     border_line_color=None,
-    padding=20,
+    padding=30,
     title="Cycle Count",
-    title_text_font_size="20pt",
-    title_standoff=30,
+    title_text_font_size="22pt",
+    title_standoff=40,
 )
 p.add_layout(color_bar, "right")
 
@@ -134,15 +134,15 @@ p.outline_line_color = None
 
 # Annotations — data storytelling to guide viewer
 dominant_label = Label(
-    x=200,
-    y=35,
-    text="← Dominant loading cluster\n     (~5000 cycles)",
+    x=120,
+    y=25,
+    text="↑ Dominant loading cluster (~5000 cycles)",
     text_font_size="20pt",
     text_color="white",
     text_font_style="bold",
     text_align="left",
     background_fill_color="#333333",
-    background_fill_alpha=0.75,
+    background_fill_alpha=0.8,
 )
 p.add_layout(dominant_label)
 
@@ -159,10 +159,10 @@ rare_label = Label(
 )
 p.add_layout(rare_label)
 
-# Background — white for zero-count bins to stand out
-p.background_fill_color = "white"
+# Background — light gray for zero-count bins to stand out against dark Inferno palette
+p.background_fill_color = "#f5f5f5"
 p.border_fill_color = "white"
-p.min_border_right = 140
+p.min_border_right = 200
 p.min_border_bottom = 80
 
 # Save
