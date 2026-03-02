@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 heatmap-rainflow: Rainflow Counting Matrix for Fatigue Analysis
 Library: highcharts unknown | Python 3.14.3
 Quality: 88/100 | Created: 2026-03-02
@@ -70,7 +70,7 @@ chart.options = HighchartsOptions.from_dict(
             "backgroundColor": "#fafafa",
             "marginTop": 180,
             "marginBottom": 200,
-            "marginRight": 340,
+            "marginRight": 380,
             "marginLeft": 320,
             "style": {"fontFamily": "'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif"},
         },
@@ -91,7 +91,7 @@ chart.options = HighchartsOptions.from_dict(
                 "style": {"fontSize": "34px", "fontWeight": "600", "color": "#34495e"},
                 "margin": 20,
             },
-            "labels": {"style": {"fontSize": "24px", "color": "#34495e"}, "rotation": 315, "y": 30},
+            "labels": {"style": {"fontSize": "28px", "color": "#34495e"}, "rotation": 315, "y": 30},
             "lineWidth": 0,
             "tickLength": 0,
         },
@@ -102,7 +102,7 @@ chart.options = HighchartsOptions.from_dict(
                 "style": {"fontSize": "34px", "fontWeight": "600", "color": "#34495e"},
                 "margin": 20,
             },
-            "labels": {"style": {"fontSize": "24px", "color": "#34495e"}},
+            "labels": {"style": {"fontSize": "28px", "color": "#34495e"}},
             "reversed": False,
             "lineWidth": 0,
             "gridLineWidth": 0,
@@ -112,17 +112,17 @@ chart.options = HighchartsOptions.from_dict(
             "max": int(max_count),
             "type": "logarithmic",
             "stops": [
-                [0, "#ffffcc"],
-                [0.12, "#ffeda0"],
-                [0.24, "#fed976"],
-                [0.38, "#feb24c"],
-                [0.52, "#fd8d3c"],
-                [0.68, "#fc4e2a"],
-                [0.82, "#e31a1c"],
-                [0.92, "#bd0026"],
-                [1, "#800026"],
+                [0, "#440154"],
+                [0.12, "#482878"],
+                [0.25, "#3e4989"],
+                [0.37, "#31688e"],
+                [0.50, "#26828e"],
+                [0.62, "#1f9e89"],
+                [0.75, "#35b779"],
+                [0.87, "#6ece58"],
+                [1, "#fde725"],
             ],
-            "labels": {"style": {"fontSize": "26px", "color": "#34495e"}},
+            "labels": {"style": {"fontSize": "28px", "color": "#34495e"}},
         },
         "legend": {
             "title": {"text": "Cycle Count", "style": {"fontSize": "28px", "fontWeight": "600", "color": "#34495e"}},
@@ -204,8 +204,8 @@ html_content = f"""<!DOCTYPE html>
                 ch.renderer.label(
                     '\\u25B6 Peak region: low-amplitude cycles near<br>' +
                     '\\u2003 100 MPa mean stress dominate fatigue damage',
-                    ch.plotLeft + ch.plotWidth * 0.38,
-                    ch.plotTop + ch.plotHeight * 0.58
+                    ch.plotLeft + ch.plotWidth * 0.55,
+                    ch.plotTop + ch.plotHeight * 0.78
                 ).css({{
                     fontSize: '28px',
                     color: '#333',
