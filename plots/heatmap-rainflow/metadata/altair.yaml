@@ -1,0 +1,236 @@
+library: altair
+specification_id: heatmap-rainflow
+created: '2026-03-02T21:05:26Z'
+updated: '2026-03-02T21:13:23Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22595465924
+issue: 4465
+python_version: 3.14.3
+library_version: 6.0.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/heatmap-rainflow/altair/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/heatmap-rainflow/altair/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/heatmap-rainflow/altair/plot.html
+quality_score: 90
+review:
+  strengths:
+  - 'Excellent spec compliance: all requirements met including log-scale color, colorbar,
+    units, and zero-count bin distinction'
+  - Sophisticated use of Vega expressions (labelExpr) for log-scale legend labels
+    showing actual cycle counts
+  - Well-crafted synthetic data with realistic engineering context, exponential decay,
+    and secondary cluster
+  - 'High visual refinement: grid/spines/ticks/domain all removed for a clean modern
+    look'
+  - Dual output (PNG + HTML) leverages Altair interactive capabilities
+  weaknesses:
+  - Tick label font sizes at 14pt slightly below the ideal 16pt threshold
+  - Y-axis bin center values show decimals (464.4, 416.9) which look less clean than
+    rounded integers in a scientific context
+  - Canvas dimensions slightly undersized versus the 3600x3600 target
+  image_description: The plot displays a 2D rainflow counting matrix as a heatmap
+    using the inferno colormap (dark purple/black to magenta to orange to yellow/white).
+    The x-axis shows "Mean Stress (MPa)" ranging from approximately -190 to 190, with
+    labels angled at -45 degrees showing every other bin center. The y-axis shows
+    "Stress Amplitude (MPa)" ranging from 36.9 at the bottom to approximately 487
+    at the top, sorted high-to-low with every other bin labeled. The title reads "heatmap-rainflow
+    · altair · pyplots.ai" in large bold text, with a subtitle "Rainflow cycle counting
+    matrix — variable-amplitude fatigue loading on steel component" in grey. A vertical
+    colorbar on the right is labeled "Cycle Count" with log-scaled tick values (16,
+    25, 40, 63, 100, 158, 251, 398, 631, 1000, 1585, 2512). The brightest region (yellow/white,
+    highest cycle counts ~2500+) is concentrated at low amplitudes and near-zero mean
+    stress, decaying through orange and magenta to dark purple at high amplitudes
+    and extreme mean values. White gaps appear in the high-amplitude region where
+    zero-count bins exist. A subtle secondary concentration is visible around amplitude
+    ~175 MPa and mean ~50 MPa.
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: Font sizes explicitly set (title 26pt, axis titles 20pt, subtitle
+          16pt) but tick/legend labels at 14pt below 16pt ideal
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: X-axis labels angled -45 with every-other-tick display; y-axis similarly
+          sparse; no collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Heatmap cells well-sized across 20x20 grid, inferno colormap provides
+          excellent differentiation, zero-count bins clearly white
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Inferno is perceptually uniform and colorblind-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Square layout appropriate for matrix; plot fills canvas well; overall
+          dimensions slightly under 3600x3600 target
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Both axes labeled descriptively with MPa units
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Inferno colormap purposeful choice above defaults; clean title/subtitle
+          hierarchy; cornerRadius polish; clearly above defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Grid disabled, domain/spines removed, ticks hidden, view stroke removed,
+          white background, generous padding
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear focal point at low amplitude/near-zero mean; secondary cluster
+          visible; color guides viewer to hotspot
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct 2D heatmap using mark_rect for rainflow matrix
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: sequential colormap, log-scale, colorbar,
+          units, zero-count distinction'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Amplitude on y-axis, mean on x-axis, color for cycle frequency
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; colorbar labeled Cycle Count with formatted
+          tick values
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Exponential amplitude decay, Gaussian mean distribution, secondary
+          cluster, sparse zero-count gaps, wide count range
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Steel component under variable-amplitude fatigue loading; engineering
+          context; neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Stress amplitudes 25-500 MPa and mean stresses +/-200 MPa realistic
+          for steel fatigue
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean linear flow: imports, seed, data, plot, style, save'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set at start
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All three imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean Pythonic code; pre-computed Log Count and Vega labelExpr are
+          elegant
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png and plot.html; current Altair API
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert Altair usage: mark_rect, proper encoding types, full axis/legend
+          config, method chaining'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Vega expressions via labelExpr for custom log-scale legend labels;
+          interactive tooltips; HTML export
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  - matrix-construction
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - custom-colormap
+  - minimal-chrome
