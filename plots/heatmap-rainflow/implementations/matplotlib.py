@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 heatmap-rainflow: Rainflow Counting Matrix for Fatigue Analysis
 Library: matplotlib 3.10.8 | Python 3.14.3
-Quality: 86/100 | Created: 2026-03-02
+Quality: 94/100 | Created: 2026-03-02
 """
 
 import matplotlib.pyplot as plt

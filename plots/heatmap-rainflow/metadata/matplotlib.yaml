@@ -1,7 +1,7 @@
 library: matplotlib
 specification_id: heatmap-rainflow
 created: '2026-03-02T21:04:57Z'
-updated: '2026-03-02T21:10:10Z'
+updated: '2026-03-02T21:21:08Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 22595465882
 issue: 4465
@@ -10,37 +10,39 @@ library_version: 3.10.8
 preview_url: https://storage.googleapis.com/pyplots-images/plots/heatmap-rainflow/matplotlib/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/heatmap-rainflow/matplotlib/plot_thumb.png
 preview_html: null
-quality_score: 86
+quality_score: 94
 review:
   strengths:
-  - 'Perfect spec compliance: all required features implemented correctly including
-    log scale, colorbar, units, and zero-bin distinction'
-  - Realistic fatigue engineering data with physically plausible values and multi-modal
-    cycle distribution
-  - Clean, well-structured code using idiomatic matplotlib patterns (pcolormesh, LogNorm,
-    masked arrays)
-  - All font sizes explicitly set to recommended values for the target resolution
+  - Custom trimmed inferno colormap avoids near-black values for better visual range
+    across the full data spectrum
+  - Contour overlay with labeled thresholds (10, 50, 200, 1000) provides quantitative
+    reference beyond color encoding
+  - Annotated data storytelling highlights dominant cycle zone and overload cluster
+    with distinct arrow styles and colors
+  - 'Excellent use of matplotlib-specific features: LogNorm, pcolormesh, masked arrays,
+    LinearSegmentedColormap, LogFormatterSciNotation'
+  - Realistic fatigue analysis data with physically accurate stress ranges and cycle
+    distribution patterns
   weaknesses:
-  - Secondary overload cluster is nearly invisible, missing an opportunity for data
-    storytelling
-  - No visual hierarchy or emphasis to guide the viewer to key engineering insights
-  - Dark end of inferno colormap makes low-count bins hard to distinguish from each
-    other
-  - Generic library usage without leveraging distinctive matplotlib features
-  image_description: 'The plot displays a 2D heatmap using the "inferno" colormap
-    (dark purple/black through orange to bright yellow). The x-axis shows "Mean Stress
-    (MPa)" ranging from -50 to 250, and the y-axis shows "Stress Amplitude (MPa)"
-    ranging from 0 to 200. The title reads "heatmap-rainflow · matplotlib · pyplots.ai"
-    in medium weight. A vertical colorbar on the right labeled "Cycle Count" shows
-    a logarithmic scale from 10^0 to approximately 10^3. The heatmap reveals a clear
-    dome-shaped pattern: the highest cycle counts (bright yellow, ~3000+) concentrate
-    at low amplitudes near the bottom center, around mean stress ~100 MPa. Counts
-    decay exponentially with increasing amplitude, forming a symmetric bell-curve-like
-    distribution. Zero-count bins in the upper corners and far edges appear as light
-    gray (#f5f5f5 background), while very low count bins adjacent to them appear as
-    very dark purple/black from the inferno colormap. The secondary overload cluster
-    near amplitude ~70 / mean ~160 is present but barely distinguishable from the
-    main distribution. Top and right spines are removed.'
+  - Contour labels at fontsize=11 are somewhat small for 4800x2700 output resolution
+  - Annotation text at fontsize=13 could be slightly larger (16+) for optimal readability
+    at full resolution
+  image_description: 'The plot displays a 2D rainflow counting matrix heatmap with
+    "Mean Stress (MPa)" on the x-axis (-50 to 250) and "Stress Amplitude (MPa)" on
+    the y-axis (0 to 200). The title reads "heatmap-rainflow · matplotlib · pyplots.ai"
+    in medium-weight font. A vertical colorbar on the right labeled "Cycle Count"
+    shows a logarithmic scale from 10^0 to 10^3. The color scheme uses a trimmed inferno
+    colormap: bright yellow for high cycle counts (~3000), through orange and red
+    for medium counts, to deep purple for low counts. The highest concentration of
+    cycles appears in the low-amplitude region (0-50 MPa) centered around mean stress
+    50-150 MPa, rendered in bright yellow. A visible secondary orange cluster appears
+    near mean 170 MPa, amplitude 75 MPa. White contour lines at thresholds 10, 50,
+    200, and 1000 are overlaid with inline labels. Two text annotations with arrows
+    highlight key regions: "Dominant cycle zone" (white) pointing to the high-density
+    bottom-center area, and "Overload cluster" (yellow) pointing to the secondary
+    peak. Zero-count bins display as light gray (#f0f0f0). Top and right spines are
+    removed. The layout is well-balanced with the heatmap filling most of the 16:9
+    canvas.'
   criteria_checklist:
     visual_quality:
       score: 29
@@ -48,68 +50,70 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt,
-          colorbar label 20pt, colorbar ticks 16pt'
+        comment: All main text sizes explicitly set (title 24, labels 20, ticks 16,
+          colorbar 20/16). Contour labels at fontsize=11 and annotations at fontsize=13
+          slightly small for 4800x2700.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text; tick labels well-spaced, colorbar positioned
-          cleanly
+        comment: No overlapping text. Annotations, contour labels, and axis labels
+          well-separated.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Heatmap cells clearly visible at 20x20 resolution; log scale reveals
-          full range. Very low-count bins hard to distinguish at dark end of inferno
+        comment: Heatmap cells clearly differentiated via log-scale. Contour lines
+          visible but non-intrusive. Masked zero bins distinct.
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Inferno is perceptually uniform and colorblind-safe
+        comment: Inferno is perceptually uniform and colorblind-safe. Good contrast.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good 16:9 proportions, plot fills ~65% of canvas, balanced margins
+        comment: 16:9 figure with tight_layout. Plot fills canvas well with balanced
+          margins.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Both axes include units (MPa), descriptive labels
+        comment: Descriptive labels with physical units (MPa).
     design_excellence:
-      score: 12
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Inferno colormap, spine removal, colorbar styling show design intent;
-          above default but not publication-ready
+        comment: Trimmed inferno colormap, custom annotation colors, thoughtful design.
+          Clearly above defaults but not FiveThirtyEight-level.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Spines removed, colorbar outline hidden, custom facecolor, no unnecessary
-          grid
+        comment: Spines removed, colorbar outline hidden, light gray facecolor, subtle
+          contours at alpha=0.5. Nearly every detail polished.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Dome pattern visible with log scale but secondary overload cluster
-          nearly invisible; no visual emphasis or annotations guide the viewer
+        passed: true
+        comment: Annotated regions with arrows create clear narrative about dominant
+          cycles vs. overloads. Contour thresholds provide quantitative reference.
     spec_compliance:
       score: 15
       max: 15
@@ -119,50 +123,52 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 2D heatmap visualization
+        comment: Correct 2D heatmap with amplitude on y-axis and mean on x-axis.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: sequential colormap, log scale, colorbar,
-          units, zero-bin distinction'
+        comment: 'All spec features present: sequential colormap, log scale, colorbar,
+          units, bin labels, zero-count distinction.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Amplitude on y-axis, mean on x-axis as specified
+        comment: Correct axis mapping. 20x20 bins within spec range. Full data range
+          displayed.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, colorbar labeled Cycle Count
+        comment: Correct title format. Colorbar serves as legend and is properly labeled.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows dominant cluster, exponential decay, zero-count regions, and
-          subtle secondary overload cluster
+        comment: Shows dominant low-amplitude cycles, secondary overload cluster,
+          zero-count regions, and 3+ orders of magnitude range.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real engineering scenario (fatigue analysis), MPa units, neutral
-          topic
+        comment: 'Real engineering scenario: fatigue analysis with stress in MPa.
+          Accurate variable-amplitude fatigue loading model.'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Realistic values for structural steel/aluminum fatigue analysis
+        comment: Stress ranges and cycle counts realistic for structural steel fatigue
+          analysis.
     code_quality:
       score: 10
       max: 10
@@ -172,54 +178,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean Imports-Data-Plot-Save flow, no functions or classes
+        comment: 'Clean linear flow: imports, data, masking, smoothing, plot, style,
+          save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set at the top.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All three imports used (plt, np, LogNorm)
+        comment: 'All imports used: pyplot, numpy, LinearSegmentedColormap, LogNorm,
+          LogFormatterSciNotation.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean vectorized numpy operations, appropriate complexity
+        comment: Clean, Pythonic code. Gaussian smoothing for contours is appropriate
+          complexity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png at dpi=300 with bbox_inches=tight
+        comment: Saves as plot.png with dpi=300, bbox_inches=tight. No deprecated
+          API.
     library_mastery:
-      score: 6
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Uses ax methods, pcolormesh for binned 2D data, LogNorm, masked arrays,
+          proper colorbar with formatter.
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Good use of pcolormesh with bin edges, LogNorm, masked arrays, ax-based
-          methods
-      - id: LM-02
-        name: Distinctive Features
-        score: 2
-        max: 5
-        passed: false
-        comment: Uses LogNorm and masked arrays but overall pattern is a standard
-          heatmap replicable in most libraries
-  verdict: REJECTED
+        comment: LinearSegmentedColormap.from_list, LogFormatterSciNotation, pcolormesh
+          with shading, contour+clabel overlay, masked_where. Distinctly matplotlib.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
+  - annotations
   patterns:
   - data-generation
   - matrix-construction
