@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 heatmap-rainflow: Rainflow Counting Matrix for Fatigue Analysis
 Library: pygal 3.1.0 | Python 3.14.3
-Quality: 83/100 | Created: 2026-03-02
+Quality: 84/100 | Created: 2026-03-02
 """
 
 import math

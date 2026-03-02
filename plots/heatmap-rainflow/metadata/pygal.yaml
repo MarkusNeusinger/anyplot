@@ -1,7 +1,7 @@
 library: pygal
 specification_id: heatmap-rainflow
 created: '2026-03-02T21:06:18Z'
-updated: '2026-03-02T21:29:45Z'
+updated: '2026-03-02T21:39:10Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 22595466314
 issue: 4465
@@ -10,44 +10,43 @@ library_version: 3.1.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/heatmap-rainflow/pygal/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/heatmap-rainflow/pygal/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/heatmap-rainflow/pygal/plot.html
-quality_score: 83
+quality_score: 84
 review:
   strengths:
   - Excellent data generation with physically realistic wind turbine blade root fatigue
-    scenario, including dual loading clusters and physical cutoff boundaries
+    scenario including dual loading clusters and physical cutoff boundaries
   - 'Perfect spec compliance: all required features present including log-scale colorbar,
     units, zero-count distinction, and correct axis mapping'
-  - Viridis colormap is colorblind-safe and perceptually uniform — strong improvement
-    from attempt 1
-  - Peak cell annotations with adaptive text color create clear focal points for data
-    storytelling
-  - Proportional margins (improved from attempt 1) make layout more robust
+  - Viridis colormap is colorblind-safe and perceptually uniform with strong visual
+    impact
+  - Reduced peak annotations (3 cells only) with adaptive text color and bold emphasis
+    border on absolute peak create clear, uncluttered focal points
+  - Proportional margins and suppressed default chrome produce a clean, professional
+    layout
   weaknesses:
-  - Class-based structure with multiple helper methods violates KISS principle, though
-    necessary for pygal architecture
-  - sys.path hack and dummy series workaround reduce code elegance
-  - Peak annotations in bottom rows create visual density with 8+ annotated cells
-    in a row
-  - Design polish could be elevated further with additional visual emphasis on peak
-    cluster
-  image_description: The plot shows a 20×20 rainflow counting matrix heatmap with
+  - Class-based structure with sys.path hack and dummy series reduce code quality
+    scores, though both are inherent pygal constraints for custom chart types
+  - Design polish could be elevated further toward publication-ready level
+  - Most of the rendering work is manual SVG construction rather than leveraging pygal
+    built-in charting capabilities, limiting library mastery score
+  image_description: 'The plot shows a 20×20 rainflow counting matrix heatmap with
     the title "heatmap-rainflow · pygal · pyplots.ai" centered at the top. The x-axis
     is labeled "Mean Stress (MPa)" with 45°-rotated tick labels at every other bin
     center, ranging from -42 to 242. The y-axis is labeled "Stress Amplitude (MPa)"
     with horizontal tick labels at every other bin, from 5 to 195. A vertical colorbar
     on the right is titled "Cycle Count" with logarithmic tick marks at 0, 1, 10,
-    100, and 1000. The colormap is viridis — progressing from dark purple (low counts)
-    through teal and green to bright yellow (highest counts). Zero-count cells are
-    white with subtle gray borders, forming the outline of a dome/triangle shape.
-    The highest counts (bright yellow/green, ~6000–9600 cycles) concentrate in the
-    bottom two rows at low amplitudes (5–15 MPa) centered around mean stresses of
-    50–130 MPa. Peak cells in the bottom rows are annotated with their count values
-    (e.g., 9629, 9017, 8790, 6846, 6644). A secondary cluster is visible around mean=55
-    MPa. The overall layout is clean with white background, well-spaced cells with
-    tiny gaps, and balanced margins.
+    100, and 1000. The colormap is viridis — dark purple (low counts) through teal
+    and green to bright yellow (highest counts). Zero-count cells are white with subtle
+    gray borders, forming a dome/triangle boundary. The highest counts (bright yellow,
+    ~9000+ cycles) concentrate in the bottom row at low amplitudes (5 MPa) centered
+    around mean stresses of 55–110 MPa. Exactly 3 peak cells are annotated with their
+    count values: 9629, 9017, and 8790. The absolute peak cell has a bold dark emphasis
+    border. A secondary vibration cluster is visible near mean=55 MPa. The overall
+    layout is clean with white background, well-spaced cells with tiny gaps, rounded
+    corners, and balanced proportional margins.'
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -55,44 +54,43 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'Font sizes explicitly set throughout (title=64, axis titles=52px,
-          ticks=36px, colorbar=36/42px). All readable. Minor: rotated x-axis labels
-          slightly compressed.'
+        comment: 'Font sizes explicitly set throughout (title=64, axes=52px, ticks=36px,
+          colorbar=42px). All readable. Minor: 45°-rotated x-axis labels slightly
+          harder to scan.'
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Every-other tick labeling prevents crowding. Peak cell annotations
-          in bottom rows are somewhat dense with multiple adjacent 4-digit numbers.
+        comment: Annotations reduced from 5+ to exactly 3 peak cells. Every-other
+          tick labeling on both axes. No overlapping elements.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All cells clearly visible with excellent viridis color gradation.
-          Zero-count cells distinctly white. Cell gaps aid separation.
+        comment: All cells clearly visible with excellent viridis gradation. Zero-count
+          cells distinctly white with gray borders. Cell gaps aid separation.
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Viridis is the gold-standard perceptually uniform, colorblind-safe
-          colormap. Strong improvement from attempt 1.
+        comment: Viridis is gold-standard perceptually uniform colorblind-safe colormap.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Proportional margins adapted to chart dimensions. Good canvas utilization.
-          Some empty space in corners due to dome-shaped data.
+        comment: Proportional margins well-adapted. Some empty space in upper corners
+          inherent to dome-shaped data.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
         comment: 'Descriptive labels with units: Mean Stress (MPa), Stress Amplitude
-          (MPa). Title in correct format.'
+          (MPa), Cycle Count.'
     design_excellence:
       score: 13
       max: 20
@@ -102,23 +100,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Viridis colormap, clean white background, rounded cell corners, adaptive
-          annotation text color. Above defaults but not publication-grade.
+        comment: Viridis colormap, rounded cell corners, adaptive annotation text
+          color, emphasis border on peak. Above defaults but not publication-grade.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Default pygal chrome suppressed. Custom SVG labels with proportional
-          margins. Cell gaps and subtle borders show attention to detail.
+        comment: Default chrome suppressed, proportional margins, cell gaps, zero-cell
+          borders. Clean uncluttered aesthetic.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Log-scale reveals dynamic range. Peak annotations create focal points.
-          Dome shape communicates physical constraints. Could use additional emphasis
-          on peak cluster.
+        comment: Log-scale reveals range. 3 peak annotations with emphasis border
+          create clear focal points. Dome shape communicates physical constraints.
     spec_compliance:
       score: 15
       max: 15
@@ -129,14 +126,14 @@ review:
         max: 5
         passed: true
         comment: Correct 2D heatmap with amplitude on y-axis, mean on x-axis, color
-          representing cycle count.
+          for cycle count.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: viridis colormap, log scale, colorbar,
-          MPa units, bin center ticks, zero-count distinction.'
+        comment: 'All spec features present: viridis, log scale, colorbar, units,
+          bin labels, zero-count distinction.'
       - id: SC-03
         name: Data Mapping
         score: 3
@@ -148,8 +145,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format. Legend correctly hidden. Colorbar
-          title present.
+        comment: Title matches required format. Legend hidden (colorbar serves as
+          legend). Colorbar titled.
     data_quality:
       score: 15
       max: 15
@@ -159,23 +156,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Full range of amplitudes and means. Shows high-frequency low-amplitude
-          cycles, rare high-amplitude events, zero-count regions, and secondary vibration
+        comment: Full range of amplitudes and means. High-frequency low-amplitude
+          cycles, rare high-amplitude events, zero-count regions, secondary vibration
           cluster.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Wind turbine blade root fatigue loading — real, neutral engineering
-          application with accurate physical modeling.
+        comment: Wind turbine blade root fatigue loading — real neutral engineering
+          application with accurate physical details.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
         comment: Amplitude 0-200 MPa and mean -50 to 250 MPa realistic for wind turbine
-          blade root loading. Counts up to ~9600 plausible.
+          blade root loading.
     code_quality:
       score: 7
       max: 10
@@ -185,8 +182,8 @@ review:
         score: 1
         max: 3
         passed: false
-        comment: Custom RainflowHeatmap(Graph) class with multiple methods. Necessary
-          for pygal but violates flat script principle.
+        comment: Custom RainflowHeatmap(Graph) class required. Helpers inlined as
+          nested functions within _plot.
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -198,21 +195,20 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: math, sys, numpy, pygal.graph.graph.Graph, pygal.style.Style.'
+        comment: 'All imports used: math, sys, numpy, pygal Graph and Style.'
       - id: CQ-04
         name: Code Elegance
         score: 1
         max: 2
         passed: false
-        comment: sys.path hack and dummy series workaround reduce elegance. Proportional
-          margins improved from attempt 1.
+        comment: sys.path hack and dummy series are inelegant but unavoidable pygal
+          constraints. Color interpolation and margins are clean.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png via render_to_png(). Also generates SVG and HTML.
-          Current API.
+        comment: Saves plot.png, plot.svg, plot.html. Current API.
     library_mastery:
       score: 6
       max: 10
@@ -222,21 +218,21 @@ review:
         score: 3
         max: 5
         passed: true
-        comment: Correctly extends pygal Graph base class. Uses SVG node system, Style
-          class, and rendering pipeline. Bulk of work is manual SVG construction.
+        comment: Extends Graph base class idiomatically. Uses svg.node(), Style, view
+          system, rendering pipeline. Bulk of work is manual SVG construction.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: HTML export with embedded interactive SVG is distinctive to pygal.
-          Graph subclass architecture leverages pygal's unique design.
+        comment: HTML export with interactive SVG, Graph subclass architecture, SVG
+          rendering pipeline are pygal-distinctive.
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
-  - colorbar
   - annotations
+  - colorbar
   - html-export
   patterns:
   - data-generation
@@ -246,3 +242,4 @@ impl_tags:
   - normalization
   styling:
   - custom-colormap
+  - edge-highlighting
