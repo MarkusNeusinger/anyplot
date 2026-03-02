@@ -1,0 +1,244 @@
+library: bokeh
+specification_id: heatmap-rainflow
+created: '2026-03-02T21:05:10Z'
+updated: '2026-03-02T21:38:52Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22595466428
+issue: 4465
+python_version: 3.14.3
+library_version: 3.8.2
+preview_url: https://storage.googleapis.com/pyplots-images/plots/heatmap-rainflow/bokeh/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/heatmap-rainflow/bokeh/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/heatmap-rainflow/bokeh/plot.html
+quality_score: 93
+review:
+  strengths:
+  - Inferno palette with logarithmic color mapping creates a visually striking, engineering-appropriate
+    heatmap with excellent contrast across the wide count range
+  - Data storytelling annotations guide viewer interpretation of fatigue loading patterns
+    effectively
+  - Clean heatmap aesthetic with removed grid, outline, and minor ticks — professional
+    and data-focused
+  - Expert Bokeh usage with ColumnDataSource, LogColorMapper, construct_color_bar(),
+    HoverTool, and dual PNG/HTML export
+  - Realistic three-cluster fatigue data distribution with appropriate MPa scales
+    for a vehicle suspension component
+  - Zero-count bins visually distinct against light gray background, creating clear
+    contrast with Inferno palette
+  weaknesses:
+  - Colorbar is relatively thin (width=80) for a 3600px canvas; could be wider for
+    better visual prominence
+  - Data flattening loop (lines 47-54) is slightly verbose — could use numpy boolean
+    indexing for more Pythonic code
+  image_description: 'The plot displays a 2D heatmap of a rainflow counting matrix
+    using the Inferno color palette (dark purple/black to orange to bright yellow).
+    The x-axis is labeled "Cycle Mean Stress (MPa)" ranging from -100 to 300, the
+    y-axis is labeled "Cycle Amplitude (MPa)" ranging from approximately 15 to 210.
+    A vertical colorbar on the right is labeled "Cycle Count" with a logarithmic scale
+    from approximately 1 to 5000. The title "heatmap-rainflow · bokeh · pyplots.ai"
+    appears at the top left. The heatmap forms a dome/mountain shape with the brightest
+    yellow area (highest counts around 5000) concentrated at low amplitudes (30-50
+    MPa) and moderate mean stress (60-120 MPa), tapering through orange, pink, purple
+    to near-black at the sparse edges. Zero-count bins appear as the light gray (#f5f5f5)
+    background. Two annotations with dark semi-transparent backgrounds and white bold
+    text are present: "↑ Dominant loading cluster (~5000 cycles)" near the bottom-center
+    bright area, and "Rare severe events →" in the upper-left pointing toward the
+    high-amplitude region.'
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 28pt, axis labels 22pt, tick
+          labels 18pt, colorbar text 18pt/22pt, annotations 20pt. All clearly readable.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text. Annotations positioned clear of axes and tick
+          labels.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Heatmap rectangles fill bins properly. Color mapping clearly distinguishes
+          high/low count bins. Zero-count bins visually distinct.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Inferno is a perceptually-uniform, colorblind-safe sequential colormap
+          with excellent contrast.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: 'Good 3600x3600 square layout. Minor deduction: colorbar relatively
+          thin and title slightly cramped at right edge.'
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive labels with units: Cycle Mean Stress (MPa) and Cycle
+          Amplitude (MPa).'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Strong design: Inferno palette for thermal/engineering aesthetic,
+          styled annotations, clean heatmap look. Clearly above defaults.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Good refinement: grid removed, outline removed, minor ticks removed,
+          background customized, border fill white. Colorbar could be wider.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Effective storytelling through annotations guiding viewer to dominant
+          cluster and rare events. Color intensity creates natural focal point.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct 2D heatmap using rect glyphs with continuous color mapping.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: sequential colormap, log scale, colorbar,
+          units, tick labels, distinct zero-count bins.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Mean on x-axis, amplitude on y-axis (per spec), color maps to count.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct. Colorbar titled Cycle Count. No legend needed
+          for single-series heatmap.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all aspects: dominant low-amplitude cluster, secondary moderate
+          cluster, sparse high-amplitude events, zero-count edges.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Vehicle suspension component fatigue analysis — real, neutral engineering
+          scenario with plausible MPa values.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Amplitudes 10-210 MPa, means -100-300 MPa realistic for steel/aluminum.
+          Counts up to ~5000 realistic for durability testing.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports, seed, data generation, plot, styling, save.
+          No functions or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set at beginning.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: numpy, bokeh.io, bokeh.models, bokeh.palettes,
+          bokeh.plotting, bokeh.resources.'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, readable code. Data flattening loop slightly verbose but functional.
+          No fake UI or over-engineering.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png and plot.html. Uses current Bokeh 3.x API.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert Bokeh usage: ColumnDataSource, LogColorMapper, figure with
+          ranges, construct_color_bar(), HoverTool with renderers.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Bokeh-distinctive: HoverTool with custom tooltips, dual PNG+HTML
+          export, construct_color_bar() from renderer, LogColorMapper.'
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - annotations
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  - matrix-construction
+  - columndatasource
+  dataprep: []
+  styling:
+  - custom-colormap
+  - minimal-chrome
