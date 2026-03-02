@@ -1,0 +1,233 @@
+library: plotnine
+specification_id: heatmap-rainflow
+created: '2026-03-02T21:07:42Z'
+updated: '2026-03-02T21:53:35Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22595466503
+issue: 4465
+python_version: 3.14.3
+library_version: 0.15.3
+preview_url: https://storage.googleapis.com/pyplots-images/plots/heatmap-rainflow/plotnine/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/heatmap-rainflow/plotnine/plot_thumb.png
+preview_html: null
+quality_score: 87
+review:
+  strengths:
+  - 'Perfect spec compliance: all required features present (heatmap, colorbar, log
+    scale, units, zero-count distinction)'
+  - Excellent data generation with realistic fatigue analysis context and two distinct
+    cycle clusters
+  - Clean code structure with KISS pattern and full reproducibility
+  - Strong visual quality with explicitly set font sizes, no overlap, and good canvas
+    utilization
+  - 'Good visual refinement: removed grids, subtle borders, custom backgrounds'
+  weaknesses:
+  - Annotations (labels + arrow segments) defined in code do not render in the output,
+    losing key storytelling elements
+  - Rendered colormap is orange/brown instead of the coded viridis — likely a plotnine
+    API issue with scale_fill_cmap
+  - Design excellence held back by missing annotations and unintended colormap
+  image_description: The plot shows a 20×20 rainflow counting matrix rendered as a
+    2D heatmap. The x-axis is labeled "Mean Stress (MPa)" ranging from -100 to 100,
+    and the y-axis is labeled "Stress Amplitude (MPa)" ranging from 0 to 200. The
+    title reads "heatmap-rainflow · plotnine · pyplots.ai" in bold centered text.
+    The colormap is an orange/brown sequential scheme (NOT the viridis specified in
+    code), with dark brown/orange representing high cycle counts and light cream/white
+    for low counts. A colorbar on the right is labeled "Cycle Count (log₁₀)" with
+    values from 0.0 to 2.5. Zero-count bins appear as white tiles with subtle gray
+    borders, visually distinct from data-bearing tiles. The primary concentration
+    of high cycle counts is clearly visible at low amplitude (0–50 MPa) near zero
+    mean stress, with a secondary cluster around amplitude ~60 MPa and mean ~30 MPa.
+    Grid lines are removed, the panel has a white background with a subtle gray border,
+    and the plot background is light gray. Notably, the code includes four annotate()
+    calls (two "label" and two "segment" for arrows) that are completely absent from
+    the rendered output.
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 24pt bold, axis titles 20pt,
+          tick labels 16pt, legend title 16pt bold, legend text 14pt'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text elements anywhere
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Tiles well-sized for 20x20 grid, but orange colormap provides less
+          perceptual uniformity than intended viridis
+      - id: VQ-04
+        name: Color Accessibility
+        score: 3
+        max: 4
+        passed: true
+        comment: Orange sequential colormap is colorblind-accessible but not as perceptually
+          uniform as viridis
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good 16:9 layout, colorbar well-positioned, minor wasted space at
+          extremes
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Both axes labeled with descriptive names and MPa units
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Above defaults with custom backgrounds, removed grids, good typography.
+          Orange colormap and missing annotations reduce polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Grid fully removed, white panel with subtle border, light gray plot
+          background, subtle tile edges
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Log scale and data patterns create natural focal points, but annotations
+          that were supposed to guide viewers failed to render
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct 2D heatmap using geom_tile for rainflow counting matrix
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features: sequential colormap, colorbar, log scale, MPa units,
+          zero-count distinction'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Amplitude on y-axis, mean on x-axis per spec
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title correctly formatted, colorbar labeled with Cycle Count (log10)
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows primary concentration, secondary cluster, zero-count bins,
+          smooth gradients
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Realistic fatigue analysis with stress amplitude and mean stress
+          in MPa
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Realistic ranges: amplitude 0-200 MPa, mean ±100 MPa, cycle counts
+          up to ~300'
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean Imports → Data → Plot → Save structure, no functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set at start
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports referenced in code
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean Pythonic code, dual-layer approach is elegant, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with dpi=300
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good grammar-of-graphics approach but annotate calls fail to produce
+          visible output
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Layer composition with dual geom_tile layers, scale_fill_cmap, extensive
+          theme customization
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep: []
+  styling:
+  - custom-colormap
+  - minimal-chrome

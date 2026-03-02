@@ -1,0 +1,245 @@
+library: letsplot
+specification_id: heatmap-rainflow
+created: '2026-03-02T21:09:10Z'
+updated: '2026-03-02T21:41:12Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22595466196
+issue: 4465
+python_version: 3.14.3
+library_version: 4.8.2
+preview_url: https://storage.googleapis.com/pyplots-images/plots/heatmap-rainflow/letsplot/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/heatmap-rainflow/letsplot/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/heatmap-rainflow/letsplot/plot.html
+quality_score: 93
+review:
+  strengths:
+  - Excellent data modeling with dual-cluster structure (primary exponential decay
+    + secondary resonance) demonstrating real-world fatigue analysis
+  - 'Strong design execution: Plasma colormap with log10 scale, sophisticated dark
+    blue-gray typography hierarchy, clean minimal layout'
+  - Perfect spec compliance with all required features including zero-count bin distinction,
+    physical units, colorbar, and correct axis mapping
+  - Effective data storytelling with peak annotation and descriptive subtitle guiding
+    the viewer
+  - Clean well-structured code with vectorized numpy operations and idiomatic lets-plot
+    usage
+  weaknesses:
+  - Very dark purple tiles at lowest count range are difficult to differentiate from
+    each other
+  - Secondary resonance cluster could benefit from its own annotation to strengthen
+    storytelling
+  - Library-specific features are present but core visualization approach is transferable
+    to other ggplot-style libraries
+  image_description: 'The plot displays a 2D heatmap of a rainflow counting matrix
+    using the Plasma colormap on a log10 color scale. The x-axis shows "Mean Stress
+    (MPa)" ranging from -40 to 100, and the y-axis shows "Stress Amplitude (MPa)"
+    ranging from 20 to 200. Tiles are colored from deep purple/blue (low counts ~5)
+    through magenta/pink (medium counts ~50-100) to bright yellow (high counts ~1,000).
+    The highest-intensity region (bright yellow/orange) is concentrated at low amplitudes
+    (10-40 MPa) near moderate mean stresses (0-40 MPa). A secondary brighter cluster
+    is visible around amplitude ~80-120 MPa and mean stress ~60-100 MPa, representing
+    the resonance-induced loading event. The title "heatmap-rainflow · letsplot ·
+    pyplots.ai" appears in large bold dark text, with an italic subtitle "Variable-amplitude
+    fatigue load spectrum with resonance-induced secondary cluster". A bold annotation
+    "Peak: 1,128 cycles" marks the highest-count bin. The colorbar on the right is
+    labeled "Cycle Count" with log-spaced breaks (5, 10, 50, 100, 500, 1,000). The
+    panel background is a subtle off-white, grid lines are removed, and small gaps
+    between tiles provide visual separation. A caption at the bottom right reads "Simulated
+    rainflow matrix · cycle counts on log10 scale".'
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title=26, subtitle=16, axis_title=20,
+          axis_text=16, legend_text=14, legend_title=16, caption=12. All clearly readable.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text anywhere. Axis labels well-spaced, annotation
+          clear, colorbar labels distinct.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Tiles clearly visible with Plasma colormap and log10 scale. Minor:
+          very dark purple tiles at lowest count range hard to differentiate.'
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Plasma is perceptually-uniform and colorblind-safe with strong luminance
+          contrast.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Heatmap fills ~60-65% of canvas. Balanced margins, colorbar near
+          data.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive labels with units: Mean Stress (MPa), Stress Amplitude
+          (MPa).'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Strong design: Plasma colormap with log scale, intentional dark
+          blue-gray typography hierarchy, themed colorbar. Clearly above defaults.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Grid removed, subtle axis lines, custom backgrounds, explicit margins,
+          tile gaps for visual separation.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Clear narrative: subtitle explains dual-cluster phenomenon, peak
+          annotation draws attention, log scale reveals full dynamic range.'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct 2D heatmap using geom_tile for rainflow counting matrix.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: heatmap, sequential colormap, log scale,
+          colorbar, units, tick labels, zero-count distinction.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=Mean Stress, Y=Stress Amplitude, Fill=Cycle Count. Correct axis
+          mapping per spec.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct. Colorbar labeled Cycle Count with formatted
+          labels.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all aspects: exponential decay in amplitude, Gaussian in mean,
+          secondary resonance cluster, zero-count bins, wide dynamic range.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real mechanical engineering fatigue analysis scenario with appropriate
+          MPa stress units and realistic ranges.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All values physically realistic: stress amplitudes 10-200 MPa, mean
+          stresses -50 to 100 MPa, cycle counts 3-1128 per bin.'
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean linear flow: Imports, Setup, Data generation, DataFrame, Plot,
+          Save. No functions or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) ensures reproducible output.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used. Every lets_plot component referenced in plot construction.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-structured with vectorized numpy operations, clean ggplot chain.
+          No fake functionality.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png via ggsave with scale=3. Current API usage.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert ggplot grammar: geom_tile + scale_fill_viridis with transform
+          + guide_colorbar + theme_minimal + custom theme. Proper ggsize and ggsave.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses layer_tooltips() for interactive hover, guide_colorbar customization,
+          HTML export. Distinctive but core approach is transferable.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  - matrix-construction
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - custom-colormap
+  - minimal-chrome
