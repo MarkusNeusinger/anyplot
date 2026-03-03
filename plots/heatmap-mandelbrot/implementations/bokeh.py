@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 heatmap-mandelbrot: Mandelbrot Set Fractal Visualization
 Library: bokeh 3.8.2 | Python 3.14.3
 Quality: 85/100 | Created: 2026-03-03
@@ -6,7 +6,8 @@ Quality: 85/100 | Created: 2026-03-03
 
 import numpy as np
 from bokeh.io import export_png, save
-from bokeh.models import BasicTicker, ColorBar, LinearColorMapper
+from bokeh.models import BasicTicker, ColorBar, LogColorMapper, NumeralTickFormatter
+from bokeh.palettes import Inferno256
 from bokeh.plotting import figure
 from bokeh.resources import CDN
 
@@ -42,39 +43,6 @@ valid = ~np.isnan(iteration_count)
 low_val = float(np.nanmin(iteration_count[valid])) if np.any(valid) else 0
 high_val = float(np.nanmax(iteration_count[valid])) if np.any(valid) else max_iter
 
-# Custom palette — deep blue to cyan to yellow to orange to dark (perceptually rich)
-palette = [
-    "#000764",
-    "#001494",
-    "#0025c8",
-    "#0638e0",
-    "#084cf0",
-    "#0860f8",
-    "#0878ff",
-    "#0890ff",
-    "#08a8ff",
-    "#08c0ff",
-    "#18d8ff",
-    "#38e8f0",
-    "#60f0d8",
-    "#88f8b8",
-    "#b0f898",
-    "#d0f878",
-    "#e8f050",
-    "#f8e030",
-    "#f8c818",
-    "#f8a808",
-    "#f08800",
-    "#e06800",
-    "#c84800",
-    "#a83000",
-    "#882000",
-    "#681800",
-    "#481008",
-    "#280800",
-    "#100400",
-]
-
 # Plot
 p = figure(
     width=4800,
@@ -82,14 +50,15 @@ p = figure(
     x_range=(x_min, x_max),
     y_range=(y_min, y_max),
     title="heatmap-mandelbrot · bokeh · pyplots.ai",
-    x_axis_label="Real Axis",
-    y_axis_label="Imaginary Axis",
+    x_axis_label="Re(c)",
+    y_axis_label="Im(c)",
     toolbar_location=None,
     tools="",
     match_aspect=True,
 )
 
-mapper = LinearColorMapper(palette=palette, low=low_val, high=high_val, nan_color="#000000")
+# LogColorMapper emphasizes boundary detail where iteration counts change rapidly
+mapper = LogColorMapper(palette=Inferno256, low=max(low_val, 1.0), high=high_val, nan_color="#000000")
 
 p.image(image=[iteration_count], x=x_min, y=y_min, dw=x_max - x_min, dh=y_max - y_min, color_mapper=mapper)
 
@@ -97,30 +66,47 @@ p.image(image=[iteration_count], x=x_min, y=y_min, dw=x_max - x_min, dh=y_max - 
 color_bar = ColorBar(
     color_mapper=mapper,
     ticker=BasicTicker(desired_num_ticks=8),
-    label_standoff=16,
-    width=40,
+    formatter=NumeralTickFormatter(format="0"),
+    label_standoff=20,
+    width=45,
     title="Escape Iterations",
     title_text_font_size="20pt",
+    title_text_color="#cccccc",
     major_label_text_font_size="18pt",
-    title_standoff=20,
+    major_label_text_color="#cccccc",
+    title_standoff=24,
     border_line_color=None,
-    padding=10,
+    padding=16,
+    bar_line_color="#333333",
 )
 p.add_layout(color_bar, "right")
 
-# Style
+# Style — dark theme with cohesive color scheme
 p.title.text_font_size = "28pt"
+p.title.text_color = "#e0e0e0"
 p.xaxis.axis_label_text_font_size = "22pt"
 p.yaxis.axis_label_text_font_size = "22pt"
 p.xaxis.major_label_text_font_size = "18pt"
 p.yaxis.major_label_text_font_size = "18pt"
+p.xaxis.axis_label_text_color = "#cccccc"
+p.yaxis.axis_label_text_color = "#cccccc"
+p.xaxis.major_label_text_color = "#aaaaaa"
+p.yaxis.major_label_text_color = "#aaaaaa"
+p.xaxis.axis_line_color = "#555555"
+p.yaxis.axis_line_color = "#555555"
+p.xaxis.major_tick_line_color = "#555555"
+p.yaxis.major_tick_line_color = "#555555"
+p.xaxis.minor_tick_line_color = None
+p.yaxis.minor_tick_line_color = None
 
 p.xgrid.grid_line_color = None
 p.ygrid.grid_line_color = None
 p.outline_line_color = None
 p.background_fill_color = "#000000"
-p.border_fill_color = "white"
-p.min_border_right = 120
+p.border_fill_color = "#1a1a1a"
+p.min_border_right = 140
+p.min_border_left = 100
+p.min_border_bottom = 80
 
 # Save
 export_png(p, filename="plot.png")
