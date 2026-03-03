@@ -1,0 +1,237 @@
+library: letsplot
+specification_id: heatmap-mandelbrot
+created: '2026-03-03T13:44:17Z'
+updated: '2026-03-03T13:59:56Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22625547103
+issue: 4431
+python_version: 3.14.3
+library_version: 4.8.2
+preview_url: https://storage.googleapis.com/pyplots-images/plots/heatmap-mandelbrot/letsplot/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/heatmap-mandelbrot/letsplot/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/heatmap-mandelbrot/letsplot/plot.html
+quality_score: 90
+review:
+  strengths:
+  - Excellent smooth coloring technique eliminates discrete banding at fractal boundary
+  - Inferno colormap on dark panel background creates a striking, professional visualization
+  - Complete spec compliance with all required features implemented correctly
+  - Interactive tooltips showing complex coordinates (c = real + imag*i) are a creative
+    use of lets-plot
+  - Clean, elegant numpy vectorization for the Mandelbrot computation
+  - Thoughtful text color hierarchy and typography choices
+  weaknesses:
+  - Caption text at size 12 is slightly small relative to the 4800x2700 output resolution
+  - coord_fixed creates some unused horizontal space in the layout
+  - Could leverage more lets-plot distinctive features
+  image_description: The plot displays a Mandelbrot set fractal visualization rendered
+    as a heatmap using lets-plot's geom_raster. The background is near-black (#0d0d0d),
+    which seamlessly blends with the black interior of the Mandelbrot set. The fractal
+    boundary glows with the inferno colormap — transitioning from deep purple/magenta
+    near the set boundary through orange to bright yellow for rapidly escaping points.
+    The characteristic cardioid (main body) and period-2 bulb (large circle to its
+    left) are clearly visible, along with smaller satellite bulbs and the intricate
+    filament structure along the real axis. The title "heatmap-mandelbrot · letsplot
+    · pyplots.ai" appears in bold dark text at the top, with an italic subtitle "Escape-time
+    fractal with smooth iteration coloring on the complex plane." The x-axis is labeled
+    "Real Axis" (-2.5 to 1.0), the y-axis "Imaginary Axis" (-1.0 to 1.0), and a vertical
+    "Iterations" colorbar on the right shows the scale from ~5 to ~95. A caption at
+    the bottom reads "z(n+1) = z(n)² + c · max iterations = 100 · interior points
+    in black." The smooth coloring technique eliminates discrete banding, creating
+    a visually striking gradient at the fractal boundary.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 26pt, axis titles 20pt, ticks
+          16pt, legend 16/14pt). Caption at 12pt is slightly small but supplementary.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text elements. Labels, ticks, title, and colorbar
+          all well-separated.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Raster fills plot area completely. Fractal detail clearly visible
+          with smooth coloring revealing fine boundary structure.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Inferno colormap is perceptually uniform and colorblind-safe. Strong
+          contrast between boundary colors and dark interior.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good layout. coord_fixed preserves mathematical proportions but creates
+          some unused horizontal space.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Real Axis and Imaginary Axis are descriptive and appropriate for
+          complex plane coordinates.
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Strong design: inferno on dark panel creates glowing effect. Thoughtful
+          text color hierarchy. Clearly above defaults.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Grid removed, dark panel background, subtle axis lines, generous
+          margins, white plot background framing dark panel.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Inferno colormap creates glowing focal point at fractal boundary.
+          Black interior vs vivid boundary establishes clear visual hierarchy.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct heatmap/raster visualization using geom_raster.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec requirements met: smooth coloring, perceptually uniform
+          colormap, full set with cardioid and bulb, labeled axes, black interior,
+          preserved aspect ratio.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=real axis (-2.5 to 1.0), Y=imaginary axis (-1.25 to 1.25), fill=escape
+          iteration count.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title follows exact format. Iterations colorbar label is accurate.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all Mandelbrot features: cardioid, period-2 bulb, satellite
+          bulbs, filament structure, smooth gradients, distinct interior.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Well-known mathematical object for education and scientific visualization.
+          Neutral content.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Standard mathematical ranges: real [-2.5, 1.0], imaginary [-1.25,
+          1.25], max_iter=100, resolution 800x571.'
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean linear flow: imports, computation, DataFrame, plot, save.
+          No functions or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Mandelbrot computation is fully deterministic.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used. Specific named imports from lets_plot.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Elegant numpy vectorization. Smooth coloring formula is clean and
+          mathematically correct.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png via ggsave with scale=3. Current API.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Good ggplot grammar: geom_raster, scale_fill_viridis, coord_fixed,
+          theme_minimal + theme, guide_colorbar.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: layer_tooltips with custom format for complex coordinates. HTML export.
+          guide_colorbar with nbin=256.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep: []
+  styling:
+  - custom-colormap
+  - dark-theme
