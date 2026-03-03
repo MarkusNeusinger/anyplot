@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 heatmap-mandelbrot: Mandelbrot Set Fractal Visualization
-Library: matplotlib | Python 3.13
-Quality: pending | Created: 2026-03-03
+Library: matplotlib 3.10.8 | Python 3.14.3
+Quality: 88/100 | Created: 2026-03-03
 """
 
 import matplotlib.pyplot as plt
