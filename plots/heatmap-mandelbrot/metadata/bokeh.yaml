@@ -1,0 +1,238 @@
+library: bokeh
+specification_id: heatmap-mandelbrot
+created: '2026-03-03T13:45:12Z'
+updated: '2026-03-03T14:00:31Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22625546870
+issue: 4431
+python_version: 3.14.3
+library_version: 3.8.2
+preview_url: https://storage.googleapis.com/pyplots-images/plots/heatmap-mandelbrot/bokeh/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/heatmap-mandelbrot/bokeh/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/heatmap-mandelbrot/bokeh/plot.html
+quality_score: 91
+review:
+  strengths:
+  - Excellent smooth coloring implementation with log2(log2(|z|)) formula eliminating
+    discrete banding
+  - Dark theme perfectly suited to Mandelbrot visualization making boundary colors
+    glow against black background
+  - LogColorMapper is a clever choice emphasizing boundary detail where iteration
+    counts change rapidly
+  - 'Cohesive gray text hierarchy (#e0e0e0 to #cccccc to #aaaaaa) creates professional
+    unified look'
+  - Dual PNG+HTML export leverages Bokeh web-native strengths
+  - Grid resolution (1200x714) and max_iter (200) both exceed spec defaults for better
+    detail
+  weaknesses:
+  - Color bar tick numbers could be more prominent (slightly dense at the right edge)
+  - Could explore Bokeh-specific interactive features in the HTML output (hover tooltips
+    showing coordinates/iteration count)
+  image_description: The plot displays the Mandelbrot set fractal on a black background
+    (#000000) with a dark gray (#1a1a1a) border fill. The fractal is rendered using
+    the Inferno256 colormap, producing deep purple/blue tones in regions of slow escape
+    that transition through orange and yellow for rapidly diverging regions. The iconic
+    main cardioid and period-2 bulb are rendered in solid black (non-escaping points).
+    The fractal boundary exhibits intricate, smooth detail thanks to the normalized
+    iteration count formula and the LogColorMapper which emphasizes boundary structure.
+    The title "heatmap-mandelbrot · bokeh · pyplots.ai" appears in light gray at the
+    top left. The x-axis is labeled "Re(c)" spanning -2.5 to 1.0, the y-axis is labeled
+    "Im(c)" spanning approximately -1.25 to 1.25, both with gray tick labels. A vertical
+    color bar on the right labeled "Escape Iterations" maps colors to iteration counts.
+    No grid lines are present, and the aspect ratio correctly preserves the mathematical
+    proportions of the complex plane.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 28pt, labels 22pt, ticks 18pt,
+          color bar 20pt/18pt). Minor deduction for slightly dense color bar tick
+          numbers at right edge.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text elements anywhere in the plot.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Mandelbrot set beautifully visible with excellent boundary detail.
+          Smooth coloring prevents banding.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Inferno256 is perceptually uniform and colorblind-safe with excellent
+          contrast.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills canvas well with match_aspect=True. Explicit margins ensure
+          balanced layout.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Re(c) and Im(c) are proper mathematical notation for the complex
+          plane.
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Strong design: custom dark theme, Inferno256 palette, cohesive gray
+          text hierarchy, LogColorMapper for boundary emphasis. Clearly above defaults.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Excellent: grid removed, outline removed, minor ticks removed, subtle
+          axis colors, generous margins, color bar styling.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: LogColorMapper creates natural visual hierarchy emphasizing fractal
+          boundary. Dark theme makes boundary colors glow.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct heatmap/image visualization of the Mandelbrot set.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec requirements met: smooth coloring, perceptually uniform
+          colormap, full set, labeled axes, black interior, preserved aspect ratio.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Standard ranges: real -2.5 to 1.0, imaginary -1.25 to 1.25. Resolution
+          1200x714 exceeds minimum 800x600.'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format. Color bar labeled Escape Iterations
+          is appropriate.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows complete Mandelbrot set: main cardioid, period-2 bulb, satellite
+          bulbs, antenna, smooth boundary gradients.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: The Mandelbrot set is the most iconic fractal in mathematics. Completely
+          neutral subject.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Standard canonical ranges for viewing the full Mandelbrot set.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean linear flow: Imports, Data, Plot, Styling, Save. No functions
+          or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Mandelbrot computation is fully deterministic.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: numpy, bokeh.io, bokeh.models, Inferno256, figure,
+          CDN.'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Vectorized numpy computation with masked updates is clean and efficient.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png via export_png. Also generates plot.html. Current
+          Bokeh 3.x API.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Good use of Bokeh image rendering pipeline: figure, p.image() with
+          color_mapper, ColorBar, LogColorMapper.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: 'Uses Bokeh-specific features: LogColorMapper with nan_color, match_aspect,
+          dual PNG+HTML export, detailed ColorBar customization.'
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - html-export
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep: []
+  styling:
+  - dark-theme
+  - custom-colormap

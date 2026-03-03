@@ -1,0 +1,239 @@
+library: matplotlib
+specification_id: heatmap-mandelbrot
+created: '2026-03-03T13:42:57Z'
+updated: '2026-03-03T14:02:01Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22625546910
+issue: 4431
+python_version: 3.14.3
+library_version: 3.10.8
+preview_url: https://storage.googleapis.com/pyplots-images/plots/heatmap-mandelbrot/matplotlib/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/heatmap-mandelbrot/matplotlib/plot_thumb.png
+preview_html: null
+quality_score: 93
+review:
+  strengths:
+  - Excellent smooth coloring implementation avoids discrete banding artifacts
+  - PowerNorm (gamma=0.4) is a sophisticated choice that emphasizes the mathematically
+    interesting boundary region
+  - Subtle contour overlay adds depth and visual hierarchy without cluttering the
+    fractal
+  - Dark theme with inferno colormap creates a dramatic, visually striking presentation
+  - All font sizes explicitly set with good readability at target resolution
+  - Fully deterministic, efficient vectorized computation with boolean masking
+  weaknesses:
+  - 'Minor: axis labels are slightly redundant (Real Part + Re(c) says the same thing
+    twice)'
+  - DE-01 could be elevated further with a custom colormap or more refined typography
+    choices
+  image_description: The plot displays the Mandelbrot set fractal on a black background
+    using the inferno colormap. The characteristic cardioid (main body) and period-2
+    bulb are rendered in solid black, representing points that never escape. Surrounding
+    regions show escape iteration counts via a smooth color gradient transitioning
+    from deep purple (low iterations, quick escape) through red/orange to bright yellow
+    (high iterations, slow escape near the boundary). Axes are labeled "Real Part
+    Re(c)" (x-axis, -2.5 to 1.0) and "Imaginary Part Im(c)" (y-axis, -1.25 to 1.25)
+    in white text with mathematical notation. The title reads "heatmap-mandelbrot
+    · matplotlib · pyplots.ai" in white. A colorbar on the right shows "Escape Iterations"
+    ranging from approximately 25 to 175. Very subtle white contour lines trace escape
+    boundaries at selected iteration levels. All spines are removed. The fractal boundary
+    detail is excellent with smooth coloring (no banding), and smaller satellite bulbs
+    and filaments are clearly visible.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title=24, labels=20, ticks=16, colorbar
+          label=20, colorbar ticks=16. White on black provides excellent contrast.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text elements. Title, axes, ticks, and colorbar are
+          well-separated.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Fractal boundary detail is excellent. Smooth coloring prevents banding.
+          PowerNorm enhances boundary visibility.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Inferno is perceptually uniform and colorblind-safe. High contrast
+          between black interior and colored exterior.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 16:9 figure fills canvas well. Colorbar proportionally sized. tight_layout
+          applied.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive mathematical labels with LaTeX notation for complex plane
+          coordinates.
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Strong design: black background, inferno colormap, PowerNorm emphasis,
+          LaTeX typography. Clearly above defaults.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: All spines removed, no grid, styled colorbar outline, generous title
+          padding, subtle contour lines (alpha=0.12).
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: PowerNorm emphasizes fractal boundary. Contour lines at strategic
+          levels highlight self-similar structure. Good visual hierarchy.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct heatmap visualization of the Mandelbrot set.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: smooth coloring, full set with cardioid
+          and period-2 bulb, labeled axes, black interior, correct aspect ratio, perceptually
+          uniform colormap.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=Real (-2.5 to 1.0), Y=Imaginary (-1.25 to 1.25), Color=escape iterations.
+          Grid 1200x860 exceeds minimum.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct. Colorbar properly labeled Escape Iterations.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all features: main cardioid, period-2 bulb, satellite bulbs,
+          filaments, boundary detail, self-similar structure.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: The Mandelbrot set is a real mathematical object used in scientific
+          education. Standard complex plane coordinates.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Standard parameter ranges: real [-2.5, 1.0], imaginary [-1.25, 1.25],
+          max_iterations=200.'
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean linear flow: imports, data computation, plotting, saving.
+          No functions or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Mandelbrot computation is fully deterministic.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All three imports used: matplotlib.colors, matplotlib.pyplot, numpy.'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Efficient vectorized computation with boolean masking. No over-engineering.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with dpi=300 and bbox_inches=tight. No deprecated
+          API.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Proper Axes-based API throughout. Correct fig/ax pattern. PowerNorm,
+          colorbar, and contour overlay demonstrate solid matplotlib knowledge.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: PowerNorm is a distinctive matplotlib normalization. Contour overlay
+          on imshow leverages versatile plot composition. mathtext rendering uses
+          built-in LaTeX engine.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - layer-composition
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep: []
+  styling:
+  - custom-colormap
+  - dark-theme
+  - alpha-blending
+  - minimal-chrome
