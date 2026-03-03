@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 alluvial-opinion-flow: Opinion Flow Diagram
 Library: altair 6.0.0 | Python 3.14.3
 Quality: 80/100 | Created: 2026-03-03
@@ -11,23 +11,22 @@ import pandas as pd
 
 np.random.seed(42)
 
-# Data - Political opinion survey: 1000 respondents tracked across 4 quarterly waves
+# Data - Employee engagement survey: 1000 staff tracked across 4 quarterly waves
 categories = ["Strongly Agree", "Agree", "Neutral", "Disagree", "Strongly Disagree"]
-waves = ["Wave 1", "Wave 2", "Wave 3", "Wave 4"]
+waves = ["Q1 2025", "Q2 2025", "Q3 2025", "Q4 2025"]
 n_cats = len(categories)
 
 initial_counts = [180, 250, 200, 220, 150]
 
-# Transition matrices (rows = source category, cols = target category)
-# Row sums match source wave totals, showing gradual polarization
+# Transition matrices showing gradual polarization in employee sentiment
 transitions = [
-    # Wave 1 -> Wave 2
+    # Q1 -> Q2
     np.array(
         [[140, 25, 10, 5, 0], [20, 170, 40, 15, 5], [5, 30, 120, 35, 10], [0, 10, 25, 150, 35], [0, 5, 5, 20, 120]]
     ),
-    # Wave 2 -> Wave 3
+    # Q2 -> Q3
     np.array([[135, 20, 8, 2, 0], [25, 155, 35, 20, 5], [5, 25, 105, 45, 20], [0, 8, 20, 145, 52], [0, 2, 7, 18, 143]]),
-    # Wave 3 -> Wave 4
+    # Q3 -> Q4
     np.array([[140, 18, 5, 2, 0], [22, 135, 30, 18, 5], [3, 22, 100, 35, 15], [0, 5, 15, 155, 55], [0, 2, 5, 15, 198]]),
 ]
 
@@ -36,13 +35,13 @@ wave_totals = [dict(zip(categories, initial_counts, strict=True))]
 for trans in transitions:
     wave_totals.append(dict(zip(categories, trans.sum(axis=0).tolist(), strict=True)))
 
-# Layout constants (pixel coordinates)
+# Layout constants
 width = 1600
 height = 900
-top_margin = 120
-bottom_margin = 50
-left_margin = 220
-right_margin = 220
+top_margin = 130
+bottom_margin = 60
+left_margin = 240
+right_margin = 280
 node_width = 50
 node_padding = 18
 available_height = height - top_margin - bottom_margin
@@ -56,7 +55,7 @@ x_positions = [left_margin + i * (available_width / (n_waves - 1)) for i in rang
 node_positions = {}
 for w_idx in range(n_waves):
     time_total = sum(wave_totals[w_idx].values())
-    usable_height = available_height * 0.88 - node_padding * (n_cats - 1)
+    usable_height = available_height * 0.85 - node_padding * (n_cats - 1)
     current_y = top_margin + (available_height - usable_height - node_padding * (n_cats - 1)) / 2
 
     node_positions[w_idx] = {}
@@ -71,7 +70,7 @@ for w_idx in range(n_waves):
         }
         current_y += node_height + node_padding
 
-# Colors for opinion categories (diverging blue-gray-red)
+# Colors for sentiment categories (diverging blue-gray-red)
 category_colors = {
     "Strongly Agree": "#306998",
     "Agree": "#5B9BD5",
@@ -117,7 +116,6 @@ for t_idx, trans in enumerate(transitions):
 
             flow_id = f"w{t_idx}_{src_cat}_{tgt_cat}"
 
-            # Top curve (forward)
             top_points = []
             for i in range(num_curve_points):
                 t_param = i / (num_curve_points - 1)
@@ -126,7 +124,6 @@ for t_idx, trans in enumerate(transitions):
                 y = src_y_top + smooth * (tgt_y_top - src_y_top)
                 top_points.append((x, y))
 
-            # Bottom curve (reversed for closed polygon)
             bottom_points = []
             for i in range(num_curve_points - 1, -1, -1):
                 t_param = i / (num_curve_points - 1)
@@ -142,6 +139,7 @@ for t_idx, trans in enumerate(transitions):
                         "flow_id": flow_id,
                         "source_cat": src_cat,
                         "target_cat": tgt_cat,
+                        "name": src_cat,
                         "value": val,
                         "x": x,
                         "y": y,
@@ -167,7 +165,6 @@ for w_idx in range(n_waves):
                 "y": pos["y"],
                 "x2": pos["x"] + node_width,
                 "y2": pos["y"] + pos["height"],
-                "color": category_colors[cat],
                 "total": pos["total"],
                 "label_x": pos["x"] + node_width / 2,
                 "label_y": pos["y"] + pos["height"] / 2,
@@ -182,30 +179,35 @@ y_domain = alt.Scale(domain=[0, height])
 color_domain = list(category_colors.keys())
 color_range = list(category_colors.values())
 
+# Interactive hover selection for category highlighting
+node_hover = alt.selection_point(fields=["name"], on="pointerover")
+
 # Stable flows (higher opacity to emphasize persistence)
 stable_chart = (
     alt.Chart(stable_df)
-    .mark_line(filled=True, opacity=0.55, strokeWidth=0)
+    .mark_line(filled=True, opacity=0.60, strokeWidth=0)
     .encode(
         x=alt.X("x:Q", scale=x_domain, axis=None),
         y=alt.Y("y:Q", scale=y_domain, axis=None),
         color=alt.Color("source_cat:N", scale=alt.Scale(domain=color_domain, range=color_range), legend=None),
         detail="flow_id:N",
         order="order:Q",
+        opacity=alt.condition(node_hover, alt.value(0.60), alt.value(0.18)),
         tooltip=[alt.Tooltip("source_cat:N", title="Category"), alt.Tooltip("value:Q", title="Respondents (stable)")],
     )
 )
 
-# Changing flows (lower opacity to distinguish from stable)
+# Changing flows (increased opacity for better visibility)
 change_chart = (
     alt.Chart(change_df)
-    .mark_line(filled=True, opacity=0.22, strokeWidth=0)
+    .mark_line(filled=True, opacity=0.35, strokeWidth=0)
     .encode(
         x=alt.X("x:Q", scale=x_domain, axis=None),
         y=alt.Y("y:Q", scale=y_domain, axis=None),
         color=alt.Color("source_cat:N", scale=alt.Scale(domain=color_domain, range=color_range), legend=None),
         detail="flow_id:N",
         order="order:Q",
+        opacity=alt.condition(node_hover, alt.value(0.35), alt.value(0.08)),
         tooltip=[
             alt.Tooltip("source_cat:N", title="From"),
             alt.Tooltip("target_cat:N", title="To"),
@@ -214,7 +216,7 @@ change_chart = (
     )
 )
 
-# Node rectangles
+# Node rectangles with color legend
 nodes_chart = (
     alt.Chart(nodes_df)
     .mark_rect(stroke="#333333", strokeWidth=1.5, cornerRadius=3)
@@ -223,61 +225,98 @@ nodes_chart = (
         y=alt.Y("y:Q", scale=y_domain),
         x2="x2:Q",
         y2="y2:Q",
-        color=alt.Color("color:N", scale=None),
+        color=alt.Color(
+            "name:N",
+            scale=alt.Scale(domain=color_domain, range=color_range),
+            legend=alt.Legend(
+                title="Sentiment",
+                orient="bottom",
+                direction="horizontal",
+                titleFontSize=18,
+                labelFontSize=16,
+                titlePadding=8,
+                symbolSize=200,
+            ),
+        ),
         tooltip=[
-            alt.Tooltip("wave:N", title="Wave"),
-            alt.Tooltip("name:N", title="Opinion"),
+            alt.Tooltip("wave:N", title="Quarter"),
+            alt.Tooltip("name:N", title="Sentiment"),
             alt.Tooltip("total:Q", title="Respondents"),
         ],
     )
+    .add_params(node_hover)
 )
 
 # Count labels on nodes
 nodes_df["count_label"] = nodes_df["total"].astype(str)
 count_labels = (
     alt.Chart(nodes_df[nodes_df["y2"] - nodes_df["y"] >= 25].reset_index(drop=True))
-    .mark_text(fontSize=13, fontWeight="bold", color="#FFFFFF", baseline="middle", align="center")
+    .mark_text(fontSize=16, fontWeight="bold", color="#FFFFFF", baseline="middle", align="center")
     .encode(x=alt.X("label_x:Q", scale=x_domain), y=alt.Y("label_y:Q", scale=y_domain), text="count_label:N")
 )
 
-# Side labels: left (Wave 1) and right (Wave 4)
+# Side labels with net change indicators on the right (Wave 4)
 label_data = []
 for _, row in nodes_df.iterrows():
     y_mid = (row["y"] + row["y2"]) / 2
     if row["wave_idx"] == 0:
         label_data.append(
-            {"x": row["x"] - 10, "y": y_mid, "text": f"{row['name']} ({int(row['total'])})", "align": "right"}
+            {"x": row["x"] - 12, "y": y_mid, "text": f"{row['name']} ({int(row['total'])})", "align": "right"}
         )
     elif row["wave_idx"] == n_waves - 1:
+        cat = row["name"]
+        delta = wave_totals[n_waves - 1][cat] - wave_totals[0][cat]
+        sign = "+" if delta > 0 else ""
         label_data.append(
-            {"x": row["x2"] + 10, "y": y_mid, "text": f"{row['name']} ({int(row['total'])})", "align": "left"}
+            {
+                "x": row["x2"] + 12,
+                "y": y_mid,
+                "text": f"{row['name']} ({int(row['total'])}) {sign}{delta}",
+                "align": "left",
+            }
         )
 
 labels_df = pd.DataFrame(label_data)
 
 left_labels = (
     alt.Chart(labels_df[labels_df["align"] == "right"].reset_index(drop=True))
-    .mark_text(fontSize=15, fontWeight="bold", color="#444444", align="right", baseline="middle")
+    .mark_text(fontSize=18, fontWeight="bold", color="#444444", align="right", baseline="middle")
     .encode(x=alt.X("x:Q", scale=x_domain), y=alt.Y("y:Q", scale=y_domain), text="text:N")
 )
 
 right_labels = (
     alt.Chart(labels_df[labels_df["align"] == "left"].reset_index(drop=True))
-    .mark_text(fontSize=15, fontWeight="bold", color="#444444", align="left", baseline="middle")
+    .mark_text(fontSize=18, fontWeight="bold", color="#444444", align="left", baseline="middle")
     .encode(x=alt.X("x:Q", scale=x_domain), y=alt.Y("y:Q", scale=y_domain), text="text:N")
 )
 
-# Wave column headers
-wave_header_data = [{"x": x_positions[i], "y": top_margin - 45, "text": waves[i]} for i in range(n_waves)]
+# Wave column headers (positioned above the diagram)
+max_node_y = max(
+    node_positions[w][cat]["y"] + node_positions[w][cat]["height"] for w in range(n_waves) for cat in categories
+)
+header_y = max_node_y + 35
+wave_header_data = [{"x": x_positions[i], "y": header_y, "text": waves[i]} for i in range(n_waves)]
 wave_headers = (
     alt.Chart(pd.DataFrame(wave_header_data))
     .mark_text(fontSize=22, fontWeight="bold", color="#333333", baseline="bottom")
     .encode(x=alt.X("x:Q", scale=x_domain), y=alt.Y("y:Q", scale=y_domain), text="text:N")
 )
 
+# Trend annotation
+trend_data = [
+    {"x": width / 2, "y": 40, "text": "Polarization trend: extreme sentiments grow while moderate opinions decline"}
+]
+trend_annotation = (
+    alt.Chart(pd.DataFrame(trend_data))
+    .mark_text(fontSize=16, fontStyle="italic", color="#666666", baseline="top", align="center")
+    .encode(x=alt.X("x:Q", scale=x_domain), y=alt.Y("y:Q", scale=y_domain), text="text:N")
+)
+
 # Combine all layers
 chart = (
-    alt.layer(change_chart, stable_chart, nodes_chart, count_labels, left_labels, right_labels, wave_headers)
+    alt.layer(
+        change_chart, stable_chart, nodes_chart, count_labels, left_labels, right_labels, wave_headers, trend_annotation
+    )
     .properties(
         width=width,
         height=height,
