@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 alluvial-opinion-flow: Opinion Flow Diagram
 Library: highcharts unknown | Python 3.14.3
 Quality: 80/100 | Created: 2026-03-03
@@ -9,7 +9,6 @@ import time
 import urllib.request
 from pathlib import Path
 
-import numpy as np
 from highcharts_core.chart import Chart
 from highcharts_core.options import HighchartsOptions
 from PIL import Image
@@ -17,10 +16,9 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
 
-# Data - Opinion survey tracking ~1000 respondents across 4 quarterly waves
+# Data - Employee satisfaction survey tracking ~1000 employees across 4 quarterly waves
 # Categories: Strongly Agree, Agree, Neutral, Disagree, Strongly Disagree
-# Topic: "Should cities invest more in public transit?"
-np.random.seed(42)
+# Topic: "Should the company expand its professional development program?"
 
 waves = ["Q1 2024", "Q2 2024", "Q3 2024", "Q4 2024"]
 categories = ["Strongly Agree", "Agree", "Neutral", "Disagree", "Strongly Disagree"]
@@ -28,7 +26,7 @@ categories = ["Strongly Agree", "Agree", "Neutral", "Disagree", "Strongly Disagr
 # Flow data: [from_node, to_node, flow_count]
 # Naming convention: "{Category}_{WaveIndex}" for column positioning
 flows = [
-    # Q1 -> Q2: Early shifts after transit expansion announcement
+    # Q1 -> Q2: After initial program improvements announced
     ["Strongly Agree_0", "Strongly Agree_1", 145],
     ["Strongly Agree_0", "Agree_1", 30],
     ["Strongly Agree_0", "Neutral_1", 5],
@@ -48,7 +46,7 @@ flows = [
     ["Strongly Disagree_0", "Neutral_1", 5],
     ["Strongly Disagree_0", "Disagree_1", 15],
     ["Strongly Disagree_0", "Strongly Disagree_1", 100],
-    # Q2 -> Q3: After pilot program launches
+    # Q2 -> Q3: After new mentorship program launches
     ["Strongly Agree_1", "Strongly Agree_2", 150],
     ["Strongly Agree_1", "Agree_2", 20],
     ["Strongly Agree_1", "Neutral_2", 5],
@@ -68,7 +66,7 @@ flows = [
     ["Strongly Disagree_1", "Neutral_2", 5],
     ["Strongly Disagree_1", "Disagree_2", 10],
     ["Strongly Disagree_1", "Strongly Disagree_2", 105],
-    # Q3 -> Q4: After ridership data published
+    # Q3 -> Q4: After satisfaction results shared
     ["Strongly Agree_2", "Strongly Agree_3", 165],
     ["Strongly Agree_2", "Agree_3", 20],
     ["Strongly Agree_2", "Neutral_3", 5],
@@ -90,25 +88,17 @@ flows = [
     ["Strongly Disagree_2", "Strongly Disagree_3", 115],
 ]
 
-# Consistent opinion colors across all waves (colorblind-safe)
+# Colorblind-safe diverging palette (blue to red via gray)
+# Blue-red is robust for deuteranopia and protanopia unlike the previous green-based palette
 category_colors = {
-    "Strongly Agree": "#1B7837",
-    "Agree": "#7FBC41",
-    "Neutral": "#9E9E9E",
-    "Disagree": "#E08214",
-    "Strongly Disagree": "#C51B7D",
+    "Strongly Agree": "#2166AC",
+    "Agree": "#67A9CF",
+    "Neutral": "#878787",
+    "Disagree": "#EF8A62",
+    "Strongly Disagree": "#B2182B",
 }
 
-# Column positions for strict time-based vertical ordering
-column_positions = {str(i): i for i in range(len(waves))}
-
 # Calculate totals per node for labels
-node_totals = {}
-for source, target, count in flows:
-    node_totals[source] = node_totals.get(source, 0) + count
-    node_totals[target] = node_totals.get(target, 0) + count
-
-# For nodes that appear as both source and target, track outgoing and incoming separately
 node_outgoing = {}
 node_incoming = {}
 for source, target, count in flows:
@@ -120,7 +110,7 @@ nodes_data = []
 for wave_idx in range(len(waves)):
     for cat in categories:
         node_id = f"{cat}_{wave_idx}"
-        # Use outgoing total for first wave, incoming total for last wave, either works for middle
+        # Use outgoing total for first wave, incoming total for subsequent waves
         if wave_idx == 0:
             total = node_outgoing.get(node_id, 0)
         else:
@@ -129,14 +119,17 @@ for wave_idx in range(len(waves)):
             {"id": node_id, "name": f"{cat} ({total})", "column": wave_idx, "color": category_colors[cat]}
         )
 
-# Identify stable flows (same category across waves) vs changers
-# Stable flows get full opacity, changers get reduced opacity
+# Per-link rgba colors: stable flows (same category) are prominent, changers are faint
+# This replaces the global linkOpacity which overrode per-link values
 links_data = []
 for source, target, weight in flows:
     source_cat = source.rsplit("_", 1)[0]
     target_cat = target.rsplit("_", 1)[0]
     is_stable = source_cat == target_cat
-    links_data.append({"from": source, "to": target, "weight": weight, "opacity": 0.6 if is_stable else 0.25})
+    hex_col = category_colors[source_cat]
+    r, g, b = int(hex_col[1:3], 16), int(hex_col[3:5], 16), int(hex_col[5:7], 16)
+    alpha = 0.7 if is_stable else 0.15
+    links_data.append({"from": source, "to": target, "weight": weight, "color": f"rgba({r},{g},{b},{alpha})"})
 
 # Chart
 chart = Chart(container="container")
@@ -146,21 +139,21 @@ chart.options.chart = {
     "type": "sankey",
     "width": 4800,
     "height": 2700,
-    "backgroundColor": "#ffffff",
+    "backgroundColor": "#FAFAFA",
     "marginLeft": 250,
-    "marginRight": 500,
-    "marginTop": 200,
-    "marginBottom": 200,
+    "marginRight": 700,
+    "marginTop": 220,
+    "marginBottom": 220,
 }
 
 chart.options.title = {
-    "text": "Public Transit Investment Opinion · alluvial-opinion-flow · highcharts · pyplots.ai",
-    "style": {"fontSize": "56px", "fontWeight": "bold", "color": "#333333"},
+    "text": "Employee Training Satisfaction · alluvial-opinion-flow · highcharts · pyplots.ai",
+    "style": {"fontSize": "52px", "fontWeight": "bold", "color": "#2C3E50", "fontFamily": "Georgia, serif"},
 }
 
 chart.options.subtitle = {
-    "text": '"Should cities invest more in public transit?" — 1,000 respondents tracked quarterly',
-    "style": {"fontSize": "38px", "color": "#666666"},
+    "text": ('"Should the company expand its professional development program?" — 1,000 employees tracked quarterly'),
+    "style": {"fontSize": "36px", "color": "#5D6D7E", "fontFamily": "Georgia, serif"},
 }
 
 chart.options.tooltip = {
@@ -179,30 +172,35 @@ series_config = {
         "enabled": True,
         "crop": False,
         "overflow": "allow",
-        "style": {"fontSize": "30px", "fontWeight": "bold", "color": "#333333", "textOutline": "3px #ffffff"},
+        "style": {
+            "fontSize": "30px",
+            "fontWeight": "bold",
+            "color": "#1A1A1A",
+            "textOutline": "5px #ffffff",
+            "fontFamily": "Arial, sans-serif",
+        },
         "nodeFormat": "{point.name}",
     },
-    "nodeWidth": 55,
-    "nodePadding": 40,
-    "linkOpacity": 0.35,
+    "nodeWidth": 50,
+    "nodePadding": 45,
+    "linkOpacity": 1,
     "curveFactor": 0.5,
     "colorByPoint": True,
-    "linkColorMode": "from",
 }
 
 chart.options.series = [series_config]
 
 # Wave labels via annotations (x-axis doesn't work with sankey)
-wave_x_positions = [280, 1600, 2920, 4000]
+wave_x_positions = [280, 1500, 2700, 3850]
 chart.options.annotations = [
     {
         "labels": [
             {
-                "point": {"x": wave_x_positions[i], "y": 2500},
+                "point": {"x": wave_x_positions[i], "y": 2480},
                 "text": wave,
                 "backgroundColor": "transparent",
                 "borderWidth": 0,
-                "style": {"fontSize": "44px", "fontWeight": "bold", "color": "#333333"},
+                "style": {"fontSize": "44px", "fontWeight": "bold", "color": "#2C3E50", "fontFamily": "Georgia, serif"},
             }
             for i, wave in enumerate(waves)
         ],
@@ -243,26 +241,26 @@ html_str = chart.to_js_literal()
 # Custom legend HTML showing opinion categories and stable vs changer distinction
 legend_html = """
 <div id="custom-legend" style="position: absolute; bottom: 50px; left: 50%; transform: translateX(-50%);
-     display: flex; gap: 50px; font-family: Arial, sans-serif; font-size: 32px; color: #333;
+     display: flex; gap: 50px; font-family: Georgia, serif; font-size: 32px; color: #2C3E50;
      align-items: center; flex-wrap: wrap; justify-content: center;">
     <div style="display: flex; align-items: center; gap: 12px;">
-        <div style="width: 36px; height: 24px; background-color: #1B7837;"></div>
+        <div style="width: 36px; height: 24px; background-color: #2166AC; border-radius: 4px;"></div>
         <span>Strongly Agree</span>
     </div>
     <div style="display: flex; align-items: center; gap: 12px;">
-        <div style="width: 36px; height: 24px; background-color: #7FBC41;"></div>
+        <div style="width: 36px; height: 24px; background-color: #67A9CF; border-radius: 4px;"></div>
         <span>Agree</span>
     </div>
     <div style="display: flex; align-items: center; gap: 12px;">
-        <div style="width: 36px; height: 24px; background-color: #9E9E9E;"></div>
+        <div style="width: 36px; height: 24px; background-color: #878787; border-radius: 4px;"></div>
         <span>Neutral</span>
     </div>
     <div style="display: flex; align-items: center; gap: 12px;">
-        <div style="width: 36px; height: 24px; background-color: #E08214;"></div>
+        <div style="width: 36px; height: 24px; background-color: #EF8A62; border-radius: 4px;"></div>
         <span>Disagree</span>
     </div>
     <div style="display: flex; align-items: center; gap: 12px;">
-        <div style="width: 36px; height: 24px; background-color: #C51B7D;"></div>
+        <div style="width: 36px; height: 24px; background-color: #B2182B; border-radius: 4px;"></div>
         <span>Strongly Disagree</span>
     </div>
     <span style="margin-left: 30px; border-left: 2px solid #ccc; padding-left: 30px;">
@@ -279,7 +277,7 @@ html_content = f"""<!DOCTYPE html>
     <script>{js_modules["sankey"]}</script>
     <script>{js_modules["annotations"]}</script>
 </head>
-<body style="margin:0; position: relative;">
+<body style="margin:0; position: relative; background-color: #FAFAFA;">
     <div id="container" style="width: 4800px; height: 2700px;"></div>
     {legend_html}
     <script>{html_str}</script>
@@ -295,7 +293,7 @@ standalone_html = f"""<!DOCTYPE html>
     <script src="https://code.highcharts.com/modules/sankey.js"></script>
     <script src="https://code.highcharts.com/modules/annotations.js"></script>
 </head>
-<body style="margin:0; overflow:auto; position: relative;">
+<body style="margin:0; overflow:auto; position: relative; background-color: #FAFAFA;">
     <div id="container" style="width: 4800px; height: 2700px;"></div>
     {legend_html}
     <script>{html_str}</script>
