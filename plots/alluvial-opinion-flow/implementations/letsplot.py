@@ -1,7 +1,6 @@
-""" pyplots.ai
+"""pyplots.ai
 alluvial-opinion-flow: Opinion Flow Diagram
 Library: letsplot 4.8.2 | Python 3.14.3
-Quality: 81/100 | Created: 2026-03-03
 """
 
 import numpy as np
@@ -11,12 +10,13 @@ from lets_plot import (
     aes,
     element_blank,
     element_text,
-    geom_polygon,
     geom_rect,
+    geom_ribbon,
     geom_text,
     ggplot,
     ggsize,
     labs,
+    layer_tooltips,
     scale_fill_manual,
     scale_x_continuous,
     scale_y_continuous,
@@ -29,7 +29,6 @@ from lets_plot.export import ggsave
 LetsPlot.setup_html()
 
 # Survey data: 1000 respondents tracked across 4 quarterly waves
-# Opinion categories on climate policy
 np.random.seed(42)
 
 waves = ["Q1 2025", "Q2 2025", "Q3 2025", "Q4 2025"]
@@ -39,7 +38,6 @@ categories = ["Strongly Agree", "Agree", "Neutral", "Disagree", "Strongly Disagr
 initial_counts = {"Strongly Agree": 120, "Agree": 250, "Neutral": 280, "Disagree": 220, "Strongly Disagree": 130}
 
 # Flows between waves - showing gradual polarization (neutral shrinks, extremes grow)
-# Q1 -> Q2: initial movement away from neutral
 flows_q1_q2 = [
     ("Strongly Agree", "Strongly Agree", 110),
     ("Strongly Agree", "Agree", 8),
@@ -62,7 +60,6 @@ flows_q1_q2 = [
     ("Strongly Disagree", "Strongly Disagree", 115),
 ]
 
-# Q2 -> Q3: continued polarization
 flows_q2_q3 = [
     ("Strongly Agree", "Strongly Agree", 135),
     ("Strongly Agree", "Agree", 10),
@@ -84,7 +81,6 @@ flows_q2_q3 = [
     ("Strongly Disagree", "Strongly Disagree", 143),
 ]
 
-# Q3 -> Q4: strong polarization visible
 flows_q3_q4 = [
     ("Strongly Agree", "Strongly Agree", 165),
     ("Strongly Agree", "Agree", 8),
@@ -142,8 +138,8 @@ for wave_idx, totals in enumerate(wave_totals):
         y_offset += height + node_gap
     node_positions.append(positions)
 
-# Build flow polygons
-flow_data = []
+# Build flow ribbons using geom_ribbon (x, ymin, ymax) instead of manual polygon vertices
+ribbon_data = []
 n_points = 40
 
 for wave_idx, wave_flows in enumerate(all_flows):
@@ -166,36 +162,35 @@ for wave_idx, wave_flows in enumerate(all_flows):
         tgt_y1 = tgt_y0 + flow_height
         tgt_offsets[to_cat] += flow_height
 
-        x_vals_top = []
-        y_vals_top = []
-        x_vals_bottom = []
-        y_vals_bottom = []
+        flow_id = f"w{wave_idx}_{from_cat}_{to_cat}"
+        stability = "stable" if is_stable else "changed"
 
         for i in range(n_points + 1):
             t = i / n_points
             x = x_left + t * (x_right - x_left)
             ease = t * t * (3 - 2 * t)
-            y_top = src_y1 + ease * (tgt_y1 - src_y1)
-            y_bottom = src_y0 + ease * (tgt_y0 - src_y0)
+            ymin_val = src_y0 + ease * (tgt_y0 - src_y0)
+            ymax_val = src_y1 + ease * (tgt_y1 - src_y1)
 
-            x_vals_top.append(x)
-            y_vals_top.append(y_top)
-            x_vals_bottom.append(x)
-            y_vals_bottom.append(y_bottom)
+            ribbon_data.append(
+                {
+                    "x": x,
+                    "ymin": ymin_val,
+                    "ymax": ymax_val,
+                    "flow_id": flow_id,
+                    "category": from_cat,
+                    "stability": stability,
+                    "from_cat": from_cat,
+                    "to_cat": to_cat,
+                    "count": str(val),
+                }
+            )
 
-        x_polygon = x_vals_top + x_vals_bottom[::-1]
-        y_polygon = y_vals_top + y_vals_bottom[::-1]
+df_ribbons = pd.DataFrame(ribbon_data)
+df_stable = df_ribbons[df_ribbons["stability"] == "stable"]
+df_changed = df_ribbons[df_ribbons["stability"] == "changed"]
 
-        flow_id = f"w{wave_idx}_{from_cat}_{to_cat}"
-        stability = "stable" if is_stable else "changed"
-        for x, y in zip(x_polygon, y_polygon, strict=False):
-            flow_data.append({"x": x, "y": y, "flow_id": flow_id, "category": from_cat, "stability": stability})
-
-df_flows = pd.DataFrame(flow_data)
-df_stable = df_flows[df_flows["stability"] == "stable"]
-df_changed = df_flows[df_flows["stability"] == "changed"]
-
-# Build node rectangles
+# Build node rectangles with metadata for tooltips
 node_rects = []
 for wave_idx, positions in enumerate(node_positions):
     for cat in categories:
@@ -207,7 +202,8 @@ for wave_idx, positions in enumerate(node_positions):
                 "ymin": pos["y0"],
                 "ymax": pos["y1"],
                 "category": cat,
-                "wave_idx": wave_idx,
+                "wave": waves[wave_idx],
+                "count": str(wave_totals[wave_idx][cat]),
             }
         )
 
@@ -233,15 +229,22 @@ for cat in categories:
         }
     )
 
-# Category labels and counts on right side of last wave
+# Category labels with counts and net change on right side of last wave
 for cat in categories:
     pos = node_positions[3][cat]
     count = wave_totals[3][cat]
+    change = count - initial_counts[cat]
+    if change > 0:
+        change_str = f", +{change}"
+    elif change < 0:
+        change_str = f", {change}"
+    else:
+        change_str = ""
     label_rows.append(
         {
             "x": x_positions[3] + node_width + 0.015,
             "y": (pos["y0"] + pos["y1"]) / 2,
-            "label": f"{cat}\n({count})",
+            "label": f"{cat}\n({count}{change_str})",
             "type": "right_label",
         }
     )
@@ -264,38 +267,53 @@ for wave_idx in [1, 2]:
 
 df_labels = pd.DataFrame(label_rows)
 
-# Plot
+# Assemble plot with geom_ribbon for flows and layer_tooltips for interactivity
 plot = (
     ggplot()
-    + geom_polygon(
-        aes(x="x", y="y", group="flow_id", fill="category"), data=df_changed, alpha=0.25, color="white", size=0.05
+    + geom_ribbon(
+        aes(x="x", ymin="ymin", ymax="ymax", group="flow_id", fill="category"),
+        data=df_changed,
+        alpha=0.35,
+        color="white",
+        size=0.05,
+        tooltips=layer_tooltips().line("@from_cat -> @to_cat").line("@count respondents (changed)"),
     )
-    + geom_polygon(
-        aes(x="x", y="y", group="flow_id", fill="category"), data=df_stable, alpha=0.6, color="white", size=0.05
+    + geom_ribbon(
+        aes(x="x", ymin="ymin", ymax="ymax", group="flow_id", fill="category"),
+        data=df_stable,
+        alpha=0.6,
+        color="white",
+        size=0.05,
+        tooltips=layer_tooltips().line("@from_cat (stable)").line("@count respondents"),
     )
     + geom_rect(
         aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax", fill="category"),
         data=df_nodes,
         color="#2A2A2A",
         size=0.8,
+        tooltips=layer_tooltips().line("@category").line("Wave: @wave").line("Count: @count"),
     )
     + geom_text(
         aes(x="x", y="y", label="label"), data=df_labels[df_labels["type"] == "header"], size=17, fontface="bold"
     )
-    + geom_text(aes(x="x", y="y", label="label"), data=df_labels[df_labels["type"] == "left_label"], size=10, hjust=1)
-    + geom_text(aes(x="x", y="y", label="label"), data=df_labels[df_labels["type"] == "right_label"], size=10, hjust=0)
+    + geom_text(aes(x="x", y="y", label="label"), data=df_labels[df_labels["type"] == "left_label"], size=13, hjust=1)
+    + geom_text(aes(x="x", y="y", label="label"), data=df_labels[df_labels["type"] == "right_label"], size=13, hjust=0)
     + geom_text(
         aes(x="x", y="y", label="label"),
         data=df_labels[df_labels["type"] == "node_count"],
-        size=9,
+        size=11,
         color="white",
         fontface="bold",
     )
     + scale_fill_manual(values=category_colors)
-    + labs(title="alluvial-opinion-flow · letsplot · pyplots.ai")
+    + labs(
+        title="alluvial-opinion-flow \u00b7 letsplot \u00b7 pyplots.ai",
+        subtitle="Polarization trend: Neutral shrinks 280\u2192122 as extreme positions grow",
+    )
     + theme_minimal()
     + theme(
         plot_title=element_text(size=26, face="bold"),
+        plot_subtitle=element_text(size=16, color="#555555"),
         axis_title=element_blank(),
         axis_text=element_blank(),
         axis_ticks=element_blank(),
