@@ -1,0 +1,247 @@
+library: matplotlib
+specification_id: alluvial-opinion-flow
+created: '2026-03-03T20:11:22Z'
+updated: '2026-03-03T20:37:10Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22640489333
+issue: 4430
+python_version: 3.14.3
+library_version: 3.10.8
+preview_url: https://storage.googleapis.com/pyplots-images/plots/alluvial-opinion-flow/matplotlib/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/alluvial-opinion-flow/matplotlib/plot_thumb.png
+preview_html: null
+quality_score: 90
+review:
+  strengths:
+  - Hand-built alluvial diagram using matplotlib Path/CURVE4 bezier curves - impressive
+    low-level construction
+  - Excellent data storytelling with subtitle, opacity hierarchy, and right-side trend
+    annotations
+  - 'Professional polish: rounded corners, shadows, white borders, text path effects'
+  - Clean visual distinction between stable and changing opinion flows via alpha
+  - All spec requirements fully met including proportional flows, node labels, and
+    chronological layout
+  - Realistic neutral employee engagement data with internally consistent polarization
+    trend
+  weaknesses:
+  - Minor text tightness in the smallest nodes where 3-line labels approach node boundaries
+  - Color palette is functional but not an optimal diverging scheme for the opinion
+    scale (green for Agree is unconventional)
+  image_description: 'The plot displays an alluvial/Sankey-style diagram tracking
+    employee engagement opinions across 4 quarterly waves (Q1-Q4 2025). Five opinion
+    categories are represented as stacked rectangular nodes with rounded corners at
+    each wave column: Strongly Agree (dark blue #306998), Agree (green #5BA865), Neutral
+    (gray #95A5A6), Disagree (orange #E67E22), and Strongly Disagree (red #C0392B).
+    Nodes are ordered bottom-to-top from Strongly Agree to Strongly Disagree, each
+    labeled with abbreviated category name and respondent count (e.g., "Str. Agree
+    n=180"). Curved flows connect nodes between consecutive waves — stable flows (same
+    category) use alpha=0.6, while category-changing flows use alpha=0.25, creating
+    clear visual distinction. Nodes have white borders (2.5px), shadow effects, and
+    bold white text (dark text on Neutral). Wave column headers (Q1-Q4 2025) appear
+    at the top in bold 20pt font. The title "alluvial-opinion-flow · matplotlib ·
+    pyplots.ai" is centered at the top (24pt) with an italic subtitle below: "Neutral
+    opinion declines as views polarize toward strong agreement and disagreement."
+    Two trend annotations appear to the right of the Q4 column: "Neutral: 220 → 140
+    (–80)" in gray and "Strong opinions: 330 → 440 (+110)" in blue. A legend at the
+    bottom left shows both flow types (Stable/Changed) and all 5 category colors across
+    4 columns.'
+  criteria_checklist:
+    visual_quality:
+      score: 26
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 24pt, subtitle 18pt, headers
+          20pt, labels 16pt bold, legend 16pt). Minor tightness in smallest nodes.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: No significant overlap. Some text tightness within smaller nodes
+          but all text readable.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Nodes well-sized with clear color-coding. Alpha differentiation effective.
+          Some thin cross-flows are subtle but visible.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 3
+        max: 4
+        passed: true
+        comment: Five distinct hues with good lightness variation. Green-red could
+          be confusable for deuteranopia but separated by gray and orange.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Excellent canvas utilization. Main chart fills ~60% horizontal, annotations
+          use remaining space. Balanced margins, nothing cut off.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title follows required format. Wave headers serve as column labels.
+          Descriptive subtitle provides context.
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom palette, rounded corners, white borders, shadow effects, opacity
+          differentiation. Strong design clearly above defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Axes hidden, shadow effects add depth, white borders create clean
+          separation, generous whitespace, text path effects.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtitle states trend, opacity hierarchy guides attention, right-side
+          annotations quantify polarization. Clear narrative.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct alluvial/Sankey-style diagram with curved flows connecting
+          opinion categories across wave columns.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: consistent colors, proportional flows,
+          node labels, stable/changer distinction, net flow highlighting, chronological
+          layout, transparency.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Categories correctly mapped to nodes, flow counts proportionally
+          represented, all data visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title follows required format. Legend shows both flow types and all
+          category colors.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all aspects: 4 waves, 5 categories, stability and change,
+          polarization trend, bidirectional flows, varying magnitudes.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Employee engagement survey tracking 1000 staff across 4 quarters
+          - realistic, comprehensible, neutral business scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 1000 respondents across 5 categories (140-250 each), gradual realistic
+          shifts, flow counts sum correctly per wave.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean Imports-Data-Plot-Save structure. No functions or classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set, all data hardcoded/deterministic.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All 5 imports used: mpatches, patheffects, pyplot, numpy, Path.'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for hand-built alluvial. Clean loops, well-organized
+          data. No fake functionality.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with dpi=300, bbox_inches=tight. No deprecated
+          API.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Expert Axes-based API usage. Path with CURVE4 bezier is the idiomatic
+          matplotlib approach for alluvial flows.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Path/CURVE4 bezier curves, FancyBboxPatch with round boxstyle, patheffects.withSimplePatchShadow,
+          patheffects.withStroke - distinctive matplotlib features.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - bezier-curves
+  - patches
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - alpha-blending
+  - edge-highlighting

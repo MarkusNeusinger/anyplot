@@ -1,0 +1,252 @@
+library: plotnine
+specification_id: alluvial-opinion-flow
+created: '2026-03-03T20:15:04Z'
+updated: '2026-03-03T20:57:23Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22640494291
+issue: 4430
+python_version: 3.14.3
+library_version: 0.15.3
+preview_url: https://storage.googleapis.com/pyplots-images/plots/alluvial-opinion-flow/plotnine/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/alluvial-opinion-flow/plotnine/plot_thumb.png
+preview_html: null
+quality_score: 89
+review:
+  strengths:
+  - 'Excellent spec compliance: all required features implemented including stable/changer
+    distinction, net flow highlighting, and respondent count labels'
+  - Strong data storytelling through subtitle narrative, delta labels, and alpha-based
+    visual hierarchy
+  - Professional diverging color palette with semantic meaning (blue to gray to orange/red)
+  - Clean, well-organized code despite the complexity of building alluvial diagrams
+    in plotnine
+  - 'Good use of plotnine idioms: geom_ribbon for curves, scale_alpha_identity, guide_legend
+    override_aes'
+  weaknesses:
+  - Flow area remains somewhat visually dense in the middle, making individual thin
+    flows hard to trace
+  - Slight unused canvas space below the diagram
+  - The polarization framing is close to sensitive territory, though categories are
+    generic
+  image_description: 'The plot displays an alluvial/Sankey-style diagram tracking
+    1,000 respondents across 4 survey waves (Wave 1 through Wave 4). Five opinion
+    categories are arranged vertically: Strongly Agree (dark blue, #306998), Agree
+    (light blue, #6BAED6), Neutral (gray, #969696), Disagree (orange, #E8983A), and
+    Strongly Disagree (dark red, #A8322A). Rectangular nodes at each wave show respondent
+    counts in white bold text (e.g., Strongly Agree: 180→180→190→206, Neutral: 190→194→178→136).
+    Curved semi-transparent ribbons connect categories between waves, with stable
+    respondents drawn at higher opacity (0.55) and changers at lower opacity (0.30–0.42),
+    with dominant net flows highlighted at 0.42. Delta labels (e.g., +16, -26, -35,
+    -42, +31, +55) between wave columns quantify significant net changes. Light gray
+    background bands frame each wave column. Category labels appear on both left and
+    right sides. The title reads "alluvial-opinion-flow · plotnine · pyplots.ai" with
+    a subtitle "Tracking 1,000 respondents across 4 waves — Neutral erodes as opinions
+    polarize toward extremes". A legend on the right lists all five opinion categories.
+    The visual clearly shows a polarization trend: Neutral erodes from 190 to 136,
+    Strongly Agree grows from 180 to 206, and Strongly Disagree surges from 180 to
+    272.'
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 24pt, subtitle 16pt, wave headers
+          18pt, category labels 16pt, node counts 15pt, delta labels 14pt, legend
+          text 15pt'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text collisions. Delta labels use geom_label with semi-transparent
+          white backgrounds. Category labels positioned outside node columns
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Nodes clearly defined with white borders. Flows visible with alpha
+          hierarchy 0.30-0.55. Some thin cross-category flows harder to trace
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Diverging blue-gray-orange palette is colorblind-safe with good contrast
+          between all categories
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good 16:9 layout with diagram filling ~65% of canvas. Slight unused
+          space below the diagram
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Axes appropriately hidden. Wave headers and category labels serve
+          as descriptive labels. Title and subtitle provide full context
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom diverging palette with semantic meaning. Professional typography
+          hierarchy. Background bands and white node borders. Clearly above defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines and grid removed. Background bands provide subtle structure.
+          Semi-transparent label backgrounds. Flow area somewhat visually dense
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtitle frames polarization story. Delta labels quantify changes.
+          Alpha variation creates visual hierarchy between stable and changing flows
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct alluvial/Sankey-style diagram with nodes and curved flow
+          ribbons across 4 waves
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features implemented: consistent colors, proportional flows,
+          count labels, stable/changer distinction, net flow highlighting, chronological
+          order, column headers, transparency'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Waves correctly ordered left-to-right. Categories consistently ordered.
+          Flow widths and node heights proportional to counts
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title follows exact format. Legend shows all 5 categories with correct
+          colors and Opinion title
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'All aspects demonstrated: 5 categories x 4 waves, stable and changing
+          respondents, net positive and negative flows, gradual polarization trend'
+      - id: DQ-02
+        name: Realistic Context
+        score: 4
+        max: 5
+        passed: true
+        comment: Generic opinion survey with agree/disagree categories is plausible
+          and follows spec example. Polarization framing slightly sensitive but categories
+          are generic
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 1000 total respondents conserved across all waves. Category sizes
+          136-272 realistic for survey data. Plausible transition patterns
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear structure: imports, data/matrices, layout calculations, node/flow
+          construction, plot composition, save. No functions or classes'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic with hardcoded transition matrices. No random
+          functions
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: sys, numpy, pandas, all plotnine components utilized'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-organized with clear sections. Cubic interpolation for ribbons
+          is elegant. Complexity appropriate for alluvial diagrams
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with dpi=300. Uses current plotnine API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Expert grammar of graphics usage: geom_ribbon for flows, geom_rect
+          for nodes, scale_alpha_identity, guide_legend with override_aes, coord_cartesian,
+          annotate. Some manual layout necessary'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: 'Uses plotnine-specific features: scale_alpha_identity, guide_legend
+          override_aes, grammar of graphics composition, geom_label with label_size/label_padding.
+          Core alluvial construction is manual'
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  - custom-legend
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  - matrix-construction
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - alpha-blending
+  - edge-highlighting

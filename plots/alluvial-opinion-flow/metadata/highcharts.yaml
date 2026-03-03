@@ -1,0 +1,254 @@
+library: highcharts
+specification_id: alluvial-opinion-flow
+created: '2026-03-03T20:16:17Z'
+updated: '2026-03-03T20:38:14Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22640499231
+issue: 4430
+python_version: 3.14.3
+library_version: unknown
+preview_url: https://storage.googleapis.com/pyplots-images/plots/alluvial-opinion-flow/highcharts/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/alluvial-opinion-flow/highcharts/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/alluvial-opinion-flow/highcharts/plot.html
+quality_score: 90
+review:
+  strengths:
+  - Excellent opacity-based distinction between stable and changing opinion flows
+    — immediately communicates the data story
+  - Colorblind-safe diverging palette (blue to gray to red) is well-chosen and professionally
+    implemented with per-link RGBA computation
+  - Custom HTML legend effectively explains both category colors and flow interpretation
+    (bold vs. faint)
+  - 'Full spec compliance: all required features implemented including respondent
+    counts, chronological arrangement, and transparency'
+  - 'Strong typography choices: Georgia serif for title hierarchy, Arial for data
+    labels, white text outlines for readability'
+  - Data tells a clear story about growing support with mild polarization
+  weaknesses:
+  - Subtitle states 1,000 employees but actual data totals only ~895 per wave — minor
+    data consistency gap
+  - Q4 2024 wave label at bottom right slightly overlaps with Strongly Disagree node
+    area
+  - Right-side margin leaves Q4 column labels somewhat close to the canvas edge
+  image_description: 'The plot displays a Sankey/alluvial diagram tracking employee
+    training satisfaction across 4 quarterly waves (Q1–Q4 2024). Five opinion categories
+    are stacked vertically at each wave column: Strongly Agree (dark blue, #2166AC),
+    Agree (light blue, #67A9CF), Neutral (gray, #878787), Disagree (salmon/orange,
+    #EF8A62), and Strongly Disagree (dark red, #B2182B). Each node is labeled with
+    the category name and respondent count in parentheses (e.g., "Strongly Agree (180)").
+    Flows between columns represent opinion transitions — bold/opaque flows indicate
+    stable opinions (same category across waves) while faint/transparent flows show
+    opinion changes. The title reads "Employee Training Satisfaction · alluvial-opinion-flow
+    · highcharts · pyplots.ai" in bold serif font, with a subtitle describing the
+    survey question and sample size. Wave labels (Q1–Q4 2024) appear at the bottom
+    of each column. A custom HTML legend at the bottom shows the five category color
+    swatches and explains "Bold flow = stable opinion | Faint flow = opinion changed."
+    The background is a light gray (#FAFAFA). Overall, the data shows growing agreement
+    over time: Strongly Agree rises from 180 to 210 while Neutral decreases from 185
+    to 140, with Strongly Disagree slightly increasing from 120 to 145, suggesting
+    mild polarization.'
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set (title 52px, subtitle 36px, labels
+          30px, wave annotations 44px, legend 32px). All readable with white text
+          outline. Minor: some labels slightly cramped against flows.'
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Most labels well-separated. Minor overlap: Q4 2024 wave label at
+          bottom right slightly overlaps with Strongly Disagree node region.'
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All nodes clearly visible with distinct colors. Stable vs changer
+          flows well-differentiated via opacity. Node widths and padding well-calibrated.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Excellent colorblind-safe diverging palette (blue-gray-red, RdBu
+          ColorBrewer). Explicitly designed for deuteranopia and protanopia.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: 'Chart fills most of canvas. Slight imbalance: Q4 column labels close
+          to right edge, Q4 wave label partially conflicts with node coloring.'
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive title with spec format, informative subtitle with survey
+          question and sample size. Wave labels serve as effective x-axis labels.
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Strong design: custom blue-gray-red diverging palette, Georgia serif
+          typography, off-white background. Clearly above defaults.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Good refinement: off-white background, no grid, custom HTML legend
+          with swatches, white text outlines, credits disabled, deliberate node padding
+          and curve factor.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Effective storytelling through bold/faint opacity distinction. Clear
+          narrative: growing support (SA 180→210), declining neutrality (185→140),
+          mild polarization (SD 120→145).'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct: Sankey/alluvial diagram using Highcharts Sankey module.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec requirements met: consistent colors, proportional flow
+          widths, respondent totals in labels, stable/changer distinction, chronological
+          arrangement, transparency.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Flows correctly connect categories across waves. Weights correspond
+          to respondent counts. All 5 categories x 4 waves represented.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title follows required format. Custom legend explains category colors
+          and flow opacity meaning.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Excellent: shows stability, gradual shifts, cross-category jumps,
+          and polarization trends.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Employee satisfaction survey about professional development — realistic,
+          neutral business scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 3
+        max: 4
+        passed: true
+        comment: 'Values plausible for domain. Minor: subtitle states 1,000 employees
+          but data totals ~895 per wave.'
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean linear flow: imports, data, node/link construction, chart
+          configuration, rendering. No functions or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic with hardcoded flow data.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: tempfile, time, urllib.request, Path, Chart, HighchartsOptions,
+          Image, webdriver, Options.'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-organized. Smart per-link RGBA color computation. JS
+          module loading with local fallback.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png via Selenium screenshot with proper cropping. Also
+          saves plot.html for interactive version.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Good use of Highcharts patterns: Chart with HighchartsOptions, dict-based
+          series, to_js_literal(), Selenium workflow, annotations module.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Leverages Highcharts-specific features: Sankey module with column
+          positioning, annotations module, custom tooltips, linkOpacity, curveFactor,
+          HTML export.'
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  - pillow
+  techniques:
+  - custom-legend
+  - annotations
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
