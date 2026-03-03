@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 alluvial-opinion-flow: Opinion Flow Diagram
-Library: altair | Python 3.13
-Quality: pending | Created: 2026-03-03
+Library: altair 6.0.0 | Python 3.14.3
+Quality: 80/100 | Created: 2026-03-03
 """
 
 import altair as alt
