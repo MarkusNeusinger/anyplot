@@ -1,7 +1,7 @@
 library: pygal
 specification_id: heatmap-mandelbrot
 created: '2026-03-03T13:50:55Z'
-updated: '2026-03-03T13:55:50Z'
+updated: '2026-03-03T14:13:20Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 22625546843
 issue: 4431
@@ -10,37 +10,44 @@ library_version: 3.1.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/heatmap-mandelbrot/pygal/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/heatmap-mandelbrot/pygal/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/heatmap-mandelbrot/pygal/plot.html
-quality_score: 78
+quality_score: 86
 review:
   strengths:
-  - Excellent spec compliance — all required features faithfully implemented
-  - Thoughtful viridis-inspired colormap with manual LUT interpolation and log-normalized
+  - Massive improvement in library usage — now fully uses pygal Graph subclass, Style
+    system, and render pipeline
+  - Excellent heatmap resolution (800x572) with smooth gradients and no visible pixelation
+  - Perfect data quality with deterministic Mandelbrot computation at 200 iterations
+    with smooth coloring
+  - Professional viridis-inspired colormap with 1024-entry LUT and log-normalized
     mapping
-  - Clean visual design with mathematical subtitle, proper colorbar, and In set legend
-  - Deterministic computation with smooth iteration count algorithm
-  - Good data storytelling through the fractal structure itself
+  - Clean design with mathematical subtitle, well-integrated colorbar, and In set
+    legend
   weaknesses:
-  - pygal is not used at all — the implementation constructs raw SVG manually without
-    importing pygal
-  - Grid resolution of 200x143 creates noticeable pixelation/blockiness
-  - No attempt to use pygal chart classes, Style system, or rendering pipeline
+  - Grid height 572 is slightly below spec 600 pixel minimum — should be at least
+    600
+  - Subtitle font size (32px) is slightly small relative to the 4800x2700 canvas
+  - Colorbar tick values (4, 11, 30, 77, 199) are not round numbers — harder to interpret
+    at a glance
+  - Layout has minor wasted space that could be tightened
   image_description: The plot displays a Mandelbrot set fractal visualization on a
-    white background. The title "heatmap-mandelbrot · pygal · pyplots.ai" appears
-    at the top, with a subtitle showing the iteration formula "z_{n+1} = z_n² + c
-    · Escape time with smooth iteration count". The main plot area shows the complex
-    plane with Real Axis (Re) ranging from -2.5 to 1.0 on the x-axis and Imaginary
-    Axis (Im) ranging from -1.0i to +1.0i on the y-axis. The Mandelbrot set interior
-    (non-escaping points) is rendered in black, clearly showing the characteristic
-    cardioid and period-2 bulb. Exterior points are colored using a viridis-inspired
-    colormap ranging from dark purple (low iteration counts) through teal/green to
-    bright yellow (high iteration counts). A vertical colorbar on the right shows
-    "Iterations" with tick values from ~4 to 189. Below the colorbar, a small black
-    square legend reads "In set". The cells are noticeably blocky/pixelated due to
-    the 200x143 grid resolution, visible as discrete colored rectangles rather than
-    smooth gradients.
+    white background. The title "heatmap-mandelbrot · pygal · pyplots.ai" is rendered
+    prominently at the top. Below the title, a mathematical subtitle reads "z_{n+1}
+    = z_n² + c · Escape time with smooth iteration count" in smaller gray text. The
+    main plot area shows the full Mandelbrot set on the complex plane with Real Axis
+    (Re) ranging from -2.5 to 1.0 on the x-axis and Imaginary Axis (Im) from -1.0i
+    to +1.0i on the y-axis. The set interior (non-escaping points) is rendered in
+    solid black, clearly displaying the characteristic cardioid and period-2 bulb
+    along with smaller satellite bulbs. Exterior points are colored using a viridis-inspired
+    colormap — dark purple for low iteration counts, transitioning through blue/teal
+    to bright yellow-green for high iteration counts near the boundary. A vertical
+    colorbar on the right labeled "Iterations" shows values from ~4 to 199. Below
+    the colorbar, a small black square with "In set" label explains the interior coloring.
+    The heatmap resolution is visibly improved over attempt 1, with smooth gradients
+    replacing the previous blocky pixelation. The plot border is a clean thin line.
+    Overall layout is professional with balanced margins.
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -49,32 +56,36 @@ review:
         max: 8
         passed: true
         comment: All font sizes explicitly set (title 56px, subtitle 32px, axis labels
-          44px, ticks 34px, colorbar 28px). All text clearly readable.
+          44px, ticks 34px, colorbar 28px). Subtitle slightly small at 32px for 4800x2700
+          canvas.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements; tick labels and axis labels well-spaced.
+        comment: No overlapping text elements. All labels, ticks, and annotations
+          well-separated.
       - id: VQ-03
         name: Element Visibility
-        score: 4
+        score: 6
         max: 6
-        passed: false
-        comment: Mandelbrot set visible but 200x143 grid produces noticeable pixelation/blockiness.
+        passed: true
+        comment: 800x572 grid produces smooth gradients with no visible pixelation.
+          Excellent boundary detail. Strong interior/exterior contrast.
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Viridis-inspired colormap is perceptually uniform and colorblind-safe.
+        comment: Viridis-inspired colormap is perceptually uniform and colorblind-safe
+          with strong contrast.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good layout with balanced margins, colorbar well-placed, slight right
-          margin issue.
+        comment: Good canvas utilization with balanced margins. Minor wasted space
+          in bottom-left area.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -83,31 +94,32 @@ review:
         comment: Real Axis (Re) and Imaginary Axis (Im) are descriptive with mathematical
           notation.
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Custom viridis LUT, mathematical subtitle, clean typography. Above
-          defaults but pixelation detracts.
+        comment: Custom viridis LUT with smooth interpolation, mathematical subtitle,
+          clean border, coordinated colors. Above defaults.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: No grid lines, clean plot border, well-placed colorbar, good whitespace.
+        comment: Grid removed, clean background, bordered plot area, refined colorbar
+          with ticks, In set legend with swatch.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
         comment: Fractal boundary creates natural visual hierarchy. Log-normalized
-          coloring reveals detail.
+          coloring reveals structure. Subtitle provides mathematical context.
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -115,108 +127,114 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct heatmap visualization of Mandelbrot set.
+        comment: Correct heatmap visualization of Mandelbrot set with escape-time
+          coloring.
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: 'All spec features present: smooth coloring, perceptually uniform
-          colormap, full set, labeled axes, black interior, correct aspect ratio.'
+        comment: 'All major features present. Minor: grid height 572px is slightly
+          below spec''s 800x600 minimum.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Real axis on x, imaginary on y, correct ranges, all data visible.
+        comment: Real axis on x (-2.5 to 1.0), imaginary axis on y (-1.25 to 1.25).
+          Correct ranges.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, colorbar labeled Iterations, In set legend
-          present.
+        comment: Title format correct. Colorbar labeled Iterations. In set legend
+          with black swatch.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Full Mandelbrot structure with cardioid, period-2 bulb, satellite
-          bulbs. Fine detail lost to resolution.
+        comment: 'Full Mandelbrot structure: cardioid, period-2 bulb, satellite bulbs,
+          filaments, fine boundary detail.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Iconic mathematical fractal, standard coordinate ranges, educational
-          context.
+        comment: The Mandelbrot set is the canonical mathematical fractal. Neutral
+          scientific/educational context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Standard ranges Real [-2.5, 1.0], Imaginary [-1.25, 1.25], max_iter=200.
+        comment: Standard ranges with 200 max iterations and bailout radius 256 for
+          smooth coloring.
     code_quality:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: 'Linear flow: imports, computation, colormap, SVG construction, save.'
+        comment: Class is necessary for pygal Graph subclassing but adds complexity
+          vs ideal flat script.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Mandelbrot computation is fully deterministic.
+        comment: Fully deterministic Mandelbrot computation, no random elements.
       - id: CQ-03
         name: Clean Imports
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: All imports used but pygal is not imported — the primary library
-          is completely absent.
+        passed: true
+        comment: 'All imports used: sys, Path, base64, BytesIO, numpy, PIL, pygal
+          Graph, pygal Style.'
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Well-structured code but building raw SVG bypasses the library entirely.
+        passed: true
+        comment: Vectorized numpy computation, clean LUT interpolation, methodical
+          SVG construction. No fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png, also plot.svg and plot.html.
+        comment: Saves plot.png, plot.svg, plot.html using current pygal API.
     library_mastery:
-      score: 2
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 1
+        score: 3
         max: 5
-        passed: false
-        comment: pygal is not imported or used at all. Implementation manually constructs
-          SVG strings.
+        passed: true
+        comment: Properly subclasses pygal Graph, overrides _plot()/_compute(), uses
+          self.svg.node(), Style class, and render pipeline. This is how you extend
+          pygal.
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 3
         max: 5
-        passed: false
-        comment: No pygal features leveraged. No chart classes, Style objects, or
-          configuration system.
+        passed: true
+        comment: Uses pygal Style system, Graph subclassing, SVG node API, multi-format
+          render pipeline, and config system.
   verdict: REJECTED
 impl_tags:
   dependencies:
-  - cairosvg
+  - pillow
   techniques:
   - colorbar
   - manual-ticks
@@ -224,7 +242,6 @@ impl_tags:
   patterns:
   - data-generation
   - matrix-construction
-  - iteration-over-groups
   dataprep:
   - normalization
   styling:
