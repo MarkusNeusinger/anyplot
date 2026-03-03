@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 heatmap-mandelbrot: Mandelbrot Set Fractal Visualization
 Library: highcharts unknown | Python 3.14.3
 Quality: 87/100 | Created: 2026-03-03
@@ -19,12 +19,12 @@ from selenium.webdriver.chrome.options import Options
 x_min, x_max = -2.5, 1.0
 y_min, y_max = -1.25, 1.25
 max_iter = 100
-nx, ny = 350, 250
+nx, ny = 800, 600
 
 real = np.linspace(x_min, x_max, nx)
 imag = np.linspace(y_min, y_max, ny)
-col_size = round((x_max - x_min) / nx, 6)
-row_size = round((y_max - y_min) / ny, 6)
+col_size = round((x_max - x_min) / nx * 1.01, 6)
+row_size = round((y_max - y_min) / ny * 1.01, 6)
 
 # Vectorized Mandelbrot iteration with smooth coloring
 c = real[np.newaxis, :] + 1j * imag[:, np.newaxis]
@@ -76,6 +76,7 @@ chart_options = {
         "marginLeft": m_left,
         "marginRight": m_right,
         "style": {"fontFamily": "'Segoe UI', Roboto, Arial, sans-serif"},
+        "plotBorderWidth": 0,
     },
     "title": {
         "text": "heatmap-mandelbrot \u00b7 highcharts \u00b7 pyplots.ai",
@@ -95,7 +96,7 @@ chart_options = {
         "gridLineWidth": 0,
     },
     "yAxis": {
-        "title": {"text": "Imaginary Axis (Im)", "style": {"fontSize": "30px", "color": "#b0b0c8"}, "margin": 20},
+        "title": {"text": "Imaginary Axis (Im)", "style": {"fontSize": "30px", "color": "#b0b0c8"}, "margin": 30},
         "labels": {"style": {"fontSize": "24px", "color": "#8888a8"}, "format": "{value}i"},
         "min": y_min,
         "max": y_max,
@@ -128,10 +129,10 @@ chart_options = {
         "align": "right",
         "layout": "vertical",
         "verticalAlign": "middle",
-        "symbolHeight": 900,
-        "symbolWidth": 30,
+        "symbolHeight": 1200,
+        "symbolWidth": 36,
         "itemStyle": {"fontSize": "22px", "color": "#8888a8"},
-        "x": -200,
+        "x": -80,
     },
     "tooltip": {"style": {"fontSize": "24px"}, "useHTML": True},
     "credits": {"enabled": False},
@@ -201,6 +202,7 @@ with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False, encodin
     temp_path = f.name
 
 chrome_options = Options()
+chrome_options.page_load_strategy = "eager"
 chrome_options.add_argument("--headless=new")
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
@@ -212,7 +214,7 @@ chrome_options.add_argument("--hide-scrollbars")
 driver = webdriver.Chrome(options=chrome_options)
 driver.set_window_size(4800, 2840)
 driver.get(f"file://{temp_path}")
-time.sleep(8)
+time.sleep(15)
 driver.save_screenshot("plot.png")
 driver.quit()
 
