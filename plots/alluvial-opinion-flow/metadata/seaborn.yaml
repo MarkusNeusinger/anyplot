@@ -1,7 +1,7 @@
 library: seaborn
 specification_id: alluvial-opinion-flow
 created: '2026-03-03T20:12:31Z'
-updated: '2026-03-03T20:18:11Z'
+updated: '2026-03-03T20:35:37Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 22640489283
 issue: 4430
@@ -10,84 +10,89 @@ library_version: 0.13.2
 preview_url: https://storage.googleapis.com/pyplots-images/plots/alluvial-opinion-flow/seaborn/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/alluvial-opinion-flow/seaborn/plot_thumb.png
 preview_html: null
-quality_score: 82
+quality_score: 89
 review:
   strengths:
-  - 'Excellent data storytelling: polarization narrative (Neutral shrinks 300→160,
-    extremes grow) is immediately visible and compelling'
-  - Custom diverging color palette (blue→gray→orange/red) communicates opinion polarity
-    semantically
-  - Smart opacity encoding (0.60 stable vs 0.22 changers) with correct z-ordering
-    creates clear visual hierarchy
-  - 'Perfect data quality: neutral topic, realistic survey scale, correct flow arithmetic'
-  - Clean well-organized code with elegant flow sorting for proper layering
+  - Excellent data storytelling with a clear polarization narrative supported by the
+    net-change sidebar
+  - Custom seaborn diverging palette (blue to gray to brown) is colorblind-safe and
+    semantically meaningful
+  - Well-executed bezier curve flows with opacity distinction between stable and changing
+    respondents
+  - Clean, fully deterministic code with smart draw-order sorting for visual layering
+  - Complete spec compliance with all 7 required features implemented
   weaknesses:
-  - Seaborn barely used — only for styling (set_style, set_context), no seaborn plot
-    functions; essentially a matplotlib implementation
-  - Category labels at 11pt and count labels at 9pt are undersized for target resolution
-  - Some very small changer flows barely perceptible at alpha=0.22
-  - No explicit net flow highlighting as requested by the spec
-  image_description: 'The plot displays an alluvial/Sankey-style diagram titled "alluvial-opinion-flow
-    · seaborn · pyplots.ai" in bold black text at top. Four vertical stacked-bar columns
-    represent survey waves (Q1 2025 through Q4 2025), connected by curved flow bands.
-    Categories from bottom to top are: Strongly Agree (dark blue #306998), Agree (medium
-    blue #5B9BD5), Neutral (gray #8C8C8C), Disagree (orange #E88C30), and Strongly
-    Disagree (red-brown #C75533). Left-side labels show category names with initial
-    counts (e.g., "Strongly Agree (n=120)"), right-side labels show final counts (e.g.,
-    "Strongly Agree (n=210)"). Middle columns show count labels in white text inside
-    bars (e.g., "n=250"). Flow bands connect corresponding categories between waves
-    — stable flows (same category) rendered at higher opacity (0.60), changers at
-    lower opacity (0.22). The polarization trend is visible: Neutral shrinks from
-    300 to 160 while Strongly Agree grows from 120 to 210 and Strongly Disagree from
-    100 to 180. An italic gray subtitle reads "Renewable Energy Survey · 1,000 respondents
-    across 4 waves · Stable flows shown at higher opacity." White background, all
-    spines and axes removed.'
+  - Some annotation text sizes (12-13pt) are slightly small for optimal legibility
+    at full resolution
+  - Changing flows at alpha=0.28 are quite subtle — some thinner cross-category transitions
+    are hard to follow
+  - Limited seaborn library usage for core visualization (constrained by lack of native
+    alluvial support)
+  image_description: 'The plot displays an alluvial/Sankey-style diagram tracking
+    opinion shifts on a "Renewable Energy Survey" across 4 quarterly waves (Q1-Q4
+    2025) with 1,000 respondents. Five opinion categories are stacked vertically:
+    Strongly Disagree (dark rust/brown, top), Disagree (medium brown), Neutral (light
+    beige/gray), Agree (light steel blue), and Strongly Agree (dark teal, bottom).
+    Curved bezier flow bands connect categories between consecutive waves — stable
+    flows (same category) are rendered at higher opacity (~0.60) while changing flows
+    use lower opacity (~0.28). Node rectangles have white edge separators. Category
+    labels with respondent counts appear on the left for Q1 and on the right for Q4,
+    with counts inside middle wave bars. A supplementary sidebar on the right shows
+    "Net Shift Q1→Q4" as horizontal bars colored by category: +90 (Strongly Agree),
+    -50 (Agree), -140 (Neutral), +20 (Disagree), +80 (Strongly Disagree). Title reads
+    "alluvial-opinion-flow · seaborn · pyplots.ai". An italic subtitle at bottom provides
+    context. Background is white throughout.'
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set but category labels (11pt) and count labels
-          (9pt) are undersized for target resolution
+        comment: All font sizes explicitly set; title 24pt, wave headers 20pt, category
+          labels 14pt (bold), inner counts 13pt, sidebar annotations 12pt. All readable
+          but some labels slightly below 16pt guideline.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text; conditional label display prevents collisions
+        comment: No overlapping text elements. Category labels, wave headers, count
+          annotations, and sidebar labels all well-separated.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Nodes and stable flows clearly visible; some small changer flows
-          at alpha=0.22 are barely perceptible
+        comment: Flow bands well-sized and proportional. Stable vs changer distinction
+          clear via opacity. Changing flows at alpha=0.28 are quite subtle for smaller
+          transitions.
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Blue-orange diverging palette is colorblind-friendly
+        comment: Diverging blue-to-brown palette via sns.diverging_palette(220, 25)
+          is colorblind-safe. Avoids red-green.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good canvas utilization with balanced margins for side labels
+        comment: 16:9 figure well-utilized. Main alluvial fills ~80% width, sidebar
+          compact. Balanced margins. Nothing cut off.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Wave headers and category labels provide appropriate context for
-          alluvial diagram
+        comment: 'Appropriate for alluvial chart: wave headers as column labels, category
+          names with counts as labels, sidebar has descriptive title.'
     design_excellence:
-      score: 14
+      score: 16
       max: 20
       items:
       - id: DE-01
@@ -95,24 +100,26 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom diverging palette communicates opinion polarity; clear typography
-          hierarchy; white edge lines; clearly above defaults
+        comment: Custom diverging palette from seaborn HSL parameters. Intentional
+          typography hierarchy. White rectangle edges. Supplementary sidebar. Clearly
+          above defaults.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: All spines removed, no ticks, white edge separators, conditional
-          label display based on bar height
+        comment: All spines removed. Axes hidden on main panel. Subtle sidebar grid
+          (alpha=0.15). White background. Edge separators on nodes.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Polarization narrative visible through data choice and opacity encoding;
-          subtitle explains visual encoding
+        comment: 'Clear polarization narrative: Neutral shrinks while extremes grow.
+          Opacity distinction separates stable from shifting. Net change sidebar makes
+          story explicit.'
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -120,27 +127,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct alluvial/Sankey-style diagram with stacked nodes and curved
-          flow bands
+        comment: Correct alluvial/Sankey-style diagram with curved flow bands connecting
+          opinion categories across waves.
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Most features present; missing explicit net flow highlighting for
-          polarization trends
+        comment: 'All 7 spec features implemented: consistent colors, proportional
+          flows, count labels, stable/changer distinction, net flows, chronological
+          order, transparency.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Waves L-to-R, categories stacked, flow widths proportional to counts
+        comment: Waves left-to-right. Categories consistently positioned. Flow widths
+          accurately proportional. Node heights reflect proportions.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format; category labels with colors serve as legend
+        comment: Title format correct. Category labels with colors serve as unambiguous
+          legend.
     data_quality:
       score: 15
       max: 15
@@ -150,21 +160,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Full Likert scale, 4 waves, stable and changing flows, clear polarization
-          pattern
+        comment: 5 categories, 4 waves, 75 flows. Shows stable retention and shifting.
+          Clear polarization trend. Different flow magnitudes.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Renewable Energy Survey is neutral and realistic
+        comment: Renewable Energy Survey is neutral, real-world plausible (technology/science
+          domain). 1000 respondents across quarterly waves is realistic.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 1000 respondents per wave, realistic distributions, correct flow
-          arithmetic
+        comment: 1000 respondents realistic. Category distributions plausible. Transition
+          counts internally consistent. Polarization pattern gradual and realistic.
     code_quality:
       score: 10
       max: 10
@@ -174,50 +185,53 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean Imports-Data-Plot-Save structure with no functions or classes
+        comment: Linear imports, data, plot, save structure. No functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data hardcoded and deterministic
+        comment: Fully deterministic with hardcoded data arrays.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All five imports are used
+        comment: 'All 6 imports used: mpatches, plt, np, pd, sns, Path.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-organized; elegant flow sorting for z-order; Bezier curves cleanly
-          structured
+        comment: Clean bezier construction. Smart draw-order sorting. No over-engineering
+          or fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300 and bbox_inches=tight
+        comment: Saves as plot.png with dpi=300 and bbox_inches tight. No deprecated
+          functions.
     library_mastery:
-      score: 2
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 1
+        score: 3
         max: 5
-        passed: false
-        comment: Seaborn only used for set_style and set_context; entire visualization
-          built with raw matplotlib primitives
+        passed: true
+        comment: Uses sns.set_style, sns.set_context, sns.despine, sns.barplot correctly.
+          Core alluvial necessarily uses matplotlib patches since seaborn has no alluvial
+          function.
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 2
         max: 5
-        passed: false
-        comment: No distinctive seaborn features leveraged; implementation could trivially
-          swap to pure matplotlib
+        passed: true
+        comment: sns.diverging_palette with HSL parameters is genuinely seaborn-specific.
+          sns.barplot with hue+palette dict is seaborn-specific. But core chart is
+          pure matplotlib.
   verdict: REJECTED
 impl_tags:
   dependencies: []
@@ -225,12 +239,13 @@ impl_tags:
   - bezier-curves
   - patches
   - annotations
+  - subplots
   patterns:
   - data-generation
   - iteration-over-groups
-  - explicit-figure
   dataprep: []
   styling:
   - alpha-blending
   - edge-highlighting
   - minimal-chrome
+  - grid-styling
