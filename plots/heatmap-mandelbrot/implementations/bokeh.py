@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 heatmap-mandelbrot: Mandelbrot Set Fractal Visualization
 Library: bokeh 3.8.2 | Python 3.14.3
-Quality: 85/100 | Created: 2026-03-03
+Quality: 91/100 | Created: 2026-03-03
 """
 
 import numpy as np
