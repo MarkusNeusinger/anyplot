@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 alluvial-opinion-flow: Opinion Flow Diagram
 Library: plotnine 0.15.3 | Python 3.14.3
 Quality: 83/100 | Created: 2026-03-03
@@ -21,7 +21,11 @@ from plotnine import (  # noqa: E402
     geom_rect,
     geom_text,
     ggplot,
+    guide_legend,
+    guides,
     labs,
+    scale_alpha_identity,
+    scale_color_manual,
     scale_fill_manual,
     theme,
     theme_minimal,
@@ -129,9 +133,17 @@ for (w, cat), pos in node_positions.items():
     )
 nodes_df = pd.DataFrame(node_data)
 
+# Compute net flows between categories per wave pair for highlighting
+net_flows = {}
+for _, row in transitions[~transitions["is_stable"]].iterrows():
+    fw, tw = row["from_wave"], row["to_wave"]
+    fc, tc = row["from_cat"], row["to_cat"]
+    key = (fw, tw, min(fc, tc), max(fc, tc))
+    direction = 1 if fc < tc else -1
+    net_flows[key] = net_flows.get(key, 0) + direction * row["count"]
+
 # Build flow polygons with separate in/out offset tracking
-stable_polys = []
-changer_polys = []
+flow_polys = []
 min_flow = 2
 
 for _, row in transitions.iterrows():
@@ -164,6 +176,16 @@ for _, row in transitions.iterrows():
     tgt_y_bottom = tgt_y_top - fh_tgt
     tgt["offset_in"] += fh_tgt
 
+    # Determine alpha: stable=0.55, changers vary by net flow magnitude
+    if is_stable:
+        alpha = 0.55
+    else:
+        key = (fw, tw, min(fc, tc), max(fc, tc))
+        net_mag = abs(net_flows.get(key, 0))
+        # Dominant direction flows get higher alpha for net flow highlighting
+        is_dominant = (fc < tc and net_flows.get(key, 0) > 0) or (fc > tc and net_flows.get(key, 0) < 0)
+        alpha = 0.35 if (is_dominant and net_mag > 10) else 0.23
+
     # Curved polygon via cubic interpolation
     x_left = x_positions[fw] + node_width / 2
     x_right = x_positions[tw] - node_width / 2
@@ -180,44 +202,85 @@ for _, row in transitions.iterrows():
     y_poly = np.concatenate([yt, yb])
 
     flow_id = f"{fw}_{tw}_{fc}_{tc}"
-    target_list = stable_polys if is_stable else changer_polys
 
     for k in range(len(x_poly)):
-        target_list.append({"x": x_poly[k], "y": y_poly[k], "flow_id": flow_id, "from_cat": fc})
+        flow_polys.append({"x": x_poly[k], "y": y_poly[k], "flow_id": flow_id, "from_cat": fc, "alpha": alpha})
 
-stable_df = pd.DataFrame(stable_polys)
-changer_df = pd.DataFrame(changer_polys)
+flows_df = pd.DataFrame(flow_polys)
 
-# Plot - changers drawn first (low opacity), stable on top (high opacity)
+# Compute wave-over-wave change for net flow arrow annotations
+wave_changes = []
+for w in range(3):
+    for cat in categories:
+        n_from = node_positions[(w, cat)]["count"]
+        n_to = node_positions[(w + 1, cat)]["count"]
+        delta = n_to - n_from
+        if abs(delta) >= 15:
+            mid_x = (x_positions[w] + x_positions[w + 1]) / 2
+            src_mid = (node_positions[(w, cat)]["y_top"] + node_positions[(w, cat)]["y_bottom"]) / 2
+            tgt_mid = (node_positions[(w + 1, cat)]["y_top"] + node_positions[(w + 1, cat)]["y_bottom"]) / 2
+            wave_changes.append(
+                {
+                    "x": mid_x,
+                    "xend": mid_x,
+                    "y": src_mid,
+                    "yend": tgt_mid,
+                    "category": cat,
+                    "delta": delta,
+                    "label": f"{'+' if delta > 0 else ''}{delta}",
+                }
+            )
+changes_df = pd.DataFrame(wave_changes)
+
+# Plot - flows use per-row alpha via scale_alpha_identity for net flow highlighting
 plot = (
     ggplot()
-    + geom_polygon(changer_df, aes(x="x", y="y", group="flow_id", fill="from_cat"), alpha=0.18)
-    + geom_polygon(stable_df, aes(x="x", y="y", group="flow_id", fill="from_cat"), alpha=0.55)
+    + geom_polygon(flows_df, aes(x="x", y="y", group="flow_id", fill="from_cat", alpha="alpha"))
+    + scale_alpha_identity()
     + geom_rect(
-        nodes_df, aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax", fill="category"), color="white", size=0.5
+        nodes_df, aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax", fill="category"), color="white", size=0.8
     )
     + geom_text(
         nodes_df,
         aes(x="label_x", y="label_y", label="count"),
         ha="center",
         va="center",
-        size=10,
+        size=12,
         color="white",
         fontweight="bold",
     )
+    + geom_text(
+        changes_df,
+        aes(x="x", y="yend", label="label", color="category"),
+        size=9,
+        fontweight="bold",
+        va="center",
+        ha="center",
+        show_legend=False,
+        nudge_y=0.012,
+    )
     + scale_fill_manual(values=cat_colors, name="Opinion", breaks=categories)
-    + labs(title="alluvial-opinion-flow · plotnine · pyplots.ai", x="", y="")
-    + coord_cartesian(xlim=(0, 1), ylim=(-0.02, 1.0))
+    + scale_color_manual(values=cat_colors)
+    + guides(fill=guide_legend(override_aes={"alpha": 1}), color=None)
+    + labs(
+        title="alluvial-opinion-flow · plotnine · pyplots.ai",
+        subtitle="Tracking 1,000 respondents across 4 waves — Neutral erodes as opinions polarize toward extremes",
+        x="",
+        y="",
+    )
+    + coord_cartesian(xlim=(0, 1), ylim=(0.0, 1.0))
     + theme_minimal()
     + theme(
         figure_size=(16, 9),
         plot_title=element_text(size=24, ha="center", weight="bold"),
+        plot_subtitle=element_text(size=14, ha="center", color="#555555", margin={"b": 12}),
         axis_text=element_blank(),
         axis_ticks=element_blank(),
         panel_grid=element_blank(),
         legend_title=element_text(size=16, weight="bold"),
         legend_text=element_text(size=14),
         legend_position="right",
+        plot_margin=0.02,
     )
 )
 
@@ -233,10 +296,10 @@ for cat in categories:
     ly = (pos["y_top"] + pos["y_bottom"]) / 2
     plot = plot + annotate(
         "text",
-        x=x_positions[0] - node_width / 2 - 0.012,
+        x=x_positions[0] - node_width / 2 - 0.015,
         y=ly,
         label=cat,
-        size=8,
+        size=11,
         color="#333333",
         fontweight="bold",
         ha="right",
@@ -249,10 +312,10 @@ for cat in categories:
     ly = (pos["y_top"] + pos["y_bottom"]) / 2
     plot = plot + annotate(
         "text",
-        x=x_positions[3] + node_width / 2 + 0.012,
+        x=x_positions[3] + node_width / 2 + 0.015,
         y=ly,
         label=cat,
-        size=8,
+        size=11,
         color="#333333",
         fontweight="bold",
         ha="left",
