@@ -1,7 +1,7 @@
 library: bokeh
 specification_id: alluvial-opinion-flow
 created: '2026-03-03T20:15:24Z'
-updated: '2026-03-03T20:20:44Z'
+updated: '2026-03-03T20:32:00Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 22640489481
 issue: 4430
@@ -10,41 +10,38 @@ library_version: 3.8.2
 preview_url: https://storage.googleapis.com/pyplots-images/plots/alluvial-opinion-flow/bokeh/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/alluvial-opinion-flow/bokeh/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/alluvial-opinion-flow/bokeh/plot.html
-quality_score: 83
+quality_score: 86
 review:
   strengths:
-  - Excellent data storytelling through deliberate data choice showing polarization
-    trend over 4 quarters
-  - Semantically meaningful diverging color palette (blue-gray-orange-red mapping
-    to agree-neutral-disagree)
-  - Clean opacity-based differentiation between stable and changing respondents with
-    two-pass rendering
+  - Excellent data storytelling with clear polarization narrative across 4 quarters
+  - Three-tier opacity system (stable/highlighted/changed) effectively communicates
+    flow importance
+  - Now uses ColumnDataSource and HoverTool, properly leveraging Bokeh strengths
+  - Perfect spec compliance including net flow highlighting added in this attempt
   - Perfect data quality with realistic neutral business scenario and internally consistent
-    flow counts
-  - Clean well-structured code with deterministic data and no unnecessary complexity
+    totals
+  - Clean well-structured code with no unnecessary complexity
   weaknesses:
-  - Does not use ColumnDataSource (Bokeh recommended data pattern) reducing library
-    mastery score
-  - Missing Bokeh interactive features (HoverTool for tooltips showing flow details)
-    that would showcase library strengths
-  - Orange and crimson for Disagree/Strongly Disagree could be more distinct for colorblind
-    accessibility
-  - No explicit highlighting of net flows to reveal polarization trends (spec requirement)
-  - Legend text appears small and isolated in top-right corner
+  - Node labels at 18pt slightly below the 20pt label guideline
+  - Light blue and gray flows could be more distinct for colorblind accessibility
+  - Design lacks final polish needed for publication quality
+  - Could leverage more advanced Bokeh interactive features
   image_description: 'The plot shows an alluvial/Sankey-style diagram titled "alluvial-opinion-flow
-    · bokeh · pyplots.ai" with a subtitle "Remote Work Policy Survey — 1,000 Employees
-    Across 4 Quarters". Four columns represent quarterly waves (Q1 2024 through Q4
-    2024) arranged left to right. Each column contains 5 stacked rectangular nodes
-    for opinion categories: Strongly Agree (dark blue), Agree (light blue), Neutral
-    (gray), Disagree (orange), and Strongly Disagree (crimson). Smooth bezier-curve
-    flow ribbons connect nodes between consecutive waves, with higher opacity (solid)
-    for stable respondents and lower opacity (faded) for changers. Left-side labels
-    show category names with counts (e.g., "Strongly Agree (120)"), right-side labels
-    show final counts (e.g., "Strongly Agree (183)"), and middle columns show just
-    counts. Wave headers appear below the diagram. A legend is in the top-right corner.
-    A bottom note reads "Solid flows = stable opinion | Faded flows = opinion changed".
-    The data clearly shows a polarization trend: extreme opinions grow while moderate
-    ones shrink over time.'
+    · bokeh · pyplots.ai" with subtitle "Remote Work Policy Survey — 1,000 Employees
+    Across 4 Quarters". Four columns (Q1 2024 through Q4 2024) are arranged left to
+    right, each containing 5 stacked rectangular nodes for opinion categories: Strongly
+    Agree (dark blue #306998), Agree (light blue #6BAED6), Neutral (gray #A0A0A0),
+    Disagree (orange #E8915A), and Strongly Disagree (dark magenta #8B2252). Smooth
+    bezier-curve flow ribbons connect nodes between consecutive waves. Stable flows
+    (same-category) have higher opacity (0.6), changed flows are faded (0.2), and
+    the largest net shifts appear at medium opacity (0.45) with thicker borders (2px).
+    Left-side labels show "Category (count)" (e.g., "Strongly Agree (120)"), right-side
+    labels show final counts (e.g., "Strongly Agree (183)"), and middle columns show
+    just numeric counts (e.g., "130", "215"). Wave headers appear below in bold 24pt.
+    A color-matched legend sits in the top-right corner with white background and
+    border. A bottom note reads "Solid flows = stable opinion · Faded flows = opinion
+    changed · Bold flows = largest net shifts". The data clearly shows a polarization
+    trend: extreme opinions grow while Neutral shrinks over time.'
   criteria_checklist:
     visual_quality:
       score: 26
@@ -55,45 +52,45 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 32pt, subtitle 20pt, headers
-          24pt, labels 16-18pt). Legend and bottom note appear slightly small relative
-          to canvas.
+        comment: All font sizes explicitly set (title 32pt, subtitle 22pt, headers
+          24pt, labels 18pt, legend 18pt). Node labels at 18pt slightly below 20pt
+          guideline.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements. Labels well-positioned on left/right
-          sides with adequate spacing.
+        comment: No overlapping text. Labels well-positioned on left/right sides with
+          adequate spacing.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Nodes and stable flows clearly visible. Changing flows at alpha=0.2
-          intentionally faded but some thin ones barely perceptible.
+        comment: Nodes visible with white borders. Stable flows prominent at alpha
+          0.6. Net-highlighted flows distinguishable. Some thin changed flows at alpha
+          0.2 barely perceptible.
       - id: VQ-04
         name: Color Accessibility
         score: 3
         max: 4
         passed: true
-        comment: Good diverging blue-gray-orange-red palette. Orange and crimson for
-          Disagree/Strongly Disagree may be harder to distinguish for some color vision
-          deficiencies.
+        comment: Improved diverging palette. Dark magenta now more distinct from orange.
+          Light blue and gray could still be confused under some color deficiencies.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Diagram occupies ~55-60% of canvas. Some empty space between rightmost
-          labels and legend in upper right.
+        comment: Diagram occupies 55-60% of canvas with balanced margins. Some empty
+          space near legend area.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Correct title format. Wave headers and category labels with counts
-          provide descriptive context.
+        comment: Title in correct format. Wave headers and category labels with counts
+          are descriptive.
     design_excellence:
       score: 13
       max: 20
@@ -103,24 +100,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom diverging palette semantically maps to opinion categories.
-          Intentional opacity hierarchy. Above defaults but not publication-ready.
+        comment: Custom diverging palette with semantic mapping. Three-tier opacity
+          hierarchy. White node borders. Above defaults but not publication-quality.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Axes and grid hidden, outline removed, white background, white edge
-          borders on nodes. Good but further refinement possible.
+        comment: Axes, grid, outline removed. Clean white background. Bordered legend.
+          Bottom note. Missing subtle background elements or typographic refinement.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Clear polarization story through data choice. Opacity differentiation
-          highlights stability vs change. Subtitle provides narrative context.
+        comment: Clear polarization story. Three-tier opacity guides eye. Bold net-shift
+          flows highlight key movements. Subtitle provides context.
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -128,28 +125,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct alluvial/Sankey-style diagram with flow ribbons across 4
-          waves.
+        comment: Correct alluvial/Sankey-style diagram with bezier flow ribbons across
+          4 waves.
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Most features present. Missing explicit net flow highlighting to
-          reveal polarization trends.
+        comment: 'All spec features present: consistent colors, proportional flows,
+          count labels, opacity differentiation, net flow highlighting, chronological
+          arrangement, transparency.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
         comment: Waves on x-axis, categories stacked vertically, flow widths proportional
-          to counts.
+          to counts, node heights represent totals.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format. Legend shows all 5 opinion categories with
+        comment: Title in exact required format. Legend shows all 5 categories with
           matching colors.
     data_quality:
       score: 15
@@ -160,22 +158,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 4 waves, 5 categories, 17 flows per transition. Shows stable/changing
-          respondents, various flow sizes, polarization trend.
+        comment: 4 waves, 5 categories, 51 total flow connections. Shows stable and
+          changing respondents, various flow sizes, clear polarization trend.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Remote Work Policy Survey is a plausible neutral business scenario
-          with standard Likert-scale responses.
+        comment: Remote Work Policy Survey with 1000 employees. Plausible neutral
+          business scenario with Likert-scale responses.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 1,000 respondents across 5 categories realistic for corporate survey.
-          Flow transitions internally consistent.
+        comment: 1000 respondents across 5 categories. Column totals sum consistently.
+          Transition magnitudes sensible.
     code_quality:
       score: 10
       max: 10
@@ -185,61 +183,66 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports, data, layout, plot, save. No functions
-          or classes.'
+        comment: 'Clean linear flow: imports, data, layout, bezier rendering, nodes,
+          labels, save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic hardcoded data. No random generation needed.
+        comment: Fully deterministic hardcoded data. No random generation.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: numpy, bokeh.io, bokeh.models, bokeh.plotting.'
+        comment: 'All imports used: numpy, bokeh.io, bokeh.models (ColumnDataSource,
+          HoverTool, Label, Legend, LegendItem), bokeh.plotting.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-structured. Two-pass rendering elegant. Bezier computation appropriately
-          complex.
+        comment: Well-structured. Sort-based two-pass rendering is elegant. Net flow
+          computation is clean. Bezier math appropriately complex.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png via export_png and plot.html. Uses current Bokeh
+        comment: Saves as plot.png via export_png and plot.html. Current Bokeh 3.8.2
           API.
     library_mastery:
-      score: 5
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses ColumnDataSource for flows and nodes. Uses figure, patches,
+          quad, Label, Legend correctly. Proper source parameter pattern.
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses figure, patch, quad, Label, Legend correctly but does not use
-          ColumnDataSource (recommended Bokeh pattern).
-      - id: LM-02
-        name: Distinctive Features
-        score: 2
-        max: 5
-        passed: false
-        comment: HTML export is a Bokeh feature. Misses HoverTool, ColumnDataSource,
-          and other distinctive Bokeh interactive features.
+        comment: HoverTool with detailed tooltips, HTML export, ColumnDataSource-driven
+          rendering. These are Bokeh-distinctive features. Could go further with linked
+          brushing or tap callbacks.
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
   - bezier-curves
-  - annotations
+  - patches
+  - hover-tooltips
   - custom-legend
+  - annotations
   - html-export
   patterns:
+  - columndatasource
   - iteration-over-groups
   dataprep: []
   styling:
