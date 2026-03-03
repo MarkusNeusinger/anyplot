@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 alluvial-opinion-flow: Opinion Flow Diagram
 Library: matplotlib 3.10.8 | Python 3.14.3
 Quality: 80/100 | Created: 2026-03-03
@@ -10,14 +10,14 @@ import numpy as np
 from matplotlib.path import Path
 
 
-# Data: Political opinion survey tracking 1000 respondents across 4 quarterly waves
+# Data: Employee engagement survey tracking 1000 staff across 4 quarterly waves
 np.random.seed(42)
 
 waves = ["Q1 2025", "Q2 2025", "Q3 2025", "Q4 2025"]
 categories = ["Strongly Agree", "Agree", "Neutral", "Disagree", "Strongly Disagree"]
 colors = {
     "Strongly Agree": "#306998",
-    "Agree": "#5B9BD5",
+    "Agree": "#2A9D8F",
     "Neutral": "#95A5A6",
     "Disagree": "#E67E22",
     "Strongly Disagree": "#C0392B",
@@ -177,7 +177,7 @@ for t_idx in range(len(waves) - 1):
 
             # Stable flows (same category) get higher opacity, changers get lower
             is_stable = from_cat == to_cat
-            alpha = 0.55 if is_stable else 0.2
+            alpha = 0.6 if is_stable else 0.25
 
             verts = [
                 (x0, y0_start),
@@ -233,7 +233,7 @@ for wave in waves:
         }
         label = f"{short[cat]}\nn={count}"
         text_color = "white" if cat != "Neutral" else "#222222"
-        fontsize = 11 if node["height"] > 1.0 else 9
+        fontsize = 14 if node["height"] > 0.8 else 12
         ax.text(
             node["x"],
             node["y_start"] + node["height"] / 2,
@@ -260,8 +260,8 @@ for t_idx, wave in enumerate(waves):
 
 # Legend distinguishing stable vs changing flows
 legend_elements = [
-    mpatches.Patch(facecolor="#888888", alpha=0.55, label="Stable (same opinion)"),
-    mpatches.Patch(facecolor="#888888", alpha=0.2, label="Changed opinion"),
+    mpatches.Patch(facecolor="#306998", alpha=0.6, edgecolor="#333333", linewidth=1.5, label="Stable (same opinion)"),
+    mpatches.Patch(facecolor="#306998", alpha=0.15, edgecolor="#333333", linewidth=1.5, label="Changed opinion"),
 ]
 for cat in categories:
     legend_elements.append(mpatches.Patch(facecolor=colors[cat], label=cat))
@@ -270,7 +270,7 @@ ax.legend(
     handles=legend_elements,
     loc="lower left",
     bbox_to_anchor=(0.0, -0.02),
-    fontsize=13,
+    fontsize=16,
     framealpha=0.9,
     edgecolor="none",
     ncol=4,
