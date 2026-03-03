@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 heatmap-mandelbrot: Mandelbrot Set Fractal Visualization
 Library: altair 6.0.0 | Python 3.14.3
 Quality: 83/100 | Created: 2026-03-03
@@ -13,7 +13,7 @@ import pandas as pd
 x_min, x_max = -2.5, 1.0
 y_min, y_max = -1.25, 1.25
 max_iter = 100
-nx, ny = 300, 214
+nx, ny = 600, 428
 
 step_x = (x_max - x_min) / nx
 step_y = (y_max - y_min) / ny
@@ -76,15 +76,17 @@ exterior = (
     alt.Chart(df_exterior)
     .mark_rect()
     .encode(
-        x=alt.X("real:Q", title="Real", scale=x_scale, axis=alt.Axis(titleFontSize=22, labelFontSize=18)),
+        x=alt.X("real:Q", title="Real (Re)", scale=x_scale, axis=alt.Axis(titleFontSize=22, labelFontSize=18)),
         x2="real2:Q",
-        y=alt.Y("imaginary:Q", title="Imaginary", scale=y_scale, axis=alt.Axis(titleFontSize=22, labelFontSize=18)),
+        y=alt.Y(
+            "imaginary:Q", title="Imaginary (Im)", scale=y_scale, axis=alt.Axis(titleFontSize=22, labelFontSize=18)
+        ),
         y2="imaginary2:Q",
         color=alt.Color(
             "iterations:Q",
             scale=alt.Scale(scheme="plasma"),
             legend=alt.Legend(
-                title="Escape Iterations", titleFontSize=18, labelFontSize=14, gradientLength=400, gradientThickness=20
+                title="Escape Iterations", titleFontSize=18, labelFontSize=16, gradientLength=400, gradientThickness=20
             ),
         ),
         tooltip=[
