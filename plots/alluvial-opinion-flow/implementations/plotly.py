@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 alluvial-opinion-flow: Opinion Flow Diagram
 Library: plotly 6.6.0 | Python 3.14.3
 Quality: 79/100 | Created: 2026-03-03
@@ -101,8 +101,8 @@ for w in range(n_waves):
         count = wave_totals[w][c]
         node_labels.append(f"{cat_name}<br>{count}")
         node_colors.append(cat_colors[cat_name])
-        x_positions.append(0.01 + (w / (n_waves - 1)) * 0.98)
-        y_positions.append(0.12 + (c / (n_cats - 1)) * 0.80)
+        x_positions.append(0.05 + (w / (n_waves - 1)) * 0.80)
+        y_positions.append(0.10 + (c / (n_cats - 1)) * 0.82)
 
 # Build link arrays
 sources = []
@@ -125,7 +125,7 @@ for wave_idx, trans in enumerate(all_transitions):
         r = int(base_color[1:3], 16)
         g = int(base_color[3:5], 16)
         b = int(base_color[5:7], 16)
-        opacity = 0.55 if is_stable else 0.18
+        opacity = 0.55 if is_stable else 0.30
         link_colors.append(f"rgba({r},{g},{b},{opacity})")
 
         link_customdata.append(
@@ -170,12 +170,12 @@ fig = go.Figure(
     ]
 )
 
-# Wave column headers (paper coordinates to avoid overlap with nodes)
-wave_x_paper = [0.035, 0.36, 0.665, 0.965]
+# Wave column headers (paper coordinates, positioned above nodes)
+wave_x_paper = [0.07, 0.335, 0.60, 0.865]
 for i, wave in enumerate(waves):
     fig.add_annotation(
         x=wave_x_paper[i],
-        y=0.97,
+        y=1.03,
         xref="paper",
         yref="paper",
         text=f"<b>{wave}</b>",
@@ -183,6 +183,12 @@ for i, wave in enumerate(waves):
         font={"size": 24, "color": "#333333"},
         xanchor="center",
     )
+
+# Net flow annotations on the right side to highlight polarization trends
+net_changes = []
+for c in range(n_cats):
+    delta = wave_totals[-1][c] - wave_totals[0][c]
+    net_changes.append((categories[c], delta, cat_colors[categories[c]]))
 
 # Legend using invisible scatter traces
 for cat, color in cat_colors.items():
@@ -197,6 +203,26 @@ for cat, color in cat_colors.items():
         )
     )
 
+# Net change annotations on right side of diagram
+# Sankey in Plotly uses y where 0=top, 1=bottom in node positioning
+# Paper coordinates use y where 0=bottom, 1=top
+# We need to invert: paper_y = 1 - node_y (approximately)
+for c in range(n_cats):
+    cat_name, delta, color = net_changes[c]
+    sign = "+" if delta > 0 else ""
+    node_y = 0.10 + (c / (n_cats - 1)) * 0.82
+    paper_y = 1.0 - node_y
+    fig.add_annotation(
+        x=0.99,
+        y=paper_y,
+        xref="paper",
+        yref="paper",
+        text=f"<b>{sign}{delta}</b>",
+        showarrow=False,
+        font={"size": 20, "color": color},
+        xanchor="left",
+    )
+
 # Style
 fig.update_layout(
     title={
@@ -208,13 +234,13 @@ fig.update_layout(
     },
     font={"size": 18, "color": "#333333"},
     template="plotly_white",
-    margin={"l": 40, "r": 40, "t": 160, "b": 80},
+    margin={"l": 40, "r": 60, "t": 160, "b": 90},
     paper_bgcolor="white",
     plot_bgcolor="white",
     legend={
         "orientation": "h",
         "yanchor": "bottom",
-        "y": -0.06,
+        "y": -0.08,
         "xanchor": "center",
         "x": 0.5,
         "font": {"size": 18},
