@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 alluvial-opinion-flow: Opinion Flow Diagram
 Library: bokeh 3.8.2 | Python 3.14.3
 Quality: 86/100 | Created: 2026-03-03
@@ -6,7 +6,7 @@ Quality: 86/100 | Created: 2026-03-03
 
 import numpy as np
 from bokeh.io import export_png, output_file, save
-from bokeh.models import ColumnDataSource, HoverTool, Label, Legend, LegendItem
+from bokeh.models import ColumnDataSource, HoverTool, Label, Legend, LegendItem, TapTool
 from bokeh.plotting import figure
 
 
@@ -17,7 +17,7 @@ opinions = ["Strongly Agree", "Agree", "Neutral", "Disagree", "Strongly Disagree
 colors = {
     "Strongly Agree": "#306998",
     "Agree": "#6BAED6",
-    "Neutral": "#A0A0A0",
+    "Neutral": "#C4B882",
     "Disagree": "#E8915A",
     "Strongly Disagree": "#8B2252",
 }
@@ -145,31 +145,48 @@ p = figure(
     width=4800,
     height=2700,
     title="alluvial-opinion-flow · bokeh · pyplots.ai",
-    x_range=(-1.8, 6.8),
-    y_range=(-70, max_y + 80),
+    x_range=(-2.2, 7.0),
+    y_range=(-80, max_y + 100),
     tools="",
     toolbar_location=None,
 )
 
 # Style
 p.title.text_font_size = "32pt"
+p.title.text_font_style = "bold"
 p.title.align = "center"
+p.title.text_color = "#1a1a2e"
 p.xgrid.visible = False
 p.ygrid.visible = False
 p.xaxis.visible = False
 p.yaxis.visible = False
 p.outline_line_color = None
-p.background_fill_color = "#FFFFFF"
+p.background_fill_color = "#FAFBFC"
+p.border_fill_color = "#FFFFFF"
+
+# Subtle background panel behind alluvial area
+p.quad(
+    left=x_positions[0] - node_width - 0.3,
+    right=x_positions[-1] + node_width + 0.3,
+    top=max_y + 10,
+    bottom=-8,
+    fill_color="#F4F5F7",
+    fill_alpha=0.6,
+    line_color="#E0E2E8",
+    line_width=1.5,
+    line_alpha=0.5,
+)
 
 # Subtitle
 subtitle = Label(
     x=2.25,
-    y=max_y + 55,
+    y=max_y + 72,
     text="Remote Work Policy Survey — 1,000 Employees Across 4 Quarters",
     text_font_size="22pt",
     text_align="center",
     text_baseline="top",
-    text_color="#555555",
+    text_color="#6B7280",
+    text_font_style="italic",
 )
 p.add_layout(subtitle)
 
@@ -307,6 +324,17 @@ hover = HoverTool(
 )
 p.add_tools(hover)
 
+# Add TapTool with selection glyph for interactive highlighting
+flow_renderer.selection_glyph = flow_renderer.glyph.clone()
+flow_renderer.selection_glyph.fill_alpha = 0.9
+flow_renderer.selection_glyph.line_alpha = 0.9
+flow_renderer.selection_glyph.line_width = 3
+flow_renderer.nonselection_glyph = flow_renderer.glyph.clone()
+flow_renderer.nonselection_glyph.fill_alpha = 0.1
+flow_renderer.nonselection_glyph.line_alpha = 0.1
+tap = TapTool(renderers=[flow_renderer])
+p.add_tools(tap)
+
 # Draw nodes using ColumnDataSource
 node_left = []
 node_right = []
@@ -386,7 +414,7 @@ for w_idx in range(len(waves)):
                     x=x - node_width / 2 - 0.05,
                     y=y_mid,
                     text=f"{op} ({int(height)})",
-                    text_font_size="18pt",
+                    text_font_size="20pt",
                     text_baseline="middle",
                     text_align="right",
                     text_color="#333333",
@@ -397,7 +425,7 @@ for w_idx in range(len(waves)):
                     x=x + node_width / 2 + 0.05,
                     y=y_mid,
                     text=f"{op} ({int(height)})",
-                    text_font_size="18pt",
+                    text_font_size="20pt",
                     text_baseline="middle",
                     text_color="#333333",
                 )
@@ -407,7 +435,7 @@ for w_idx in range(len(waves)):
                     x=x + node_width / 2 + 0.05,
                     y=y_mid,
                     text=str(int(height)),
-                    text_font_size="16pt",
+                    text_font_size="18pt",
                     text_baseline="middle",
                     text_color="#555555",
                 )
@@ -432,15 +460,20 @@ legend_items = [LegendItem(label=op, renderers=[legend_renderers[op]]) for op in
 legend = Legend(
     items=legend_items,
     location="top_right",
-    label_text_font_size="18pt",
-    glyph_width=32,
-    glyph_height=32,
-    spacing=10,
-    padding=18,
-    background_fill_alpha=0.85,
-    background_fill_color="white",
-    border_line_color="#bbbbbb",
-    border_line_width=2,
+    label_text_font_size="20pt",
+    label_text_color="#333333",
+    glyph_width=36,
+    glyph_height=36,
+    spacing=12,
+    padding=20,
+    background_fill_alpha=0.92,
+    background_fill_color="#FAFBFC",
+    border_line_color="#D1D5DB",
+    border_line_width=1.5,
+    title="Opinion Categories",
+    title_text_font_size="16pt",
+    title_text_color="#6B7280",
+    title_text_font_style="italic",
 )
 p.add_layout(legend, "right")
 
@@ -451,9 +484,21 @@ opacity_note = Label(
     text="Solid flows = stable opinion  ·  Faded flows = opinion changed  ·  Bold flows = largest net shifts",
     text_font_size="18pt",
     text_align="center",
-    text_color="#777777",
+    text_color="#6B7280",
 )
 p.add_layout(opacity_note)
+
+# Data storytelling: annotate key polarization trend
+trend_annotation = Label(
+    x=2.25,
+    y=-68,
+    text="▲ Polarization trend: Strongly Agree grew +53%  ·  Neutral shrank −8%  ·  Strongly Disagree grew +29%",
+    text_font_size="16pt",
+    text_align="center",
+    text_color="#8B2252",
+    text_font_style="bold",
+)
+p.add_layout(trend_annotation)
 
 # Save
 export_png(p, filename="plot.png")
