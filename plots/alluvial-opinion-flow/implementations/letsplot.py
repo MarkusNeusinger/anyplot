@@ -1,6 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 alluvial-opinion-flow: Opinion Flow Diagram
 Library: letsplot 4.8.2 | Python 3.14.3
+Quality: 90/100 | Created: 2026-03-03
 """
 
 import numpy as np

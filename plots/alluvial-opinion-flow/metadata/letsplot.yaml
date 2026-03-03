@@ -1,7 +1,7 @@
 library: letsplot
 specification_id: alluvial-opinion-flow
 created: '2026-03-03T20:11:28Z'
-updated: '2026-03-03T20:16:29Z'
+updated: '2026-03-03T20:31:18Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 22640499631
 issue: 4430
@@ -10,85 +10,83 @@ library_version: 4.8.2
 preview_url: https://storage.googleapis.com/pyplots-images/plots/alluvial-opinion-flow/letsplot/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/alluvial-opinion-flow/letsplot/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/alluvial-opinion-flow/letsplot/plot.html
-quality_score: 81
+quality_score: 90
 review:
   strengths:
-  - 'Excellent data storytelling: polarization pattern immediately visible with Neutral
-    shrinking from 280 to 122 while extremes grow'
-  - Thoughtful semantic color palette (cool blue = agreement, warm orange/red = disagreement,
-    gray = neutral)
-  - Clean opacity-based distinction between stable and changing flows
-  - Comprehensive labeling with respondent counts at all four waves
-  - 'Perfect code quality: clean KISS structure, deterministic data, all imports used'
+  - Excellent alluvial diagram built from scratch using lets-plot primitives with
+    smooth bezier-like flow curves
+  - Clean diverging color palette (Python Blue anchored) with semantic meaning
+  - 'Strong data storytelling: subtitle, opacity-based stable/changed distinction,
+    and net change annotations'
+  - All spec requirements implemented including interactivity via layer_tooltips
+  - Professional visual refinement with all chrome removed and generous whitespace
   weaknesses:
-  - Side category labels (size=10) are too small for 4800x2700 canvas - increase to
-    13-14
-  - Changed flows at alpha=0.25 are too faint - increase to 0.35 for better visibility
-    of cross-category transitions
-  - No explicit net flow highlighting as mentioned in spec notes
-  - Library mastery limited by fully manual polygon construction - consider using
-    lets_plot tooltips or other distinctive features
-  image_description: 'The plot displays an alluvial/Sankey-style diagram with 4 waves
-    (Q1 2025 through Q4 2025) arranged left to right. Five opinion categories are
-    stacked vertically at each wave: "Strongly Agree" (dark blue, bottom), "Agree"
-    (light blue), "Neutral" (gray), "Disagree" (orange), and "Strongly Disagree" (red,
-    top). Colored rectangular nodes at each wave position are connected by curved
-    flow ribbons. Stable flows (same category) appear at higher opacity (~0.6) while
-    change flows are more translucent (~0.25). Category labels with respondent counts
-    appear on both the left (Wave 1) and right (Wave 4) sides. Middle waves show count
-    numbers in white bold text inside the node rectangles. Bold wave headers sit above
-    each column. The title "alluvial-opinion-flow · letsplot · pyplots.ai" appears
-    in the upper left. A clear polarization pattern is visible: Neutral shrinks from
-    280 to 122, Strongly Agree grows from 120 to 205, and Strongly Disagree grows
-    from 130 to 214.'
+  - Some node count labels (size=11) are on the small side for 4800x2700 output
+  - 'Minor data inconsistency: Q4 respondent total sums to 999 instead of 1000'
+  image_description: 'The plot displays an alluvial/Sankey-style diagram tracking
+    opinion shifts across 4 quarterly waves (Q1-Q4 2025) for 1000 survey respondents.
+    Five opinion categories are arranged vertically: Strongly Disagree (red, #C0392B),
+    Disagree (orange, #E8915A), Neutral (gray, #9CA3AF), Agree (light blue, #5B9BD5),
+    and Strongly Agree (dark blue, #306998). Colored node rectangles at each wave
+    show category sizes, with white count labels inside the middle-wave nodes (e.g.,
+    154, 230, 215, 256, 145 at Q2). Smooth bezier-like flow ribbons connect categories
+    across waves, with stable flows rendered at higher opacity (0.6) and changed flows
+    at lower opacity (0.35). Left-side labels show initial counts (e.g., Neutral 280),
+    right-side labels show final counts with net change (e.g., Neutral 122, -158).
+    The title "alluvial-opinion-flow · letsplot · pyplots.ai" and subtitle "Polarization
+    trend: Neutral shrinks 280→122 as extreme positions grow" appear at top-left.
+    The layout is clean with no axes, grid, or spines — just the alluvial diagram
+    filling the 4800x2700 canvas.'
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set throughout but side category labels at
-          size=10 are undersized for 4800x2700 canvas
+        comment: All font sizes explicitly set (title=26, headers=17, subtitle=16,
+          labels=13, node counts=11). Readable at full size, though node count labels
+          are on the smaller end.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All text elements well-separated with no collisions
+        comment: No text collisions. Category labels, wave headers, and node counts
+          all well-separated.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Stable flows visible at alpha=0.6 but changed flows at alpha=0.25
-          are too faint for smaller transitions
+        comment: Flow ribbons clearly visible with appropriate alpha. Some very thin
+          flow ribbons barely visible, inherent to data proportionality.
       - id: VQ-04
         name: Color Accessibility
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Blue-gray-orange-red palette avoids red-green issues but red and
-          orange categories may blend for some CVD types
+        comment: 'Excellent diverging palette: blue → gray → orange/red. Not red-green
+          dependent. Good contrast.'
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good horizontal and vertical utilization with some unused space at
-          bottom
+        comment: Alluvial diagram fills canvas well with balanced margins. No content
+          cut off.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Axes appropriately hidden; wave labels and category labels with counts
-          serve as effective substitutes
+        comment: Axes appropriately removed. Wave headers and category labels serve
+          as spatial labels.
     design_excellence:
-      score: 14
+      score: 16
       max: 20
       items:
       - id: DE-01
@@ -96,24 +94,24 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Thoughtful semantic color palette with meaningful visual language;
-          clean typography; professional appearance beyond defaults
+        comment: Custom diverging palette anchored on Python Blue. Clean typography.
+          Professional appearance above defaults.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Grid removed, axes hidden, contextual labels, subtle node borders,
-          thin flow outlines
+        comment: 'All chrome stripped: no grid, spines, or ticks. Generous node spacing.
+          Dark outlines on nodes.'
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Opacity hierarchy guides viewer; polarization narrative immediately
-          apparent through data choice
+        comment: Subtitle states polarization narrative. Opacity distinguishes stable
+          from changed. Net change annotations quantify the story.
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -122,53 +120,53 @@ review:
         max: 5
         passed: true
         comment: Correct alluvial/Sankey-style diagram with flows connecting categories
-          across 4 time periods
+          across waves.
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Most features present; missing explicit net flow highlighting for
-          polarization trends
+        comment: 'All spec features present: consistent colors, proportional flows,
+          node counts, stable/changer distinction, net changes, chronological arrangement.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Waves correctly arranged, categories stacked consistently, flow widths
-          proportional
+        comment: Waves mapped left-to-right. Categories stacked vertically. Flow widths
+          proportional.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format; legend replaced by contextual category labels
-          on both sides
+        comment: Title matches required format. Legend hidden but categories identified
+          through labeled text.
     data_quality:
-      score: 13
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 4 waves, 5 categories, mix of stable and changing flows, clear polarization
-          pattern
+        comment: Shows all 5 categories across 4 waves. Demonstrates stability, change,
+          and polarization trend.
       - id: DQ-02
         name: Realistic Context
         score: 4
         max: 5
         passed: true
-        comment: Generic opinion survey tracking 1000 respondents; neutral visible
-          output
+        comment: Standard Likert-scale survey with quarterly waves. Real and comprehensible
+          scenario. Polarization framing leans slightly toward political contexts.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Realistic respondent count, plausible distributions, numbers sum
-          correctly
+        comment: 1000 respondents realistic. Distributions plausible. Transition patterns
+          realistic.
     code_quality:
       score: 10
       max: 10
@@ -178,55 +176,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear structure with no functions or classes
+        comment: 'Clean linear flow: imports → data → layout → construction → plot
+          → save.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set and all data is deterministic
+        comment: np.random.seed(42) set. Data is hardcoded and deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used. Specific imports from lets_plot.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-structured with appropriate complexity for alluvial diagrams
+        comment: Well-structured alluvial construction with smooth hermite interpolation.
+          No fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png via ggsave with scale=3; current API
+        comment: Saves as plot.png with ggsave scale=3. Also exports HTML. Current
+          API.
     library_mastery:
-      score: 5
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Proper ggplot grammar with geom_ribbon, geom_rect, geom_text. Idiomatic
+          lets-plot constructs.
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Correct grammar of graphics pattern but core visualization uses manual
-          polygon geometry
-      - id: LM-02
-        name: Distinctive Features
-        score: 2
-        max: 5
-        passed: false
-        comment: HTML export is distinctive but core technique is generic manual polygon
-          construction
-  verdict: REJECTED
+        comment: Uses layer_tooltips() with line() chaining for interactive hover.
+          HTML export leverages dual-output capability.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
   - annotations
+  - hover-tooltips
+  - html-export
   patterns:
   - data-generation
   - iteration-over-groups
