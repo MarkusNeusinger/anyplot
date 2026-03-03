@@ -1,10 +1,10 @@
-""" pyplots.ai
+"""pyplots.ai
 alluvial-opinion-flow: Opinion Flow Diagram
 Library: pygal 3.1.0 | Python 3.14.3
 Quality: 70/100 | Created: 2026-03-03
 """
 
-import re
+import xml.etree.ElementTree as ET
 
 import cairosvg
 import numpy as np
@@ -135,8 +135,8 @@ chart = pygal.StackedBar(
     width=4800,
     height=2700,
     style=custom_style,
-    title="alluvial-opinion-flow · pygal · pyplots.ai",
-    x_title="Renewable Energy Policy Survey · 1,000 Respondents Tracked Quarterly",
+    title="alluvial-opinion-flow \u00b7 pygal \u00b7 pyplots.ai",
+    x_title="Renewable Energy Policy Survey \u00b7 1,000 Respondents Tracked Quarterly",
     show_legend=True,
     legend_at_bottom=True,
     legend_at_bottom_columns=5,
@@ -157,59 +157,92 @@ chart.x_labels = waves
 for cat_idx, cat in enumerate(categories):
     chart.add(cat, [{"value": int(v), "label": f"{cat}: {int(v)} respondents"} for v in respondent_counts[cat_idx]])
 
-# Render chart to SVG
+# Render chart to SVG and parse with ElementTree for robust XML traversal
+ET.register_namespace("", "http://www.w3.org/2000/svg")
+ET.register_namespace("xlink", "http://www.w3.org/1999/xlink")
 svg_str = chart.render().decode("utf-8")
+root = ET.fromstring(svg_str)
+SVG = "{http://www.w3.org/2000/svg}"
 
-# Parse bar rect positions from the SVG using pygal's desc metadata
-# Structure: <g class="bar"><rect .../><desc class="value">N</desc>
-#            <desc class="x centered">X</desc><desc class="y centered">Y</desc></g>
-bar_info = []  # (series_idx, bar_idx, x, y, w, h, center_x)
-for series_match in re.finditer(r'<g class="series serie-(\d+) color-\d+">(.*?)</g>\s*</g>', svg_str, re.DOTALL):
-    series_idx = int(series_match.group(1))
-    content = series_match.group(2)
+# Extract bar positions using proper XML parsing (replaces fragile regex)
+# pygal SVG structure: <g class="series serie-N"> -> <g class="bars"> -> <g class="bar">
+bar_info = []  # (series_idx, bar_idx, x, y, w, h, center_x, rect_elem)
+for g in root.iter(f"{SVG}g"):
+    cls = g.get("class", "")
+    if "serie-" not in cls or "series" not in cls:
+        continue
+    series_idx = None
+    for part in cls.split():
+        if part.startswith("serie-"):
+            series_idx = int(part[6:])
+            break
+    if series_idx is None:
+        continue
+    # Find the bars wrapper group, then iterate individual bar elements
+    bars_group = None
+    for child in g:
+        if child.tag == f"{SVG}g" and child.get("class", "") == "bars":
+            bars_group = child
+            break
+    if bars_group is None:
+        continue
     bar_idx = 0
-    for bar_match in re.finditer(r'<g class="bar[^"]*">(.*?)</g>', content, re.DOTALL):
-        bar_content = bar_match.group(1)
-        rect_m = re.search(
-            r"<rect\s+x=\"([\d.e+-]+)\"\s+y=\"([\d.e+-]+)\"\s+"
-            r"rx=\"\d+\"\s+ry=\"\d+\"\s+"
-            r"width=\"([\d.e+-]+)\"\s+height=\"([\d.e+-]+)\"",
-            bar_content,
-        )
-        cx_m = re.search(r'<desc class="x centered">([\d.e+-]+)</desc>', bar_content)
-        if rect_m and cx_m:
-            x = float(rect_m.group(1))
-            y = float(rect_m.group(2))
-            w = float(rect_m.group(3))
-            h = float(rect_m.group(4))
-            cx = float(cx_m.group(1))
-            bar_info.append((series_idx, bar_idx, x, y, w, h, cx))
+    for bar_g in bars_group:
+        if bar_g.tag != f"{SVG}g":
+            continue
+        bar_cls = bar_g.get("class", "")
+        if "bar" not in bar_cls:
+            continue
+        rect = bar_g.find(f"{SVG}rect")
+        cx_desc = None
+        for desc in bar_g.findall(f"{SVG}desc"):
+            if desc.get("class") == "x centered":
+                cx_desc = desc
+                break
+        if rect is not None and cx_desc is not None:
+            x = float(rect.get("x"))
+            y = float(rect.get("y"))
+            w = float(rect.get("width"))
+            h = float(rect.get("height"))
+            cx = float(cx_desc.text)
+            bar_info.append((series_idx, bar_idx, x, y, w, h, cx, rect))
         bar_idx += 1
 
-# Narrow bars from full-width stacked bars to alluvial node columns
-# and add white stroke for visual separation
+# Narrow bars to alluvial node columns with white stroke separators
 NODE_WIDTH = 160
-for _series_idx, _bar_idx, x, y, w, h, cx in bar_info:
+for _si, _bi, _x, _y, _w, _h, cx, rect in bar_info:
     new_x = cx - NODE_WIDTH / 2
-    old_rect = f'x="{x}" y="{y}" rx="6" ry="6" width="{w}" height="{h}"'
-    new_rect = (
-        f'x="{new_x:.2f}" y="{y}" rx="6" ry="6" width="{NODE_WIDTH}" height="{h}" stroke="white" stroke-width="3"'
-    )
-    svg_str = svg_str.replace(old_rect, new_rect, 1)
+    rect.set("x", f"{new_x:.2f}")
+    rect.set("width", str(NODE_WIDTH))
+    rect.set("stroke", "white")
+    rect.set("stroke-width", "3")
 
 # Build position lookup: (series_idx, wave_idx) -> (y_top, y_bottom, center_x)
 bar_positions = {}
-for series_idx, bar_idx, _x, y, _w, h, cx in bar_info:
+for series_idx, bar_idx, _x, y, _w, h, cx, _rect in bar_info:
     bar_positions[(series_idx, bar_idx)] = (y, y + h, cx)
 
-# Category name to series index mapping
 cat_to_series = {cat: idx for idx, cat in enumerate(categories)}
 
-# Build flow SVG paths
-flow_svg = '<g id="alluvial-flows">\n'
+# Find the plot group (parent of series groups with actual bar data) for flow insertion
+plot_group = None
+first_series_pos = 0
+for g in root.iter(f"{SVG}g"):
+    cls = g.get("class", "")
+    if cls == "plot":
+        for idx, child in enumerate(g):
+            if child.get("class", "").startswith("series serie-0"):
+                plot_group = g
+                first_series_pos = idx
+                break
+    if plot_group is not None:
+        break
+
+# Build alluvial flow paths
+flow_group = ET.Element(f"{SVG}g")
+flow_group.set("id", "alluvial-flows")
 
 for flow_idx, flow_dict in enumerate(flows):
-    # Track vertical offsets within each bar segment for flow stacking
     source_offsets = {}
     target_offsets = {}
     for cat_idx in range(len(categories)):
@@ -266,27 +299,32 @@ for flow_idx, flow_dict in enumerate(flows):
             f"Z"
         )
 
-        flow_svg += f'  <path d="{path_d}" fill="{cat_colors[src_idx]}" fill-opacity="{opacity}" stroke="none"/>\n'
+        path_elem = ET.SubElement(flow_group, f"{SVG}path")
+        path_elem.set("d", path_d)
+        path_elem.set("fill", cat_colors[src_idx])
+        path_elem.set("fill-opacity", str(opacity))
+        path_elem.set("stroke", "none")
 
         source_offsets[src_idx] = y0_bottom
         target_offsets[tgt_idx] = y1_bottom
 
-flow_svg += "</g>\n"
+# Insert flows before series groups so bars render on top
+if plot_group is not None:
+    plot_group.insert(first_series_pos, flow_group)
 
-# Insert flows BEFORE series groups so bars render on top
-first_series = svg_str.find('<g class="series')
-if first_series > 0:
-    svg_str = svg_str[:first_series] + flow_svg + svg_str[first_series:]
+# Add polarization annotation with readable font size and contrast
+annotation = ET.SubElement(root, f"{SVG}text")
+annotation.set("x", "4720")
+annotation.set("y", "130")
+annotation.set("text-anchor", "end")
+annotation.set("font-size", "44")
+annotation.set("font-style", "italic")
+annotation.set("font-family", "DejaVu Sans, sans-serif")
+annotation.set("fill", "#555555")
+annotation.text = "Solid = stable opinion \u00b7 Faded = changed \u00b7 Polarization: Neutral 280\u2192150"
 
-# Add polarization annotation below title, right-aligned within chart area
-annotation_svg = (
-    '<text x="4720" y="90" text-anchor="end" font-size="32" font-style="italic" '
-    'font-family="DejaVu Sans, sans-serif" fill="#888888">'
-    "Solid = stable opinion · Faded = changed · "
-    "Polarization: Neutral 280&#x2192;150"
-    "</text>\n"
-)
-svg_str = svg_str.replace("</svg>", f"{annotation_svg}</svg>")
+# Serialize SVG
+svg_str = ET.tostring(root, encoding="unicode")
 
 # Save outputs
 with open("plot.svg", "w") as f:
