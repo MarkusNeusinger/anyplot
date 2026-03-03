@@ -1,7 +1,7 @@
 library: altair
 specification_id: alluvial-opinion-flow
 created: '2026-03-03T20:16:57Z'
-updated: '2026-03-03T20:42:21Z'
+updated: '2026-03-03T20:52:52Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 22640489306
 issue: 4430
@@ -10,36 +10,40 @@ library_version: 6.0.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/alluvial-opinion-flow/altair/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/alluvial-opinion-flow/altair/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/alluvial-opinion-flow/altair/plot.html
-quality_score: 83
+quality_score: 85
 review:
   strengths:
-  - Full spec compliance with all 7 required features (stable/changer differentiation,
-    net change indicators, proportional flows, category totals, consistent colors,
-    chronological order, transparency)
-  - Strong data storytelling through polarization narrative with net change indicators
-    and trend annotation
-  - Interactive Altair features (hover highlighting, tooltips, zoom/pan, HTML export)
-    add genuine value
-  - Semantically meaningful diverging color palette aligned with sentiment polarity
-  - Realistic neutral employee engagement context with plausible transition patterns
+  - Excellent data storytelling with polarization trend annotation and net change
+    indicators that immediately communicate the insight
+  - Well-designed diverging blue-gray-red palette semantically matching sentiment
+    categories
+  - Smooth bezier curves for flows with proper opacity distinction between stable
+    and changing respondents
+  - Complete spec compliance — all required features implemented including node count
+    labels, net flows, and chronological arrangement
+  - 'Good use of Altair-specific interactivity: hover highlighting, tooltips, and
+    HTML export'
   weaknesses:
-  - Change flow opacity (0.08) far too low in static PNG - opinion shifts nearly invisible
-    without hover interaction
-  - Right-side labels extend to canvas edge; Strongly Disagree label appears clipped
-  - Non-hovered stable flow opacity (0.18) also too faint for comfortable static viewing
-  image_description: 'The plot displays an alluvial/Sankey-style diagram tracking
-    employee engagement sentiment across 4 quarterly waves (Q1-Q4 2025). Five sentiment
-    categories are shown vertically: Strongly Disagree (red) at top, Disagree (orange),
-    Neutral (gray), Agree (light blue), and Strongly Agree (dark blue) at bottom.
-    Rectangular nodes at each wave column display respondent counts in bold white
-    text. Curved flow ribbons connect categories between adjacent waves - stable flows
-    (same category) are more opaque and change flows are lighter. Left-side labels
-    show category names with initial counts. Right-side labels show final counts with
-    net change indicators (e.g., Strongly Disagree +123, Neutral -45). Wave headers
-    appear above the diagram. A trend annotation at bottom reads "Polarization trend:
-    extreme sentiments grow while moderate opinions decline." The title "alluvial-opinion-flow
-    · altair · pyplots.ai" is centered at the top. A horizontal color legend for Sentiment
-    appears at the bottom.'
+  - Code verbosity (~360 lines) due to manual polygon construction for flows, though
+    unavoidable without native Sankey support
+  - Smallest text (count labels, trend annotation) at 16pt could be slightly larger
+    for stronger visual hierarchy
+  - Some dead space at the bottom between the trend annotation and the legend
+  image_description: 'The plot shows an alluvial/Sankey-style diagram titled "alluvial-opinion-flow
+    · altair · pyplots.ai". Four wave columns (Q1 2025 through Q4 2025) are arranged
+    left to right, each containing five rectangular nodes colored by sentiment category
+    using a diverging blue-gray-red palette: Strongly Agree (dark blue #306998), Agree
+    (light blue #5B9BD5), Neutral (gray #888888), Disagree (coral #E07B54), and Strongly
+    Disagree (dark red #C0392B). Smooth bezier-curve flows connect categories across
+    waves, with stable flows (same category) rendered at higher opacity (~0.65) and
+    changing flows at lower opacity (~0.45). Left-side labels show category names
+    with initial counts (e.g., "Strongly Agree (180)"). Right-side labels show final
+    counts with net change indicators (e.g., "Strongly Disagree (273) +123", "Agree
+    (182) -68"). White count labels appear inside each node. Light gray background
+    bands provide visual depth behind each wave column. A bottom annotation reads
+    "Polarization trend: extreme sentiments grow while moderate opinions decline"
+    in italic gray. A horizontal legend at the bottom identifies the five sentiment
+    categories.'
   criteria_checklist:
     visual_quality:
       score: 26
@@ -50,67 +54,70 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 28pt, headers 22pt, side labels
-          18pt, counts 16pt). Right labels extend to canvas edge.
+        comment: All font sizes explicitly set (title 28, headers 22, labels 18, counts
+          16). Count labels and trend annotation at 16pt readable but could be slightly
+          larger.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions. Labels, counts, and headers all well-separated.
+        comment: No overlapping text. Side labels, node counts, wave headers, and
+          annotation all clearly separated.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Nodes clearly visible. Change flows at 0.08 opacity very faint in
-          static PNG without hover.
+        comment: Flows visible with appropriate opacity levels. Some thinner change
+          flows become quite faint at non-hover opacity (0.28).
       - id: VQ-04
         name: Color Accessibility
         score: 3
         max: 4
         passed: true
-        comment: Diverging blue-gray-red palette generally colorblind-safe. Orange-red
-          distinction may challenge protanopia/deuteranopia.
+        comment: Diverging blue-gray-red palette avoids red-green conflict. Adjacent
+          blue shades could be harder to differentiate for some viewers.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good canvas usage. Right-side label 'Strongly Disagree (273) +123'
-          reaches canvas edge, appears slightly clipped.
+        comment: Plot fills canvas well with balanced margins. Some dead space between
+          trend annotation and bottom legend.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Wave headers with temporal context. Category labels include respondent
-          counts. Appropriate for alluvial diagram.
+        comment: Correct title format. Wave headers serve as column labels. No traditional
+          axes needed for alluvial diagram.
     design_excellence:
-      score: 12
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Custom diverging palette aligned with sentiment. Intentional typography
-          hierarchy. Rounded node corners. Above defaults.
+        comment: Strong design with custom diverging palette semantically matching
+          sentiment. Intentional typography hierarchy. Corner radii and background
+          bands add depth.
       - id: DE-02
         name: Visual Refinement
-        score: 3
-        max: 6
-        passed: true
-        comment: View border removed. Rounded corner nodes with stroke. Clean background.
-          Room for more polish.
-      - id: DE-03
-        name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Net change indicators, trend annotation, stable vs change opacity
-          differentiation create clear polarization narrative.
+        comment: View frame removed. Background bands add depth. Node corner radii
+          and strokes. Count labels filtered by node height. Good refinement.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear polarization narrative with net change indicators and trend
+          annotation. Opacity distinction between stable/changing flows guides understanding.
     spec_compliance:
       score: 15
       max: 15
@@ -120,27 +127,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct alluvial/Sankey diagram with curved flow ribbons between
-          nodes.
+        comment: Correct alluvial/Sankey-style diagram with flows connecting categories
+          across wave columns.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All 7 spec requirements implemented.
+        comment: 'All spec requirements met: consistent colors, proportional flows,
+          count labels, stable/changer distinction, net changes, chronological arrangement,
+          transparency.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Waves on x-axis, categories stacked vertically, proportional flow
-          widths.
+        comment: Waves correctly mapped left-to-right. Categories consistently stacked.
+          Flow widths proportional to counts.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format. Horizontal Sentiment legend at bottom.
+        comment: Title follows required format. Legend shows Sentiment with correct
+          category labels in horizontal layout.
     data_quality:
       score: 15
       max: 15
@@ -150,59 +160,59 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 4 waves, 5 Likert categories, stability and change patterns, polarization
-          trend, varied flow magnitudes.
+        comment: 'Shows all aspects: 4 quarterly waves, 5 sentiment categories, stable
+          and changing flows, clear polarization trend, net changes.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Employee engagement survey, 1000 staff, 4 quarterly waves. Neutral
-          business context.
+        comment: Employee engagement survey tracking 1000 staff quarterly. Neutral
+          business scenario with standard survey response categories.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Counts 150-273 realistic for corporate surveys. Plausible transition
-          patterns.
+        comment: 1000 total respondents, realistic retention rates in transition matrices,
+          gradual plausible polarization.
     code_quality:
-      score: 9
+      score: 8
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, layout, chart layers, save. No functions
-          or classes.'
+        comment: Follows Import-Data-Plot-Save with no functions/classes. Verbose
+          (~360 lines) due to manual polygon construction.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set. Data is deterministic.
+        comment: np.random.seed(42) set. Data uses deterministic transition matrices.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only altair, numpy, pandas - all used.
+        comment: Only altair, numpy, pandas imported — all actively used.
       - id: CQ-04
         name: Code Elegance
         score: 1
         max: 2
-        passed: false
-        comment: Necessarily complex manual Bezier computation. Well-organized but
-          verbose at ~333 lines.
+        passed: true
+        comment: Well-organized but verbose. Manual polygon construction unavoidable
+          without native Sankey support.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png (scale_factor=3.0) and plot.html. Current Altair 6.x
-          API.
+        comment: Saves as plot.png (scale_factor=3.0) and plot.html. Uses current
+          Altair 6.0 API.
     library_mastery:
       score: 6
       max: 10
@@ -212,23 +222,25 @@ review:
         score: 3
         max: 5
         passed: true
-        comment: Uses declarative encoding, layer composition, color scales. Heavy
-          manual geometry computation bypasses Altair's declarative philosophy.
+        comment: Uses declarative grammar for layered composition and encoding. Core
+          visualization relies on manual polygon coordinates since Altair lacks native
+          Sankey support.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: selection_point for hover, alt.condition for conditional opacity,
-          tooltips, interactive zoom/pan, HTML export.
+        comment: Uses selection_point for hover highlighting, alt.condition for conditional
+          opacity, .interactive() for zoom/pan, tooltips, HTML export, and alt.layer()
+          for composition.
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
   - hover-tooltips
-  - annotations
   - html-export
+  - annotations
   - custom-legend
   patterns:
   - data-generation
