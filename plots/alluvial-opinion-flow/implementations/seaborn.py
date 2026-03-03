@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 alluvial-opinion-flow: Opinion Flow Diagram
 Library: seaborn 0.13.2 | Python 3.14.3
-Quality: 89/100 | Created: 2026-03-03
+Quality: 90/100 | Created: 2026-03-03
 """
 
 import matplotlib.patches as mpatches
