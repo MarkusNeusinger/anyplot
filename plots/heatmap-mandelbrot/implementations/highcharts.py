@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 heatmap-mandelbrot: Mandelbrot Set Fractal Visualization
 Library: highcharts unknown | Python 3.14.3
-Quality: 87/100 | Created: 2026-03-03
+Quality: 90/100 | Created: 2026-03-03
 """
 
 import json
