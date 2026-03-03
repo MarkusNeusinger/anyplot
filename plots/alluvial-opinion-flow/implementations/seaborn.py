@@ -1,33 +1,28 @@
-""" pyplots.ai
+"""pyplots.ai
 alluvial-opinion-flow: Opinion Flow Diagram
 Library: seaborn 0.13.2 | Python 3.14.3
-Quality: 82/100 | Created: 2026-03-03
 """
 
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import seaborn as sns
 from matplotlib.path import Path
 
 
-# Style
+# Style — seaborn theming and context
 sns.set_style("white")
-sns.set_context("talk", font_scale=1.2)
+sns.set_context("talk", font_scale=1.3)
 
 # Data: Survey tracking 1000 respondents on renewable energy support
 # across 4 quarterly waves — shows gradual polarization over time
 waves = ["Q1 2025", "Q2 2025", "Q3 2025", "Q4 2025"]
 categories = ["Strongly Agree", "Agree", "Neutral", "Disagree", "Strongly Disagree"]
 
-# Diverging palette: blues for agreement, gray for neutral, warm tones for disagreement
-category_colors = {
-    "Strongly Agree": "#306998",
-    "Agree": "#5B9BD5",
-    "Neutral": "#8C8C8C",
-    "Disagree": "#E88C30",
-    "Strongly Disagree": "#C75533",
-}
+# Diverging palette via seaborn: blue (agreement) → gray (neutral) → warm (disagreement)
+palette_rgb = sns.diverging_palette(220, 25, n=5, s=80, l=50)
+category_colors = {cat: tuple(palette_rgb[i]) for i, cat in enumerate(categories)}
 
 # Respondent counts per category at each wave (total = 1000 per wave)
 # Pattern: Neutral shrinks as respondents polarize toward extremes
@@ -129,15 +124,18 @@ flows = [
     },
 ]
 
-# Plot
-fig, ax = plt.subplots(figsize=(16, 9))
+# Figure with two panels: main alluvial + net change barplot
+fig = plt.figure(figsize=(16, 9))
+gs = fig.add_gridspec(1, 2, width_ratios=[5, 1], wspace=0.05)
+ax = fig.add_subplot(gs[0, 0])
+ax_net = fig.add_subplot(gs[0, 1])
 
+# --- Main alluvial diagram ---
 n_waves = len(waves)
 x_positions = np.linspace(0, 10, n_waves)
 bar_width = 0.55
 total_height = 100
 
-# Calculate and draw nodes (stacked bars at each wave)
 node_positions = {}
 
 for wave_idx, wave in enumerate(waves):
@@ -161,7 +159,6 @@ for wave_idx, wave in enumerate(waves):
         )
         ax.add_patch(rect)
 
-        # Labels: category name + count on first/last columns, count inside middle bars
         count_val = counts[cat_idx, wave_idx]
 
         if wave_idx == 0:
@@ -171,7 +168,7 @@ for wave_idx, wave in enumerate(waves):
                 f"{category}\n(n={count_val})",
                 ha="right",
                 va="center",
-                fontsize=11,
+                fontsize=14,
                 fontweight="bold",
                 color=category_colors[category],
             )
@@ -179,30 +176,29 @@ for wave_idx, wave in enumerate(waves):
             ax.text(
                 x + bar_width / 2 + 0.15,
                 (y_bottom + y_top) / 2,
-                f"{category}\n(n={count_val})",
+                f"(n={count_val})",
                 ha="left",
                 va="center",
-                fontsize=11,
+                fontsize=14,
                 fontweight="bold",
                 color=category_colors[category],
             )
         else:
-            if height > 7:
+            if height > 9:
                 ax.text(
                     x,
                     (y_bottom + y_top) / 2,
                     f"n={count_val}",
                     ha="center",
                     va="center",
-                    fontsize=9,
+                    fontsize=13,
                     fontweight="semibold",
                     color="white",
                 )
 
         y_bottom = y_top
 
-    # Wave header
-    ax.text(x, total_height + 3, wave, ha="center", va="bottom", fontsize=18, fontweight="bold")
+    ax.text(x, total_height + 3, wave, ha="center", va="bottom", fontsize=20, fontweight="bold")
 
 # Draw flows between consecutive waves
 # Draw changers first (low opacity), then stable flows on top (high opacity)
@@ -261,9 +257,9 @@ for flow_idx, flow_dict in enumerate(flows):
         ]
         path = Path(verts, codes)
 
-        # Stable flows (same category) get high opacity; changers get low opacity
+        # Stable flows (same category) get high opacity; changers get slightly higher for visibility
         is_stable = source_cat == target_cat
-        alpha = 0.60 if is_stable else 0.22
+        alpha = 0.60 if is_stable else 0.28
 
         color = category_colors[source_cat]
         patch = mpatches.PathPatch(path, facecolor=color, edgecolor=color, linewidth=0.3, alpha=alpha)
@@ -272,29 +268,65 @@ for flow_idx, flow_dict in enumerate(flows):
         source_offsets[source_cat] = y0_top
         target_offsets[target_cat] = y1_top
 
-# Style
-ax.set_xlim(-4.0, 14.0)
+# Main axes style — use seaborn despine
+ax.set_xlim(-4.0, 12.0)
 ax.set_ylim(-8, 115)
 ax.set_aspect("auto")
 ax.set_xticks([])
 ax.set_yticks([])
-for spine in ax.spines.values():
-    spine.set_visible(False)
+sns.despine(ax=ax, left=True, bottom=True, top=True, right=True)
 ax.set_facecolor("white")
-fig.patch.set_facecolor("white")
 
-ax.set_title("alluvial-opinion-flow · seaborn · pyplots.ai", fontsize=24, fontweight="bold", pad=25)
+# --- Net change sidebar using seaborn barplot ---
+net_changes = counts[:, -1] - counts[:, 0]
+df_net = pd.DataFrame({"Category": categories, "Net Change": net_changes.tolist()})
 
-ax.text(
-    5,
-    -5,
+# Reversed order so bottom-to-top matches alluvial stacking
+cat_order = categories[::-1]
+sns.barplot(
+    data=df_net,
+    x="Net Change",
+    y="Category",
+    hue="Category",
+    palette=category_colors,
+    legend=False,
+    order=cat_order,
+    ax=ax_net,
+)
+
+# Annotate bars with net change values
+for i, cat in enumerate(cat_order):
+    val = net_changes[categories.index(cat)]
+    sign = "+" if val > 0 else ""
+    offset = 5 if val >= 0 else -5
+    ha = "left" if val >= 0 else "right"
+    ax_net.text(
+        val + offset, i, f"{sign}{val}", ha=ha, va="center", fontsize=12, fontweight="bold", color=category_colors[cat]
+    )
+
+ax_net.set_title("Net Shift\nQ1 → Q4", fontsize=14, fontweight="bold", pad=15)
+ax_net.set_ylabel("")
+ax_net.set_xlabel("")
+ax_net.tick_params(axis="y", length=0)
+ax_net.set_yticklabels([])
+ax_net.axvline(0, color="#444444", linewidth=0.8, zorder=0)
+ax_net.xaxis.grid(True, alpha=0.15, linewidth=0.5)
+sns.despine(ax=ax_net, left=True)
+ax_net.set_facecolor("white")
+
+# Title and subtitle
+fig.suptitle("alluvial-opinion-flow · seaborn · pyplots.ai", fontsize=24, fontweight="bold", y=0.97)
+fig.text(
+    0.42,
+    0.02,
     "Renewable Energy Survey · 1,000 respondents across 4 waves · Stable flows shown at higher opacity",
     ha="center",
-    va="top",
+    va="bottom",
     fontsize=14,
     color="#666666",
     style="italic",
 )
 
-plt.tight_layout()
+fig.patch.set_facecolor("white")
+fig.subplots_adjust(left=0.12, right=0.98, top=0.90, bottom=0.08, wspace=0.05)
 plt.savefig("plot.png", dpi=300, bbox_inches="tight", facecolor="white")
