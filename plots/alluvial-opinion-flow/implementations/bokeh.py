@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 alluvial-opinion-flow: Opinion Flow Diagram
 Library: bokeh 3.8.2 | Python 3.14.3
 Quality: 83/100 | Created: 2026-03-03
@@ -6,7 +6,7 @@ Quality: 83/100 | Created: 2026-03-03
 
 import numpy as np
 from bokeh.io import export_png, output_file, save
-from bokeh.models import Label, Legend, LegendItem
+from bokeh.models import ColumnDataSource, HoverTool, Label, Legend, LegendItem
 from bokeh.plotting import figure
 
 
@@ -19,7 +19,7 @@ colors = {
     "Agree": "#6BAED6",
     "Neutral": "#A0A0A0",
     "Disagree": "#E8915A",
-    "Strongly Disagree": "#C44E52",
+    "Strongly Disagree": "#8B2252",
 }
 
 # Flow transitions between consecutive waves (source, target, respondent_count)
@@ -101,6 +101,27 @@ for w_idx in range(len(waves)):
             totals[op] = sum(f[2] for f in flows_data[w_idx - 1] if f[1] == op)
     node_totals.append(totals)
 
+# Compute net flows per transition to identify largest shifts for highlighting
+net_flows = []
+for _w_idx, flows in enumerate(flows_data):
+    transition_nets = {}
+    for from_op, to_op, count in flows:
+        if from_op != to_op:
+            key = tuple(sorted([from_op, to_op]))
+            if key not in transition_nets:
+                transition_nets[key] = 0
+            if from_op < to_op:
+                transition_nets[key] += count
+            else:
+                transition_nets[key] -= count
+    net_flows.append(transition_nets)
+
+# Find the top net flow magnitude across all transitions for highlighting threshold
+all_net_magnitudes = []
+for nets in net_flows:
+    all_net_magnitudes.extend(abs(v) for v in nets.values())
+net_highlight_threshold = sorted(all_net_magnitudes, reverse=True)[2] if len(all_net_magnitudes) > 2 else 0
+
 # Layout
 x_positions = [0, 1.5, 3.0, 4.5]
 node_width = 0.14
@@ -145,15 +166,27 @@ subtitle = Label(
     x=2.25,
     y=max_y + 55,
     text="Remote Work Policy Survey — 1,000 Employees Across 4 Quarters",
-    text_font_size="20pt",
+    text_font_size="22pt",
     text_align="center",
     text_baseline="top",
-    text_color="#666666",
+    text_color="#555555",
 )
 p.add_layout(subtitle)
 
-# Precompute all flow ribbon positions for two-pass rendering
-flow_ribbons = []
+# Precompute all flow ribbon data for ColumnDataSource-based rendering
+n_points = 50
+t_param = np.linspace(0, 1, n_points)
+
+flow_xs_list = []
+flow_ys_list = []
+flow_colors = []
+flow_alphas = []
+flow_line_widths = []
+flow_from_labels = []
+flow_to_labels = []
+flow_counts = []
+flow_wave_labels = []
+flow_types = []
 
 for w_idx, flows in enumerate(flows_data):
     x_start = x_positions[w_idx] + node_width / 2
@@ -174,55 +207,157 @@ for w_idx, flows in enumerate(flows_data):
         y_tgt_top = y_tgt_bottom + count
         target_cursors[to_op] = y_tgt_top
 
-        flow_ribbons.append(
-            (x_start, x_end, y_src_top, y_src_bottom, y_tgt_top, y_tgt_bottom, colors[from_op], from_op == to_op)
+        is_stable = from_op == to_op
+
+        # Check if this flow is part of a large net shift
+        is_net_highlight = False
+        if not is_stable:
+            key = tuple(sorted([from_op, to_op]))
+            net_mag = abs(net_flows[w_idx].get(key, 0))
+            is_net_highlight = net_mag >= net_highlight_threshold
+
+        # Cubic bezier control points
+        cx0 = x_start + (x_end - x_start) / 3
+        cx1 = x_start + 2 * (x_end - x_start) / 3
+
+        # Top edge bezier
+        x_curve = (
+            (1 - t_param) ** 3 * x_start
+            + 3 * (1 - t_param) ** 2 * t_param * cx0
+            + 3 * (1 - t_param) * t_param**2 * cx1
+            + t_param**3 * x_end
+        )
+        y_top = (
+            (1 - t_param) ** 3 * y_src_top
+            + 3 * (1 - t_param) ** 2 * t_param * y_src_top
+            + 3 * (1 - t_param) * t_param**2 * y_tgt_top
+            + t_param**3 * y_tgt_top
+        )
+        y_bottom = (
+            (1 - t_param) ** 3 * y_src_bottom
+            + 3 * (1 - t_param) ** 2 * t_param * y_src_bottom
+            + 3 * (1 - t_param) * t_param**2 * y_tgt_bottom
+            + t_param**3 * y_tgt_bottom
         )
 
-# Render flows: changers first (behind, transparent), then stable on top (opaque)
-n_points = 50
-t_param = np.linspace(0, 1, n_points)
+        xs = list(x_curve) + list(x_curve[::-1])
+        ys = list(y_top) + list(y_bottom[::-1])
 
-for ribbon in sorted(flow_ribbons, key=lambda r: r[7]):
-    x_s, x_e, yst, ysb, ytt, ytb, color, is_stable = ribbon
+        if is_stable:
+            fill_alpha = 0.6
+            line_w = 0.5
+        elif is_net_highlight:
+            fill_alpha = 0.45
+            line_w = 2.0
+        else:
+            fill_alpha = 0.2
+            line_w = 0.5
 
-    # Cubic bezier control points at 1/3 and 2/3 of x distance
-    cx0 = x_s + (x_e - x_s) / 3
-    cx1 = x_s + 2 * (x_e - x_s) / 3
+        flow_xs_list.append(xs)
+        flow_ys_list.append(ys)
+        flow_colors.append(colors[from_op])
+        flow_alphas.append(fill_alpha)
+        flow_line_widths.append(line_w)
+        flow_from_labels.append(from_op)
+        flow_to_labels.append(to_op)
+        flow_counts.append(count)
+        flow_wave_labels.append(f"{waves[w_idx]} → {waves[w_idx + 1]}")
+        flow_types.append("Stable" if is_stable else "Changed")
 
-    # Top edge bezier
-    x_curve = (
-        (1 - t_param) ** 3 * x_s
-        + 3 * (1 - t_param) ** 2 * t_param * cx0
-        + 3 * (1 - t_param) * t_param**2 * cx1
-        + t_param**3 * x_e
-    )
-    y_top = (
-        (1 - t_param) ** 3 * yst
-        + 3 * (1 - t_param) ** 2 * t_param * yst
-        + 3 * (1 - t_param) * t_param**2 * ytt
-        + t_param**3 * ytt
-    )
+# Sort: render changers first (behind), then stable on top
+sort_order = sorted(range(len(flow_types)), key=lambda i: flow_types[i] == "Stable")
 
-    # Bottom edge bezier
-    y_bottom = (
-        (1 - t_param) ** 3 * ysb
-        + 3 * (1 - t_param) ** 2 * t_param * ysb
-        + 3 * (1 - t_param) * t_param**2 * ytb
-        + t_param**3 * ytb
-    )
+flow_source = ColumnDataSource(
+    data={
+        "xs": [flow_xs_list[i] for i in sort_order],
+        "ys": [flow_ys_list[i] for i in sort_order],
+        "color": [flow_colors[i] for i in sort_order],
+        "alpha": [flow_alphas[i] for i in sort_order],
+        "line_width": [flow_line_widths[i] for i in sort_order],
+        "from_op": [flow_from_labels[i] for i in sort_order],
+        "to_op": [flow_to_labels[i] for i in sort_order],
+        "count": [flow_counts[i] for i in sort_order],
+        "wave": [flow_wave_labels[i] for i in sort_order],
+        "flow_type": [flow_types[i] for i in sort_order],
+    }
+)
 
-    # Closed polygon: top curve forward + bottom curve reversed
-    xs = list(x_curve) + list(x_curve[::-1])
-    ys = list(y_top) + list(y_bottom[::-1])
+flow_renderer = p.patches(
+    xs="xs",
+    ys="ys",
+    fill_color="color",
+    fill_alpha="alpha",
+    line_color="color",
+    line_alpha=0.3,
+    line_width="line_width",
+    source=flow_source,
+)
 
-    # Stable respondents: higher opacity; changers: lower opacity
-    fill_alpha = 0.6 if is_stable else 0.2
+# Add HoverTool for flow ribbons
+hover = HoverTool(
+    renderers=[flow_renderer],
+    tooltips=[
+        ("Transition", "@wave"),
+        ("From", "@from_op"),
+        ("To", "@to_op"),
+        ("Respondents", "@count"),
+        ("Type", "@flow_type"),
+    ],
+    point_policy="follow_mouse",
+)
+p.add_tools(hover)
 
-    p.patch(
-        xs, ys, fill_color=color, fill_alpha=fill_alpha, line_color=color, line_alpha=fill_alpha * 0.6, line_width=0.5
-    )
+# Draw nodes using ColumnDataSource
+node_left = []
+node_right = []
+node_top = []
+node_bottom = []
+node_colors_list = []
+node_op_labels = []
+node_wave_labels = []
+node_count_labels = []
 
-# Draw nodes and labels
+for w_idx in range(len(waves)):
+    x = x_positions[w_idx]
+    for op in opinions:
+        y_start = node_positions[w_idx][op]["y_start"]
+        y_end = node_positions[w_idx][op]["y_end"]
+        height = y_end - y_start
+        if height > 0:
+            node_left.append(x - node_width / 2)
+            node_right.append(x + node_width / 2)
+            node_top.append(y_end)
+            node_bottom.append(y_start)
+            node_colors_list.append(colors[op])
+            node_op_labels.append(op)
+            node_wave_labels.append(waves[w_idx])
+            node_count_labels.append(str(int(height)))
+
+node_source = ColumnDataSource(
+    data={
+        "left": node_left,
+        "right": node_right,
+        "top": node_top,
+        "bottom": node_bottom,
+        "color": node_colors_list,
+        "opinion": node_op_labels,
+        "wave": node_wave_labels,
+        "count": node_count_labels,
+    }
+)
+
+p.quad(
+    left="left",
+    right="right",
+    top="top",
+    bottom="bottom",
+    fill_color="color",
+    line_color="white",
+    line_width=2,
+    source=node_source,
+)
+
+# Node text labels and legend renderers
 legend_renderers = {}
 for w_idx in range(len(waves)):
     x = x_positions[w_idx]
@@ -232,20 +367,19 @@ for w_idx in range(len(waves)):
         height = y_end - y_start
 
         if height > 0:
-            renderer = p.quad(
-                left=x - node_width / 2,
-                right=x + node_width / 2,
-                top=y_end,
-                bottom=y_start,
-                fill_color=colors[op],
-                line_color="white",
-                line_width=2,
-            )
-
             if op not in legend_renderers:
-                legend_renderers[op] = renderer
+                r = p.quad(
+                    left=x - node_width / 2,
+                    right=x + node_width / 2,
+                    top=y_end,
+                    bottom=y_start,
+                    fill_color=colors[op],
+                    line_color=colors[op],
+                    fill_alpha=0,
+                    line_alpha=0,
+                )
+                legend_renderers[op] = r
 
-            # Node labels: category name + count on first/last columns, count only on middle
             y_mid = (y_start + y_end) / 2
             if w_idx == 0:
                 label = Label(
@@ -293,19 +427,20 @@ for w_idx, wave in enumerate(waves):
     )
     p.add_layout(label)
 
-# Legend
+# Legend — positioned inside the plot, larger text
 legend_items = [LegendItem(label=op, renderers=[legend_renderers[op]]) for op in opinions]
 legend = Legend(
     items=legend_items,
     location="top_right",
-    label_text_font_size="16pt",
-    glyph_width=28,
-    glyph_height=28,
-    spacing=8,
-    padding=15,
-    background_fill_alpha=0.8,
+    label_text_font_size="18pt",
+    glyph_width=32,
+    glyph_height=32,
+    spacing=10,
+    padding=18,
+    background_fill_alpha=0.85,
     background_fill_color="white",
-    border_line_color="#cccccc",
+    border_line_color="#bbbbbb",
+    border_line_width=2,
 )
 p.add_layout(legend, "right")
 
@@ -313,10 +448,10 @@ p.add_layout(legend, "right")
 opacity_note = Label(
     x=2.25,
     y=-50,
-    text="Solid flows = stable opinion  |  Faded flows = opinion changed",
-    text_font_size="16pt",
+    text="Solid flows = stable opinion  ·  Faded flows = opinion changed  ·  Bold flows = largest net shifts",
+    text_font_size="18pt",
     text_align="center",
-    text_color="#888888",
+    text_color="#777777",
 )
 p.add_layout(opacity_note)
 
