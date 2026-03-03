@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 alluvial-opinion-flow: Opinion Flow Diagram
 Library: plotnine 0.15.3 | Python 3.14.3
 Quality: 83/100 | Created: 2026-03-03
@@ -41,13 +41,13 @@ wave_labels = ["Wave 1", "Wave 2", "Wave 3", "Wave 4"]
 
 # Transition matrices (rows=source category, cols=target category)
 # Wave 1→2: mostly stable, small initial shifts
-m12 = np.array([[155, 18, 5, 2, 0], [22, 195, 28, 5, 0], [3, 20, 138, 22, 7], [0, 5, 18, 155, 22], [0, 3, 5, 15, 157]])
+m12 = np.array([[154, 18, 5, 2, 1], [22, 195, 28, 5, 0], [3, 20, 138, 22, 7], [0, 5, 18, 155, 22], [1, 3, 5, 15, 156]])
 
 # Wave 2→3: accelerating polarization
-m23 = np.array([[155, 15, 8, 2, 0], [30, 175, 25, 8, 3], [5, 18, 128, 30, 13], [0, 5, 12, 150, 32], [0, 2, 5, 10, 169]])
+m23 = np.array([[153, 15, 8, 2, 2], [30, 175, 25, 8, 3], [5, 18, 128, 30, 13], [0, 5, 12, 150, 32], [2, 2, 5, 10, 167]])
 
 # Wave 3→4: strong polarization, neutral collapses
-m34 = np.array([[168, 15, 5, 2, 0], [35, 148, 22, 8, 2], [3, 12, 98, 42, 23], [0, 3, 8, 142, 47], [0, 2, 3, 12, 200]])
+m34 = np.array([[166, 15, 5, 2, 2], [35, 148, 22, 8, 2], [3, 12, 98, 42, 23], [0, 3, 8, 142, 47], [2, 2, 3, 12, 198]])
 
 # Build transitions DataFrame
 rows = []
@@ -79,8 +79,8 @@ cat_colors = {
     "Strongly Agree": "#306998",
     "Agree": "#6BAED6",
     "Neutral": "#969696",
-    "Disagree": "#D4883A",
-    "Strongly Disagree": "#C0392B",
+    "Disagree": "#E8983A",
+    "Strongly Disagree": "#A8322A",
 }
 
 # Layout
@@ -185,7 +185,7 @@ for _, row in transitions.iterrows():
         net_mag = abs(net_flows.get(key, 0))
         # Dominant direction flows get higher alpha for net flow highlighting
         is_dominant = (fc < tc and net_flows.get(key, 0) > 0) or (fc > tc and net_flows.get(key, 0) < 0)
-        alpha = 0.35 if (is_dominant and net_mag > 10) else 0.23
+        alpha = 0.42 if (is_dominant and net_mag > 10) else 0.30
 
     # Curved ribbon via cubic interpolation (idiomatic plotnine geom_ribbon)
     x_left = x_positions[fw] + node_width / 2
@@ -237,37 +237,52 @@ for w in range(3):
             )
 changes_df = pd.DataFrame(wave_changes)
 
+# Background banding behind wave columns for visual framing
+band_data = []
+for w in range(4):
+    band_data.append({"xmin": x_positions[w] - 0.09, "xmax": x_positions[w] + 0.09, "ymin": -0.01, "ymax": 0.935})
+bands_df = pd.DataFrame(band_data)
+
 # Plot - flows use per-row alpha via scale_alpha_identity for net flow highlighting
 plot = (
     ggplot()
+    + geom_rect(
+        bands_df,
+        aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax"),
+        fill="#F0F2F5",
+        alpha=0.6,
+        color=None,
+        inherit_aes=False,
+        show_legend=False,
+    )
     + geom_ribbon(
         flows_df, aes(x="x", ymin="ymin", ymax="ymax", group="flow_id", fill="from_cat", alpha="alpha"), color=None
     )
     + scale_alpha_identity()
     + geom_rect(
-        nodes_df, aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax", fill="category"), color="white", size=0.8
+        nodes_df, aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax", fill="category"), color="white", size=1.0
     )
     + geom_text(
         nodes_df,
         aes(x="label_x", y="label_y", label="count"),
         ha="center",
         va="center",
-        size=12,
+        size=15,
         color="white",
         fontweight="bold",
     )
     + geom_label(
         changes_df,
         aes(x="x", y="yend", label="label", color="category"),
-        size=12,
+        size=14,
         fontweight="bold",
         va="center",
         ha="center",
         show_legend=False,
         nudge_y=0.012,
-        fill="#FFFFFFCC",
+        fill="#FFFFFFDD",
         label_size=0,
-        label_padding=0.15,
+        label_padding=0.18,
     )
     + scale_fill_manual(values=cat_colors, name="Opinion", breaks=categories)
     + scale_color_manual(values=cat_colors)
@@ -278,17 +293,17 @@ plot = (
         x="",
         y="",
     )
-    + coord_cartesian(xlim=(-0.05, 1.05), ylim=(0.0, 1.0))
+    + coord_cartesian(xlim=(-0.14, 1.14), ylim=(-0.02, 1.0))
     + theme_minimal()
     + theme(
         figure_size=(16, 9),
         plot_title=element_text(size=24, ha="center", weight="bold"),
-        plot_subtitle=element_text(size=14, ha="center", color="#555555", margin={"b": 12}),
+        plot_subtitle=element_text(size=16, ha="center", color="#555555", margin={"b": 14}),
         axis_text=element_blank(),
         axis_ticks=element_blank(),
         panel_grid=element_blank(),
         legend_title=element_text(size=16, weight="bold"),
-        legend_text=element_text(size=14),
+        legend_text=element_text(size=15),
         legend_position="right",
         plot_margin=0.02,
     )
@@ -297,7 +312,7 @@ plot = (
 # Wave column headers
 for w, label in enumerate(wave_labels):
     plot = plot + annotate(
-        "text", x=x_positions[w], y=0.95, label=label, size=16, color="#333333", fontweight="bold", ha="center"
+        "text", x=x_positions[w], y=0.95, label=label, size=18, color="#222222", fontweight="bold", ha="center"
     )
 
 # Category labels on left of first column
@@ -309,8 +324,8 @@ for cat in categories:
         x=x_positions[0] - node_width / 2 - 0.015,
         y=ly,
         label=cat,
-        size=13,
-        color="#333333",
+        size=16,
+        color="#222222",
         fontweight="bold",
         ha="right",
         va="center",
@@ -325,8 +340,8 @@ for cat in categories:
         x=x_positions[3] + node_width / 2 + 0.015,
         y=ly,
         label=cat,
-        size=13,
-        color="#333333",
+        size=16,
+        color="#222222",
         fontweight="bold",
         ha="left",
         va="center",
