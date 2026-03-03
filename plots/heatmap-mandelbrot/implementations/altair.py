@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 heatmap-mandelbrot: Mandelbrot Set Fractal Visualization
 Library: altair 6.0.0 | Python 3.14.3
 Quality: 85/100 | Created: 2026-03-03
@@ -13,7 +13,7 @@ import pandas as pd
 x_min, x_max = -2.5, 1.0
 y_min, y_max = -1.25, 1.25
 max_iter = 100
-nx, ny = 600, 428
+nx, ny = 800, 600
 
 step_x = (x_max - x_min) / nx
 step_y = (y_max - y_min) / ny
@@ -102,13 +102,25 @@ chart = (
     (interior + exterior)
     .interactive()
     .properties(
-        width=1400,
-        height=1000,
-        title=alt.Title("heatmap-mandelbrot · altair · pyplots.ai", fontSize=28, anchor="start", offset=16),
+        width=1600,
+        height=900,
+        autosize=alt.AutoSizeParams(type="fit", contains="padding"),
+        title=alt.Title(
+            "heatmap-mandelbrot · altair · pyplots.ai",
+            subtitle=["z(n+1) = z(n)² + c  ·  max 100 iterations  ·  escape radius 2"],
+            fontSize=28,
+            subtitleFontSize=18,
+            subtitleColor="#b0b0b0",
+            anchor="start",
+            offset=16,
+        ),
         padding={"left": 20, "right": 20, "top": 20, "bottom": 20},
     )
-    .configure_view(strokeWidth=0)
-    .configure_axis(grid=False)
+    .configure_view(strokeWidth=0, fill="#0a0a0a")
+    .configure_axis(grid=False, domainColor="#666666", tickColor="#666666", labelColor="#cccccc", titleColor="#dddddd")
+    .configure_legend(titleColor="#dddddd", labelColor="#cccccc")
+    .configure_title(color="#eeeeee")
+    .configure(background="#111111")
 )
 
 # Save
