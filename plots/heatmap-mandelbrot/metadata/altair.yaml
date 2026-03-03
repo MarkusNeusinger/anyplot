@@ -1,7 +1,7 @@
 library: altair
 specification_id: heatmap-mandelbrot
 created: '2026-03-03T13:51:48Z'
-updated: '2026-03-03T13:56:34Z'
+updated: '2026-03-03T14:05:12Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 22625547489
 issue: 4431
@@ -10,37 +10,42 @@ library_version: 6.0.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/heatmap-mandelbrot/altair/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/heatmap-mandelbrot/altair/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/heatmap-mandelbrot/altair/plot.html
-quality_score: 83
+quality_score: 85
 review:
   strengths:
-  - 'Perfect spec compliance: all required features (smooth coloring, plasma colormap,
-    black interior, correct axes, proper aspect ratio) are implemented'
-  - Clean, deterministic code with excellent structure and no unnecessary complexity
-  - 'Good use of Altair-specific features: interactivity, tooltips, layer composition,
-    HTML export'
-  - Plasma colormap is both aesthetically pleasing and colorblind-accessible
+  - Excellent smooth coloring algorithm with normalized iteration count eliminates
+    color banding at fractal boundaries
+  - Clean interior/exterior separation with solid black for in-set points provides
+    strong visual contrast
+  - Correct aspect ratio preservation matching the complex plane mathematical proportions
+  - Effective use of Altair layer composition and interactive features (tooltips,
+    zoom/pan, HTML export)
+  - Perfect data quality with canonical mathematical object and correct parameter
+    ranges
   weaknesses:
-  - Grid resolution of 300x214 creates visible pixelation at the fractal boundary,
-    significantly reducing the visual impact of the smooth coloring
-  - Legend label font size at 14pt is below the 16pt guideline for supporting text
-  - The large uniformly-colored deep blue exterior regions are visually monotonous
-  image_description: The plot shows a Mandelbrot set fractal visualization rendered
-    with Altair's mark_rect. The characteristic cardioid (main body) and period-2
-    bulb are clearly visible as solid black regions in the center of the complex plane.
-    The exterior (escaped) points are colored using the plasma colormap, ranging from
-    deep dark blue/purple (low iteration counts, far from the boundary) through pink/magenta
-    to bright yellow (high iteration counts, near the set boundary). The title "heatmap-mandelbrot
-    · altair · pyplots.ai" appears top-left in a large font. The x-axis is labeled
-    "Real" ranging from -2.5 to ~0.9, and the y-axis is labeled "Imaginary" ranging
-    from ~-1.2 to ~1.2. A vertical gradient legend on the right displays "Escape Iterations"
-    from ~5 to 100. Individual rectangular cells are visible at the fractal boundary
-    due to the 300x214 grid resolution, creating noticeable pixelation. Smaller satellite
-    bulbs along the real axis (near -1.75) and off the main cardioid are discernible.
-    The aspect ratio correctly preserves the mathematical proportions of the complex
-    plane.
+  - Grid resolution (600x428) is below spec requirement of 800x600, reducing fractal
+    boundary detail
+  - Output canvas dimensions (~4200x3000) do not match either target format (4800x2700
+    or 3600x3600)
+  - Design excellence could be elevated with more sophisticated title treatment, subtitle,
+    or background styling
+  image_description: 'The plot displays a Mandelbrot set fractal visualization rendered
+    as a heatmap using Altair''s mark_rect. The title "heatmap-mandelbrot · altair
+    · pyplots.ai" appears in the top-left in large font. The x-axis is labeled "Real"
+    ranging from -2.5 to ~0.9, and the y-axis is labeled "Imaginary" ranging from
+    -1.2 to 1.2. The fractal uses the plasma colormap: deep dark blue/indigo for regions
+    that escape quickly (low iterations), transitioning through purple, pink, and
+    magenta to bright yellow for regions that escape slowly (high iterations near
+    100). The interior of the Mandelbrot set — the classic cardioid body and period-2
+    bulb — is rendered in solid black, providing strong contrast against the colorful
+    exterior. Smaller satellite bulbs and the antenna along the negative real axis
+    are visible. The boundary shows smooth color gradients from the normalized iteration
+    count. A vertical gradient legend on the right labeled "Escape Iterations" shows
+    the scale from ~10 to 100. The overall layout is clean with no grid lines and
+    no view border.'
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -48,42 +53,42 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title 28pt, axis titles 22pt, tick labels 18pt all explicitly set.
-          Legend labels at 14pt slightly below 16pt guideline.
+        comment: All font sizes explicitly set (title=28, axis titles=22, ticks=18,
+          legend title=18, legend labels=16). All readable.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements; all well-separated.
+        comment: No overlapping text elements. Axis labels well-spaced, title separate,
+          legend clear.
       - id: VQ-03
         name: Element Visibility
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: 300x214 grid resolution creates visible pixelation at fractal boundary.
-          Individual rectangles discernible.
+        passed: true
+        comment: Fractal features clearly visible with good contrast. Grid resolution
+          600x428 is below spec 800x600, causing slightly blocky boundaries.
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Plasma colormap is perceptually uniform and colorblind-safe. Strong
-          contrast between black interior and colored exterior.
+        comment: Plasma colormap is perceptually uniform and colorblind-safe. Excellent
+          contrast.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good canvas utilization with 1400x1000 chart. Minor wasted space
-          in far-left uniformly dark exterior.
+        comment: Good proportions filling ~60-70% of canvas. Output ~4200x3000 doesn't
+          match target formats.
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Real and Imaginary are descriptive but lack units or parenthetical
-          clarification.
+        passed: true
+        comment: Axes labeled Real (Re) and Imaginary (Im). Title in correct format.
     design_excellence:
       score: 12
       max: 20
@@ -92,24 +97,25 @@ review:
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: false
-        comment: Plasma colormap is a thoughtful choice. Above default configuration
-          but pixelated resolution detracts from fractal beauty.
+        passed: true
+        comment: Plasma colormap is visually striking. Black interior creates dramatic
+          contrast. Above defaults but not publication-level.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Grid disabled, view stroke removed, padding set. Clean minimal chrome.
+        comment: Grid removed, view stroke removed, explicit padding, custom legend
+          sizing. Good refinement.
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
-        passed: false
-        comment: Smooth coloring creates visual emphasis at boundary but low resolution
-          prevents appreciation of fine fractal detail.
+        passed: true
+        comment: Mandelbrot set naturally creates visual hierarchy. Smooth coloring
+          and plasma palette guide the eye to boundary.
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -117,53 +123,52 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct heatmap visualization of the Mandelbrot set using mark_rect.
+        comment: Correct heatmap visualization using mark_rect for Mandelbrot escape-time
+          fractal.
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: 'All spec requirements met: smooth coloring, plasma colormap, black
-          interior, labeled axes, correct aspect ratio.'
+        comment: All features present except grid resolution 600x428 is below spec
+          800x600.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=Real, Y=Imaginary, Color=escape iterations. Full specified range
-          shown.
+        comment: Real on X, imaginary on Y, color mapped to escape iterations. All
+          correct.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title in correct format. Legend 'Escape Iterations' with gradient
-          scale is clear.
+        comment: Title format correct. Legend 'Escape Iterations' is descriptive.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Full Mandelbrot set with cardioid, period-2 bulb, satellite bulbs,
-          and boundary gradients. Resolution limits finer structures.
+        comment: 'Shows all Mandelbrot features: cardioid, period-2 bulb, satellites,
+          antenna, smooth gradients.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Genuine mathematical object computed from standard iteration formula.
-          Neutral, educational context.
+        comment: Mandelbrot set is a fundamental mathematical object, canonical for
+          fractal visualization.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Standard ranges: real [-2.5, 1.0], imaginary [-1.25, 1.25], max_iter=100.
-          Mathematically correct.'
+        comment: 'Standard ranges: real [-2.5, 1.0], imaginary [-1.25, 1.25], max_iter=100.'
     code_quality:
       score: 10
       max: 10
@@ -173,33 +178,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean Imports -> Data -> Plot -> Save flow. No functions or classes.
+        comment: 'Linear flow: imports, data computation, plot creation, save. No
+          functions/classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic Mandelbrot computation with no random elements.
+        comment: Mandelbrot computation is mathematically deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All three imports (altair, numpy, pandas) used. No unused imports.
+        comment: All imports (altair, numpy, pandas) are used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean implementation with smooth iteration formula and interior/exterior
-          split for Altair layering.
+        comment: Clean vectorized NumPy. Efficient interior/exterior split. Appropriate
+          complexity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with scale_factor=3.0 and plot.html. Current Altair
-          API.
+        comment: Saves as plot.png and plot.html. Current Altair 6.x API.
     library_mastery:
       score: 7
       max: 10
@@ -209,15 +214,15 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of mark_rect, layer composition, encoding types, Scale/Axis/Legend,
-          disable_max_rows for large data.
+        comment: 'Good Altair grammar usage: mark_rect, :Q encodings, layer composition,
+          Scale/Axis/Legend config.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: false
-        comment: Uses interactivity, tooltips, HTML export, and declarative layer
-          composition distinctive to Altair.
+        passed: true
+        comment: Layer composition, interactive tooltips, zoom/pan, dual HTML+PNG
+          export.
   verdict: REJECTED
 impl_tags:
   dependencies: []
@@ -231,4 +236,3 @@ impl_tags:
   dataprep: []
   styling:
   - custom-colormap
-  - minimal-chrome
