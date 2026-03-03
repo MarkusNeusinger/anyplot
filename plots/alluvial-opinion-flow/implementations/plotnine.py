@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 alluvial-opinion-flow: Opinion Flow Diagram
 Library: plotnine 0.15.3 | Python 3.14.3
-Quality: 84/100 | Created: 2026-03-03
+Quality: 83/100 | Created: 2026-03-03
 """
 
 import sys

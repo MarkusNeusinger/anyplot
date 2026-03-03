@@ -1,7 +1,7 @@
 library: plotnine
 specification_id: alluvial-opinion-flow
 created: '2026-03-03T20:15:04Z'
-updated: '2026-03-03T20:33:14Z'
+updated: '2026-03-03T20:44:06Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 22640494291
 issue: 4430
@@ -10,90 +10,97 @@ library_version: 0.15.3
 preview_url: https://storage.googleapis.com/pyplots-images/plots/alluvial-opinion-flow/plotnine/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/alluvial-opinion-flow/plotnine/plot_thumb.png
 preview_html: null
-quality_score: 84
+quality_score: 83
 review:
   strengths:
-  - 'Excellent data storytelling with clear polarization narrative through subtitle,
-    alpha hierarchy, and net change annotations (DE-03: 5/6)'
-  - 'Full spec compliance — all required features implemented correctly (SC: 15/15)'
-  - 'Clean, well-structured deterministic code with no over-engineering (CQ: 10/10)'
-  - 'Good visual refinement with removed axes, hidden grid, and white node borders
-    (DE-02: 4/6)'
-  - 'Custom diverging color palette with clear typography hierarchy (DE-01: 6/8)'
+  - Excellent spec compliance — all required features implemented including stable/changer
+    distinction, proportional flows, respondent counts, and net flow highlighting
+  - Strong data storytelling through subtitle framing, net change annotations, and
+    alpha-based visual hierarchy
+  - Clean, professional visual design with meaningful diverging color palette and
+    polished typography
+  - Fully deterministic, well-organized code with no unnecessary abstractions
+  - 'Consistent data: 1000 respondents perfectly maintained across all 4 waves with
+    realistic transition matrices'
   weaknesses:
-  - Change annotation text (size=9) is too small for 4800x2700 output — hard to read
-    at a glance
-  - Category labels (size=11) are below recommended label sizes
-  - Disagree (#E8915A) and Strongly Disagree (#C0392B) are close in hue, potentially
-    challenging for some color vision deficiencies
-  - Change annotations lack background/halo, making them less legible when overlapping
-    flow bands
-  - Limited use of plotnine-distinctive features due to manual polygon computation
+  - 'Minor text sizing: node counts (12pt) and category labels (13pt) slightly below
+    optimal thresholds for 4800x2700 output'
+  - Disagree (#D4883A) and Strongly Disagree (#C0392B) could have wider hue separation
+    for accessibility
+  - Some minor changer flows at 0.23 alpha are very faint and hard to trace visually
+  - Library mastery limited by plotnine lacking a native alluvial/sankey geom
   image_description: 'The plot displays an alluvial/Sankey-style opinion flow diagram
-    with the title "alluvial-opinion-flow · plotnine · pyplots.ai" in bold at top,
-    and a subtitle reading "Tracking 1,000 respondents across 4 waves — Neutral erodes
-    as opinions polarize toward extremes." Four wave columns (Wave 1–4) are arranged
-    left to right with bold column headers. Five opinion categories are stacked vertically
-    at each wave: Strongly Agree (dark blue #306998), Agree (light blue #6BAED6),
-    Neutral (gray #969696), Disagree (orange #E8915A), and Strongly Disagree (red
-    #C0392B). Colored rectangular nodes at each wave display white respondent counts
-    (e.g., Wave 1: 180, 250, 190, 200, 180). Curved flow bands connect categories
-    across waves with alpha differentiation — stable flows at 0.55 opacity, dominant
-    changers at 0.35, minor changers at 0.23. Net change annotations (+16, -26, -35,
-    -16, -42, +31, +55) appear between waves for categories with >=15 respondent change.
-    Category labels appear on both left (Wave 1) and right (Wave 4) sides. A legend
-    titled "Opinion" on the right shows all five categories. The overall layout is
-    clean with no axes, grid, or spines — just the alluvial structure on a white background.'
+    with the bold centered title "alluvial-opinion-flow · plotnine · pyplots.ai" and
+    a gray subtitle "Tracking 1,000 respondents across 4 waves — Neutral erodes as
+    opinions polarize toward extremes." Four wave columns (Wave 1–4) are arranged
+    left to right with bold black headers. Five opinion categories are stacked vertically
+    at each wave: Strongly Agree (dark steel blue #306998), Agree (light sky blue
+    #6BAED6), Neutral (medium gray #969696), Disagree (warm orange-brown #D4883A),
+    and Strongly Disagree (dark red #C0392B). Solid-color rectangular nodes at each
+    wave display white bold respondent counts (e.g., Wave 1: 180, 250, 190, 200, 180
+    totaling 1000). White borders separate adjacent nodes cleanly. Curved flow ribbons
+    connect categories across waves — stable flows (same category) render at ~0.55
+    opacity while changer flows use lower opacity (~0.23–0.35), with dominant net-flow
+    directions receiving slightly higher alpha. Net change annotations (+16, -26,
+    -35, -16, -42, +31, +55) appear in small white-background label boxes between
+    waves for categories with ≥15 respondent change. Category labels appear in bold
+    on the left of Wave 1 and right of Wave 4. A legend titled "Opinion" on the right
+    shows all five categories with full opacity swatches. The background is clean
+    white with no grid, axes, or spines.'
   criteria_checklist:
     visual_quality:
-      score: 24
+      score: 25
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set throughout but change annotations (size=9)
-          and category labels (size=11) are below recommended thresholds for 4800x2700
-          output
+        comment: All font sizes explicitly set. Title=24, subtitle=14, wave headers=16,
+          category labels=13, node counts=12, annotations=12, legend=14-16. All readable
+          but node counts and annotations slightly below 16pt threshold.
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: No text-on-text overlap. Some change annotations sit atop flow bands
-          but remain readable due to color contrast
+        comment: No text-on-text overlap. Change annotation labels have white backgrounds
+          ensuring readability over flow bands. Minor visual concern from label-over-flow
+          positioning.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Flow widths well-proportioned. Nodes clearly sized. Alpha layering
-          works well. Some smaller flows could be more visible
+        comment: Flow widths well-proportioned. Nodes clearly sized with white borders.
+          Alpha differentiation works well. Some thinner minor-changer flows at 0.23
+          alpha are quite faint.
       - id: VQ-04
         name: Color Accessibility
         score: 3
         max: 4
         passed: true
-        comment: Blue-gray-red diverging palette is generally colorblind-safe but
-          Disagree and Strongly Disagree are close in hue
+        comment: Blue-gray-red diverging palette is generally colorblind-safe. Disagree
+          and Strongly Disagree are somewhat close in hue for certain color vision
+          deficiencies.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good layout with well-distributed wave positions. Legend on right
-          uses some space. Slight whitespace imbalance at bottom
+        comment: Alluvial diagram fills center well with wave columns at x=0.14-0.86.
+          Legend on right, category labels on both sides. Minor whitespace imbalance
+          at bottom.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title format correct. Wave headers as column labels. Category labels
-          on both sides. Axes appropriately hidden
+        comment: Axes appropriately hidden for alluvial diagram. Wave headers and
+          category labels serve as meaningful descriptors. Title follows correct format.
     design_excellence:
-      score: 15
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -101,23 +108,25 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom diverging palette, clear typography hierarchy, smooth cubic-interpolated
-          flow curves. Clearly above defaults, approaching publication quality
+        comment: Custom diverging blue-gray-red palette with semantic meaning. Clear
+          typography hierarchy. White node borders. Alpha-based distinction. Clearly
+          above defaults but not FiveThirtyEight-level.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Grid fully removed, axes hidden, white node borders, generous whitespace.
-          Good refinement with further-customized theme_minimal()
+        comment: Grid removed, axes hidden, theme_minimal with extensive customization.
+          White edge separators. Clean uncluttered appearance. Could benefit from
+          more sophisticated spacing or framing.
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: 'Excellent narrative: subtitle frames polarization, alpha differentiates
-          stable/changers, net change annotations quantify shifts, data designed to
-          show Neutral erosion'
+        comment: Subtitle frames polarization narrative. Net change annotations quantify
+          key shifts. Alpha differentiation distinguishes stable from changing. Good
+          visual hierarchy but could be stronger.
     spec_compliance:
       score: 15
       max: 15
@@ -127,56 +136,58 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct alluvial/Sankey-style diagram with flow bands connecting
-          categories across waves
+        comment: Correct alluvial/Sankey-style diagram with nodes at each wave connected
+          by curved flow ribbons.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
         comment: 'All spec features present: consistent colors, proportional flows,
-          node counts, stable/changer distinction, net flow highlighting, chronological
-          waves, transparency'
+          respondent counts, stable/changer distinction, net flow highlighting, chronological
+          arrangement, transparency.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Waves left-to-right, categories consistently ordered, flow widths
-          proportional to counts
+        comment: Waves correctly arranged chronologically. Categories consistently
+          ordered. Flow widths proportional to counts. Node sizes proportional to
+          totals.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows spec-id · library · pyplots.ai format. Legend shows
-          all 5 categories with correct colors and override_aes
+        comment: Title format correct. Legend titled Opinion with all 5 categories
+          matching data.
     data_quality:
-      score: 14
+      score: 13
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: 4 waves, 5 categories, stable and changing respondents, growing and
-          shrinking categories, various flow sizes, clear polarization pattern
+        comment: 4 waves, 5 categories, 40+ flow connections. Shows stability, gradual
+          shifts, and accelerating polarization. Missing some extreme cross-category
+          transitions.
       - id: DQ-02
         name: Realistic Context
         score: 4
         max: 5
         passed: true
-        comment: Realistic opinion survey with Likert scale and 1000 respondents.
-          Plausible transition matrices. Generic opinion topic without specific domain
-          context
+        comment: Generic opinion survey using standard Likert scale. Realistic social
+          science research scenario. Avoids specific political framing while demonstrating
+          opinion tracking.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 1000 respondents, sensible category sizes (136-272), realistic transition
-          rates with gradual shifts
+        comment: 1000 respondents consistently maintained across all 4 waves. Transition
+          matrices well-crafted with realistic proportions.
     code_quality:
       score: 10
       max: 10
@@ -186,34 +197,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, layout, flow construction, plot assembly,
-          save. No functions or classes'
+        comment: 'Flat script: imports, data, layout, plot, save. No functions or
+          classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic with hardcoded transition matrices. No random
-          data
+        comment: Fully deterministic with hard-coded transition matrices. No random
+          generation.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used. No unused imports
+        comment: 'All imports used: numpy, pandas, and 18 plotnine components all
+          actively referenced.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for manually constructing alluvial flows.
-          Well-organized with clear variable names
+        comment: Well-organized code with clear sections. Cubic interpolation for
+          smooth ribbons. No fake functionality.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300. No deprecated API usage
+        comment: Saves as plot.png at dpi=300. Uses current plotnine 0.15.3 API.
     library_mastery:
       score: 6
       max: 10
@@ -223,27 +235,28 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Uses plotnine grammar of graphics well: ggplot() composition, aes()
-          mappings, scale_*_manual, scale_alpha_identity, guide_legend with override_aes,
-          annotate()'
+        comment: 'Good use of grammar of graphics: ggplot() + geom layers + scales
+          + guides + theme. Uses geom_ribbon, geom_rect, geom_text, geom_label, scale_alpha_identity.
+          Core alluvial geometry must be constructed manually.'
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
-        passed: false
-        comment: scale_alpha_identity() and guide_legend(override_aes) are plotnine-specific.
-          Core technique (manual polygon computation) is library-agnostic
+        passed: true
+        comment: 'Uses plotnine-specific features: scale_alpha_identity(), grammar
+          of graphics layer composition, guide_legend(override_aes). Core ribbon/rect
+          construction could be replicated in matplotlib.'
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - layer-composition
-  - bezier-curves
+  - custom-legend
   patterns:
   - data-generation
-  - matrix-construction
   - iteration-over-groups
+  - matrix-construction
   dataprep: []
   styling:
   - minimal-chrome
