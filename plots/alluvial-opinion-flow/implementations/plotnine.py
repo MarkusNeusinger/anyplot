@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 alluvial-opinion-flow: Opinion Flow Diagram
 Library: plotnine 0.15.3 | Python 3.14.3
 Quality: 84/100 | Created: 2026-03-03
@@ -17,8 +17,9 @@ from plotnine import (  # noqa: E402
     coord_cartesian,
     element_blank,
     element_text,
-    geom_polygon,
+    geom_label,
     geom_rect,
+    geom_ribbon,
     geom_text,
     ggplot,
     guide_legend,
@@ -78,7 +79,7 @@ cat_colors = {
     "Strongly Agree": "#306998",
     "Agree": "#6BAED6",
     "Neutral": "#969696",
-    "Disagree": "#E8915A",
+    "Disagree": "#D4883A",
     "Strongly Disagree": "#C0392B",
 }
 
@@ -186,25 +187,29 @@ for _, row in transitions.iterrows():
         is_dominant = (fc < tc and net_flows.get(key, 0) > 0) or (fc > tc and net_flows.get(key, 0) < 0)
         alpha = 0.35 if (is_dominant and net_mag > 10) else 0.23
 
-    # Curved polygon via cubic interpolation
+    # Curved ribbon via cubic interpolation (idiomatic plotnine geom_ribbon)
     x_left = x_positions[fw] + node_width / 2
     x_right = x_positions[tw] - node_width / 2
     n_pts = 40
 
     t_param = np.linspace(0, 1, n_pts)
-    xt = x_left + (x_right - x_left) * t_param
-    yt = src_y_top + (tgt_y_top - src_y_top) * (3 * t_param**2 - 2 * t_param**3)
-
-    xb = x_right + (x_left - x_right) * t_param
-    yb = tgt_y_bottom + (src_y_bottom - tgt_y_bottom) * (3 * t_param**2 - 2 * t_param**3)
-
-    x_poly = np.concatenate([xt, xb])
-    y_poly = np.concatenate([yt, yb])
+    x_vals = x_left + (x_right - x_left) * t_param
+    y_top_curve = src_y_top + (tgt_y_top - src_y_top) * (3 * t_param**2 - 2 * t_param**3)
+    y_bot_curve = src_y_bottom + (tgt_y_bottom - src_y_bottom) * (3 * t_param**2 - 2 * t_param**3)
 
     flow_id = f"{fw}_{tw}_{fc}_{tc}"
 
-    for k in range(len(x_poly)):
-        flow_polys.append({"x": x_poly[k], "y": y_poly[k], "flow_id": flow_id, "from_cat": fc, "alpha": alpha})
+    for k in range(n_pts):
+        flow_polys.append(
+            {
+                "x": x_vals[k],
+                "ymin": y_bot_curve[k],
+                "ymax": y_top_curve[k],
+                "flow_id": flow_id,
+                "from_cat": fc,
+                "alpha": alpha,
+            }
+        )
 
 flows_df = pd.DataFrame(flow_polys)
 
@@ -235,7 +240,9 @@ changes_df = pd.DataFrame(wave_changes)
 # Plot - flows use per-row alpha via scale_alpha_identity for net flow highlighting
 plot = (
     ggplot()
-    + geom_polygon(flows_df, aes(x="x", y="y", group="flow_id", fill="from_cat", alpha="alpha"))
+    + geom_ribbon(
+        flows_df, aes(x="x", ymin="ymin", ymax="ymax", group="flow_id", fill="from_cat", alpha="alpha"), color=None
+    )
     + scale_alpha_identity()
     + geom_rect(
         nodes_df, aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax", fill="category"), color="white", size=0.8
@@ -249,15 +256,18 @@ plot = (
         color="white",
         fontweight="bold",
     )
-    + geom_text(
+    + geom_label(
         changes_df,
         aes(x="x", y="yend", label="label", color="category"),
-        size=9,
+        size=12,
         fontweight="bold",
         va="center",
         ha="center",
         show_legend=False,
         nudge_y=0.012,
+        fill="#FFFFFFCC",
+        label_size=0,
+        label_padding=0.15,
     )
     + scale_fill_manual(values=cat_colors, name="Opinion", breaks=categories)
     + scale_color_manual(values=cat_colors)
@@ -268,7 +278,7 @@ plot = (
         x="",
         y="",
     )
-    + coord_cartesian(xlim=(0, 1), ylim=(0.0, 1.0))
+    + coord_cartesian(xlim=(-0.05, 1.05), ylim=(0.0, 1.0))
     + theme_minimal()
     + theme(
         figure_size=(16, 9),
@@ -299,7 +309,7 @@ for cat in categories:
         x=x_positions[0] - node_width / 2 - 0.015,
         y=ly,
         label=cat,
-        size=11,
+        size=13,
         color="#333333",
         fontweight="bold",
         ha="right",
@@ -315,7 +325,7 @@ for cat in categories:
         x=x_positions[3] + node_width / 2 + 0.015,
         y=ly,
         label=cat,
-        size=11,
+        size=13,
         color="#333333",
         fontweight="bold",
         ha="left",
