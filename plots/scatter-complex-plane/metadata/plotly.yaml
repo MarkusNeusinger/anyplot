@@ -1,0 +1,225 @@
+library: plotly
+specification_id: scatter-complex-plane
+created: '2026-03-04T20:23:50Z'
+updated: '2026-03-04T20:54:51Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22687521485
+issue: 4427
+python_version: 3.14.3
+library_version: 6.6.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/scatter-complex-plane/plotly/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/scatter-complex-plane/plotly/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/scatter-complex-plane/plotly/plot.html
+quality_score: 90
+review:
+  strengths:
+  - Comprehensive mathematical storytelling with four distinct categories demonstrating
+    different complex number concepts
+  - Excellent spec compliance with every required feature present and well-executed
+  - Custom text positioning per label to minimize overlap shows attention to detail
+  - Rich Plotly-specific hover tooltips with magnitude and phase information
+  - Clean well-organized code with consistent typography and color palette
+  weaknesses:
+  - Minor crowding near the origin where 5 roots of unity and their arrows converge
+  - Arrow opacity at 0.60 makes shorter vectors slightly less prominent
+  image_description: 'The plot displays an Argand diagram on a white background with
+    the title "scatter-complex-plane · plotly · pyplots.ai" and subtitle "Argand diagram
+    — roots of unity, conjugates & vector addition" centered at the top in Georgia
+    serif font. The axes are labeled Re(z) (horizontal) and Im(z) (vertical) with
+    bold zeroline axes through the origin. A dashed gray unit circle centered at the
+    origin is labeled "r = 1" in italic near 160°. Four categories of complex numbers
+    are plotted: (1) navy-blue 5th Roots of Unity (ω0–ω4) on the unit circle, (2)
+    orange Arbitrary Points (z₁–z₅) spread across quadrants, (3) purple Conjugate
+    Pair (w and w̄) connected by a dashed vertical line showing real-axis symmetry,
+    and (4) a larger green Sum point (z₁+z₂) with dotted green lines showing the parallelogram
+    rule from z₁ and z₂. Vector arrows extend from the origin to each point with semi-transparent
+    coloring. Each point is annotated with its label in bold and rectangular form
+    (a+bi). A legend in the upper-left lists all four categories. The plot uses equal
+    aspect ratio (1:1 square at 1200×1200), very subtle gridlines, and a clean plotly_white
+    template.'
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 28pt, axis labels 22pt, ticks
+          18pt, annotations 16pt'
+      - id: VQ-02
+        name: No Overlap
+        score: 4
+        max: 6
+        passed: true
+        comment: Custom text offsets reduce overlap but crowding near origin among
+          roots of unity is noticeable
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Markers well-sized with white borders; arrow opacity 0.60 slightly
+          faint for short vectors
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue/orange/purple/green colorblind-safe palette with strong contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square format ideal for complex plane; equal aspect ratio; good margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Re(z) and Im(z) are standard mathematical axis labels
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom palette, Georgia serif throughout, white marker borders, styled
+          HTML subtitle
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: plotly_white template, very subtle grid, bold zerolines, legend with
+          subtle border
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Multiple stories: roots of unity, conjugate symmetry, parallelogram
+          rule; marker size hierarchy'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Argand diagram / complex plane scatter plot
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features: axes through origin, dashed unit circle, vectors,
+          equal aspect, annotations, distinct colors'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=real, Y=imaginary, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct, legend labels match categories
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Roots of unity, arbitrary points, conjugate pair, vector addition
+          — comprehensive coverage
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Mathematical/educational context with standard complex analysis concepts
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Axis range fits all points well with appropriate padding
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean Imports → Data → Plot → Save structure, no functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set, data largely deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only numpy and plotly.graph_objects, both used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-organized with clear sections and clean category iteration
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot.png and plot.html, current Plotly API
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Proper go.Figure, add_trace, add_annotation, hovertemplate with customdata
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Rich hovertemplate, HTML annotations, interactive HTML export, scaleanchor
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - edge-highlighting
+  - grid-styling
+  - alpha-blending
