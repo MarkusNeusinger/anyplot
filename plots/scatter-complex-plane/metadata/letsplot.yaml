@@ -1,7 +1,7 @@
 library: letsplot
 specification_id: scatter-complex-plane
 created: '2026-03-04T20:23:02Z'
-updated: '2026-03-04T20:26:59Z'
+updated: '2026-03-04T20:36:36Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 22687521714
 issue: 4427
@@ -10,40 +10,32 @@ library_version: 4.8.2
 preview_url: https://storage.googleapis.com/pyplots-images/plots/scatter-complex-plane/letsplot/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/scatter-complex-plane/letsplot/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/scatter-complex-plane/letsplot/plot.html
-quality_score: 79
+quality_score: 84
 review:
   strengths:
-  - 'Full spec compliance: unit circle, vectors, annotations, equal aspect ratio,
-    category distinction all present'
-  - Custom colorblind-safe palette (blue, orange, magenta) with good contrast
-  - Clean category distinction showing roots of unity, arbitrary points, and complex
-    addition (sum)
-  - Well-structured code following KISS pattern with explicit font sizing throughout
-  - 'Good visual refinement: subtle grid, minimal theme, custom background, generous
-    margins'
+  - Excellent spec compliance with all required features present
+  - Good use of lets-plot distinctive features (interactive tooltips with formatted
+    data)
+  - Clean, well-structured code with proper reproducibility
+  - Strong data storytelling through meaningful mathematical data (roots of unity
+    + arithmetic)
+  - Custom color palette with good colorblind accessibility
   weaknesses:
-  - Label overlap in dense areas near the unit circle — coordinate annotations crowd
-    vector lines and compete with name labels
-  - Coordinate annotations at size=9 are relatively small compared to other text elements
-  - Axis labels say just "Real" and "Imaginary" — more descriptive labels like "Real
-    Part" or "Im(z)" would improve clarity
-  - Code contains odd expression arbitrary_real * 0 + arbitrary_imag instead of just
-    arbitrary_imag on line 33
-  - Library mastery is generic — no distinctive lets-plot features leveraged beyond
-    basic ggplot grammar
-  image_description: 'The plot shows a complex plane (Argand diagram) with the title
-    "scatter-complex-plane · letsplot · pyplots.ai" in bold at the top. The x-axis
-    is labeled "Real" and the y-axis "Imaginary", with tick marks at -2, -1, 0, 1,
-    2. A dashed gray unit circle is centered at the origin. Horizontal and vertical
-    gray reference axes pass through the origin. Three categories of points are plotted:
-    blue ("5th Root of Unity") showing ω0–ω4 evenly spaced on the unit circle, orange
-    ("Arbitrary") showing z1–z6 scattered across all four quadrants, and magenta ("Sum")
-    showing ω1+ω2. Colored vector arrows extend from the origin to each point. Points
-    are rendered as hollow circles with white fill and colored outlines. Each point
-    has a bold name label above and a gray coordinate annotation (a+bi form) below.
-    A legend on the right lists the three categories. The background is light gray
-    (#FAFAFA) with subtle major grid lines and no minor grid. The layout uses equal
-    aspect ratio so the unit circle appears circular.'
+  - Text overlap in annotation labels, especially near the left side of the plot where
+    ω2, ω3, z6 cluster
+  - Annotation text (rect_form at size=10) is somewhat small relative to point labels
+  - Design could be pushed further for publication-level polish
+  image_description: 'The plot displays an Argand diagram on a light background with
+    subtle gray grid lines. A dashed gray unit circle is centered at the origin. Twelve
+    complex numbers are plotted as open circles with white fill and colored strokes:
+    blue for "5th Root of Unity" (ω0–ω4), orange for "Arbitrary" (z1–z6), and magenta/pink
+    for "Sum" (ω1+ω2). Vectors (arrows) extend from the origin to each point in matching
+    colors. Bold colored point labels are positioned radially outward, and gray rectangular-form
+    annotations (a+bi) appear below each point. The title reads "scatter-complex-plane
+    · letsplot · pyplots.ai" in bold, with an italic subtitle describing the content.
+    Axes are labeled "Real Part" (x) and "Imaginary Part" (y). A legend on the right
+    identifies the three categories. The aspect ratio is equal, so the unit circle
+    appears circular.'
   criteria_checklist:
     visual_quality:
       score: 24
@@ -54,46 +46,43 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=24, axis=20, ticks=16, legend=16-18).
-          Coordinate annotations at size=9 are readable but small.
+        comment: All font sizes explicitly set. Rect_form annotations at size=10 are
+          slightly small but readable.
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: Some overlap in dense central area near unit circle — coordinate
-          annotations crowd vector lines and name labels compete for space around
-          ω2/ω3.
+        passed: false
+        comment: Annotation text overlaps near ω2/ω3/z6 cluster. Labels crowd each
+          other in left portion of plot.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Points well-sized with hollow circle markers and colored outlines.
-          Vectors and unit circle clearly visible. Slightly dense near origin.
+        comment: Points well-sized (size=7, stroke=2.5) for 12 data points. Arrows
+          visible at alpha=0.65.
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Blue (#306998), orange (#E3882D), magenta (#AA3377) — colorblind-safe,
-          no red-green reliance.
+        comment: Blue, orange, magenta palette distinguishable across colorblind types.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good use of canvas with coord_fixed(). Some space taken by legend
-          on right. Balanced overall.
+        comment: Good canvas utilization, some empty space in corners. Legend well-placed.
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: Labels are 'Real' and 'Imaginary' — descriptive but could be more
-          specific (e.g., 'Real Part' / 'Imaginary Part'). No units applicable.
+        comment: Real Part and Imaginary Part are fully descriptive for mathematical
+          context.
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -101,23 +90,21 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom color palette, hollow point style with outlines, light background.
-          Above defaults but not publication-level.
+        comment: Custom 3-color palette, open circle markers, good typography hierarchy,
+          flavor_high_contrast_light theme.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: theme_minimal removes spines, minor grid removed, major grid subtle,
-          custom background, generous margins.
+        comment: Minor grid removed, major grid subtle, generous margins, clean background.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: 'Category distinction tells a story: roots of unity on circle, arbitrary
-          points scattered, sum demonstrates addition. Decent visual hierarchy through
-          color.'
+        comment: Color-coded categories create visual hierarchy. Roots on unit circle,
+          arbitrary points spread, sum shows addition.
     spec_compliance:
       score: 15
       max: 15
@@ -127,29 +114,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Argand diagram with scatter points in complex plane.
+        comment: Correct Argand diagram / complex plane scatter.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All required: axes through origin, unit circle (dashed), vectors
-          with arrows, equal aspect ratio, a+bi annotations, distinct colors per category.'
+        comment: 'All required features present: axes through origin, unit circle,
+          vectors, equal aspect ratio, annotations, distinct colors.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Real on x-axis, imaginary on y-axis. All data visible.
+        comment: Real on x-axis, imaginary on y-axis, all data visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Legend shows all three categories with clear
-          labels.
+        comment: Title follows exact format. Legend labels match categories.
     data_quality:
-      score: 13
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -157,24 +143,24 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Shows roots of unity, arbitrary points in all quadrants, and complex
-          addition. Covers most features; polar form annotation would complete it.
+        comment: Shows roots of unity, arbitrary points in all quadrants, complex
+          addition.
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Mathematical/educational context with standard notation (ω for roots
-          of unity). Plausible and neutral.
+        comment: Genuine mathematical/educational context with 5th roots of unity
+          and complex arithmetic.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values in -2.3 to 2.3 range, roots on unit circle. Sensible for complex
-          plane visualization.
+        comment: Values range ±2.5, appropriate for unit circle and nearby complex
+          numbers.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -182,7 +168,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → plot → save. No functions or classes.'
+        comment: 'Linear flow: imports, data, plot, save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -194,22 +180,21 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: numpy, pandas, lets_plot, export_ggsave.'
+        comment: All imports used.
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: Mostly clean but line 33 has 'arbitrary_real * 0 + arbitrary_imag'
-          which is just 'arbitrary_imag' — unnecessary computation.
+        comment: Clean, well-organized, appropriate complexity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with scale=3. Also saves HTML. Current API.
+        comment: Saves as plot.png with scale=3.
     library_mastery:
-      score: 6
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -217,25 +202,27 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Good use of ggplot grammar: multiple geom layers, aes mappings,
-          scale_color_manual, coord_fixed, theme customization.'
+        comment: Good ggplot grammar with layered geoms, aes mappings, scales, themes,
+          coord_fixed.
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 4
         max: 5
-        passed: false
-        comment: Uses arrow() in geom_segment and HTML export, but these are basic
-          lets-plot features. Nothing truly distinctive to lets-plot vs plotnine.
+        passed: true
+        comment: Uses layer_tooltips for interactive hover info, flavor_high_contrast_light,
+          dual PNG+HTML export.
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - layer-composition
+  - hover-tooltips
+  - html-export
   patterns:
   - data-generation
   dataprep: []
   styling:
   - alpha-blending
-  - grid-styling
   - edge-highlighting
+  - grid-styling
