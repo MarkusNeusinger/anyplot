@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 bar-diverging-likert: Likert Scale Diverging Bar Chart
 Library: bokeh 3.8.2 | Python 3.14.3
 Quality: 85/100 | Created: 2026-03-04
@@ -154,7 +154,7 @@ for cat_name in likert_categories:
             source=label_source,
             text_align="center",
             text_baseline="middle",
-            text_font_size="14pt",
+            text_font_size="18pt",
             text_color=label_text_colors[cat_name],
         )
         p.add_layout(labels)
@@ -167,13 +167,17 @@ p.add_layout(center_line)
 legend = Legend(
     items=legend_items,
     orientation="horizontal",
-    label_text_font_size="18pt",
-    spacing=25,
-    padding=15,
+    location="center",
+    label_text_font_size="22pt",
+    label_standoff=12,
+    spacing=60,
+    padding=25,
+    margin=20,
     background_fill_alpha=0.0,
     border_line_alpha=0.0,
-    glyph_height=25,
-    glyph_width=25,
+    glyph_height=45,
+    glyph_width=45,
+    click_policy="hide",
 )
 p.add_layout(legend, "below")
 
@@ -193,8 +197,12 @@ p.ygrid.grid_line_alpha = 0.0
 # Clean up
 p.outline_line_color = None
 p.background_fill_color = "#ffffff"
+p.xaxis.axis_line_color = None
+p.yaxis.axis_line_color = None
 p.xaxis.major_tick_line_color = None
 p.yaxis.major_tick_line_color = None
+p.xaxis.minor_tick_line_color = None
+p.yaxis.minor_tick_line_color = None
 
 # Save
 export_png(p, filename="plot.png")
