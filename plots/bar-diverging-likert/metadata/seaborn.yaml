@@ -1,7 +1,7 @@
 library: seaborn
 specification_id: bar-diverging-likert
 created: '2026-03-04T06:06:58Z'
-updated: '2026-03-04T06:12:08Z'
+updated: '2026-03-04T06:25:38Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 22657236136
 issue: 4429
@@ -10,83 +10,80 @@ library_version: 0.13.2
 preview_url: https://storage.googleapis.com/pyplots-images/plots/bar-diverging-likert/seaborn/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/bar-diverging-likert/seaborn/plot_thumb.png
 preview_html: null
-quality_score: 82
+quality_score: 88
 review:
   strengths:
-  - Perfect spec compliance — all five required features (centered neutral, diverging
-    colors, sorting, percentage labels, horizontal layout) implemented correctly
-  - Thoughtful diverging color palette (red to pink to gray to lightblue to darkblue)
-    with cohesive harmony and white edge separators
-  - Strong data storytelling through net agreement sorting making comparative analysis
-    intuitive
-  - Clean well-organized code with deterministic data and appropriate complexity
+  - Perfect spec compliance with all 5 Likert requirements implemented correctly
+  - Excellent data storytelling through net-agreement sorting
+  - Professional visual polish with custom diverging palette, white edge separation,
+    and clean typography
+  - Smart percentage label logic showing only where segment width >= 10%
+  - Clean maintainable code with appropriate complexity
   weaknesses:
-  - Minimal seaborn library usage — only sns.set_style is from seaborn while all plotting
-    is pure matplotlib ax.barh()
-  - In-bar percentage labels at fontsize=12 are slightly small compared to other text
-    elements
-  - All survey questions skew positive — no question with net negative agreement reducing
-    diverging contrast
-  - Title is slightly tight on the right canvas edge
-  image_description: The plot shows a horizontal diverging stacked bar chart titled
-    "Employee Engagement Survey · bar-diverging-likert · seaborn · pyplots.ai". Eight
-    employee engagement survey questions are listed on the y-axis, sorted from highest
-    net agreement (Team collaboration at top) to lowest (Compensation & benefits at
-    bottom). Bars diverge from a central zero line, with negative responses (Strongly
-    Disagree in dark red, Disagree in light pink) extending left and positive responses
-    (Agree in light blue, Strongly Agree in dark blue) extending right. Neutral responses
-    (gray) are split evenly across the center. Percentage labels appear inside bar
-    segments where width is 10% or more. The x-axis shows "Percentage" with absolute
-    values (0% to 80%) and a thin vertical center line at 0%. Top and right spines
-    are removed, subtle x-axis gridlines at low alpha are visible, and a 5-item legend
-    sits below the chart. White edge lines separate bar segments. The title is tight
-    on the right edge of the canvas.
+  - Core plotting relies entirely on matplotlib ax.barh() with no seaborn plotting
+    functions used
+  - Neutral gray and Agree teal could be confusable for some colorblind viewers
+  - No additional emphasis techniques to highlight key findings
+  image_description: The plot displays a horizontal diverging stacked bar chart for
+    an Employee Engagement Survey with 8 questions. Bars diverge from a central vertical
+    black line at 0%. The left side extends with Strongly Disagree segments in saturated
+    red and Disagree segments in pink; the right side shows Agree in light teal and
+    Strongly Agree in darker teal. Neutral responses (gray) are split evenly across
+    the center point. Questions are sorted by net agreement from Team collaboration
+    (most positive, top) to Compensation & benefits (most negative, bottom). Percentage
+    labels appear inside bar segments where values are >= 10%, with white text on
+    dark backgrounds and dark text on light backgrounds. The x-axis shows absolute
+    percentage values (0% to 80%) with a "Percentage" label. A horizontal legend at
+    the bottom identifies all 5 Likert categories. Title reads "Employee Engagement
+    Survey · bar-diverging-likert · seaborn · pyplots.ai". Top and right spines are
+    removed; subtle x-axis grid lines provide reference. White edge lines separate
+    adjacent bar segments cleanly.
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 24pt, labels 20pt, ticks 16pt).
-          In-bar labels at 12pt slightly small but readable.
+        comment: 'All font sizes explicitly set: title 24pt, xlabel 20pt, yticks 16pt,
+          xticks 16pt, bar labels 14pt, legend 14pt'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text. Percentage labels only shown where segment >=
-          10%.
+        comment: No overlapping text; labels hidden for segments < 10% preventing
+          collisions
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Bar segments well-sized. Very small segments (3-5%) are narrow but
-          still visible.
+        comment: Bar height 0.65 with white edge lines provides clear segment separation;
+          all segments visible
       - id: VQ-04
         name: Color Accessibility
         score: 3
         max: 4
         passed: true
-        comment: Red-to-blue diverging scheme avoids red-green issues. Light pink
-          and gray could be slightly similar for some colorblind types.
+        comment: Red-to-teal diverging palette good for most colorblind types, but
+          neutral gray and Agree teal could be confusable
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Plot fills canvas well. Title slightly tight on right edge.
+        comment: 16:9 figure fills canvas well; tight_layout with bbox_inches tight
+          prevents cutoff
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis label with percentage symbols on ticks. Full question
-          text on y-axis.
+        comment: Descriptive Percentage label with percent symbols on tick marks
     design_excellence:
       score: 15
       max: 20
@@ -96,22 +93,22 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom diverging palette with muted neutral. White edge separators
-          add polish. Clearly above defaults.
+        comment: Custom diverging palette, neutral gray override, white edge separation,
+          medium fontweight — cohesive professional look
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: Top/right spines removed, subtle x-grid at alpha=0.15, y-grid disabled,
-          white edge separators, clean center line.
+        comment: Spines removed via despine, subtle x-grid alpha 0.15, y-grid off,
+          generous bar spacing, clean central axis
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Sorting by net agreement creates clear visual hierarchy. Diverging
-          layout naturally tells the story.
+        comment: Sorting by net agreement creates clear narrative; no additional emphasis
+          techniques for key findings
     spec_compliance:
       score: 15
       max: 15
@@ -121,52 +118,52 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct diverging stacked bar chart centered on neutral.
+        comment: Correct diverging stacked bar chart with neutral split at center
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: centered neutral, diverging colors, sorting,
-          percentage labels, horizontal orientation.'
+        comment: 'All spec features present: centered neutral, diverging colors, sorting,
+          percentage labels, horizontal orientation'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Questions on Y-axis, percentages on X-axis. Divergence correctly
-          centered on neutral.
+        comment: Questions on Y-axis, percentages on X-axis, all 8 questions and 5
+          Likert categories correctly mapped
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title includes required format. Legend shows all 5 Likert categories
-          with correct labels.
+        comment: Title contains required format with descriptive prefix; legend correctly
+          labels all 5 categories
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 8 questions with good variation. Could benefit from a net-negative
-          question for more dramatic contrast.
+        comment: Full range from strongly positive to negative net agreement; mix
+          of small and large segments
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Employee engagement survey is realistic and neutral. Question topics
-          are plausible.
+        comment: Employee engagement survey with realistic HR topics; neutral, business-appropriate
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: All rows sum to 100%. Percentages are realistic for survey data.
+        comment: All rows sum to 100%; values realistic for employee surveys; good
+          variation
     code_quality:
       score: 10
       max: 10
@@ -176,52 +173,50 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports, data, sort, plot, style, save. No functions
-          or classes.'
+        comment: 'Clean linear flow: imports, data, sort, plot, style, save; no functions
+          or classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic with hardcoded survey data.
+        comment: Fully deterministic hardcoded data; no random generation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: pyplot, ticker, pandas, seaborn, Patch.'
+        comment: 'All imports used: plt, mticker, pd, sns, Patch'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Manual bar positioning is appropriately complex for centered diverging
-          chart. Clean and well-organized.
+        comment: Clean loop-based bar construction appropriate for diverging layout
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png at dpi=300 with bbox_inches tight. No deprecated
-          API.
+        comment: Saves as plot.png at 300 dpi; uses current seaborn API
     library_mastery:
-      score: 2
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 1
+        score: 2
         max: 5
         passed: false
-        comment: Only sns.set_style used from seaborn. All plotting is matplotlib
-          ax.barh(). Minimal library usage.
+        comment: Uses seaborn theming and utilities but all core bar plotting uses
+          matplotlib ax.barh(); no seaborn plotting functions called
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 2
         max: 5
         passed: false
-        comment: No distinctive seaborn features. Functionally a matplotlib plot with
-          seaborn styling.
+        comment: sns.diverging_palette() is a genuine seaborn feature but is a utility
+          function; implementation could largely be replicated with pure matplotlib
   verdict: REJECTED
 impl_tags:
   dependencies: []
@@ -232,7 +227,6 @@ impl_tags:
   patterns:
   - data-generation
   - iteration-over-groups
-  - explicit-figure
   dataprep: []
   styling:
   - edge-highlighting
