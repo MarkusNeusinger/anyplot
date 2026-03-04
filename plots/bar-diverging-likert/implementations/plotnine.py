@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 bar-diverging-likert: Likert Scale Diverging Bar Chart
 Library: plotnine 0.15.3 | Python 3.14.3
 Quality: 82/100 | Created: 2026-03-04
@@ -7,12 +7,16 @@ Quality: 82/100 | Created: 2026-03-04
 import pandas as pd
 from plotnine import (
     aes,
+    annotate,
     element_blank,
+    element_line,
     element_text,
     geom_rect,
     geom_text,
     geom_vline,
     ggplot,
+    guide_legend,
+    guides,
     labs,
     scale_fill_manual,
     scale_x_continuous,
@@ -100,8 +104,15 @@ seg_df["ymax"] = seg_df["y_pos"] + bar_height / 2
 # Percentage labels only where segments are wide enough to read
 seg_df["label"] = seg_df["value"].apply(lambda v: f"{v}%" if v >= 10 else "")
 
-# Use dark text on the light neutral segment, white elsewhere
-seg_df["label_color"] = seg_df["response"].apply(lambda r: "#444444" if r == "Neutral" else "white")
+# Use dark text on lighter segments (Neutral, Agree, Disagree), white on darker ones
+label_colors = {
+    "Strongly Disagree": "white",
+    "Disagree": "#5A1A14",
+    "Neutral": "#444444",
+    "Agree": "#133B5C",
+    "Strongly Agree": "white",
+}
+seg_df["label_color"] = seg_df["response"].apply(lambda r: label_colors[r])
 
 # Response ordering for legend
 response_order = ["Strongly Disagree", "Disagree", "Neutral", "Agree", "Strongly Agree"]
@@ -125,26 +136,29 @@ plot = (
     ggplot(seg_df)
     + geom_rect(aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax", fill="response"))
     + geom_text(
-        aes(x="label_x", y="y_pos", label="label"), color=seg_df["label_color"].tolist(), size=10, fontweight="bold"
+        aes(x="label_x", y="y_pos", label="label"), color=seg_df["label_color"].tolist(), size=11, fontweight="bold"
     )
     + geom_vline(xintercept=0, color="#333333", size=0.8)
     + scale_fill_manual(values=colors, breaks=response_order)
     + scale_y_continuous(breaks=y_breaks, labels=question_labels)
     + scale_x_continuous(labels=lambda ticks: [f"{abs(int(v))}%" for v in ticks])
-    + labs(x="", y="", title="bar-diverging-likert · plotnine · pyplots.ai", fill="Response")
+    + annotate("text", x=30, y=9.6, label="← Disagree    Agree →", size=10, color="#666666", fontstyle="italic")
+    + labs(x="Percentage of Responses", y="", title="bar-diverging-likert · plotnine · pyplots.ai", fill="Response")
+    + guides(fill=guide_legend(nrow=1))
     + theme_minimal()
     + theme(
         figure_size=(16, 9),
         text=element_text(size=14),
         axis_title=element_text(size=20),
-        axis_text_y=element_text(size=15),
-        axis_text_x=element_text(size=14),
+        axis_text_y=element_text(size=16),
+        axis_text_x=element_text(size=16),
         plot_title=element_text(size=24, ha="center"),
-        legend_text=element_text(size=14),
+        legend_text=element_text(size=16),
         legend_title=element_text(size=16),
         legend_position="bottom",
         panel_grid_major_y=element_blank(),
         panel_grid_minor=element_blank(),
+        panel_grid_major_x=element_line(color="#E0E0E0", linetype="dashed", size=0.4),
     )
 )
 
