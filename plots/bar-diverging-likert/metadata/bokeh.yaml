@@ -1,0 +1,245 @@
+library: bokeh
+specification_id: bar-diverging-likert
+created: '2026-03-04T06:07:40Z'
+updated: '2026-03-04T06:31:30Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22657236156
+issue: 4429
+python_version: 3.14.3
+library_version: 3.8.2
+preview_url: https://storage.googleapis.com/pyplots-images/plots/bar-diverging-likert/bokeh/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/bar-diverging-likert/bokeh/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/bar-diverging-likert/bokeh/plot.html
+quality_score: 90
+review:
+  strengths:
+  - 'Excellent spec compliance: all 5 required features implemented correctly (centered
+    neutral, diverging colors, sorting, percentage labels, horizontal orientation)'
+  - Strong visual refinement with removed spines, subtle grid, clean legend, and white
+    edge separators between segments
+  - Thoughtful color palette with adapted label text colors (white on dark, dark on
+    light) for maximum readability
+  - Good data storytelling through sorting by net agreement, creating a clear narrative
+    from negative to positive sentiment
+  - Clean, well-structured code with appropriate complexity for the visualization
+  - Effective use of Bokeh interactive features (hover tooltips, clickable legend)
+    alongside static PNG output
+  weaknesses:
+  - Y-axis question text font size could be slightly larger for improved readability
+    at full resolution
+  - Slight layout asymmetry with x_range extending further on the positive side than
+    needed
+  - Could benefit from additional visual emphasis on the most extreme questions to
+    strengthen data storytelling
+  image_description: 'The plot is a horizontal diverging stacked bar chart displaying
+    10 employee engagement survey questions. Questions are sorted by net agreement
+    from bottom (most negative: "Meetings are productive") to top (most positive:
+    "I understand company goals"). Bars diverge from a central zero line marked by
+    a thin dark vertical rule. Five Likert categories are shown: Strongly Disagree
+    (dark red) and Disagree (salmon) extend leftward, Neutral (gray) is centered on
+    zero split evenly, Agree (light blue) and Strongly Agree (dark blue) extend rightward.
+    Percentage labels appear inside segments 10% or larger. The x-axis reads "← Disagree  Percentage  Agree
+    →" with tick marks from -60 to 80. A horizontal legend at the bottom lists all
+    five categories with color swatches. The title reads "bar-diverging-likert · bokeh
+    · pyplots.ai" at the top left. White line separators cleanly delineate each bar
+    segment. Grid lines are subtle dashed lines on the x-axis only. The y-grid is
+    completely removed. Background is white with no outline or axis lines visible.'
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 28pt, labels 22pt, ticks 18pt,
+          bar labels 20pt, legend 22pt). Y-axis question text could be slightly larger.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text. Percentage labels only shown for segments >=10%.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All bar segments clearly visible with 0.7 bar height, good spacing,
+          and white edge separators.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Red-blue diverging scheme (ColorBrewer RdBu-inspired) is a standard
+          colorblind-safe palette.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good use of canvas. Slight asymmetry in x_range (-65 to 85) leaves
+          extra space on the right side.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive x-axis with directional arrows. Title follows required
+          format.
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom RdBu-inspired palette with adapted label text colors. Professional
+          appearance clearly above defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Thorough refinement: axis lines removed, tick marks removed, subtle
+          dashed grid, clean legend, white edge separators.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Questions sorted by net agreement creates clear narrative. Color
+          contrast communicates sentiment direction.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct diverging stacked bar chart for Likert scale data with horizontal
+          orientation.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec requirements met: centered neutral, diverging colors, sorting,
+          percentage labels, horizontal orientation.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Y-axis shows categorical questions, x-axis shows percentages. All
+          5 Likert categories correctly mapped.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title follows exact format. Legend shows all 5 categories with correct
+          labels.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 10 questions with full range of agreement patterns. All 5 Likert
+          categories well-represented.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Employee engagement survey is a real, neutral business context with
+          professionally worded questions.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Realistic survey percentages summing to 100%. Values range from 3%
+          to 42%.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean linear flow: imports, data, sort, plot, style, save. No functions
+          or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: All data is hardcoded/deterministic. No random number generation.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: numpy, export_png, save, ColumnDataSource, HoverTool,
+          LabelSet, Legend, LegendItem, Span, figure.'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean Pythonic code with appropriate complexity. Modern Python features
+          (strict=True in zip).
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png via export_png and plot.html via save. Current
+          Bokeh API.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of ColumnDataSource, figure with categorical y_range, hbar,
+          Legend/LegendItem, Span, LabelSet.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: HoverTool with custom tooltips, click_policy hide on legend, dual
+          PNG+HTML export.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - hover-tooltips
+  - custom-legend
+  - annotations
+  - html-export
+  patterns:
+  - iteration-over-groups
+  - columndatasource
+  dataprep: []
+  styling:
+  - grid-styling
+  - edge-highlighting
