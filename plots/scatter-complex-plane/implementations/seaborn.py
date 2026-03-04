@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 scatter-complex-plane: Complex Plane Visualization (Argand Diagram)
 Library: seaborn 0.13.2 | Python 3.14.3
 Quality: 83/100 | Created: 2026-03-04
@@ -26,52 +26,88 @@ labels = (
 
 categories = ["Roots of Unity"] * 3 + ["Sum of Roots"] * 1 + ["Arbitrary Points"] * len(arbitrary_points)
 
+magnitudes = [abs(z) for z in all_points]
+
 df = pd.DataFrame(
     {
         "real": [z.real for z in all_points],
         "imaginary": [z.imag for z in all_points],
         "label": labels,
         "category": categories,
+        "magnitude": magnitudes,
     }
 )
 
-# Plot
-palette = {"Roots of Unity": "#306998", "Sum of Roots": "#E74C3C", "Arbitrary Points": "#2ECC71"}
+# Seaborn theme and style
+sns.set_theme(style="white", context="talk", font_scale=1.1)
+palette = sns.color_palette(["#306998", "#D4752E", "#8B5CF6"])
+cat_colors = {"Roots of Unity": palette[0], "Sum of Roots": palette[1], "Arbitrary Points": palette[2]}
 markers = {"Roots of Unity": "D", "Sum of Roots": "X", "Arbitrary Points": "o"}
 
-fig, ax = plt.subplots(figsize=(16, 16))
+# Use JointGrid for seaborn-distinctive marginal distributions
+g = sns.JointGrid(data=df, x="real", y="imaginary", height=14, ratio=6, space=0.15)
 
+# Main scatter with hue, style, and size encoding
 sns.scatterplot(
     data=df,
     x="real",
     y="imaginary",
     hue="category",
     style="category",
+    size="magnitude",
+    sizes=(150, 450),
     markers=markers,
-    palette=palette,
-    s=300,
+    palette=cat_colors,
     edgecolor="white",
-    linewidth=1.2,
+    linewidth=1.5,
     zorder=5,
-    ax=ax,
+    ax=g.ax_joint,
+    legend="full",
 )
+
+# Marginal KDE plots — distinctively seaborn
+for cat, color in cat_colors.items():
+    subset = df[df["category"] == cat]
+    sns.kdeplot(
+        data=subset, x="real", color=color, fill=True, alpha=0.3, linewidth=1.5, ax=g.ax_marg_x, warn_singular=False
+    )
+    sns.kdeplot(
+        data=subset,
+        y="imaginary",
+        color=color,
+        fill=True,
+        alpha=0.3,
+        linewidth=1.5,
+        ax=g.ax_marg_y,
+        warn_singular=False,
+    )
+
+# Remove marginal axis labels and ticks for clean look
+g.ax_marg_x.set_xlabel("")
+g.ax_marg_x.set_ylabel("")
+g.ax_marg_y.set_xlabel("")
+g.ax_marg_y.set_ylabel("")
+g.ax_marg_x.tick_params(left=False, labelleft=False)
+g.ax_marg_y.tick_params(bottom=False, labelbottom=False)
+
+ax = g.ax_joint
 
 # Vectors from origin to each point
 for _, row in df.iterrows():
-    color = palette[row["category"]]
+    color = cat_colors[row["category"]]
     ax.annotate(
         "",
         xy=(row["real"], row["imaginary"]),
         xytext=(0, 0),
-        arrowprops={"arrowstyle": "->", "color": color, "lw": 2.0, "alpha": 0.6},
+        arrowprops={"arrowstyle": "->", "color": color, "lw": 2.0, "alpha": 0.5},
     )
 
 # Annotations with rectangular form
 offsets = {
-    "$\\omega_0$": (16, -20),
-    "$\\omega_1$": (-80, 10),
-    "$\\omega_2$": (-80, -20),
-    "$\\Sigma\\omega_k$": (16, -22),
+    "$\\omega_0$": (18, -22),
+    "$\\omega_1$": (-90, 14),
+    "$\\omega_2$": (-90, -22),
+    "$\\Sigma\\omega_k$": (18, -24),
 }
 
 for _, row in df.iterrows():
@@ -81,41 +117,48 @@ for _, row in df.iterrows():
         r_str = "0"
     else:
         r_str = f"{r:.1f}"
-    if i >= 0:
+    if abs(i) < 0.01:
+        rect_form = f"{r_str}+0.0i"
+    elif i >= 0:
         rect_form = f"{r_str}+{i:.1f}i"
     else:
         rect_form = f"{r_str}{i:.1f}i"
 
-    offset = offsets.get(row["label"], (14, 14))
+    offset = offsets.get(row["label"], (16, 16))
 
     ax.annotate(
         f"{row['label']}\n{rect_form}",
         xy=(r, i),
         xytext=offset,
         textcoords="offset points",
-        fontsize=12,
-        color="#333333",
+        fontsize=13,
+        color="#2C2C2C",
         fontweight="medium",
-        bbox={"boxstyle": "round,pad=0.3", "facecolor": "white", "edgecolor": "none", "alpha": 0.85},
+        bbox={
+            "boxstyle": "round,pad=0.3",
+            "facecolor": "white",
+            "edgecolor": "#CCCCCC",
+            "alpha": 0.9,
+            "linewidth": 0.5,
+        },
         zorder=6,
     )
 
 # Unit circle
 theta = np.linspace(0, 2 * np.pi, 200)
-ax.plot(np.cos(theta), np.sin(theta), ls="--", color="#999999", lw=1.8, alpha=0.7, label="Unit Circle")
+ax.plot(np.cos(theta), np.sin(theta), ls="--", color="#888888", lw=1.8, alpha=0.6, label="Unit Circle")
 
 # Style
 ax.set_aspect("equal")
 ax.set_title("scatter-complex-plane · seaborn · pyplots.ai", fontsize=24, fontweight="medium", pad=20)
 ax.tick_params(axis="both", labelsize=16)
 
-ax.axhline(0, color="#aaaaaa", lw=1.0, zorder=0)
-ax.axvline(0, color="#aaaaaa", lw=1.0, zorder=0)
+ax.axhline(0, color="#AAAAAA", lw=1.0, zorder=0)
+ax.axvline(0, color="#AAAAAA", lw=1.0, zorder=0)
 
-ax.spines["top"].set_visible(False)
-ax.spines["right"].set_visible(False)
-ax.spines["left"].set_visible(False)
-ax.spines["bottom"].set_visible(False)
+sns.despine(ax=ax, left=True, bottom=True)
+sns.despine(ax=g.ax_marg_x, left=True, bottom=True)
+sns.despine(ax=g.ax_marg_y, left=True, bottom=True)
 
 ax.xaxis.grid(True, alpha=0.15, linewidth=0.8)
 ax.yaxis.grid(True, alpha=0.15, linewidth=0.8)
@@ -127,9 +170,22 @@ ax.set_ylim(-limit, limit)
 ax.set_xlabel("Real Axis", fontsize=20, labelpad=12)
 ax.set_ylabel("Imaginary Axis", fontsize=20, labelpad=12)
 
-ax.legend(fontsize=14, loc="upper left", framealpha=0.9, edgecolor="none")
+# Adjust legend — keep category + unit circle, remove size entries
+handles, leg_labels = ax.get_legend_handles_labels()
+keep = []
+skip_keys = {"magnitude", ""}
+for handle, lbl in zip(handles, leg_labels, strict=False):
+    if lbl not in skip_keys:
+        try:
+            float(lbl)
+        except ValueError:
+            keep.append((handle, lbl))
+filtered_handles, filtered_labels = zip(*keep, strict=False) if keep else ([], [])
+ax.legend(
+    filtered_handles, filtered_labels, fontsize=14, loc="upper left", framealpha=0.95, edgecolor="none", fancybox=True
+)
 
 plt.tight_layout()
 
 # Save
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+plt.savefig("plot.png", dpi=225, bbox_inches="tight")
