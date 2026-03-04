@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 scatter-complex-plane: Complex Plane Visualization (Argand Diagram)
 Library: letsplot 4.8.2 | Python 3.14.3
 Quality: 85/100 | Created: 2026-03-04
@@ -44,10 +44,10 @@ for r, i in zip(all_real, all_imag, strict=True):
     sign = "+" if i >= 0 else "\u2212"
     rect_labels.append(f"{r:.2f}{sign}{abs(i):.2f}i")
 
-# Polar form annotations
+# Polar form annotations (visible in static PNG)
 polar_labels = []
 for mag, ang in zip(all_mag, all_angle_deg, strict=True):
-    polar_labels.append(f"|z|={mag:.2f}, \u03b8={ang:.0f}\u00b0")
+    polar_labels.append(f"r={mag:.2f}, \u03b8={ang:.0f}\u00b0")
 
 df = pd.DataFrame(
     {
@@ -62,23 +62,23 @@ df = pd.DataFrame(
     }
 )
 
-# Smart label placement: offset radially, then resolve overlaps
+# Smart label placement: offset radially outward
 angles = np.arctan2(all_imag, all_real)
-base_offset = 0.42
+base_offset = 0.45
 label_x = all_real + base_offset * np.cos(angles)
-label_y = all_imag + base_offset * np.sin(angles) + 0.16
+label_y = all_imag + base_offset * np.sin(angles) + 0.18
 
-# Resolve crowded labels by nudging apart (wide x threshold for annotation text width)
-min_sep_x = 1.1
-min_sep_y = 0.5
-for _ in range(40):
+# Resolve crowded labels with simple repulsion
+min_sep_x = 1.2
+min_sep_y = 0.6
+for _ in range(12):
     for i in range(len(label_x)):
         for j in range(i + 1, len(label_x)):
             dx = label_x[i] - label_x[j]
             dy = label_y[i] - label_y[j]
             norm_dist = np.sqrt((dx / min_sep_x) ** 2 + (dy / min_sep_y) ** 2)
             if norm_dist < 1.0:
-                push = 0.18 * (1.0 - norm_dist) / max(norm_dist, 0.01)
+                push = 0.2 * (1.0 - norm_dist) / max(norm_dist, 0.01)
                 label_x[i] += dx * push
                 label_y[i] += dy * push
                 label_x[j] -= dx * push
@@ -123,40 +123,40 @@ plot = (
     + geom_polygon(  # noqa: F405
         data=circle_df,
         mapping=aes(x="x", y="y"),  # noqa: F405
-        fill="#F0F4FA",
-        alpha=0.5,
+        fill="#EAF0FA",
+        alpha=0.45,
         color="rgba(0,0,0,0)",
     )
     # Unit circle (dashed reference)
     + geom_path(  # noqa: F405
         data=circle_df,
         mapping=aes(x="x", y="y"),  # noqa: F405
-        color="#A0A8B8",
-        size=1.0,
+        color="#8893A8",
+        size=1.1,
         linetype="dashed",
     )
     # Axes through origin
-    + geom_hline(yintercept=0, color="#999999", size=0.6)  # noqa: F405
-    + geom_vline(xintercept=0, color="#999999", size=0.6)  # noqa: F405
-    # Vectors from origin with tapered arrows
+    + geom_hline(yintercept=0, color="#AAAAAA", size=0.5)  # noqa: F405
+    + geom_vline(xintercept=0, color="#AAAAAA", size=0.5)  # noqa: F405
+    # Vectors from origin
     + geom_segment(  # noqa: F405
         data=arrows_df,
         mapping=aes(  # noqa: F405
             x="x_start", y="y_start", xend="x_end", yend="y_end", color="category"
         ),
-        size=1.2,
-        alpha=0.65,
-        arrow=arrow(length=12, type="open"),  # noqa: F405
+        size=1.3,
+        alpha=0.7,
+        arrow=arrow(length=13, type="open"),  # noqa: F405
     )
     # Points with interactive tooltips
     + geom_point(  # noqa: F405
         data=df,
         mapping=aes(x="real", y="imaginary", color="category"),  # noqa: F405
-        size=7,
+        size=8,
         alpha=0.95,
         shape=21,
         fill="#FFFFFF",
-        stroke=2.5,
+        stroke=2.8,
         tooltips=point_tooltips,
     )
     # Point labels (name) - positioned radially outward
@@ -165,16 +165,25 @@ plot = (
         mapping=aes(  # noqa: F405
             x="label_x", y="label_y", label="label", color="category"
         ),
-        size=13,
+        size=14,
         fontface="bold",
     )
     # Coordinate annotations (a+bi form) positioned below labels
     + geom_text(  # noqa: F405
         data=df,
         mapping=aes(x="label_x", y="label_y", label="rect_form"),  # noqa: F405
+        size=10,
+        color="#555555",
+        nudge_y=-0.24,
+    )
+    # Polar form annotations (r, theta) below rectangular form
+    + geom_text(  # noqa: F405
+        data=df,
+        mapping=aes(x="label_x", y="label_y", label="polar_form"),  # noqa: F405
         size=9,
-        color="#666666",
-        nudge_y=-0.22,
+        color="#777777",
+        fontface="italic",
+        nudge_y=-0.46,
     )
     # Scales
     + scale_color_manual(values=colors)  # noqa: F405
@@ -187,26 +196,26 @@ plot = (
         color="Category",
     )
     + scale_x_continuous(  # noqa: F405
-        breaks=[-2, -1, 0, 1, 2], expand=[0.15, 0.15]
+        breaks=[-3, -2, -1, 0, 1, 2, 3], expand=[0.12, 0.12]
     )
     + scale_y_continuous(  # noqa: F405
-        breaks=[-2, -1, 0, 1, 2], expand=[0.15, 0.15]
+        breaks=[-3, -2, -1, 0, 1, 2, 3], expand=[0.12, 0.12]
     )
     + flavor_high_contrast_light()  # noqa: F405
     + theme(  # noqa: F405
         plot_title=element_text(  # noqa: F405
-            size=24, color="#1a1a1a", face="bold"
+            size=26, color="#1a1a1a", face="bold"
         ),
         plot_subtitle=element_text(  # noqa: F405
-            size=16, color="#555555", face="italic"
+            size=17, color="#555555", face="italic"
         ),
-        axis_title=element_text(size=20, color="#333333"),  # noqa: F405
-        axis_text=element_text(size=16, color="#555555"),  # noqa: F405
-        legend_title=element_text(size=18),  # noqa: F405
-        legend_text=element_text(size=16),  # noqa: F405
-        panel_grid_major=element_line(color="#DCDCDC", size=0.3),  # noqa: F405
+        axis_title=element_text(size=21, color="#333333"),  # noqa: F405
+        axis_text=element_text(size=17, color="#555555"),  # noqa: F405
+        legend_title=element_text(size=19),  # noqa: F405
+        legend_text=element_text(size=17),  # noqa: F405
+        panel_grid_major=element_line(color="#E0E0E0", size=0.25),  # noqa: F405
         panel_grid_minor=element_blank(),  # noqa: F405
-        plot_margin=[30, 50, 20, 20],
+        plot_margin=[35, 55, 25, 25],
     )
     + ggsize(1600, 900)  # noqa: F405
 )
