@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 scatter-complex-plane: Complex Plane Visualization (Argand Diagram)
 Library: plotly 6.6.0 | Python 3.14.3
 Quality: 79/100 | Created: 2026-03-04
@@ -31,22 +31,53 @@ categories = (
 real_parts = [z.real for z in all_points]
 imag_parts = [z.imag for z in all_points]
 
+
+def format_complex(r, im):
+    """Format a+bi string for annotation."""
+    if im == 0:
+        return f"{r:.1f}"
+    sign = "+" if im > 0 else "−"
+    return f"{r:.1f} {sign} {abs(im):.1f}i"
+
+
 # Colors
 palette = {"5th Roots of Unity": "#306998", "Arbitrary Points": "#E8833A", "Conjugate Pair": "#7B4F9D"}
+
+# Custom text positions to avoid overlap
+text_offsets = dict.fromkeys(all_labels, "top right")
+# Fix overlapping labels: z₄ at (1.2, -2.0) and w̄ at (1.5, -2.0)
+text_offsets["z₄"] = "bottom left"
+text_offsets["w̄"] = "top right"
+# Avoid crowding near origin for roots of unity
+text_offsets["ω2"] = "top left"
+text_offsets["ω3"] = "bottom left"
 
 # Plot
 fig = go.Figure()
 
+# Unit circle as a shape (not a trace) to keep legend clean
 theta = np.linspace(0, 2 * np.pi, 200)
 fig.add_trace(
     go.Scatter(
-        x=np.cos(theta),
-        y=np.sin(theta),
+        x=np.cos(theta).tolist(),
+        y=np.sin(theta).tolist(),
         mode="lines",
         line={"color": "#999999", "width": 2, "dash": "dash"},
         name="Unit Circle",
         hoverinfo="skip",
+        showlegend=False,
     )
+)
+
+# Add "r=1" label on the unit circle
+fig.add_annotation(
+    x=np.cos(np.pi / 4),
+    y=np.sin(np.pi / 4),
+    text="r = 1",
+    showarrow=False,
+    font={"size": 14, "color": "#777777", "family": "serif"},
+    xshift=12,
+    yshift=10,
 )
 
 for cat in ["5th Roots of Unity", "Arbitrary Points", "Conjugate Pair"]:
@@ -54,9 +85,11 @@ for cat in ["5th Roots of Unity", "Arbitrary Points", "Conjugate Pair"]:
     cat_real = [real_parts[i] for i in cat_indices]
     cat_imag = [imag_parts[i] for i in cat_indices]
     cat_labels = [all_labels[i] for i in cat_indices]
+    cat_points = [all_points[i] for i in cat_indices]
     color = palette[cat]
 
-    for r, im, _label in zip(cat_real, cat_imag, cat_labels, strict=True):
+    # Vector arrows from origin
+    for r, im in zip(cat_real, cat_imag, strict=True):
         fig.add_annotation(
             x=r,
             y=im,
@@ -74,22 +107,40 @@ for cat in ["5th Roots of Unity", "Arbitrary Points", "Conjugate Pair"]:
             opacity=0.5,
         )
 
-    hover_text = [
-        f"{label}<br>{r:+.2f} {im:+.2f}i<br>|z| = {abs(complex(r, im)):.2f}"
-        for r, im, label in zip(cat_real, cat_imag, cat_labels, strict=True)
+    # Visible a+bi annotations for each point
+    for r, im, label in zip(cat_real, cat_imag, cat_labels, strict=True):
+        pos = text_offsets.get(label, "top right")
+        xshift = -8 if "left" in pos else 8
+        yshift = -14 if "bottom" in pos else 14
+        fig.add_annotation(
+            x=r,
+            y=im,
+            text=f"<b>{label}</b>  ({format_complex(r, im)})",
+            showarrow=False,
+            font={"size": 13, "color": color, "family": "serif"},
+            xanchor="left" if "right" in pos else "right",
+            yanchor="bottom" if "top" in pos else "top",
+            xshift=xshift,
+            yshift=yshift,
+        )
+
+    # Custom hover template with Plotly-specific hovertemplate
+    hover_custom = [
+        f"<b>{label}</b><br>"
+        f"z = {format_complex(r, im)}<br>"
+        f"|z| = {abs(z):.3f}<br>"
+        f"arg(z) = {np.degrees(np.angle(z)):.1f}°"
+        for r, im, label, z in zip(cat_real, cat_imag, cat_labels, cat_points, strict=True)
     ]
 
     fig.add_trace(
         go.Scatter(
             x=cat_real,
             y=cat_imag,
-            mode="markers+text",
-            marker={"size": 16, "color": color, "line": {"color": "white", "width": 2}},
-            text=cat_labels,
-            textposition="top right",
-            textfont={"size": 16, "color": color},
+            mode="markers",
+            marker={"size": 16, "color": color, "line": {"color": "white", "width": 2}, "symbol": "circle"},
             name=cat,
-            hovertext=hover_text,
+            hovertext=hover_custom,
             hoverinfo="text",
         )
     )
@@ -98,7 +149,7 @@ for cat in ["5th Roots of Unity", "Arbitrary Points", "Conjugate Pair"]:
 fig.update_layout(
     title={"text": "scatter-complex-plane · plotly · pyplots.ai", "font": {"size": 28}, "x": 0.5, "xanchor": "center"},
     xaxis={
-        "title": {"text": "Real Axis", "font": {"size": 22}},
+        "title": {"text": "Re(z)", "font": {"size": 22, "family": "serif"}},
         "tickfont": {"size": 18},
         "zeroline": True,
         "zerolinewidth": 2,
@@ -109,7 +160,7 @@ fig.update_layout(
         "range": [-3.5, 4],
     },
     yaxis={
-        "title": {"text": "Imaginary Axis", "font": {"size": 22}},
+        "title": {"text": "Im(z)", "font": {"size": 22, "family": "serif"}},
         "tickfont": {"size": 18},
         "zeroline": True,
         "zerolinewidth": 2,
