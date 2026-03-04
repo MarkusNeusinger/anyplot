@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 bar-diverging-likert: Likert Scale Diverging Bar Chart
 Library: highcharts unknown | Python 3.14.3
 Quality: 86/100 | Created: 2026-03-04
@@ -12,6 +12,7 @@ from pathlib import Path
 from highcharts_core.chart import Chart
 from highcharts_core.options import HighchartsOptions
 from highcharts_core.options.series.bar import BarSeries
+from highcharts_core.utility_classes.javascript_functions import CallbackFunction
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
@@ -59,8 +60,12 @@ for row in survey_data:
     d_data.append(
         {"y": -d, "dataLabels": {"format": f"{d}%"}} if d >= 8 else {"y": -d, "dataLabels": {"enabled": False}}
     )
-    nl_data.append(-n / 2)
-    nr_data.append(n / 2)
+    nl_data.append(
+        {"y": -n / 2, "dataLabels": {"enabled": True, "format": f"{n}%"}}
+        if n >= 12
+        else {"y": -n / 2, "dataLabels": {"enabled": False}}
+    )
+    nr_data.append({"y": n / 2, "dataLabels": {"enabled": False}})
     a_data.append({"y": a, "dataLabels": {"format": f"{a}%"}} if a >= 8 else {"y": a, "dataLabels": {"enabled": False}})
     sa_data.append(
         {"y": sa, "dataLabels": {"format": f"{sa}%"}} if sa >= 8 else {"y": sa, "dataLabels": {"enabled": False}}
@@ -88,7 +93,7 @@ chart.options.title = {
 
 chart.options.subtitle = {
     "text": "Employee Engagement Survey Results",
-    "style": {"fontSize": "32px", "color": "#666666"},
+    "style": {"fontSize": "32px", "color": "#888888", "fontWeight": "300"},
 }
 
 chart.options.x_axis = {
@@ -99,10 +104,12 @@ chart.options.x_axis = {
     "tickWidth": 0,
 }
 
+y_axis_formatter = CallbackFunction.from_js_literal("function() { return Math.abs(this.value) + '%'; }")
 chart.options.y_axis = {
     "title": {"text": "\u2190 Disagree    |    Agree \u2192", "style": {"fontSize": "28px"}, "margin": 20},
-    "labels": {"style": {"fontSize": "24px"}},
+    "labels": {"style": {"fontSize": "24px"}, "formatter": y_axis_formatter},
     "tickInterval": 10,
+    "max": 80,
     "gridLineWidth": 1,
     "gridLineColor": "#e8e8e8",
     "plotLines": [{"value": 0, "width": 3, "color": "#333333", "zIndex": 5}],
@@ -131,7 +138,7 @@ chart.options.plot_options = {
         "dataLabels": {
             "enabled": True,
             "inside": True,
-            "style": {"fontSize": "20px", "fontWeight": "bold", "textOutline": "none"},
+            "style": {"fontSize": "22px", "fontWeight": "bold", "textOutline": "none"},
         },
     }
 }
@@ -149,7 +156,11 @@ s_nl.id = "neutral"
 s_nl.data = nl_data
 s_nl.color = color_n
 s_nl.legend_index = 2
-s_nl.data_labels = {"enabled": False}
+s_nl.data_labels = {
+    "enabled": True,
+    "inside": True,
+    "style": {"fontSize": "22px", "fontWeight": "bold", "color": "#555555", "textOutline": "none"},
+}
 chart.add_series(s_nl)
 
 # Disagree
@@ -161,7 +172,7 @@ s_d.legend_index = 1
 s_d.data_labels = {
     "enabled": True,
     "inside": True,
-    "style": {"fontSize": "20px", "fontWeight": "bold", "color": "#333333", "textOutline": "none"},
+    "style": {"fontSize": "22px", "fontWeight": "bold", "color": "#333333", "textOutline": "none"},
 }
 chart.add_series(s_d)
 
@@ -174,7 +185,7 @@ s_sd.legend_index = 0
 s_sd.data_labels = {
     "enabled": True,
     "inside": True,
-    "style": {"fontSize": "20px", "fontWeight": "bold", "color": "#ffffff", "textOutline": "none"},
+    "style": {"fontSize": "22px", "fontWeight": "bold", "color": "#ffffff", "textOutline": "none"},
 }
 chart.add_series(s_sd)
 
@@ -196,7 +207,7 @@ s_a.legend_index = 3
 s_a.data_labels = {
     "enabled": True,
     "inside": True,
-    "style": {"fontSize": "20px", "fontWeight": "bold", "color": "#333333", "textOutline": "none"},
+    "style": {"fontSize": "22px", "fontWeight": "bold", "color": "#333333", "textOutline": "none"},
 }
 chart.add_series(s_a)
 
@@ -209,7 +220,7 @@ s_sa.legend_index = 4
 s_sa.data_labels = {
     "enabled": True,
     "inside": True,
-    "style": {"fontSize": "20px", "fontWeight": "bold", "color": "#ffffff", "textOutline": "none"},
+    "style": {"fontSize": "22px", "fontWeight": "bold", "color": "#ffffff", "textOutline": "none"},
 }
 chart.add_series(s_sa)
 
