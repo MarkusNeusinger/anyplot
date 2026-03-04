@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 scatter-complex-plane: Complex Plane Visualization (Argand Diagram)
 Library: letsplot 4.8.2 | Python 3.14.3
 Quality: 84/100 | Created: 2026-03-04
@@ -62,11 +62,30 @@ df = pd.DataFrame(
     }
 )
 
-# Compute label positions offset radially outward from each point
+# Smart label placement: offset radially, then resolve overlaps
 angles = np.arctan2(all_imag, all_real)
-label_offset = 0.30
-df["label_x"] = all_real + label_offset * np.cos(angles)
-df["label_y"] = all_imag + label_offset * np.sin(angles) + 0.12
+base_offset = 0.42
+label_x = all_real + base_offset * np.cos(angles)
+label_y = all_imag + base_offset * np.sin(angles) + 0.16
+
+# Resolve crowded labels by nudging apart (wide x threshold for annotation text width)
+min_sep_x = 1.1
+min_sep_y = 0.5
+for _ in range(40):
+    for i in range(len(label_x)):
+        for j in range(i + 1, len(label_x)):
+            dx = label_x[i] - label_x[j]
+            dy = label_y[i] - label_y[j]
+            norm_dist = np.sqrt((dx / min_sep_x) ** 2 + (dy / min_sep_y) ** 2)
+            if norm_dist < 1.0:
+                push = 0.18 * (1.0 - norm_dist) / max(norm_dist, 0.01)
+                label_x[i] += dx * push
+                label_y[i] += dy * push
+                label_x[j] -= dx * push
+                label_y[j] -= dy * push
+
+df["label_x"] = label_x
+df["label_y"] = label_y
 
 # Arrow data (vectors from origin to each point)
 arrows_df = pd.DataFrame(
@@ -100,12 +119,20 @@ point_tooltips = (
 # Plot
 plot = (
     ggplot()  # noqa: F405
+    # Unit circle filled region (subtle)
+    + geom_polygon(  # noqa: F405
+        data=circle_df,
+        mapping=aes(x="x", y="y"),  # noqa: F405
+        fill="#F0F4FA",
+        alpha=0.5,
+        color="rgba(0,0,0,0)",
+    )
     # Unit circle (dashed reference)
     + geom_path(  # noqa: F405
         data=circle_df,
         mapping=aes(x="x", y="y"),  # noqa: F405
-        color="#BBBBBB",
-        size=1.2,
+        color="#A0A8B8",
+        size=1.0,
         linetype="dashed",
     )
     # Axes through origin
@@ -141,13 +168,13 @@ plot = (
         size=13,
         fontface="bold",
     )
-    # Coordinate annotations (a+bi form) below points
+    # Coordinate annotations (a+bi form) positioned below labels
     + geom_text(  # noqa: F405
         data=df,
-        mapping=aes(x="real", y="imaginary", label="rect_form"),  # noqa: F405
-        size=10,
-        color="#555555",
-        nudge_y=-0.28,
+        mapping=aes(x="label_x", y="label_y", label="rect_form"),  # noqa: F405
+        size=9,
+        color="#666666",
+        nudge_y=-0.22,
     )
     # Scales
     + scale_color_manual(values=colors)  # noqa: F405
