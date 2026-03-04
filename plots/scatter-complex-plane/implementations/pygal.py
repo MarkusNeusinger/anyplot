@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 scatter-complex-plane: Complex Plane Visualization (Argand Diagram)
 Library: pygal 3.1.0 | Python 3.14.3
 Quality: 76/100 | Created: 2026-03-04
@@ -16,26 +16,54 @@ roots_of_unity = [np.exp(2j * np.pi * k / 3) for k in range(3)]
 arbitrary = [2.5 + 1.5j, -1.8 + 2.2j, 1.0 - 2.0j, -0.5 - 1.5j, 3.0 + 0j, 0 + 2.8j]
 z_product = arbitrary[0] * roots_of_unity[1]
 
-# Unit circle
+# Pre-compute labels (a+bi format) for all complex numbers
+root_labels = []
+for z in roots_of_unity:
+    if abs(z.imag) < 1e-10:
+        root_labels.append(f"ω = {z.real:.1f}")
+    elif abs(z.real) < 1e-10:
+        root_labels.append(f"ω = {z.imag:.1f}i")
+    else:
+        root_labels.append(f"ω = {z.real:.1f}{z.imag:+.1f}i")
+
+arb_names = ["z₁", "z₂", "z₃", "z₄", "z₅", "z₆"]
+arb_labels = []
+for name, z in zip(arb_names, arbitrary, strict=True):
+    if abs(z.imag) < 1e-10:
+        arb_labels.append(f"{name} = {z.real:.1f}")
+    elif abs(z.real) < 1e-10:
+        arb_labels.append(f"{name} = {z.imag:.1f}i")
+    else:
+        arb_labels.append(f"{name} = {z.real:.1f}{z.imag:+.1f}i")
+
+if abs(z_product.imag) < 1e-10:
+    prod_label = f"z₁·ω₁ = {z_product.real:.1f}"
+elif abs(z_product.real) < 1e-10:
+    prod_label = f"z₁·ω₁ = {z_product.imag:.1f}i"
+else:
+    prod_label = f"z₁·ω₁ = {z_product.real:.1f}{z_product.imag:+.1f}i"
+
+# Unit circle points
 theta = np.linspace(0, 2 * np.pi, 120)
 unit_circle = [(float(np.cos(t)), float(np.sin(t))) for t in theta]
+
+# Colorblind-safe palette (blue, orange, purple — no red-green pair)
+BLUE = "#306998"
+ORANGE = "#E67E22"
+PURPLE = "#8E44AD"
+GRAY_CIRCLE = "#888888"
+DARK = "#1A1A1A"
 
 # Style
 custom_style = Style(
     background="white",
-    plot_background="white",
-    foreground="#333333",
-    foreground_strong="#333333",
-    foreground_subtle="#dddddd",
-    guide_stroke_color="#dddddd",
-    guide_stroke_dasharray="4, 4",
-    colors=(
-        "#AAAAAA",  # Unit circle
-        "#306998",  # Roots of unity
-        "#E74C3C",  # Arbitrary points
-        "#2ECC71",  # Product
-        "#1A1A1A",  # Origin
-    ),
+    plot_background="#FAFAFA",
+    foreground="#2C3E50",
+    foreground_strong="#2C3E50",
+    foreground_subtle="#E0E0E0",
+    guide_stroke_color="#E0E0E0",
+    guide_stroke_dasharray="3, 3",
+    colors=(GRAY_CIRCLE, BLUE, ORANGE, PURPLE, DARK),
     font_family="DejaVu Sans, Helvetica, Arial, sans-serif",
     title_font_family="DejaVu Sans, Helvetica, Arial, sans-serif",
     title_font_size=56,
@@ -43,9 +71,9 @@ custom_style = Style(
     major_label_font_size=32,
     legend_font_size=30,
     legend_font_family="DejaVu Sans, Helvetica, Arial, sans-serif",
-    value_font_size=24,
+    value_font_size=28,
     tooltip_font_size=24,
-    opacity=0.85,
+    opacity=0.9,
     opacity_hover=1.0,
 )
 
@@ -77,18 +105,6 @@ chart = pygal.XY(
     js=[],
 )
 
-
-# Format complex number as a+bi string
-def fmt(z):
-    return (
-        f"{z.real:.1f}"
-        if abs(z.imag) < 1e-10
-        else f"{z.imag:.1f}i"
-        if abs(z.real) < 1e-10
-        else f"{z.real:.1f}{z.imag:+.1f}i"
-    )
-
-
 # Unit circle (dashed reference)
 chart.add(
     "Unit Circle",
@@ -96,14 +112,14 @@ chart.add(
     stroke=True,
     show_dots=False,
     fill=False,
-    stroke_style={"width": 3, "dasharray": "12, 8", "opacity": 0.6},
+    stroke_style={"width": 4, "dasharray": "10, 6", "opacity": 0.7},
 )
 
 # Roots of unity - vectors from origin with labeled endpoints
 roots_series = []
-for z in roots_of_unity:
-    roots_series.append((0.0, 0.0))
-    roots_series.append({"value": (float(z.real), float(z.imag)), "label": f"ω = {fmt(z)}"})
+for i, z in enumerate(roots_of_unity):
+    roots_series.append({"value": (0.0, 0.0), "label": ""})
+    roots_series.append({"value": (float(z.real), float(z.imag)), "label": root_labels[i]})
     roots_series.append(None)
 
 chart.add(
@@ -111,17 +127,24 @@ chart.add(
     roots_series,
     stroke=True,
     show_dots=True,
-    dots_size=16,
-    stroke_style={"width": 4, "linecap": "round"},
-    formatter=lambda x: fmt(complex(x[0], x[1])) if isinstance(x, (tuple, list)) and x != (0.0, 0.0) else "",
+    dots_size=18,
+    stroke_style={"width": 6, "linecap": "round", "opacity": 0.85},
+    formatter=lambda x: (
+        ""
+        if not isinstance(x, (tuple, list)) or x == (0.0, 0.0)
+        else f"{x[0]:.1f}"
+        if abs(x[1]) < 1e-10
+        else f"{x[1]:.1f}i"
+        if abs(x[0]) < 1e-10
+        else f"{x[0]:.1f}{x[1]:+.1f}i"
+    ),
 )
 
 # Arbitrary points - vectors from origin
 arb_series = []
-labels = ["z₁", "z₂", "z₃", "z₄", "z₅", "z₆"]
 for i, z in enumerate(arbitrary):
-    arb_series.append((0.0, 0.0))
-    arb_series.append({"value": (float(z.real), float(z.imag)), "label": f"{labels[i]} = {fmt(z)}"})
+    arb_series.append({"value": (0.0, 0.0), "label": ""})
+    arb_series.append({"value": (float(z.real), float(z.imag)), "label": arb_labels[i]})
     arb_series.append(None)
 
 chart.add(
@@ -129,24 +152,43 @@ chart.add(
     arb_series,
     stroke=True,
     show_dots=True,
-    dots_size=14,
-    stroke_style={"width": 3, "linecap": "round"},
-    formatter=lambda x: fmt(complex(x[0], x[1])) if isinstance(x, (tuple, list)) and x != (0.0, 0.0) else "",
+    dots_size=16,
+    stroke_style={"width": 5, "linecap": "round", "opacity": 0.8},
+    formatter=lambda x: (
+        ""
+        if not isinstance(x, (tuple, list)) or x == (0.0, 0.0)
+        else f"{x[0]:.1f}"
+        if abs(x[1]) < 1e-10
+        else f"{x[1]:.1f}i"
+        if abs(x[0]) < 1e-10
+        else f"{x[0]:.1f}{x[1]:+.1f}i"
+    ),
 )
 
 # Product z1 * omega1 with dashed vector
 chart.add(
     "z₁·ω₁ (Product)",
-    [(0.0, 0.0), {"value": (float(z_product.real), float(z_product.imag)), "label": f"z₁·ω₁ = {fmt(z_product)}"}],
+    [
+        {"value": (0.0, 0.0), "label": ""},
+        {"value": (float(z_product.real), float(z_product.imag)), "label": prod_label},
+    ],
     stroke=True,
     show_dots=True,
-    dots_size=18,
-    stroke_style={"width": 4, "dasharray": "8, 6", "linecap": "round"},
-    formatter=lambda x: fmt(complex(x[0], x[1])) if isinstance(x, (tuple, list)) and x != (0.0, 0.0) else "",
+    dots_size=20,
+    stroke_style={"width": 6, "dasharray": "10, 6", "linecap": "round", "opacity": 0.9},
+    formatter=lambda x: (
+        ""
+        if not isinstance(x, (tuple, list)) or x == (0.0, 0.0)
+        else f"{x[0]:.1f}"
+        if abs(x[1]) < 1e-10
+        else f"{x[1]:.1f}i"
+        if abs(x[0]) < 1e-10
+        else f"{x[0]:.1f}{x[1]:+.1f}i"
+    ),
 )
 
 # Origin marker
-chart.add("Origin", [{"value": (0.0, 0.0), "label": "0+0i"}], stroke=False, dots_size=10, formatter=lambda x: "0")
+chart.add("Origin", [{"value": (0.0, 0.0), "label": "0"}], stroke=False, dots_size=10, formatter=lambda x: "")
 
 # Save
 chart.render_to_png("plot.png")
