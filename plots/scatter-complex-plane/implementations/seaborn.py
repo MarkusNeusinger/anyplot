@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 scatter-complex-plane: Complex Plane Visualization (Argand Diagram)
 Library: seaborn 0.13.2 | Python 3.14.3
-Quality: 83/100 | Created: 2026-03-04
+Quality: 84/100 | Created: 2026-03-04
 """
 
 import matplotlib.pyplot as plt
