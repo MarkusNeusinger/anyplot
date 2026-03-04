@@ -1,7 +1,7 @@
 library: pygal
 specification_id: bar-diverging-likert
 created: '2026-03-04T06:08:42Z'
-updated: '2026-03-04T06:14:22Z'
+updated: '2026-03-04T06:25:48Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 22657236170
 issue: 4429
@@ -10,38 +10,39 @@ library_version: 3.1.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/bar-diverging-likert/pygal/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/bar-diverging-likert/pygal/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/bar-diverging-likert/pygal/plot.html
-quality_score: 81
+quality_score: 85
 review:
   strengths:
-  - Correct diverging layout with neutral category split evenly at the midpoint
-  - Data sorted by net agreement creates clear storytelling narrative
-  - Thoughtful diverging color palette (red to gray to blue) with semantic meaning
-  - Smart conditional value labeling via value_formatter that hides labels for segments
-    < 8%
-  - Realistic employee engagement survey context with varied response distributions
+  - Excellent spec compliance — all required features perfectly implemented (diverging
+    layout, neutral split, sorting, percentage labels)
+  - Professional ColorBrewer RdBu diverging palette that is colorblind-safe and semantically
+    appropriate
+  - Smart value_formatter that hides labels for small segments, preventing visual
+    clutter
+  - Clean, well-structured code with elegant handling of the neutral category split
+    (None label trick)
+  - Realistic employee engagement survey data with good variation across questions
   weaknesses:
-  - Phantom legend entry from the space series for neutral-right half pollutes the
-    legend
-  - No explicit axis titles (missing Response Percentage or similar)
-  - X-axis range extends beyond the data wasting canvas space
-  - Salmon and gray colors could be more distinct for colorblind users
-  - Pygal default chrome (dashed grid, default axis styling) still visible
-  image_description: 'The plot displays a horizontal diverging stacked bar chart for
-    an Employee Engagement Survey with 8 questions. Bars diverge from a central neutral
-    point, with negative responses (Strongly Disagree in red #D94535, Disagree in
-    salmon #E8998D) extending left and positive responses (Agree in light blue #7DB5D6,
-    Strongly Agree in dark blue #306998) extending right. Gray (#AAAAAA) neutral segments
-    are split evenly across the midpoint. Questions are sorted by net agreement from
-    top (Team collaboration is effective — most positive) to bottom (I receive fair
-    compensation — most negative). Percentage labels appear inside bar segments for
-    values >= 8%. The title reads "Employee Engagement Survey · bar-diverging-likert
-    · pygal · pyplots.ai". A legend at the bottom shows all 6 series, though a phantom
-    tiny gray square appears for the unnamed neutral-right series. The x-axis shows
-    cumulative percentage values with dashed horizontal grid lines. The background
-    is white.'
+  - Faint dotted vertical grid lines persist despite show_x_guides=False (pygal rendering
+    quirk detracts from polish)
+  - Design could be pushed toward publication quality with more visual refinement
+  - Data variation could include more extreme negative distributions for fuller demonstration
+  image_description: 'The plot shows a horizontal diverging stacked bar chart for
+    an employee engagement survey with 8 questions. Questions are listed on the y-axis
+    (left side), sorted by net agreement from most positive (top: "Team collaboration
+    is effective") to most negative (bottom: "I receive fair compensation"). Bars
+    diverge from a center point — negative responses (Strongly Disagree in dark red
+    #B2182B, Disagree in salmon #EF8A62) extend left, positive responses (Agree in
+    light blue #67A9CF, Strongly Agree in medium-dark blue #2166AC) extend right.
+    The neutral category (#D9D9D9 gray) is split evenly at center. Percentage labels
+    appear inside bar segments where space permits (>=8%), hidden for smaller segments.
+    The title reads "Employee Engagement Survey · bar-diverging-likert · pygal · pyplots.ai".
+    A 5-item legend sits at the bottom in a single row. Faint dotted vertical guide
+    lines are visible despite being disabled in code. The overall color scheme is
+    a professional ColorBrewer RdBu diverging palette on a white background.'
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -50,40 +51,40 @@ review:
         max: 8
         passed: true
         comment: All font sizes explicitly set (title=72, label=44, major_label=40,
-          legend=40, value=30). Text clearly readable.
+          legend=40, value=30). All text clearly readable.
       - id: VQ-02
         name: No Overlap
-        score: 5
-        max: 6
-        passed: true
-        comment: No text overlap in chart. Minor phantom legend entry from unnamed
-          neutral-right series.
-      - id: VQ-03
-        name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All bar segments clearly visible with good color differentiation.
+        comment: No overlapping text. Smart value_formatter hides labels for segments
+          <8%.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Bar segments clearly visible with distinct colors. Some very thin
+          segments are narrow but distinguishable.
       - id: VQ-04
         name: Color Accessibility
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Red-gray-blue diverging palette is reasonably colorblind-safe. Salmon
-          and gray could be more distinct.
+        comment: ColorBrewer RdBu 5-class diverging palette, established colorblind-safe
+          scheme.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good overall layout. X-axis extends beyond data range, some wasted
-          space.
+        comment: Good layout utilization. Some unused whitespace on the far right.
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: Title is descriptive with correct format. No explicit axis titles.
+        comment: x_title='Response Percentage (%)' with units.
     design_excellence:
       score: 12
       max: 20
@@ -93,24 +94,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom diverging palette with semantic meaning. White background,
-          explicit font hierarchy. Above defaults.
+        comment: Intentional ColorBrewer RdBu palette, custom font size hierarchy,
+          clean white background. Above defaults but not publication-ready.
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
-        passed: true
-        comment: White background, x-guides disabled, custom spacing. Pygal default
-          chrome still visible.
+        passed: false
+        comment: Grid guides disabled in code but faint dotted vertical lines still
+          visible (pygal rendering quirk).
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Sorting by net agreement creates immediate narrative. Diverging layout
-          reinforces comparison.
+        comment: Questions sorted by net agreement creates clear visual narrative.
+          Red-blue color contrast guides viewer.
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -118,26 +119,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct diverging stacked horizontal bar chart.
+        comment: Correct horizontal diverging stacked bar chart using pygal.HorizontalStackedBar.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: neutral split, diverging colors, sorting,
-          percentage labels, horizontal orientation.'
+        comment: 'All spec features present: centered neutral split, diverging colors,
+          sorting, percentage labels, horizontal orientation.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Correct mapping with negative values for disagree, positive for agree.
+        comment: Questions on y-axis, percentages on x-axis, negative left, positive
+          right, neutral split at center.
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Title format correct. Legend has phantom entry from space series.
+        comment: Title contains spec-id, library, and pyplots.ai. Legend labels correctly
+          identify all 5 response categories.
     data_quality:
       score: 14
       max: 15
@@ -147,22 +150,22 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: 8 questions with varied distributions showing positive and negative
-          skewing patterns.
+        comment: 8 questions with varied distributions from very positive to moderately
+          negative. Could include more extreme negative distributions.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Employee engagement survey is realistic and neutral.
+        comment: Employee engagement survey is a real, common, and neutral use case.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: All percentages sum to 100% per question with realistic distributions.
+        comment: All response sets sum to 100%, values are realistic percentages.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -170,33 +173,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports, data, sorting, style, chart config,
-          series, save.'
+        comment: Clean Imports → Data → Sort → Chart → Save flow. No functions or
+          classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic with hardcoded data.
+        comment: Fully deterministic hardcoded data.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only pygal and pygal.style.Style imported, both used.
+        comment: Only pygal and Style imported, both used.
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: The space series name is a workaround that leaks a phantom legend
-          entry.
+        comment: Clean, Pythonic. Smart use of None label for second neutral half
+          to avoid duplicate legend entry.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html. Current API.
+        comment: Saves as plot.png via render_to_png. Also generates HTML.
     library_mastery:
       score: 7
       max: 10
@@ -206,20 +209,19 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of HorizontalStackedBar, Style class, print_values, value_formatter,
-          legend_at_bottom_columns.
+        comment: 'Good use of pygal API: HorizontalStackedBar, Style, print_values
+          with formatter, legend_at_bottom_columns, truncate_label.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses pygal-specific print_values with value_formatter, HTML/SVG export,
-          truncate_label control.
+        comment: 'Leverages pygal-specific features: print_values with value_formatter,
+          render_to_file for HTML, truncate options.'
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
   - html-export
   patterns:
   - data-generation
