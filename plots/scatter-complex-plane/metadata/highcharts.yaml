@@ -1,7 +1,7 @@
 library: highcharts
 specification_id: scatter-complex-plane
 created: '2026-03-04T20:25:01Z'
-updated: '2026-03-04T20:38:51Z'
+updated: '2026-03-04T20:47:16Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 22687521960
 issue: 4427
@@ -10,39 +10,42 @@ library_version: unknown
 preview_url: https://storage.googleapis.com/pyplots-images/plots/scatter-complex-plane/highcharts/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/scatter-complex-plane/highcharts/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/scatter-complex-plane/highcharts/plot.html
-quality_score: 85
+quality_score: 86
 review:
   strengths:
-  - Excellent spec compliance — all required features implemented completely
-  - Thoughtful colorblind-safe teal/amber palette with intentional visual hierarchy
-  - Custom per-point label offsets prevent overlap with careful attention to placement
-  - Both rectangular and polar notation on every point adds mathematical richness
-  - Interactive HTML export alongside PNG is a nice Highcharts-specific bonus
+  - 'Excellent spec compliance: all required features present (unit circle, vectors,
+    arrowheads, annotations, equal aspect ratio)'
+  - Thoughtful colorblind-safe palette (teal/amber) with intentional accessibility
+    consideration
+  - Careful label positioning with custom per-point offsets preventing overlap
+  - Both rectangular and polar coordinate forms displayed for all points
+  - Clean visual hierarchy with two marker sizes and shapes distinguishing point categories
+  - Interactive HTML output provided alongside PNG for Highcharts native interactivity
   weaknesses:
-  - X-axis title Real Axis (Re) is partially cut off at bottom edge — marginBottom
-    insufficient
-  - z4 label at (-2, -1) slightly cramped near left edge
-  - Helper function arrowhead_points breaks KISS convention — should be inlined
-  image_description: 'The plot displays an Argand diagram on a light gray (#fafbfc)
-    background at 3600x3600 square format. The title "scatter-complex-plane · highcharts
-    · pyplots.ai" appears at the top in dark slate (58px), with a subtitle "Argand
-    Diagram — 3rd Roots of Unity and Arbitrary Complex Numbers" below in gray. The
-    x-axis is labeled "Real Axis (Re)" and the y-axis "Imaginary Axis (Im)", both
-    ranging from approximately -3.5 to 3.5. Bold plotLines create axes through the
-    origin. A dashed gray unit circle is centered at the origin. Three teal (#1a7a6d)
-    circle markers with white borders represent the 3rd roots of unity (omega0 at
-    1 angle 0 degrees, omega1 at 1 angle 120 degrees, omega2 at 1 angle 240 degrees)
-    on the unit circle. Five amber (#d4820a) diamond markers represent arbitrary complex
-    numbers (z1 through z5) spread across all four quadrants. Dashed vectors with
-    V-shaped arrowheads connect the origin to each point — teal for roots, amber for
-    arbitrary points. Each point is labeled with both rectangular (a+bi) and polar
-    (r angle theta) forms. A floating legend in the top-right corner with a rounded
-    border identifies the three series: Unit Circle, 3rd Roots of Unity, and Complex
-    Numbers. The origin is marked with an "O" label. The "Real Axis (Re)" label at
-    the bottom appears partially cut off by the image boundary.'
+  - Repetitive vector+arrowhead creation code could be more concise
+  - Annotations module downloaded but not utilized through the Highcharts annotations
+    API
+  - Some unused vertical space in the plot area
+  - Does not demonstrate complex operations (addition/multiplication) mentioned in
+    spec applications
+  image_description: The plot shows an Argand diagram on a 3600x3600 light gray (#fafbfc)
+    canvas. The title "scatter-complex-plane · highcharts · pyplots.ai" appears in
+    bold dark text at the top, with a gray subtitle "Argand Diagram — 3rd Roots of
+    Unity and Arbitrary Complex Numbers" below it. The x-axis is labeled "Real Axis
+    (Re)" and the y-axis "Imaginary Axis (Im)", both ranging from approximately -3.5
+    to 3.5 with integer tick marks. A dashed gray unit circle is centered at the origin.
+    Three large teal circle markers represent the 3rd roots of unity (ω0 at (1,0),
+    ω1 at (-0.5, 0.87), ω2 at (-0.5, -0.87)), each labeled with polar form (e.g.,
+    "ω0 = 1∠0°"). Five amber diamond markers represent arbitrary complex numbers (z₁
+    through z₅) scattered across all four quadrants, each labeled with both rectangular
+    form (e.g., "z₁ = 2+1.5i") and polar form (e.g., "2.50∠37°"). Dashed vectors with
+    arrowheads extend from the origin to each point — teal for roots, amber for arbitrary
+    points. Bold axis lines cross at the origin. A floating legend in the top-right
+    corner lists "Unit Circle", "3rd Roots of Unity", and "Complex Numbers". The origin
+    is marked with an "O" label.
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -50,42 +53,44 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (58px title, 40px axes, 32px ticks,
-          30px/26px data labels). All readable.
+        comment: All font sizes explicitly set (title 58px, subtitle 36px, axis titles
+          40px, tick labels 32px, data labels 26-30px). All readable; z4 label slightly
+          cramped near left edge.
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Labels well-positioned with custom per-point offsets. z4 label slightly
-          cramped near left edge.
+        comment: Custom per-point label offsets with allowOverlap:false. Labels well-positioned;
+          some slightly close but all readable.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Markers well-sized (radius 20/15) with white edge highlighting. Vectors
-          and unit circle clearly visible.
+        comment: 'Excellent marker sizing for 8 points: roots radius 20, arbitrary
+          radius 15. Two distinct shapes (circle vs diamond) with white outlines.'
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Teal and amber palette is excellent colorblind-safe combination.
+        comment: Teal and amber palette explicitly chosen to avoid red-green confusion.
+          Good contrast against light background.
       - id: VQ-05
         name: Layout & Canvas
-        score: 2
+        score: 3
         max: 4
-        passed: false
-        comment: X-axis title partially cut off at bottom edge. Bottom margin insufficient
-          for 3600px canvas.
+        passed: true
+        comment: Square 3600x3600 canvas appropriate for equal-aspect-ratio. Generous
+          margins. Some unused vertical space at bottom.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Real Axis (Re) and Imaginary Axis (Im) are descriptive with standard
-          abbreviations.
+        comment: 'Descriptive labels: Real Axis (Re) and Imaginary Axis (Im) with
+          abbreviations.'
     design_excellence:
       score: 14
       max: 20
@@ -95,22 +100,23 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom teal/amber palette, off-white background, letter-spacing,
-          white-bordered markers. Above defaults.
+        comment: Custom teal/amber palette, custom background, letter-spacing on title,
+          white marker edges, intentional typography hierarchy. Clearly above defaults.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Grid removed, clean plotLines for axes, subtle legend styling, dashed
-          vectors.
+        comment: Dotted grid at 0.25 opacity, bold origin axes, white text outlines,
+          rounded legend border, generous whitespace. Axis lines remain on all sides.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Good hierarchy: larger markers for roots, different shapes per category,
-          dual annotation forms.'
+        comment: 'Clear visual hierarchy: roots are focal with larger teal markers,
+          arbitrary points secondary with smaller amber diamonds. Unit circle provides
+          geometric context.'
     spec_compliance:
       score: 15
       max: 15
@@ -120,26 +126,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct scatter plot in complex plane (Argand diagram) with vectors.
+        comment: Correct scatter plot in the complex plane (Argand diagram).
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features: axes through origin, dashed unit circle, vectors
-          with arrows, equal aspect ratio, annotations, distinct markers.'
+        comment: 'All required features present: axes through origin, dashed unit
+          circle, vectors with arrowheads, equal aspect ratio, rectangular+polar annotations,
+          distinct colors/markers.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Real on x-axis, imaginary on y-axis. All data visible.
+        comment: X=real, Y=imaginary, correct mapping. All data visible within axis
+          range.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows exact format. Legend correctly labels all series.
+        comment: Title follows exact format. Legend labels descriptive and match data.
     data_quality:
       score: 14
       max: 15
@@ -149,21 +157,22 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Shows roots of unity, arbitrary points across all quadrants, vectors,
-          dual notation. Could show sum/product.
+        comment: Shows roots of unity, arbitrary points in all quadrants, vectors,
+          both coordinate forms. Does not demonstrate complex operations (addition/multiplication).
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Roots of unity are foundational mathematical concept. Educationally
-          meaningful and neutral.
+        comment: Mathematical/educational context. Roots of unity are standard in
+          complex analysis education. Neutral and universally applicable.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Points range ±2.5 with axis range ±3.5. Good breathing room.
+        comment: 8 total points within spec range. Values between -2 and 2.5 sensible
+          for complex plane. Axis range provides good padding.
     code_quality:
       score: 9
       max: 10
@@ -172,34 +181,35 @@ review:
         name: KISS Structure
         score: 2
         max: 3
-        passed: false
-        comment: Contains arrowhead_points helper function, breaking strict KISS convention.
+        passed: true
+        comment: Linear script structure. No functions/classes. Code is long (~430
+          lines) with repetitive vector+arrowhead creation loops.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data is deterministic. No random generation.
+        comment: 'All data deterministic: roots from exact formulas, arbitrary points
+          as constants.'
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used.
+        comment: All imports used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-structured with clear sections. Custom per-point label offsets
-          show attention to detail.
+        comment: Clean variable naming, well-commented sections, proper arrowhead
+          geometry. No fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png via Selenium screenshot. Current highcharts_core
-          API.
+        comment: Saves as plot.png via Selenium. Uses current highcharts_core API.
     library_mastery:
       score: 7
       max: 10
@@ -209,23 +219,26 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of ScatterSeries/SplineSeries, per-point data labels, plotLines,
-          HTML tooltips.
+        comment: 'Proper highcharts_core usage: Chart with container, HighchartsOptions,
+          ScatterSeries/SplineSeries, data_labels, plotLines, z_index. CDN download
+          with fallback.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Interactive tooltips, hover states, SplineSeries for curves, plotLines,
-          floating legend, HTML export.
+        comment: Interactive tooltips with custom HTML, hover states, plotLines, SplineSeries
+          for curves, data labels with useHTML, HTML export. Annotations module downloaded
+          but not used through API.
   verdict: REJECTED
 impl_tags:
   dependencies:
   - selenium
   techniques:
   - annotations
-  - html-export
   - hover-tooltips
+  - html-export
+  - layer-composition
   - custom-legend
   patterns:
   - data-generation
@@ -233,4 +246,5 @@ impl_tags:
   dataprep: []
   styling:
   - edge-highlighting
+  - grid-styling
   - alpha-blending

@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 scatter-complex-plane: Complex Plane Visualization (Argand Diagram)
 Library: highcharts unknown | Python 3.14.3
-Quality: 85/100 | Created: 2026-03-04
+Quality: 86/100 | Created: 2026-03-04
 """
 
 import math
