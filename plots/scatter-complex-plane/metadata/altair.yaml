@@ -1,0 +1,233 @@
+library: altair
+specification_id: scatter-complex-plane
+created: '2026-03-04T20:22:49Z'
+updated: '2026-03-04T20:54:13Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22687521750
+issue: 4427
+python_version: 3.14.3
+library_version: 6.0.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/scatter-complex-plane/altair/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/scatter-complex-plane/altair/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/scatter-complex-plane/altair/plot.html
+quality_score: 90
+review:
+  strengths:
+  - Excellent spec compliance with all required features (unit circle, vectors, annotations,
+    equal aspect ratio)
+  - Strong data storytelling through rotation arc with π/4 label showing complex multiplication
+    as rotation
+  - Idiomatic Altair usage with layered composition and interactive legend selection
+  - Clean well-organized code with logical section structure
+  - Custom color palette and refined visual styling (subtle grid, removed frame, styled
+    axis labels)
+  weaknesses:
+  - 'Minor: arrowheads could be slightly larger for better visibility at full resolution'
+  - 'Minor: some label positions in Q1 (z and z₅) are close together despite offset
+    handling'
+  image_description: 'The plot displays an Argand diagram (complex plane visualization)
+    on a square canvas with a clean white background. The title "scatter-complex-plane
+    · altair · pyplots.ai" appears at the top in bold dark text (~28pt), with a descriptive
+    subtitle "Roots of unity, arbitrary points & rotation (z → z·e^(iπ/4)) in the
+    complex plane" below. Three categories of complex numbers are plotted: Roots of
+    Unity (steel blue) showing ω0, ω1, ω2 on the unit circle; Arbitrary points (orange)
+    including z₁ through z₅ spread across all four quadrants; and Transformation (purple)
+    showing z and z·e^(iπ/4). Vectors with triangular arrowheads extend from the origin
+    to each point. A dashed gray unit circle is centered at the origin. Custom axis
+    lines pass through the origin with italic "Re" and "Im" labels at the endpoints.
+    A dashed purple arc between z and its rotated form shows the π/4 rotation angle.
+    Each point is annotated with its label and rectangular form. The legend is positioned
+    in the top-right corner. The grid is extremely subtle with very low opacity dashes.'
+  criteria_checklist:
+    visual_quality:
+      score: 26
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set. Subtitle at 17pt slightly below 20pt
+          guideline but acceptable as secondary text.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Labels well-positioned with quadrant-based offsets and special handling
+          for nearby points. Minor closeness between z and z₅ in Q1.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Points at size=220 with white stroke clearly visible. Arrowheads
+          adequate but could be slightly larger.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue/orange/purple palette is colorblind-safe with excellent contrast.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Square canvas well-utilized. Legend slightly isolated in top-right
+          corner.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Real Axis and Imaginary Axis descriptive. Re/Im italic labels at
+          endpoints add clarity.
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom palette, white stroke on markers, styled italic axis labels,
+          cohesive color scheme. Clearly above defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Frame removed, grid extremely subtle, custom axis lines through origin,
+          generous title padding.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Rotation arc with π/4 label demonstrates complex multiplication.
+          Three categories create visual hierarchy. Subtitle narrates the story.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct scatter plot in the complex plane (Argand diagram).
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: axes through origin, dashed unit circle,
+          vectors, equal aspect ratio, annotations, distinct colors.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Real on x-axis, imaginary on y-axis, all data visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct. Legend labels match categories.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Demonstrates roots of unity, arbitrary points across all quadrants,
+          and complex transformation.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real mathematical scenario with neutral educational context.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values range ~-2.5 to 2.5, appropriate for the unit circle and complex
+          numbers.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear flow with no functions or classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only altair, numpy, pandas imported — all used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-organized with clear sections. Offset logic justified by positioning
+          needs.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot.png and plot.html. Current API.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert layered grammar: alt.layer(), proper encoding types, Scale/Axis/Legend
+          objects, alt.Title with subtitle.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Interactive legend selection with selection_point, tooltips, .interactive()
+          zoom/pan, HTML export.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  - hover-tooltips
+  - html-export
+  - custom-legend
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - edge-highlighting
+  - grid-styling
