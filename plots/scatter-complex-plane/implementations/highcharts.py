@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 scatter-complex-plane: Complex Plane Visualization (Argand Diagram)
-Library: highcharts | Python 3.13
-Quality: pending | Created: 2026-03-04
+Library: highcharts unknown | Python 3.14.3
+Quality: 78/100 | Created: 2026-03-04
 """
 
 import tempfile
