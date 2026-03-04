@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 bar-diverging-likert: Likert Scale Diverging Bar Chart
 Library: bokeh 3.8.2 | Python 3.14.3
-Quality: 88/100 | Created: 2026-03-04
+Quality: 90/100 | Created: 2026-03-04
 """
 
 import numpy as np
