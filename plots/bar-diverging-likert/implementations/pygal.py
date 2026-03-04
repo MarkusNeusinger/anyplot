@@ -1,9 +1,11 @@
-""" pyplots.ai
+"""pyplots.ai
 bar-diverging-likert: Likert Scale Diverging Bar Chart
 Library: pygal 3.1.0 | Python 3.14.3
-Quality: 85/100 | Created: 2026-03-04
 """
 
+import re
+
+import cairosvg
 import pygal
 from pygal.style import Style
 
@@ -21,14 +23,15 @@ questions = [
 ]
 
 # Response percentages: (Strongly Disagree, Disagree, Neutral, Agree, Strongly Agree)
+# Includes strongly negative (compensation, vision) and strongly positive (collaboration)
 responses = [
     (5, 10, 15, 40, 30),
     (8, 15, 20, 35, 22),
     (12, 22, 18, 30, 18),
     (6, 12, 22, 38, 22),
-    (15, 25, 20, 28, 12),
-    (4, 8, 12, 42, 34),
-    (10, 18, 25, 30, 17),
+    (22, 30, 18, 20, 10),
+    (3, 7, 10, 42, 38),
+    (18, 28, 22, 22, 10),
     (7, 14, 16, 38, 25),
 ]
 
@@ -44,7 +47,7 @@ custom_style = Style(
     plot_background="white",
     foreground="#333333",
     foreground_strong="#333333",
-    foreground_subtle="#e0e0e0",
+    foreground_subtle="white",
     colors=("#D9D9D9", "#EF8A62", "#B2182B", "#D9D9D9", "#67A9CF", "#2166AC"),
     title_font_size=72,
     label_font_size=44,
@@ -96,6 +99,14 @@ chart.add("Strongly Agree", strongly_agree_vals)
 
 chart.x_labels = questions
 
-# Save
-chart.render_to_png("plot.png")
-chart.render_to_file("plot.html")
+# Render SVG and strip guide lines (pygal renders them despite show_x_guides=False)
+svg_content = chart.render().decode("utf-8")
+
+# Remove guide line paths but keep axis text labels
+svg_content = re.sub(r'<path [^>]*class="(?:major )?(?:axis major )?guide line"[^/]*/>', "", svg_content)
+
+# Save cleaned SVG as PNG and HTML
+cairosvg.svg2png(bytestring=svg_content.encode("utf-8"), write_to="plot.png")
+
+with open("plot.html", "w") as f:
+    f.write(svg_content)
