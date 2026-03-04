@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 scatter-complex-plane: Complex Plane Visualization (Argand Diagram)
 Library: altair 6.0.0 | Python 3.14.3
 Quality: 79/100 | Created: 2026-03-04
@@ -16,12 +16,21 @@ np.random.seed(42)
 n_roots = 3
 roots_of_unity = [np.exp(2j * np.pi * k / n_roots) for k in range(n_roots)]
 
-# Additional complex numbers for variety
+# Additional complex numbers spread across all quadrants
 arbitrary_points = [2.5 + 1.5j, -1.8 + 2.2j, 1.0 - 2.0j, -0.5 - 1.5j, 2.0 + 0.5j]
 
 # Complex multiplication example: rotate and scale
 z_original = 1.5 + 0.8j
 z_rotated = z_original * np.exp(1j * np.pi / 4)  # rotate 45 degrees
+
+
+def fmt_complex(z, decimals=2):
+    """Format complex number as a+bi string."""
+    r, i = round(z.real, decimals), round(z.imag, decimals)
+    if i >= 0:
+        return f"{r}+{i}i"
+    return f"{r}{i}i"
+
 
 all_points = []
 
@@ -32,7 +41,7 @@ for k, z in enumerate(roots_of_unity):
             "real": z.real,
             "imaginary": z.imag,
             "label": f"ω{k}",
-            "annotation": f"{z.real:.2f}{z.imag:+.2f}i",
+            "rect_form": fmt_complex(z),
             "category": "Roots of Unity",
         }
     )
@@ -41,13 +50,7 @@ for k, z in enumerate(roots_of_unity):
 labels_arb = ["z₁", "z₂", "z₃", "z₄", "z₅"]
 for lbl, z in zip(labels_arb, arbitrary_points, strict=True):
     all_points.append(
-        {
-            "real": z.real,
-            "imaginary": z.imag,
-            "label": lbl,
-            "annotation": f"{z.real:.1f}{z.imag:+.1f}i",
-            "category": "Arbitrary",
-        }
+        {"real": z.real, "imaginary": z.imag, "label": lbl, "rect_form": fmt_complex(z, 1), "category": "Arbitrary"}
     )
 
 # Add transformation pair
@@ -56,7 +59,7 @@ all_points.append(
         "real": z_original.real,
         "imaginary": z_original.imag,
         "label": "z",
-        "annotation": f"{z_original.real:.1f}{z_original.imag:+.1f}i",
+        "rect_form": fmt_complex(z_original, 1),
         "category": "Transformation",
     }
 )
@@ -65,12 +68,15 @@ all_points.append(
         "real": z_rotated.real,
         "imaginary": z_rotated.imag,
         "label": "z·e^(iπ/4)",
-        "annotation": f"{z_rotated.real:.2f}{z_rotated.imag:+.2f}i",
+        "rect_form": fmt_complex(z_rotated),
         "category": "Transformation",
     }
 )
 
 df = pd.DataFrame(all_points)
+
+# Combined annotation: label + rectangular form
+df["annotation_text"] = df["label"] + " = " + df["rect_form"]
 
 # Unit circle data (parametric)
 theta = np.linspace(0, 2 * np.pi, 200)
@@ -85,8 +91,8 @@ for _, row in df.iterrows():
     )
 arrow_df = pd.DataFrame(arrow_data)
 
-# Axis range
-axis_limit = 3.2
+# Axis range - tight to fill canvas while keeping unit circle visible
+axis_limit = 2.8
 
 # Axis lines through origin
 axis_line_data = pd.DataFrame(
@@ -100,6 +106,8 @@ axis_line_data = pd.DataFrame(
 
 # Color palette
 category_colors = ["#306998", "#E8822A", "#6A5ACD"]
+category_domain = ["Roots of Unity", "Arbitrary", "Transformation"]
+color_scale = alt.Scale(domain=category_domain, range=category_colors)
 
 # Axis lines
 axes = (
@@ -115,7 +123,7 @@ unit_circle = (
     .encode(x="x:Q", y="y:Q", order="order:O")
 )
 
-# Vector arrows from origin
+# Vector arrows from origin (use strokeColor to avoid legend merge with points' color)
 vectors = (
     alt.Chart(arrow_df)
     .mark_line(strokeWidth=2, opacity=0.7)
@@ -124,15 +132,11 @@ vectors = (
         y="y:Q",
         detail="group:N",
         order="order:O",
-        color=alt.Color(
-            "category:N",
-            scale=alt.Scale(domain=["Roots of Unity", "Arbitrary", "Transformation"], range=category_colors),
-            legend=alt.Legend(title="Category", titleFontSize=18, labelFontSize=16, symbolSize=200),
-        ),
+        color=alt.Color("category:N", scale=color_scale, legend=None),
     )
 )
 
-# Scatter points
+# Scatter points - this layer drives the legend with filled circle markers
 points = (
     alt.Chart(df)
     .mark_point(filled=True, size=200, stroke="white", strokeWidth=1.5, opacity=0.9)
@@ -167,22 +171,30 @@ points = (
         ),
         color=alt.Color(
             "category:N",
-            scale=alt.Scale(domain=["Roots of Unity", "Arbitrary", "Transformation"], range=category_colors),
-            legend=None,
+            scale=color_scale,
+            legend=alt.Legend(
+                title="Category",
+                titleFontSize=18,
+                labelFontSize=16,
+                symbolType="circle",
+                symbolSize=200,
+                symbolStrokeWidth=0,
+            ),
         ),
         tooltip=[
             alt.Tooltip("label:N", title="Label"),
-            alt.Tooltip("annotation:N", title="Value"),
+            alt.Tooltip("rect_form:N", title="Value (a+bi)"),
             alt.Tooltip("category:N", title="Category"),
         ],
     )
 )
 
-# Point annotations
+# Point annotations showing label = a+bi (rectangular form)
+# Use dy offset to avoid overlap; adjust per-point via calculated field
 annotations = (
     alt.Chart(df)
-    .mark_text(fontSize=13, fontWeight="bold", dy=-16, color="#333333")
-    .encode(x="real:Q", y="imaginary:Q", text="label:N")
+    .mark_text(fontSize=13, fontWeight="bold", dy=-18, color="#333333")
+    .encode(x="real:Q", y="imaginary:Q", text="annotation_text:N")
 )
 
 # Axis labels at ends
@@ -209,6 +221,7 @@ chart = (
             subtitleColor="#777777",
         ),
     )
+    .resolve_scale(color="independent")
     .configure_axis(titlePadding=12)
     .configure_view(strokeWidth=0)
     .interactive()
