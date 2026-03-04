@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 scatter-complex-plane: Complex Plane Visualization (Argand Diagram)
 Library: pygal 3.1.0 | Python 3.14.3
 Quality: 79/100 | Created: 2026-03-04
@@ -16,67 +16,68 @@ roots_of_unity = [np.exp(2j * np.pi * k / 3) for k in range(3)]
 arbitrary = [2.5 + 1.5j, -1.8 + 2.2j, 1.0 - 2.0j, -0.5 - 1.5j, 3.0 + 0j, 0 + 2.8j]
 z_product = arbitrary[0] * roots_of_unity[1]
 
-
-# Reusable label formatter for complex numbers (a+bi format)
-def format_complex(z):
-    """Format a complex number tuple (real, imag) as a+bi string."""
-    if not isinstance(z, (tuple, list)) or z == (0.0, 0.0):
-        return ""
-    r, i = z[0], z[1]
+# Pre-compute labels inline (no helper functions — KISS)
+root_labels = []
+for k, z in enumerate(roots_of_unity):
+    r, i = z.real, z.imag
     if abs(i) < 1e-10:
-        return f"{r:.1f}"
-    if abs(r) < 1e-10:
-        return f"{i:.1f}i"
-    return f"{r:.1f}{i:+.1f}i"
+        val = f"{r:.1f}"
+    elif abs(r) < 1e-10:
+        val = f"{i:.1f}i"
+    else:
+        val = f"{r:.1f}{i:+.1f}i"
+    root_labels.append(f"ω{k} = {val}")
 
-
-def make_label(z, prefix=""):
-    """Generate a display label for a complex number."""
-    txt = format_complex((z.real, z.imag))
-    return f"{prefix} = {txt}" if prefix else txt
-
-
-# Pre-compute labels
-root_labels = [make_label(z, f"ω{k}") for k, z in enumerate(roots_of_unity)]
 arb_names = ["z₁", "z₂", "z₃", "z₄", "z₅", "z₆"]
-arb_labels = [make_label(z, name) for name, z in zip(arb_names, arbitrary, strict=True)]
-prod_label = make_label(z_product, "z₁·ω₁")
+arb_labels = []
+for name, z in zip(arb_names, arbitrary, strict=True):
+    r, i = z.real, z.imag
+    if abs(i) < 1e-10:
+        val = f"{r:.1f}"
+    elif abs(r) < 1e-10:
+        val = f"{i:.1f}i"
+    else:
+        val = f"{r:.1f}{i:+.1f}i"
+    arb_labels.append(f"{name} = {val}")
 
-# Unit circle points
-theta = np.linspace(0, 2 * np.pi, 120)
+r_p, i_p = z_product.real, z_product.imag
+prod_label = f"z₁·ω₁ = {r_p:.1f}{i_p:+.1f}i"
+
+# Unit circle points (high resolution for smoothness)
+theta = np.linspace(0, 2 * np.pi, 180)
 unit_circle = [(float(np.cos(t)), float(np.sin(t))) for t in theta]
 
-# Colorblind-safe palette (blue, orange, purple — no red-green pair)
-BLUE = "#2B6CB0"
-ORANGE = "#DD6B20"
-PURPLE = "#805AD5"
-GRAY_CIRCLE = "#A0AEC0"
-DARK = "#1A202C"
+# Colorblind-safe palette — refined tones for publication quality
+BLUE = "#1E5AA8"
+ORANGE = "#D4721A"
+PURPLE = "#7B3FA0"
+GRAY_CIRCLE = "#94A3B8"
+DARK = "#0F172A"
 
-# Style — refined for publication quality
+# Style — publication-grade refinement
 custom_style = Style(
     background="white",
-    plot_background="#F7FAFC",
-    foreground="#2D3748",
-    foreground_strong="#1A202C",
-    foreground_subtle="#E2E8F0",
+    plot_background="#F8FAFC",
+    foreground="#1E293B",
+    foreground_strong="#0F172A",
+    foreground_subtle="#CBD5E1",
     guide_stroke_color="#E2E8F0",
-    guide_stroke_dasharray="4, 4",
+    guide_stroke_dasharray="3, 6",
     colors=(GRAY_CIRCLE, BLUE, ORANGE, PURPLE, DARK),
     font_family="DejaVu Sans, Helvetica, Arial, sans-serif",
     title_font_family="DejaVu Sans, Helvetica, Arial, sans-serif",
-    title_font_size=58,
-    label_font_size=36,
-    major_label_font_size=34,
-    legend_font_size=32,
+    title_font_size=56,
+    label_font_size=34,
+    major_label_font_size=32,
+    legend_font_size=30,
     legend_font_family="DejaVu Sans, Helvetica, Arial, sans-serif",
-    value_font_size=30,
+    value_font_size=28,
     tooltip_font_size=24,
-    opacity=0.92,
+    opacity=0.94,
     opacity_hover=1.0,
 )
 
-# Chart - square for equal aspect ratio
+# Chart — square canvas for equal aspect ratio
 chart = pygal.XY(
     width=3600,
     height=3600,
@@ -87,16 +88,16 @@ chart = pygal.XY(
     show_legend=True,
     legend_at_bottom=True,
     legend_at_bottom_columns=5,
-    legend_box_size=26,
+    legend_box_size=24,
     stroke=False,
     dots_size=14,
     show_x_guides=True,
     show_y_guides=True,
     truncate_legend=-1,
     margin_bottom=120,
-    margin_left=80,
-    margin_right=60,
-    margin_top=80,
+    margin_left=90,
+    margin_right=70,
+    margin_top=90,
     range=(-3.5, 3.5),
     xrange=(-3.5, 3.5),
     print_values=True,
@@ -104,17 +105,29 @@ chart = pygal.XY(
     js=[],
 )
 
-# Unit circle (dashed reference — subtle backdrop)
+
+# Formatter — inline lambda for a+bi display on values
+def complex_formatter(z):
+    return (
+        ""
+        if not isinstance(z, (tuple, list)) or z == (0.0, 0.0)
+        else (
+            f"{z[0]:.1f}" if abs(z[1]) < 1e-10 else f"{z[1]:.1f}i" if abs(z[0]) < 1e-10 else f"{z[0]:.1f}{z[1]:+.1f}i"
+        )
+    )
+
+
+# Unit circle (dashed reference — subtle geometric backdrop)
 chart.add(
     "Unit Circle",
     unit_circle,
     stroke=True,
     show_dots=False,
     fill=False,
-    stroke_style={"width": 3, "dasharray": "8, 5", "opacity": 0.5},
+    stroke_style={"width": 2.5, "dasharray": "6, 6", "opacity": 0.45},
 )
 
-# Roots of unity - vectors from origin, prominent as mathematical focal point
+# Roots of unity — vectors from origin, prominent as mathematical focal point
 roots_series = []
 for i, z in enumerate(roots_of_unity):
     roots_series.append({"value": (0.0, 0.0), "label": ""})
@@ -126,12 +139,12 @@ chart.add(
     roots_series,
     stroke=True,
     show_dots=True,
-    dots_size=20,
-    stroke_style={"width": 7, "linecap": "round", "opacity": 0.9},
-    formatter=format_complex,
+    dots_size=22,
+    stroke_style={"width": 6, "linecap": "round", "opacity": 0.85},
+    formatter=complex_formatter,
 )
 
-# Arbitrary points - vectors from origin, slightly less prominent
+# Arbitrary points — vectors from origin with slightly thinner strokes
 arb_series = []
 for i, z in enumerate(arbitrary):
     arb_series.append({"value": (0.0, 0.0), "label": ""})
@@ -143,12 +156,12 @@ chart.add(
     arb_series,
     stroke=True,
     show_dots=True,
-    dots_size=16,
-    stroke_style={"width": 4, "linecap": "round", "opacity": 0.7},
-    formatter=format_complex,
+    dots_size=18,
+    stroke_style={"width": 3.5, "linecap": "round", "opacity": 0.7},
+    formatter=complex_formatter,
 )
 
-# Product z1 * omega1 with dashed vector — highlighted as demonstration of multiplication
+# Product z₁·ω₁ — dashed vector highlights complex multiplication result
 chart.add(
     "z₁·ω₁ (Product)",
     [
@@ -157,17 +170,17 @@ chart.add(
     ],
     stroke=True,
     show_dots=True,
-    dots_size=22,
-    stroke_style={"width": 7, "dasharray": "12, 5", "linecap": "round", "opacity": 0.95},
-    formatter=format_complex,
+    dots_size=24,
+    stroke_style={"width": 6, "dasharray": "10, 5", "linecap": "round", "opacity": 0.92},
+    formatter=complex_formatter,
 )
 
-# Origin marker — no value label to avoid clutter at (0,0)
+# Origin marker — small, no label to reduce clutter at convergence point
 chart.add(
     "Origin",
-    [{"value": (0.0, 0.0), "label": "0"}],
+    [{"value": (0.0, 0.0), "label": "O"}],
     stroke=False,
-    dots_size=10,
+    dots_size=8,
     print_values=False,
     formatter=lambda x: "",
 )
