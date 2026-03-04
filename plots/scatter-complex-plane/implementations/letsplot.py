@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 scatter-complex-plane: Complex Plane Visualization (Argand Diagram)
 Library: letsplot 4.8.2 | Python 3.14.3
-Quality: 84/100 | Created: 2026-03-04
+Quality: 85/100 | Created: 2026-03-04
 """
 
 import numpy as np
