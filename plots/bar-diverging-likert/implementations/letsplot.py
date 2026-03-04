@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 bar-diverging-likert: Likert Scale Diverging Bar Chart
-Library: letsplot | Python 3.13
-Quality: pending | Created: 2026-03-04
+Library: letsplot 4.8.2 | Python 3.14.3
+Quality: 84/100 | Created: 2026-03-04
 """
 
 import pandas as pd
