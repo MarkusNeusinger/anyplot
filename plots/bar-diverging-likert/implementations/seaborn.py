@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 bar-diverging-likert: Likert Scale Diverging Bar Chart
 Library: seaborn 0.13.2 | Python 3.14.3
 Quality: 82/100 | Created: 2026-03-04
@@ -11,7 +11,12 @@ import seaborn as sns
 from matplotlib.patches import Patch
 
 
+# Configure seaborn theme and context for consistent styling
+sns.set_style("white")
+sns.set_context("talk", font_scale=1.1)
+
 # Data - Employee engagement survey (8 questions, 5-point Likert scale)
+# Includes mix of positive and negative net agreement for diverging contrast
 questions = [
     "Career growth opportunities",
     "Work-life balance",
@@ -25,11 +30,11 @@ questions = [
 
 survey_data = {
     "question": questions,
-    "strongly_disagree": [5, 8, 3, 12, 15, 4, 10, 6],
-    "disagree": [10, 14, 7, 18, 20, 8, 16, 12],
-    "neutral": [15, 18, 12, 20, 15, 14, 18, 16],
-    "agree": [40, 35, 45, 30, 30, 42, 32, 38],
-    "strongly_agree": [30, 25, 33, 20, 20, 32, 24, 28],
+    "strongly_disagree": [5, 8, 3, 14, 20, 4, 10, 6],
+    "disagree": [10, 14, 7, 22, 28, 8, 18, 12],
+    "neutral": [15, 18, 12, 20, 17, 14, 16, 16],
+    "agree": [40, 35, 45, 28, 22, 42, 32, 38],
+    "strongly_agree": [30, 25, 33, 16, 13, 32, 24, 28],
 }
 
 df = pd.DataFrame(survey_data)
@@ -38,22 +43,15 @@ df = pd.DataFrame(survey_data)
 df["net_agreement"] = df["agree"] + df["strongly_agree"] - df["disagree"] - df["strongly_disagree"]
 df = df.sort_values("net_agreement").reset_index(drop=True)
 
-# Diverging color palette (colorblind-safe)
-colors = {
-    "strongly_disagree": "#c0392b",
-    "disagree": "#e78c8c",
-    "neutral": "#b8b8b8",
-    "agree": "#7db8d9",
-    "strongly_agree": "#306998",
-}
-
-category_names = ["Strongly Disagree", "Disagree", "Neutral", "Agree", "Strongly Agree"]
+# Generate diverging color palette using seaborn's HSL-based interpolation
+pal = list(sns.diverging_palette(10, 220, s=75, l=55, n=5))
+pal[2] = (0.72, 0.72, 0.72)  # Visible neutral gray (center="light" is near-white)
 category_keys = ["strongly_disagree", "disagree", "neutral", "agree", "strongly_agree"]
+category_names = ["Strongly Disagree", "Disagree", "Neutral", "Agree", "Strongly Agree"]
+colors = dict(zip(category_keys, pal, strict=True))
 
 # Plot
-sns.set_style("white")
 fig, ax = plt.subplots(figsize=(16, 9))
-
 bar_height = 0.65
 
 for idx, row in df.iterrows():
@@ -105,19 +103,19 @@ for idx, row in df.iterrows():
 
     # Percentage labels inside segments (only where width >= 10%)
     segments = [
-        (sd_left + row["strongly_disagree"] / 2, row["strongly_disagree"], "#ffffff"),
+        (sd_left + row["strongly_disagree"] / 2, row["strongly_disagree"], "white"),
         (d_left + row["disagree"] / 2, row["disagree"], "#333333"),
         (0, row["neutral"], "#555555"),
         (a_left + row["agree"] / 2, row["agree"], "#333333"),
-        (sa_left + row["strongly_agree"] / 2, row["strongly_agree"], "#ffffff"),
+        (sa_left + row["strongly_agree"] / 2, row["strongly_agree"], "white"),
     ]
     for x_center, value, text_color in segments:
         if value >= 10:
             ax.text(
-                x_center, idx, f"{value}%", ha="center", va="center", fontsize=12, fontweight="medium", color=text_color
+                x_center, idx, f"{value}%", ha="center", va="center", fontsize=14, fontweight="medium", color=text_color
             )
 
-# Style
+# Axis styling
 ax.set_yticks(range(len(df)))
 ax.set_yticklabels(df["question"], fontsize=16)
 ax.set_xlabel("Percentage", fontsize=20, labelpad=10)
@@ -126,14 +124,15 @@ ax.set_title(
 )
 ax.tick_params(axis="x", labelsize=16)
 ax.axvline(0, color="#333333", linewidth=1.0, zorder=3)
-ax.spines["top"].set_visible(False)
-ax.spines["right"].set_visible(False)
 ax.xaxis.set_major_formatter(mticker.FuncFormatter(lambda x, _: f"{abs(int(x))}%"))
 ax.xaxis.grid(True, alpha=0.15, linewidth=0.8)
 ax.yaxis.grid(False)
 ax.set_axisbelow(True)
 
-# Legend
+# Remove spines using seaborn's despine utility
+sns.despine(ax=ax)
+
+# Legend using seaborn-generated palette colors
 legend_elements = [Patch(facecolor=colors[k], label=n) for k, n in zip(category_keys, category_names, strict=True)]
 ax.legend(handles=legend_elements, loc="upper center", bbox_to_anchor=(0.5, -0.1), ncol=5, fontsize=14, frameon=False)
 
