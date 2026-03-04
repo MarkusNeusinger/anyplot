@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 scatter-complex-plane: Complex Plane Visualization (Argand Diagram)
-Library: plotnine | Python 3.13
-Quality: pending | Created: 2026-03-04
+Library: plotnine 0.15.3 | Python 3.14.3
+Quality: 78/100 | Created: 2026-03-04
 """
 
 import numpy as np
