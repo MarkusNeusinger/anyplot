@@ -1,7 +1,7 @@
 library: highcharts
 specification_id: bar-diverging-likert
 created: '2026-03-04T06:14:48Z'
-updated: '2026-03-04T06:20:25Z'
+updated: '2026-03-04T06:31:39Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 22657236120
 issue: 4429
@@ -10,110 +10,108 @@ library_version: unknown
 preview_url: https://storage.googleapis.com/pyplots-images/plots/bar-diverging-likert/highcharts/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/bar-diverging-likert/highcharts/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/bar-diverging-likert/highcharts/plot.html
-quality_score: 86
+quality_score: 93
 review:
   strengths:
-  - Perfect spec compliance — all diverging chart features implemented correctly with
-    centered neutral, proper sorting, and conditional data labels
-  - Excellent diverging color palette with thoughtful red-to-blue scheme and muted
-    gray neutral
-  - 'Smart use of Highcharts features: linkedTo for clean legend, plotLines for center
-    axis, conditional per-point data labels'
-  - Realistic employee engagement survey data showing excellent variety across 8 questions
-  - Clean, well-structured code with elegant neutral-split approach
+  - Excellent neutral split implementation using linked_to for unified legend entry
+    — idiomatic Highcharts approach
+  - Smart conditional data labels (>=8% threshold) preventing crowding in narrow segments
+  - Strong diverging color palette with good colorblind accessibility
+  - Sorting by net agreement creates immediate visual narrative
+  - Clean, well-structured code with robust CDN fallback
   weaknesses:
-  - Y-axis tick labels show raw stacked numbers without percent units — confusing
-    for a percentage chart
-  - Neutral percentages are completely hidden — could show at least on wider neutral
-    segments
-  - Some unused canvas space on the right side (axis extends to 90 but max bar reaches
-    ~77)
-  image_description: The plot shows a horizontal diverging stacked bar chart titled
+  - Y-axis max (80) does not fully accommodate the longest bar (Meaningful work right
+    side totals 81), causing potential 1% clipping
+  - Design refinement is good but not yet publication-perfect (standard legend style,
+    basic grid lines)
+  image_description: 'The plot displays a horizontal diverging stacked bar chart titled
     "bar-diverging-likert · highcharts · pyplots.ai" with subtitle "Employee Engagement
-    Survey Results". Eight survey questions are listed along the left y-axis, sorted
-    from lowest net agreement at top ("Adequate resources") to highest at bottom ("Meaningful
-    work"). Bars diverge from a central vertical line at 0. Left-side bars use dark
-    red (#C0392B) for Strongly Disagree and lighter pink-red (#E57373) for Disagree.
-    Right-side bars use light blue (#64B5F6) for Agree and dark blue (#306998) for
-    Strongly Agree. Neutral responses are shown in muted gray (#B0BEC5), split evenly
-    across the center. Percentage data labels are displayed inside each segment where
-    space permits (hidden for values < 8%). The bottom axis shows numeric values from
-    -60 to 90 with the label "← Disagree | Agree →". A legend at the bottom identifies
-    all five categories in correct order. The color scheme creates a clean red-to-blue
-    diverging palette with a muted neutral center.
+    Survey Results." Eight survey questions are arranged vertically, sorted by net
+    agreement from lowest (top: "Adequate resources") to highest (bottom: "Meaningful
+    work"). Bars diverge from a central vertical black line at 0%. The left side shows
+    disagreement: dark red (#C0392B) for Strongly Disagree and lighter red/pink (#E57373)
+    for Disagree. The right side shows agreement: light blue (#64B5F6) for Agree and
+    dark blue (#306998) for Strongly Agree. Gray segments (#B0BEC5) for Neutral are
+    split evenly across the center. Percentage labels appear inside bar segments where
+    space permits (threshold of 8%), with white text on dark backgrounds and dark
+    text on light backgrounds. The y-axis shows absolute percentages from 0-80% in
+    both directions with a label "← Disagree | Agree →". A horizontal legend at the
+    bottom shows all five categories in order. The overall color palette is a clean
+    red-to-blue diverging scheme with muted gray neutral.'
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 48px, subtitle 32px, labels
-          28px, axis 24px, legend 30px, data labels 20px). All readable. Data labels
-          slightly small but legible.
+        comment: 'All font sizes explicitly set: title 48px, subtitle 32px, category
+          labels 28px, axis labels 24px, data labels 22px. All clearly readable at
+          4800x2700.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text. Category labels have ample space. Data labels
-          conditionally hidden for segments < 8%.
+        comment: No overlapping text. Data labels conditionally hidden for segments
+          <8% preventing crowding.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Bar segments well-sized (pointWidth=55). Split neutral segments are
-          small but visible.
+        comment: 'Bar segments well-sized (pointWidth: 55) with clear color differentiation.
+          Even small segments remain visible.'
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Red-to-blue diverging palette is colorblind-safe with good luminance
-          contrast.
+        comment: Red-blue diverging scheme is colorblind-safe. Warm-cool contrast
+          works for deuteranopia/protanopia.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good canvas use but axis extends to 90 while max bar reaches ~77,
-          creating wasted space on right.
+        comment: 'Good proportions with explicit margins. Minor issue: y-axis max=80
+          but Meaningful work right side extends to 81, causing potential 1% clipping.'
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Descriptive axis label but tick values show raw stacked numbers without
-          % units.
+        passed: true
+        comment: Y-axis title descriptive with direction arrows. Tick labels show
+          absolute percentages with % symbol.
     design_excellence:
-      score: 13
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Custom diverging palette, professional typography hierarchy. Above
-          default but not publication-ready.
+        comment: Custom diverging palette with intentional typography hierarchy. Professional,
+          cohesive design clearly above defaults.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Axis lines/ticks removed, subtle grid, no bar borders, bold center
-          plotLine. Good refinement.
+        comment: Subtle grid, removed axis spines/ticks, borderless bars, credits
+          disabled, clean center plotLine. Most details polished.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Sorted by net agreement creates clear gradient. Diverging colors
-          guide viewer to compare positive vs negative.
+        comment: Questions sorted by net agreement creating clear narrative. Diverging
+          layout communicates sentiment direction. No explicit annotations but visual
+          hierarchy guides reader.
     spec_compliance:
       score: 15
       max: 15
@@ -129,22 +127,22 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: centered neutral, diverging colors, sorted
-          by net agreement, conditional data labels.'
+        comment: 'All spec features present: neutral split, diverging colors, sorting,
+          conditional labels, horizontal orientation.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Questions on categories, percentages as bar lengths, negative for
-          disagree, positive for agree.
+        comment: Questions on category axis, percentages on value axis. Negative for
+          disagree, positive for agree. Neutral correctly split.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format. Legend shows all 5 categories in order with
-          linkedTo for neutral dedup.
+        comment: Title matches format. Legend shows all five categories with correct
+          ordering via legend_index.
     data_quality:
       score: 15
       max: 15
@@ -154,20 +152,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Full range of Likert distributions: strongly positive, strongly
-          negative, balanced, and mixed patterns across 8 questions.'
+        comment: Good variety in agreement distributions from heavily negative to
+          heavily positive with different neutral proportions.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Employee engagement survey with plausible, neutral HR topics.
+        comment: Employee engagement survey is realistic and neutral. Question labels
+          are meaningful.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Percentages sum to 100 per question. Realistic survey value distributions.
+        comment: All rows sum to 100%. Percentages in plausible 5-39% range for survey
+          data.
     code_quality:
       score: 10
       max: 10
@@ -177,51 +177,53 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean Imports → Data → Plot → Render flow. No functions or classes.
+        comment: 'Clean linear flow: Imports, Data, Processing, Chart config, Series,
+          Render. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic hardcoded data.
+        comment: Fully deterministic hardcoded data. No random elements.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used.
+        comment: All imports used in the code.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean conditional logic, elegant neutral split, linkedTo for legend
-          dedup.
+        comment: Clean conditional data label logic. CDN fallback with retry is robust.
+          Well-commented series construction.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png via container screenshot. Current API.
+        comment: Saves as plot.png via container screenshot. Uses current highcharts-core
+          API.
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert use of highcharts-core: HighchartsOptions, BarSeries, stacking
+          via plot_options, proper container specification.'
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Proper HighchartsOptions/BarSeries usage. Leverages plotOptions stacking,
-          plotLines, linkedTo, legendIndex.
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: Uses Highcharts-specific linkedTo, plotLines, legendIndex, per-point
-          dataLabels config.
-  verdict: REJECTED
+        comment: linked_to for unified neutral legend entry, CallbackFunction.from_js_literal()
+          for JS formatter, legend_index for ordering, plotLines for center reference.
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
@@ -229,7 +231,6 @@ impl_tags:
   - html-export
   patterns:
   - data-generation
-  - iteration-over-groups
   dataprep: []
   styling:
   - grid-styling
