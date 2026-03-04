@@ -1,6 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 scatter-complex-plane: Complex Plane Visualization (Argand Diagram)
 Library: plotly 6.6.0 | Python 3.14.3
+Quality: 90/100 | Created: 2026-03-04
 """
 
 import numpy as np
