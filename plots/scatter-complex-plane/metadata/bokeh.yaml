@@ -1,0 +1,227 @@
+library: bokeh
+specification_id: scatter-complex-plane
+created: '2026-03-04T20:25:07Z'
+updated: '2026-03-04T20:53:28Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22687521719
+issue: 4427
+python_version: 3.14.3
+library_version: 3.8.2
+preview_url: https://storage.googleapis.com/pyplots-images/plots/scatter-complex-plane/bokeh/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/scatter-complex-plane/bokeh/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/scatter-complex-plane/bokeh/plot.html
+quality_score: 86
+review:
+  strengths:
+  - Full spec compliance with all required features (axes, unit circle, vectors, annotations,
+    equal aspect ratio)
+  - Custom color palette with intentional visual hierarchy via marker sizes and arrow
+    alpha
+  - 'Excellent use of Bokeh-specific features: hover tooltips with |z| and arg(z),
+    interactive tools, HTML export'
+  - Clean deterministic code with well-structured label placement logic
+  - Good data storytelling through category differentiation (roots of unity, conjugates,
+    products)
+  weaknesses:
+  - Label crowding near origin where roots of unity cluster on the unit circle
+  - Unit circle could be slightly more prominent (higher alpha or thicker dash)
+  - Missing sum/addition example mentioned in spec example data description
+  image_description: 'The plot shows a square Argand diagram (complex plane) at 3600x3600px
+    with the title "scatter-complex-plane · bokeh · pyplots.ai" at the top. A dashed
+    gray unit circle is centered at the origin. Dark gray axes pass through the origin,
+    labeled "Real Axis" (horizontal) and "Imaginary Axis" (vertical). Fourteen complex
+    numbers are plotted as colored scatter points with arrows from the origin: 5th
+    roots of unity in dark blue (#306998), arbitrary points in orange (#D4762C), a
+    conjugate pair in teal (#2AA198), and a product point in pink/magenta (#C4386B).
+    Each point has a text label showing its rectangular form (e.g., "1.5+2i", "-0.81+0.59i").
+    The legend in the top-left lists all five categories including the unit circle.
+    Grid lines are very subtle. The background is clean white with no outline border.
+    Markers have white edge lines and vary in size by category. Arrow alpha varies
+    by category for visual hierarchy.'
+  criteria_checklist:
+    visual_quality:
+      score: 26
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 38pt, axis labels 28pt, tick
+          labels 20pt, point labels 20pt, legend 22pt'
+      - id: VQ-02
+        name: No Overlap
+        score: 4
+        max: 6
+        passed: true
+        comment: Some label crowding near roots of unity clustered on unit circle
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Markers clearly visible, unit circle slightly faint
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue, orange, teal, magenta palette is colorblind-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Square format appropriate, some empty corners inherent to domain
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Standard descriptive labels for complex plane domain
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom palette, marker size hierarchy, alpha variation, white edge
+          highlighting
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Outline removed, subtle grid, subdued axis lines, clean background
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Visual hierarchy through marker sizes, coherent mathematical story
+          via categories
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Argand diagram / complex plane scatter
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All required: axes, unit circle, vectors, annotations, equal aspect,
+          categories'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Real on x, imaginary on y, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct title format and legend labels
+    data_quality:
+      score: 13
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows roots of unity, arbitrary points, conjugates, products. Missing
+          sum/addition
+      - id: DQ-02
+        name: Realistic Context
+        score: 4
+        max: 5
+        passed: true
+        comment: Mathematical/educational context with real concepts
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values range ±3.5, appropriate for unit circle and surrounding points
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean linear flow, no functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: All data deterministic from mathematical formulas
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-structured with justified label collision avoidance
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot.png and plot.html, current API
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses ColumnDataSource, figure, LegendItem, Arrow/NormalHead, Span
+          properly
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Hover tooltips with magnitude/angle, interactive tools, HTML export,
+          autohide toolbar
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  - columndatasource
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
+  - grid-styling

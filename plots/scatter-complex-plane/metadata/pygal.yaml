@@ -1,0 +1,223 @@
+library: pygal
+specification_id: scatter-complex-plane
+created: '2026-03-04T20:25:25Z'
+updated: '2026-03-04T20:50:29Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22687521803
+issue: 4427
+python_version: 3.14.3
+library_version: 3.1.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/scatter-complex-plane/pygal/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/scatter-complex-plane/pygal/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/scatter-complex-plane/pygal/plot.html
+quality_score: 81
+review:
+  strengths:
+  - Full spec compliance with all required features (unit circle, vectors, annotations,
+    equal aspect, distinct colors)
+  - Thoughtful color palette with strong colorblind accessibility
+  - Good visual hierarchy differentiating roots of unity, arbitrary points, and the
+    product
+  - Effective use of pygal-specific features (stroke_style, series breaks, formatters)
+  - Clean dual output (PNG + HTML) leveraging pygal SVG nature
+  weaknesses:
+  - Repeated label formatting logic reduces code elegance
+  - Value labels near the origin are slightly crowded
+  - complex_formatter function breaks KISS convention
+  - No arrowheads on vectors (pygal XY limitation)
+  image_description: 'The plot displays a complex plane (Argand diagram) on a square
+    canvas with a light gray-blue plot background. The title "scatter-complex-plane
+    · pygal · pyplots.ai" sits at the top in dark text. The x-axis is labeled "Real
+    Axis" and the y-axis "Imaginary Axis", both in dark bold text. A subtle dashed
+    unit circle in light gray is centered at the origin. Three blue dots represent
+    the 3rd roots of unity (at 1.0, -0.5+0.9i, -0.5-0.9i) with blue vectors from the
+    origin. Six orange dots mark arbitrary points (2.5+1.5i, -1.8+2.2i, 1.0-2.0i,
+    -0.5-1.5i, 3.0, 2.8i) with lighter orange vectors from origin. A purple dot with
+    a dashed vector shows the product z1·w1 at approximately -2.5+1.4i. Each point
+    is annotated with its rectangular form (a+bi). A small dark origin marker sits
+    at (0,0). The legend at the bottom shows five entries: Unit Circle, Roots of Unity
+    (3rd), Arbitrary Points, z1·w1 (Product), Origin. Grid lines are subtle and the
+    axis range spans -3.5 to 3.5 on both axes.'
+  criteria_checklist:
+    visual_quality:
+      score: 25
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Font sizes explicitly set, all text readable; value labels slightly
+          small but legible
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Minor crowding near origin where vectors converge, but text remains
+          readable
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Dots well-sized, vectors visible, unit circle subtle but discernible
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue, orange, purple palette is colorblind-safe with strong contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Square canvas with good utilization, slight margin inefficiency
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 1
+        max: 2
+        passed: true
+        comment: Descriptive axis labels but no unit qualifiers
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Custom palette with refined tones, light plot background, above defaults
+          but not publication-grade
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle dashed grid guides, custom stroke dasharray, clean background
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Clear hierarchy: roots (blue) vs arbitrary (orange) vs product (purple
+          dashed)'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct XY scatter for complex plane
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Unit circle, vectors, equal aspect, annotations, distinct colors
+          all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Real on x-axis, imaginary on y-axis, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct, legend labels descriptive and matching
+    data_quality:
+      score: 13
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Roots of unity, arbitrary points in all quadrants, product; covers
+          main aspects well
+      - id: DQ-02
+        name: Realistic Context
+        score: 4
+        max: 5
+        passed: true
+        comment: Mathematical/educational context with roots of unity and complex
+          arithmetic
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Range -3.5 to 3.5 well-suited for data distribution
+    code_quality:
+      score: 8
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Follows flat flow but defines a complex_formatter function
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set, data is deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: numpy, pygal, Style'
+      - id: CQ-04
+        name: Code Elegance
+        score: 1
+        max: 2
+        passed: true
+        comment: Label formatting logic repeated three times with identical pattern
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png using current pygal API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of pygal.XY with Style, series breaks, stroke_style, formatters
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Leverages stroke_style dicts, per-point label dicts, js=[], dual
+          SVG/PNG output
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - grid-styling
+  - alpha-blending
