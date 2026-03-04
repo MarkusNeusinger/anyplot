@@ -1,7 +1,7 @@
 library: pygal
 specification_id: scatter-complex-plane
 created: '2026-03-04T20:25:25Z'
-updated: '2026-03-04T20:38:08Z'
+updated: '2026-03-04T20:44:10Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 22687521803
 issue: 4427
@@ -13,29 +13,33 @@ preview_html: https://storage.googleapis.com/pyplots-images/plots/scatter-comple
 quality_score: 79
 review:
   strengths:
-  - Perfect spec compliance (15/15) with all required features present
-  - Colorblind-safe custom palette explicitly chosen (blue/orange/purple)
-  - Smart use of pygal per-series stroke_style to differentiate product vector
-  - Data demonstrates complex multiplication geometrically with z1*omega1
-  - Equal aspect ratio correctly maintained via square canvas
+  - Full spec compliance with all required features (unit circle, vectors, annotations,
+    equal aspect ratio)
+  - Effective visual hierarchy through differentiated dot sizes and stroke styles
+    across series
+  - Colorblind-safe palette with good contrast
+  - Good use of pygal-specific features (formatter, stroke_style, print_values)
+  - Data storytelling through the complex multiplication product demonstration
   weaknesses:
-  - Formatter lambda duplicated 3 times across series - extract to reusable variable
-  - Label congestion near origin where all vectors converge and 0.0 label overlaps
-  - Design polish not yet publication-level - opacity and hierarchy could be refined
-  - Upper-right quadrant relatively sparse compared to other areas
-  image_description: 'The plot displays a complex plane (Argand diagram) on a square
-    3600x3600 canvas. A dashed gray unit circle is centered at the origin. Three blue
-    dots represent the 3rd roots of unity, connected by blue vectors from the origin.
-    Six orange dots represent arbitrary complex points (z1 through z6), also with
-    vectors from origin. A purple dot with a dashed vector shows the product z1*omega1.
-    A small dark dot marks the origin. Each point is labeled with its complex number
-    in a+bi format (e.g., "2.5+1.5i", "-0.5+0.9i"). The title reads "scatter-complex-plane
-    · pygal · pyplots.ai". Axes are labeled "Real Axis" (x) and "Imaginary Axis" (y),
-    ranging from -3.5 to 3.5. A five-item legend sits at the bottom. The background
-    is white with a subtle #FAFAFA plot area, and grid lines are light gray dashed.'
+  - Helper functions violate KISS flat-script structure
+  - Some label crowding near the origin where vectors converge
+  - Design could be more refined - plot does not reach publication excellence
+  image_description: 'The plot displays a complex plane (Argand diagram) on a 3600x3600
+    square canvas. The title "scatter-complex-plane · pygal · pyplots.ai" appears
+    at the top. The x-axis is labeled "Real Axis" and the y-axis "Imaginary Axis",
+    ranging from -3.5 to 3.5 on both axes. A dashed gray unit circle is centered at
+    the origin. Three blue dots represent the 3rd roots of unity connected by vectors
+    from the origin. Six orange dots represent arbitrary points (z1 through z6) also
+    with vectors from the origin. A purple dot shows the product z1*omega1 with a
+    dashed vector. A small dark origin marker sits at (0,0). Each point is labeled
+    with its rectangular form (e.g., "2.5+1.5i", "-1.8+2.2i"). The legend at the bottom
+    lists five series: Unit Circle, Roots of Unity (3rd), Arbitrary Points, z1*omega1
+    (Product), and Origin. The plot background is a very light blue-gray (#F7FAFC),
+    grid lines are subtle dashed gray, and the color palette (blue, orange, purple)
+    is colorblind-safe.'
   criteria_checklist:
     visual_quality:
-      score: 24
+      score: 25
       max: 30
       items:
       - id: VQ-01
@@ -43,43 +47,46 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title=56, labels=36, major_labels=32,
-          legend=30, values=28). All readable.
+        comment: 'Font sizes explicitly set (title=58, labels=36, ticks=34, legend=32,
+          values=30). All text readable. Minor: value labels adequate but could be
+          slightly larger.'
       - id: VQ-02
         name: No Overlap
         score: 4
         max: 6
         passed: true
-        comment: Congestion near origin where vectors converge; 0.0 label competes
-          with nearby roots of unity labels.
+        comment: Some crowding near origin where vectors converge. Origin label overlaps
+          with nearby vector start points.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Dots well-sized (14-20), vectors visible. Unit circle appropriately
-          subtle.
+        comment: Dots well-sized (14-22), vectors clearly visible with appropriate
+          stroke widths. Unit circle subtle but visible.
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Colorblind-safe palette (blue, orange, purple). No red-green pair.
+        comment: Blue, orange, purple palette is colorblind-safe. Good contrast against
+          light background.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Square canvas correct for equal aspect ratio. Good use of space,
-          some sparse quadrants.
+        comment: Square canvas appropriate for equal aspect ratio. Minor wasted space
+          in corners.
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: Real Axis and Imaginary Axis are descriptive but lack units.
+        comment: Real Axis and Imaginary Axis are standard mathematical labels. Units
+          not applicable.
     design_excellence:
-      score: 11
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -87,22 +94,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom palette, custom font family, FAFAFA plot background, intentional
-          color hierarchy.
+        comment: Custom colorblind-safe palette with intentional color hierarchy.
+          Custom style with refined background. Above defaults but not publication-exceptional.
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Subtle dashed grid, custom foreground colors, good margins. Deliberate
-          refinement.
+        comment: Subtle dashed grid lines, light plot background, custom margins.
+          Some visual refinement beyond defaults.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Product point creates focal point for complex multiplication. Three
-          categories guide viewer.
+        comment: Clear visual hierarchy through differentiated dot sizes and stroke
+          styles. Product operation demonstrates complex multiplication visually.
     spec_compliance:
       score: 15
       max: 15
@@ -112,14 +119,14 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct XY scatter in complex plane (Argand diagram).
+        comment: XY scatter plot in the complex plane, correct Argand diagram.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Unit circle, vectors, equal aspect ratio, annotations, distinct colors
-          all present.
+        comment: 'All required features present: unit circle, vectors, annotations,
+          equal aspect ratio, distinct colors.'
       - id: SC-03
         name: Data Mapping
         score: 3
@@ -131,7 +138,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Legend labels descriptive and match series.
+        comment: Title matches format. Legend labels descriptive and match data categories.
     data_quality:
       score: 13
       max: 15
@@ -141,56 +148,57 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Shows roots of unity, arbitrary points in all quadrants, purely real,
-          purely imaginary, and product.
+        comment: 'Shows roots of unity, arbitrary points in multiple quadrants, complex
+          multiplication product. Minor: could show addition/subtraction.'
       - id: DQ-02
         name: Realistic Context
         score: 4
         max: 5
         passed: true
-        comment: Mathematical context appropriate for Argand diagram. Neutral and
-          educational.
+        comment: Mathematical/educational context. Real-world plausible for math or
+          signal processing textbook.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Range -3.5 to 3.5 fits all points and unit circle well.
+        comment: Values in reasonable range. Unit circle at correct radius, roots
+          of unity at correct positions.
     code_quality:
-      score: 9
+      score: 7
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 1
         max: 3
-        passed: true
-        comment: 'Linear flow: imports, data, style, chart, series, save.'
+        passed: false
+        comment: Contains helper functions format_complex() and make_label() violating
+          KISS flat-script principle.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42) set. Data is deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: numpy, pygal, Style all used.
+        comment: 'All imports used: numpy, pygal, Style.'
       - id: CQ-04
         name: Code Elegance
         score: 1
         max: 2
-        passed: true
-        comment: Formatter lambda duplicated 3 times. Label generation logic also
-          repeated.
+        passed: false
+        comment: Helper functions add unnecessary abstraction. Slightly over-engineered.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png. Current API.
+        comment: Saves as plot.png via render_to_png(). Current API.
     library_mastery:
       score: 7
       max: 10
@@ -200,15 +208,15 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of pygal.XY, Style class, per-series stroke_style, dict
-          data points, formatters.
+        comment: Good use of pygal.XY with Style customization, stroke_style dicts,
+          formatter callbacks, show_dots/stroke toggles.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses stroke_style dicts, per-series toggles, print_values with formatters,
-          HTML export.
+        comment: 'Uses pygal-specific features: formatter callback, stroke_style dicts,
+          js=[], HTML export, print_values.'
   verdict: REJECTED
 impl_tags:
   dependencies: []
@@ -220,3 +228,4 @@ impl_tags:
   dataprep: []
   styling:
   - grid-styling
+  - alpha-blending

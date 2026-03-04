@@ -1,4 +1,4 @@
-"""pyplots.ai
+""" pyplots.ai
 scatter-complex-plane: Complex Plane Visualization (Argand Diagram)
 Library: pygal 3.1.0 | Python 3.14.3
 Quality: 79/100 | Created: 2026-03-04
