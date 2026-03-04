@@ -1,6 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 bar-diverging-likert: Likert Scale Diverging Bar Chart
 Library: pygal 3.1.0 | Python 3.14.3
+Quality: 88/100 | Created: 2026-03-04
 """
 
 import re
