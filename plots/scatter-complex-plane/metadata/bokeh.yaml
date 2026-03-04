@@ -1,7 +1,7 @@
 library: bokeh
 specification_id: scatter-complex-plane
 created: '2026-03-04T20:25:07Z'
-updated: '2026-03-04T20:38:31Z'
+updated: '2026-03-04T20:45:59Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 22687521719
 issue: 4427
@@ -10,104 +10,106 @@ library_version: 3.8.2
 preview_url: https://storage.googleapis.com/pyplots-images/plots/scatter-complex-plane/bokeh/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/scatter-complex-plane/bokeh/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/scatter-complex-plane/bokeh/plot.html
-quality_score: 83
+quality_score: 89
 review:
   strengths:
-  - Full spec compliance with all required features (unit circle, vectors, annotations,
-    equal aspect ratio)
-  - Excellent use of Bokeh-specific features (hover tooltips with magnitude/angle,
-    HTML export, interactive toolbar)
-  - Thoughtful data categorization with genuine mathematical meaning (roots of unity,
-    conjugates, product)
-  - Clean deterministic code with smart label placement logic
-  - Good visual hierarchy through size and alpha differentiation by category
+  - Perfect spec compliance with all required features present
+  - Excellent data choice covering roots of unity, conjugates, and products
+  - Strong visual hierarchy through marker size and alpha differentiation
+  - 'Effective Bokeh-specific features: hover tooltips with magnitude/angle, HTML
+    export, interactive tools'
+  - Clean professional color palette with good colorblind accessibility
+  - Fully deterministic and well-structured code
   weaknesses:
-  - Label crowding near the origin where roots of unity cluster together
-  - Arbitrary category arrow alpha (0.35) too low, making vectors hard to trace
-  - Text sizes could be larger for better prominence on the 3600x3600 canvas
-  - Axis spines still present on all four sides
-  image_description: 'The plot displays a complex plane (Argand diagram) on a square
-    3600x3600 canvas with a white background. Four categories of complex numbers are
-    plotted: 5th Roots of Unity (dark blue, 5 points arranged on the unit circle),
-    Arbitrary points (orange, 6 points scattered across all quadrants), a Conjugate
-    Pair (teal/cyan, 2 points mirrored across the real axis at 1.5+2i and 1.5-2i),
-    and a Product point (magenta/pink, 1 point at approximately -0.35+2.47i). A dashed
-    gray unit circle is centered at the origin. Vectors (arrows) extend from the origin
-    to each point with varying alpha transparency by category (roots of unity strongest,
-    arbitrary faintest). Each point is annotated with its rectangular form (e.g.,
-    "1.5+2i", "-1.8+2.2i", "3", "2.8i"). The real and imaginary axes cross at the
-    origin, drawn as subtle gray lines. Axis labels read "Real Axis" (horizontal)
-    and "Imaginary Axis" (vertical). The title reads "scatter-complex-plane · bokeh
-    · pyplots.ai" in the top-left. A legend in the top-left corner lists all five
-    categories: Unit Circle, 5th Root of Unity, Arbitrary, Conjugate Pair, and Product.
-    Subtle grid lines at very low alpha (0.15) provide reference. The range extends
-    from -3.8 to 3.8 on both axes.'
+  - Minor label crowding in bottom-right where 1.2-2i and 1.5-2i labels are very close
+  - Some roots-of-unity labels near origin slightly crowded despite angle-based offset
+    logic
+  image_description: The plot displays an Argand diagram on a 3600x3600 white canvas
+    with equal aspect ratio. A dashed gray unit circle is centered at the origin.
+    Subtle gray axes through the origin divide the complex plane into four quadrants.
+    Five dark blue points (5th roots of unity) sit on the unit circle with colored
+    vector arrows from the origin. Six orange points (Arbitrary) are spread across
+    the plane at positions like 2.5+1.5i, -1.8+2.2i, 3+0i, and 0+2.8i. Two teal points
+    form a conjugate pair at 1.5+2i and 1.5-2i. One pink/magenta point shows the product
+    at approximately -0.35+2.47i. Each point is labeled with its rectangular form
+    (a+bi). Arrows in category-matching colors extend from the origin to each point.
+    A legend in the top-left corner lists Unit Circle, 5th Root of Unity, Arbitrary,
+    Conjugate Pair, and Product. The title reads "scatter-complex-plane · bokeh ·
+    pyplots.ai". Axis labels are "Real Axis" (x) and "Imaginary Axis" (y). The grid
+    is very subtle (low alpha). Overall appearance is clean and professional with
+    good color contrast.
   criteria_checklist:
     visual_quality:
-      score: 23
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 8
         max: 8
         passed: true
-        comment: Font sizes explicitly set but slightly small for 3600x3600 canvas
+        comment: 'All font sizes explicitly set: title 38pt, axis labels 28pt, tick
+          labels 20pt, point labels 20pt'
       - id: VQ-02
         name: No Overlap
         score: 4
         max: 6
         passed: true
-        comment: Some label crowding near origin where roots of unity cluster
+        comment: Labels 1.2-2i and 1.5-2i very close in bottom-right; some crowding
+          near roots of unity
       - id: VQ-03
         name: Element Visibility
-        score: 4
+        score: 6
         max: 6
         passed: true
-        comment: Points well-sized but arbitrary arrows at alpha=0.35 too faint
+        comment: Points well-sized 20-28 with white edges and colored arrows, all
+          clearly visible
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Colorblind-safe palette with good contrast
+        comment: 'Colorblind-safe palette: dark blue, orange, teal, pink with strong
+          contrast'
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Square format appropriate, slight imbalance in space usage
+        comment: Square format appropriate for equal-aspect complex plane, some wasted
+          corner space
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Real Axis and Imaginary Axis are correct and complete for complex
-          plane
+        comment: Real Axis and Imaginary Axis are fully descriptive for the mathematical
+          domain
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Custom palette with intentional hierarchy, above defaults but not
-          publication-level
+        comment: Custom 4-color palette, size hierarchy, white edge highlighting,
+          subdued axis colors
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Subtle grid, outline removed, custom axis styling, but spines still
-          on all sides
+        comment: Grid alpha 0.15, outline removed, minor ticks hidden, axis lines
+          subdued
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Meaningful categories with size/alpha hierarchy guiding the viewer
+        comment: Visual hierarchy through marker size and alpha, category grouping
+          tells mathematical story
     spec_compliance:
       score: 15
       max: 15
@@ -117,48 +119,49 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct scatter plot in complex plane with vector arrows
+        comment: Correct Argand diagram with vectors
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: unit circle, vectors, annotations, equal
-          aspect ratio'
+        comment: 'All required: origin axes, unit circle, arrows, equal aspect, annotations,
+          categories'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Real on X, imaginary on Y, all data visible
+        comment: Real on x, imaginary on y, all data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format and legend labels
+        comment: Correct title format, legend includes all categories plus unit circle
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows roots of unity, arbitrary points, conjugate pair, and product
+        comment: Roots of unity, arbitrary points, conjugate pair, product demonstrate
+          multiple complex concepts
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Genuine mathematical/educational context
+        comment: 'Mathematical context: complex number operations, neutral and educational'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values range -3 to 3, appropriate for complex plane
+        comment: Values in ±3 range sensible for complex plane visualization
     code_quality:
       score: 10
       max: 10
@@ -168,13 +171,13 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear flow, no functions or classes
+        comment: Linear imports-data-plot-save structure, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data deterministic, no randomness
+        comment: 'Fully deterministic: computed from exact complex expressions'
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -186,13 +189,13 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Clean code with good dictionary-based mappings
+        comment: Clean and well-organized with appropriate label placement logic
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html, current API
+        comment: Saves plot.png via export_png, current Bokeh 3.8 API
     library_mastery:
       score: 8
       max: 10
@@ -202,25 +205,27 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of ColumnDataSource, Arrow, Span, Label, Legend models
+        comment: ColumnDataSource, Arrow/NormalHead, Label, Legend/LegendItem, Span,
+          Range1d all idiomatic
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Hover tooltips with formatted data, HTML export, interactive toolbar
+        comment: Hover tooltips with formatted magnitude/angle, HTML export, interactive
+          tools, autohide toolbar
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
+  - custom-legend
   - hover-tooltips
   - html-export
-  - custom-legend
   patterns:
   - data-generation
-  - iteration-over-groups
   - columndatasource
+  - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
