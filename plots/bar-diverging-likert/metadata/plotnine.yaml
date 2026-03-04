@@ -1,7 +1,7 @@
 library: plotnine
 specification_id: bar-diverging-likert
 created: '2026-03-04T06:05:46Z'
-updated: '2026-03-04T06:10:39Z'
+updated: '2026-03-04T06:20:28Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 22657236142
 issue: 4429
@@ -10,106 +10,107 @@ library_version: 0.15.3
 preview_url: https://storage.googleapis.com/pyplots-images/plots/bar-diverging-likert/plotnine/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/bar-diverging-likert/plotnine/plot_thumb.png
 preview_html: null
-quality_score: 82
+quality_score: 86
 review:
   strengths:
-  - Perfect spec compliance - all five specification requirements implemented correctly
-  - Excellent data quality with realistic neutral employee engagement survey context
-  - Clean well-organized code with deterministic data and KISS structure
-  - Smart label threshold (>=10%) prevents cluttered narrow segments
-  - Effective sorting by net agreement creates natural visual hierarchy
-  - Thoughtful label color logic (dark on neutral, white on colored segments)
+  - Perfect spec compliance with all five requirements implemented correctly
+  - Excellent data quality with realistic employee engagement survey and good variation
+  - Strong custom diverging color palette with contrast-aware label colors
+  - Clean well-structured code following KISS principles
+  - Good design sophistication with custom palette, bold labels, and theme refinement
   weaknesses:
-  - In-bar percentage labels at size=10 are small; could be larger for better readability
-  - White text on lighter segments (Agree, Disagree) has suboptimal contrast
-  - Tick label font sizes (14-15pt) slightly below recommended 16pt threshold
-  - X-axis grid lines could be more subtle or removed for cleaner look
-  - No axis labels (empty strings) - even a minimal Percentage of Responses would
-    help
-  - Library mastery could be improved by leveraging more plotnine-distinctive features
-  image_description: 'The plot displays a horizontal diverging stacked bar chart with
-    10 employee engagement survey questions sorted by net agreement. The title "bar-diverging-likert
-    · plotnine · pyplots.ai" is centered at the top. Bars diverge from a central vertical
-    line at 0%. A custom red-to-blue diverging color palette is used: dark red (#C0392B)
-    for Strongly Disagree, light pink-red (#E78B84) for Disagree, muted gray (#BDC3C7)
-    for Neutral, light blue (#7FB3D8) for Agree, and dark blue (#2471A3) for Strongly
-    Agree. Percentage labels are shown in bold inside bar segments where values are
-    >=10%. The neutral segment is split evenly across the midpoint. The x-axis shows
-    absolute percentages (50%, 0%, 50%). A legend at the bottom identifies all 5 response
-    categories. Questions range from "Team collaboration" (most positive, top) to
-    "Compensation & benefits" (least positive, bottom).'
+  - Directional annotation positioned off-center at x=30 rather than centered above
+    zero line
+  - Manual for-loop segment building rather than idiomatic plotnine wide-to-long data
+    reshaping
+  - Generic library usage that does not showcase plotnine distinctive strengths
+  image_description: The plot is a horizontal diverging stacked bar chart showing
+    employee engagement survey results for 10 questions. Bars diverge from a central
+    vertical line at 0%, with negative responses (Strongly Disagree in dark red, Disagree
+    in light pink-red) extending left and positive responses (Agree in light blue,
+    Strongly Agree in dark blue) extending right. Neutral responses in gray are split
+    evenly across the midpoint. Questions are sorted from most positive (Team Collaboration
+    at top) to most negative (Compensation & Benefits at bottom). Bold percentage
+    labels appear inside segments that are 10% or wider. The x-axis shows "Percentage
+    of Responses" with absolute percentage tick labels (0%, 50%). A legend at the
+    bottom displays all five response categories (Strongly Disagree, Disagree, Neutral,
+    Agree, Strongly Agree) in a single horizontal row. The title reads "bar-diverging-likert
+    · plotnine · pyplots.ai" centered at top. An italic annotation "← Disagree  Agree
+    →" appears in the upper-right area. The overall color scheme is a clean red-gray-blue
+    diverging palette on a minimal white background with subtle dashed vertical grid
+    lines.
   criteria_checklist:
     visual_quality:
-      score: 24
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set but tick labels slightly below 16pt and
-          in-bar labels small at size=10
+        comment: All font sizes explicitly set (Title=24, axis_title=20, ticks=16,
+          legend=16, geom_text=11 bold). Directional annotation at size=10 italic
+          is slightly small.
       - id: VQ-02
         name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text; percentage labels only shown when segment >=
+          10%.
+      - id: VQ-03
+        name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Minor label overlap on narrow neutral segments where percentage text
-          extends slightly beyond boundary
-      - id: VQ-03
-        name: Element Visibility
-        score: 6
-        max: 6
-        passed: true
-        comment: All bar segments clearly visible with distinct colors and well-chosen
-          bar height
+        comment: Bar segments clearly visible. Very thin segments (e.g., Strongly
+          Disagree for Team Collaboration at 3%) are narrow but perceptible.
       - id: VQ-04
         name: Color Accessibility
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Red-to-blue diverging palette avoids red-green issue but white text
-          on lighter Agree/Disagree segments has reduced contrast
+        comment: Red-to-blue diverging palette is colorblind-safe with good value
+          contrast.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good 16:9 layout with bars filling canvas well; slight excess whitespace
-          between chart and bottom legend
+        comment: Good layout with 16:9 aspect ratio. Directional annotation positioned
+          off-center at x=30 rather than centered.
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: Axis labels are empty strings; data is self-describing but no explicit
-          labels like Percentage of Responses
+        comment: Descriptive axis label 'Percentage of Responses' with implicit units.
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Custom red-gray-blue diverging palette well-curated; bold white labels
-          add polish; above default but lacks extra refinement for 6+
+        comment: Custom diverging palette, contrast-aware label colors, bold emphasis.
+          Clearly above defaults.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: theme_minimal with y-grid removed and minor grid removed; legend
-          at bottom; x-axis grid lines still visible
+        comment: theme_minimal removes spines, y-grid removed, x-grid styled as subtle
+          dashed gray. Good refinement.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Sorting by net agreement creates clear visual hierarchy; diverging
-          layout guides comparison of agreement vs disagreement
+        comment: Sorting by net agreement creates clear visual hierarchy from strongest
+          to weakest.
     spec_compliance:
       score: 15
       max: 15
@@ -119,54 +120,50 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct diverging stacked bar chart for Likert scale data diverging
-          from center
+        comment: Correct diverging stacked bar chart with neutral centered at midpoint.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: centered neutral, diverging colors, sorted
-          by net agreement, percentage labels, horizontal orientation'
+        comment: 'All spec features present: centered neutral, diverging colors, sorted,
+          percentage labels, horizontal.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis shows percentages correctly, Y-axis shows questions, diverging
-          from center works correctly
+        comment: Correct mapping of percentages to x-axis, questions to y-axis, all
+          5 Likert categories.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend shows all 5 response categories in proper
-          order with Response title
+        comment: Correct title format and legend with all 5 categories in correct
+          order.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 10 questions with good variety in distributions; range from positive
-          to mixed; data somewhat positively skewed overall
+        comment: 10 questions with good variation from strongly positive to more negative.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Employee engagement survey is a classic neutral real-world use case
-          for Likert scale data
+        comment: Realistic employee engagement survey with common HR questions.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: All rows sum to 100%; values realistic for employee surveys with
-          natural variation
+        comment: Percentages sum to 100% per question, realistic positive-skewed distribution.
     code_quality:
       score: 10
       max: 10
@@ -176,60 +173,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean Imports-Data-Processing-Plot-Save structure with no functions
-          or classes
+        comment: Clean Imports -> Data -> Processing -> Plot -> Save flow.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic with hardcoded data values
+        comment: Fully deterministic hardcoded data.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All plotnine imports used; no unused imports
+        comment: All imports are used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-organized loop for segment construction; clean label threshold
-          logic
+        comment: Clean, well-structured, appropriate complexity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300; current plotnine API
+        comment: Saves as plot.png with dpi=300, current plotnine API.
     library_mastery:
-      score: 6
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
-        passed: true
-        comment: Good grammar of graphics approach with ggplot + geom layers + scales;
-          manual geom_rect slightly lower-level than typical idiom
+        passed: false
+        comment: Uses grammar of graphics correctly but builds segments via manual
+          for-loop and geom_rect rather than idiomatic wide-to-long approach.
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Uses layer composition distinctive to plotnine but does not showcase
-          advanced features like faceting or stat transformations
+        comment: Uses pd.Categorical, guide_legend(nrow=1), grammar composition. Core
+          technique is generic.
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - layer-composition
+  - custom-legend
   patterns:
-  - data-generation
   - iteration-over-groups
+  - wide-to-long
   dataprep: []
   styling:
   - grid-styling
