@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 histogram-epidemic: Epidemic Curve (Epi Curve)
 Library: plotly 6.6.0 | Python 3.14.3
 Quality: 88/100 | Created: 2026-03-05
@@ -37,7 +37,7 @@ fig.add_trace(
         y=confirmed,
         name="Confirmed",
         marker={"color": "#306998", "line": {"color": "rgba(255,255,255,0.4)", "width": 0.5}},
-        hovertemplate="Date: %{x|%b %d}<br>Confirmed: %{y}<extra></extra>",
+        hovertemplate="%{y} cases<extra></extra>",
     )
 )
 
@@ -46,8 +46,8 @@ fig.add_trace(
         x=dates,
         y=probable,
         name="Probable",
-        marker={"color": "#e8a838", "line": {"color": "rgba(255,255,255,0.4)", "width": 0.5}},
-        hovertemplate="Date: %{x|%b %d}<br>Probable: %{y}<extra></extra>",
+        marker={"color": "#e8a838", "line": {"color": "rgba(255,255,255,0.5)", "width": 0.8}},
+        hovertemplate="%{y} cases<extra></extra>",
     )
 )
 
@@ -56,8 +56,8 @@ fig.add_trace(
         x=dates,
         y=suspect,
         name="Suspect",
-        marker={"color": "#8cb4d5", "line": {"color": "rgba(255,255,255,0.4)", "width": 0.5}},
-        hovertemplate="Date: %{x|%b %d}<br>Suspect: %{y}<extra></extra>",
+        marker={"color": "#8cb4d5", "line": {"color": "rgba(255,255,255,0.5)", "width": 0.8}},
+        hovertemplate="%{y} cases<extra></extra>",
     )
 )
 
@@ -70,7 +70,7 @@ fig.add_trace(
         yaxis="y2",
         mode="lines",
         line={"color": "#c44e52", "width": 3, "dash": "solid"},
-        hovertemplate="Date: %{x|%b %d}<br>Cumulative: %{y:,}<extra></extra>",
+        hovertemplate="%{y:,} total<extra></extra>",
     )
 )
 
@@ -78,45 +78,37 @@ fig.add_trace(
 lockdown_date = dates[20]
 vaccine_date = dates[75]
 
-fig.add_shape(
-    type="line",
-    x0=lockdown_date,
-    x1=lockdown_date,
-    y0=0,
-    y1=0.85,
-    yref="paper",
-    line={"color": "#555", "width": 2, "dash": "dash"},
-)
-
-fig.add_annotation(
-    x=lockdown_date,
-    y=0.87,
-    yref="paper",
-    text="Lockdown<br>imposed",
-    showarrow=False,
-    font={"size": 13, "color": "#333"},
-    align="center",
-)
-
-fig.add_shape(
-    type="line",
-    x0=vaccine_date,
-    x1=vaccine_date,
-    y0=0,
-    y1=0.85,
-    yref="paper",
-    line={"color": "#555", "width": 2, "dash": "dash"},
-)
-
-fig.add_annotation(
-    x=vaccine_date,
-    y=0.87,
-    yref="paper",
-    text="Vaccination<br>campaign",
-    showarrow=False,
-    font={"size": 13, "color": "#333"},
-    align="center",
-)
+for evt_date, evt_text, evt_color in [
+    (lockdown_date, "Lockdown imposed", "#8b0000"),
+    (vaccine_date, "Vaccination campaign", "#2e7d32"),
+]:
+    fig.add_shape(
+        type="line",
+        x0=evt_date,
+        x1=evt_date,
+        y0=0,
+        y1=0.82,
+        yref="paper",
+        line={"color": evt_color, "width": 2.5, "dash": "dashdot"},
+    )
+    fig.add_annotation(
+        x=evt_date,
+        y=0.88,
+        yref="paper",
+        text=f"<b>{evt_text}</b>",
+        showarrow=True,
+        arrowhead=0,
+        arrowwidth=1.5,
+        arrowcolor=evt_color,
+        ax=0,
+        ay=-20,
+        font={"size": 13, "color": evt_color, "family": "Arial"},
+        align="center",
+        bgcolor="rgba(255,255,255,0.9)",
+        bordercolor=evt_color,
+        borderwidth=1,
+        borderpad=4,
+    )
 
 # Layout
 fig.update_layout(
@@ -130,7 +122,7 @@ fig.update_layout(
     xaxis={
         "title": {"text": "Date of Symptom Onset", "font": {"size": 22, "color": "#333"}},
         "tickfont": {"size": 16, "color": "#555"},
-        "tickformat": "%b %d",
+        "tickformat": "%b %d, %Y",
         "dtick": 14 * 24 * 60 * 60 * 1000,
         "tickangle": -30,
         "showgrid": False,
@@ -138,7 +130,12 @@ fig.update_layout(
         "showline": True,
         "linecolor": "#ccc",
         "linewidth": 1,
+        "spikemode": "across",
+        "spikethickness": 1,
+        "spikecolor": "#999",
+        "spikedash": "dot",
     },
+    hovermode="x unified",
     yaxis={
         "title": {"text": "Daily New Cases", "font": {"size": 22, "color": "#333"}},
         "tickfont": {"size": 18, "color": "#555"},
@@ -167,16 +164,20 @@ fig.update_layout(
     legend={
         "font": {"size": 16},
         "orientation": "h",
+        "traceorder": "normal",
         "yanchor": "top",
         "y": 0.98,
-        "xanchor": "right",
-        "x": 0.65,
-        "bgcolor": "rgba(255,255,255,0.85)",
-        "bordercolor": "rgba(0,0,0,0.1)",
+        "xanchor": "center",
+        "x": 0.4,
+        "bgcolor": "rgba(255,255,255,0.9)",
+        "bordercolor": "rgba(0,0,0,0.15)",
         "borderwidth": 1,
     },
     margin={"l": 75, "r": 80, "t": 70, "b": 75},
 )
+
+# Range slider for interactive exploration
+fig.update_xaxes(rangeslider={"visible": True, "thickness": 0.06, "bgcolor": "rgba(248,249,252,0.8)"})
 
 # Save
 fig.write_image("plot.png", width=1600, height=900, scale=3)
