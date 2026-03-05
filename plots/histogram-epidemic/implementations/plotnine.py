@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 histogram-epidemic: Epidemic Curve (Epi Curve)
 Library: plotnine 0.15.3 | Python 3.14.3
-Quality: 86/100 | Created: 2026-03-05
+Quality: 88/100 | Created: 2026-03-05
 """
 
 import numpy as np
