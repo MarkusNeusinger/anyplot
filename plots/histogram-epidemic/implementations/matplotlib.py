@@ -1,10 +1,11 @@
-""" pyplots.ai
+"""pyplots.ai
 histogram-epidemic: Epidemic Curve (Epi Curve)
 Library: matplotlib 3.10.8 | Python 3.14.3
 Quality: 87/100 | Created: 2026-03-05
 """
 
 import matplotlib.dates as mdates
+import matplotlib.patheffects as pe
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -17,14 +18,14 @@ dates = pd.date_range("2024-01-15", periods=90, freq="D")
 confirmed_base = np.concatenate(
     [
         np.random.poisson(3, 10),
-        np.random.poisson(8, 10),
-        np.random.poisson(25, 10),
-        np.random.poisson(55, 10),
-        np.random.poisson(40, 10),
-        np.random.poisson(20, 10),
+        np.random.poisson(12, 10),
         np.random.poisson(35, 10),
-        np.random.poisson(50, 10),
+        np.random.poisson(55, 10),
+        np.random.poisson(15, 10),
+        np.random.poisson(8, 10),
         np.random.poisson(30, 10),
+        np.random.poisson(50, 10),
+        np.random.poisson(18, 10),
     ]
 )
 probable = np.maximum(0, (confirmed_base * np.random.uniform(0.1, 0.3, 90)).astype(int))
@@ -41,7 +42,7 @@ fig, ax = plt.subplots(figsize=(16, 9))
 
 bar_width = 0.8
 ax.bar(
-    df["date"], df["Confirmed"], width=bar_width, label="Confirmed", color="#306998", edgecolor="white", linewidth=0.3
+    df["date"], df["Confirmed"], width=bar_width, label="Confirmed", color="#306998", edgecolor="white", linewidth=0.6
 )
 ax.bar(
     df["date"],
@@ -51,7 +52,7 @@ ax.bar(
     label="Probable",
     color="#E8A838",
     edgecolor="white",
-    linewidth=0.3,
+    linewidth=0.6,
 )
 ax.bar(
     df["date"],
@@ -59,14 +60,15 @@ ax.bar(
     width=bar_width,
     bottom=df["Confirmed"] + df["Probable"],
     label="Suspect",
-    color="#A8D5BA",
+    color="#5BAA8A",
     edgecolor="white",
-    linewidth=0.3,
+    linewidth=0.6,
 )
 
 # Cumulative line on secondary axis
 ax2 = ax.twinx()
 ax2.plot(df["date"], cumulative, color="#C44E52", linewidth=2.5, alpha=0.85, label="Cumulative cases")
+ax2.fill_between(df["date"], cumulative, alpha=0.08, color="#C44E52")
 ax2.set_ylabel("Cumulative Cases", fontsize=20, color="#C44E52")
 ax2.tick_params(axis="y", labelsize=16, colors="#C44E52")
 ax2.spines["top"].set_visible(False)
@@ -76,9 +78,26 @@ lockdown_date = pd.Timestamp("2024-02-10")
 vaccine_date = pd.Timestamp("2024-03-15")
 ax.axvline(lockdown_date, color="#555555", linestyle="--", linewidth=1.5, alpha=0.7)
 ax.axvline(vaccine_date, color="#555555", linestyle="--", linewidth=1.5, alpha=0.7)
-ax.text(lockdown_date, ax.get_ylim()[1] * 0.95, " Lockdown", fontsize=14, color="#555555", va="top", ha="left")
+text_effect = [pe.withStroke(linewidth=3, foreground="white")]
 ax.text(
-    vaccine_date, ax.get_ylim()[1] * 0.95, " Vaccination\n campaign", fontsize=14, color="#555555", va="top", ha="left"
+    lockdown_date,
+    ax.get_ylim()[1] * 0.95,
+    " Lockdown",
+    fontsize=14,
+    color="#555555",
+    va="top",
+    ha="left",
+    path_effects=text_effect,
+)
+ax.text(
+    vaccine_date,
+    ax.get_ylim()[1] * 0.95,
+    " Vaccination\n campaign",
+    fontsize=14,
+    color="#555555",
+    va="top",
+    ha="left",
+    path_effects=text_effect,
 )
 
 # Style
