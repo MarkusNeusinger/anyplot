@@ -1,0 +1,227 @@
+library: plotnine
+specification_id: histogram-epidemic
+created: '2026-03-05T18:40:08Z'
+updated: '2026-03-05T19:07:51Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22731101133
+issue: 4426
+python_version: 3.14.3
+library_version: 0.15.3
+preview_url: https://storage.googleapis.com/pyplots-images/plots/histogram-epidemic/plotnine/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/histogram-epidemic/plotnine/plot_thumb.png
+preview_html: null
+quality_score: 90
+review:
+  strengths:
+  - Excellent data storytelling with annotated wave peaks and intervention events
+    creating a clear outbreak narrative
+  - Professional color palette (blue/orange/grey) with strong colorblind accessibility
+  - Comprehensive spec compliance including all required features (stacked bars, intervention
+    lines, cumulative overlay)
+  - Well-structured code with appropriate complexity for the two-wave epidemic model
+  - Strong visual refinement with subtle grid, custom background, and clean typography
+  weaknesses:
+  - Cumulative line is scaled to same y-axis rather than a true secondary y-axis,
+    making cumulative values unreadable from the chart
+  - Individual bars are narrow for 90 days of data — slightly wider weekly bins could
+    improve readability for the tail period
+  image_description: 'The plot displays an epidemic curve (epi curve) with stacked
+    bars showing daily new case counts over a 90-day period from mid-January to mid-April
+    2024. Three case classifications are stacked: Confirmed (blue, #306998) at the
+    bottom, Probable (orange, #E8963E) in the middle, and Suspect (grey, #C0C0C0)
+    on top. Two epidemic waves are visible — Wave 1 peaks around Feb 2 at ~70 cases/day,
+    Wave 2 peaks around Mar 11 at ~43 cases/day. Both peaks are annotated with blue
+    bold text. Two dashed vertical lines mark intervention events: "Lockdown" (Feb
+    10) and "Vaccination campaign" (Mar 1), labeled in italic grey text. A dark red
+    cumulative cases line rises from left to right across the chart. The title reads
+    "histogram-epidemic · plotnine · pyplots.ai" in bold at top. The legend is positioned
+    at top center. The background is a subtle off-white (#FAFAFA), with only horizontal
+    y-axis gridlines visible. X-axis shows dates at 2-week intervals rotated 45°,
+    Y-axis shows "Number of New Cases (per day)".'
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title=24pt bold, axis_title=20pt
+          bold, axis_text=16pt, legend_text=16pt, legend_title=18pt bold'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: All text elements distinct and readable, annotations well-positioned
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Bars visible and stacked clearly, some narrowness in dense areas
+          expected for 90-day data
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue/orange/grey palette is colorblind-safe with excellent contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good 16:9 layout, plot fills ~60% of canvas, balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive labels with units: Date of Symptom Onset, Number of
+          New Cases (per day)'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Strong design with custom palette, bold typography, intentional hierarchy,
+          clearly above defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Good refinement: x-grid removed, subtle y-grid, custom axis lines,
+          off-white background'
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Excellent storytelling: annotated wave peaks, intervention events,
+          cumulative trend line'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct epidemic curve histogram with stacked bars
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: daily bins, stacked bars, intervention lines,
+          cumulative overlay'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=onset_date, Y=case_count, fill=case_type correctly mapped
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct, legend labels match data categories
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Two waves, three case types, intervention events, cumulative burden
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Realistic epidemic scenario with confirmed/probable/suspect classification
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Peak ~70 cases/day, 90-day period, realistic for localized outbreak
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports, data, plot, save. No functions or classes'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) ensures reproducibility
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used, no unused imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-structured, appropriate complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with dpi=300, current API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Good grammar of graphics usage: layered geoms, aesthetic mappings,
+          scale functions, theme system'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Multi-layer composition with different data sources, pd.Categorical
+          for stack ordering
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  - groupby-aggregation
+  dataprep:
+  - cumulative-sum
+  - time-series
+  styling:
+  - grid-styling
+  - alpha-blending
