@@ -1,7 +1,7 @@
 library: pygal
 specification_id: histogram-epidemic
 created: '2026-03-05T18:39:50Z'
-updated: '2026-03-05T19:10:05Z'
+updated: '2026-03-05T19:20:32Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 22731097161
 issue: 4426
@@ -10,32 +10,34 @@ library_version: 3.1.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/histogram-epidemic/pygal/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/histogram-epidemic/pygal/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/histogram-epidemic/pygal/plot.html
-quality_score: 85
+quality_score: 86
 review:
   strengths:
-  - Clean removal of x-guides significantly improves visual clarity
-  - Creative pygal-specific intervention markers using unicode symbols on x-axis labels
-  - Excellent colorblind-safe palette (blue/gold/maroon) with distinct luminance values
-  - Two-wave epidemic data with five intervention events creates compelling narrative
-  - Perfect code quality with KISS structure and deterministic seed
-  - Dual PNG + HTML output leverages pygal interactive capabilities
+  - Excellent data modeling with two realistic epidemic waves and varying case classification
+    proportions over time
+  - 'Strong use of pygal-specific features: rich tooltip dicts, x_labels_major filtering,
+    HTML export'
+  - Well-designed intervention markers integrated into x-axis labels creating narrative
+    flow
+  - Custom epidemiological color palette with warm background and intentional font
+    hierarchy
+  - Perfect data quality with realistic, neutral, comprehensive feature coverage
   weaknesses:
-  - Some x-axis label crowding around clustered intervention dates
-  - Legend horizontal layout has uneven spacing
-  - Pygal SVG-to-PNG rendering limits fine typographic control
-  image_description: 'The plot shows a stacked bar chart depicting an epidemic curve
-    for a respiratory outbreak spanning approximately 90 days (Jan 15 – Apr 08). Three
-    stacked series are displayed: Confirmed (dark teal blue, #1B5E8C), Probable (warm
-    gold, #E8A838), and Suspect (dark maroon, #8B4049). Two distinct epidemic waves
-    are visible — the first peaking around Feb 05 (~39 total cases) and a larger second
-    wave peaking around Mar 11 (~55 total cases). The x-axis shows "Date of Symptom
-    Onset" with biweekly major tick labels rotated 45°, plus intervention event dates
-    marked with unicode down-pointing triangle symbols and event names (Cluster ID,
-    Contact Tracing, Quarantine, Vaccination, Contained). The y-axis shows "New Cases"
-    from 0 to ~55 with subtle horizontal grid lines only (no vertical x-guides). The
-    background is a warm off-white (#FAFAF7). The legend sits at the bottom showing
-    all three series. Title reads "Epidemic Curve (Respiratory Outbreak) · histogram-epidemic
-    · pygal · pyplots.ai".'
+  - Missing cumulative case count line overlay as suggested by spec
+  - X-axis intervention labels could benefit from more visual distinction
+  image_description: 'The plot displays a stacked bar chart representing an epidemic
+    curve for a respiratory outbreak over 90 days (Jan 15 to mid-April 2024). The
+    x-axis shows "Date of Symptom Onset" with rotated labels at 45 degrees. Major
+    labels include date anchors (Jan 15, Apr 13) and five intervention events marked
+    with down-pointing triangle symbols: Cluster Identified, Contact Tracing, Quarantine
+    Order, Vaccination Drive, and Outbreak Contained. The y-axis shows "New Cases
+    (Daily)" from 0 to approximately 60. Three stacked series are displayed: Confirmed
+    (steel blue), Probable (amber/golden), and Suspect (dark maroon). Two distinct
+    epidemic waves are visible - a smaller first wave peaking around 38 cases at day
+    20 and a larger second wave peaking around 55 cases at day 55 - showing a clear
+    propagated transmission pattern. The background is warm off-white. Horizontal
+    y-axis grid lines are subtle and dotted. Bars have slight rounding. Legend at
+    bottom shows all three categories in a single row.'
   criteria_checklist:
     visual_quality:
       score: 26
@@ -46,42 +48,42 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title=60, label=28, major_label=30, legend=36).
-          All text readable.
+        comment: All font sizes explicitly set (title=58, labels=26, major_labels=28,
+          legend=34). Clear and readable.
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Major labels rotated 45° with biweekly + intervention selection.
-          Minor crowding between some adjacent intervention labels.
+        comment: Major labels well-filtered, minor labels hidden. Slight density at
+          intervention markers.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: 90 stacked bars with spacing=2 clearly visible. Both waves and all
-          three case types distinguishable.
+        comment: Bars well-sized with spacing=2, stacking clear, all three series
+          distinguishable.
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Dark teal blue / warm gold / dark maroon palette is excellent for
-          colorblind accessibility with distinct luminance.
+        comment: Blue, amber, dark maroon palette is colorblind-safe with good luminance
+          contrast.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good canvas utilization. Bottom margin accommodates rotated labels.
-          Slight whitespace imbalance at right.
+        comment: Good canvas utilization with generous margins. Slight empty space
+          above max y-value.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels: Date of Symptom Onset, New Cases.'
+        comment: 'Descriptive labels: Date of Symptom Onset, New Cases (Daily).'
     design_excellence:
       score: 14
       max: 20
@@ -91,22 +93,22 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom epidemiology-appropriate palette, warm off-white background,
-          intentional font hierarchy. Above defaults.
+        comment: Custom epidemiological palette, warm background, intentional font
+          hierarchy. Above defaults.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: x-guides off, subtle y-grid, off-white background, major labels only,
-          opacity=0.92. Good refinement.
+        comment: Subtle dotted y-guides, no x-guides, rounded bars, generous margins,
+          custom grid color.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Two-wave pattern with intervention timeline markers creates narrative
-          through outbreak lifecycle.
+        comment: Two-wave pattern immediately visible. Intervention markers create
+          narrative arc.
     spec_compliance:
       score: 14
       max: 15
@@ -116,49 +118,52 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Stacked bar chart correctly represents epidemic curve histogram with
-          daily bins.
+        comment: Stacked bar chart is standard epi curve representation with daily
+          bins.
       - id: SC-02
         name: Required Features
         score: 3
         max: 4
         passed: true
-        comment: Stacked by case classification, daily bins, intervention events via
-          x-axis markers. Cumulative line not included (optional).
+        comment: Daily bins, stacked classification, interventions marked. Missing
+          optional cumulative line.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=dates, Y=case counts, stacking=case classification. All correct.
+        comment: X=dates, Y=case counts, all 90 days visible, correct stacking order.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Legend labels match data categories.
+        comment: Correct title format. Legend labels match data series.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Two waves, three case types, five intervention events. Good coverage.
+        comment: Two waves, three classifications, five interventions, baseline noise.
+          All key features.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Respiratory outbreak scenario is realistic and neutral.
+        comment: Respiratory outbreak with realistic progression. Neutral public health
+          topic.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Daily counts 0-55 over 90 days realistic for localized outbreak.
+        comment: Peak ~55 daily cases for localized outbreak is realistic. 90-day
+          duration plausible.
     code_quality:
       score: 10
       max: 10
@@ -168,31 +173,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports, data, style, chart, save.'
+        comment: 'Linear flow: imports, data, labels, style, chart, save. No functions/classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42) set at top.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used.
+        comment: 'All imports actively used: numpy, pandas, pygal, Style.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Gaussian wave generation clean. Dict-based label approach appropriate.
+        comment: Clean wave generation, organized label filtering, appropriate complexity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png and plot.html.
+        comment: render_to_png plot.png and render_to_file plot.html.
     library_mastery:
       score: 7
       max: 10
@@ -202,19 +207,20 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of StackedBar, Style, x_labels_major, show_minor_x_labels,
-          legend config, spacing.
+        comment: Proper StackedBar, Style class, x_labels_major, show_minor_x_labels,
+          value_formatter.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Dict-based data points with label keys, x_labels_major, dual PNG+HTML
-          render, pygal-specific config.
+        comment: Rich tooltip dicts, x_labels_major filtering, rounded_bars, HTML
+          export.
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
+  - hover-tooltips
   - html-export
   - manual-ticks
   patterns:
@@ -224,3 +230,4 @@ impl_tags:
   - time-series
   styling:
   - grid-styling
+  - edge-highlighting
