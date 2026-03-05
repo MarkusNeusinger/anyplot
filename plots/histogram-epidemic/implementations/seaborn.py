@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 histogram-epidemic: Epidemic Curve (Epi Curve)
 Library: seaborn 0.13.2 | Python 3.14.3
 Quality: 88/100 | Created: 2026-03-05
@@ -6,7 +6,6 @@ Quality: 88/100 | Created: 2026-03-05
 
 import matplotlib.dates as mdates
 import matplotlib.lines as mlines
-import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -47,6 +46,7 @@ cumulative = np.cumsum(daily_totals)
 
 # Plot
 sns.set_theme(style="ticks", font_scale=1.0, rc={"font.family": "sans-serif"})
+sns.set_context("talk", rc={"axes.titlesize": 24, "axes.labelsize": 20, "xtick.labelsize": 16, "ytick.labelsize": 16})
 palette = {"Confirmed": "#306998", "Probable": "#E8A838", "Suspect": "#9467BD"}
 
 fig, ax = plt.subplots(figsize=(16, 9))
@@ -61,7 +61,7 @@ sns.histplot(
     bins=120,
     edgecolor="white",
     linewidth=0.4,
-    legend=False,
+    legend=True,
     ax=ax,
 )
 
@@ -71,20 +71,20 @@ peak_end = pd.Timestamp("2024-03-18")
 ax.axvspan(peak_start, peak_end, alpha=0.06, color="#C04040", zorder=0)
 ax.text(
     peak_start + (peak_end - peak_start) / 2,
-    ax.get_ylim()[1] * 0.03,
-    "Peak",
-    fontsize=12,
+    ax.get_ylim()[1] * 0.85,
+    "Peak Period",
+    fontsize=16,
     ha="center",
-    va="bottom",
+    va="center",
     color="#C04040",
     fontstyle="italic",
-    alpha=0.7,
+    fontweight="semibold",
+    alpha=0.9,
 )
 
 # Cumulative line on secondary axis
 ax2 = ax.twinx()
 ax2.plot(dates_range, cumulative, color="#C04040", linewidth=2.8, alpha=0.85, zorder=3)
-ax2.fill_between(dates_range, cumulative, alpha=0.03, color="#C04040")
 ax2.set_ylabel("Cumulative Cases", fontsize=20, color="#C04040", labelpad=12)
 ax2.tick_params(axis="y", labelsize=16, colors="#C04040")
 
@@ -126,14 +126,15 @@ sns.despine(ax=ax2, left=True)
 ax.yaxis.grid(True, alpha=0.2, linewidth=0.8)
 ax.set_axisbelow(True)
 
-# Build legend manually to combine bar categories with cumulative line
-legend_handles = [
-    mpatches.Patch(facecolor=palette["Confirmed"], edgecolor="white", label="Confirmed"),
-    mpatches.Patch(facecolor=palette["Probable"], edgecolor="white", label="Probable"),
-    mpatches.Patch(facecolor=palette["Suspect"], edgecolor="white", label="Suspect"),
-    mlines.Line2D([], [], color="#C04040", linewidth=2.5, alpha=0.85, label="Cumulative Cases"),
-]
-ax.legend(handles=legend_handles, fontsize=14, loc="upper left", framealpha=0.92, edgecolor="#CCCCCC", fancybox=True)
+# Extend seaborn-generated legend with cumulative line entry
+legend = ax.get_legend()
+handles, labels = legend.legend_handles[:], [t.get_text() for t in legend.get_texts()]
+legend.remove()
+handles.append(mlines.Line2D([], [], color="#C04040", linewidth=2.5, alpha=0.85))
+labels.append("Cumulative Cases")
+ax.legend(
+    handles=handles, labels=labels, fontsize=14, loc="upper left", framealpha=0.92, edgecolor="#CCCCCC", fancybox=True
+)
 
 # Save
 plt.tight_layout()
