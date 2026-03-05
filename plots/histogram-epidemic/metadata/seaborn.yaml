@@ -1,0 +1,232 @@
+library: seaborn
+specification_id: histogram-epidemic
+created: '2026-03-05T18:39:19Z'
+updated: '2026-03-05T19:11:48Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22731100121
+issue: 4426
+python_version: 3.14.3
+library_version: 0.13.2
+preview_url: https://storage.googleapis.com/pyplots-images/plots/histogram-epidemic/seaborn/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/histogram-epidemic/seaborn/plot_thumb.png
+preview_html: null
+quality_score: 90
+review:
+  strengths:
+  - 'Complete spec compliance with all requested features: stacked bars, intervention
+    lines, cumulative overlay, daily bins'
+  - Strong data storytelling with peak period highlighting, intervention markers,
+    and cumulative context
+  - Custom color palette that is both aesthetically pleasing and colorblind-accessible
+  - Professional annotation styling with rounded boxes and intervention labels
+  - Clean, well-structured code with proper seaborn idioms
+  weaknesses:
+  - Bar density at 120 bins makes tail-end case type segments quite small
+  - Some visual competition in the peak region between shading, labels, and intervention
+    lines
+  image_description: 'The plot displays a stacked histogram (epidemic curve) spanning
+    approximately 120 days from mid-January to mid-May 2024. Bars are stacked by case
+    classification: Confirmed (steel blue #306998), Probable (gold #E8A838), and Suspect
+    (muted purple #9467BD). A red cumulative cases line overlays on a secondary y-axis
+    (right side, labeled in red). Two dashed vertical intervention lines are annotated
+    with rounded-box labels: "Travel Restrictions" around Feb 20 and "Vaccination
+    Campaign" around Mar 25. A subtle pink-shaded region marks the "Peak Period" (early-to-mid
+    March) with italic red text. The curve shows a clear epidemic shape: gradual rise,
+    sharp peak around 180 daily cases in early March, decline, a smaller secondary
+    wave in late April, then tapering off. X-axis labels are rotated 45 degrees showing
+    biweekly dates. Top and right spines are removed with a subtle y-axis grid. The
+    title reads "histogram-epidemic · seaborn · pyplots.ai" and a legend in the upper
+    left shows all four series.'
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt,
+          legend 14pt, annotations 14-16pt'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: X-axis labels rotated 45 degrees, legend clear of data peak, annotations
+          well-spaced
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Bars distinguishable with white edgecolor; at 120 bins tail-end segments
+          are small
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue/gold/purple palette is colorblind-safe with good luminance contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 16:9 figure fills canvas well with tight layout and balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive labels: Date of Symptom Onset, New Cases, Cumulative
+          Cases'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom harmonious palette, styled annotation boxes, peak period shading,
+          intentional typography hierarchy
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines removed, subtle y-axis grid, white bar edges, generous padding
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear narrative with peak highlighting, intervention markers, and
+          cumulative context
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct stacked histogram with daily bins
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features: stacked bars, intervention lines, cumulative overlay,
+          daily bins'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = onset_date, Y = case_count, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct title format, legend includes all series
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows epidemic curve features: rise, peak, decline, secondary wave,
+          three case classifications'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Epidemiological outbreak with realistic case classifications, neutral
+          topic
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 120 days, peak ~180 cases/day, cumulative ~8000, realistic for moderate
+          outbreak
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports, data, plot, save. No functions or classes'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set at start
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, appropriate complexity for the visualization
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with dpi=300, current API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: sns.histplot with hue stacking, set_theme, set_context, despine are
+          recommended patterns
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Hue-based stacking in histplot is distinctive seaborn; much polish
+          is pure matplotlib
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - twin-axes
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  - explicit-figure
+  dataprep:
+  - cumulative-sum
+  - time-series
+  styling:
+  - alpha-blending
+  - edge-highlighting
+  - grid-styling
