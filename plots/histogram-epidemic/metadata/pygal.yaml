@@ -1,7 +1,7 @@
 library: pygal
 specification_id: histogram-epidemic
 created: '2026-03-05T18:39:50Z'
-updated: '2026-03-05T18:48:09Z'
+updated: '2026-03-05T19:00:27Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 22731097161
 issue: 4426
@@ -13,30 +13,34 @@ preview_html: https://storage.googleapis.com/pyplots-images/plots/histogram-epid
 quality_score: 80
 review:
   strengths:
-  - Clean two-wave epidemic data clearly showing propagated transmission pattern
-  - Well-chosen blue/orange/pink color palette appropriate for epidemiological data
-  - Excellent code quality with KISS structure and deterministic seed
-  - Good use of pygal-specific features (major labels, HTML export, stacked bars)
-  - Readable text with explicitly set font sizes at appropriate scale
+  - Clean two-wave epidemic data with realistic propagated transmission pattern
+  - Intervention event timeline embedded in x-axis labels creates narrative context
+  - Well-chosen epidemiology-appropriate color palette (blue/orange/red)
+  - Perfect code quality with KISS structure and deterministic seed
+  - Good use of pygal-specific features (major labels, tooltip labels, HTML export)
   weaknesses:
-  - Missing annotated vertical lines for key intervention events (spec requirement)
-  - No cumulative case count line overlay (spec suggestion)
-  - Design could be elevated further for publication quality
-  - Legend layout could be improved (horizontal spread looks uneven)
+  - show_x_guides=True draws 90 vertical lines creating visual clutter that hurts
+    design refinement
+  - Intervention events are in x-axis label text rather than distinct annotated vertical
+    reference lines
+  - Legend horizontal layout looks slightly uneven with Probable centered between
+    the other two
   image_description: 'The plot shows a stacked bar chart depicting an epidemic curve
-    for a respiratory outbreak over approximately 90 days (Jan 15 to Apr 08). Three
-    stacked series are displayed: Confirmed (steel blue, #306998), Probable (warm
-    orange/yellow, #FFB347), and Suspect (salmon pink, #E57373). Two distinct waves
-    are visible — the first peaking around Feb 05 (~38 cases) and a larger second
-    wave peaking around Mar 08 (~55 cases). The x-axis shows "Date of Symptom Onset"
-    with weekly major tick labels rotated 45 degrees, and the y-axis shows "New Cases"
-    from 0 to approximately 55. Subtle gray horizontal grid lines are present on a
-    white background. The legend sits at the bottom with all three series labeled.
-    The title reads "Epidemic Curve (Respiratory Outbreak) · histogram-epidemic ·
-    pygal · pyplots.ai".'
+    for a respiratory outbreak spanning approximately 90 days (Jan 15 – Apr 08). Three
+    stacked series are displayed: Confirmed (dark blue, #1B5E8C), Probable (warm orange,
+    #D4882C), and Suspect (muted red, #B84747). Two distinct epidemic waves are visible
+    — the first peaking around Feb 05 (~39 total cases) and a larger second wave peaking
+    around Mar 08 (~55 total cases). The x-axis shows "Date of Symptom Onset" with
+    major tick labels rotated 45°, including intervention event annotations in brackets
+    (e.g., "Jan 25 [Cluster ID]", "Feb 09 [Contact Tracing]", "Feb 26 [Quarantine]",
+    "Mar 15 [Vaccination]", "Mar 30 [Contained]"). The y-axis shows "New Cases" from
+    0 to ~55. Thin vertical x-guide lines appear at every bar position creating visual
+    clutter. Subtle horizontal y-guide lines are present. The background is a warm
+    off-white (#FAFAF7). The legend sits at the bottom showing all three series. Title
+    reads "Epidemic Curve (Respiratory Outbreak) · histogram-epidemic · pygal · pyplots.ai".'
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 24
       max: 30
       items:
       - id: VQ-01
@@ -44,41 +48,41 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title=60, labels=32, legend=36). All text
-          readable. Minor density on x-axis.
+        comment: Font sizes explicitly set (title=60, label=28, major_label=30, legend=36).
+          All text readable.
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: X-axis labels rotated 45 degrees with weekly major labels only. Legend
-          layout slightly awkward.
+        comment: X-axis major labels rotated 45° mostly readable. Intervention bracketed
+          labels crowd adjacent labels slightly.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Bars clearly visible and well-stacked. Spacing=2 works well for 90
-          bars.
+        comment: Bars clearly visible and well-stacked. 90 bars with spacing=2 works
+          adequately.
       - id: VQ-04
         name: Color Accessibility
         score: 3
         max: 4
         passed: true
-        comment: Blue/orange/pink palette generally distinguishable. Orange and pink
-          could be similar for some CVD.
+        comment: Dark blue/warm orange/muted red avoids red-green confusion. Orange
+          and red could be close under some deficiencies.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good canvas utilization. Slight extra whitespace at bottom.
+        comment: Good canvas utilization, plot fills majority of space.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels: Date of Symptom Onset and New Cases.'
+        comment: Descriptive axis labels appropriate for epidemiological context.
     design_excellence:
       score: 11
       max: 20
@@ -88,24 +92,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom color palette, white background, custom font sizing. Above
-          defaults but not publication-exceptional.
+        comment: Custom palette with warm off-white background. Above defaults but
+          pygal rendering limits polish.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 2
         max: 6
-        passed: true
-        comment: Subtle grid lines, x-guides hidden, opacity 0.9. Some refinement
-          but could push further.
+        passed: false
+        comment: show_x_guides=True draws 90 vertical lines creating significant visual
+          clutter.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Two-wave pattern communicates propagated transmission. No annotations
-          for intervention events.
+        comment: Two-wave pattern with intervention labels on x-axis creates narrative
+          timeline.
     spec_compliance:
-      score: 13
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -116,23 +120,23 @@ review:
         comment: Stacked bar chart correctly represents epidemic curve histogram.
       - id: SC-02
         name: Required Features
-        score: 2
+        score: 3
         max: 4
-        passed: false
-        comment: Missing annotated vertical lines for intervention events. No cumulative
-          line overlay.
+        passed: true
+        comment: Stacked by case type, interventions in labels. Not distinct vertical
+          lines per spec.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=dates, Y=case counts. Correct mapping.
+        comment: X=dates, Y=case counts, stacking=case types. All correct.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Legend labels match data categories.
+        comment: Title follows format, legend labels match data categories.
     data_quality:
       score: 14
       max: 15
@@ -142,8 +146,7 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Two waves showing propagated transmission. Three case types stacked
-          with good variation.
+        comment: Two waves, three case types, intervention timeline. Good coverage.
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -155,7 +158,7 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Daily case counts 0-55 over 90 days realistic for respiratory outbreak.
+        comment: Daily counts 0-55 over 90 days realistic for localized outbreak.
     code_quality:
       score: 10
       max: 10
@@ -171,7 +174,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures reproducibility.
+        comment: np.random.seed(42) ensures deterministic output.
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -183,13 +186,13 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity. Gaussian wave generation is clean.
+        comment: Appropriate complexity, clean Gaussian wave generation.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html.
+        comment: Saves as plot.png via render_to_png.
     library_mastery:
       score: 7
       max: 10
@@ -199,14 +202,15 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of StackedBar, Style, x_labels_major, legend config.
+        comment: Good use of StackedBar, Style, x_labels_major, show_minor_x_labels,
+          legend config.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: 'Uses pygal-specific features: x_labels_major, render_to_file HTML,
-          truncate_legend, spacing.'
+        comment: x_labels_major, dict-based tooltip labels, HTML export alongside
+          PNG.
   verdict: REJECTED
 impl_tags:
   dependencies: []
@@ -214,6 +218,7 @@ impl_tags:
   - html-export
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep:
   - time-series
   styling:
