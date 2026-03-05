@@ -1,0 +1,228 @@
+library: matplotlib
+specification_id: histogram-epidemic
+created: '2026-03-05T18:39:57Z'
+updated: '2026-03-05T18:52:44Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22731096590
+issue: 4426
+python_version: 3.14.3
+library_version: 3.10.8
+preview_url: https://storage.googleapis.com/pyplots-images/plots/histogram-epidemic/matplotlib/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/histogram-epidemic/matplotlib/plot_thumb.png
+preview_html: null
+quality_score: 90
+review:
+  strengths:
+  - Complete spec compliance with all requested features (stacked bars, intervention
+    lines, cumulative overlay)
+  - Cohesive custom color palette with intentional visual hierarchy
+  - Professional annotation styling with path effects for text readability
+  - Two-wave epidemic data creates a compelling epidemiological narrative
+  - Clean, well-structured code with proper matplotlib idioms
+  weaknesses:
+  - Some thin Suspect bar segments are hard to distinguish visually
+  - Blue and teal-green could be improved for colorblind accessibility
+  image_description: 'The plot displays a stacked bar chart showing daily new disease
+    cases over a 90-day period (Jan 16 to Apr 09, 2024). Bars are stacked in three
+    colors: dark blue (Confirmed), amber/gold (Probable), and teal-green (Suspect).
+    Two dashed vertical lines mark intervention events — "Lockdown" around Feb 10
+    and "Vaccination campaign" around Mar 15. A red cumulative cases line with subtle
+    pink fill-between runs along a secondary y-axis on the right. The x-axis shows
+    dates with 2-week intervals rotated 30 degrees. The left y-axis shows "Daily New
+    Cases" (0-65), the right y-axis shows "Cumulative Cases" (0-2200) in red. Top
+    and right spines are removed on the primary axis. A combined legend sits in the
+    upper left corner with semi-transparent background. The data shows two epidemic
+    waves with a trough between them.'
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title=24, labels=20, ticks=16, legend=16,
+          annotations=14'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text; rotated date labels, legend with framealpha
+          avoids collision
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Bars clearly visible but some Suspect segments are very thin and
+          hard to distinguish
+      - id: VQ-04
+        name: Color Accessibility
+        score: 3
+        max: 4
+        passed: true
+        comment: Blue/amber/teal palette reasonable but blue and teal-green may be
+          hard to distinguish for colorblind viewers
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good 16:9 proportions, tight_layout with bbox_inches tight, canvas
+          well-utilized
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive labels: Date of Symptom Onset, Daily New Cases, Cumulative
+          Cases'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom cohesive palette, white bar edges, path effects on annotations,
+          fill_between accent
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines removed, subtle y-grid alpha=0.2, white edgecolor separation,
+          good whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Two-wave epidemic with intervention annotations creates clear narrative;
+          cumulative overlay provides context
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct stacked histogram/bar chart for epidemic curve
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Daily bins, stacked by classification, intervention lines, cumulative
+          secondary axis
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=dates, Y=case counts, stacking order correct
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct, legend labels match data categories
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Two epidemic waves, three classifications, cumulative trend, intervention
+          events
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Realistic epidemiological outbreak scenario, neutral public health
+          topic
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Daily counts 0-65, cumulative ~2200 over 90 days, plausible for regional
+          outbreak
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports, data generation, plot, style, save'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: mdates, patheffects, pyplot, numpy, pandas'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-structured, no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with dpi=300, bbox_inches tight
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses Axes methods, twinx, DateFormatter, WeekdayLocator, path_effects
+          idiomatically
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Leverages patheffects for text stroke, mdates locators/formatters,
+          fill_between, combined legend from dual axes
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - twin-axes
+  - annotations
+  patterns:
+  - data-generation
+  dataprep:
+  - cumulative-sum
+  - time-series
+  styling:
+  - edge-highlighting
+  - alpha-blending
+  - grid-styling
