@@ -1,13 +1,16 @@
-""" pyplots.ai
+"""pyplots.ai
 histogram-epidemic: Epidemic Curve (Epi Curve)
 Library: seaborn 0.13.2 | Python 3.14.3
 Quality: 68/100 | Created: 2026-03-05
 """
 
 import matplotlib.dates as mdates
+import matplotlib.lines as mlines
+import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import seaborn as sns
 
 
 # Data
@@ -27,63 +30,48 @@ confirmed_base = np.concatenate(
     ]
 )
 confirmed_counts = np.maximum(0, confirmed_base + np.random.normal(0, 8, 120)).astype(int)
-
 probable_counts = np.maximum(0, confirmed_counts * 0.25 + np.random.normal(0, 3, 120)).astype(int)
 suspect_counts = np.maximum(0, confirmed_counts * 0.12 + np.random.normal(0, 2, 120)).astype(int)
 
-df = pd.DataFrame(
-    {
-        "onset_date": np.tile(dates_range, 3),
-        "case_count": np.concatenate([confirmed_counts, probable_counts, suspect_counts]),
-        "case_type": (["Confirmed"] * 120 + ["Probable"] * 120 + ["Suspect"] * 120),
-    }
-)
+# Build long-form DataFrame with one row per case for sns.histplot
+rows = []
+for i, date in enumerate(dates_range):
+    rows.extend([(date, "Confirmed")] * confirmed_counts[i])
+    rows.extend([(date, "Probable")] * probable_counts[i])
+    rows.extend([(date, "Suspect")] * suspect_counts[i])
+cases_df = pd.DataFrame(rows, columns=["onset_date", "case_type"])
 
-pivot = df.pivot_table(index="onset_date", columns="case_type", values="case_count", aggfunc="sum")
-pivot = pivot[["Confirmed", "Probable", "Suspect"]]
-cumulative = pivot.sum(axis=1).cumsum()
+# Cumulative data
+daily_totals = confirmed_counts + probable_counts + suspect_counts
+cumulative = np.cumsum(daily_totals)
 
 # Plot
+sns.set_theme(style="ticks", font_scale=1.0)
+palette = {"Confirmed": "#306998", "Probable": "#E8A838", "Suspect": "#5BA05B"}
+
 fig, ax = plt.subplots(figsize=(16, 9))
 
-colors = {"Confirmed": "#306998", "Probable": "#E8A838", "Suspect": "#A8D8A8"}
-
-ax.bar(
-    pivot.index,
-    pivot["Confirmed"],
-    width=1.0,
-    label="Confirmed",
-    color=colors["Confirmed"],
+sns.histplot(
+    data=cases_df,
+    x="onset_date",
+    hue="case_type",
+    hue_order=["Confirmed", "Probable", "Suspect"],
+    multiple="stack",
+    palette=palette,
+    bins=120,
     edgecolor="white",
     linewidth=0.3,
-)
-ax.bar(
-    pivot.index,
-    pivot["Probable"],
-    width=1.0,
-    bottom=pivot["Confirmed"],
-    label="Probable",
-    color=colors["Probable"],
-    edgecolor="white",
-    linewidth=0.3,
-)
-ax.bar(
-    pivot.index,
-    pivot["Suspect"],
-    width=1.0,
-    bottom=pivot["Confirmed"] + pivot["Probable"],
-    label="Suspect",
-    color=colors["Suspect"],
-    edgecolor="white",
-    linewidth=0.3,
+    legend=False,
+    ax=ax,
 )
 
+# Cumulative line on secondary axis
 ax2 = ax.twinx()
-ax2.plot(pivot.index, cumulative, color="#C04040", linewidth=2.5, alpha=0.85, label="Cumulative Cases")
+ax2.plot(dates_range, cumulative, color="#C04040", linewidth=2.5, alpha=0.85)
 ax2.set_ylabel("Cumulative Cases", fontsize=20, color="#C04040")
 ax2.tick_params(axis="y", labelsize=16, colors="#C04040")
-ax2.spines["top"].set_visible(False)
 
+# Intervention annotations
 intervention_dates = [
     (pd.Timestamp("2024-02-20"), "Travel\nRestrictions"),
     (pd.Timestamp("2024-03-25"), "Vaccination\nCampaign"),
@@ -104,20 +92,25 @@ for date, label in intervention_dates:
 # Style
 ax.set_xlabel("Date of Symptom Onset", fontsize=20)
 ax.set_ylabel("New Cases", fontsize=20)
-ax.set_title("histogram-epidemic · seaborn · pyplots.ai", fontsize=24, fontweight="medium", pad=20)
+ax.set_title("histogram-epidemic \u00b7 seaborn \u00b7 pyplots.ai", fontsize=24, fontweight="medium", pad=20)
 ax.tick_params(axis="both", labelsize=16)
 ax.xaxis.set_major_locator(mdates.WeekdayLocator(interval=2))
 ax.xaxis.set_major_formatter(mdates.DateFormatter("%b %d"))
 plt.setp(ax.get_xticklabels(), rotation=45, ha="right")
 
-ax.spines["top"].set_visible(False)
-ax.spines["right"].set_visible(False)
-ax2.spines["top"].set_visible(False)
+sns.despine(ax=ax)
+sns.despine(ax=ax2, left=True)
 ax.yaxis.grid(True, alpha=0.2, linewidth=0.8)
+ax.set_axisbelow(True)
 
-lines_1, labels_1 = ax.get_legend_handles_labels()
-lines_2, labels_2 = ax2.get_legend_handles_labels()
-ax.legend(lines_1 + lines_2, labels_1 + labels_2, fontsize=14, loc="upper left", framealpha=0.9)
+# Build legend manually to combine bar categories with cumulative line
+legend_handles = [
+    mpatches.Patch(facecolor=palette["Confirmed"], edgecolor="white", label="Confirmed"),
+    mpatches.Patch(facecolor=palette["Probable"], edgecolor="white", label="Probable"),
+    mpatches.Patch(facecolor=palette["Suspect"], edgecolor="white", label="Suspect"),
+    mlines.Line2D([], [], color="#C04040", linewidth=2.5, alpha=0.85, label="Cumulative Cases"),
+]
+ax.legend(handles=legend_handles, fontsize=14, loc="upper left", framealpha=0.9)
 
 # Save
 plt.tight_layout()
