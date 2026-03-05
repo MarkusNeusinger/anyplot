@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 histogram-epidemic: Epidemic Curve (Epi Curve)
 Library: matplotlib 3.10.8 | Python 3.14.3
-Quality: 87/100 | Created: 2026-03-05
+Quality: 90/100 | Created: 2026-03-05
 """
 
 import matplotlib.dates as mdates
