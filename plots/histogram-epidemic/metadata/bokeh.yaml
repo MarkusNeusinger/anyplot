@@ -1,7 +1,7 @@
 library: bokeh
 specification_id: histogram-epidemic
 created: '2026-03-05T18:39:42Z'
-updated: '2026-03-05T18:44:03Z'
+updated: '2026-03-05T18:55:53Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 22731096177
 issue: 4426
@@ -10,106 +10,105 @@ library_version: 3.8.2
 preview_url: https://storage.googleapis.com/pyplots-images/plots/histogram-epidemic/bokeh/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/histogram-epidemic/bokeh/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/histogram-epidemic/bokeh/plot.html
-quality_score: 85
+quality_score: 90
 review:
   strengths:
-  - 'Excellent data quality: realistic epidemic scenario with two distinct outbreak
-    waves, three case classifications, and plausible case counts'
-  - 'All spec features implemented: stacked bars, intervention lines with labels,
-    cumulative overlay, daily bins'
-  - 'Good Bokeh idiom usage: ColumnDataSource, HoverTool, Span, Legend construction'
-  - 'Strong visual refinement: subtle grid, removed minor ticks, clean frame styling'
+  - Complete spec compliance with all required features (stacked bars, intervention
+    lines, secondary cumulative axis)
+  - Strong data storytelling with clear outbreak narrative arc (point-source peak,
+    secondary wave, decline)
+  - Expert idiomatic Bokeh usage (vbar_stack, HoverTool, Span annotations, extra_y_ranges)
+  - Professional typography with all font sizes explicitly configured
+  - Clean visual refinement (removed x-grid, subtle y-grid, clean axis lines, generous
+    margins)
   weaknesses:
-  - Cumulative line is scaled to primary y-axis without a secondary y-axis, making
-    cumulative values unreadable from the chart
-  - Yellow and orange may lack sufficient contrast for some colorblind viewers
-  - Could use vbar_stack for cleaner idiomatic stacking instead of manual top/bottom
-    calculation
-  - Y-axis label lacks units
-  image_description: 'The plot displays a stacked bar chart (epidemic curve) spanning
-    from mid-January 2024 to mid-April 2024. The x-axis shows "Date of Symptom Onset"
-    with datetime ticks, and the y-axis shows "New Cases" from 0 to ~80. Three case
-    classifications are stacked: Confirmed (dark blue), Probable (yellow), and Suspect
-    (salmon/orange). A sharp primary peak occurs around Jan 27 reaching ~70 total
-    cases (point-source pattern), followed by a smaller secondary wave around Feb
-    15-25 (~30 cases, propagated transmission). Two dashed vertical lines mark "Source
-    Identified" (red) and "Intervention Began" (green). A dark gray cumulative line
-    rises from left to right, flattening as cases decline. The legend in the top-right
-    corner lists all four series including "Cumulative (total: 1,126)". The title
+  - 'Color palette: green (#2CA02C) and coral (#D4726A) pair is suboptimal for deuteranopia/protanopia'
+  - Right portion of timeline (March-April) is very sparse, slightly wasting horizontal
+    space
+  image_description: 'The plot displays a stacked bar chart (epidemic curve) showing
+    daily new disease cases from mid-January 2024 to mid-April 2024. Bars are stacked
+    in three layers: Confirmed (dark blue, #306998), Probable (green, #2CA02C), and
+    Suspect (coral/pink, #D4726A). A sharp primary peak (~75 total daily cases) occurs
+    around late January, followed by a secondary propagated wave (~35-38 cases) in
+    mid-February, then a gradual decline to near-zero by April. Two dashed vertical
+    lines annotate key events: "Source Identified" (red, ~Jan 27) and "Intervention
+    Began" (teal, ~Feb 5). A dark gray cumulative cases line rises on the right y-axis,
+    reaching 1,126 total. The legend in the top-right shows all four elements. Title
     reads "histogram-epidemic · bokeh · pyplots.ai". Background is white with subtle
-    y-grid lines only. Overall clean and professional appearance.'
+    y-axis gridlines only.'
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 25
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 36pt, axis labels 26pt, tick
-          labels 20pt, legend 22pt, annotation labels 20pt'
+        comment: All font sizes explicitly set (title 36pt, labels 26pt, ticks 20pt,
+          legend 22pt, annotations 20pt). All clearly readable.
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Source Identified label positioned close to bar peaks, minor potential
-          overlap in densest region
+        comment: No major overlap. Source Identified annotation near peak bars but
+          readable. Legend well-placed.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Daily bars well-sized with white borders; bars become thin in tail
-          region but remain visible
+        comment: Bars well-sized at 0.8-day width, stacking clearly visible, cumulative
+          line distinct.
       - id: VQ-04
         name: Color Accessibility
+        score: 2
+        max: 4
+        passed: false
+        comment: Green (#2CA02C) and coral (#D4726A) pair suboptimal for deuteranopia/protanopia.
+      - id: VQ-05
+        name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Blue-yellow-orange palette works for most colorblind types but yellow/orange
-          may lack contrast for deuteranopia
-      - id: VQ-05
-        name: Layout & Canvas
-        score: 4
-        max: 4
-        passed: true
-        comment: Plot fills canvas well with balanced margins, legend positioned cleanly
+        comment: Good proportions. Right tail (March-April) sparse, slightly wasting
+          horizontal space.
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: Descriptive labels but missing units on y-axis
+        comment: 'Descriptive labels: Date of Symptom Onset, New Cases (per day),
+          Cumulative Cases.'
     design_excellence:
-      score: 13
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Custom palette, intentional typography hierarchy, white bar borders
-          add polish. Above defaults but not publication-flagship level
+        comment: Thoughtful color palette, intentional typography hierarchy, professional
+          appearance above defaults.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: X-grid removed, y-grid subtle, minor ticks removed, outline removed,
-          axis lines styled gray
+        comment: X-grid removed, y-grid subtle (alpha 0.15), outline removed, minor
+          ticks hidden, generous margins.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Intervention lines with labels create narrative, two waves visible,
-          cumulative adds context
+        comment: Strong narrative with point-source peak, secondary wave, intervention
+          markers, cumulative burden.
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -117,25 +116,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct stacked bar histogram epidemic curve
+        comment: Correct epidemic curve as stacked histogram by date.
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: All features present but cumulative line lacks proper secondary y-axis
+        comment: 'All features: daily bins, stacked by classification, annotated intervention
+          lines, secondary cumulative axis.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = date of symptom onset, Y = case counts, correct mapping
+        comment: X = onset date, Y = case counts. Both axes show all data correctly.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exact format, legend labels correct with cumulative total
+        comment: Title format correct. Legend labels match data categories with cumulative
+          total.
     data_quality:
       score: 15
       max: 15
@@ -145,22 +146,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Point-source wave, propagated secondary wave, endemic tail, three
-          classifications, intervention events
+        comment: Shows point-source primary wave, propagated secondary wave, endemic
+          tail, three case classifications, cumulative burden.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Foodborne illness outbreak with confirmed/probable/suspect classifications,
-          neutral scenario
+        comment: Foodborne illness outbreak — realistic, neutral epidemiological scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Peak ~70 cases/day, 90-day span, ~1126 total cases, realistic for
-          foodborne outbreak
+        comment: Peak ~75 daily cases, ~1,126 total over 90 days — plausible for local
+          foodborne outbreak.
     code_quality:
       score: 10
       max: 10
@@ -170,53 +170,54 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data generation, stacking, plot, styling,
-          save'
+        comment: Flat imports → data → plot → save structure, no functions/classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set at top
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: All imports used, no extras.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized, manual stacking necessary for Bokeh vbar API
+        comment: Clean, Pythonic. Gaussian curve data generation is elegant.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: export_png plus HTML output, current Bokeh API
+        comment: Saves plot.png via export_png and plot.html. Current Bokeh API.
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert use of ColumnDataSource, vbar_stack, HoverTool, Span, Label,
+          Legend/LegendItem, extra_y_ranges.
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Good use of ColumnDataSource, vbar, HoverTool, Span, Label, Legend.
-          Could use vbar_stack
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: HoverTool with vline mode, Span for annotations, dual HTML+PNG output
-  verdict: REJECTED
+        comment: vbar_stack, HoverTool with vline mode, Span annotations, HTML export
+          — strong Bokeh-specific usage.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - twin-axes
   - annotations
   - hover-tooltips
   - custom-legend
