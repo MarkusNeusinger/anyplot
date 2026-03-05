@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 histogram-epidemic: Epidemic Curve (Epi Curve)
 Library: altair 6.0.0 | Python 3.14.3
 Quality: 88/100 | Created: 2026-03-05
@@ -36,12 +36,10 @@ df = pd.DataFrame(
     }
 )
 
-# Cumulative case count (normalized to bar y-axis scale)
+# Cumulative case count
 daily_total = pd.DataFrame({"onset_date": dates, "daily_total": total_cases})
 daily_total["cumulative"] = daily_total["daily_total"].cumsum()
-max_cumulative = int(daily_total["cumulative"].max())
 max_daily = int(total_cases.max()) + 15
-daily_total["cumulative_scaled"] = daily_total["cumulative"] / max_cumulative * max_daily
 
 # Intervention events
 events = pd.DataFrame(
@@ -58,7 +56,7 @@ color_scale = alt.Scale(domain=type_order, range=["#306998", "#E69F00", "#56B4E9
 
 bars = (
     alt.Chart(df)
-    .mark_bar()
+    .mark_bar(stroke="#ffffff", strokeWidth=0.5)
     .encode(
         x=alt.X(
             "onset_date:T",
@@ -77,13 +75,19 @@ bars = (
     .transform_calculate(order="{'Confirmed': 0, 'Probable': 1, 'Suspect': 2}[datum.case_type]")
 )
 
-# Cumulative line overlay (scaled to left y-axis range)
+# Cumulative line overlay with independent right y-axis
 cumulative_line = (
     alt.Chart(daily_total)
     .mark_line(strokeWidth=2.5, interpolate="monotone", color="#D55E00")
     .encode(
         x="onset_date:T",
-        y=alt.Y("cumulative_scaled:Q", scale=alt.Scale(domain=[0, max_daily])),
+        y=alt.Y(
+            "cumulative:Q",
+            title="Cumulative Cases",
+            axis=alt.Axis(
+                titleColor="#D55E00", labelColor="#D55E00", format=",.0f", titleFontSize=22, labelFontSize=18
+            ),
+        ),
         tooltip=[
             alt.Tooltip("onset_date:T", title="Date", format="%b %d, %Y"),
             alt.Tooltip("cumulative:Q", title="Cumulative Cases", format=","),
@@ -91,30 +95,12 @@ cumulative_line = (
     )
 )
 
-# Right-axis tick labels for cumulative scale
-cum_ticks = [0, 500, 1000, 1500, 2000, 2500, 3000, max_cumulative]
-cum_tick_df = pd.DataFrame(
-    {"label": [f"{int(v):,}" for v in cum_ticks], "y_val": [v / max_cumulative * max_daily for v in cum_ticks]}
-)
-
-right_axis_labels = (
-    alt.Chart(cum_tick_df)
-    .mark_text(align="left", dx=8, fontSize=16, color="#D55E00")
-    .encode(x=alt.value(1600), y=alt.Y("y_val:Q", scale=alt.Scale(domain=[0, max_daily])), text="label:N")
-)
-
-right_axis_title = (
-    alt.Chart(pd.DataFrame({"x": [0]}))
-    .mark_text(align="center", fontSize=20, color="#D55E00", angle=270, fontWeight="bold")
-    .encode(x=alt.value(1660), y=alt.value(450), text=alt.value("Cumulative Cases"))
-)
-
 # Intervention vertical rules
 rules = alt.Chart(events).mark_rule(strokeDash=[6, 4], strokeWidth=1.5, color="#888888").encode(x="date:T")
 
 rule_labels = (
     alt.Chart(events)
-    .mark_text(align="left", dx=6, fontSize=13, fontWeight="bold", fontStyle="italic", color="#555555", angle=270)
+    .mark_text(align="left", dx=6, fontSize=18, fontWeight="bold", fontStyle="italic", color="#555555", angle=270)
     .encode(x="date:T", y="y_pos:Q", text="event:N")
 )
 
@@ -130,13 +116,17 @@ peak_data = pd.DataFrame(
 
 peak_label = (
     alt.Chart(peak_data)
-    .mark_text(fontSize=14, fontWeight="bold", color="#D55E00", dy=-14)
+    .mark_text(fontSize=18, fontWeight="bold", color="#D55E00", dy=-16)
     .encode(x="onset_date:T", y="peak_val:Q", text="label:N")
 )
 
-# Combine all layers
+# Combine bar layers (share left y-axis)
+bar_layer = alt.layer(bars, rules, rule_labels, peak_label)
+
+# Combine with cumulative line using independent y-axis resolution
 chart = (
-    alt.layer(bars, cumulative_line, right_axis_labels, right_axis_title, rules, rule_labels, peak_label)
+    alt.layer(bar_layer, cumulative_line)
+    .resolve_scale(y="independent")
     .properties(
         width=1600,
         height=900,
@@ -145,7 +135,7 @@ chart = (
             fontSize=28,
             anchor="start",
             subtitle="Daily new cases by classification with cumulative total",
-            subtitleFontSize=16,
+            subtitleFontSize=18,
             subtitleColor="#666666",
         ),
     )
