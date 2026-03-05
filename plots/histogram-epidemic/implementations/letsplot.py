@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 histogram-epidemic: Epidemic Curve (Epi Curve)
 Library: letsplot 4.8.2 | Python 3.14.3
-Quality: 84/100 | Created: 2026-03-05
+Quality: 87/100 | Created: 2026-03-05
 """
 
 import numpy as np

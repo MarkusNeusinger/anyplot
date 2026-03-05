@@ -1,7 +1,7 @@
 library: letsplot
 specification_id: histogram-epidemic
 created: '2026-03-05T18:39:54Z'
-updated: '2026-03-05T18:44:09Z'
+updated: '2026-03-05T18:51:55Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 22731099083
 issue: 4426
@@ -10,81 +10,81 @@ library_version: 4.8.2
 preview_url: https://storage.googleapis.com/pyplots-images/plots/histogram-epidemic/letsplot/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/histogram-epidemic/letsplot/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/histogram-epidemic/letsplot/plot.html
-quality_score: 84
+quality_score: 87
 review:
   strengths:
-  - Excellent code quality with clean structure and full reproducibility
-  - Good use of letsplot interactive tooltip feature (layer_tooltips)
-  - Realistic foodborne outbreak data with convincing point-source shape
-  - Thoughtful colorblind-accessible color palette
-  - Proper explicit font sizing throughout
+  - Excellent spec compliance - all required features implemented including stacked
+    bars, intervention lines, and cumulative overlay
+  - Strong data storytelling with realistic foodborne outbreak shape and intervention
+    markers creating a narrative timeline
+  - Clean, well-structured code with proper reproducibility
+  - Good colorblind-safe color palette
   weaknesses:
-  - Vertical intervention lines lack text annotations (spec explicitly says annotated
-    vertical lines)
-  - Cumulative line has no legend entry or secondary y-axis label
-  - Legend position slightly overlaps cumulative line
-  - Long near-zero tail wastes canvas space on the right
-  image_description: 'The plot shows a stacked bar chart depicting a foodborne outbreak
-    epi curve spanning March 1 to April 29, 2024. Daily bars are stacked by case classification:
-    Confirmed (steel blue), Probable (golden brown), and Suspect (gray). The outbreak
-    exhibits a classic point-source shape with a sharp rise peaking around March 11-14
-    at approximately 170 daily cases, followed by a gradual decline. A black cumulative
-    trend line (scaled to share the primary y-axis) rises steeply during the peak
-    and plateaus. Two vertical dashed lines mark interventions: a red one around March
-    15 and a green one around April 5, but neither has text annotations identifying
-    what they represent. The title reads "histogram-epidemic · letsplot · pyplots.ai"
+  - X-axis date labels too dense - 23+ labels every 2 days creates tight spacing
+  - Caption text is small and pushed to far bottom-right corner, easy to miss
+  - Cumulative line has no secondary y-axis label clarifying its scale
+  - Timestamp*1000 workaround for geom_vline is not idiomatic lets-plot
+  image_description: 'The plot displays a stacked bar chart representing a foodborne
+    outbreak epidemic curve over 45 days (Feb 29 to Apr 15, 2024). Bars are stacked
+    by case classification: Confirmed (steel blue #306998), Probable (brown/orange
+    #B07430), and Suspect (gray #8B8B8B). The outbreak shows a classic point-source
+    shape — rapid rise peaking around Mar 9-11 at ~175 daily cases, then gradual decline.
+    A black cumulative cases line (scaled) curves upward from left to right, flattening
+    as new cases diminish. Two dashed vertical intervention lines mark "Lockdown Start"
+    (red, Mar 15) and "Vaccination Campaign" (green, Apr 5), with bold text labels
+    positioned nearby. The title reads "histogram-epidemic · letsplot · pyplots.ai"
     with a subtitle "Foodborne outbreak epi curve — daily cases by classification
-    with cumulative trend". X-axis shows "Date of Symptom Onset" with date ticks,
-    Y-axis shows "Daily New Cases". Legend is positioned in the upper right corner
-    labeled "Case Classification". The background is white with subtle horizontal
-    gridlines only.'
+    with cumulative trend." X-axis labeled "Date of Symptom Onset" with dates every
+    2 days; Y-axis labeled "Daily New Cases." Legend labeled "Case Classification"
+    positioned in the right portion of the plot. A small caption at bottom-right reads
+    "Black line = cumulative cases (scaled)." White background with minimal styling
+    — only light gray horizontal grid lines.'
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 26
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 24pt, subtitle 16pt, axis titles
-          20pt, axis text 16pt, legend 14-16pt'
+        comment: All font sizes explicitly set (title=24, axis_title=20, axis_text=16).
+          X-axis date labels dense but readable.
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Mostly clean but legend at [0.88, 0.85] slightly overlaps cumulative
-          line area
+        comment: X-axis labels tightly packed (every 2 days for 45 days) but individually
+          legible. No actual collisions.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Bars clearly visible, vertical intervention lines visible but thin
-          and unlabeled
+        comment: Stacked bars clearly visible. Cumulative line visible at alpha=0.7.
+          Intervention lines clear.
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Blue/brown/gray palette is colorblind-safe with good contrast
+        comment: Blue, brown/orange, gray palette is colorblind-safe. Good contrast.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good fill on left but long near-zero tail creates wasted space on
-          right
+        comment: Good canvas use ~65%. Minor wasted space in right tail area.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Date of Symptom Onset and Daily New Cases are descriptive and domain-appropriate
+        comment: 'Descriptive labels: Date of Symptom Onset, Daily New Cases.'
     design_excellence:
-      score: 12
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -92,24 +92,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom color palette, thoughtful subtitle, above defaults but not
-          publication-level
+        comment: Custom palette, thoughtful typography with subtitle and caption.
+          Above defaults but not publication-level.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: theme_minimal with removed x-gridlines, subtle y-gridlines, white
-          background
+        comment: X-axis grid removed, subtle horizontal gridlines, white background.
+          Good refinement.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
         passed: true
-        comment: Point-source shape visible, cumulative line adds context, but unlabeled
-          intervention lines weaken narrative
+        comment: 'Strong storytelling: point-source outbreak shape, intervention markers
+          create narrative, cumulative line adds context.'
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -117,51 +117,51 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct stacked bar histogram / epi curve format
+        comment: Correct stacked bar histogram for epidemic curve.
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Stacked bars, vertical lines, cumulative overlay present but intervention
-          lines lack text annotations
+        comment: 'All features: daily bins, stacked bars, intervention lines, cumulative
+          overlay.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = onset dates, Y = case counts, correct stacking
+        comment: X=dates, Y=counts, fill=classification. All correct.
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend labels match, but cumulative line has
-          no legend entry or secondary y-axis label
+        comment: Title format correct. Legend titled Case Classification with matching
+          labels.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Three case classifications, clear peak, gradual decline, interventions,
-          cumulative trend shown
+        comment: 'Shows all aspects: three case types, point-source shape, interventions,
+          cumulative trend.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Foodborne outbreak scenario is realistic and neutral
+        comment: Foodborne outbreak scenario is realistic, comprehensible, and neutral.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 60-day timeframe with peak ~170 daily cases is plausible for localized
-          foodborne outbreak
+        comment: 45-day outbreak peaking ~175 daily cases is realistic for foodborne
+          illness.
     code_quality:
       score: 10
       max: 10
@@ -171,34 +171,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports, data generation, plot construction,
-          save'
+        comment: 'Linear flow: imports, data, plot, save. No functions/classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set before all random operations
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used, no extras
+        comment: All imports used. Specific imports from lets_plot.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-structured, no over-engineering
+        comment: Clean, well-organized. Appropriate complexity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with scale=3, also HTML export
+        comment: Saves as plot.png via ggsave with scale=3.
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -206,19 +205,19 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Good ggplot grammar usage: aes mapping, geom_bar stacking, scale_fill_manual,
-          theme composition'
+        comment: Good ggplot grammar. The timestamp*1000 workaround for vlines is
+          not fully idiomatic.
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: Uses layer_tooltips() for interactive hover info and HTML export
-          — distinctive letsplot features
+        comment: Uses layer_tooltips() and HTML export — lets-plot distinctive features.
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
   - layer-composition
   - hover-tooltips
   - html-export
@@ -229,3 +228,4 @@ impl_tags:
   - time-series
   styling:
   - grid-styling
+  - alpha-blending
