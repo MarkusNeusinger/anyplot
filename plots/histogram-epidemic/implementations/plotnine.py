@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 histogram-epidemic: Epidemic Curve (Epi Curve)
 Library: plotnine 0.15.3 | Python 3.14.3
 Quality: 88/100 | Created: 2026-03-05
@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 from plotnine import (
     aes,
+    annotate,
     element_blank,
     element_line,
     element_rect,
@@ -95,6 +96,28 @@ plot = (
         size=10,
         color="#444444",
         fontstyle="italic",
+    )
+    + annotate(
+        "text",
+        x=dates[-1],
+        y=daily_totals["cumulative_scaled"].iloc[-1],
+        label="Cumulative\ncases →",
+        ha="right",
+        va="bottom",
+        size=10,
+        color="#8B0000",
+        fontstyle="italic",
+        fontweight="bold",
+    )
+    + annotate(
+        "segment",
+        x=dates[-8],
+        xend=dates[-2],
+        y=daily_totals["cumulative_scaled"].iloc[-8],
+        yend=daily_totals["cumulative_scaled"].iloc[-2],
+        color="#8B0000",
+        size=0.5,
+        alpha=0.4,
     )
     + scale_fill_manual(values={"Confirmed": "#306998", "Probable": "#E8963E", "Suspect": "#C0C0C0"})
     + scale_x_date(date_breaks="2 weeks", date_labels="%b %d")
