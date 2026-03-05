@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 histogram-epidemic: Epidemic Curve (Epi Curve)
 Library: letsplot 4.8.2 | Python 3.14.3
 Quality: 84/100 | Created: 2026-03-05
@@ -15,6 +15,7 @@ from lets_plot import (
     element_text,
     geom_bar,
     geom_line,
+    geom_text,
     geom_vline,
     ggplot,
     ggsize,
@@ -35,7 +36,7 @@ LetsPlot.setup_html()
 np.random.seed(42)
 
 outbreak_start = pd.Timestamp("2024-03-01")
-n_days = 60
+n_days = 45
 dates = pd.date_range(outbreak_start, periods=n_days, freq="D")
 
 # Point-source outbreak: sharp rise, gradual decline (log-normal shape)
@@ -69,6 +70,15 @@ df_cumulative = pd.DataFrame({"onset_date": dates, "scaled_cumulative": cumulati
 lockdown_date = pd.Timestamp("2024-03-15")
 vaccination_date = pd.Timestamp("2024-04-05")
 
+# Annotation data for intervention labels
+df_annotations = pd.DataFrame(
+    {
+        "onset_date": [lockdown_date, vaccination_date],
+        "y_pos": [max_daily * 0.92, max_daily * 0.82],
+        "label": ["Lockdown\nStart", "Vaccination\nCampaign"],
+    }
+)
+
 # Colors
 color_confirmed = "#306998"
 color_probable = "#B07430"
@@ -94,6 +104,16 @@ plot = (
     )
     + geom_vline(xintercept=lockdown_date.timestamp() * 1000, color="#CC4444", size=1.2, linetype="dashed")
     + geom_vline(xintercept=vaccination_date.timestamp() * 1000, color="#44AA44", size=1.2, linetype="dashed")
+    + geom_text(
+        data=df_annotations,
+        mapping=aes(x="onset_date", y="y_pos", label="label"),
+        color="#333333",
+        size=11,
+        fontface="bold",
+        hjust=0,
+        nudge_x=50000000,
+        inherit_aes=False,
+    )
     + scale_fill_manual(
         values={"Confirmed": color_confirmed, "Probable": color_probable, "Suspect": color_suspect},
         name="Case Classification",
@@ -103,6 +123,7 @@ plot = (
     + labs(
         title="histogram-epidemic · letsplot · pyplots.ai",
         subtitle="Foodborne outbreak epi curve — daily cases by classification with cumulative trend",
+        caption="Black line = cumulative cases (scaled)",
     )
     + theme_minimal()
     + theme(
@@ -112,7 +133,8 @@ plot = (
         axis_text=element_text(size=16),
         legend_title=element_text(size=16, face="bold"),
         legend_text=element_text(size=14),
-        legend_position=[0.88, 0.85],
+        plot_caption=element_text(size=14, color="#666666"),
+        legend_position=[0.88, 0.55],
         panel_grid_major_x=element_blank(),
         panel_grid_minor=element_blank(),
         panel_grid_major_y=element_line(color="#E0E0E0", size=0.5),
