@@ -1,7 +1,7 @@
 library: plotnine
 specification_id: histogram-epidemic
 created: '2026-03-05T18:40:08Z'
-updated: '2026-03-05T18:52:18Z'
+updated: '2026-03-05T18:59:04Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 22731101133
 issue: 4426
@@ -10,34 +10,40 @@ library_version: 0.15.3
 preview_url: https://storage.googleapis.com/pyplots-images/plots/histogram-epidemic/plotnine/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/histogram-epidemic/plotnine/plot_thumb.png
 preview_html: null
-quality_score: 88
+quality_score: 84
 review:
   strengths:
-  - Excellent data storytelling with two-wave epidemic pattern and intervention markers
-  - Strong colorblind-safe palette (blue/orange/grey)
-  - All font sizes explicitly set with professional typography
-  - Clean well-structured code following KISS principles
-  - Perfect spec compliance for chart type and data mapping
+  - Excellent two-wave epidemic pattern with realistic Gaussian peaks + Poisson noise
+    data generation
+  - Professional colorblind-safe blue/orange/gray color palette
+  - 'Strong visual refinement: subtle grid, removed x-grid, clean axis lines, polished
+    #FAFAFA background'
+  - Well-annotated intervention events (Lockdown, Vaccination campaign) adding epidemiological
+    context
+  - Cumulative overlay line providing total burden context despite plotnine dual-axis
+    limitations
   weaknesses:
-  - Cumulative case line has no label, legend entry, or right y-axis annotation -
-    viewers cannot interpret its values
-  - Library mastery could be improved with plotnine-specific features
-  image_description: 'The plot displays a stacked bar chart (epi curve) over 90 days
-    from Jan 15 to mid-April 2024. Bars are stacked by case classification: Confirmed
-    (steel blue, bottom), Probable (orange, middle), and Suspect (grey, top). There
-    is a sharp initial peak around Jan 29-Feb 2 reaching approximately 70 total cases
-    per day, followed by a trough after a "Lockdown" vertical dashed line at Feb 10,
-    then a secondary broader wave peaking around Mar 11 at approximately 43 cases
-    per day, declining after a "Vaccination campaign" dashed line at Mar 1. A dark
-    red cumulative case line rises monotonically from left to right, scaled to the
-    primary y-axis. The title reads "histogram-epidemic · plotnine · pyplots.ai" in
-    bold at top. Legend is positioned at top showing all three case categories. Background
-    is light off-white (#FAFAFA), y-axis grid is subtle grey, x-axis grid removed.
-    X-axis labels are rotated 45 degrees showing biweekly dates. Axis labels are bold:
-    "Date of Symptom Onset" (x) and "Number of New Cases" (y).'
+  - No secondary y-axis labels for cumulative line (plotnine limitation)
+  - Data storytelling could be stronger with peak annotations or outbreak phase labels
+  - Y-axis label lacks units specification
+  - Cumulative line could be slightly thicker for better visibility
+  image_description: 'The plot displays a stacked bar chart (epidemic curve) spanning
+    from Jan 15 to Apr 14, 2024, with 90 daily bars. Each bar is stacked with three
+    case classification categories: Confirmed (blue #306998, bottom), Probable (orange
+    #E8963E, middle), and Suspect (gray #C0C0C0, top). The x-axis shows "Date of Symptom
+    Onset" with 2-week tick intervals rotated 45 degrees, and the y-axis shows "Number
+    of New Cases" ranging from 0 to ~70. A dark red cumulative cases line curves upward
+    from left to right, labeled "Cumulative cases →" in italic bold near the top right.
+    Two dashed vertical lines mark intervention events: "Lockdown" around Feb 10 and
+    "Vaccination campaign" around Mar 1, with italic text labels. The title reads
+    "histogram-epidemic · plotnine · pyplots.ai" in bold at the top. The legend is
+    positioned at the top showing all three case types. The background is a light
+    off-white (#FAFAFA) with subtle horizontal grid lines. Two epidemic waves are
+    visible: a sharp peak around Feb 2-5 (~70 total cases) and a broader secondary
+    wave around Mar 10-15 (~43 total cases).'
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 26
       max: 30
       items:
       - id: VQ-01
@@ -45,40 +51,38 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 24pt, axis titles 20pt bold,
-          tick labels 16pt, legend text 16pt'
+        comment: 'All font sizes explicitly set: title 24pt bold, axis titles 20pt
+          bold, tick labels 16pt, legend text 16pt'
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: X-axis labels rotated 45 degrees, no collisions, intervention annotations
-          positioned cleanly
+        comment: Mostly clean; minor crowding near intervention annotation labels
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: 90 daily bars slightly dense but clearly distinguishable, cumulative
-          line visible
+        comment: Bars well-sized; cumulative line relatively thin but visible
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Blue/orange/grey is excellent colorblind-safe combination
+        comment: Blue/orange/gray palette is colorblind-safe with excellent contrast
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Good 16:9 proportions, plot fills canvas well, balanced margins
+        comment: Good 16:9 layout; cumulative label slightly cramped at right edge
       - id: VQ-06
         name: Axis Labels & Title
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: 'Descriptive axis labels: Date of Symptom Onset, Number of New Cases'
+        passed: false
+        comment: Descriptive labels but no units on y-axis
     design_excellence:
       score: 14
       max: 20
@@ -88,22 +92,22 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom palette, dark red cumulative line, off-white background, italic
-          annotations, bold typography
+        comment: Custom palette, professional typography, polished background. Above
+          defaults but not FiveThirtyEight-level
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Subtle y-axis grid, x grid removed, axis lines added, but cumulative
-          line lacks right-axis label
+        comment: X-grid removed, subtle y-grid, axis lines added, clean background.
+          Nearly fully polished
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: Two-wave pattern with interventions creates narrative, but cumulative
-          line lacks context
+        passed: false
+        comment: Intervention markers create narrative but no peak annotations or
+          callouts to highlight key insights
     spec_compliance:
       score: 14
       max: 15
@@ -113,51 +117,51 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct stacked bar chart epi curve with daily bins
+        comment: Correct stacked bar chart with daily bins for 90-day outbreak
       - id: SC-02
         name: Required Features
         score: 3
         max: 4
         passed: true
-        comment: All features present but cumulative line has no label or right y-axis
-          annotation
+        comment: All features present except secondary y-axis labels for cumulative
+          line
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=dates, Y=case counts, stacking correct
+        comment: X = onset_date, Y = case_count, all 90 days visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend labels match data
+        comment: Correct title format and legend labels
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Shows both outbreak patterns, three classifications, intervention
-          effects
+        comment: Point-source peak + propagated wave, three classifications, interventions,
+          cumulative overlay
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: COVID-like outbreak with plausible classifications and interventions
+        comment: Plausible COVID-like epidemic with lockdown and vaccination events
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Peak ~70 cases/day, 90-day span, realistic for localized outbreak
+        comment: Peak ~70 cases/day, 90-day timeframe, realistic Poisson-noised counts
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -165,7 +169,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, plot, save'
+        comment: Clean imports → data → plot → save structure
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -177,13 +181,13 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports used, no extras
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Clean, well-organized, appropriate secondary axis workaround
+        passed: false
+        comment: Dual-axis workaround with scale_factor is somewhat convoluted
       - id: CQ-05
         name: Output & API
         score: 1
@@ -191,7 +195,7 @@ review:
         passed: true
         comment: Saves as plot.png with dpi=300
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -199,14 +203,15 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Proper grammar of graphics with layered geoms, pd.Categorical for
-          ordering, scale_x_date
+        comment: Good grammar-of-graphics with layered geoms, Categorical ordering,
+          scale_fill_manual, theme composition
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Standard plotnine features only, no advanced plotnine-specific patterns
+        passed: true
+        comment: Uses plotnine-specific grammar layering, Categorical ordering, deep
+          theme customization
   verdict: REJECTED
 impl_tags:
   dependencies: []
