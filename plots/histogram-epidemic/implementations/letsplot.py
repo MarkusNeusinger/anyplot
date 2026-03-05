@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 histogram-epidemic: Epidemic Curve (Epi Curve)
 Library: letsplot 4.8.2 | Python 3.14.3
 Quality: 87/100 | Created: 2026-03-05
@@ -15,6 +15,7 @@ from lets_plot import (
     element_text,
     geom_bar,
     geom_line,
+    geom_rect,
     geom_text,
     geom_vline,
     ggplot,
@@ -62,26 +63,50 @@ daily_total = confirmed_counts + probable_counts + suspect_counts
 cumulative = np.cumsum(daily_total)
 max_daily = int(daily_total.max())
 max_cumulative = int(cumulative[-1])
-scale_factor = max_daily * 0.9 / max_cumulative
+scale_factor = max_daily * 0.85 / max_cumulative
 
 df_cumulative = pd.DataFrame({"onset_date": dates, "scaled_cumulative": cumulative * scale_factor})
 
-# Intervention dates
+# Intervention dates — epoch milliseconds for lets-plot datetime axis
 lockdown_date = pd.Timestamp("2024-03-15")
 vaccination_date = pd.Timestamp("2024-04-05")
+lockdown_ms = lockdown_date.timestamp() * 1000
+vaccination_ms = vaccination_date.timestamp() * 1000
 
-# Annotation data for intervention labels
-df_annotations = pd.DataFrame(
+# Background highlight rectangles behind annotation labels
+label_width_ms = 5.5 * 86400 * 1000
+df_lockdown_bg = pd.DataFrame(
     {
-        "onset_date": [lockdown_date, vaccination_date],
-        "y_pos": [max_daily * 0.92, max_daily * 0.82],
-        "label": ["Lockdown\nStart", "Vaccination\nCampaign"],
+        "xmin": [lockdown_ms + 30000000],
+        "xmax": [lockdown_ms + 30000000 + label_width_ms],
+        "ymin": [max_daily * 0.87],
+        "ymax": [max_daily * 0.97],
+    }
+)
+df_vacc_bg = pd.DataFrame(
+    {
+        "xmin": [vaccination_ms - 8 * 86400 * 1000],
+        "xmax": [vaccination_ms - 8 * 86400 * 1000 + 7 * 86400 * 1000],
+        "ymin": [max_daily * 0.77],
+        "ymax": [max_daily * 0.87],
     }
 )
 
+# Annotation data for intervention labels
+df_ann_lockdown = pd.DataFrame(
+    {"onset_date": [lockdown_date], "y_pos": [max_daily * 0.92], "label": ["Lockdown Start"]}
+)
+df_ann_vacc = pd.DataFrame(
+    {"onset_date": [vaccination_date], "y_pos": [max_daily * 0.82], "label": ["Vaccination Campaign"]}
+)
+
+# Weekly x-axis breaks
+weekly_dates = pd.date_range(outbreak_start, periods=7, freq="7D")
+weekly_ms = [d.timestamp() * 1000 for d in weekly_dates]
+
 # Colors
 color_confirmed = "#306998"
-color_probable = "#B07430"
+color_probable = "#C07830"
 color_suspect = "#8B8B8B"
 
 # Plot
@@ -96,45 +121,74 @@ plot = (
     + geom_line(
         data=df_cumulative,
         mapping=aes(x="onset_date", y="scaled_cumulative"),
-        color="#222222",
-        size=1.5,
-        alpha=0.7,
+        color="#333333",
+        size=1.8,
+        alpha=0.75,
         inherit_aes=False,
         tooltips="none",
     )
-    + geom_vline(xintercept=lockdown_date.timestamp() * 1000, color="#CC4444", size=1.2, linetype="dashed")
-    + geom_vline(xintercept=vaccination_date.timestamp() * 1000, color="#44AA44", size=1.2, linetype="dashed")
+    + geom_vline(xintercept=lockdown_ms, color="#CC3333", size=1.3, linetype="dashed")
+    + geom_vline(xintercept=vaccination_ms, color="#339933", size=1.3, linetype="dashed")
+    # Subtle background rectangles behind labels
+    + geom_rect(
+        data=df_lockdown_bg,
+        mapping=aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax"),
+        fill="white",
+        alpha=0.85,
+        inherit_aes=False,
+        color="#CCCCCC",
+        size=0.3,
+    )
+    + geom_rect(
+        data=df_vacc_bg,
+        mapping=aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax"),
+        fill="white",
+        alpha=0.85,
+        inherit_aes=False,
+        color="#CCCCCC",
+        size=0.3,
+    )
     + geom_text(
-        data=df_annotations,
+        data=df_ann_lockdown,
         mapping=aes(x="onset_date", y="y_pos", label="label"),
         color="#333333",
         size=11,
         fontface="bold",
         hjust=0,
-        nudge_x=50000000,
+        nudge_x=80000000,
+        inherit_aes=False,
+    )
+    + geom_text(
+        data=df_ann_vacc,
+        mapping=aes(x="onset_date", y="y_pos", label="label"),
+        color="#333333",
+        size=11,
+        fontface="bold",
+        hjust=1,
+        nudge_x=-80000000,
         inherit_aes=False,
     )
     + scale_fill_manual(
         values={"Confirmed": color_confirmed, "Probable": color_probable, "Suspect": color_suspect},
         name="Case Classification",
     )
-    + scale_x_datetime(name="Date of Symptom Onset", format="%b %d")
+    + scale_x_datetime(name="Date of Symptom Onset", format="%b %d", breaks=weekly_ms)
     + scale_y_continuous(name="Daily New Cases", format="d")
     + labs(
         title="histogram-epidemic · letsplot · pyplots.ai",
         subtitle="Foodborne outbreak epi curve — daily cases by classification with cumulative trend",
-        caption="Black line = cumulative cases (scaled)",
+        caption=f"Dark line = cumulative cases (scaled)  ·  {max_cumulative:,} total cases",
     )
     + theme_minimal()
     + theme(
         plot_title=element_text(size=24, face="bold"),
-        plot_subtitle=element_text(size=16, color="#666666"),
+        plot_subtitle=element_text(size=16, color="#555555"),
         axis_title=element_text(size=20),
         axis_text=element_text(size=16),
         legend_title=element_text(size=16, face="bold"),
         legend_text=element_text(size=14),
-        plot_caption=element_text(size=14, color="#666666"),
-        legend_position=[0.88, 0.55],
+        plot_caption=element_text(size=14, color="#555555", hjust=0.5),
+        legend_position=[0.15, 0.72],
         panel_grid_major_x=element_blank(),
         panel_grid_minor=element_blank(),
         panel_grid_major_y=element_line(color="#E0E0E0", size=0.5),
