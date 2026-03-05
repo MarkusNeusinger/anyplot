@@ -1,0 +1,232 @@
+library: highcharts
+specification_id: histogram-epidemic
+created: '2026-03-05T18:48:48Z'
+updated: '2026-03-05T19:05:37Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22731100352
+issue: 4426
+python_version: 3.14.3
+library_version: unknown
+preview_url: https://storage.googleapis.com/pyplots-images/plots/histogram-epidemic/highcharts/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/histogram-epidemic/highcharts/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/histogram-epidemic/highcharts/plot.html
+quality_score: 91
+review:
+  strengths:
+  - 'Complete spec compliance: all five spec requirements implemented (daily bins,
+    stacked bars by classification, intervention markers, date x-axis, cumulative
+    secondary y-axis)'
+  - Excellent data storytelling with dual epidemic waves, intervention markers, and
+    cumulative overlay creating a rich epidemiological narrative
+  - Strong typography hierarchy and cohesive color palette showing intentional design
+  - Clean, well-structured code with proper reproducibility
+  weaknesses:
+  - Canvas margins are slightly generous, losing some horizontal space for the chart
+    area
+  - Spines could be further refined for a more polished publication-ready look
+  image_description: 'The plot displays a stacked column chart (epidemic curve) showing
+    daily new cases of a respiratory illness outbreak from January 15 to mid-April
+    2024. Three case classifications are stacked: Confirmed (dark steel blue #306998),
+    Probable (amber/orange #f39c12), and Suspect (gray #95a5a6). Two dashed vertical
+    plot lines mark key interventions: "Travel Advisory Issued" in red (~day 25) and
+    "Vaccination Campaign" in green (~day 42). A dashed dark spline line overlays
+    the cumulative total cases on a secondary y-axis (right side, 0-2320+). The chart
+    has a light gray background (#fafbfc), a prominent title "histogram-epidemic ·
+    highcharts · pyplots.ai" with a descriptive subtitle below it. The legend is centered
+    at the top. X-axis shows "Symptom Onset Date" with weekly tick intervals, left
+    y-axis shows "Daily New Cases" (0-75), right y-axis shows "Cumulative Cases."
+    Two distinct epidemic waves are visible — a first wave peaking around day 20 and
+    a larger second wave peaking around day 55.'
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 56px, subtitle 36px, axis titles
+          42px, tick labels 28-34px, legend 32px, plot line labels 28px'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: X-axis labels spaced every 7 days with no collisions. Legend floats
+          above chart. Plot line labels offset cleanly
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Bars well-sized with pointPadding:0 and minimal groupPadding. Cumulative
+          spline has lineWidth:5
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue/orange/gray palette is colorblind-safe. No red-green distinction
+          issues
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Chart fills canvas reasonably well but margins are generous (240px
+          each side on 4800px)
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive labels: Symptom Onset Date, Daily New Cases, Cumulative
+          Cases'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom background, cohesive palette, Segoe UI font, styled typography
+          hierarchy. Clearly above defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Dotted grid lines, secondary grid removed, no column borders, generous
+          whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Dual-wave pattern, intervention markers, cumulative overlay create
+          rich epidemiological narrative
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Stacked column chart is correct type for epidemic curve
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features: daily bins, stacked bars by classification, intervention
+          lines, cumulative overlay'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X-axis dates, Y-axis case counts, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title follows exact format. Legend labels match data series
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Two waves, three classifications, interventions, cumulative burden
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Respiratory illness outbreak is real-world neutral epidemiological
+          scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Daily cases 0-75, cumulative ~2300 over 90 days, realistic classification
+          ratios
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports, data, chart config, series, rendering. No
+          functions/classes'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set before all random generation
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean and well-organized. No fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png via container screenshot. Current API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Proper use of HighchartsOptions, series types, plotOptions for stacking,
+          dual y-axis
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses Highcharts-specific plotLines with labels, shared tooltip, spline
+          series type
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - twin-axes
+  - annotations
+  - html-export
+  patterns:
+  - data-generation
+  dataprep:
+  - cumulative-sum
+  - time-series
+  styling:
+  - grid-styling
