@@ -1,0 +1,28 @@
+# Specification-level metadata for eye-diagram-basic
+# Auto-synced to PostgreSQL on push to main
+
+spec_id: eye-diagram-basic
+title: Signal Integrity Eye Diagram
+
+# Specification tracking
+created: "2026-03-06T19:52:32Z"
+updated: null
+issue: 4561
+suggested: MarkusNeusinger
+
+# Classification tags (applies to all library implementations)
+# See docs/reference/tagging-system.md for detailed guidelines
+tags:
+  plot_type:
+    - line
+    - heatmap
+  data_type:
+    - timeseries
+    - numeric
+    - continuous
+  domain:
+    - engineering
+    - technology
+  features:
+    - color-mapped
+    - advanced
