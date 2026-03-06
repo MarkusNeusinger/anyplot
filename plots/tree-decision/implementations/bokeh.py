@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 tree-decision: Decision Tree Visualization with Probabilities
 Library: bokeh 3.8.2 | Python 3.14.3
-Quality: 84/100 | Created: 2026-03-06
+Quality: 80/100 | Created: 2026-03-06
 """
 
 import numpy as np

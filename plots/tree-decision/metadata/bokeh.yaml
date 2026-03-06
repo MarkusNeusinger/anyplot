@@ -1,7 +1,7 @@
 library: bokeh
 specification_id: tree-decision
 created: '2026-03-06T21:38:55Z'
-updated: '2026-03-06T21:52:43Z'
+updated: '2026-03-06T22:00:22Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 22782764651
 issue: 4569
@@ -10,34 +10,38 @@ library_version: 3.8.2
 preview_url: https://storage.googleapis.com/pyplots-images/plots/tree-decision/bokeh/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/tree-decision/bokeh/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/tree-decision/bokeh/plot.html
-quality_score: 84
+quality_score: 80
 review:
   strengths:
-  - Perfect spec compliance - all node shapes, EMV display, probability labels, pruned
-    marking
-  - Excellent data storytelling through visual hierarchy of active vs. pruned paths
-  - Now uses ColumnDataSource and HoverTool, leveraging bokeh idioms and interactivity
-  - Clean, well-organized code with correct EMV rollback calculations
-  - Comprehensive hand-crafted legend including pruned branch indicator
+  - Excellent spec compliance with all required node types, shapes, and features correctly
+    implemented
+  - Realistic business investment scenario with proper EMV rollback calculations documented
+    in comments
+  - 'Good use of Bokeh-specific features: HoverTool for interactivity, BoxAnnotation
+    for visual storytelling, ColumnDataSource for structured data'
+  - Thoughtful color palette with coordinated fill and border colors for each node
+    type
+  - Clean, well-organized code with clear data structure definitions
   weaknesses:
-  - Bottom ~20% of canvas is empty, tree does not fill vertical space well
-  - Orange/green color pair may cause accessibility issues for deuteranopia
-  - Cross marks near root node (License Tech, Do Nothing) are still visually crowded
-  image_description: 'The plot displays a decision tree visualization on a light gray
-    (#FAFAFA) background with left-to-right layout. The title "tree-decision · bokeh
-    · pyplots.ai" appears at the top left in a large font. A hand-crafted legend in
-    the upper-left corner shows four entries: Decision Node (blue square), Chance
-    Node (orange circle), Terminal Node (green right-pointing triangle), and Pruned/suboptimal
-    (dashed line with red X). The root decision node (blue square, EMV $248K) is at
-    the far left, branching into three paths: "Launch Product" (solid line, optimal),
-    "License Tech" (dashed, pruned), and "Do Nothing" (dashed, pruned). The optimal
-    path leads through a chance node (EMV $248K) splitting into "High Demand (p=0.6)"
-    to a second decision node (EMV $380K) and "Low Demand (p=0.4)" to a $50K terminal.
-    The Expand branch from D2 leads to a chance node (EMV $380K) with "Success (p=0.7)"
-    to $500K and "Failure (p=0.3)" to $100K. "Don''t Expand" is pruned at $300K. Right-angle
-    connectors link all nodes. Pruned branches use dashed lines with reduced opacity
-    and red cross marks. The bottom ~20% of the canvas is largely empty. Colors are
-    blue (#306998), orange (#E8983E), and green (#27AE60).'
+  - Canvas utilization is unbalanced — significant empty space in the lower-right
+    while the tree clusters upper-left to center
+  - Branch labels positioned to the left of edge midpoints can crowd near pruned cross
+    marks
+  - Node sizes not perfectly balanced — decision squares appear much larger than chance
+    circles and terminal triangles
+  image_description: 'The plot displays a decision tree with left-to-right layout
+    on a light gray-blue background (#F7F9FB). Decision nodes are rendered as blue
+    (#306998) squares, chance nodes as purple (#8E6BBF) circles, and terminal nodes
+    as amber (#D4A03C) right-pointing triangles. The root decision node (EMV $248K)
+    branches into three paths: "Launch Product" (optimal), "License Tech" (pruned),
+    and "Do Nothing" (pruned). Pruned branches use dashed lines with red cross marks.
+    The "Launch Product" path leads to a chance node (EMV $248K) splitting into "High
+    Demand (p=0.6)" and "Low Demand (p=0.4)". The high demand path reaches a second
+    decision node (EMV $380K) with "Expand" and "Don''t Expand" options. The "Expand"
+    path leads to a final chance node (EMV $380K) with "Success (p=0.7, $500K)" and
+    "Failure (p=0.3, $100K)". A subtle blue background band highlights the optimal
+    path region. The title "tree-decision · bokeh · pyplots.ai" appears at the top.
+    A custom legend in the top-left shows all four element types.'
   criteria_checklist:
     visual_quality:
       score: 24
@@ -48,41 +52,42 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set (36pt title, 20pt labels, 19-20pt values).
-          Pruned label alpha 0.55 readable but slightly faint.
+        comment: Font sizes explicitly set (20pt labels, 19-20pt node values, 36pt
+          title). All text readable.
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Mostly clean. Two pruned cross marks near root visually crowded.
+        comment: Mostly clean, minor crowding near pruned cross marks and branch labels.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Nodes well sized. Terminal triangles slightly smaller proportionally.
+        comment: All node shapes visible and distinguishable. Circles could be slightly
+          larger.
       - id: VQ-04
         name: Color Accessibility
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Blue/orange/green distinguishable but orange/green may be difficult
-          for deuteranopia.
+        comment: Blue/purple/amber palette is colorblind-safe with strong contrast.
       - id: VQ-05
         name: Layout & Canvas
         score: 2
         max: 4
-        passed: true
-        comment: Bottom ~20% of canvas empty. Tree compressed in upper portion.
+        passed: false
+        comment: Significant empty space in lower-right quadrant. Tree clusters upper-left
+          to center.
       - id: VQ-06
         name: Axis Labels & Title
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: Axes hidden for tree diagram. Title in correct format.
+        comment: Axes appropriately hidden for tree diagram. Descriptive title present.
     design_excellence:
-      score: 13
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -90,24 +95,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom palette, professional look, right-angle connectors. Above
-          defaults but not publication-ready.
+        comment: Thoughtful custom color palette with coordinated borders. Above defaults
+          but not publication-level.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Axes/grid hidden, custom background, hand-crafted legend. Some rough
-          edges in cross-mark positioning.
+        comment: Axes/grid hidden, outline removed, custom background, BoxAnnotation
+          band.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: 'Strong visual hierarchy: solid optimal paths vs dashed pruned with
-          red X marks. EMV guides analysis.'
+        comment: Subtle blue band highlights optimal path. Pruned branches visually
+          de-emphasized.
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -115,53 +120,50 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct decision tree with all three node types.
+        comment: Correct decision tree with proper node shapes.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: node shapes, L-R layout, probabilities,
-          EMV, pruning, distinct colors.'
+        comment: 'All features: node types, probabilities, EMV, pruning, branch labels.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Two-stage investment decision correctly represented with verified
-          EMV rollback.
+        comment: Left-to-right layout, correct parent-child relationships.
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: Title correct format. Legend covers all node types plus pruned indicator.
+        comment: Correct title format. Custom legend covers all types. Manually built.
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: All node types, multi-stage decisions, pruning at both levels, varying
-          probabilities, correct EMV rollback.
+        comment: Shows all node types, two-stage decisions, pruning, probabilities
+          summing to 1.0.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Business investment scenario with plausible probabilities and payoffs.
+        comment: Investment/product launch scenario with realistic business terminology.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Payoffs $0K-$500K and probabilities 0.3-0.7 realistic for business
-          decisions.
+        comment: Dollar values in $0-500K range are realistic for business decisions.
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -169,34 +171,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, plot, edges, nodes, hover, labels, legend,
-          style, save.'
+        comment: 'Clean linear flow: imports, data, plot, save.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic data, no random elements.
+        comment: Fully deterministic with hardcoded data.
       - id: CQ-03
         name: Clean Imports
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: 'All imports used: numpy, ColumnDataSource, HoverTool, Label, figure,
-          output_file, save, export_png.'
+        passed: false
+        comment: numpy imported but only used for np.pi/2; could use math.pi.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean loop-based edge drawing, dictionary-based nodes, ColumnDataSource
-          construction.
+        comment: Well-structured data representation. Appropriate complexity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png and plot.html. Current API.
+        comment: Saves as plot.png via export_png. Current API.
     library_mastery:
       score: 7
       max: 10
@@ -206,15 +205,15 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses ColumnDataSource for all node types. Uses figure, scatter, rect,
-          line, multi_line, Label idiomatically.
+        comment: Good use of ColumnDataSource, figure methods, Label annotations,
+          proper Bokeh patterns.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: HoverTool with node details and HTML export leverage bokeh interactive
-          capabilities.
+        comment: Uses HoverTool, BoxAnnotation, and HTML export — distinctive Bokeh
+          features.
   verdict: REJECTED
 impl_tags:
   dependencies: []
