@@ -1,10 +1,11 @@
-""" pyplots.ai
+"""pyplots.ai
 tree-decision: Decision Tree Visualization with Probabilities
 Library: matplotlib 3.10.8 | Python 3.14.3
 Quality: 89/100 | Created: 2026-03-06
 """
 
 import matplotlib.patches as mpatches
+import matplotlib.patheffects as pe
 import matplotlib.pyplot as plt
 from matplotlib.patches import FancyArrowPatch, FancyBboxPatch
 
@@ -24,11 +25,11 @@ nodes = [
 
 # Layout — manual left-to-right positions, spread to fill canvas
 positions = {
-    "D1": (0.8, 5.0),
+    "D1": (0.8, 4.6),
     "C1": (3.5, 6.8),
-    "T1": (3.5, 3.2),
+    "T1": (3.5, 2.2),
     "D2": (6.2, 8.2),
-    "T2": (6.2, 5.0),
+    "T2": (6.2, 4.3),
     "T3": (9.0, 9.2),
     "T4": (9.0, 7.2),
 }
@@ -76,8 +77,8 @@ for node in nodes:
 
     # Branch label
     if label:
-        mx, my = px + (cx - px) * 0.38, py + (cy - py) * 0.38
-        offset_y = 0.45 if cy >= py else -0.45
+        mx, my = px + (cx - px) * 0.35, py + (cy - py) * 0.35
+        offset_y = 0.55 if cy >= py else -0.55
         ax.text(
             mx,
             my + offset_y,
@@ -103,18 +104,9 @@ for node in nodes:
     nid, ntype, parent_id, label, prob, payoff, emv, pruned = node
     x, y = positions[nid]
 
+    shadow_fx = [pe.SimplePatchShadow(offset=(3, -3), shadow_rgbFace="black", alpha=0.15), pe.Normal()]
+
     if ntype == "decision":
-        # Shadow
-        shadow = FancyBboxPatch(
-            (x - node_size + 0.04, y - node_size - 0.04),
-            node_size * 2,
-            node_size * 2,
-            boxstyle="round,pad=0.03",
-            facecolor="#00000015",
-            edgecolor="none",
-            zorder=2,
-        )
-        ax.add_patch(shadow)
         rect = FancyBboxPatch(
             (x - node_size, y - node_size),
             node_size * 2,
@@ -125,6 +117,7 @@ for node in nodes:
             linewidth=2.5,
             zorder=3,
         )
+        rect.set_path_effects(shadow_fx)
         ax.add_patch(rect)
         if emv is not None:
             emv_text = f"${emv / 1e6:.1f}M" if emv >= 1e6 else f"${emv / 1e3:.0f}K"
@@ -145,9 +138,8 @@ for node in nodes:
             )
 
     elif ntype == "chance":
-        shadow = plt.Circle((x + 0.04, y - 0.04), node_size, facecolor="#00000015", edgecolor="none", zorder=2)
-        ax.add_patch(shadow)
         circle = plt.Circle((x, y), node_size, facecolor=chance_color, edgecolor="white", linewidth=2.5, zorder=3)
+        circle.set_path_effects(shadow_fx)
         ax.add_patch(circle)
         if emv is not None:
             emv_text = f"${emv / 1e6:.1f}M" if emv >= 1e6 else f"${emv / 1e3:.0f}K"
@@ -170,18 +162,6 @@ for node in nodes:
     elif ntype == "terminal":
         triangle_size = node_size * 0.95
         tri_color = terminal_color if not pruned else pruned_color
-        # Shadow
-        shadow_tri = plt.Polygon(
-            [
-                (x - triangle_size * 0.6 + 0.04, y - triangle_size - 0.04),
-                (x - triangle_size * 0.6 + 0.04, y + triangle_size - 0.04),
-                (x + triangle_size + 0.04, y - 0.04),
-            ],
-            facecolor="#00000015",
-            edgecolor="none",
-            zorder=2,
-        )
-        ax.add_patch(shadow_tri)
         triangle = plt.Polygon(
             [
                 (x - triangle_size * 0.6, y - triangle_size),
@@ -193,6 +173,7 @@ for node in nodes:
             linewidth=2.5,
             zorder=3,
         )
+        triangle.set_path_effects(shadow_fx)
         ax.add_patch(triangle)
         if payoff is not None:
             payoff_text = f"${payoff / 1e6:.1f}M" if payoff >= 1e6 else f"${payoff / 1e3:.0f}K"
@@ -241,7 +222,7 @@ legend.get_frame().set_facecolor("white")
 # Style
 ax.set_title("tree-decision · matplotlib · pyplots.ai", fontsize=24, fontweight="medium", pad=20, color="#333333")
 ax.set_xlim(-0.3, 11.0)
-ax.set_ylim(1.8, 10.5)
+ax.set_ylim(0.8, 10.5)
 ax.set_aspect("equal")
 ax.axis("off")
 
