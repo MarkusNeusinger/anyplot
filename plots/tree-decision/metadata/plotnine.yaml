@@ -1,7 +1,7 @@
 library: plotnine
 specification_id: tree-decision
 created: '2026-03-06T21:38:26Z'
-updated: '2026-03-06T21:42:34Z'
+updated: '2026-03-06T21:51:15Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 22782764704
 issue: 4569
@@ -10,36 +10,41 @@ library_version: 0.15.3
 preview_url: https://storage.googleapis.com/pyplots-images/plots/tree-decision/plotnine/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/tree-decision/plotnine/plot_thumb.png
 preview_html: null
-quality_score: 82
+quality_score: 84
 review:
   strengths:
-  - Perfect spec compliance with all required features implemented correctly
-  - Excellent data quality with realistic product launch decision scenario
-  - Clear visual distinction between active and pruned branches (solid vs dashed,
-    opacity)
-  - Clean well-documented code with verified EMV calculations
-  - Appropriate use of theme_void() for diagram-style visualization
+  - Full spec compliance with all required decision tree features (node shapes, EMV
+    values, pruned branches, probabilities)
+  - Excellent data quality with realistic, mathematically correct business scenario
+  - Good visual hierarchy differentiating active vs pruned paths
+  - Clean, well-structured code following KISS principles
   weaknesses:
-  - Branch labels and EMV values are somewhat small (plotnine size=7-8)
-  - Visual clutter around pruned branches where labels and prune marks crowd together
-  - Large empty gap between tree and legend wastes canvas space
-  - Node markers could be larger for better visual impact
-  image_description: 'The plot displays a left-to-right decision tree diagram titled
-    "tree-decision · plotnine · pyplots.ai" on a white background. The root decision
-    node (blue square, left side) branches into "Launch Product" (solid line, active)
-    and "License IP" (dashed gray line, pruned with red "||" mark). The Launch Product
-    branch leads to an orange chance node (EMV: $320K) which splits into "High Demand
-    (p=0.60)" leading to a green terminal triangle ($500K) and "Low Demand (p=0.40)"
-    leading to a second blue decision node (EMV: $50K). This decision node branches
-    into "Pivot Strategy" (active) leading to another orange chance node (EMV: $50K)
-    with "Recovery (p=0.50)" to $200K and "No Recovery (p=0.50)" to -$100K, and "Cut
-    Losses" (pruned, dashed) to -$50K. The License IP path leads to an orange chance
-    node (EMV: $184K) with both branches pruned: "Accepted (p=0.70)" to $250K and
-    "Rejected (p=0.30)" to $30K. A legend at the bottom identifies Chance (orange
-    circle), Decision (blue square), and Terminal (green triangle) node types.'
+  - Branch labels (size=10) and EMV/payoff labels (size=9) are slightly small for
+    optimal legibility at this canvas size
+  - Color palette is good but could be more refined for publication quality
+  - The Optimal annotation could be more prominent or connected to the actual optimal
+    path
+  image_description: 'The plot displays a decision tree with a left-to-right layout
+    on a clean white background. The title "tree-decision · plotnine · pyplots.ai"
+    is centered at the top in bold dark text. The tree has three types of nodes: blue
+    squares for Decision nodes, orange circles for Chance nodes, and green right-pointing
+    triangles for Terminal nodes. The root Decision node (blue square) is at the far
+    left with "EMV: $320K" below it. Two branches extend from it: "Launch Product"
+    (solid dark line going up) and "License IP" (dashed gray line going down, with
+    a red cross prune mark). The Launch Product branch leads to an orange Chance node
+    with "EMV: $320K", which splits into "High Demand (p=0.60)" leading to a green
+    terminal at $500K, and "Low Demand (p=0.40)" leading to a second blue Decision
+    node at "EMV: $50K". From that Decision node, "Pivot Strategy" (solid) leads to
+    another orange Chance node with "EMV: $50K" that splits into "Recovery (p=0.50)"
+    at $200K and "No Recovery (p=0.50)" at -$100K. "Cut Losses" is pruned (dashed,
+    cross mark) leading to -$50K. The License IP branch leads to a pruned orange Chance
+    node with "EMV: $184K" splitting into "Accepted (p=0.70)" at $250K and "Rejected
+    (p=0.30)" at $30K, both also pruned. A star Optimal annotation in blue italic
+    sits near the top-left. The legend at the bottom shows Chance (orange circle),
+    Decision (blue square), Terminal (green triangle).'
   criteria_checklist:
     visual_quality:
-      score: 23
+      score: 24
       max: 30
       items:
       - id: VQ-01
@@ -47,39 +52,40 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Font sizes explicitly set but branch labels and EMV values somewhat
-          small
+        comment: Font sizes explicitly set but branch/value labels (size 9-10) slightly
+          small for canvas
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Visual clutter around pruned branches where labels and prune marks
-          crowd together
+        passed: true
+        comment: Minor crowding near middle Decision node but no severe overlap
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Nodes visible with distinct shapes, could be slightly larger
+        comment: Nodes clearly visible with border effect, good active/pruned branch
+          differentiation
       - id: VQ-04
         name: Color Accessibility
         score: 3
         max: 4
         passed: true
-        comment: Blue/orange colorblind-friendly, green terminals have shape redundancy
+        comment: Blue-orange-green palette largely colorblind-safe, green-orange could
+          challenge deuteranopia
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good layout but notable gap between tree and legend
+        comment: Good horizontal spread, some unused vertical space
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title correct, theme_void appropriate for diagram
+        comment: Title follows format, theme_void appropriate for tree diagram
     design_excellence:
       score: 13
       max: 20
@@ -89,20 +95,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom color palette with intentional mapping, not quite publication-level
+        comment: Custom palette, node border effect, clean theme_void. Above defaults
+          but not publication-grade
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: theme_void appropriate, red prune marks add interest, missing subtle
-          node borders
+        comment: theme_void removes axes, alpha blending on pruned branches, node
+          border layering
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Clear visual hierarchy between active and pruned paths
+        comment: Optimal annotation, pruned branches visually subdued, EMV values
+          guide viewer
     spec_compliance:
       score: 15
       max: 15
@@ -112,25 +120,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct decision tree visualization
+        comment: Correct tree-structured decision diagram with left-to-right layout
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: node shapes, probabilities, EMV, pruning'
+        comment: 'All features present: node shapes, EMV, probabilities, pruned branches,
+          payoffs'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Tree structure and EMV calculations correct
+        comment: Tree structure correct, EMV rollback calculations mathematically
+          correct
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend shows all node types
+        comment: Title follows required format, legend shows all node types
     data_quality:
       score: 15
       max: 15
@@ -140,20 +150,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all tree features: multi-stage decisions, pruning, positive/negative
-          payoffs'
+        comment: 'Shows all aspects: decision/chance/terminal nodes, pruned/active
+          branches, multi-stage, positive/negative payoffs'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic product launch decision scenario
+        comment: Product launch decision scenario is realistic, neutral business context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Realistic dollar values and probabilities
+        comment: Payoffs -$100K to $500K realistic for business, probabilities sum
+          correctly
     code_quality:
       score: 10
       max: 10
@@ -163,33 +174,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean Imports-Data-Plot-Save structure
+        comment: Clean Imports-Data-Plot-Save structure, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hardcoded data
+        comment: Fully deterministic data, no random elements
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: All imports used, no unused imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-structured with clear data separation
+        comment: Clean, well-structured, good pandas usage, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300
+        comment: Saves as plot.png at dpi=300, current plotnine API
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -197,13 +208,15 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good grammar of graphics usage with layered geoms and scales
+        comment: 'Good grammar of graphics: ggplot + geom layers + scale_manual +
+          theme_void + coord_fixed'
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Manual coordinate positioning is not distinctive to plotnine
+        passed: true
+        comment: Uses annotate(), scale_shape_manual with ggplot codes, guide_legend
+          override_aes, coord_fixed
   verdict: REJECTED
 impl_tags:
   dependencies: []
@@ -217,3 +230,4 @@ impl_tags:
   styling:
   - minimal-chrome
   - alpha-blending
+  - edge-highlighting
