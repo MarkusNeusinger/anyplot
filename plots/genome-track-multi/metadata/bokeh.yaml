@@ -1,7 +1,7 @@
 library: bokeh
 specification_id: genome-track-multi
 created: '2026-03-06T17:03:13Z'
-updated: '2026-03-06T17:07:36Z'
+updated: '2026-03-06T17:16:33Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 22773343290
 issue: 4422
@@ -10,37 +10,42 @@ library_version: 3.8.2
 preview_url: https://storage.googleapis.com/pyplots-images/plots/genome-track-multi/bokeh/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/genome-track-multi/bokeh/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/genome-track-multi/bokeh/plot.html
-quality_score: 85
+quality_score: 89
 review:
   strengths:
-  - Excellent spec compliance with all 4 required tracks and all specified features
-    (exons, introns, UTRs, strand arrows, coverage area, lollipop variants, regulatory
-    rectangles)
-  - Realistic EGFR gene data with biologically meaningful coverage-exon correlation
-  - Clean code structure with well-organized track sections
-  - Good use of Bokeh shared x_range for coordinated tracks
+  - Excellent spec compliance with all 4 required tracks fully implemented (genes,
+    coverage, variants, regulatory)
+  - Realistic EGFR gene data creates compelling biological context with coverage peaks
+    at exons
+  - Strong visual design with custom cohesive palette, alternating track backgrounds,
+    and clean typography
+  - Good use of Bokeh-specific features (HoverTool, shared Range1d, dual PNG/HTML
+    output)
+  - Perfect data quality with realistic scales and comprehensive feature coverage
   weaknesses:
-  - Yellow enhancer rectangles have low contrast against the light background
-  - Track labels positioned via screen units could shift if layout changes
-  - Genes track label is slightly cramped near the title
-  - Could leverage more Bokeh-specific features like HoverTool for HTML export
+  - Strand direction triangles on the gene track are too subtle — could be larger
+    or use a more prominent glyph
+  - Regulatory track legend text slightly small compared to overall plot scale
+  - Left border (200px) creates slight whitespace imbalance
   image_description: 'The plot displays a multi-track genome browser view of the EGFR
-    gene locus on chromosome 7 (positions ~55,086,000 to ~55,212,000). Four vertically
-    stacked tracks share a common x-axis showing genomic position with comma-formatted
-    coordinates. The top Gene track shows blue rectangular exons connected by a thin
-    blue intron line with triangle arrows indicating the (+) strand direction, "EGFR
-    (+)" labeled above, and lighter blue UTR regions at the ends. The Coverage track
-    displays a blue filled area plot of read depth (0-80) with peaks correlating to
-    exon positions. The Variant track shows lollipop markers with orange circles for
-    SNPs and purple diamonds for Indels, height encoding quality score (0-100), with
-    a legend in the top-right. The bottom Regulatory track displays colored rectangles:
-    green for Promoters, yellow for Enhancers, and pink for CTCF Binding sites, with
-    a horizontal legend. Track labels ("Genes", "Coverage", "Variants", "Regulatory")
-    appear in bold gray on each panel''s upper-left. The background is a subtle off-white
-    (#FAFBFC) with white borders between tracks.'
+    gene locus on chromosome 7 (~55,086,000–55,212,000 bp), with four vertically stacked
+    tracks sharing a common x-axis. Track 1 (Genes): Shows the EGFR gene with dark
+    blue rectangular exons connected by a lighter blue intron line. Small triangular
+    markers indicate the (+) strand direction. The gene name "EGFR (+)" is labeled
+    above in italic. Thinner UTR rectangles appear at the 5'' and 3'' ends. Track
+    2 (Coverage): A filled area plot in semi-transparent blue with a darker blue outline
+    showing read depth (0–60+). Peaks align with exon positions, simulating RNA-seq-like
+    coverage. Background is light gray. Track 3 (Variants): Lollipop markers with
+    orange circles for SNPs and purple diamonds for Indels, heights encoding quality
+    scores (0–100). A legend in the top-right distinguishes SNP and Indel types. Track
+    4 (Regulatory): Colored rectangles for regulatory elements — green (Promoter),
+    gold (Enhancer), pink (CTCF Binding) — with a horizontal legend in the top-right.
+    The x-axis shows formatted genomic positions with the label "Genomic Position
+    (chr7)". Tracks alternate between white and light gray backgrounds. Title reads
+    "genome-track-multi · bokeh · pyplots.ai".'
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 26
       max: 30
       items:
       - id: VQ-01
@@ -48,68 +53,67 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set throughout (title 36pt, labels 20-22pt,
-          ticks 16-18pt). Genes track label slightly cramped near title area.
+        comment: All font sizes explicitly set (title 36pt, axis labels 20-22pt, ticks
+          16-18pt, track labels 22pt). Regulatory track legend text slightly small.
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 'Minor issue: Genes track label appears close to the title area.
-          All other text is clear.'
+        comment: No text collisions or overlapping elements anywhere.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Exons, coverage area, lollipop markers, and regulatory rectangles
-          are all well-sized. Regulatory elements could be slightly taller.
+        comment: Exons, coverage, and lollipop markers well-sized. Strand direction
+          triangles are too subtle at size=18 alpha=0.5.
       - id: VQ-04
         name: Color Accessibility
         score: 3
         max: 4
         passed: true
-        comment: Good palette overall. Yellow enhancer rectangles have somewhat low
-          contrast against the light background.
+        comment: Good palette avoiding red-green. Minor concern with green Promoter
+          vs gold Enhancer for deuteranopia.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Four stacked panels with good individual proportions. Column layout
-          produces reasonable aspect ratio.
+        comment: Four tracks fill canvas well. 200px left border creates slightly
+          more whitespace than ideal.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels: Read Depth, Quality Score, Genomic Position
-          (chr7).'
+        comment: 'Descriptive labels with context: Genomic Position (chr7), Read Depth,
+          Quality Score.'
     design_excellence:
-      score: 13
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Custom color palette anchored by Python Blue, consistent color mapping,
-          professional appearance. Above defaults but not publication-level.
+        comment: Custom cohesive palette anchored on Python Blue. Alternating track
+          backgrounds. Clearly above defaults, approaching publication quality.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Grids removed on gene/regulatory tracks, subtle grid on coverage/variant
-          tracks, outlines removed, toolbar hidden, clean backgrounds.
+        comment: Outlines removed, subtle dashed grids, axes hidden where unnecessary,
+          white edge-highlighting on shapes, generous whitespace.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Coverage peaks correlate with exon positions. EGFR gene context is
-          biologically meaningful. Natural reading flow across tracks.
+        comment: EGFR gene context creates biological narrative. Coverage peaks at
+          exons tell expression story. Multi-track alignment guides the viewer.
     spec_compliance:
       score: 15
       max: 15
@@ -119,29 +123,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct multi-track genome browser with 4 stacked tracks sharing
-          a genomic coordinate axis.
+        comment: Correct multi-track genome browser view with 4 vertically stacked
+          tracks.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Gene track (exons, introns, UTRs, strand arrows), coverage area,
-          lollipop variants, regulatory rectangles, track labels.
+        comment: 'All spec features present: gene track with exons/introns/UTRs/strand,
+          coverage area, lollipop variants, regulatory rectangles, track labels, shared
+          coords, background shading.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Genomic positions correctly mapped to shared x-axis, y-axes appropriate
-          for each track.
+        comment: X-axis is genomic position, all tracks aligned via shared Range1d.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Variant and regulatory legends both present
-          and correct.
+        comment: Title format correct. Variant legend (SNP/Indel) and regulatory legend
+          (Promoter/Enhancer/CTCF Binding) accurate.
     data_quality:
       score: 15
       max: 15
@@ -151,22 +155,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: 26 exons with UTRs, intron connections, strand
-          direction, coverage peaks, SNP/Indel variants, three regulatory types.'
+        comment: 26 exons, UTRs, intron, strand markers, coverage peaks at exons,
+          20 variants (14 SNP + 6 Indel), 8 regulatory elements across 3 types.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: EGFR gene on chr7 is a real, well-known oncogene. Neutral scientific
-          context.
+        comment: EGFR gene on chr7 is a real, well-known gene with realistic coordinates
+          and biologically plausible data.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Realistic genomic positions, read depths, quality scores, and region
-          span for gene-level view.
+        comment: Coverage 0-60x (typical RNA-seq), quality scores 20-100 (standard),
+          regulatory elements 1-2 kb (realistic).
     code_quality:
       score: 10
       max: 10
@@ -176,34 +180,36 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, constants, data generation, 4 track figures,
-          combine, save.'
+        comment: 'Linear flow: imports, constants, data, track1-4, layout, save. No
+          functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set at top.
+        comment: np.random.seed(42) set at the top.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used.
+        comment: All imports used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized code with clear section comments for each track.
+        comment: Well-organized with clear section comments. Appropriate complexity
+          for a 4-track genome viewer.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html. Current Bokeh API.
+        comment: Saves as plot.png via export_png and plot.html via save. Current
+          Bokeh API.
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -211,29 +217,32 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses ColumnDataSource, shared Range1d, column layout, various glyphs,
-          Label, NumeralTickFormatter.
+        comment: 'Good use of ColumnDataSource, figure composition with column layout,
+          shared Range1d, NumeralTickFormatter, Label model. Minor: invisible glyph
+          trick for legend.'
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Shared x_range for linked panning, column layout for multi-figure
-          composition, HTML export alongside PNG.
+        comment: HoverTool for interactive tooltips, dual PNG/HTML output, shared
+          x_range across figures — all distinctive Bokeh patterns.
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
-  - layer-composition
-  - custom-legend
+  - hover-tooltips
   - html-export
+  - layer-composition
+  - annotations
   patterns:
   - data-generation
   - columndatasource
   - iteration-over-groups
-  dataprep: []
+  dataprep:
+  - convolution
   styling:
-  - minimal-chrome
   - alpha-blending
   - edge-highlighting
   - grid-styling
+  - minimal-chrome
