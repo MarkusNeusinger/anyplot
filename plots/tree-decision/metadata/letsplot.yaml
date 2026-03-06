@@ -1,0 +1,233 @@
+library: letsplot
+specification_id: tree-decision
+created: '2026-03-06T21:37:40Z'
+updated: '2026-03-06T22:15:00Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22782764623
+issue: 4569
+python_version: 3.14.3
+library_version: 4.8.2
+preview_url: https://storage.googleapis.com/pyplots-images/plots/tree-decision/letsplot/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/tree-decision/letsplot/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/tree-decision/letsplot/plot.html
+quality_score: 86
+review:
+  strengths:
+  - Excellent spec compliance with all required node types, shapes, EMV values, probabilities,
+    and pruned branch markers
+  - Strong data quality with realistic two-stage product launch scenario featuring
+    positive and negative payoffs
+  - Thoughtful color palette with blue/gold/green differentiation and solarized light
+    theme
+  - Clear visual hierarchy distinguishing active vs pruned branches through line weight,
+    style, and color
+  - Clean KISS code structure with well-organized data definitions
+  weaknesses:
+  - Probability label font size slightly small relative to other text
+  - Area around D2 node is congested with multiple converging labels
+  - Library mastery limited — manual shape placement does not leverage lets-plot distinctive
+    features
+  - Depth shading bands at alpha=0.08 are nearly invisible
+  image_description: 'The plot displays a two-stage decision tree for a product launch
+    strategy, laid out left-to-right on a warm cream/beige solarized light background.
+    The root decision node (D1) is a dark blue square at far left with "EMV $450K"
+    below it. Two branches extend from D1: "Launch Product" (bold label, thick dark
+    branch) leading to an orange/gold chance node (C1), and "License Tech" (bold label,
+    dashed gray branch) leading down to a green terminal triangle showing "$250K".
+    A red X mark crosses the pruned "License Tech" branch. From C1 (also "EMV $450K"),
+    three probability branches extend: "Strong (0.3)" to terminal "$900K", "Moderate
+    (0.5)" to decision node D2 ("EMV $440K"), and "Weak (0.2)" to terminal "-$200K".
+    D2 branches to "Scale Up" (active, leading to chance node C2 with "EMV $440K")
+    and "Maintain" (pruned with red X, dashed to terminal "$350K"). C2 branches to
+    "Success (0.6)" leading to "$600K" and "Setback (0.4)" leading to "$200K". A manual
+    legend in the bottom-right shows Decision Node (blue square), Chance Node (orange
+    circle), and Terminal Node (green triangle). Subtle gray shading bands mark Stage
+    1 and Stage 2 depth levels. Elbow-style connectors link all nodes.'
+  criteria_checklist:
+    visual_quality:
+      score: 26
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Font sizes explicitly set (title=28, subtitle=16, labels=11-12).
+          Probability labels at size=11 slightly small.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Some congestion around D2 node where EMV, probability, and decision
+          labels cluster. All readable but tight.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: All node shapes clearly visible and well-sized. Pruning X marks small
+          but visible.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue-orange-green palette is colorblind-safe with good contrast.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good left-to-right layout. Some empty space in bottom-left quadrant.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive title and subtitle. No axes needed for tree diagram.
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom palette, solarized light theme, bold/italic typography differentiation.
+          Clearly above defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: theme_void removes clutter, warm background, subtle depth bands.
+          Elbow connectors add noise in dense areas.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Good hierarchy: thick active vs dashed pruned branches, red X marks.
+          Viewer can trace optimal path.'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct decision tree with squares, circles, and right-pointing triangles.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: node shapes, probabilities, payoffs, EMV rollback,
+          pruned branches.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Left-to-right layout correct, accurate EMV calculations.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct. Manual legend with all three node types.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all aspects: decision, chance, terminal nodes, pruning, two-stage,
+          positive and negative payoffs.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Product launch strategy is realistic and neutral.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Plausible values ($200K-$900K), probabilities sum to 1.0.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports, data, processing, plot, save.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hardcoded data.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports are used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-organized. Complexity appropriate for manual tree construction.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with scale=3 via ggsave.
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good ggplot grammar with layered geom composition, theme_void, flavor_solarized_light.
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Uses flavor_solarized_light and geom_label parameters, but core manual
+          approach isn't distinctively lets-plot.
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - annotations
+  - custom-legend
+  - patches
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - alpha-blending
+  - edge-highlighting
