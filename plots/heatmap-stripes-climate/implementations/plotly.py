@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 heatmap-stripes-climate: Climate Warming Stripes
 Library: plotly 6.6.0 | Python 3.14.3
 Quality: 84/100 | Created: 2026-03-06
@@ -35,38 +35,25 @@ colorscale = [
     [1.0, "#67000d"],
 ]
 
-
-def anomaly_to_color(val, vmin, vmax_val):
-    """Map anomaly value to color using the colorscale."""
-    t = (val - vmin) / (vmax_val - vmin)
-    t = max(0.0, min(1.0, t))
-    for i in range(len(colorscale) - 1):
-        t0, c0 = colorscale[i]
-        t1, c1 = colorscale[i + 1]
-        if t0 <= t <= t1:
-            f = (t - t0) / (t1 - t0)
-            r0, g0, b0 = int(c0[1:3], 16), int(c0[3:5], 16), int(c0[5:7], 16)
-            r1, g1, b1 = int(c1[1:3], 16), int(c1[3:5], 16), int(c1[5:7], 16)
-            r = int(r0 + f * (r1 - r0))
-            g = int(g0 + f * (g1 - g0))
-            b = int(b0 + f * (b1 - b0))
-            return f"rgb({r},{g},{b})"
-    return colorscale[-1][1]
-
-
-bar_colors = [anomaly_to_color(a, -vmax, vmax) for a in anomalies]
-
-# Plot using go.Bar for seamless stripes (no gap artifacts)
+# Plot using go.Heatmap with native colorscale for idiomatic Plotly usage
 fig = go.Figure(
-    data=go.Bar(
-        x=years, y=[1] * n_years, marker={"color": bar_colors, "line": {"width": 0}}, width=1.0, hoverinfo="skip"
+    data=go.Heatmap(
+        z=[anomalies],
+        x=years,
+        y=[""],
+        colorscale=colorscale,
+        zmin=-vmax,
+        zmax=vmax,
+        showscale=False,
+        hoverinfo="skip",
+        xgap=0,
+        ygap=0,
     )
 )
 
 # Subtle decade markers as thin semi-transparent lines
-decade_years = [1900, 1950, 2000]
-for dy in decade_years:
-    fig.add_shape(type="line", x0=dy, x1=dy, y0=0, y1=1, line={"color": "rgba(255,255,255,0.35)", "width": 1.5})
+for dy in [1900, 1950, 2000]:
+    fig.add_shape(type="line", x0=dy, x1=dy, y0=-0.5, y1=0.5, line={"color": "rgba(255,255,255,0.35)", "width": 1.5})
 
 # Subtle start/end year annotations
 fig.add_annotation(
@@ -102,17 +89,8 @@ fig.update_layout(
     paper_bgcolor="white",
     plot_bgcolor="white",
     xaxis={"showgrid": False, "showticklabels": False, "zeroline": False, "showline": False, "range": [1849.5, 2024.5]},
-    yaxis={
-        "showgrid": False,
-        "showticklabels": False,
-        "zeroline": False,
-        "showline": False,
-        "range": [0, 1],
-        "fixedrange": True,
-    },
+    yaxis={"showgrid": False, "showticklabels": False, "zeroline": False, "showline": False, "fixedrange": True},
     margin={"l": 0, "r": 0, "t": 70, "b": 30},
-    bargap=0,
-    bargroupgap=0,
     showlegend=False,
 )
 
