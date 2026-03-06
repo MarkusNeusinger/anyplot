@@ -1,7 +1,7 @@
 library: pygal
 specification_id: tree-decision
 created: '2026-03-06T21:39:10Z'
-updated: '2026-03-06T21:57:10Z'
+updated: '2026-03-06T22:06:16Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 22782764491
 issue: 4569
@@ -10,36 +10,36 @@ library_version: 3.1.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/tree-decision/pygal/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/tree-decision/pygal/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/tree-decision/pygal/plot.html
-quality_score: 84
+quality_score: 85
 review:
   strengths:
-  - Excellent spec compliance — all required features present with correct node shapes,
+  - Perfect spec compliance — all required features present with correct node shapes,
     EMV values, probability labels, and pruned branch markings
-  - Strong data storytelling — optimal vs pruned paths immediately distinguishable
-    through bold/dashed lines, color contrast, and X marks
-  - Colorblind-safe palette improved to Okabe-Ito inspired colors (teal-blue/vermilion
-    instead of green/red)
-  - Now uses pygal-native legend via real data series instead of manual legend construction
+  - Strong data storytelling through visual hierarchy — optimal path immediately distinguishable
+    via bold lines, background highlight, and color contrast
+  - Colorblind-safe Okabe-Ito palette with good node type differentiation
+  - 'Improved pygal integration: value_formatter, xlink tooltips, CSS injection, native
+    legend via real data series'
   weaknesses:
-  - Library mastery still limited — pygal core charting capabilities underutilized
-    since tree diagrams require manual SVG overlay
-  - Bottom portion of canvas has wasted space between tree and legend
-  - SVG string building is still verbose (~90 lines of f-strings), though organized
+  - Library mastery inherently limited — pygal lacks a tree chart type, requiring
+    manual SVG overlay for the core visualization
+  - Bottom portion of canvas has wasted space between tree content and legend
+  - SVG string building remains verbose (~90 lines) despite good organization
   image_description: 'The plot displays a decision tree for a "New Product Launch"
-    scenario with a left-to-right layout on a white background. The title "tree-decision
-    · pygal · pyplots.ai" is centered at the top in dark gray. On the far left is
-    a blue square decision node labeled "Strategy Choice" with "EMV $260K" displayed
-    inside in white text. Three elbow-connector branches emanate from it: "Launch
-    Product" (solid blue, optimal path), "Sell License" (dashed gray, pruned with
-    vermilion X marks), and "Do Nothing" (dashed gray, pruned with vermilion X). The
-    "Launch Product" branch leads to an orange circle chance node "Market Outcome"
-    (EMV $260K), which splits into "High Demand" (p=0.6, teal-blue triangle, $500K)
-    and "Low Demand" (p=0.4, vermilion triangle, -$100K). The "Sell License" branch
-    leads to an orange circle "License Result" (EMV $190K) splitting into "Accepted"
-    (p=0.7, teal-blue triangle, $250K) and "Rejected" (p=0.3, teal-blue triangle,
-    $50K). The "Do Nothing" branch leads to a gray triangle ($0K). A pygal-native
-    legend at the bottom identifies: Decision Node, Chance Node, Terminal (Gain),
-    Terminal (Loss), Terminal (Neutral) with corresponding color swatches.'
+    scenario with left-to-right layout on a white background. The title "tree-decision
+    · pygal · pyplots.ai" is centered at the top. A blue rounded-corner square decision
+    node on the far left shows "EMV $260K" in white text, labeled "Strategy Choice"
+    below. Three elbow-connector branches extend rightward: "Launch Product" (solid
+    bold blue — optimal path), "Sell License" (dashed gray, pruned with vermilion
+    X marks), and "Do Nothing" (dashed gray, pruned with vermilion X). A subtle light-blue
+    highlight region shades the optimal path. "Launch Product" leads to an orange
+    circle chance node "Market Outcome" (EMV $260K), which splits into "High Demand"
+    (p=0.6, teal-blue triangle → $500K) and "Low Demand" (p=0.4, vermilion triangle
+    → −$100K). "Sell License" leads to an orange circle "License Result" (EMV $190K)
+    splitting into "Accepted" (p=0.7, teal-blue triangle → $250K) and "Rejected" (p=0.3,
+    teal-blue triangle → $50K). "Do Nothing" goes to a gray triangle ($0K). All nodes
+    have subtle drop shadows. A pygal-native legend at the bottom identifies: Decision
+    Node, Chance Node, Terminal (Gain), Terminal (Loss), Terminal (Neutral).'
   criteria_checklist:
     visual_quality:
       score: 26
@@ -50,37 +50,37 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'Font sizes explicitly set throughout: title 72px, labels 36-40px,
-          node text 28-34px. All text readable. Slight inconsistency in typographic
-          hierarchy.'
+        comment: 'Font sizes explicitly set throughout: title 72px, branch labels
+          36px, probability labels 34px, node labels 34-38px, payoff values 40px.
+          Minor inconsistency in typographic hierarchy.'
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Generally clear layout. Sell License label and pruning X marks close
-          but distinguishable. Minor crowding on vertical segment.
+        comment: Generally clear layout. Minor crowding near Sell License label and
+          pruning X marks on vertical segment.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Terminal triangles increased to 60px, better proportioned. Decision
-          square and chance circles well-sized.
+        comment: Terminal triangles 60px, decision squares 140px, chance circles 110px
+          — well-proportioned with drop shadows.
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: 'Okabe-Ito inspired palette: teal-blue for gains, vermilion for losses.
-          Fully colorblind-safe. Fixed from attempt 1.'
+        comment: 'Okabe-Ito inspired palette: teal-blue for gains, vermilion for losses,
+          gray for neutral. Fully colorblind-safe.'
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Tree occupies ~60% of canvas with good left-to-right flow. Some wasted
-          space at bottom between tree and legend.
+        comment: Tree occupies ~60% of canvas. Some wasted space at bottom between
+          tree and legend.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -96,24 +96,23 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Thoughtful Okabe-Ito inspired palette, white strokes on nodes, rounded
-          corners on decision rect, clean elbow connectors. Above defaults but not
-          publication-level.
+        comment: Okabe-Ito palette, white strokes, rounded corners, drop shadows,
+          clean elbow connectors. Above defaults but not publication-level.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Clean white background, no grid/axes, generous whitespace. Dashed
-          lines for pruned branches. Legend well-organized at bottom.
+        comment: Clean white background, no grid/axes, generous whitespace, dashed
+          pruned branches, subtle background highlight on optimal path.
       - id: DE-03
         name: Data Storytelling
         score: 5
         max: 6
         passed: true
-        comment: 'Strong visual hierarchy: optimal path bold blue vs pruned dashed
-          gray with X marks. Color-coded payoffs guide interpretation. Viewer immediately
-          identifies optimal strategy.'
+        comment: 'Strong visual hierarchy: bold blue optimal path with background
+          highlight vs faded dashed pruned paths with X marks. Color-coded payoffs
+          guide interpretation.'
     spec_compliance:
       score: 15
       max: 15
@@ -123,29 +122,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct decision tree with squares for decision, circles for chance,
-          right-pointing triangles for terminal.
+        comment: Correct decision tree with squares, circles, and right-pointing triangles.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features: EMV rollback, probability labels, pruned branch marking,
-          distinct node colors, branch labels.'
+        comment: 'All features present: EMV values, probabilities, pruned markings,
+          distinct colors, branch labels.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Tree structure correct. Probabilities sum to 1.0 per chance node.
-          EMV calculations verified correct.
+        comment: Correct parent-child relationships. Probabilities sum to 1.0. EMV
+          calculations correct.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title in correct format. Pygal-native legend identifies all 5 node
-          categories.
+        comment: Title in correct format. Pygal-native legend with 5 node categories.
     data_quality:
       score: 15
       max: 15
@@ -155,22 +152,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All node types, positive/negative payoffs, multiple branches, pruned
-          vs optimal, two-stage depth.
+        comment: All node types, positive/negative payoffs, pruned/optimal paths,
+          two-stage depth.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: New product launch decision with Launch/License/Do Nothing. Standard
-          business scenario.
+        comment: New product launch decision — neutral business scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values ($0K-$500K, -$100K) and probabilities (0.3-0.7) realistic
-          for product launch.
+        comment: Values $0K-$500K and probabilities 0.3-0.7 realistic for product
+          launch.
     code_quality:
       score: 9
       max: 10
@@ -180,7 +176,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat structure: imports, data, chart, SVG overlay, save.'
+        comment: Flat structure. fmt_currency is a pygal value_formatter callback
+          — standard pattern.
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -192,14 +189,14 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All three imports used (cairosvg, pygal, Style).
+        comment: 'All imports used: cairosvg, pygal, Style.'
       - id: CQ-04
         name: Code Elegance
         score: 1
         max: 2
         passed: true
-        comment: Still ~90 lines of SVG string building but well-organized. Pragmatic
-          given pygal lacks tree chart type.
+        comment: ~90 lines manual SVG is verbose but well-organized. Pragmatic given
+          pygal's limitations.
       - id: CQ-05
         name: Output & API
         score: 1
@@ -207,33 +204,32 @@ review:
         passed: true
         comment: Saves plot.png via cairosvg, plus plot.svg and plot.html.
     library_mastery:
-      score: 5
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 3
         max: 5
-        passed: false
-        comment: 'Improved: real data series per node type for pygal-native legend.
-          Style for typography/color. Chart config for dimensions/legend/margin. Tree
-          visualization still manual SVG since pygal has no tree chart type.'
+        passed: true
+        comment: Uses Style, data series for legend, value_formatter, chart config.
+          Core tree is manual SVG overlay since pygal has no tree chart type.
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Uses pygal native legend system via data series, Style class, SVG
-          rendering pipeline, legend positioning. Core tree drawing is still manual
-          SVG.
+        passed: true
+        comment: Leverages xlink tooltips, value_formatter, CSS injection, tooltip_fancy_mode,
+          native legend system. Meaningful pygal integrations.
   verdict: REJECTED
 impl_tags:
   dependencies:
   - cairosvg
   techniques:
-  - custom-legend
   - annotations
+  - custom-legend
   - html-export
+  - hover-tooltips
   patterns:
   - data-generation
   dataprep: []
