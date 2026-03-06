@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 sequence-logo-basic: Sequence Logo for Motif Visualization
 Library: bokeh 3.8.2 | Python 3.14.3
-Quality: 78/100 | Created: 2026-03-06
+Quality: 79/100 | Created: 2026-03-06
 """
 
 import numpy as np
