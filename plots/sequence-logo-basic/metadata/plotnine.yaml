@@ -1,7 +1,7 @@
 library: plotnine
 specification_id: sequence-logo-basic
 created: '2026-03-06T20:27:13Z'
-updated: '2026-03-06T20:40:26Z'
+updated: '2026-03-06T20:54:56Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 22780525163
 issue: 4421
@@ -10,81 +10,75 @@ library_version: 0.15.3
 preview_url: https://storage.googleapis.com/pyplots-images/plots/sequence-logo-basic/plotnine/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/sequence-logo-basic/plotnine/plot_thumb.png
 preview_html: null
-quality_score: 80
+quality_score: 78
 review:
   strengths:
-  - Excellent colorblind-safe palette with good contrast between nucleotides
-  - Smart data storytelling with yellow highlight on most conserved position and annotation
-  - Clean well-structured code with deterministic data and proper IC calculation
-  - 'Good visual refinement: subtle gridlines, custom background, removed unnecessary
-    chrome'
-  - Font size scaling proportional to segment height is a clever approach
+  - Excellent data quality with realistic bioinformatics context and correct information
+    content calculation
+  - Good data storytelling with highlighted most conserved position annotation
+  - Clean well-structured code with perfect KISS pattern
+  - Colorblind-safe palette and refined visual design with subtle backgrounds
+  - Correct information content formula implementation
   weaknesses:
-  - Letters rendered as plain text on colored rectangles instead of stretched/scaled
-    glyphs filling segments
-  - Small-frequency segments at stack bases have tiny cramped barely-readable letters
-  - Looks more like a stacked bar chart with labels than a traditional sequence logo
-  - Generic library usage not distinctive to plotnine
-  image_description: 'The plot displays a sequence logo for a 10-position DNA transcription
-    factor binding site, implemented as stacked colored rectangles with white bold
-    letter labels. Each position shows stacked bars whose total height represents
-    information content in bits (y-axis). Position 5 is essentially empty (uniform
-    distribution = 0 bits). Position 8 is the tallest (~1.4 bits) and highlighted
-    with a pale yellow background rectangle and an italic "most conserved" annotation
-    above it. Colors used: A=green (#009E73), C=blue (#0072B2), G=orange (#E69F00),
-    T=pink (#CC79A7) — a colorblind-safe palette. The title reads "sequence-logo-basic
-    · plotnine · pyplots.ai" in bold at the top. X-axis labeled "Position" (1-10),
-    Y-axis labeled "Information content (bits)". A "Nucleotide" legend appears on
-    the right. Background is light gray (#FAFAFA) with subtle horizontal gridlines.
-    Larger segments have clearly readable white letters; smaller segments at the base
-    have tiny barely-visible letters.'
+  - Letters not rendered as stretched glyphs - plain text with varying sizes does
+    not match spec requirement for scaled glyphs
+  - Small nucleotide letters at stack bases are barely visible and overlap reducing
+    readability
+  - Faint background rectangles add visual noise without clearly delineating letter
+    boundaries
+  image_description: The plot shows a sequence logo for a 10-position DNA transcription
+    factor binding site motif. Each position has stacked colored letters (A=green,
+    C=blue, G=orange/yellow, T=pink/mauve) with heights proportional to information
+    content in bits. The Y-axis ranges from 0 to ~1.5 bits. Position 8 is highlighted
+    with a pale yellow background and an italic "most conserved" annotation, showing
+    a large green "A" as the dominant nucleotide. Position 5 is empty (uniform distribution
+    = 0 bits). The title reads "sequence-logo-basic · plotnine · pyplots.ai" in bold.
+    The background is light gray (#FAFAFA) with subtle horizontal gridlines. Smaller
+    letters at the bottom of stacks are very tiny and difficult to read. Letters are
+    rendered as text of varying font sizes rather than stretched glyphs.
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 23
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title 24, axis_title 20, axis_text 16,
-          legend 14-16). Letter labels scale with segment height. Some small-segment
-          letters are tiny.
+        comment: Font sizes explicitly set for title/axes/legend but small letters
+          at stack bases are very tiny
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 4
         max: 6
-        passed: true
-        comment: Height filter prevents most overlap. A few bottom-stack letters are
-          cramped and barely distinguishable.
+        passed: false
+        comment: Small letters at bottom of stacks crowd together and overlap slightly
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 4
         max: 6
-        passed: true
-        comment: Stacked bars clearly visible with good width. Small frequency segments
-          at base are very thin but visible.
+        passed: false
+        comment: Dominant letters visible but smaller nucleotides at stack bases barely
+          visible
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: 'Excellent colorblind-safe palette: green, blue, orange, pink. Avoids
-          red-green conflict.'
+        comment: Colorblind-safe Okabe-Ito-inspired palette
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good 16:9 layout, plot fills most of canvas. Some wasted space on
-          right near legend.
+        comment: Good 16:9 proportions, position 5 empty creates visual gap
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Position and Information content (bits) - descriptive with units.
+        comment: Descriptive labels with units
     design_excellence:
       score: 13
       max: 20
@@ -94,24 +88,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom colorblind palette, white letters on colored bars, light gray
-          background, white edge separators. Above defaults but not publication-grade.
+        comment: Custom palette, subtle backgrounds, clean minimal theme - above defaults
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: X-grid removed, subtle y-grid, axis lines present, custom background.
-          Good refinement.
+        comment: X-grid removed, subtle y-grid, axis lines, FAFAFA background
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
         comment: Yellow highlight on most conserved position with annotation creates
-          clear focal point.
+          focal point
     spec_compliance:
-      score: 11
+      score: 12
       max: 15
       items:
       - id: SC-01
@@ -119,27 +111,26 @@ review:
         score: 3
         max: 5
         passed: false
-        comment: Stacked colored rectangles with plain text instead of true sequence
-          logo with stretched letter glyphs.
+        comment: Sequence logo but letters not rendered as stretched glyphs per spec
+          requirement
       - id: SC-02
         name: Required Features
-        score: 2
+        score: 3
         max: 4
         passed: false
-        comment: Vertical stacking, IC scaling, standard colors, axis labels present.
-          Letters NOT rendered as scaled glyphs per spec.
+        comment: Has stacking, IC scaling, colors, ordering - missing glyph stretching
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=position (1-10), Y=information content in bits. Correct mapping.
+        comment: Positions 1-10 on X, information content bits on Y
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Legend labeled Nucleotide with A, C, G, T.
+        comment: Correct title format and legend labels
     data_quality:
       score: 14
       max: 15
@@ -149,20 +140,20 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: 10 positions with varied conservation levels from uniform to highly
-          conserved.
+        comment: Shows varied conservation levels from 0 bits to ~1.4 bits
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Transcription factor binding site motif - real bioinformatics context.
+        comment: Transcription factor binding site motif - genuine bioinformatics
+          context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: IC ranges from 0 to ~1.4 bits, max possible 2 bits for DNA. Realistic.
+        comment: IC correctly 0-2 bits for DNA, frequencies sum to 1
     code_quality:
       score: 10
       max: 10
@@ -172,32 +163,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports, data, calculation, DataFrame, plot,
-          save.'
+        comment: 'Clean linear flow: imports, data, calculation, plot, save'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic data, no randomness.
+        comment: Fully deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriate complexity. Highlight logic and font scaling well-implemented.
+        comment: Clean and well-organized
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300.
+        comment: Saves as plot.png with dpi=300
     library_mastery:
       score: 6
       max: 10
@@ -207,15 +197,15 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Good grammar of graphics usage: layer composition, scale_size_identity,
-          coord_cartesian, scale_fill_manual.'
+        comment: Good grammar of graphics composition with layered geoms and proper
+          aesthetics
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Uses scale_size_identity and layer composition but stacked-rect-with-text
-          could be done in most libraries.
+        comment: Uses scale_size_identity and guides but no truly distinctive feature
+          leveraged
   verdict: REJECTED
 impl_tags:
   dependencies: []
@@ -226,7 +216,7 @@ impl_tags:
   - data-generation
   - iteration-over-groups
   dataprep:
-  - normalization
+  - information-content
   styling:
-  - edge-highlighting
   - grid-styling
+  - alpha-blending
