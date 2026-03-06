@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 heatmap-stripes-climate: Climate Warming Stripes
 Library: highcharts unknown | Python 3.14.3
 Quality: 87/100 | Created: 2026-03-06
@@ -11,9 +11,7 @@ import urllib.request
 from pathlib import Path
 
 import numpy as np
-from highcharts_core.chart import Chart
-from highcharts_core.options import HighchartsOptions
-from highcharts_core.options.series.heatmap import HeatmapSeries
+from PIL import Image
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
@@ -40,20 +38,20 @@ anomalies = base_trend + noise
 abs_max = float(max(abs(anomalies.min()), abs(anomalies.max())))
 
 # Build heatmap data: [x, y, value] - fill multiple rows so stripes cover full height
-n_rows = 30
+n_rows = 50
 series_data = [[i, row, round(float(anom), 4)] for row in range(n_rows) for i, anom in enumerate(anomalies)]
 
-# Highcharts options using heatmap series with colorAxis (idiomatic Highcharts feature)
+# Highcharts options using heatmap series with colorAxis
 chart_options = {
     "chart": {
         "type": "heatmap",
         "width": 4800,
-        "height": 1600,
+        "height": 2700,
         "backgroundColor": "#ffffff",
-        "marginTop": -5,
-        "marginLeft": -1,
-        "marginRight": -1,
-        "marginBottom": 70,
+        "marginTop": 0,
+        "marginLeft": 0,
+        "marginRight": 0,
+        "marginBottom": 80,
         "spacing": [0, 0, 0, 0],
     },
     "title": {
@@ -111,17 +109,7 @@ chart_options = {
     ],
 }
 
-# Validate library usage via highcharts-core Python API
-chart = Chart(container="container")
-chart.options = HighchartsOptions()
-chart.options.chart = {"type": "heatmap", "width": 4800, "height": 1600}
-chart.options.color_axis = chart_options["colorAxis"]
-series = HeatmapSeries()
-series.name = "Temperature Anomaly"
-series.data = [[0, 0, 0.1]]
-chart.add_series(series)
-
-# Serialize options as JSON (preserves data format for colorAxis mapping)
+# Serialize options as JSON
 options_json = json.dumps(chart_options)
 
 # Download Highcharts JS and heatmap module for inline embedding
@@ -145,7 +133,7 @@ html_content = f"""<!DOCTYPE html>
     <script>{heatmap_js}</script>
 </head>
 <body style="margin:0; padding:0; background:#ffffff;">
-    <div id="container" style="width:4800px; height:1600px;"></div>
+    <div id="container" style="width:4800px; height:2700px;"></div>
     <script>
         Highcharts.chart('container', {options_json});
     </script>
@@ -156,7 +144,7 @@ html_content = f"""<!DOCTYPE html>
 with open("plot.html", "w", encoding="utf-8") as f:
     f.write(html_content)
 
-# Screenshot with headless Chrome - larger window to capture title below stripes
+# Screenshot with headless Chrome
 with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False, encoding="utf-8") as f:
     f.write(html_content)
     temp_path = f.name
@@ -166,13 +154,18 @@ chrome_options.add_argument("--headless")
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
 chrome_options.add_argument("--disable-gpu")
-chrome_options.add_argument("--window-size=4800,1700")
+chrome_options.add_argument("--window-size=4900,2800")
 
 driver = webdriver.Chrome(options=chrome_options)
+driver.set_window_size(4900, 2800)
 driver.get(f"file://{temp_path}")
 time.sleep(5)
-container = driver.find_element("id", "container")
-container.screenshot("plot.png")
+driver.save_screenshot("plot.png")
 driver.quit()
+
+# Crop to exact 4800x2700
+img = Image.open("plot.png")
+img = img.crop((0, 0, 4800, 2700))
+img.save("plot.png")
 
 Path(temp_path).unlink()
