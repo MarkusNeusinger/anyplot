@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 sequence-logo-basic: Sequence Logo for Motif Visualization
 Library: plotnine 0.15.3 | Python 3.14.3
 Quality: 80/100 | Created: 2026-03-06
@@ -17,7 +17,9 @@ from plotnine import (
     geom_rect,
     geom_text,
     ggplot,
+    guides,
     labs,
+    scale_color_manual,
     scale_fill_manual,
     scale_size_identity,
     scale_x_continuous,
@@ -41,7 +43,7 @@ position_freqs = {
     10: {"A": 0.15, "C": 0.55, "G": 0.15, "T": 0.15},
 }
 
-# Calculate information content and build stacked rectangles
+# Calculate information content and build stacked letter segments
 records = []
 for pos, freqs in position_freqs.items():
     ic = 2.0
@@ -68,61 +70,64 @@ for pos, freqs in position_freqs.items():
             y_bottom += height
 
 df = pd.DataFrame(records)
-bar_half_width = 0.45
+bar_half_width = 0.44
 df["xmin"] = df["position"] - bar_half_width
 df["xmax"] = df["position"] + bar_half_width
 
-# Scale font size proportional to segment height so letters fill their rectangles
-# Calibrated so the largest letter visually fills its segment
+# Scale font size so letters visually fill their segments as glyphs
+# The letter IS the primary visual element (sequence logo convention)
 max_height = df["height"].max()
-df["fontsize"] = df["height"] * (42 / max_height)
+df["fontsize"] = df["height"] * (64 / max_height)
+df["fontsize"] = df["fontsize"].clip(lower=5)
 
-# Only show letters on segments tall enough to be readable (fixes VQ-02 overlap)
-df_text = df[df["height"] > 0.04].copy()
+# Only show letters on segments tall enough to be readable
+df_visible = df[df["height"] > 0.02].copy()
 
-# Colorblind-safe DNA color scheme (avoids pure red-green conflict)
+# Colorblind-safe DNA color scheme
 dna_colors = {"A": "#009E73", "C": "#0072B2", "G": "#E69F00", "T": "#CC79A7"}
 
 # Highlight most conserved position for data storytelling
 highlight_pos = 8
+highlight_ymax = df[df["position"] == highlight_pos]["ymax"].max()
 df_highlight = pd.DataFrame(
-    {
-        "xmin": [highlight_pos - 0.48],
-        "xmax": [highlight_pos + 0.48],
-        "ymin": [-0.02],
-        "ymax": [df[df["position"] == highlight_pos]["ymax"].max() + 0.03],
-    }
+    {"xmin": [highlight_pos - 0.48], "xmax": [highlight_pos + 0.48], "ymin": [-0.02], "ymax": [highlight_ymax + 0.04]}
 )
 
-# Plot
+# Plot - colored letters as primary visual elements (sequence logo style)
 plot = (
     ggplot(df)
+    # Storytelling: highlight most conserved position
     + geom_rect(
         aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax"),
         data=df_highlight,
         fill="#FFF9C4",
         color=None,
-        alpha=0.6,
+        alpha=0.5,
     )
-    + geom_rect(aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax", fill="letter"), color="white", size=0.5)
+    # Very subtle background rectangles to define segment boundaries
+    + geom_rect(
+        aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax", fill="letter"), alpha=0.08, color="#FFFFFF", size=0.2
+    )
+    # Colored bold letters: the primary visual element (scaled glyphs)
     + geom_text(
-        aes(x="position", y="y_mid", label="letter", size="fontsize"),
-        data=df_text,
+        aes(x="position", y="y_mid", label="letter", color="letter", size="fontsize"),
+        data=df_visible,
         fontweight="bold",
-        color="white",
         show_legend=False,
     )
     + scale_fill_manual(values=dna_colors)
+    + scale_color_manual(values=dna_colors, name="Nucleotide")
     + scale_size_identity()
+    + guides(fill="none")
     + scale_x_continuous(breaks=range(1, 11), minor_breaks=[])
     + scale_y_continuous(expand=(0, 0, 0.05, 0))
     + coord_cartesian(ylim=(0, None))
     + annotate(
         "text",
         x=highlight_pos,
-        y=df[df["position"] == highlight_pos]["ymax"].max() + 0.07,
+        y=highlight_ymax + 0.09,
         label="most conserved",
-        size=9,
+        size=10,
         color="#555555",
         fontstyle="italic",
     )
@@ -130,7 +135,7 @@ plot = (
         x="Position",
         y="Information content (bits)",
         title="sequence-logo-basic \u00b7 plotnine \u00b7 pyplots.ai",
-        fill="Nucleotide",
+        color="Nucleotide",
     )
     + theme_minimal()
     + theme(
