@@ -1,0 +1,24 @@
+spec_id: heatmap-risk-matrix
+title: Risk Assessment Matrix (Probability vs Impact)
+
+# Specification tracking
+created: "2026-03-06T19:53:02Z"
+updated: null
+issue: 4567
+suggested: MarkusNeusinger
+
+# Classification tags
+tags:
+  plot_type:
+    - heatmap
+  data_type:
+    - categorical
+    - ordinal
+    - numeric
+  domain:
+    - business
+    - engineering
+  features:
+    - annotated
+    - color-mapped
+    - comparison
