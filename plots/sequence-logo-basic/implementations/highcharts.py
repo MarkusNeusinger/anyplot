@@ -1,23 +1,24 @@
-""" pyplots.ai
+"""pyplots.ai
 sequence-logo-basic: Sequence Logo for Motif Visualization
 Library: highcharts unknown | Python 3.14.3
 Quality: 73/100 | Created: 2026-03-06
 """
 
-import json
 import tempfile
 import time
 import urllib.request
 from pathlib import Path
 
 import numpy as np
-from highcharts_core.chart import Chart  # noqa: F401
+from highcharts_core.chart import Chart
+from highcharts_core.options import HighchartsOptions
+from highcharts_core.options.series.bar import ColumnSeries
+from highcharts_core.utility_classes.javascript_functions import CallbackFunction
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
 
 # Data - ETS-family transcription factor binding site motif (10 positions)
-# Frequency matrix: each position has relative frequencies for A, C, G, T
 freq_matrix = [
     {"A": 0.23, "C": 0.31, "G": 0.25, "T": 0.21},
     {"A": 0.10, "C": 0.05, "G": 0.80, "T": 0.05},
@@ -43,8 +44,92 @@ for freqs in freq_matrix:
     heights.sort(key=lambda x: x[0])
     stacks.append(heights)
 
-# Build 4 series (one per stack level, bottom to top)
-series_config = []
+# Stretched-glyph formatter: renders letters with CSS scaleY to fill bar height
+label_formatter = CallbackFunction.from_js_literal("""function() {
+    var letter = this.point.custom && this.point.custom.letter;
+    if (!letter || this.point.y < 0.02) return '';
+    var h = this.point.shapeArgs ? this.point.shapeArgs.height : 30;
+    var w = this.point.shapeArgs ? this.point.shapeArgs.width : 80;
+    var baseFontSize = Math.max(28, Math.min(Math.floor(w * 0.7), 180));
+    var scaleY = Math.max(0.4, Math.min(h / baseFontSize, 4.5));
+    return '<div style="font-family:Arial Black,Impact,sans-serif;'
+        + 'font-size:' + baseFontSize + 'px;font-weight:900;'
+        + 'color:rgba(255,255,255,0.92);line-height:1;text-align:center;'
+        + 'transform:scaleY(' + scaleY.toFixed(2) + ');'
+        + 'text-shadow:1px 2px 3px rgba(0,0,0,0.25);">'
+        + letter + '</div>';
+}""")
+
+tooltip_formatter = CallbackFunction.from_js_literal("""function() {
+    var letter = this.point.custom && this.point.custom.letter;
+    if (!letter) return false;
+    return '<b>Position ' + (this.point.index + 1) + '</b><br/>'
+        + 'Nucleotide: <b>' + letter + '</b><br/>'
+        + 'Height: <b>' + this.point.y.toFixed(3) + ' bits</b>';
+}""")
+
+# Build chart using highcharts-core Python API
+chart = Chart(container="container")
+chart.options = HighchartsOptions()
+
+chart.options.chart = {
+    "type": "column",
+    "width": 4800,
+    "height": 2700,
+    "backgroundColor": "#fafafa",
+    "marginBottom": 200,
+    "marginTop": 160,
+    "marginLeft": 240,
+    "marginRight": 120,
+    "style": {"fontFamily": "'Helvetica Neue', Arial, sans-serif"},
+}
+
+chart.options.title = {
+    "text": "sequence-logo-basic \u00b7 highcharts \u00b7 pyplots.ai",
+    "style": {"fontSize": "48px", "fontWeight": "600", "color": "#2c3e50"},
+    "margin": 40,
+}
+
+chart.options.subtitle = {
+    "text": "ETS-family transcription factor binding site \u2014 conserved GGAATT core motif",
+    "style": {"fontSize": "30px", "fontWeight": "400", "color": "#7f8c8d"},
+}
+
+chart.options.x_axis = {
+    "categories": [str(i + 1) for i in range(len(freq_matrix))],
+    "title": {"text": "Position", "style": {"fontSize": "36px", "fontWeight": "500", "color": "#34495e"}, "margin": 24},
+    "labels": {"style": {"fontSize": "30px", "color": "#34495e"}},
+    "lineWidth": 2,
+    "lineColor": "#34495e",
+    "tickWidth": 0,
+}
+
+chart.options.y_axis = {
+    "title": {
+        "text": "Information content (bits)",
+        "style": {"fontSize": "36px", "fontWeight": "500", "color": "#34495e"},
+        "margin": 30,
+    },
+    "labels": {"style": {"fontSize": "28px", "color": "#34495e"}},
+    "max": 2.0,
+    "min": 0,
+    "tickInterval": 0.5,
+    "gridLineWidth": 1,
+    "gridLineColor": "rgba(0,0,0,0.06)",
+    "gridLineDashStyle": "Dash",
+    "lineWidth": 2,
+    "lineColor": "#34495e",
+}
+
+chart.options.plot_options = {
+    "column": {"stacking": "normal", "pointPadding": 0.02, "groupPadding": 0.06, "borderWidth": 0, "borderRadius": 0}
+}
+
+chart.options.legend = {"enabled": False}
+chart.options.credits = {"enabled": False}
+chart.options.tooltip = {"style": {"fontSize": "22px"}, "useHTML": True, "formatter": tooltip_formatter}
+
+# Build 4 series (one per stack level, bottom to top) using ColumnSeries
 for level in range(4):
     data_points = []
     for stack in stacks:
@@ -53,94 +138,30 @@ for level in range(4):
             data_points.append({"y": round(height, 4), "color": letter_colors[letter], "custom": {"letter": letter}})
         else:
             data_points.append({"y": 0, "color": "transparent", "custom": {"letter": ""}})
-    series_config.append(
-        {
-            "type": "column",
-            "name": f"Level {level}",
-            "data": data_points,
-            "showInLegend": False,
-            "borderWidth": 0,
-            "enableMouseTracking": True,
-            "dataLabels": {
-                "enabled": True,
-                "useHTML": True,
-                "align": "center",
-                "verticalAlign": "middle",
-                "y": 0,
-                "padding": 0,
-                "crop": False,
-                "overflow": "allow",
-                "style": {"textOutline": "none"},
-                "formatter": "__FORMATTER__",
-            },
-        }
-    )
 
-# Build Highcharts config
-config = {
-    "chart": {
-        "type": "column",
-        "width": 4800,
-        "height": 2700,
-        "backgroundColor": "#ffffff",
-        "marginBottom": 200,
-        "marginTop": 140,
-        "marginLeft": 220,
-        "marginRight": 100,
-    },
-    "title": {
-        "text": "sequence-logo-basic \u00b7 highcharts \u00b7 pyplots.ai",
-        "style": {"fontSize": "48px", "fontWeight": "500"},
-    },
-    "xAxis": {
-        "categories": [str(i + 1) for i in range(len(freq_matrix))],
-        "title": {"text": "Position", "style": {"fontSize": "36px"}, "margin": 20},
-        "labels": {"style": {"fontSize": "28px"}},
-        "lineWidth": 2,
-        "lineColor": "#333",
-        "tickWidth": 0,
-    },
-    "yAxis": {
-        "title": {"text": "Information content (bits)", "style": {"fontSize": "36px"}, "margin": 30},
-        "labels": {"style": {"fontSize": "28px"}},
-        "max": 2.0,
-        "min": 0,
-        "gridLineWidth": 1,
-        "gridLineColor": "rgba(0,0,0,0.1)",
-        "lineWidth": 2,
-        "lineColor": "#333",
-    },
-    "plotOptions": {"column": {"stacking": "normal", "pointPadding": 0, "groupPadding": 0.08, "borderWidth": 0}},
-    "legend": {"enabled": False},
-    "credits": {"enabled": False},
-    "tooltip": {"style": {"fontSize": "22px"}, "formatter": "__TOOLTIP_FORMATTER__", "useHTML": True},
-    "series": series_config,
-}
+    series = ColumnSeries()
+    series.data = data_points
+    series.name = f"Level {level}"
+    series.show_in_legend = False
+    series.enable_mouse_tracking = True
+    series.data_labels = {
+        "enabled": True,
+        "useHTML": True,
+        "align": "center",
+        "verticalAlign": "middle",
+        "y": 0,
+        "padding": 0,
+        "crop": False,
+        "overflow": "allow",
+        "style": {"textOutline": "none"},
+        "formatter": label_formatter,
+    }
+    chart.add_series(series)
 
-# Serialize config to JSON, then inject JS functions
-config_json = json.dumps(config)
-
-formatter_js = """function() {
-    var letter = this.point.custom && this.point.custom.letter;
-    if (!letter || this.point.y < 0.03) return '';
-    var h = this.point.shapeArgs ? this.point.shapeArgs.height : 30;
-    var fontSize = Math.max(20, Math.min(Math.floor(h * 0.78), 200));
-    return '<div style="font-family:Arial Black,Impact,sans-serif;font-size:' + fontSize + 'px;font-weight:900;color:#fff;line-height:1;text-align:center;text-shadow:1px 1px 2px rgba(0,0,0,0.3);">' + letter + '</div>';
-}"""
-
-tooltip_js = """function() {
-    var letter = this.point.custom && this.point.custom.letter;
-    if (!letter) return false;
-    return '<b>Position ' + (this.point.index + 1) + '</b><br/>' +
-           'Nucleotide: <b>' + letter + '</b><br/>' +
-           'Height: <b>' + this.point.y.toFixed(3) + ' bits</b>';
-}"""
-
-config_js = config_json.replace('"__FORMATTER__"', formatter_js)
-config_js = config_js.replace('"__TOOLTIP_FORMATTER__"', tooltip_js)
+# Generate JS from the Chart object
+js_literal = chart.to_js_literal()
 
 # Load Highcharts JS for inline embedding
-# Try local npm install first (CDN may be blocked in CI), then fall back to CDN
 highcharts_paths = [
     Path(__file__).resolve().parents[3] / "node_modules" / "highcharts" / "highcharts.js",
     Path("node_modules/highcharts/highcharts.js"),
@@ -156,16 +177,16 @@ if highcharts_js is None:
     with urllib.request.urlopen(req, timeout=30) as response:
         highcharts_js = response.read().decode("utf-8")
 
-# Build HTML
+# Build HTML with inline Highcharts
 html_content = f"""<!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
     <script>{highcharts_js}</script>
 </head>
-<body style="margin:0; padding:0; background:#ffffff;">
+<body style="margin:0; padding:0; background:#fafafa;">
     <div id="container" style="width: 4800px; height: 2700px;"></div>
-    <script>Highcharts.chart('container', {config_js});</script>
+    <script>{js_literal}</script>
 </body>
 </html>"""
 
