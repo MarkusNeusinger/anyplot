@@ -1,7 +1,7 @@
 library: pygal
 specification_id: sequence-logo-basic
 created: '2026-03-06T20:25:16Z'
-updated: '2026-03-06T20:43:36Z'
+updated: '2026-03-06T20:51:27Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 22780525053
 issue: 4421
@@ -10,33 +10,33 @@ library_version: 3.1.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/sequence-logo-basic/pygal/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/sequence-logo-basic/pygal/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/sequence-logo-basic/pygal/plot.html
-quality_score: 82
+quality_score: 81
 review:
   strengths:
-  - Scientifically accurate ETS transcription factor binding site data with realistic
-    information content values
-  - Clean, well-structured code with linear flow and deterministic data
-  - Good use of pygal-specific features (formatters, tooltips, dual output)
-  - Custom DNA color palette with intentional typography choices
-  - Effective use of conditional value printing to avoid clutter in small segments
+  - 'Excellent data quality: real ETS transcription factor binding site with biologically
+    accurate frequencies'
+  - Colorblind-safe palette (teal/blue/amber/purple) with deliberate avoidance of
+    red-green confusion
+  - Clean, well-structured code with appropriate complexity
+  - Good use of pygal-specific features (formatters, tooltips, rounded bars, dual
+    output)
+  - Core position marking on x-axis adds context to the visualization
   weaknesses:
-  - Not a true sequence logo — letters are text labels inside stacked bars rather
-    than scaled glyphs (pygal limitation)
-  - Green-red color pairing could be improved for colorblind accessibility
-  - Low-conservation positions (8-10) create visual emptiness on the right side
-  - No active emphasis on the conserved core region to guide viewer attention
-  image_description: 'The plot displays a stacked bar chart with 10 positions along
-    the x-axis representing a DNA transcription factor binding site motif (ETS family).
-    Each position has stacked colored bars: green (A), blue (C), orange (G), and red/crimson
-    (T). The y-axis shows "Information content (bits)" ranging from 0 to 1.5. Positions
-    4 and 5 have the tallest stacks (~1.35 bits, dominated by green/A), positions
-    2 and 3 are orange/G-dominated (~0.85 and ~1.15 bits), positions 6 and 7 are red/T-dominated
-    (~1.15 bits each). Positions 1, 8, 9, and 10 have very short bars indicating low
-    conservation. Some bars display nucleotide letters (G, A, T) centered inside larger
-    segments. The title "sequence-logo-basic · pygal · pyplots.ai" appears at top.
-    A legend at the bottom displays A, C, G, T in a single row with colored squares.
-    Bars have slightly rounded corners. Background is white with light gray (#fafafa)
-    plot area and subtle horizontal grid lines.'
+  - 'Not a true sequence logo: letters are small text labels inside bars rather than
+    scaled glyphs filling the bar height'
+  - Fixed stacking order (A, C, G, T) rather than frequency-sorted per position as
+    spec requires
+  - Y-axis range (0-1.6) creates wasted vertical space above the tallest bar (~1.35)
+  image_description: 'The plot is a stacked bar chart with 10 positions along the
+    x-axis and "Information content (bits)" on the y-axis (ranging from 0 to ~1.5).
+    Four nucleotide series are displayed: A (teal/green), C (blue), G (amber/orange),
+    T (red/purple). Positions 2-7 feature tall stacked bars representing a conserved
+    GGAATT core — position 4 is the tallest (~1.35 bits, dominated by green A). Positions
+    1, 8, 9, 10 have very short bars indicating low information content. Letters (G,
+    A, T) are printed as text labels inside the larger bar segments. The title reads
+    "sequence-logo-basic · pygal · pyplots.ai" at the top. A legend at the bottom
+    shows all four nucleotides in a 4-column layout. The plot background is light
+    gray (#f8f9fa) on a white canvas, with rounded bar corners and subtle styling.'
   criteria_checklist:
     visual_quality:
       score: 27
@@ -44,44 +44,45 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'Font sizes explicitly set: title=34, labels=22, major_labels=20,
-          legend=22, value=22. All text clearly readable.'
+        comment: Font sizes explicitly set (title=36, labels=22, major_labels=20,
+          value=24). All text readable. Title slightly compact relative to canvas.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text. Nucleotide letters only shown when bar height
-          >= 0.12.
+        comment: No overlapping text or elements. X-labels well-spaced, legend at
+          bottom in 4 columns.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: High-conservation positions well-sized. Positions 8-10 have very
-          thin segments hard to distinguish.
+        comment: Conserved positions prominent. Positions 8-10 have very short bars
+          where segments are hard to distinguish.
       - id: VQ-04
         name: Color Accessibility
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Standard DNA colors. Green-red pairing not ideal for deuteranopia.
+        comment: Teal/blue/amber/purple palette avoids red-green confusion with good
+          contrast.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Plot fills canvas reasonably. Right side (positions 8-10) appears
-          visually empty due to tiny bars.
+        comment: Plot fills ~50-60% of canvas. Some wasted vertical space above tallest
+          bar.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive with units: Position, Information content (bits).'
+        comment: Y-axis with units (bits), X-axis descriptive with core position context.
     design_excellence:
       score: 12
       max: 20
@@ -91,53 +92,53 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom DNA palette, monospace value font, rounded bars, off-white
-          background. Above defaults.
+        comment: Custom palette, light gray background, rounded bars, custom opacity.
+          Above defaults but not publication-ready.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: X-guides disabled, subtle y-guides, off-white plot background, clean
-          bar spacing and legend layout.
+        comment: No x-guides, subtle foreground colors, custom margins and spacing,
+          organized legend.
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: Conserved core visible through height. Letters in dominant bars aid
-          identification. No additional emphasis on core region.
+        comment: Conserved core visually stands out. Core positions marked on x-axis.
+          Letters identify dominant nucleotides.
     spec_compliance:
-      score: 12
+      score: 11
       max: 15
       items:
       - id: SC-01
         name: Plot Type
         score: 3
         max: 5
-        passed: true
-        comment: Stacked bar approximation of sequence logo. Pygal cannot render stretched
-          letter glyphs.
+        passed: false
+        comment: Stacked bar chart approximation rather than true sequence logo with
+          scaled letter glyphs.
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 2
         max: 4
-        passed: true
-        comment: Has stacking by freq x IC, DNA colors, axes. Letters as text labels
-          not scaled glyphs.
+        passed: false
+        comment: Missing frequency-based stacking order and scaled letter glyphs.
+          IC-scaled heights and DNA colors present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=position, Y=information content in bits. Correct mapping.
+        comment: X-axis positions 1-10, Y-axis information content in bits. Stack
+          heights correctly reflect IC.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format. Legend shows A, C, G, T with correct
-          colors.
+        comment: Title follows exact format. Legend correctly labels all four nucleotides.
     data_quality:
       score: 14
       max: 15
@@ -147,22 +148,22 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Shows high, moderate, and low conservation positions. Good range
-          of IC values.
+        comment: '10-position motif with good variation: highly conserved, mixed,
+          and near-uniform positions.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: ETS transcription factor binding site with GGAATT core. Real biological
-          scenario.
+        comment: ETS transcription factor binding site with GGAATT core — real, well-known
+          biological motif.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: IC values 0-1.35 bits realistic for DNA (max 2). Frequencies sum
-          to 1.0 per position.
+        comment: Frequencies sum to 1.0 per position. IC ranges 0.02-1.35 bits, within
+          0-2 bits for DNA.
     code_quality:
       score: 10
       max: 10
@@ -172,32 +173,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, IC calculation, style, chart, save.
-          No functions/classes.'
+        comment: 'Linear flow: imports, data, IC calculation, style, chart config,
+          save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic data, no randomness.
+        comment: Fully deterministic data, no random generation.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: numpy, pygal, Style.'
+        comment: numpy, pygal, pygal.style.Style — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean implementation. Lambda for formatter is appropriate.
+        comment: Clean, well-organized. Lambda with default arguments for formatters
+          is appropriate.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png. Current pygal API.
+        comment: Saves as plot.png via render_to_png. Current API.
     library_mastery:
       score: 7
       max: 10
@@ -207,24 +209,24 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of StackedBar with Style, dict-based data points, legend
-          config, print_values.
+        comment: StackedBar, Style class, structured data dicts with value/label/formatter,
+          idiomatic pygal patterns.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Formatter lambda, tooltip config, rounded_bars, dual output, dict-based
-          data points with custom labels.
+        comment: print_values with custom formatters, tooltip config, rounded_bars,
+          legend_at_bottom_columns, dual PNG+HTML render.
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
   - html-export
   patterns:
+  - data-generation
   - iteration-over-groups
-  dataprep: []
+  dataprep:
+  - normalization
   styling:
-  - grid-styling
   - alpha-blending
