@@ -1,0 +1,28 @@
+# Specification-level metadata for heatmap-cohort-retention
+# Auto-synced to PostgreSQL on push to main
+
+spec_id: heatmap-cohort-retention
+title: Cohort Retention Heatmap
+
+# Specification tracking
+created: "2026-03-06T19:53:21Z"
+updated: null
+issue: 4570
+suggested: MarkusNeusinger
+
+# Classification tags (applies to all library implementations)
+# See docs/reference/tagging-system.md for detailed guidelines
+tags:
+  plot_type:
+    - heatmap
+  data_type:
+    - categorical
+    - numeric
+    - timeseries
+  domain:
+    - business
+    - marketing
+  features:
+    - annotated
+    - color-mapped
+    - temporal
