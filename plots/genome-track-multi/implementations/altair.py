@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 genome-track-multi: Genome Track Viewer
 Library: altair 6.0.0 | Python 3.14.3
 Quality: 89/100 | Created: 2026-03-06
@@ -87,6 +87,10 @@ regulatory_df = pd.DataFrame(
 # Shared x scale
 x_domain = [region_start, region_end]
 
+# Background shading data for alternating track bands
+bg_band = pd.DataFrame({"x": [region_start], "x2": [region_end]})
+bg_color = "#f0f4f8"
+
 # Track 1: Gene annotations
 intron_lines = (
     alt.Chart(gene_bodies)
@@ -134,7 +138,7 @@ strand_arrows_df = pd.DataFrame(strand_arrows_data)
 
 strand_marks = (
     alt.Chart(strand_arrows_df)
-    .mark_point(shape="triangle-right", size=80, filled=True, opacity=0.7)
+    .mark_point(shape="triangle-right", size=140, filled=True, opacity=0.7)
     .encode(
         x=alt.X("position:Q", scale=alt.Scale(domain=x_domain)),
         y=alt.Y("y_pos:Q", scale=alt.Scale(domain=[-0.5, 1.5]), axis=None),
@@ -143,7 +147,12 @@ strand_marks = (
     )
 )
 
-gene_track = (intron_lines + exon_bars + gene_names + strand_marks).properties(
+gene_bg = (
+    alt.Chart(bg_band)
+    .mark_rect(color=bg_color)
+    .encode(x=alt.X("x:Q", scale=alt.Scale(domain=x_domain), axis=None), x2="x2:Q")
+)
+gene_track = (gene_bg + intron_lines + exon_bars + gene_names + strand_marks).properties(
     width=1600, height=100, title=alt.Title("Genes", anchor="start", fontSize=20, color="#555")
 )
 
@@ -166,7 +175,12 @@ coverage_track = (
 # Track 3: Variants (circles with quality on y-axis)
 variant_color_scale = alt.Scale(domain=["SNP", "Indel"], range=["#E8590C", "#306998"])
 
-variant_track = (
+variant_bg = (
+    alt.Chart(bg_band)
+    .mark_rect(color=bg_color)
+    .encode(x=alt.X("x:Q", scale=alt.Scale(domain=x_domain), axis=None), x2="x2:Q")
+)
+variant_track_marks = (
     alt.Chart(variant_df)
     .mark_circle(size=200)
     .encode(
@@ -185,13 +199,14 @@ variant_track = (
     )
     .properties(width=1600, height=140, title=alt.Title("Variants", anchor="start", fontSize=20, color="#555"))
 )
+variant_track = variant_bg + variant_track_marks
 
 # Track 4: Regulatory elements
 reg_color_scale = alt.Scale(domain=["Promoter", "Enhancer"], range=["#7B2D8E", "#D4920B"])
 
 regulatory_track = (
     alt.Chart(regulatory_df)
-    .mark_bar(height=18, cornerRadius=3)
+    .mark_bar(height=26, cornerRadius=3)
     .encode(
         x=alt.X(
             "start:Q",
