@@ -1,7 +1,7 @@
-""" pyplots.ai
+"""pyplots.ai
 genome-track-multi: Genome Track Viewer
 Library: plotnine 0.15.3 | Python 3.14.3
-Quality: 89/100 | Created: 2026-03-06
+Quality: 91/100 | Created: 2026-03-06
 """
 
 import numpy as np
@@ -227,10 +227,10 @@ plot = (
     + geom_segment(data=intron_lines, mapping=aes(x="x", xend="xend", y="y", yend="yend"), color=exon_color, size=0.7)
     # Gene track: strand chevrons (increased alpha for visibility)
     + geom_segment(
-        data=chevrons_up, mapping=aes(x="x", xend="xend", y="y", yend="yend"), color=exon_color, size=0.4, alpha=0.55
+        data=chevrons_up, mapping=aes(x="x", xend="xend", y="y", yend="yend"), color=exon_color, size=0.4, alpha=0.70
     )
     + geom_segment(
-        data=chevrons_down, mapping=aes(x="x", xend="xend", y="y", yend="yend"), color=exon_color, size=0.4, alpha=0.55
+        data=chevrons_down, mapping=aes(x="x", xend="xend", y="y", yend="yend"), color=exon_color, size=0.4, alpha=0.70
     )
     # Gene track: exon rectangles
     + geom_rect(
@@ -244,7 +244,7 @@ plot = (
     + geom_text(
         data=gene_label,
         mapping=aes(x="x", y="y", label="label"),
-        size=11,
+        size=13,
         color="#333333",
         fontstyle="italic",
         fontweight="bold",
@@ -254,7 +254,7 @@ plot = (
         data=coverage_df,
         mapping=aes(x="x", ymin="ymin", ymax="ymax"),
         fill=coverage_fill,
-        alpha=0.55,
+        alpha=0.70,
         color=coverage_fill,
         size=0.3,
     )
@@ -272,7 +272,7 @@ plot = (
     + geom_text(
         data=track_labels,
         mapping=aes(x="x", y="y", label="label"),
-        size=11,
+        size=13,
         ha="left",
         fontweight="bold",
         color="#444444",
@@ -290,11 +290,11 @@ plot = (
         plot_title=element_text(size=24, weight="bold"),
         axis_title_x=element_text(size=20),
         axis_title_y=element_blank(),
-        axis_text_x=element_text(size=14),
+        axis_text_x=element_text(size=16),
         axis_text_y=element_blank(),
         axis_ticks_major_y=element_blank(),
-        legend_title=element_text(size=14, weight="bold"),
-        legend_text=element_text(size=12),
+        legend_title=element_text(size=16, weight="bold"),
+        legend_text=element_text(size=14),
         legend_position="right",
         legend_key_size=18,
         panel_grid_minor=element_blank(),
