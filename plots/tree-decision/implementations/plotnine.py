@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 tree-decision: Decision Tree Visualization with Probabilities
 Library: plotnine 0.15.3 | Python 3.14.3
 Quality: 84/100 | Created: 2026-03-06
@@ -38,7 +38,7 @@ from plotnine import (
 nodes = pd.DataFrame(
     {
         "x": [0, 3, 3, 6.5, 6.5, 6.5, 6.5, 9.5, 9.5, 12.5, 12.5],
-        "y": [5, 8, 2, 9.5, 6, 3.5, 0.5, 7.2, 4.8, 8.2, 6.2],
+        "y": [5, 8.2, 1.8, 9.8, 5.8, 3.3, 0.3, 7.5, 4.1, 8.6, 6.0],
         "node_type": [
             "Decision",
             "Chance",
@@ -70,18 +70,18 @@ nodes = pd.DataFrame(
 
 emv_nodes = nodes[nodes["node_type"] != "Terminal"].copy()
 emv_nodes["lx"] = emv_nodes["x"]
-emv_nodes["ly"] = emv_nodes["y"] - 0.9
+emv_nodes["ly"] = emv_nodes["y"] - 1.0
 
 terminal_nodes = nodes[nodes["node_type"] == "Terminal"].copy()
-terminal_nodes["lx"] = terminal_nodes["x"] + 0.6
+terminal_nodes["lx"] = terminal_nodes["x"] + 0.7
 terminal_nodes["ly"] = terminal_nodes["y"]
 
 edges = pd.DataFrame(
     {
         "x": [0, 0, 3, 3, 3, 3, 6.5, 6.5, 9.5, 9.5],
         "xend": [3, 3, 6.5, 6.5, 6.5, 6.5, 9.5, 9.5, 12.5, 12.5],
-        "y": [5, 5, 8, 8, 2, 2, 6, 6, 7.2, 7.2],
-        "yend": [8, 2, 9.5, 6, 3.5, 0.5, 7.2, 4.8, 8.2, 6.2],
+        "y": [5, 5, 8.2, 8.2, 1.8, 1.8, 5.8, 5.8, 7.5, 7.5],
+        "yend": [8.2, 1.8, 9.8, 5.8, 3.3, 0.3, 7.5, 4.1, 8.6, 6.0],
         "branch_label": [
             "Launch Product",
             "License IP",
@@ -107,12 +107,12 @@ edges["ly"] = (edges["y"] + edges["yend"]) / 2
 for i in edges.index:
     dy = edges.loc[i, "yend"] - edges.loc[i, "y"]
     if dy > 0:
-        edges.loc[i, "ly"] += 0.7
+        edges.loc[i, "ly"] += 0.8
     else:
-        edges.loc[i, "ly"] -= 0.7
-    # For pruned branches, shift label further from midpoint to avoid prune mark collision
+        edges.loc[i, "ly"] -= 0.8
+    # For pruned branches, shift label slightly toward start to avoid overlap with prune mark
     if edges.loc[i, "pruned"]:
-        edges.loc[i, "lx"] += 0.8
+        edges.loc[i, "lx"] -= 0.3
 
 active = edges[~edges["pruned"]].copy()
 pruned = edges[edges["pruned"]].copy()
@@ -127,8 +127,8 @@ optimal_path = pd.DataFrame(
     {
         "x": [0, 3, 3, 6.5, 9.5, 9.5],
         "xend": [3, 6.5, 6.5, 9.5, 12.5, 12.5],
-        "y": [5, 8, 8, 6, 7.2, 7.2],
-        "yend": [8, 9.5, 6, 7.2, 8.2, 6.2],
+        "y": [5, 8.2, 8.2, 5.8, 7.5, 7.5],
+        "yend": [8.2, 9.8, 5.8, 7.5, 8.6, 6.0],
     }
 )
 
@@ -156,32 +156,32 @@ plot = (
         alpha=0.5,
     )
     # Prune marks
-    + geom_text(aes(x="mx", y="my", label="mark"), data=prune_marks, size=16, color="#CC3333", fontweight="bold")
+    + geom_text(aes(x="mx", y="my", label="mark"), data=prune_marks, size=18, color="#CC3333", fontweight="bold")
     # Branch labels
-    + geom_text(aes(x="lx", y="ly", label="branch_label"), data=edges, size=12, color="#2B2B2B")
+    + geom_text(aes(x="lx", y="ly", label="branch_label"), data=edges, size=14, color="#2B2B2B")
     # Nodes with border effect
     + geom_point(aes(x="x", y="y", shape="node_type"), data=nodes, size=14, color="#2B2B2B", fill="#2B2B2B", stroke=0.5)
     # Nodes with color fill
     + geom_point(aes(x="x", y="y", color="node_type", shape="node_type"), data=nodes, size=12)
     # EMV labels at non-terminal nodes
     + geom_text(
-        aes(x="lx", y="ly", label="value"), data=emv_nodes, size=11, color="#306998", ha="center", fontweight="bold"
+        aes(x="lx", y="ly", label="value"), data=emv_nodes, size=13, color="#306998", ha="center", fontweight="bold"
     )
     # Payoff labels at terminal nodes
     + geom_text(
-        aes(x="lx", y="ly", label="value"), data=terminal_nodes, size=11, color="#1A1A1A", ha="left", fontweight="bold"
+        aes(x="lx", y="ly", label="value"), data=terminal_nodes, size=13, color="#1A1A1A", ha="left", fontweight="bold"
     )
     # Optimal path annotation — prominent with arrow-like indicator
-    + annotate("text", x=0.8, y=9.8, label="★ Optimal Path", size=12, color="#306998", fontweight="bold")
-    + annotate("segment", x=0.8, y=9.5, xend=1.5, yend=8.8, size=0.8, color="#306998", alpha=0.6)
-    + scale_color_manual(values={"Decision": "#306998", "Chance": "#E8833A", "Terminal": "#2E7D32"}, name="Node Type")
+    + annotate("text", x=0.8, y=10.2, label="★ Optimal Path", size=14, color="#306998", fontweight="bold")
+    + annotate("segment", x=0.8, y=9.9, xend=1.2, yend=9.0, size=1.0, color="#306998", alpha=0.7)
+    + scale_color_manual(values={"Decision": "#306998", "Chance": "#E8833A", "Terminal": "#00796B"}, name="Node Type")
     + scale_shape_manual(values={"Decision": "s", "Chance": "o", "Terminal": ">"}, name="Node Type")
     + guides(color=guide_legend(override_aes={"size": 9}))
     + theme_void()
     + theme(
         figure_size=(16, 9),
         plot_title=element_text(size=26, weight="bold", ha="center", color="#1A1A1A"),
-        plot_subtitle=element_text(size=15, ha="center", color="#555555"),
+        plot_subtitle=element_text(size=16, ha="center", color="#555555"),
         legend_position=(0.5, 0.03),
         legend_direction="horizontal",
         legend_title=element_text(size=16, weight="bold"),
@@ -196,7 +196,7 @@ plot = (
     )
     + coord_fixed(ratio=0.65)
     + xlim(-1.5, 14.5)
-    + ylim(-0.8, 11)
+    + ylim(-1.0, 11.5)
 )
 
 # Save
