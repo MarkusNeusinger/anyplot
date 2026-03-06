@@ -1,6 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 sequence-logo-basic: Sequence Logo for Motif Visualization
 Library: plotnine 0.15.3 | Python 3.14.3
+Quality: 83/100 | Created: 2026-03-06
 """
 
 import numpy as np
