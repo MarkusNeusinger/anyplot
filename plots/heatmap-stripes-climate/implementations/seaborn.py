@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 heatmap-stripes-climate: Climate Warming Stripes
 Library: seaborn 0.13.2 | Python 3.14.3
 Quality: 88/100 | Created: 2026-03-06
@@ -29,10 +29,15 @@ anomalies = baseline_trend + noise
 anomaly_matrix = anomalies.reshape(1, -1)
 
 # Plot
-cmap = sns.color_palette("coolwarm", as_cmap=True)
+sns.set_style("white")
+sns.set_context("talk", font_scale=1.2)
+
+cmap = sns.diverging_palette(h_neg=240, h_pos=15, s=85, l=45, sep=10, as_cmap=True)
 vmax = max(abs(anomalies.min()), abs(anomalies.max()))
 
-fig, ax = plt.subplots(figsize=(16, 5))
+fig, ax = plt.subplots(figsize=(16, 9))
+
+ax.set_position([0.02, 0.08, 0.96, 0.68])
 
 sns.heatmap(
     anomaly_matrix,
@@ -45,15 +50,17 @@ sns.heatmap(
     xticklabels=False,
     yticklabels=False,
     square=False,
+    linewidths=0,
+    linecolor="none",
 )
 
 # Style
 ax.set_axis_off()
+sns.despine(fig=fig, left=True, bottom=True, right=True, top=True)
 
-fig.subplots_adjust(left=0, right=1, top=0.88, bottom=0.02)
 fig.text(
     0.5,
-    0.94,
+    0.88,
     "heatmap-stripes-climate \u00b7 seaborn \u00b7 pyplots.ai",
     ha="center",
     va="center",
@@ -62,4 +69,4 @@ fig.text(
 )
 
 # Save
-plt.savefig("plot.png", dpi=300, bbox_inches="tight", facecolor="white")
+plt.savefig("plot.png", dpi=300, facecolor="white")
