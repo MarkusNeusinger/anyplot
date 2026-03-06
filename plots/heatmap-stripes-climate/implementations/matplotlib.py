@@ -1,9 +1,10 @@
-""" pyplots.ai
+"""pyplots.ai
 heatmap-stripes-climate: Climate Warming Stripes
 Library: matplotlib 3.10.8 | Python 3.14.3
 Quality: 89/100 | Created: 2026-03-06
 """
 
+import matplotlib.patheffects as pe
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.colors import LinearSegmentedColormap, TwoSlopeNorm
@@ -27,17 +28,19 @@ base_trend = np.piecewise(
 noise = np.random.normal(0, 0.08, n_years)
 anomalies = base_trend + noise
 
-# Custom colormap matching spec: deep blue (#08306b) → white → deep red (#67000d)
+# Colorblind-optimized diverging colormap: blue → white → red
+# Uses perceptually distinct stops avoiding problematic hue combinations
 cmap = LinearSegmentedColormap.from_list(
     "climate_stripes",
-    ["#08306b", "#2171b5", "#6baed6", "#c6dbef", "#ffffff", "#fcbba1", "#fb6a4a", "#cb181d", "#67000d"],
+    ["#053061", "#2166ac", "#4393c3", "#92c5de", "#f7f7f7", "#f4a582", "#d6604d", "#b2182b", "#67001f"],
 )
 
 # Plot - standard 4800x2700 canvas (16x9 at 300dpi)
 fig, ax = plt.subplots(figsize=(16, 9))
+fig.set_facecolor("#f7f7f7")
 
-# Position stripes with ~3:1 aspect ratio within the canvas
-ax.set_position([0.03, 0.05, 0.94, 0.82])
+# Position stripes with ~3:1 aspect ratio: width=0.94*16=15.04in, height=0.56*9=5.04in → 2.98:1
+ax.set_position([0.03, 0.15, 0.94, 0.56])
 
 vmax = max(abs(anomalies.min()), abs(anomalies.max()))
 norm = TwoSlopeNorm(vmin=-vmax, vcenter=0, vmax=vmax)
@@ -56,6 +59,10 @@ ax.imshow(
 # Style - Minimal: no axes, no labels, no ticks, no gridlines
 ax.axis("off")
 
-ax.set_title("heatmap-stripes-climate · matplotlib · pyplots.ai", fontsize=24, fontweight="medium", pad=20)
+# Title with path effects for subtle depth against the light background
+title = fig.suptitle(
+    "heatmap-stripes-climate · matplotlib · pyplots.ai", fontsize=24, fontweight="medium", y=0.78, color="#333333"
+)
+title.set_path_effects([pe.withStroke(linewidth=3, foreground="#f7f7f7")])
 
-plt.savefig("plot.png", dpi=300)
+plt.savefig("plot.png", dpi=300, facecolor=fig.get_facecolor(), bbox_inches="tight")
