@@ -1,7 +1,7 @@
 library: letsplot
 specification_id: tree-decision
 created: '2026-03-06T21:37:40Z'
-updated: '2026-03-06T21:52:05Z'
+updated: '2026-03-06T22:02:44Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 22782764623
 issue: 4569
@@ -10,34 +10,33 @@ library_version: 4.8.2
 preview_url: https://storage.googleapis.com/pyplots-images/plots/tree-decision/letsplot/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/tree-decision/letsplot/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/tree-decision/letsplot/plot.html
-quality_score: 85
+quality_score: 87
 review:
   strengths:
-  - 'Full spec compliance: all node types (squares, circles, triangles), pruning marks,
-    EMV labels, and probabilities present'
-  - Excellent data quality with a realistic two-stage product launch decision and
-    verified EMV calculations
-  - Clean solarized-light aesthetic with intentional color hierarchy across node types
-  - Well-structured code with deterministic data and efficient elbow connector construction
+  - Excellent elbow connector design creating a clean professional tree layout
+  - Strong visual hierarchy distinguishing active vs pruned paths through multiple
+    encoding channels (line style, color, weight, red X marks)
+  - Thoughtful differentiation between bold decision labels and italic probability
+    labels
+  - Comprehensive data covering two-stage decisions with positive and negative payoffs
+  - Clean well-documented code with EMV rollback calculations explained in comments
+  - Solarized light flavor and depth shading bands add professional polish
   weaknesses:
-  - Minor label crowding around D2/C2 region where Scale Up, Maintain, Setback, and
-    Success labels compete for space
-  - Could improve spatial separation between nodes in upper-right portion of tree
-  - Design is good but not yet publication-level typographic refinement
-  - Could leverage more lets-plot distinctive features
-  image_description: 'The plot shows a left-to-right decision tree diagram for a Product
-    Launch Strategy on a warm solarized-light beige background. The root decision
-    node (blue square, bottom-left) branches into "Launch Product" (solid dark connector)
-    and "License Tech" (dashed gray pruned branch with red X mark). The "Launch Product"
-    path leads to an orange/amber circle chance node (C1, EMV $450K) with three branches:
-    "Strong (0.3)" leading to $900K terminal, "Moderate (0.5)" leading to a second
-    blue square decision node (D2, EMV $440K), and "Weak (0.2)" leading to -$200K
-    terminal. D2 branches into "Scale Up" (active) leading to another chance node
-    (C2, EMV $440K) and "Maintain" (pruned with red X) leading to $350K terminal.
-    C2 branches into "Success (0.6)" to $600K and "Setback (0.4)" to $200K. Terminal
-    nodes are green right-pointing triangles. A manual legend in the lower-right shows
-    the three node types. Branch labels have white semi-transparent backgrounds. Title
-    reads "Product Launch Strategy · tree-decision · letsplot · pyplots.ai" in bold.'
+  - Minor label crowding near $900K and Scale Up in the upper-middle area
+  - Title format adds descriptive prefix before the standard spec-id format
+  image_description: The plot displays a decision tree for a "Product Launch Strategy"
+    with a left-to-right layout on a warm cream/beige background (solarized light
+    flavor). Decision nodes are dark blue squares (D1 at far left, D2 in the middle),
+    chance nodes are orange/gold circles (C1, C2), and terminal nodes are green right-pointing
+    triangles. Active branches use thick dark elbow connectors while pruned branches
+    (License Tech, Maintain) are shown as dashed gray lines with red X cross marks.
+    Decision branch labels appear in bold (Launch Product, License Tech, Scale Up,
+    Maintain) and probability labels in italic (Strong 0.3, Moderate 0.5, Weak 0.2,
+    Success 0.6, Setback 0.4). EMV values are displayed below non-terminal nodes in
+    dark blue bold text. Payoff values appear next to terminal nodes in dark green
+    bold. Subtle gray shading bands indicate Stage 1 and Stage 2 depth. A manual legend
+    in the bottom right identifies the three node types. Title reads "Product Launch
+    Strategy · tree-decision · letsplot · pyplots.ai".
   criteria_checklist:
     visual_quality:
       score: 25
@@ -48,68 +47,69 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title at 26pt, body text at size 11, legend at 10. All readable.
-          Slightly small in places.
+        comment: Font sizes explicitly set throughout (title=28, labels=10-12). Legend
+          text at size 10 is slightly small.
       - id: VQ-02
         name: No Overlap
         score: 4
         max: 6
-        passed: false
-        comment: 'Minor crowding around D2/C2 area: Maintain label overlaps pruning
-          X mark, Setback/Success labels crowded.'
+        passed: true
+        comment: $900K and Scale Up labels crowded near upper-middle area. Maintain
+          label close to pruning X mark.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Node shapes well-sized and distinguishable. Good line weights on
-          connectors.
+        comment: All nodes clearly visible with good line weight differentiation.
+          Triangles could be slightly larger.
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Blue, amber, green palette distinguishable by hue and luminance.
-          Colorblind-safe.
+        comment: Blue, orange/gold, and green are well-distinguishable. Redundant
+          encoding for pruned branches.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good left-to-right layout. Some wasted space in lower-left quadrant.
+        comment: Good left-to-right layout with depth shading bands. Some unused space
+          in lower-right.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Tree diagram uses theme_void appropriately. Descriptive title.
+        comment: Tree diagram uses theme_void appropriately. Title is descriptive.
     design_excellence:
-      score: 13
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Custom palette with intentional hierarchy. Solarized light flavor.
-          Above defaults but not publication-level.
+        comment: Custom color palette with coordinated borders, solarized light, bold/italic
+          label differentiation. Clearly above defaults.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: theme_void, solarized light background, custom margins, white label
-          backgrounds with rounded corners.
+        comment: theme_void, solarized light background, subtle depth bands, rounded
+          label boxes, generous margins.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Clear optimal path via solid vs dashed branches. Red X marks guide
-          viewer. EMV values enable rollback tracing.
+        comment: 'Clear visual hierarchy: optimal path thick/dark vs pruned dashed/gray.
+          Red X marks and EMV values guide the viewer.'
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -123,20 +123,22 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: node shapes, layout, pruning, EMV, probabilities,
-          colors, labels.'
+        comment: 'All features present: node shapes, probabilities, EMV, pruning marks,
+          left-to-right layout.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Tree structure correct. Probabilities sum to 1.0 at each chance node.
+        comment: Two-stage decision correctly mapped with consistent EMV rollback
+          calculations.
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: Title follows format. Manual legend shows all three node types.
+        comment: Title has extra prefix before standard format. Manual legend correctly
+          shows all three node types.
     data_quality:
       score: 15
       max: 15
@@ -146,22 +148,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows all node types, pruned branches, EMV rollback, two stages,
-          positive and negative payoffs.
+        comment: Shows decision, chance, terminal nodes, probabilities, EMV rollback,
+          pruning, two stages, positive and negative payoffs.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Product launch strategy is a classic neutral business decision analysis
-          scenario.
+        comment: Product launch strategy is a classic neutral business scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Payoffs $200K-$900K and probabilities 0.2-0.6 are realistic. EMV
-          calculations verified correct.
+        comment: Values in $200K-$900K range realistic for product launch. Reasonable
+          probabilities.
     code_quality:
       score: 10
       max: 10
@@ -171,32 +172,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat structure: imports, data, build segments, plot, save. No functions
-          or classes.'
+        comment: Clean imports-data-plot-save flow. No functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hardcoded data.
+        comment: Fully deterministic hardcoded data with documented EMV calculations.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used.
+        comment: All imports used. Explicit named imports.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-organized data-driven approach. Clean elbow connector construction.
+        comment: Well-organized with clear separation of concerns. Elbow connector
+          construction is clean.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves via ggsave with scale=3.
+        comment: Saves as plot.png with scale=3. Current API.
     library_mastery:
       score: 7
       max: 10
@@ -206,15 +207,15 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good ggplot grammar with layered geoms, aes mappings, theme_void,
-          flavor.
+        comment: Good ggplot grammar with layer composition, theme_void, flavor_solarized_light,
+          proper aes mappings.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses geom_rect, geom_polygon, geom_label with label_padding/label_r,
-          flavor_solarized_light.
+        comment: Uses flavor_solarized_light, geom_label with label_padding/label_r/label_size,
+          and HTML export.
   verdict: REJECTED
 impl_tags:
   dependencies: []
