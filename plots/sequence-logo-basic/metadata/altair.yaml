@@ -1,0 +1,232 @@
+library: altair
+specification_id: sequence-logo-basic
+created: '2026-03-06T20:42:57Z'
+updated: '2026-03-06T21:19:20Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22780525058
+issue: 4421
+python_version: 3.14.3
+library_version: 6.0.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/sequence-logo-basic/altair/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/sequence-logo-basic/altair/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/sequence-logo-basic/altair/plot.html
+quality_score: 89
+review:
+  strengths:
+  - 'Excellent data quality: real ETS-family binding motif with full range of conservation
+    levels'
+  - 'Strong visual storytelling: core region highlighting with opacity differentiation
+    and annotation'
+  - 'Good design polish: subtle grid, removed spines, soft background, informative
+    subtitles'
+  - 'Effective use of Altair-specific features: selections, conditional encodings,
+    transform_calculate, layer composition'
+  weaknesses:
+  - Letters rendered as plain text labels on colored bars rather than stretched glyphs
+    filling allocated height (Altair limitation)
+  - Green vs red nucleotide colors could be problematic for colorblind users (follows
+    established bio convention from spec)
+  image_description: 'The plot shows a sequence logo visualization for a 10-position
+    DNA motif. Colored stacked bars represent nucleotide contributions at each position,
+    with letter labels overlaid on each segment. Colors follow standard DNA conventions:
+    A=green, C=blue, G=orange/yellow, T=red. The Y-axis shows "Information Content
+    (bits)" from 0 to 2.0 with subtle dashed gridlines. The X-axis shows "Position"
+    (1-10). Positions 3 and 4 show tall orange G-dominated bars (~1.6 bits), positions
+    5 and 6 show tall green A-dominated bars. Positions 1, 8, and 10 have very low
+    bars (low conservation). A core region annotation at the top labels "CCGGAAGT
+    core (pos 2-9)" with subtle blue-gray background shading over the core positions.
+    Non-core positions have reduced opacity (0.45 vs 0.95). The title reads "sequence-logo-basic
+    · altair · pyplots.ai" with informative subtitles. A legend on the right identifies
+    nucleotide colors.'
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Font sizes explicitly set (title 28pt, axis titles 22pt, ticks 18pt).
+          Dynamic letter sizing works well for large bars but very small segments
+          have tiny text.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text. Annotation, labels, and letters cleanly separated.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Bars clearly visible. Very low-IC positions have appropriately small
+          bars but individual segments hard to distinguish.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 3
+        max: 4
+        passed: true
+        comment: Spec-mandated DNA colors include green/red which is problematic for
+          colorblind. Mitigated by letter labels and blue/orange.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Chart fills canvas well at 1600x900. Balanced margins. Legend on
+          right without crowding.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Position and Information Content (bits) - descriptive with units.
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom bio-standard colors, styled axes, subtle dashed grid, soft
+          background, core region shading. Above defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines removed, subtle dashed grid, generous padding, clean view.
+          Well-polished.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Core region highlighting with opacity differentiation and annotation.
+          Strong visual hierarchy.
+    spec_compliance:
+      score: 13
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 4
+        max: 5
+        passed: true
+        comment: Sequence logo with stacked letters proportional to IC. Letters are
+          text labels on bars, not stretched glyphs (Altair limitation).
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: Most features present. Missing true glyph stretching (Altair cannot
+          do this).
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=position (ordinal), Y=information content (quantitative). Correct
+          mapping.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct title format. Legend shows all four nucleotide colors.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Full range: highly conserved (3,4), moderate (2,5,6,7,9), non-conserved
+          (1,8,10).'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: ETS-family transcription factor binding motif - real biological context.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: IC 0-2 bits for DNA. Frequencies sum to 1.0. Biologically plausible.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports, data, chart layers, save. No functions/classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Data is hardcoded and deterministic.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports (altair, numpy, pandas) used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-structured. transform_calculate for dynamic sizing is
+          clever.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with scale_factor=3.0 and plot.html.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good declarative API usage with layered charts, encodings, scale/axis
+          config.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses selection_point, transform_calculate, conditional encodings,
+          layer composition, tooltips.
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - annotations
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - grid-styling
+  - alpha-blending
