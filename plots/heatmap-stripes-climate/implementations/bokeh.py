@@ -1,0 +1,81 @@
+""" pyplots.ai
+heatmap-stripes-climate: Climate Warming Stripes
+Library: bokeh 3.8.2 | Python 3.14.3
+Quality: 89/100 | Created: 2026-03-06
+"""
+
+import numpy as np
+from bokeh.io import export_png
+from bokeh.models import HoverTool, LinearColorMapper, Range1d
+from bokeh.palettes import RdBu11, interp_palette
+from bokeh.plotting import figure, save
+from bokeh.resources import Resources
+
+
+# Data - Synthetic global temperature anomalies (1850-2024) relative to 1961-1990 baseline
+np.random.seed(42)
+years = np.arange(1850, 2025)
+n_years = len(years)
+
+base_trend = np.concatenate(
+    [
+        np.linspace(-0.3, -0.2, 60),
+        np.linspace(-0.2, -0.1, 40),
+        np.linspace(-0.1, 0.0, 25),
+        np.linspace(0.0, 0.4, 25),
+        np.linspace(0.4, 1.2, 25),
+    ]
+)
+noise = np.random.normal(0, 0.1, n_years)
+anomalies = base_trend + noise
+
+# Symmetric color range centered at 0
+vmax = max(abs(anomalies.min()), abs(anomalies.max()))
+vmax = np.ceil(vmax * 10) / 10
+
+# Smooth 256-color blue-white-red palette using Bokeh's interp_palette for banding-free gradient
+palette = interp_palette(tuple(reversed(RdBu11)), 256)
+
+color_mapper = LinearColorMapper(palette=palette, low=-vmax, high=vmax)
+
+# Reshape anomalies as 2D image (1 row x n_years columns) for seamless rendering
+img_data = anomalies.reshape(1, -1)
+
+# Plot - landscape format 4800x2700 (allowed canvas size)
+p = figure(
+    width=4800,
+    height=2700,
+    title="heatmap-stripes-climate · bokeh · pyplots.ai",
+    tools="",
+    toolbar_location=None,
+    x_range=Range1d(years[0], years[-1] + 1),
+    y_range=Range1d(0, 1),
+)
+
+p.image(image=[img_data], x=years[0], y=0, dw=n_years, dh=1, color_mapper=color_mapper)
+
+# Style - minimalist: no axes, no labels, no gridlines, no ticks
+p.title.text_font_size = "42pt"
+p.title.text_font_style = "normal"
+p.title.align = "center"
+p.title.text_color = "#333333"
+
+p.xaxis.visible = False
+p.yaxis.visible = False
+p.xgrid.grid_line_color = None
+p.ygrid.grid_line_color = None
+p.outline_line_color = None
+p.background_fill_color = "#FFFFFF"
+p.border_fill_color = "#FFFFFF"
+p.min_border_left = 0
+p.min_border_right = 0
+p.min_border_top = 80
+p.min_border_bottom = 0
+
+# Save static PNG
+export_png(p, filename="plot.png")
+
+# Add interactive hover for HTML version (Bokeh-distinctive feature)
+hover = HoverTool(tooltips=[("Year", "$x{0}"), ("Anomaly", "@image{+0.00}°C")])
+p.add_tools(hover)
+save(p, filename="plot.html", resources=Resources(mode="cdn"), title="Climate Warming Stripes")
