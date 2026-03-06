@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 tree-decision: Decision Tree Visualization with Probabilities
 Library: matplotlib 3.10.8 | Python 3.14.3
 Quality: 87/100 | Created: 2026-03-06
@@ -36,7 +36,7 @@ positions = {
 # Colors — refined palette
 decision_color = "#306998"
 chance_color = "#D4682A"
-terminal_color = "#3D8B5E"
+terminal_color = "#2A9D8F"
 pruned_color = "#B0B0B0"
 bg_color = "#FAFAFA"
 branch_color = "#444444"
@@ -76,8 +76,8 @@ for node in nodes:
 
     # Branch label
     if label:
-        mx, my = px + (cx - px) * 0.42, py + (cy - py) * 0.42
-        offset_y = 0.35 if cy >= py else -0.35
+        mx, my = px + (cx - px) * 0.38, py + (cy - py) * 0.38
+        offset_y = 0.45 if cy >= py else -0.45
         ax.text(
             mx,
             my + offset_y,
@@ -85,8 +85,8 @@ for node in nodes:
             fontsize=16,
             ha="center",
             va="center",
-            color=pruned_color if pruned else "#333333",
-            fontweight="medium",
+            color=pruned_color if pruned else "#555555",
+            fontweight="normal",
             bbox={
                 "boxstyle": "round,pad=0.25",
                 "facecolor": "white",
@@ -98,7 +98,7 @@ for node in nodes:
         )
 
 # Draw nodes
-node_size = 0.4
+node_size = 0.45
 for node in nodes:
     nid, ntype, parent_id, label, prob, payoff, emv, pruned = node
     x, y = positions[nid]
@@ -127,12 +127,12 @@ for node in nodes:
         )
         ax.add_patch(rect)
         if emv is not None:
-            emv_text = f"${emv / 1e6:.2f}M" if emv >= 1e6 else f"${emv / 1e3:.0f}K"
+            emv_text = f"${emv / 1e6:.1f}M" if emv >= 1e6 else f"${emv / 1e3:.0f}K"
             ax.text(
                 x,
-                y + 0.05,
+                y + 0.06,
                 "EMV",
-                fontsize=14,
+                fontsize=16,
                 ha="center",
                 va="bottom",
                 color="white",
@@ -141,7 +141,7 @@ for node in nodes:
                 alpha=0.85,
             )
             ax.text(
-                x, y - 0.08, emv_text, fontsize=17, ha="center", va="top", color="white", fontweight="bold", zorder=4
+                x, y - 0.06, emv_text, fontsize=18, ha="center", va="top", color="white", fontweight="bold", zorder=4
             )
 
     elif ntype == "chance":
@@ -150,12 +150,12 @@ for node in nodes:
         circle = plt.Circle((x, y), node_size, facecolor=chance_color, edgecolor="white", linewidth=2.5, zorder=3)
         ax.add_patch(circle)
         if emv is not None:
-            emv_text = f"${emv / 1e6:.2f}M" if emv >= 1e6 else f"${emv / 1e3:.0f}K"
+            emv_text = f"${emv / 1e6:.1f}M" if emv >= 1e6 else f"${emv / 1e3:.0f}K"
             ax.text(
                 x,
-                y + 0.05,
+                y + 0.06,
                 "EMV",
-                fontsize=14,
+                fontsize=16,
                 ha="center",
                 va="bottom",
                 color="white",
@@ -164,7 +164,7 @@ for node in nodes:
                 alpha=0.85,
             )
             ax.text(
-                x, y - 0.08, emv_text, fontsize=17, ha="center", va="top", color="white", fontweight="bold", zorder=4
+                x, y - 0.06, emv_text, fontsize=18, ha="center", va="top", color="white", fontweight="bold", zorder=4
             )
 
     elif ntype == "terminal":
@@ -200,7 +200,7 @@ for node in nodes:
                 x + triangle_size + 0.2,
                 y,
                 payoff_text,
-                fontsize=18,
+                fontsize=20,
                 ha="left",
                 va="center",
                 fontweight="bold",
