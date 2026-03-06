@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 tree-decision: Decision Tree Visualization with Probabilities
 Library: altair 6.0.0 | Python 3.14.3
-Quality: 87/100 | Created: 2026-03-06
+Quality: 90/100 | Created: 2026-03-06
 """
 
 import altair as alt

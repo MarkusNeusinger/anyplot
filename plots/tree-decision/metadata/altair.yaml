@@ -1,7 +1,7 @@
 library: altair
 specification_id: tree-decision
 created: '2026-03-06T21:34:11Z'
-updated: '2026-03-06T21:47:41Z'
+updated: '2026-03-06T21:56:20Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 22782764498
 issue: 4569
@@ -10,32 +10,36 @@ library_version: 6.0.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/tree-decision/altair/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/tree-decision/altair/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/tree-decision/altair/plot.html
-quality_score: 87
+quality_score: 90
 review:
   strengths:
-  - Excellent spec compliance - all required features faithfully implemented (node
-    shapes, pruned branches, EMV, probabilities, cross mark)
-  - Strong data storytelling through opacity contrast between active and pruned paths
-  - Good use of Altair-specific features (hover selection, tooltips, HTML export)
-  - Colorblind-safe palette with intentional color assignments per node type
-  - Mathematically correct EMV rollback values
+  - Excellent spec compliance with all required node types, shapes, labels, pruning,
+    EMV, and probabilities faithfully implemented
+  - Strong data storytelling through optimal path background panel, opacity contrast,
+    and cross mark
+  - 'Good use of Altair-distinctive features: hover selection, tooltips, conditional
+    encoding, HTML export'
+  - Colorblind-safe palette with intentional color assignments and stroke colors per
+    node type
+  - Mathematically correct EMV rollback values with realistic business scenario
   weaknesses:
-  - Code is repetitive with 5 separate node chart objects for active/pruned variants
-  - Some layout imbalance - tree does not fully utilize the left portion of the canvas
-  - Design could be elevated further with subtle background shading or gradient effects
-    to reinforce hierarchy
-  image_description: 'The plot displays a left-to-right decision tree diagram on a
-    clean white background. A blue square (decision node) on the far left is labeled
-    "$152K" (EMV) and branches into two paths: "Invest Large" (solid dark line going
-    up-right to an orange circle chance node with "$152K" EMV) and "Invest Small"
-    (dashed grey line going down-right to a faded orange circle chance node with "$95K"
-    EMV). A red cross mark is placed on the pruned "Invest Small" branch. The active
-    chance node fans out to three teal right-pointing triangle terminal nodes showing
-    "$300K / High Demand", "$120K / Moderate", and "$-40K / Low Demand" with probability
-    labels 0.40, 0.35, and 0.25 respectively. The pruned chance node similarly branches
-    to three faded terminal nodes ($180K, $90K, $20K). A legend at the bottom identifies
-    Decision Node (blue square), Chance Node (orange circle), and Terminal Node (teal
-    triangle). Title reads "tree-decision · altair · pyplots.ai".'
+  - Optimal path label at 12pt is slightly small relative to other text
+  - Pruned elements at 0.28 opacity are quite faint and could be slightly more visible
+  - Legend placement at the bottom could be better integrated into the design
+  image_description: 'The plot displays a left-to-right decision tree visualization
+    on a clean white background. A blue square decision node on the far left is labeled
+    "$152K" (EMV) and branches into two paths. The upper "Invest Large" path (solid
+    dark lines) leads to an orange circle chance node also labeled "$152K", which
+    fans out to three teal right-pointing triangle terminal nodes: "$300K / High Demand"
+    (p=0.40), "$120K / Moderate" (p=0.35), and "$-40K / Low Demand" (p=0.25). The
+    lower "Invest Small" path uses dashed grey lines with reduced opacity, leading
+    to a faded orange chance node labeled "$95K" and three faded terminal nodes ($180K,
+    $90K, $20K). A red cross mark is placed on the pruned branch. A subtle light-blue
+    background panel with a dashed border and rounded corners highlights the optimal
+    path, with an italic "optimal path" label at the bottom-right. A manual legend
+    at the bottom identifies Decision Node (blue square), Chance Node (orange circle),
+    and Terminal Node (teal triangle). Title reads "tree-decision · altair · pyplots.ai"
+    at top-left.'
   criteria_checklist:
     visual_quality:
       score: 27
@@ -46,21 +50,21 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=28, EMV/payoff=17, branch=16,
-          prob=15, desc=14). Readable at full resolution.
+        comment: 'All font sizes explicitly set (12-28pt). Minor: optimal path label
+          at 12pt is slightly small.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text. All labels well-spaced.
+        comment: All labels cleanly spaced with no text collisions.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: 'Nodes clearly visible. Pruned elements appropriately reduced in
-          opacity. Minor: terminal triangles could have more size differentiation.'
+        comment: Nodes clearly visible. Pruned elements at 0.28 opacity are quite
+          faint but still discernible.
       - id: VQ-04
         name: Color Accessibility
         score: 4
@@ -73,37 +77,41 @@ review:
         score: 3
         max: 4
         passed: true
-        comment: Good left-to-right layout. Some vertical whitespace imbalance.
+        comment: Good left-to-right layout. Some unused margin space on far-left and
+          far-right.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Axes appropriately hidden for diagram type. Title present.
+        comment: Axes appropriately hidden. All labels descriptive with dollar values
+          and demand types.
     design_excellence:
-      score: 13
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Custom colorblind-safe palette with intentional assignments. Above
-          defaults but not publication-level.
+        comment: Custom palette with intentional color assignments. Subtle background
+          panel with rounded corners and dashed border. Strong design with clear hierarchy.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Clean background, no axes clutter, generous spacing, cross mark detail.
+        comment: Clean canvas, no axes clutter. Dashed pruned lines. Background panel
+          with cornerRadius. Generous whitespace.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Clear hierarchy via opacity contrast. EMV prominent. Cross mark signals
-          rejected option.
+        comment: Optimal path background panel is effective storytelling. Active vs
+          pruned opacity contrast creates clear hierarchy. Cross mark and italic label
+          reinforce the narrative.
     spec_compliance:
       score: 15
       max: 15
@@ -113,26 +121,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct decision tree with squares, circles, and triangles.
+        comment: Correct decision tree with squares, circles, and triangles in left-to-right
+          layout.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: node shapes, pruned branches, EMV, probabilities,
-          cross mark.'
+        comment: 'All spec features present: node shapes, pruning, EMV, probabilities,
+          payoffs, branch labels.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Correct left-to-right tree structure with all data visible.
+        comment: Correct tree structure with proper parent-child relationships.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format. Legend identifies all three node types.
+        comment: Title in correct format. Custom legend identifies all three node
+          types.
     data_quality:
       score: 15
       max: 15
@@ -142,24 +152,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: decision, chance, terminal nodes, active/pruned
-          branches, positive/negative payoffs, varying probabilities.'
+        comment: 'Shows all aspects: decision, chance, terminal nodes, active and
+          pruned branches, positive and negative payoffs, varying probabilities.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Two-stage investment decision with market demand uncertainty - classic
+        comment: Two-stage investment decision with market demand uncertainty. Classic
           neutral business scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Realistic payoff values and probabilities. Mathematically correct
-          EMV calculations.
+        comment: Realistic payoffs ($-40K to $300K). Probabilities sum to 1.0. EMV
+          calculations mathematically correct.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -167,7 +177,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat structure: imports, data, chart layers, combine, save.'
+        comment: 'Flat structure: imports, data, colors, scales, layers, combine,
+          save.'
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -182,17 +193,18 @@ review:
         comment: Only altair and pandas imported, both used.
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: Somewhat repetitive with separate chart objects for active/pruned
-          node variants.
+        comment: Clean organization with conditional opacity encoding. Repetition
+          structurally necessary for different mark types.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html. Current Altair API.
+        comment: Saves as plot.png (scale_factor=3.0) and plot.html. Current Altair
+          6.0 API.
     library_mastery:
       score: 8
       max: 10
@@ -202,24 +214,25 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Idiomatic Altair patterns: mark_*, encode, layer, alt.condition,
-          transform_filter.'
+        comment: 'Uses alt.Chart with various marks, encoding with alt.condition,
+          transform_filter, alt.layer, alt.Title, alt.Tooltip. Minor: some pre-filtered
+          DataFrames.'
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Interactive hover selection, tooltips, HTML export, transform_filter
-          - distinctive Altair features.
-  verdict: REJECTED
+        comment: Interactive hover selection with size-change feedback, structured
+          tooltips, conditional encoding via alt.datum, HTML export.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
-  - annotations
   - hover-tooltips
   - custom-legend
   - html-export
+  - annotations
   patterns:
   - data-generation
   dataprep: []
