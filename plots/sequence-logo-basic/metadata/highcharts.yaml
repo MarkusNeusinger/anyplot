@@ -1,7 +1,7 @@
 library: highcharts
 specification_id: sequence-logo-basic
 created: '2026-03-06T20:29:10Z'
-updated: '2026-03-06T20:33:23Z'
+updated: '2026-03-06T20:46:29Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 22780525150
 issue: 4421
@@ -10,70 +10,76 @@ library_version: unknown
 preview_url: https://storage.googleapis.com/pyplots-images/plots/sequence-logo-basic/highcharts/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/sequence-logo-basic/highcharts/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/sequence-logo-basic/highcharts/plot.html
-quality_score: 73
+quality_score: 82
 review:
   strengths:
-  - Correct information content calculation with proper entropy formula
-  - 'Excellent data choice: real ETS-family binding motif with clear biological signal'
-  - Dynamic letter sizing via dataLabels formatter adapts to bar height
-  - Clean linear code structure with deterministic data
-  - Proper axis labels with units
+  - 'Major improvement: properly uses highcharts-core Python API (Chart, ColumnSeries,
+    CallbackFunction) instead of raw JSON'
+  - CSS scaleY glyph rendering creates visually stretched letters approximating a
+    real sequence logo
+  - Excellent data choice with real ETS-family GGAATT motif and informative subtitle
+  - Clean deterministic code with all imports used
+  - 'Refined visual details: subtle dashed grid, removed tick marks, text shadows
+    on letters'
   weaknesses:
-  - Letters rendered as plain white text on colored bars rather than stretched glyphs
-    as spec requires
-  - Unused Chart import — the highcharts-core Python API is completely bypassed
-  - Low-IC positions have cramped, hard-to-read stacked labels
-  - No use of the highcharts-core Python library Chart/Series API
-  image_description: The plot displays a stacked column chart representing a DNA sequence
-    logo for a 10-position ETS-family transcription factor binding site. Each position
-    (1-10) on the x-axis has stacked colored bars where A=green (#2ca02c), C=blue
-    (#1f77b4), G=orange (#ff7f0e), T=red (#d62728). The total bar height at each position
-    corresponds to information content in bits (y-axis, 0 to 2.0). White letter labels
-    (A, C, G, T) are overlaid on each colored segment. Positions 2-3 are dominated
-    by G (tall orange bars ~0.95-1.15 bits), positions 4-5 by A (tall green bars ~1.15-1.35
-    bits), positions 6-7 by T (tall red bars ~1.42-1.57 bits), while positions 1,
-    8, 9, 10 have low information content (short or no bars). Position 9 has zero
-    information content (uniform distribution). The title reads "sequence-logo-basic
-    · highcharts · pyplots.ai". Subtle grid lines on y-axis, clean white background.
+  - Letters are white on colored bars rather than colored letter glyphs (standard
+    sequence logo has colored glyphs on white background)
+  - Low-IC positions (1, 8, 10) have cramped small letter labels that add visual noise
+  - Design could be more polished with colored glyphs and position emphasis
+  image_description: 'The plot displays a stacked column sequence logo for a 10-position
+    ETS-family transcription factor binding site. Positions 1-10 are on the x-axis,
+    information content (bits) 0-2.0 on the y-axis. Each position has stacked colored
+    bars: A=green (#2ca02c), C=blue (#1f77b4), G=orange (#ff7f0e), T=red (#d62728),
+    with white CSS-scaled letter glyphs overlaid on each segment. Positions 2-3 show
+    dominant G (tall orange bars), positions 4-5 show dominant A (tall green bars),
+    positions 6-7 show dominant T (tall red bars with smaller blue/green/orange segments
+    on top). Position 1 has nearly zero information content (tiny barely-visible bars).
+    Position 9 has zero IC (empty — uniform distribution). Positions 8 and 10 have
+    low IC with small stacked bars showing C dominance. The title reads "sequence-logo-basic
+    · highcharts · pyplots.ai" with subtitle "ETS-family transcription factor binding
+    site — conserved GGAATT core motif". Background is light gray (#fafafa), subtle
+    dashed grid lines on y-axis.'
   criteria_checklist:
     visual_quality:
-      score: 24
+      score: 25
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set (48px title, 36px axis titles, 28px labels).
-          Dynamic letter sizing on bars, but small bars produce tiny letters.
+        comment: 'Font sizes explicitly set (48px title, 36px axis titles, 30px/28px
+          labels). Dynamic CSS letter sizing. Minor: small letters at low-IC positions
+          hard to read.'
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Minor cramping of stacked letter labels at low-IC positions (8, 10).
+        comment: No significant overlap. Mild visual clutter at low-IC positions 8
+          and 10 with tiny stacked segments.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Bars clearly visible at high-IC positions. Low-IC positions have
-          very thin segments.
+        comment: High-IC positions excellently visible with large stretched letters.
+          Low-IC positions small but distinguishable. Position 1 nearly invisible.
       - id: VQ-04
         name: Color Accessibility
         score: 3
         max: 4
         passed: true
-        comment: Standard bioinformatics colors. Green and red together can be problematic
-          for colorblind users.
+        comment: Standard bioinformatics DNA colors. Green+red combination can be
+          problematic for colorblind users, though domain convention.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good canvas usage. Y-axis max 2.0 with data max ~1.57 leaves some
-          unused space.
+        comment: Good canvas utilization with well-configured margins. Some unused
+          vertical space (y-max 2.0 vs data max ~1.6).
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -82,60 +88,62 @@ review:
         comment: Position for x-axis, Information content (bits) for y-axis. Descriptive
           with units.
     design_excellence:
-      score: 10
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Standard bioinformatics colors, clean bars. Professional but not
-          exceptional.
+        passed: true
+        comment: Custom bioinformatics palette, white letters with text shadows, light
+          gray background, professional typography. Above defaults but not publication-ready.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Subtle grid lines, credits disabled, clean margins. Some refinement
-          beyond defaults.
+        passed: true
+        comment: Dashed grid at 6% opacity, tick marks removed, credits disabled,
+          clean axis lines. Noticeably refined.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Data naturally highlights conserved GGAATT core with low flanking
-          positions.
+        passed: true
+        comment: GGAATT core motif creates natural focal point with tall bars. Flanking
+          positions drop sharply. Subtitle names the pattern.
     spec_compliance:
-      score: 12
+      score: 13
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Colored stacked bars with text labels instead of stretched letter
-          glyphs as spec requires.
+        comment: Sequence logo as stacked columns with CSS-scaled letter glyphs. Good
+          Highcharts approximation. Letters are white on colored bars rather than
+          colored glyphs.
       - id: SC-02
         name: Required Features
         score: 3
         max: 4
         passed: true
-        comment: Vertical stacking, frequency ordering, IC scaling, standard colors
-          all present. Missing stretched glyphs.
+        comment: Vertical stacking, frequency ordering, IC scaling, standard colors,
+          CSS scaleY glyphs, axis labels all present. White letters deviate from classical
+          colored-glyph appearance.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=position, Y=information content in bits. Correct mapping.
+        comment: Correct position-to-x and IC-to-y mapping throughout.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Legend appropriately disabled with direct labels.
+        comment: Title matches required format. Legend appropriately disabled.
     data_quality:
       score: 14
       max: 15
@@ -145,24 +153,24 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: High conservation, low conservation, and zero conservation positions
-          all shown.
+        comment: 'Full range: high conservation (positions 4-7), moderate (2-3), low
+          (8, 10), zero (9). All 4 nucleotides appear dominant.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
         comment: ETS-family transcription factor binding site with characteristic
-          GGAATT core motif.
+          GGAATT core motif. Scientifically accurate.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Frequencies sum to 1 per position, IC correctly bounded 0-2 bits
+        comment: Frequencies sum to 1 per position. IC correctly bounded 0-2 bits
           for DNA.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -170,56 +178,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, IC calculation, config, HTML, screenshot.'
+        comment: 'Linear flow: imports, data, IC calculation, chart config, series,
+          HTML export, screenshot.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data hardcoded. Deterministic.
+        comment: Deterministic hardcoded frequency matrix. No randomness.
       - id: CQ-03
         name: Clean Imports
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'Unused import: from highcharts_core.chart import Chart (noqa: F401).'
+        passed: true
+        comment: 'All imports used: Chart, HighchartsOptions, ColumnSeries, CallbackFunction,
+          selenium, numpy, etc.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clever JSON config with JS function injection. Well-organized.
+        comment: Well-organized code. JS callbacks necessary for glyph rendering.
+          Clean loop over stack levels.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png via Selenium screenshot.
+        comment: Saves as plot.png via container.screenshot(). Current API usage.
     library_mastery:
-      score: 4
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 2
+        score: 4
         max: 5
-        passed: false
-        comment: highcharts-core Python API completely bypassed. Raw JSON config used
-          instead of Chart/HighchartsOptions.
+        passed: true
+        comment: 'Properly uses highcharts-core Python API: Chart, HighchartsOptions,
+          ColumnSeries, CallbackFunction.from_js_literal(), chart.add_series(), chart.to_js_literal().'
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Uses Highcharts stacking and dataLabels with dynamic formatter, but
-          via raw JS not Python API.
+        passed: true
+        comment: HTML dataLabels with CSS transform, per-point custom data, CallbackFunction
+          formatters, useHTML, stacked column with per-point coloring.
   verdict: REJECTED
 impl_tags:
   dependencies:
   - selenium
   techniques:
   - html-export
-  - annotations
+  - hover-tooltips
   patterns:
   - data-generation
   - iteration-over-groups
