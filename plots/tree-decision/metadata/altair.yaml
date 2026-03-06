@@ -1,7 +1,7 @@
 library: altair
 specification_id: tree-decision
 created: '2026-03-06T21:34:11Z'
-updated: '2026-03-06T21:38:49Z'
+updated: '2026-03-06T21:47:41Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 22782764498
 issue: 4569
@@ -10,38 +10,35 @@ library_version: 6.0.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/tree-decision/altair/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/tree-decision/altair/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/tree-decision/altair/plot.html
-quality_score: 82
+quality_score: 87
 review:
   strengths:
-  - Excellent spec compliance - all required node types, shapes, labels, and features
-    are present
-  - Mathematically correct EMV calculations and probabilities
-  - Effective visual distinction between active (solid) and pruned (dashed/faded)
-    branches with red cross mark
-  - Clean, well-organized code with logical layer separation
-  - Realistic business investment scenario with plausible values including both gains
-    and losses
+  - Excellent spec compliance - all required features faithfully implemented (node
+    shapes, pruned branches, EMV, probabilities, cross mark)
+  - Strong data storytelling through opacity contrast between active and pruned paths
+  - Good use of Altair-specific features (hover selection, tooltips, HTML export)
+  - Colorblind-safe palette with intentional color assignments per node type
+  - Mathematically correct EMV rollback values
   weaknesses:
-  - Manual hardcoded coordinate system does not leverage Altair data-driven strengths
-  - Yellow and green node colors may be hard to distinguish for colorblind users
-  - Cross mark and Invest Small label are positioned close together, slightly crowded
-  - Pruned terminal nodes retain full opacity - could benefit from reduced opacity
-    to match pruned branch lines
-  image_description: 'The plot shows a left-to-right decision tree visualization on
-    a clean white background. A blue square decision node on the left is labeled "$152K"
-    (EMV) and branches into two paths: "Invest Large" (solid dark lines going to an
-    upper gold/yellow circle chance node labeled "$152K") and "Invest Small" (dashed
-    gray lines going to a lower gold/yellow circle chance node labeled "$95K"). The
-    "Invest Small" branch is marked with a red cross indicating it is pruned. Each
-    chance node branches into three terminal outcomes represented by green right-pointing
-    triangles: High Demand ($300K/$180K), Moderate ($120K/$90K), and Low Demand ($-40K/$20K).
-    Probability labels (0.40, 0.35, 0.25) in gold appear along chance branches. Pruned
-    branches use dashed lines with reduced opacity. A manual legend at the bottom
-    shows the three node types. Title reads "tree-decision · altair · pyplots.ai"
-    in bold at top.'
+  - Code is repetitive with 5 separate node chart objects for active/pruned variants
+  - Some layout imbalance - tree does not fully utilize the left portion of the canvas
+  - Design could be elevated further with subtle background shading or gradient effects
+    to reinforce hierarchy
+  image_description: 'The plot displays a left-to-right decision tree diagram on a
+    clean white background. A blue square (decision node) on the far left is labeled
+    "$152K" (EMV) and branches into two paths: "Invest Large" (solid dark line going
+    up-right to an orange circle chance node with "$152K" EMV) and "Invest Small"
+    (dashed grey line going down-right to a faded orange circle chance node with "$95K"
+    EMV). A red cross mark is placed on the pruned "Invest Small" branch. The active
+    chance node fans out to three teal right-pointing triangle terminal nodes showing
+    "$300K / High Demand", "$120K / Moderate", and "$-40K / Low Demand" with probability
+    labels 0.40, 0.35, and 0.25 respectively. The pruned chance node similarly branches
+    to three faded terminal nodes ($180K, $90K, $20K). A legend at the bottom identifies
+    Decision Node (blue square), Chance Node (orange circle), and Terminal Node (teal
+    triangle). Title reads "tree-decision · altair · pyplots.ai".'
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -49,43 +46,40 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 28, labels 14-16, legend 13).
-          Readable at full resolution. Some labels at 13-14pt are on the smaller side.
+        comment: All font sizes explicitly set (title=28, EMV/payoff=17, branch=16,
+          prob=15, desc=14). Readable at full resolution.
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Generally clean layout. Red cross mark and Invest Small label are
-          positioned very close together.
+        comment: No overlapping text. All labels well-spaced.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: All node types clearly visible. Pruned terminal nodes could have
-          reduced opacity to match dashed lines.
+        comment: 'Nodes clearly visible. Pruned elements appropriately reduced in
+          opacity. Minor: terminal triangles could have more size differentiation.'
       - id: VQ-04
         name: Color Accessibility
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Blue, gold, green palette generally distinguishable. Yellow and green
-          may be difficult for deuteranopia users.
+        comment: 'Colorblind-safe palette: blue, orange, teal with distinct stroke
+          colors.'
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good left-to-right layout. Some wasted space in top-left and bottom-left
-          corners.
+        comment: Good left-to-right layout. Some vertical whitespace imbalance.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No axes needed for this diagram type. All labels are descriptive
-          with dollar values and demand types.
+        comment: Axes appropriately hidden for diagram type. Title present.
     design_excellence:
       score: 13
       max: 20
@@ -95,22 +89,21 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Thoughtful color palette with intentional stroke colors. Above defaults
-          but not publication-ready.
+        comment: Custom colorblind-safe palette with intentional assignments. Above
+          defaults but not publication-level.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Clean canvas, no spines, no axes, no grid. Dashed pruned branches
-          are a nice touch.
+        comment: Clean background, no axes clutter, generous spacing, cross mark detail.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Clear visual hierarchy: solid vs dashed paths. Red cross mark draws
-          attention to rejected decision. EMV values guide rollback logic.'
+        comment: Clear hierarchy via opacity contrast. EMV prominent. Cross mark signals
+          rejected option.
     spec_compliance:
       score: 15
       max: 15
@@ -120,29 +113,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct decision tree with left-to-right layout, branching paths,
-          and three node types.
+        comment: Correct decision tree with squares, circles, and triangles.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: node shapes, probabilities, EMV, pruned marking,
-          payoffs.'
+        comment: 'All spec features present: node shapes, pruned branches, EMV, probabilities,
+          cross mark.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Tree structure correctly maps parent-child relationships with clear
-          left-to-right flow.
+        comment: Correct left-to-right tree structure with all data visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title in correct format. Custom legend correctly identifies all three
-          node types.
+        comment: Correct title format. Legend identifies all three node types.
     data_quality:
       score: 15
       max: 15
@@ -152,25 +142,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: decision/chance/terminal nodes, positive and
-          negative payoffs, probabilities summing to 1.0, EMV rollback, pruned vs
-          active branches.'
+        comment: 'Shows all aspects: decision, chance, terminal nodes, active/pruned
+          branches, positive/negative payoffs, varying probabilities.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Investment decision scenario with market demand outcomes. Neutral
-          business context.
+        comment: Two-stage investment decision with market demand uncertainty - classic
+          neutral business scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Payoffs from -40K to 300K realistic for investment decisions. Probabilities
-          sum to 1.0. EMV mathematically correct.
+        comment: Realistic payoff values and probabilities. Mathematically correct
+          EMV calculations.
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -178,57 +167,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat structure: imports, data, plot layers, combine, save. No functions
-          or classes.'
+        comment: 'Flat structure: imports, data, chart layers, combine, save.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic data with hardcoded values.
+        comment: Fully deterministic hardcoded data.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only altair and pandas imported, both actively used.
+        comment: Only altair and pandas imported, both used.
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: Clean, well-organized code with logical layer separation.
+        comment: Somewhat repetitive with separate chart objects for active/pruned
+          node variants.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with scale_factor=3.0 and plot.html. Current Altair
-          API.
+        comment: Saves as plot.png and plot.html. Current Altair API.
     library_mastery:
-      score: 4
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Uses mark types, encoding system, and alt.layer() correctly. Manual
-          coordinate approach doesn't leverage declarative paradigm.
+        comment: 'Idiomatic Altair patterns: mark_*, encode, layer, alt.condition,
+          transform_filter.'
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 4
         max: 5
-        passed: false
-        comment: Uses Altair as a drawing canvas with manual coordinates. Doesn't
-          use selections, transforms, or interactive features.
+        passed: true
+        comment: Interactive hover selection, tooltips, HTML export, transform_filter
+          - distinctive Altair features.
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
   - layer-composition
+  - annotations
+  - hover-tooltips
   - custom-legend
   - html-export
   patterns:
@@ -237,3 +226,4 @@ impl_tags:
   styling:
   - minimal-chrome
   - alpha-blending
+  - edge-highlighting
