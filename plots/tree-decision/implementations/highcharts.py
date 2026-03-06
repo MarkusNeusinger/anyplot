@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 tree-decision: Decision Tree Visualization with Probabilities
 Library: highcharts unknown | Python 3.14.3
 Quality: 84/100 | Created: 2026-03-06
@@ -10,6 +10,9 @@ import time
 import urllib.request
 from pathlib import Path
 
+from highcharts_core.chart import Chart
+from highcharts_core.options import HighchartsOptions
+from highcharts_core.options.series.scatter import ScatterSeries
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
@@ -31,31 +34,288 @@ from selenium.webdriver.chrome.options import Options
 #   C2: 0.5 * 400 + 0.5 * 250 = $325K
 #   D1: max(560, 325) = $560K (choose Launch, prune Keep Current)
 
-nodes = [
-    {"id": "D1", "x": 300, "y": 1150, "type": "decision", "label": "D1", "value": "EMV: $560K"},
-    {"id": "C1", "x": 1300, "y": 500, "type": "chance", "label": "C1", "value": "EMV: $560K"},
-    {"id": "C2", "x": 1300, "y": 1800, "type": "chance", "label": "C2", "value": "EMV: $325K"},
-    {"id": "T1", "x": 2500, "y": 200, "type": "terminal", "label": "T1", "value": "$800K"},
-    {"id": "D2", "x": 2500, "y": 800, "type": "decision", "label": "D2", "value": "EMV: $200K"},
-    {"id": "T2", "x": 2500, "y": 1500, "type": "terminal", "label": "T2", "value": "$400K"},
-    {"id": "T3", "x": 2500, "y": 2100, "type": "terminal", "label": "T3", "value": "$250K"},
-    {"id": "T4", "x": 3700, "y": 550, "type": "terminal", "label": "T4", "value": "$200K"},
-    {"id": "T5", "x": 3700, "y": 1050, "type": "terminal", "label": "T5", "value": "-$100K"},
-]
 
-edges = [
-    {"from": "D1", "to": "C1", "label": "Launch Product", "pruned": False},
-    {"from": "D1", "to": "C2", "label": "Keep Current", "pruned": True},
-    {"from": "C1", "to": "T1", "label": "High Demand (0.6)", "pruned": False},
-    {"from": "C1", "to": "D2", "label": "Low Demand (0.4)", "pruned": False},
-    {"from": "C2", "to": "T2", "label": "Market Grows (0.5)", "pruned": True},
-    {"from": "C2", "to": "T3", "label": "Market Stable (0.5)", "pruned": True},
-    {"from": "D2", "to": "T4", "label": "Discount", "pruned": False},
-    {"from": "D2", "to": "T5", "label": "Withdraw", "pruned": True},
-]
+# --- Build chart using highcharts-core Python API ---
 
-nodes_json = json.dumps(nodes)
-edges_json = json.dumps(edges)
+chart = Chart(container="container")
+chart.options = HighchartsOptions()
+
+chart.options.chart = {
+    "width": 4800,
+    "height": 2700,
+    "backgroundColor": "#ffffff",
+    "style": {"fontFamily": "-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif"},
+    "spacingTop": 20,
+    "spacingBottom": 40,
+    "spacingLeft": 40,
+    "spacingRight": 40,
+}
+
+chart.options.title = {
+    "text": "tree-decision \u00b7 highcharts \u00b7 pyplots.ai",
+    "style": {"fontSize": "56px", "fontWeight": "600", "color": "#333333"},
+}
+
+chart.options.subtitle = {
+    "text": "Product Launch Decision Analysis \u2014 Expected Monetary Value Rollback",
+    "style": {"fontSize": "32px", "fontWeight": "400", "color": "#777777"},
+}
+
+chart.options.x_axis = {"visible": False, "min": 0, "max": 4400, "gridLineWidth": 0}
+
+chart.options.y_axis = {"visible": False, "min": 0, "max": 2300, "reversed": True, "gridLineWidth": 0}
+
+chart.options.tooltip = {
+    "useHTML": True,
+    "style": {"fontSize": "24px", "pointerEvents": "none"},
+    "backgroundColor": "rgba(255, 255, 255, 0.95)",
+    "borderColor": "#306998",
+    "borderRadius": 8,
+    "shadow": {"color": "rgba(0,0,0,0.1)", "offsetX": 2, "offsetY": 2, "width": 5},
+    "headerFormat": "",
+    "pointFormat": (
+        '<span style="font-size:28px;font-weight:700;color:{point.color}">'
+        "\u25cf {series.name}</span><br/>"
+        '<span style="font-size:24px;font-weight:600">{point.name}</span>'
+    ),
+}
+
+chart.options.legend = {
+    "enabled": True,
+    "layout": "vertical",
+    "align": "right",
+    "verticalAlign": "middle",
+    "x": -60,
+    "y": 250,
+    "itemStyle": {"fontSize": "28px", "fontWeight": "400", "color": "#444444"},
+    "symbolWidth": 24,
+    "symbolHeight": 24,
+    "symbolRadius": 4,
+    "itemMarginBottom": 20,
+    "backgroundColor": "rgba(255, 255, 255, 0.9)",
+    "borderColor": "#DDDDDD",
+    "borderWidth": 1,
+    "borderRadius": 8,
+    "padding": 24,
+    "title": {"text": "Legend", "style": {"fontSize": "30px", "fontWeight": "700", "color": "#333333"}},
+}
+
+chart.options.credits = {"enabled": False}
+
+chart.options.plot_options = {
+    "scatter": {
+        "states": {"hover": {"marker": {"radiusPlus": 10, "lineWidthPlus": 3}}, "inactive": {"opacity": 0.4}},
+        "cursor": "pointer",
+        "stickyTracking": False,
+    }
+}
+
+# --- Series for each node type (id on each point forces object serialization) ---
+
+# Decision nodes (squares)
+decision_series = ScatterSeries()
+decision_series.name = "Decision Node"
+decision_series.data = [
+    {"x": 550, "y": 1100, "id": "D1", "name": "EMV: $560K"},
+    {"x": 2650, "y": 750, "id": "D2", "name": "EMV: $200K"},
+]
+decision_series.marker = {
+    "symbol": "square",
+    "radius": 36,
+    "fillColor": "#306998",
+    "lineColor": "#1F4D6E",
+    "lineWidth": 4,
+}
+decision_series.color = "#306998"
+decision_series.data_labels = {
+    "enabled": True,
+    "format": "{point.name}",
+    "y": 60,
+    "style": {"fontSize": "32px", "fontWeight": "700", "color": "#222222", "textOutline": "3px white"},
+}
+chart.add_series(decision_series)
+
+# Chance nodes (circles)
+chance_series = ScatterSeries()
+chance_series.name = "Chance Node"
+chance_series.data = [
+    {"x": 1550, "y": 450, "id": "C1", "name": "EMV: $560K"},
+    {
+        "x": 1550,
+        "y": 1750,
+        "id": "C2",
+        "name": "EMV: $325K",
+        "marker": {"fillColor": "#DDDDDD", "lineColor": "#BBBBBB"},
+    },
+]
+chance_series.marker = {
+    "symbol": "circle",
+    "radius": 36,
+    "fillColor": "#E8833A",
+    "lineColor": "#B85E20",
+    "lineWidth": 4,
+}
+chance_series.color = "#E8833A"
+chance_series.data_labels = {
+    "enabled": True,
+    "format": "{point.name}",
+    "y": 60,
+    "style": {"fontSize": "32px", "fontWeight": "700", "color": "#222222", "textOutline": "3px white"},
+}
+chart.add_series(chance_series)
+
+# Terminal nodes - optimal path (triangles)
+optimal_series = ScatterSeries()
+optimal_series.name = "Terminal (Optimal)"
+optimal_series.data = [
+    {"x": 2650, "y": 200, "id": "T1", "name": "$800K"},
+    {"x": 3750, "y": 500, "id": "T4", "name": "$200K"},
+]
+optimal_series.marker = {
+    "symbol": "triangle",
+    "radius": 30,
+    "fillColor": "#2A9D8F",
+    "lineColor": "#1E7A6D",
+    "lineWidth": 4,
+}
+optimal_series.color = "#2A9D8F"
+optimal_series.data_labels = {
+    "enabled": True,
+    "format": "{point.name}",
+    "align": "left",
+    "x": 50,
+    "y": 5,
+    "style": {"fontSize": "34px", "fontWeight": "700", "color": "#222222", "textOutline": "3px white"},
+}
+chart.add_series(optimal_series)
+
+# Terminal nodes - pruned path (grey triangles)
+pruned_series = ScatterSeries()
+pruned_series.name = "Terminal (Pruned)"
+pruned_series.data = [
+    {"x": 3750, "y": 1000, "id": "T5", "name": "-$100K"},
+    {"x": 2650, "y": 1450, "id": "T2", "name": "$400K"},
+    {"x": 2650, "y": 2050, "id": "T3", "name": "$250K"},
+]
+pruned_series.marker = {
+    "symbol": "triangle",
+    "radius": 28,
+    "fillColor": "#DDDDDD",
+    "lineColor": "#BBBBBB",
+    "lineWidth": 3,
+}
+pruned_series.color = "#BBBBBB"
+pruned_series.data_labels = {
+    "enabled": True,
+    "format": "{point.name}",
+    "align": "left",
+    "x": 45,
+    "y": 5,
+    "style": {"fontSize": "32px", "fontWeight": "700", "color": "#999999", "textOutline": "3px white"},
+}
+chart.add_series(pruned_series)
+
+# Optimal path line (invisible series for legend entry)
+path_optimal = ScatterSeries()
+path_optimal.name = "Optimal Path"
+path_optimal.data = []
+path_optimal.color = "#306998"
+path_optimal.marker = {"symbol": "square", "radius": 0}
+path_optimal.line_width = 5
+chart.add_series(path_optimal)
+
+# Pruned path line (invisible series for legend entry)
+path_pruned = ScatterSeries()
+path_pruned.name = "Pruned Branch"
+path_pruned.data = []
+path_pruned.color = "#CCCCCC"
+path_pruned.marker = {"symbol": "square", "radius": 0}
+path_pruned.dash_style = "Dash"
+path_pruned.line_width = 3
+chart.add_series(path_pruned)
+
+# Generate chart JS via highcharts-core API
+chart_js = chart.to_js_literal()
+
+# Edge data for bezier curve drawing (renderer for custom graph edges)
+edges_data = [
+    {"fx": 550, "fy": 1100, "tx": 1550, "ty": 450, "label": "Launch Product", "p": False},
+    {"fx": 550, "fy": 1100, "tx": 1550, "ty": 1750, "label": "Keep Current", "p": True},
+    {"fx": 1550, "fy": 450, "tx": 2650, "ty": 200, "label": "High Demand (0.6)", "p": False},
+    {"fx": 1550, "fy": 450, "tx": 2650, "ty": 750, "label": "Low Demand (0.4)", "p": False},
+    {"fx": 2650, "fy": 750, "tx": 3750, "ty": 500, "label": "Discount", "p": False},
+    {"fx": 2650, "fy": 750, "tx": 3750, "ty": 1000, "label": "Withdraw", "p": True},
+    {"fx": 1550, "fy": 1750, "tx": 2650, "ty": 1450, "label": "Market Grows (0.5)", "p": True},
+    {"fx": 1550, "fy": 1750, "tx": 2650, "ty": 2050, "label": "Market Stable (0.5)", "p": True},
+]
+edges_json = json.dumps(edges_data)
+
+# JS to draw bezier edges using chart renderer + axis coordinate mapping
+edge_js = (
+    """
+(function() {
+    var chart = Highcharts.charts[Highcharts.charts.length - 1];
+    if (!chart) return;
+    var ren = chart.renderer;
+    var xAxis = chart.xAxis[0];
+    var yAxis = chart.yAxis[0];
+    var edges = """
+    + edges_json
+    + """;
+
+    edges.forEach(function(e) {
+        var x1 = xAxis.toPixels(e.fx);
+        var y1 = yAxis.toPixels(e.fy);
+        var x2 = xAxis.toPixels(e.tx);
+        var y2 = yAxis.toPixels(e.ty);
+        var midX = (x1 + x2) / 2;
+
+        var edgeColor = e.p ? '#CCCCCC' : '#306998';
+        var edgeWidth = e.p ? 3 : 5;
+
+        ren.path([
+            'M', x1, y1,
+            'C', midX, y1, midX, y2, x2, y2
+        ]).attr({
+            'stroke': edgeColor,
+            'stroke-width': edgeWidth,
+            'fill': 'none',
+            'stroke-dasharray': e.p ? '16,10' : 'none',
+            zIndex: 1
+        }).add();
+
+        if (e.p) {
+            var pruneX = x1 + (x2 - x1) * 0.35;
+            var pruneY = y1 + (y2 - y1) * 0.25;
+            ren.path([
+                'M', pruneX - 12, pruneY - 18,
+                'L', pruneX + 12, pruneY + 18,
+                'M', pruneX + 4, pruneY - 18,
+                'L', pruneX + 28, pruneY + 18
+            ]).attr({
+                'stroke': '#CC4444',
+                'stroke-width': 4,
+                zIndex: 5
+            }).add();
+        }
+
+        var labelX = x1 + (x2 - x1) * 0.45;
+        var labelY = y1 + (y2 - y1) * 0.45 - 20;
+        var labelColor = e.p ? '#999999' : '#444444';
+
+        ren.text(e.label, labelX, labelY).attr({
+            align: 'center',
+            zIndex: 6
+        }).css({
+            fontSize: '30px',
+            fontWeight: '600',
+            color: labelColor,
+            fontFamily: '-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif'
+        }).add();
+    });
+})();
+"""
+)
 
 # Download Highcharts JS
 highcharts_paths = [
@@ -73,7 +333,7 @@ if highcharts_js is None:
     with urllib.request.urlopen(req, timeout=30) as response:
         highcharts_js = response.read().decode("utf-8")
 
-# Build HTML with custom Highcharts renderer drawing
+# Build HTML with chart JS from highcharts-core + edge drawing
 html_content = f"""<!DOCTYPE html>
 <html>
 <head>
@@ -83,275 +343,12 @@ html_content = f"""<!DOCTYPE html>
 <body style="margin:0; background:#ffffff;">
     <div id="container" style="width:4800px; height:2700px;"></div>
     <script>
-    (function() {{
-        var nodes = {nodes_json};
-        var edges = {edges_json};
-
-        var nodeMap = {{}};
-        nodes.forEach(function(n) {{ nodeMap[n.id] = n; }});
-
-        var chart = Highcharts.chart('container', {{
-            chart: {{
-                width: 4800,
-                height: 2700,
-                backgroundColor: '#ffffff',
-                events: {{
-                    load: function() {{
-                        var ren = this.renderer;
-                        var offsetX = 350;
-                        var offsetY = 220;
-                        var nodeSize = 65;
-
-                        // Draw title
-                        ren.text(
-                            'tree-decision \\u00b7 highcharts \\u00b7 pyplots.ai',
-                            2400, 80
-                        ).attr({{
-                            align: 'center',
-                            zIndex: 10
-                        }}).css({{
-                            fontSize: '56px',
-                            fontWeight: '600',
-                            color: '#333333',
-                            fontFamily: '-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif'
-                        }}).add();
-
-                        // Draw subtitle
-                        ren.text(
-                            'Product Launch Decision Analysis \\u2014 Expected Monetary Value Rollback',
-                            2400, 140
-                        ).attr({{
-                            align: 'center',
-                            zIndex: 10
-                        }}).css({{
-                            fontSize: '32px',
-                            fontWeight: '400',
-                            color: '#777777',
-                            fontFamily: '-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif'
-                        }}).add();
-
-                        // Colors
-                        var decisionColor = '#306998';
-                        var chanceColor = '#E8833A';
-                        var terminalColor = '#2A9D8F';
-                        var prunedColor = '#BBBBBB';
-                        var optimalEdgeColor = '#306998';
-                        var prunedEdgeColor = '#CCCCCC';
-
-                        // Draw edges
-                        edges.forEach(function(e) {{
-                            var fromNode = nodeMap[e.from];
-                            var toNode = nodeMap[e.to];
-                            var x1 = fromNode.x + offsetX + nodeSize;
-                            var y1 = fromNode.y + offsetY;
-                            var x2 = toNode.x + offsetX - nodeSize;
-                            var y2 = toNode.y + offsetY;
-
-                            if (toNode.type === 'terminal') {{
-                                x2 = toNode.x + offsetX - 40;
-                            }}
-
-                            var midX = (x1 + x2) / 2;
-
-                            var pathData = [
-                                'M', x1, y1,
-                                'C', midX, y1, midX, y2, x2, y2
-                            ];
-
-                            var edgeColor = e.pruned ? prunedEdgeColor : optimalEdgeColor;
-                            var edgeWidth = e.pruned ? 3 : 5;
-                            var dashStyle = e.pruned ? 'Dash' : 'Solid';
-
-                            ren.path(pathData).attr({{
-                                'stroke': edgeColor,
-                                'stroke-width': edgeWidth,
-                                'fill': 'none',
-                                'stroke-dasharray': e.pruned ? '16,10' : 'none',
-                                zIndex: 1
-                            }}).add();
-
-                            // Prune mark (double strike)
-                            if (e.pruned) {{
-                                var pruneX = x1 + (x2 - x1) * 0.35;
-                                var pruneY = y1 + (y2 - y1) * 0.25;
-                                ren.path([
-                                    'M', pruneX - 12, pruneY - 18,
-                                    'L', pruneX + 12, pruneY + 18,
-                                    'M', pruneX + 4, pruneY - 18,
-                                    'L', pruneX + 28, pruneY + 18
-                                ]).attr({{
-                                    'stroke': '#CC4444',
-                                    'stroke-width': 4,
-                                    zIndex: 5
-                                }}).add();
-                            }}
-
-                            // Branch label
-                            var labelX = x1 + (x2 - x1) * 0.45;
-                            var labelY = y1 + (y2 - y1) * 0.45 - 20;
-                            var labelColor = e.pruned ? '#999999' : '#444444';
-
-                            ren.text(e.label, labelX, labelY).attr({{
-                                align: 'center',
-                                zIndex: 6
-                            }}).css({{
-                                fontSize: '30px',
-                                fontWeight: '600',
-                                color: labelColor,
-                                fontFamily: '-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif'
-                            }}).add();
-                        }});
-
-                        // Draw nodes
-                        nodes.forEach(function(n) {{
-                            var cx = n.x + offsetX;
-                            var cy = n.y + offsetY;
-                            var isPruned = false;
-
-                            // Check if node is on a pruned path
-                            edges.forEach(function(e) {{
-                                if (e.to === n.id && e.pruned) isPruned = true;
-                            }});
-
-                            if (n.type === 'decision') {{
-                                // Square node
-                                var fillColor = isPruned ? '#DDDDDD' : decisionColor;
-                                ren.rect(cx - nodeSize, cy - nodeSize, nodeSize * 2, nodeSize * 2, 8)
-                                    .attr({{
-                                        fill: fillColor,
-                                        stroke: isPruned ? '#BBBBBB' : '#1F4D6E',
-                                        'stroke-width': 4,
-                                        zIndex: 3
-                                    }}).add();
-
-                            }} else if (n.type === 'chance') {{
-                                // Circle node
-                                var fillColor = isPruned ? '#DDDDDD' : chanceColor;
-                                ren.circle(cx, cy, nodeSize).attr({{
-                                    fill: fillColor,
-                                    stroke: isPruned ? '#BBBBBB' : '#B85E20',
-                                    'stroke-width': 4,
-                                    zIndex: 3
-                                }}).add();
-
-                            }} else if (n.type === 'terminal') {{
-                                // Right-pointing triangle
-                                var fillColor = isPruned ? '#DDDDDD' : terminalColor;
-                                var triSize = nodeSize * 0.9;
-                                var path = [
-                                    'M', cx - triSize, cy - triSize,
-                                    'L', cx + triSize, cy,
-                                    'L', cx - triSize, cy + triSize,
-                                    'Z'
-                                ];
-                                ren.path(path).attr({{
-                                    fill: fillColor,
-                                    stroke: isPruned ? '#BBBBBB' : '#1E7A6D',
-                                    'stroke-width': 4,
-                                    zIndex: 3
-                                }}).add();
-                            }}
-
-                            // EMV / Payoff value label
-                            var valueColor = isPruned ? '#999999' : '#222222';
-                            var valueY = cy + nodeSize + 40;
-                            if (n.type === 'terminal') {{
-                                // Show payoff to the right of terminal
-                                ren.text(n.value, cx + nodeSize + 20, cy + 8).attr({{
-                                    align: 'left',
-                                    zIndex: 6
-                                }}).css({{
-                                    fontSize: '34px',
-                                    fontWeight: '700',
-                                    color: valueColor,
-                                    fontFamily: '-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif'
-                                }}).add();
-                            }} else {{
-                                // Show EMV below decision/chance nodes
-                                ren.text(n.value, cx, valueY).attr({{
-                                    align: 'center',
-                                    zIndex: 6
-                                }}).css({{
-                                    fontSize: '32px',
-                                    fontWeight: '700',
-                                    color: valueColor,
-                                    fontFamily: '-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif'
-                                }}).add();
-                            }}
-                        }});
-
-                        // Legend
-                        var legendX = 3950;
-                        var legendY = 1850;
-                        var legendSpacing = 75;
-
-                        ren.text('Legend', legendX, legendY - 30).css({{
-                            fontSize: '34px',
-                            fontWeight: '700',
-                            color: '#333333',
-                            fontFamily: '-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif'
-                        }}).add();
-
-                        // Decision node legend
-                        ren.rect(legendX, legendY, 36, 36, 4).attr({{
-                            fill: decisionColor, stroke: '#1F4D6E', 'stroke-width': 2, zIndex: 5
-                        }}).add();
-                        ren.text('Decision Node', legendX + 54, legendY + 26).css({{
-                            fontSize: '28px', color: '#444444',
-                            fontFamily: '-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif'
-                        }}).add();
-
-                        // Chance node legend
-                        ren.circle(legendX + 18, legendY + legendSpacing + 18, 18).attr({{
-                            fill: chanceColor, stroke: '#B85E20', 'stroke-width': 2, zIndex: 5
-                        }}).add();
-                        ren.text('Chance Node', legendX + 54, legendY + legendSpacing + 26).css({{
-                            fontSize: '28px', color: '#444444',
-                            fontFamily: '-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif'
-                        }}).add();
-
-                        // Terminal node legend
-                        ren.path([
-                            'M', legendX, legendY + legendSpacing * 2 + 36,
-                            'L', legendX + 36, legendY + legendSpacing * 2 + 18,
-                            'L', legendX, legendY + legendSpacing * 2,
-                            'Z'
-                        ]).attr({{
-                            fill: terminalColor, stroke: '#1E7A6D', 'stroke-width': 2, zIndex: 5
-                        }}).add();
-                        ren.text('Terminal Node (Payoff)', legendX + 54, legendY + legendSpacing * 2 + 26).css({{
-                            fontSize: '28px', color: '#444444',
-                            fontFamily: '-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif'
-                        }}).add();
-
-                        // Optimal path legend
-                        ren.path(['M', legendX, legendY + legendSpacing * 3 + 18, 'L', legendX + 36, legendY + legendSpacing * 3 + 18]).attr({{
-                            stroke: optimalEdgeColor, 'stroke-width': 5, zIndex: 5
-                        }}).add();
-                        ren.text('Optimal Path', legendX + 54, legendY + legendSpacing * 3 + 26).css({{
-                            fontSize: '28px', color: '#444444',
-                            fontFamily: '-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif'
-                        }}).add();
-
-                        // Pruned path legend
-                        ren.path(['M', legendX, legendY + legendSpacing * 4 + 18, 'L', legendX + 36, legendY + legendSpacing * 4 + 18]).attr({{
-                            stroke: prunedEdgeColor, 'stroke-width': 3, 'stroke-dasharray': '12,8', zIndex: 5
-                        }}).add();
-                        ren.text('Pruned Branch', legendX + 54, legendY + legendSpacing * 4 + 26).css({{
-                            fontSize: '28px', color: '#444444',
-                            fontFamily: '-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif'
-                        }}).add();
-                    }}
-                }}
-            }},
-            title: {{ text: null }},
-            credits: {{ enabled: false }},
-            xAxis: {{ visible: false }},
-            yAxis: {{ visible: false }},
-            legend: {{ enabled: false }},
-            series: [{{ type: 'scatter', data: [] }}]
-        }});
-    }})();
+    {chart_js}
+    </script>
+    <script>
+    setTimeout(function() {{
+    {edge_js}
+    }}, 200);
     </script>
 </body>
 </html>"""
