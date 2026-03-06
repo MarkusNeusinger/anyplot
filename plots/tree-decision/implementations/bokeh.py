@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 tree-decision: Decision Tree Visualization with Probabilities
 Library: bokeh 3.8.2 | Python 3.14.3
 Quality: 82/100 | Created: 2026-03-06
@@ -6,7 +6,7 @@ Quality: 82/100 | Created: 2026-03-06
 
 import numpy as np
 from bokeh.io import export_png
-from bokeh.models import Label
+from bokeh.models import ColumnDataSource, HoverTool, Label
 from bokeh.plotting import figure, output_file, save
 
 
@@ -19,18 +19,18 @@ from bokeh.plotting import figure, output_file, save
 #   Root decision: max(248, 185, 0) = 248 -> License & Do Nothing pruned
 
 nodes = {
-    "D1": {"type": "decision", "x": 80, "y": 540, "value": 248},
-    "C1": {"type": "chance", "x": 300, "y": 790, "value": 248},
+    "D1": {"type": "decision", "x": 80, "y": 550, "value": 248},
+    "C1": {"type": "chance", "x": 300, "y": 780, "value": 248},
     "C2": {"type": "chance", "x": 300, "y": 350, "value": 185},
-    "T1": {"type": "terminal", "x": 300, "y": 210, "value": 0},
-    "D2": {"type": "decision", "x": 530, "y": 890, "value": 380},
-    "T2": {"type": "terminal", "x": 530, "y": 670, "value": 50},
-    "T3": {"type": "terminal", "x": 530, "y": 430, "value": 250},
-    "T4": {"type": "terminal", "x": 530, "y": 280, "value": 120},
-    "C3": {"type": "chance", "x": 760, "y": 950, "value": 380},
-    "T5": {"type": "terminal", "x": 760, "y": 820, "value": 300},
-    "T6": {"type": "terminal", "x": 990, "y": 1000, "value": 500},
-    "T7": {"type": "terminal", "x": 990, "y": 900, "value": 100},
+    "T1": {"type": "terminal", "x": 300, "y": 110, "value": 0},
+    "D2": {"type": "decision", "x": 530, "y": 920, "value": 380},
+    "T2": {"type": "terminal", "x": 530, "y": 630, "value": 50},
+    "T3": {"type": "terminal", "x": 530, "y": 440, "value": 250},
+    "T4": {"type": "terminal", "x": 530, "y": 260, "value": 120},
+    "C3": {"type": "chance", "x": 760, "y": 1000, "value": 380},
+    "T5": {"type": "terminal", "x": 760, "y": 800, "value": 300},
+    "T6": {"type": "terminal", "x": 990, "y": 1060, "value": 500},
+    "T7": {"type": "terminal", "x": 990, "y": 930, "value": 100},
 }
 
 edges = [
@@ -51,9 +51,9 @@ edges = [
 p = figure(
     width=4800,
     height=2700,
-    title="tree-decision · bokeh · pyplots.ai",
+    title="tree-decision \u00b7 bokeh \u00b7 pyplots.ai",
     x_range=(-40, 1120),
-    y_range=(100, 1100),
+    y_range=(30, 1130),
     toolbar_location=None,
 )
 
@@ -63,7 +63,7 @@ for src, dst, label, prob, pruned in edges:
     dx, dy = nodes[dst]["x"], nodes[dst]["y"]
     mid_x = (sx + dx) / 2
 
-    alpha = 0.25 if pruned else 0.8
+    alpha = 0.45 if pruned else 0.8
     dash = [12, 8] if pruned else "solid"
     lw = 4 if pruned else 6
 
@@ -78,17 +78,17 @@ for src, dst, label, prob, pruned in edges:
         y=(sy + dy) / 2,
         text=branch_text,
         text_font_size="20pt",
-        text_alpha=0.35 if pruned else 0.85,
+        text_alpha=0.55 if pruned else 0.85,
         text_align="right",
         text_baseline="middle",
         x_offset=-14,
     )
     p.add_layout(lbl)
 
-    # Pruned cross mark on the branch
+    # Pruned cross mark on the vertical segment, offset right from labels
     if pruned:
-        cx = (sx + mid_x) / 2
-        cy = sy
+        cx = mid_x + 35
+        cy = (sy + dy) / 2
         cs = 18
         p.multi_line(
             [[cx - cs, cx + cs], [cx - cs, cx + cs]],
@@ -98,17 +98,48 @@ for src, dst, label, prob, pruned in edges:
             line_alpha=0.75,
         )
 
-# Draw nodes by type
-decision_nodes = {k: v for k, v in nodes.items() if v["type"] == "decision"}
-chance_nodes = {k: v for k, v in nodes.items() if v["type"] == "chance"}
-terminal_nodes = {k: v for k, v in nodes.items() if v["type"] == "terminal"}
+# Build ColumnDataSources for each node type
+decision_data = {k: v for k, v in nodes.items() if v["type"] == "decision"}
+chance_data = {k: v for k, v in nodes.items() if v["type"] == "chance"}
+terminal_data = {k: v for k, v in nodes.items() if v["type"] == "terminal"}
+
+decision_src = ColumnDataSource(
+    data={
+        "x": [n["x"] for n in decision_data.values()],
+        "y": [n["y"] for n in decision_data.values()],
+        "name": list(decision_data.keys()),
+        "emv": [f"${n['value']}K" for n in decision_data.values()],
+        "node_type": ["Decision"] * len(decision_data),
+    }
+)
+
+chance_src = ColumnDataSource(
+    data={
+        "x": [n["x"] for n in chance_data.values()],
+        "y": [n["y"] for n in chance_data.values()],
+        "name": list(chance_data.keys()),
+        "emv": [f"${n['value']}K" for n in chance_data.values()],
+        "node_type": ["Chance"] * len(chance_data),
+    }
+)
+
+terminal_src = ColumnDataSource(
+    data={
+        "x": [n["x"] for n in terminal_data.values()],
+        "y": [n["y"] for n in terminal_data.values()],
+        "name": list(terminal_data.keys()),
+        "emv": [f"${n['value']}K" for n in terminal_data.values()],
+        "node_type": ["Terminal"] * len(terminal_data),
+    }
+)
 
 # Decision nodes - large squares
-p.rect(
-    [n["x"] for n in decision_nodes.values()],
-    [n["y"] for n in decision_nodes.values()],
+r_dec = p.rect(
+    "x",
+    "y",
     width=65,
     height=65,
+    source=decision_src,
     fill_color="#306998",
     fill_alpha=0.92,
     line_color="#1B3D5E",
@@ -116,9 +147,10 @@ p.rect(
 )
 
 # Chance nodes - large circles
-p.scatter(
-    [n["x"] for n in chance_nodes.values()],
-    [n["y"] for n in chance_nodes.values()],
+r_ch = p.scatter(
+    "x",
+    "y",
+    source=chance_src,
     size=55,
     marker="circle",
     fill_color="#E8983E",
@@ -128,9 +160,10 @@ p.scatter(
 )
 
 # Terminal nodes - right-pointing triangles
-p.scatter(
-    [n["x"] for n in terminal_nodes.values()],
-    [n["y"] for n in terminal_nodes.values()],
+r_term = p.scatter(
+    "x",
+    "y",
+    source=terminal_src,
     size=48,
     marker="triangle",
     fill_color="#27AE60",
@@ -139,6 +172,14 @@ p.scatter(
     line_width=4,
     angle=np.pi / 2,
 )
+
+# HoverTool for interactive node inspection
+hover = HoverTool(
+    renderers=[r_dec, r_ch, r_term],
+    tooltips=[("Node", "@name"), ("Type", "@node_type"), ("Value", "@emv")],
+    point_policy="snap_to_data",
+)
+p.add_tools(hover)
 
 # Value labels on each node
 for _nid, nd in nodes.items():
@@ -165,7 +206,7 @@ for _nid, nd in nodes.items():
     p.add_layout(lbl)
 
 # Legend (top-left area)
-legend_y_start = 1070
+legend_y_start = 1100
 legend_spacing = 45
 legend_x = 30
 
@@ -196,7 +237,7 @@ for i, (ntype, color, text) in enumerate(legend_entries):
 
 # Pruned branch legend entry
 ly = legend_y_start - 3 * legend_spacing
-p.line([legend_x - 12, legend_x + 12], [ly, ly], line_width=4, line_dash=[10, 6], line_color="#444", line_alpha=0.4)
+p.line([legend_x - 12, legend_x + 12], [ly, ly], line_width=4, line_dash=[10, 6], line_color="#444", line_alpha=0.5)
 cs = 7
 p.multi_line(
     [[legend_x - cs, legend_x + cs], [legend_x - cs, legend_x + cs]],
