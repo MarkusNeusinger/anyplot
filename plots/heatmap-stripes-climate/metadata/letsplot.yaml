@@ -1,0 +1,216 @@
+library: letsplot
+specification_id: heatmap-stripes-climate
+created: '2026-03-06T02:37:01Z'
+updated: '2026-03-06T02:49:25Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22746426279
+issue: 4423
+python_version: 3.14.3
+library_version: 4.8.2
+preview_url: https://storage.googleapis.com/pyplots-images/plots/heatmap-stripes-climate/letsplot/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/heatmap-stripes-climate/letsplot/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/heatmap-stripes-climate/letsplot/plot.html
+quality_score: 90
+review:
+  strengths:
+  - Excellent minimalist design faithful to Ed Hawkins warming stripes concept
+  - 'Custom diverging color palette with spec-recommended hex values (#08306b, #67000d)'
+  - Realistic synthetic data with proper 1961-1990 baseline normalization and acceleration
+    after ~1970
+  - Leverages letsplot-specific features (layer_tooltips, HTML export) beyond what
+    other libraries offer
+  - 'Perfect code quality: clean structure, reproducible seed, all imports used'
+  weaknesses:
+  - Aspect ratio is 16:9 (~1.78:1) rather than the spec target ~3:1 (wide and short)
+  image_description: 'The plot displays classic Ed Hawkins-style warming stripes —
+    a sequence of vertical colored bars spanning from 1850 to 2024. The left portion
+    is dominated by blues (deep navy #08306b through lighter blues), representing
+    negative temperature anomalies relative to the 1961-1990 baseline. Moving right,
+    the stripes transition through near-white/neutral tones around the baseline period,
+    then shift to progressively deeper reds (#67000d) in the most recent decades,
+    representing positive anomalies. The title "heatmap-stripes-climate · letsplot
+    · pyplots.ai" appears in subdued gray at the top left. There are no axes, gridlines,
+    tick marks, or legend — the visualization communicates purely through color. The
+    stripes fill most of the white canvas with no gaps between bars. The overall aspect
+    ratio is 16:9 (1600x900 base, exported at 3x scale to 4800x2700).'
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: Title explicitly set at size=24pt, only text element per spec, perfectly
+          readable
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping elements; only title text and stripes
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Stripes clearly visible, width=1.0 creates seamless bars
+      - id: VQ-04
+        name: Color Accessibility
+        score: 3
+        max: 4
+        passed: true
+        comment: Blue-to-red diverging is conventional for climate data, not red-green
+          problematic
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good canvas fill but aspect ratio is 16:9 instead of target ~3:1
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title present and descriptive. No axes by design per spec.
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom diverging palette, minimalist theme_void, hidden legend, subdued
+          gray title
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: theme_void removes all chrome, white background, custom margins
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Blue-to-red progression immediately communicates warming trend with
+          visible acceleration
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct warming stripes using geom_tile
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: All features present except ~3:1 aspect ratio (currently 16:9)
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Year on x-axis, anomaly as fill color
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct, no legend needed per spec
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Full 1850-2024 range, both negative and positive anomalies, visible
+          acceleration
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Global temperature anomalies relative to 1961-1990 baseline
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Anomalies range ~-0.5 to ~+1.0C, realistic for global mean temperature
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean Imports, Data, Plot, Save flow
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, appropriate complexity. Tooltips are legitimate letsplot feature
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with ggsave
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Proper ggplot grammar with geom_tile, scale_fill_gradient2, theme_void
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: layer_tooltips() for interactive hover and HTML export are distinctive
+          letsplot features
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - custom-colormap
