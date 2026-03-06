@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 genome-track-multi: Genome Track Viewer
 Library: pygal 3.1.0 | Python 3.14.3
 Quality: 87/100 | Created: 2026-03-06
@@ -90,7 +90,7 @@ regulatory = [
     {"start": 55_245_000, "end": 55_248_000, "type": "CTCF"},
 ]
 
-# === Colorblind-safe palette (Tol bright, avoids red-green) ===
+# === Colorblind-safe palette (Tol bright) ===
 GENE_CLR = "#4477AA"
 COV_CLR = "#66CCEE"
 COV_STROKE = "#2277BB"
@@ -99,13 +99,14 @@ INDEL_CLR = "#AA3377"
 PROM_CLR = "#CCBB44"
 ENH_CLR = "#228833"
 CTCF_CLR = "#EE8866"
+TRACK_ACCENTS = [GENE_CLR, COV_STROKE, SNP_CLR, ENH_CLR]
 
 # === Layout ===
 WIDTH = 4800
 HEIGHT = 2700
 MARGIN_LEFT = 300
 MARGIN_RIGHT = 100
-MARGIN_TOP = 140
+MARGIN_TOP = 170
 MARGIN_BOTTOM = 150
 PLOT_W = WIDTH - MARGIN_LEFT - MARGIN_RIGHT
 PLOT_H = HEIGHT - MARGIN_TOP - MARGIN_BOTTOM
@@ -113,10 +114,10 @@ N_TRACKS = 4
 TRACK_GAP = 24
 TRACK_H = (PLOT_H - (N_TRACKS - 1) * TRACK_GAP) / N_TRACKS
 
-# Pygal internal data padding fraction (1/52 per side, ~1.923%)
+# Pygal internal data padding fraction (1/52 per side)
 PYGAL_PAD = 1 / 52
 
-# Normalize genomic positions to [0, 1] for stable pygal coordinate mapping
+# Normalize genomic positions to [0, 1]
 norm_pos = (cov_pos - region_start) / region_length
 norm_variants = [(v["pos"] - region_start) / region_length for v in variants]
 
@@ -195,13 +196,78 @@ var_chart.add("SNP", snp_series)
 var_chart.add("Indel", indel_series)
 var_svg_raw = var_chart.render(is_unicode=True)
 
-# === Build composite SVG with embedded pygal charts ===
-# ViewBox crops pygal's internal padding so data aligns with manual SVG tracks
+# === Regulatory chart: pygal.Histogram for interval visualization with tooltips ===
+reg_style = Style(
+    background="transparent",
+    plot_background="transparent",
+    foreground="#333",
+    foreground_strong="#333",
+    foreground_subtle="transparent",
+    colors=(PROM_CLR, ENH_CLR, CTCF_CLR),
+    font_family="sans-serif",
+    tooltip_font_size=18,
+)
+
+reg_chart = pygal.Histogram(
+    width=int(PLOT_W),
+    height=int(TRACK_H),
+    style=reg_style,
+    show_legend=False,
+    show_x_labels=False,
+    show_y_labels=False,
+    show_x_guides=False,
+    show_y_guides=False,
+    margin=0,
+    range=(0, 1.5),
+)
+
+promoters = [
+    (1.0, (r["start"] - region_start) / region_length, (r["end"] - region_start) / region_length)
+    for r in regulatory
+    if r["type"] == "Promoter"
+]
+enhancers = [
+    (1.0, (r["start"] - region_start) / region_length, (r["end"] - region_start) / region_length)
+    for r in regulatory
+    if r["type"] == "Enhancer"
+]
+ctcf_els = [
+    (1.0, (r["start"] - region_start) / region_length, (r["end"] - region_start) / region_length)
+    for r in regulatory
+    if r["type"] == "CTCF"
+]
+# Anchor bars at x=0 and x=1 (zero height, invisible) to lock x-range to [0, 1]
+promoters.extend([(0, 0.0, 0.001), (0, 0.999, 1.0)])
+reg_chart.add("Promoter", promoters)
+reg_chart.add("Enhancer", enhancers)
+reg_chart.add("CTCF", ctcf_els)
+reg_svg_raw = reg_chart.render(is_unicode=True)
+
+# === Helper to clean and embed pygal SVG ===
 pad_x = PLOT_W * PYGAL_PAD
 pad_y = TRACK_H * PYGAL_PAD
 vb_w = PLOT_W - 2 * pad_x
 vb_h = TRACK_H - 2 * pad_y
 
+
+def embed_pygal_svg(raw_svg, track_y):
+    """Strip XML/DOCTYPE, rewrite <svg> tag for embedding with viewBox alignment."""
+    svg = re.sub(r"<\?xml[^?]*\?>\s*", "", raw_svg)
+    svg = re.sub(r"<!DOCTYPE[^>]*>\s*", "", svg)
+    svg_id = re.search(r'id="([^"]+)"', svg).group(1)
+    svg = re.sub(
+        r"<svg[^>]*>",
+        f'<svg id="{svg_id}" class="pygal-chart" '
+        f'x="{MARGIN_LEFT}" y="{track_y:.0f}" '
+        f'width="{PLOT_W}" height="{TRACK_H:.0f}" '
+        f'viewBox="{pad_x:.2f} {pad_y:.2f} {vb_w:.2f} {vb_h:.2f}">',
+        svg,
+        count=1,
+    )
+    return svg
+
+
+# === Build composite SVG ===
 parts = []
 parts.append(
     f'<svg xmlns="http://www.w3.org/2000/svg" '
@@ -210,19 +276,43 @@ parts.append(
 )
 parts.append(f'<rect width="{WIDTH}" height="{HEIGHT}" fill="white"/>')
 
-# Title
+# Title with decorative accent
 title = "EGFR Gene Region (chr7) \u00b7 genome-track-multi \u00b7 pygal \u00b7 pyplots.ai"
 parts.append(
-    f'<text x="{WIDTH / 2}" y="80" font-family="sans-serif" font-size="44" '
-    f'fill="#222" text-anchor="middle" font-weight="bold">{title}</text>'
+    f'<text x="{WIDTH / 2}" y="72" font-family="sans-serif" font-size="44" '
+    f'fill="#1a1a1a" text-anchor="middle" font-weight="bold">{title}</text>'
+)
+# Subtitle for context
+parts.append(
+    f'<text x="{WIDTH / 2}" y="105" font-family="sans-serif" font-size="24" '
+    f'fill="#777" text-anchor="middle" font-style="italic">'
+    f"Epidermal Growth Factor Receptor \u2014 28 exons, ~194 kb</text>"
+)
+# Accent gradient line under title
+parts.append(
+    "<defs>"
+    f'<linearGradient id="titleAccent" x1="0" y1="0" x2="1" y2="0">'
+    f'<stop offset="0%" stop-color="{GENE_CLR}" stop-opacity="0"/>'
+    f'<stop offset="20%" stop-color="{GENE_CLR}" stop-opacity="0.8"/>'
+    f'<stop offset="50%" stop-color="{COV_STROKE}" stop-opacity="0.8"/>'
+    f'<stop offset="80%" stop-color="{SNP_CLR}" stop-opacity="0.8"/>'
+    f'<stop offset="100%" stop-color="{SNP_CLR}" stop-opacity="0"/>'
+    "</linearGradient></defs>"
+)
+accent_x = WIDTH * 0.2
+accent_w = WIDTH * 0.6
+parts.append(
+    f'<line x1="{accent_x}" y1="120" x2="{accent_x + accent_w}" y2="120" stroke="url(#titleAccent)" stroke-width="3"/>'
 )
 
-# Track backgrounds, labels, separators
+# Track backgrounds, accent strips, labels, separators
 track_names = ["Genes", "Coverage", "Variants", "Regulatory"]
 for i in range(N_TRACKS):
     ty = MARGIN_TOP + i * (TRACK_H + TRACK_GAP)
     bg = "#f5f5f5" if i % 2 == 0 else "#ffffff"
     parts.append(f'<rect x="{MARGIN_LEFT}" y="{ty:.0f}" width="{PLOT_W}" height="{TRACK_H:.0f}" fill="{bg}"/>')
+    # Left accent color strip
+    parts.append(f'<rect x="{MARGIN_LEFT}" y="{ty:.0f}" width="5" height="{TRACK_H:.0f}" fill="{TRACK_ACCENTS[i]}"/>')
     parts.append(
         f'<text x="{MARGIN_LEFT - 20}" y="{ty + TRACK_H / 2 + 8:.0f}" '
         f'font-family="sans-serif" font-size="28" fill="#333" '
@@ -252,7 +342,7 @@ exon_h = TRACK_H * 0.45
 for es, ee in exons:
     x1 = MARGIN_LEFT + (es - region_start) / region_length * PLOT_W
     x2 = MARGIN_LEFT + (ee - region_start) / region_length * PLOT_W
-    w = max(x2 - x1, 5)
+    w = max(x2 - x1, 8)
     parts.append(
         f'<rect x="{x1:.1f}" y="{gene_cy - exon_h / 2:.1f}" width="{w:.1f}" '
         f'height="{exon_h:.1f}" fill="{GENE_CLR}" rx="2">'
@@ -275,54 +365,52 @@ parts.append(
     f'<text x="{(gene_x1 + gene_x2) / 2:.1f}" '
     f'y="{gene_cy - exon_h / 2 - 14:.1f}" font-family="sans-serif" '
     f'font-size="26" fill="{GENE_CLR}" text-anchor="middle" '
-    f'font-style="italic">EGFR</text>'
+    f'font-style="italic" font-weight="600">EGFR</text>'
+)
+# Strand indicator
+parts.append(
+    f'<text x="{gene_x2 + 30:.1f}" y="{gene_cy + 8:.1f}" font-family="sans-serif" '
+    f'font-size="22" fill="{GENE_CLR}" font-weight="bold">(+)</text>'
 )
 
 # --- Track 2: Coverage (embedded pygal.XY with fill + hermite interpolation) ---
 cov_ty = MARGIN_TOP + 1 * (TRACK_H + TRACK_GAP)
-cov_svg = re.sub(r"<\?xml[^?]*\?>\s*", "", cov_svg_raw)
-cov_svg = re.sub(r"<!DOCTYPE[^>]*>\s*", "", cov_svg)
-# Preserve pygal's id/class for CSS, but set position + viewBox for alignment
-cov_id = re.search(r'id="([^"]+)"', cov_svg).group(1)
-cov_svg = re.sub(
-    r"<svg[^>]*>",
-    f'<svg id="{cov_id}" class="pygal-chart" '
-    f'x="{MARGIN_LEFT}" y="{cov_ty:.0f}" '
-    f'width="{PLOT_W}" height="{TRACK_H:.0f}" '
-    f'viewBox="{pad_x:.2f} {pad_y:.2f} {vb_w:.2f} {vb_h:.2f}">',
-    cov_svg,
-    count=1,
-)
-parts.append(cov_svg)
+parts.append(embed_pygal_svg(cov_svg_raw, cov_ty))
 
-# Coverage y-axis ticks
+# Coverage y-axis ticks (prominent)
 max_cov = float(cov_vals.max())
 cov_range_max = max_cov * 1.05
-for tick_val in [0, int(max_cov / 2), int(max_cov)]:
+for tick_val in [0, int(max_cov)]:
     frac = tick_val / cov_range_max
     tick_y = cov_ty + TRACK_H * (1 - frac)
     parts.append(
         f'<text x="{MARGIN_LEFT - 10}" y="{tick_y + 6:.1f}" font-family="sans-serif" '
-        f'font-size="20" fill="#999" text-anchor="end">{tick_val}</text>'
+        f'font-size="22" fill="#444" text-anchor="end" font-weight="500">{tick_val}x</text>'
     )
+
+# Annotation: coverage-exon correlation callout
+peak_exon = exons[27]  # last large exon (55,238,800-55,240,817)
+peak_x = MARGIN_LEFT + ((peak_exon[0] + peak_exon[1]) / 2 - region_start) / region_length * PLOT_W
+peak_cov_idx = np.argmin(np.abs(cov_pos - (peak_exon[0] + peak_exon[1]) / 2))
+peak_cov_val = cov_vals[peak_cov_idx]
+peak_frac = peak_cov_val / cov_range_max
+peak_y = cov_ty + TRACK_H * (1 - peak_frac)
+ann_x = peak_x + 120
+ann_y = peak_y - 40
+parts.append(
+    f'<line x1="{peak_x:.1f}" y1="{peak_y:.1f}" x2="{ann_x:.1f}" y2="{ann_y:.1f}" '
+    f'stroke="#555" stroke-width="1.5" stroke-dasharray="4,3"/>'
+)
+parts.append(
+    f'<text x="{ann_x + 8:.1f}" y="{ann_y + 5:.1f}" font-family="sans-serif" '
+    f'font-size="18" fill="#555" font-style="italic">coverage peak at exon</text>'
+)
 
 # --- Track 3: Variants (embedded pygal.XY scatter with tooltips) ---
 var_ty = MARGIN_TOP + 2 * (TRACK_H + TRACK_GAP)
-var_svg = re.sub(r"<\?xml[^?]*\?>\s*", "", var_svg_raw)
-var_svg = re.sub(r"<!DOCTYPE[^>]*>\s*", "", var_svg)
-var_id = re.search(r'id="([^"]+)"', var_svg).group(1)
-var_svg = re.sub(
-    r"<svg[^>]*>",
-    f'<svg id="{var_id}" class="pygal-chart" '
-    f'x="{MARGIN_LEFT}" y="{var_ty:.0f}" '
-    f'width="{PLOT_W}" height="{TRACK_H:.0f}" '
-    f'viewBox="{pad_x:.2f} {pad_y:.2f} {vb_w:.2f} {vb_h:.2f}">',
-    var_svg,
-    count=1,
-)
-parts.append(var_svg)
+parts.append(embed_pygal_svg(var_svg_raw, var_ty))
 
-# Variant legend (manual, positioned within track)
+# Variant legend
 vleg_x = MARGIN_LEFT + PLOT_W - 280
 vleg_y = var_ty + 25
 parts.append(f'<circle cx="{vleg_x}" cy="{vleg_y}" r="7" fill="{SNP_CLR}"/>')
@@ -332,32 +420,26 @@ parts.append(
     f'<text x="{vleg_x + 102}" y="{vleg_y + 6}" font-family="sans-serif" font-size="22" fill="#333">Indel</text>'
 )
 
-# --- Track 4: Regulatory (manual SVG — no pygal chart type for intervals) ---
+# --- Track 4: Regulatory (embedded pygal.Histogram with tooltips) ---
 reg_ty = MARGIN_TOP + 3 * (TRACK_H + TRACK_GAP)
+parts.append(embed_pygal_svg(reg_svg_raw, reg_ty))
+
+# Regulatory type labels above bars
 reg_cy = reg_ty + TRACK_H / 2
 reg_h = TRACK_H * 0.45
-reg_clrs = {"Promoter": PROM_CLR, "Enhancer": ENH_CLR, "CTCF": CTCF_CLR}
-
 for reg in regulatory:
     x1 = MARGIN_LEFT + (reg["start"] - region_start) / region_length * PLOT_W
     x2 = MARGIN_LEFT + (reg["end"] - region_start) / region_length * PLOT_W
-    w = max(x2 - x1, 4)
-    clr = reg_clrs[reg["type"]]
     parts.append(
-        f'<rect x="{x1:.1f}" y="{reg_cy - reg_h / 2:.1f}" width="{w:.1f}" '
-        f'height="{reg_h:.1f}" fill="{clr}" fill-opacity="0.85" rx="3">'
-        f"<title>{reg['type']}: {reg['start']:,}-{reg['end']:,}</title></rect>"
-    )
-    # Labels above rectangles to avoid crowding track label
-    parts.append(
-        f'<text x="{(x1 + x2) / 2:.1f}" y="{reg_cy - reg_h / 2 - 8:.1f}" '
+        f'<text x="{(x1 + x2) / 2:.1f}" y="{reg_ty + 30:.1f}" '
         f'font-family="sans-serif" font-size="18" fill="#555" '
         f'text-anchor="middle">{reg["type"]}</text>'
     )
 
 # Regulatory legend
 rlx = MARGIN_LEFT + PLOT_W - 460
-rly = reg_ty + 25
+rly = reg_ty + TRACK_H - 30
+reg_clrs = {"Promoter": PROM_CLR, "Enhancer": ENH_CLR, "CTCF": CTCF_CLR}
 for j, (rtype, rclr) in enumerate(reg_clrs.items()):
     lx = rlx + j * 155
     parts.append(f'<rect x="{lx}" y="{rly - 8}" width="16" height="16" fill="{rclr}" rx="2"/>')
@@ -387,7 +469,7 @@ for tick_pos in range(tick_start, region_end, tick_interval):
 parts.append(
     f'<text x="{MARGIN_LEFT + PLOT_W / 2}" y="{xay + 80}" '
     f'font-family="sans-serif" font-size="28" fill="#333" '
-    f'text-anchor="middle">Genomic Position ({chrom})</text>'
+    f'text-anchor="middle" font-weight="500">Genomic Position ({chrom})</text>'
 )
 
 parts.append("</svg>")
