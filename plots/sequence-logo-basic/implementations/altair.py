@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 sequence-logo-basic: Sequence Logo for Motif Visualization
 Library: altair 6.0.0 | Python 3.14.3
 Quality: 80/100 | Created: 2026-03-06
@@ -44,6 +44,7 @@ for pos_idx, freqs in enumerate(frequencies):
                 "y_end": round(y_start + height, 6),
                 "y_mid": round(y_start + height / 2, 6),
                 "ic": round(ic, 4),
+                "is_core": 2 <= position <= 9,
             }
         )
         y_start += height
@@ -51,24 +52,39 @@ for pos_idx, freqs in enumerate(frequencies):
 df = pd.DataFrame(rows)
 
 # Standard DNA colors per spec (A=green, C=blue, G=orange/yellow, T=red)
-# Using colorblind-friendly shades: teal-green and brick-red are more distinguishable
 nuc_colors = ["#228B22", "#1f77b4", "#F5A623", "#CC3311"]
 color_scale = alt.Scale(domain=["A", "C", "G", "T"], range=nuc_colors)
 
-# Label threshold: only show letters when bar is tall enough to read
-label_threshold = 0.15
+# Shared axis configs
+x_axis = alt.X(
+    "position:O",
+    title="Position",
+    axis=alt.Axis(labelFontSize=18, titleFontSize=22, labelAngle=0, tickSize=0, domainWidth=0, titlePadding=16),
+)
+y_scale = alt.Scale(domain=[0, 2.0])
 
-# Stacked bars representing nucleotide heights
+# Stacked bars with conditional opacity: core positions more vivid
 bars = (
     alt.Chart(df)
-    .mark_rect(stroke="#ffffff", strokeWidth=0.5)
+    .mark_rect(stroke="#ffffff", strokeWidth=0.8, cornerRadius=1)
     .encode(
-        x=alt.X("position:O", title="Position", axis=alt.Axis(labelFontSize=18, titleFontSize=22, labelAngle=0)),
+        x=x_axis,
         y=alt.Y(
             "y_start:Q",
             title="Information Content (bits)",
-            scale=alt.Scale(domain=[0, 2]),
-            axis=alt.Axis(labelFontSize=18, titleFontSize=22, grid=True, gridColor="#e8e8e8", gridWidth=0.5),
+            scale=y_scale,
+            axis=alt.Axis(
+                labelFontSize=18,
+                titleFontSize=22,
+                grid=True,
+                gridColor="#e0e4e8",
+                gridWidth=0.5,
+                gridDash=[4, 4],
+                tickSize=0,
+                domainWidth=0,
+                titlePadding=16,
+                values=[0, 0.5, 1.0, 1.5, 2.0],
+            ),
         ),
         y2="y_end:Q",
         color=alt.Color(
@@ -81,8 +97,11 @@ bars = (
                 orient="right",
                 symbolSize=300,
                 symbolStrokeWidth=0,
+                titlePadding=8,
+                padding=16,
             ),
         ),
+        opacity=alt.condition(alt.datum.is_core, alt.value(1.0), alt.value(0.5)),
         tooltip=[
             alt.Tooltip("position:O", title="Position"),
             alt.Tooltip("letter:N", title="Nucleotide"),
@@ -92,41 +111,54 @@ bars = (
     )
 )
 
-# Letter labels on dominant bars
-df_labels = df[df["height"] > label_threshold].copy()
-
-# White text on dark bars (A=green, C=blue, T=red), dark text on light bars (G=amber)
-df_labels["text_color"] = df_labels["letter"].map({"A": "white", "C": "white", "G": "#222222", "T": "white"})
-
+# Letter labels scaled by bar height via calculated transform
 labels = (
-    alt.Chart(df_labels)
-    .mark_text(fontSize=56, fontWeight="bold", baseline="middle")
+    alt.Chart(df)
+    .transform_filter(alt.datum.height > 0.12)
+    .transform_calculate(
+        font_size="max(18, min(64, datum.height * 55))", text_color="datum.letter == 'G' ? '#222222' : 'white'"
+    )
+    .mark_text(fontWeight="bold", baseline="middle")
     .encode(
         x="position:O",
-        y=alt.Y("y_mid:Q", scale=alt.Scale(domain=[0, 2])),
+        y=alt.Y("y_mid:Q", scale=y_scale),
         text="letter:N",
+        size=alt.Size("font_size:Q", scale=None, legend=None),
         color=alt.Color("text_color:N", scale=None, legend=None),
     )
 )
 
+# Core annotation: bracket label at top of chart
+core_annotation_df = pd.DataFrame(
+    [{"position": 5, "y_val": 1.92, "label": "\u2190 CCGGAAGT core (pos 2\u20139) \u2192"}]
+)
+
+core_annotation = (
+    alt.Chart(core_annotation_df)
+    .mark_text(fontSize=16, color="#667788", fontStyle="italic")
+    .encode(x="position:O", y=alt.Y("y_val:Q", scale=y_scale), text="label:N")
+)
+
 # Combine layers
 chart = (
-    (bars + labels)
+    alt.layer(bars, labels, core_annotation)
     .properties(
         width=1600,
         height=900,
         title=alt.Title(
-            "sequence-logo-basic · altair · pyplots.ai",
+            "sequence-logo-basic \u00b7 altair \u00b7 pyplots.ai",
             fontSize=28,
             fontWeight="bold",
             anchor="middle",
             subtitle="ETS-family transcription factor binding motif (CCGGAAGT core)",
             subtitleFontSize=18,
-            subtitleColor="#666666",
+            subtitleColor="#667788",
+            offset=16,
         ),
     )
-    .configure_view(strokeWidth=0)
-    .configure_axis(domainColor="#999999", tickColor="#999999", labelColor="#333333", titleColor="#333333")
+    .configure_view(strokeWidth=0, fill="#fafbfc")
+    .configure_axis(domainColor="#cccccc", tickColor="#cccccc", labelColor="#444444", titleColor="#333333")
+    .configure(padding={"left": 24, "right": 24, "top": 20, "bottom": 20})
 )
 
 # Save
