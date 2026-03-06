@@ -1,0 +1,28 @@
+# Specification-level metadata for line-retention-cohort
+# Auto-synced to PostgreSQL on push to main
+
+spec_id: line-retention-cohort
+title: User Retention Curve by Cohort
+
+# Specification tracking
+created: "2026-03-06T19:53:33Z"
+updated: null
+issue: 4572
+suggested: MarkusNeusinger
+
+# Classification tags (applies to all library implementations)
+# See docs/reference/tagging-system.md for detailed guidelines
+tags:
+  plot_type:
+    - line
+  data_type:
+    - numeric
+    - categorical
+    - timeseries
+  domain:
+    - marketing
+    - business
+  features:
+    - multi
+    - comparison
+    - temporal
