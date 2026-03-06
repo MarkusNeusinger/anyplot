@@ -1,7 +1,7 @@
 library: matplotlib
 specification_id: sequence-logo-basic
 created: '2026-03-06T20:25:27Z'
-updated: '2026-03-06T20:29:14Z'
+updated: '2026-03-06T20:36:39Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 22780524847
 issue: 4421
@@ -10,35 +10,33 @@ library_version: 3.10.8
 preview_url: https://storage.googleapis.com/pyplots-images/plots/sequence-logo-basic/matplotlib/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/sequence-logo-basic/matplotlib/plot_thumb.png
 preview_html: null
-quality_score: 84
+quality_score: 92
 review:
   strengths:
-  - Excellent glyph rendering using TextPath + Affine2D transforms — letters are properly
-    stretched as scaled glyphs, not plain text
-  - Perfect spec compliance with all required features implemented correctly
-  - Realistic ETS-family transcription factor binding site data with excellent feature
-    coverage
-  - Clean, well-structured code with appropriate complexity
+  - Excellent glyph rendering using TextPath + Affine2D transforms — the proper matplotlib
+    technique for sequence logos
+  - Conserved core highlight with FancyBboxPatch adds meaningful data storytelling
+  - Biologically realistic ETS-family binding site data with clear conservation patterns
+  - 'Full spec compliance: all required features implemented correctly'
+  - Clean, well-structured code with all font sizes explicitly set
   weaknesses:
-  - No color legend mapping nucleotides to colors — would improve accessibility for
-    non-bioinformatics viewers
-  - No visual storytelling emphasis on the conserved core region (positions 3-6)
-  - Green/red color pair (A/T) is not fully colorblind-safe
-  - Very small letters at low-contribution positions could benefit from a minimum
-    height threshold
-  image_description: The plot displays a DNA sequence logo across 10 positions. Letters
-    A (green), C (blue), G (orange), and T (red) are stacked vertically at each position,
-    with heights proportional to information content in bits. Positions 1, 8, and
-    10 show no stacks (uniform distribution = 0 bits). Positions 3-6 display the dominant
-    motif GAGT with tall, clearly visible glyphs reaching ~1.4-1.6 bits. Position
-    2 shows a moderate C, and position 9 shows a strong T. The x-axis is labeled "Position"
-    (1-10), the y-axis "Information content (bits)" (0-2.00). Top and right spines
-    are removed, with a subtle y-axis grid. Title reads "sequence-logo-basic · matplotlib
-    · pyplots.ai". Letters are rendered as properly scaled glyphs (stretched to fill
-    their allocated height), not plain text.
+  - Color comment claims teal for A but uses standard green (#1b7837) — minor inconsistency
+  - Very small letters at low-information positions are hard to distinguish individually
+  image_description: 'The plot displays a DNA sequence logo for a 10-position transcription
+    factor binding site motif. Positions 1-10 are shown on the x-axis, with information
+    content (bits) on the y-axis ranging from 0 to 2.0. At each position, nucleotide
+    letters (A, C, G, T) are stacked vertically as scaled glyphs, with height proportional
+    to their contribution to information content. Colors are: A=green, C=blue, G=orange,
+    T=purple. Positions 3-6 form a highly conserved core (highlighted with a pale
+    yellow rounded rectangle and labeled "Conserved core"), showing dominant G, A,
+    G, T letters reaching ~1.4-1.6 bits. Positions 1, 8, and 10 show near-zero information
+    (uniform distribution). Position 2 has moderate conservation (dominant C). Position
+    9 shows a strong T. A color legend in the upper right identifies all four nucleotides.
+    Top and right spines are removed, with a subtle y-axis grid. The title reads "sequence-logo-basic
+    · matplotlib · pyplots.ai".'
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -46,33 +44,34 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt'
+        comment: 'All font sizes explicitly set: title 24pt, axis labels 20pt, ticks
+          16pt, legend 14pt'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or elements
+        comment: No text collisions anywhere
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Dominant letters clear; very small letters at low-info positions
-          are tiny but recognizable
+        comment: Letter glyphs well-sized at conserved positions; very small at low-info
+          positions but correct behavior
       - id: VQ-04
         name: Color Accessibility
         score: 3
         max: 4
         passed: true
-        comment: Green/red pair (A/T) not fully colorblind-safe; letter shapes provide
-          secondary cue
+        comment: Green/blue/orange/purple avoids red-green conflict; comment claims
+          teal but uses standard green
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good 16:9 canvas utilization with balanced margins
+        comment: Good 16:9 proportions, tight_layout, plot fills canvas well
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -80,29 +79,30 @@ review:
         passed: true
         comment: 'Descriptive labels with units: Position, Information content (bits)'
     design_excellence:
-      score: 11
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Standard bioinformatics DNA colors, clean glyph rendering, professional
-          but conventional
+        comment: Custom nucleotide palette, highlighted conserved core, refined legend,
+          clean typography hierarchy
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Spines removed, subtle y-grid, tight_layout; missing color legend
+        comment: Spines removed, subtle y-axis grid, rounded highlight box, generous
+          whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 5
         max: 6
-        passed: false
-        comment: Conserved core visible but no visual emphasis or annotation guiding
-          the viewer
+        passed: true
+        comment: Yellow highlight on conserved core with annotation creates clear
+          focal point and biological story
     spec_compliance:
       score: 15
       max: 15
@@ -119,20 +119,20 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: stacking, ordering, scaling, colors,
-          glyph rendering'
+        comment: 'All spec features: vertical stacking, frequency ordering, info content
+          scaling, standard colors, scaled glyphs'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=position, Y=information content in bits
+        comment: X=position (1-10), Y=information content (0-2 bits)
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format, no legend needed for self-identifying letters
+        comment: Correct title format and nucleotide color legend
     data_quality:
       score: 15
       max: 15
@@ -142,19 +142,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Full spectrum: conserved, moderate, and uniform positions'
+        comment: 'Full range: uniform, moderate, and highly conserved positions'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: ETS-family transcription factor binding site motif
+        comment: ETS-family transcription factor binding site motif with plausible
+          GAGT core
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 10 positions, frequencies sum to 1.0, 0-2 bits range for DNA
+        comment: Frequencies sum to 1, information content correct for DNA (max 2
+          bits)
     code_quality:
       score: 10
       max: 10
@@ -170,7 +172,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic data, no randomness
+        comment: Fully deterministic with hardcoded frequency data
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -182,15 +184,15 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Clean TextPath + Affine2D approach, appropriate complexity
+        comment: Clean TextPath + Affine2D + PathPatch approach
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png at 300 DPI, no deprecated API
+        comment: Saves as plot.png with dpi=300, current API
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -198,24 +200,25 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: TextPath + Affine2D + PathPatch pipeline is canonical matplotlib
-          for scaled glyphs
+        comment: Ax-based API, TextPath with Affine2D transforms for glyph rendering
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: TextPath and Affine2D transforms are distinctively matplotlib features
-  verdict: REJECTED
+        comment: TextPath, Affine2D, FancyBboxPatch, PathPatch, custom Line2D legend
+          handles
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
+  - custom-legend
   - patches
   - manual-ticks
   patterns:
-  - data-generation
   - iteration-over-groups
-  dataprep:
-  - normalization
+  dataprep: []
   styling:
   - grid-styling
+  - alpha-blending
