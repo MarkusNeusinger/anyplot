@@ -1,0 +1,240 @@
+library: highcharts
+specification_id: genome-track-multi
+created: '2026-03-06T17:05:56Z'
+updated: '2026-03-06T17:18:38Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22773343284
+issue: 4422
+python_version: 3.14.3
+library_version: unknown
+preview_url: https://storage.googleapis.com/pyplots-images/plots/genome-track-multi/highcharts/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/genome-track-multi/highcharts/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/genome-track-multi/highcharts/plot.html
+quality_score: 91
+review:
+  strengths:
+  - Excellent multi-track layout using Highcharts multiple yAxis with percentage positioning
+  - Biologically accurate TP53 locus data with realistic coordinates, variant IDs,
+    and coverage patterns
+  - 'Strong data storytelling: coverage peaks align with exon positions, creating
+    immediate biological insight'
+  - Cohesive color palette with clear visual hierarchy across all four tracks
+  - Plot bands connecting exon regions across tracks add a sophisticated cross-track
+    linking effect
+  - Lollipop markers with columnrange stems are an elegant variant representation
+  weaknesses:
+  - Bypasses highcharts_core Python API in favor of raw JavaScript (pragmatic but
+    less idiomatic)
+  - Slight excess bottom spacing (spacingBottom=180) wastes some canvas area
+  image_description: The plot displays a multi-track genome browser view of the TP53
+    locus on chromosome 17 (chr17:7,570,000-7,592,000) with four vertically stacked
+    tracks sharing a common x-axis in Mb format. The Genes track (top) shows dark
+    blue (#306998) exon rectangles connected by chevron-patterned intron lines, with
+    a "TP53 ◀" label indicating minus strand. The Coverage track renders as a blue
+    areaspline with a gradient fill from semi-transparent blue to near-white, with
+    peaks reaching ~90x at exon positions and a ~30-35x baseline. The Variants track
+    uses orange (#E67E22) circle lollipop markers for SNPs and purple (#8E44AD) diamond
+    lollipop markers for indels, with thin gray stems from baseline to quality score.
+    Inline colored labels identify SNP and Indel types. The Regulatory track (bottom)
+    shows teal (#2196A4) rectangles for enhancers and gold (#D4A017) rectangles for
+    promoters with inline legend labels. Subtle blue-tinted plot bands highlight exon
+    regions across all tracks. Dashed gray separator lines divide the tracks. The
+    title reads "TP53 Locus (chr17) · genome-track-multi · highcharts · pyplots.ai"
+    with a subtitle showing the coordinate range and genome assembly.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 44px, subtitle 28px, axis titles
+          26px, labels 20-24px). All text clearly readable.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or elements anywhere. Clean spacing.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Exon rectangles, coverage area, variant markers (radius 14-16), regulatory
+          rectangles all clearly visible.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue, orange, purple, teal, gold palette is colorblind-safe with
+          good contrast.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Four tracks fill canvas well. Minor excess bottom spacing (spacingBottom=180).
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: X-axis labeled 'Genomic Position (chr17)' with Mb units. Coverage
+          y-axis has 'x' suffix.
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Cohesive blue-centric palette with warm accents. Gradient fills,
+          lollipop stems, plot bands, dashed separators. Professional genomics aesthetic.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines removed on gene/regulatory tracks. Subtle grid (rgba 0.06).
+          Dashed separators. Generous whitespace.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Coverage peaks at exon positions tell the biological story. Variant
+          quality as lollipop heights creates hierarchy. Plot bands link tracks.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Multi-track genome browser with vertically stacked tracks sharing
+          x-axis.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Gene track (exons, introns, strand), coverage area, variant lollipops,
+          regulatory rectangles, track labels.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X-axis is genomic position. Each track maps data appropriately.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct title format. Inline legends for variants and regulatory
+          elements.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'All track types shown: 11 exons, coverage with peaks, SNPs and indels,
+          enhancers and promoters.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: TP53 is a real tumor suppressor gene. Realistic rs-number variant
+          IDs and genomic coordinates.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Coverage 30-90x realistic for sequencing. Quality scores 55-99 are
+          plausible PHRED values.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports, data, chart config, HTML, screenshot. No functions
+          or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean approach with arearange for rectangles, areaspline for coverage,
+          columnrange for stems.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png via Selenium. Also saves plot.html.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
+        max: 5
+        passed: true
+        comment: Writes raw Highcharts JS instead of highcharts_core Python API. Pragmatic
+          but not idiomatic.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Multiple yAxis with percentage positioning, arearange, areaspline
+          with gradients, columnrange, plotBands, renderer.path().
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - layer-composition
+  - annotations
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - gradient-fill
+  - grid-styling
+  - edge-highlighting

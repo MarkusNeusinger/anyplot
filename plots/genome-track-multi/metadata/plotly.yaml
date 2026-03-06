@@ -1,0 +1,241 @@
+library: plotly
+specification_id: genome-track-multi
+created: '2026-03-06T17:01:13Z'
+updated: '2026-03-06T17:22:52Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22773343286
+issue: 4422
+python_version: 3.14.3
+library_version: 6.6.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/genome-track-multi/plotly/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/genome-track-multi/plotly/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/genome-track-multi/plotly/plot.html
+quality_score: 90
+review:
+  strengths:
+  - Excellent biological context — EGFR oncogene with realistic variant IDs, regulatory
+    elements, and expression data
+  - 'All previous review issues addressed: colorblind-safe regulatory palette, rangeslider
+    removed from static PNG, title enlarged to 30pt, colored accent strips added'
+  - Professional genome browser aesthetic with attention to detail (accent strips,
+    alternating backgrounds, track dividers)
+  - Dual output strategy (static PNG + interactive HTML) leveraging Plotly strengths
+  - Coverage peaks correlate with exon positions, demonstrating real biological relationships
+  weaknesses:
+  - 'Indel and Promoter colors are very similar purples (#8B3A8B vs #8E44AD), though
+    mitigated by being in different tracks with different shapes'
+  - The extreme 3-prime coverage spike (60x) compresses the rest of the coverage track,
+    making smaller peaks less visible
+  image_description: 'The plot displays a 4-track genome browser view of the EGFR
+    locus on chromosome 7 (chr7:55,086,000-55,280,000). The title "EGFR Locus (chr7)
+    · genome-track-multi · plotly · pyplots.ai" is centered at the top in 30pt font
+    with a gray subtitle "Multi-track genome browser — chr7:55,086,000-55,280,000"
+    below. Track 1 (Genes): Dark blue exon rectangles connected by a thin light-blue
+    intron line, with directional arrows indicating the + strand. "EGFR (+)" label
+    in blue above. Light blue background shading and a blue left-edge accent strip.
+    Track 2 (Coverage): A filled area chart in semi-transparent blue showing RNA-seq
+    read depth (0-60x), with peaks at exon positions and a prominent spike near the
+    3'' end. Subtle horizontal gridlines. Blue accent strip on left. Track 3 (Variants):
+    Lollipop markers — orange circles for SNPs and purple diamonds for Indels — with
+    stem height encoding quality scores (0-100). Light blue background shading with
+    orange accent strip. Track 4 (Regulatory): Colored rectangles for Promoters (purple),
+    Enhancers (blue), and CTCF sites (yellow/orange). Purple accent strip on left.
+    No rangeslider in the static PNG (removed via deepcopy). Horizontal legend at
+    the bottom labels SNP, Indel, Promoter, Enhancer, and CTCF. Formatted genomic
+    coordinates on x-axis with "Genomic Position (bp)" label.'
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set (title 30pt, axis titles 18-22pt,
+          track labels 18pt bold, ticks 16pt). Minor: Variants y-axis label wraps
+          to two lines.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text collisions anywhere. Clean separation between all elements.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: All elements clearly visible. Dense middle exon cluster slightly
+          compressed but distinguishable.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 3
+        max: 4
+        passed: true
+        comment: Colorblind-safe regulatory palette. Indel and Promoter colors are
+          similar purples, mitigated by shape difference.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Rangeslider removed from static PNG. Four tracks fill canvas well
+          with appropriate height ratios.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Genomic Position (bp) with units. All tracks labeled with bold names.
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom cohesive palette, plotly_white template, 30pt title with subtitle,
+          colored left-edge accent strips. Above defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Rangeslider removed from static, subtle grid on coverage only, alternating
+          backgrounds, accent strips, hidden ticks on gene/regulatory.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: EGFR oncogene context. Coverage peaks align with exons. Quality-encoded
+          variant heights create hierarchy.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct multi-track genome browser with 4 stacked tracks sharing
+          x-axis.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: exon rectangles, intron lines, strand arrows,
+          coverage area, lollipop variants, regulatory rectangles, track labels.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Genomic coordinates on shared x-axis, all data correctly mapped per
+          track.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title includes spec-id, library, and pyplots.ai. Legend labels correct.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Comprehensive: 28 exons, coverage with exon-correlated peaks, SNPs
+          and Indels, three regulatory element types.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: EGFR on chr7 is a real cancer gene. Realistic rs-numbers and regulatory
+          types.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Correct genomic coordinates for EGFR. Coverage 0-60x realistic. Quality
+          scores 20-99 plausible.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear script with no functions or classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set at the top.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: copy, numpy, plotly.graph_objects, make_subplots.'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean code. deepcopy for dual output is elegant.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot.png (4800x2700) and plot.html with CDN.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Expert use of make_subplots, go.Scatter, add_shape, add_annotation,
+          domain references.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Rangeslider, hovertemplate, HTML export, fill=toself, deepcopy dual
+          output.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - subplots
+  - annotations
+  - hover-tooltips
+  - custom-legend
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling
+  - edge-highlighting
