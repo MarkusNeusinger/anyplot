@@ -1,0 +1,242 @@
+library: plotly
+specification_id: tree-decision
+created: '2026-03-06T21:34:38Z'
+updated: '2026-03-06T22:09:48Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22782764459
+issue: 4569
+python_version: 3.14.3
+library_version: 6.6.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/tree-decision/plotly/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/tree-decision/plotly/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/tree-decision/plotly/plot.html
+quality_score: 86
+review:
+  strengths:
+  - Perfect spec compliance with all required features correctly implemented (node
+    shapes, probabilities, EMV rollback, pruning marks, payoffs)
+  - Strong data storytelling through visual hierarchy - bold optimal path vs faded
+    pruned branches with red marks make the winning strategy immediately obvious
+  - Realistic business scenario with mathematically verified EMV calculations
+  - Hover text built inline during trace creation - clean code flow without post-hoc
+    patching
+  - Dual PNG + interactive HTML output with rich tooltips leveraging Plotly core strength
+  weaknesses:
+  - Minor label crowding between License Tech and Do Nothing near the decision node
+  - Library mastery limited to basic go.Scatter/add_shape patterns rather than more
+    advanced Plotly features
+  - Green terminal node color used uniformly for both positive and negative outcomes
+    could be semantically confusing
+  image_description: 'The plot displays a left-to-right decision tree for a product
+    launch investment decision. A dark blue square decision node on the far left displays
+    "$280" in white text (EMV). Three branches emerge from it: "Launch Product" (solid
+    dark blue optimal path) connects to an orange circle chance node also showing
+    "$280" EMV. From the chance node, "High Demand (p=0.6)" leads to a green right-pointing
+    triangle with "$+500" payoff, and "Low Demand (p=0.4)" leads to another green
+    triangle with "$-50". Two pruned branches (gray dashed lines with reduced opacity)
+    lead to "License Tech" connecting to a gray circle chance node ($170 EMV), which
+    splits to "Accepted (p=0.7)" at $+200 and "Rejected (p=0.3)" at $+100. "Do Nothing"
+    leads directly to a gray terminal triangle at $+0. Red "//" marks appear on pruned
+    branches near the decision node and near the C2 chance node. A legend in the bottom-left
+    identifies Decision Node (blue square), Chance Node (orange circle), Terminal
+    Node (green triangle), and Pruned Branch (gray dashed). Background is off-white
+    with white paper. Title reads "Product Launch Decision · tree-decision · plotly
+    · pyplots.ai" with subtitle "Optimal path maximizes EMV at $280K · Pruned branches
+    marked with //".'
+  criteria_checklist:
+    visual_quality:
+      score: 25
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'Font sizes explicitly set throughout: title 28pt, labels/EMV 20pt,
+          prune marks 26pt, legend 17pt. All clearly readable.'
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Most labels well-positioned with custom yshift. Minor crowding between
+          License Tech and Do Nothing near decision node.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: All nodes clearly visible with distinct shapes. Pruned elements appropriately
+          faded while remaining visible.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 3
+        max: 4
+        passed: true
+        comment: Blue/orange/green/gray palette with shape redundancy. Green terminals
+          could challenge some deuteranopia viewers.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good left-to-right layout. Do Nothing branch extends low creating
+          minor imbalance.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No traditional axes needed. Title descriptive with contextual subtitle.
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom palette with intentional hierarchy. White node borders, consistent
+          Arial typography. Clearly above defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Axes/grid hidden. Off-white plot bg on white paper. White node outlines.
+          Generous margins.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Strong visual hierarchy: bold optimal path vs faded pruned branches
+          with red marks. Subtitle communicates key insight.'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct decision tree with squares, circles, right-pointing triangles.
+          Left-to-right layout.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: node shapes, probabilities, EMV rollback,
+          pruning marks, payoffs.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Tree structure correct. Probabilities sum to 1.0. EMV calculations
+          verified.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct. Legend shows all four element types with correct
+          symbols.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all aspects: decision/chance/terminal nodes, pruning, positive/negative
+          payoffs, probabilities, EMV rollback.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Product launch investment decision - realistic, neutral business
+          scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Payoff values plausible for business decisions. Probabilities reasonable
+          and consistent.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat script structure with one trivial 5-line helper that does not
+          break linear flow.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: All data hardcoded and fully deterministic.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only plotly.graph_objects imported and used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Hover text built inline. Invisible scatter for shape hover is necessary
+          Plotly workaround.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png at 4800x2700. Also exports interactive HTML.
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses go.Figure, go.Scatter, add_shape, add_annotation correctly.
+          Reasonable pattern for custom diagrams.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Dual PNG + HTML with rich hover tooltips. hoverlabel customization.
+          Layout shapes for geometric rendering.
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  - hover-tooltips
+  - html-export
+  - patches
+  patterns:
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - edge-highlighting
