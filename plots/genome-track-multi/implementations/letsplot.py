@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 genome-track-multi: Genome Track Viewer
 Library: letsplot 4.8.2 | Python 3.14.3
 Quality: 87/100 | Created: 2026-03-06
@@ -111,36 +111,38 @@ regulatory = pd.DataFrame(
     }
 )
 
-# Track layout: generous spacing between tracks for clear visual separation
-track_gene_y = 4.2
-track_cov_y = 2.7
-track_var_y = 1.3
-track_reg_y = 0.0
-track_height = 0.42
-cov_height = 0.65  # Extra height for coverage track to show peaks clearly
+# Track layout configuration
+tracks = {
+    "Genes": {"center": 4.2, "half_h": 0.42, "pad_bot": 0.25, "pad_top": 0.55},
+    "Coverage": {"center": 2.7, "half_h": 0.65, "pad_bot": 0.25, "pad_top": 0.30},
+    "Variants": {"center": 1.3, "half_h": 0.42, "pad_bot": 0.25, "pad_top": 0.30},
+    "Regulatory": {"center": 0.0, "half_h": 0.42, "pad_bot": 0.25, "pad_top": 0.30},
+}
 
 # Scale positions to kb for readability
 scale = 1000.0
+x_start = region_start / scale
+x_end = region_end / scale
 
 # --- Gene track data ---
+t = tracks["Genes"]
 gene_intron_df = pd.DataFrame(
-    {"x": genes["start"] / scale, "xend": genes["end"] / scale, "y": track_gene_y, "yend": track_gene_y}
+    {"x": genes["start"] / scale, "xend": genes["end"] / scale, "y": t["center"], "yend": t["center"]}
 )
 
 exon_df = pd.DataFrame(
     {
         "xmin": exons["start"] / scale,
         "xmax": exons["end"] / scale,
-        "ymin": track_gene_y - track_height,
-        "ymax": track_gene_y + track_height,
+        "ymin": t["center"] - t["half_h"],
+        "ymax": t["center"] + t["half_h"],
         "gene": exons["gene"],
     }
 )
-# Add tooltip info for exons
 exon_df["exon_size"] = ((exons["end"] - exons["start"]) / 1000).round(1).astype(str) + " kb"
 
 gene_label_df = pd.DataFrame(
-    {"x": (genes["start"] + genes["end"]) / 2 / scale, "y": track_gene_y + track_height + 0.22, "label": genes["name"]}
+    {"x": (genes["start"] + genes["end"]) / 2 / scale, "y": t["center"] + t["half_h"] + 0.22, "label": genes["name"]}
 )
 
 # Strand arrows
@@ -148,101 +150,95 @@ strand_arrows = []
 for _, g in genes.iterrows():
     mid = (g["start"] + g["end"]) / 2 / scale
     arrow_char = "\u25b6" if g["strand"] == "+" else "\u25c0"
-    strand_arrows.append({"x": mid, "y": track_gene_y - track_height - 0.22, "label": arrow_char})
+    strand_arrows.append({"x": mid, "y": t["center"] - t["half_h"] - 0.22, "label": arrow_char})
 strand_df = pd.DataFrame(strand_arrows)
 
 # --- Coverage track data ---
+t = tracks["Coverage"]
 cov_plot_df = coverage_df.copy()
 cov_plot_df["x"] = cov_plot_df["position"] / scale
-# Normalize coverage to fit within track band
 max_depth = cov_plot_df["depth"].max()
-cov_plot_df["y"] = track_cov_y - cov_height + (cov_plot_df["depth"] / max_depth) * (2 * cov_height)
-cov_plot_df["ybase"] = track_cov_y - cov_height
+cov_plot_df["y"] = t["center"] - t["half_h"] + (cov_plot_df["depth"] / max_depth) * (2 * t["half_h"])
+cov_plot_df["ybase"] = t["center"] - t["half_h"]
 cov_plot_df["depth_label"] = cov_plot_df["depth"].round(1).astype(str) + "x"
 cov_plot_df["pos_label"] = (cov_plot_df["position"] / 1000).round(1).astype(str) + " kb"
 
 # --- Variant track data ---
+t = tracks["Variants"]
 var_plot_df = variants_df.copy()
 var_plot_df["x"] = var_plot_df["position"] / scale
-var_plot_df["y_base"] = track_var_y
-# Lollipop height based on quality - slightly taller stems
-var_plot_df["y_top"] = track_var_y + (var_plot_df["quality"] / 100) * (2 * track_height + 0.12)
+var_plot_df["y_base"] = t["center"]
+# Ensure minimum stem height for low-quality variants (min 30% of max height)
+min_stem = 0.3
+max_stem = 2 * t["half_h"] + 0.15
+var_plot_df["y_top"] = t["center"] + min_stem * max_stem + (var_plot_df["quality"] / 100) * (1 - min_stem) * max_stem
 var_plot_df["qual_label"] = "QUAL: " + var_plot_df["quality"].round(1).astype(str)
 var_plot_df["pos_label"] = (var_plot_df["position"] / 1000).round(1).astype(str) + " kb"
 
 # --- Regulatory track data ---
+t = tracks["Regulatory"]
 reg_plot_df = pd.DataFrame(
     {
         "xmin": regulatory["start"] / scale,
         "xmax": regulatory["end"] / scale,
-        "ymin": track_reg_y - track_height,
-        "ymax": track_reg_y + track_height,
+        "ymin": t["center"] - t["half_h"],
+        "ymax": t["center"] + t["half_h"],
         "element": regulatory["element"],
         "size_label": ((regulatory["end"] - regulatory["start"]) / 1000).round(1).astype(str) + " kb",
     }
 )
 
-# Track background shading with more generous spacing
-track_bg = pd.DataFrame(
-    {
-        "xmin": [region_start / scale] * 4,
-        "xmax": [region_end / scale] * 4,
-        "ymin": [
-            track_reg_y - track_height - 0.25,
-            track_var_y - track_height - 0.25,
-            track_cov_y - cov_height - 0.25,
-            track_gene_y - track_height - 0.25,
-        ],
-        "ymax": [
-            track_reg_y + track_height + 0.3,
-            track_var_y + track_height + 0.3,
-            track_cov_y + cov_height + 0.3,
-            track_gene_y + track_height + 0.55,
-        ],
-        "track": ["Regulatory", "Variants", "Coverage", "Genes"],
-    }
-)
+# Track background shading
+bg_rows = []
+for name, t in tracks.items():
+    bg_rows.append(
+        {
+            "xmin": x_start,
+            "xmax": x_end,
+            "ymin": t["center"] - t["half_h"] - t["pad_bot"],
+            "ymax": t["center"] + t["half_h"] + t["pad_top"],
+            "track": name,
+        }
+    )
+track_bg = pd.DataFrame(bg_rows)
 
-# Thin horizontal divider lines between tracks
-divider_y_positions = [
-    (track_reg_y + track_height + 0.3 + track_var_y - track_height - 0.25) / 2,
-    (track_var_y + track_height + 0.3 + track_cov_y - cov_height - 0.25) / 2,
-    (track_cov_y + cov_height + 0.3 + track_gene_y - track_height - 0.25) / 2,
-]
-divider_df = pd.DataFrame(
-    {
-        "x": [region_start / scale] * 3,
-        "xend": [region_end / scale] * 3,
-        "y": divider_y_positions,
-        "yend": divider_y_positions,
-    }
-)
+# Divider lines between adjacent tracks
+track_order = ["Regulatory", "Variants", "Coverage", "Genes"]
+divider_positions = []
+for i in range(len(track_order) - 1):
+    lo = tracks[track_order[i]]
+    hi = tracks[track_order[i + 1]]
+    y_mid = (lo["center"] + lo["half_h"] + lo["pad_top"] + hi["center"] - hi["half_h"] - hi["pad_bot"]) / 2
+    divider_positions.append(y_mid)
 
-# Track labels
+divider_df = pd.DataFrame({"x": [x_start] * 3, "xend": [x_end] * 3, "y": divider_positions, "yend": divider_positions})
+
+# Track labels positioned inside each track's upper-left corner
 track_labels_df = pd.DataFrame(
     {
-        "x": [region_start / scale - 0.5] * 4,
-        "y": [track_reg_y, track_var_y, track_cov_y, track_gene_y],
-        "label": ["Regulatory", "Variants", "Coverage", "Genes"],
+        "x": [x_start + 1.0] * 4,
+        "y": [tracks[n]["center"] + tracks[n]["half_h"] + tracks[n]["pad_top"] - 0.15 for n in track_order],
+        "label": track_order,
     }
 )
 
-# Highlight region: variant within exon (HOXA3, exon 2 region) for focal point
+# Highlight region: variant-dense area near HOXA3 exon 2
 highlight_df = pd.DataFrame(
     {
         "xmin": [27241.0],
         "xmax": [27243.0],
-        "ymin": [track_reg_y - track_height - 0.25],
-        "ymax": [track_gene_y + track_height + 0.55],
+        "ymin": [tracks["Regulatory"]["center"] - tracks["Regulatory"]["half_h"] - tracks["Regulatory"]["pad_bot"]],
+        "ymax": [tracks["Genes"]["center"] + tracks["Genes"]["half_h"] + tracks["Genes"]["pad_top"]],
     }
 )
 
-# Peak coverage annotation for data storytelling
+# Peak coverage annotation
 peak_idx = cov_plot_df["depth"].idxmax()
 peak_x = cov_plot_df.loc[peak_idx, "x"]
 peak_depth = cov_plot_df.loc[peak_idx, "depth"]
+t = tracks["Coverage"]
 peak_annotation_df = pd.DataFrame(
-    {"x": [peak_x], "y": [track_cov_y + cov_height + 0.12], "label": [f"\u25b2 Peak: {peak_depth:.0f}x"]}
+    {"x": [peak_x + 2.0], "y": [t["center"] + t["half_h"] - 0.05], "label": [f"Peak: {peak_depth:.0f}x"]}
 )
 
 # Colors — refined palette
@@ -254,6 +250,10 @@ snp_color = "#E8833A"
 indel_color = "#C44E52"
 promoter_color = "#2CA02C"
 enhancer_color = "#8B6DAF"
+
+# Custom x-axis tick labels with "kb" suffix - use wider spacing to avoid rotation
+tick_positions = list(range(int(x_start), int(x_end) + 1, 20))
+tick_labels = [f"{v} kb" for v in tick_positions]
 
 # Plot
 plot = (
@@ -306,11 +306,11 @@ plot = (
         size=0.5,
         tooltips=layer_tooltips().line("Position: @pos_label").line("Depth: @depth_label"),
     )
-    # Coverage peak annotation for storytelling
+    # Coverage peak annotation
     + geom_text(aes(x="x", y="y", label="label"), data=peak_annotation_df, size=12, color="#2B7BBE", fontface="bold")
-    # Variant track: lollipop stems - thicker
+    # Variant track: lollipop stems
     + geom_segment(aes(x="x", xend="x", y="y_base", yend="y_top", color="type"), data=var_plot_df, size=1.2)
-    # Variant track: lollipop heads - larger with tooltips
+    # Variant track: lollipop heads with tooltips
     + geom_point(
         aes(x="x", y="y_top", color="type"),
         data=var_plot_df,
@@ -327,27 +327,29 @@ plot = (
         color="#FFFFFF",
         tooltips=layer_tooltips().line("@element").line("Size: @size_label"),
     )
-    # Track labels on the left
+    # Track labels inside the plot area
     + geom_text(
-        aes(x="x", y="y", label="label"), data=track_labels_df, size=16, color="#333333", fontface="bold", hjust=1
+        aes(x="x", y="y", label="label"), data=track_labels_df, size=14, color="#444444", fontface="bold", hjust=0
     )
     # Scales
     + scale_color_manual(values={"SNP": snp_color, "Indel": indel_color}, name="Variant Type")
     + scale_fill_manual(values={"Promoter": promoter_color, "Enhancer": enhancer_color}, name="Regulatory")
-    + scale_x_continuous(name=f"Genomic Position ({chrom}, kb)", expand=[0.02, 0.01])
+    + scale_x_continuous(
+        name=f"Genomic Position ({chrom})", breaks=tick_positions, labels=tick_labels, expand=[0.01, 0.01]
+    )
     + scale_y_continuous(expand=[0.04, 0.04])
     + labs(
         title="genome-track-multi \u00b7 letsplot \u00b7 pyplots.ai",
         subtitle="HOXA Gene Cluster \u2014 chr7:27,200\u201327,280 kb  |  Highlight: variant-rich region in HOXA3",
     )
-    + coord_cartesian(xlim=[region_start / scale - 14, region_end / scale + 2])
+    + coord_cartesian(xlim=[x_start - 1, x_end + 1])
     + theme_minimal()
     + theme(
         plot_title=element_text(size=26, face="bold", color="#1a1a1a"),
         plot_subtitle=element_text(size=17, color="#555555"),
         axis_title_x=element_text(size=20, color="#333333"),
         axis_title_y=element_blank(),
-        axis_text_x=element_text(size=16, color="#555555"),
+        axis_text_x=element_text(size=16, color="#555555", angle=0),
         axis_text_y=element_blank(),
         axis_ticks_y=element_blank(),
         panel_grid_major_x=element_line(color="#EAEAEA", size=0.3),
