@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 genome-track-multi: Genome Track Viewer
 Library: plotly 6.6.0 | Python 3.14.3
 Quality: 87/100 | Created: 2026-03-06
@@ -113,8 +113,8 @@ intron_color = "#8FB0CC"
 coverage_color = "#306998"
 snp_color = "#D4763A"
 indel_color = "#8B3A8B"
-promoter_color = "#C0392B"
-enhancer_color = "#27AE60"
+promoter_color = "#8E44AD"
+enhancer_color = "#2980B9"
 ctcf_color = "#F39C12"
 
 # Plot - 4 tracks with shared x-axis
@@ -290,8 +290,8 @@ fig.update_layout(
     template="plotly_white",
     height=900,
     width=1600,
-    legend={"font": {"size": 16}, "orientation": "h", "yanchor": "bottom", "y": -0.12, "xanchor": "center", "x": 0.5},
-    margin={"l": 100, "r": 40, "t": 80, "b": 80},
+    legend={"font": {"size": 16}, "orientation": "h", "yanchor": "top", "y": -0.02, "xanchor": "center", "x": 0.5},
+    margin={"l": 100, "r": 40, "t": 80, "b": 100},
 )
 
 # X-axis formatting (genomic coordinates)
@@ -300,23 +300,24 @@ fig.update_xaxes(
     tickfont={"size": 16},
     tickformat=",",
     range=[region_start - 2000, region_end + 5000],
+    rangeslider={"visible": True, "thickness": 0.06},
     row=4,
     col=1,
 )
 for row in range(1, 4):
-    fig.update_xaxes(tickfont={"size": 16}, tickformat=",", row=row, col=1)
+    fig.update_xaxes(tickfont={"size": 16}, tickformat=",", showticklabels=False, row=row, col=1)
 
 # Y-axis formatting per track
-fig.update_yaxes(range=[-0.2, 1.4], showticklabels=False, row=1, col=1)
-fig.update_yaxes(tickfont={"size": 16}, row=2, col=1)
+fig.update_yaxes(range=[-0.2, 1.4], showticklabels=False, showgrid=False, row=1, col=1)
+fig.update_yaxes(tickfont={"size": 16}, gridcolor="rgba(200, 210, 220, 0.4)", gridwidth=1, row=2, col=1)
 fig.update_yaxes(
-    title={"text": "<b>Variants</b><br>Quality", "font": {"size": 18}},
+    title={"text": "<b>Variants</b> (Quality)", "font": {"size": 18}},
     tickfont={"size": 16},
     range=[-5, 110],
     row=3,
     col=1,
 )
-fig.update_yaxes(range=[-0.1, 1.1], showticklabels=False, row=4, col=1)
+fig.update_yaxes(range=[-0.1, 1.1], showticklabels=False, showgrid=False, row=4, col=1)
 
 # Subtle background shading for alternate tracks
 for row in [1, 3]:
@@ -331,6 +332,20 @@ for row in [1, 3]:
         fillcolor="rgba(240, 245, 250, 0.5)",
         line={"width": 0},
         layer="below",
+    )
+
+# Track divider lines for visual separation
+for row in range(1, 5):
+    yref = f"y{row} domain" if row > 1 else "y domain"
+    fig.add_shape(
+        type="line",
+        x0=0,
+        x1=1,
+        y0=0,
+        y1=0,
+        xref=f"x{row} domain" if row > 1 else "x domain",
+        yref=yref,
+        line={"color": "rgba(180, 190, 200, 0.6)", "width": 1},
     )
 
 # Save
