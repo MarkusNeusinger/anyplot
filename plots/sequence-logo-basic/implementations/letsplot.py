@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 sequence-logo-basic: Sequence Logo for Motif Visualization
 Library: letsplot 4.8.2 | Python 3.14.3
 Quality: 73/100 | Created: 2026-03-06
@@ -31,27 +31,27 @@ frequencies = {
 # Color scheme: A=green, C=blue, G=orange, T=red
 color_map = {"A": "#2CA02C", "C": "#1F77B4", "G": "#FF7F0E", "T": "#D62728"}
 
-# Calculate information content and build stacked rectangles
-half_width = 0.4
+# Calculate information content and build letter data
 rows = []
 for pos in positions:
     freqs = frequencies[pos]
     entropy = -sum(f * np.log2(f) for f in freqs.values() if f > 0)
     info_content = 2.0 - entropy
 
+    # Sort by frequency (least frequent at bottom, most frequent on top)
     sorted_letters = sorted(freqs.items(), key=lambda x: x[1])
 
     y_bottom = 0.0
     for letter, freq in sorted_letters:
         height = freq * info_content
-        if height < 0.001:
+        if height < 0.02:
             y_bottom += height
             continue
         rows.append(
             {
                 "position": pos,
-                "xmin": pos - half_width,
-                "xmax": pos + half_width,
+                "xmin": pos - 0.45,
+                "xmax": pos + 0.45,
                 "ymin": y_bottom,
                 "ymax": y_bottom + height,
                 "ymid": y_bottom + height / 2,
@@ -63,13 +63,23 @@ for pos in positions:
 
 df = pd.DataFrame(rows)
 
-# Plot
+# Build plot with colored letters as the primary visual element
 plot = (
     ggplot(df)
-    + geom_rect(aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax", fill="letter"), color="white", size=0.5)
-    + geom_text(aes(x="position", y="ymid", label="letter", size="height"), color="white", fontface="bold")
-    + scale_fill_manual(values=color_map, name="Nucleotide")
-    + scale_size(range=[6, 28], guide="none")
+    # Subtle background rectangles for structure only
+    + geom_rect(
+        aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax", fill="letter"),
+        alpha=0.15,
+        color="rgba(0,0,0,0)",
+        size=0,
+        show_legend=False,
+    )
+    # Colored letter glyphs — the primary visual element
+    + geom_text(aes(x="position", y="ymid", label="letter", color="letter", size="height"), fontface="bold")
+    # Manual color scales for both fill (background) and color (letters)
+    + scale_fill_manual(values=color_map)
+    + scale_color_manual(values=color_map, name="Nucleotide", guide=guide_legend(override_aes={"size": 16}))
+    + scale_size(range=[4, 32], guide="none")
     + scale_x_continuous(breaks=positions, limits=[0.3, 10.7])
     + scale_y_continuous(limits=[0, 2.1])
     + labs(x="Position", y="Information content (bits)", title="sequence-logo-basic \u00b7 letsplot \u00b7 pyplots.ai")
