@@ -1,0 +1,30 @@
+# Specification-level metadata for recurrence-basic
+# Auto-synced to PostgreSQL on push to main
+
+spec_id: recurrence-basic
+title: Recurrence Plot for Nonlinear Time Series
+
+# Specification tracking
+created: "2026-03-06T19:54:38Z"
+updated: null
+issue: 4592
+suggested: MarkusNeusinger
+
+# Classification tags (applies to all library implementations)
+# See docs/reference/tagging-system.md for detailed guidelines
+tags:
+  plot_type:
+    - heatmap
+    - matrix
+  data_type:
+    - timeseries
+    - numeric
+    - matrix
+  domain:
+    - statistics
+    - science
+    - engineering
+  features:
+    - color-mapped
+    - temporal
+    - 2d
