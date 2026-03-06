@@ -1,0 +1,27 @@
+# Specification-level metadata for scatter-hr-diagram
+# Auto-synced to PostgreSQL on push to main
+
+spec_id: scatter-hr-diagram
+title: Hertzsprung-Russell Diagram
+
+# Specification tracking
+created: "2026-03-06T19:52:08Z"
+updated: null
+issue: 4558
+suggested: MarkusNeusinger
+
+# Classification tags (applies to all library implementations)
+# See docs/reference/tagging-system.md for detailed guidelines
+tags:
+  plot_type:
+    - scatter
+  data_type:
+    - numeric
+    - continuous
+    - categorical
+  domain:
+    - science
+  features:
+    - color-mapped
+    - annotated
+    - 2d
