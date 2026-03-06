@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 heatmap-stripes-climate: Climate Warming Stripes
-Library: letsplot | Python 3.13
-Quality: pending | Created: 2026-03-06
+Library: letsplot 4.8.2 | Python 3.14.3
+Quality: 84/100 | Created: 2026-03-06
 """
 
 import numpy as np
