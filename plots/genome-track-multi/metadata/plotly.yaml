@@ -1,7 +1,7 @@
 library: plotly
 specification_id: genome-track-multi
 created: '2026-03-06T17:01:13Z'
-updated: '2026-03-06T17:05:29Z'
+updated: '2026-03-06T17:13:54Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 22773343286
 issue: 4422
@@ -10,40 +10,39 @@ library_version: 6.6.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/genome-track-multi/plotly/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/genome-track-multi/plotly/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/genome-track-multi/plotly/plot.html
-quality_score: 87
+quality_score: 88
 review:
   strengths:
-  - Excellent biological context with EGFR oncogene making a genuinely useful genomics
-    visualization example
-  - All 4 spec-required tracks implemented with appropriate visualization types (rectangles,
-    area, lollipop, colored blocks)
-  - Coverage peaks naturally correlate with exon positions demonstrating real biological
-    relationships
-  - Interactive hover tooltips provide rich variant and coverage detail
-  - Clean code structure with well-organized data generation and reproducible seed
+  - Excellent biological context - EGFR oncogene with realistic variant IDs, regulatory
+    elements, and expression data
+  - Colorblind-safe palette (improved from attempt 1) - purple/blue/yellow regulatory
+    colors work well
+  - All 4 spec-required tracks implemented with appropriate visualization types
+  - Coverage peaks correlate with exon positions, demonstrating real biological relationships
+  - Rangeslider added for genomic navigation, leveraging Plotly interactive capabilities
+  - Clean code structure with well-organized data generation
   weaknesses:
-  - Red-green color combination in regulatory track (Promoter vs Enhancer) problematic
-    for colorblind viewers
-  - Design could be more polished - tick labels visible on gene/regulatory tracks
-    where they add no value
-  - Could better leverage Plotly-specific features like range sliders for genomic
-    navigation
+  - Rangeslider shows miniaturized regulatory elements in the static PNG, adding visual
+    clutter below the main plot
+  - Design polish is close but not quite at publication level - needs a final push
+    on typography and visual hierarchy
+  - Dense exon cluster in the middle region could benefit from slight visual differentiation
   image_description: The plot displays a 4-track genome browser view of the EGFR locus
-    on chromosome 7 (positions ~55,086,000 to ~55,280,000). The title reads "EGFR
-    Locus (chr7) · genome-track-multi · plotly · pyplots.ai" centered at the top.
-    Track 1 (Genes) shows the EGFR gene structure with blue rectangles for exons connected
-    by a thin line for introns, with small directional arrows indicating the + strand.
-    The gene name "EGFR (+)" is labeled above. Track 2 (Coverage) is a filled area
-    chart in semi-transparent blue showing RNA-seq read depth, with peaks corresponding
-    to exon positions and a notable spike near the 3' end. Track 3 (Variants) uses
-    lollipop markers — orange circles for SNPs and purple diamonds for indels — with
-    stem height encoding quality score (0-100). Track 4 (Regulatory) shows colored
-    rectangles for Promoters (red), Enhancers (green), and CTCF binding sites (yellow).
-    All tracks share a common x-axis with genomic positions formatted with commas.
-    Track labels appear on the left y-axis. A horizontal legend at the bottom shows
-    SNP, Indel, Promoter, Enhancer, and CTCF categories. Alternating light blue background
-    shading distinguishes tracks 1 and 3. The plotly_white template provides a clean
-    background.
+    on chromosome 7 (positions ~55,086,000 to ~55,280,000). The title "EGFR Locus
+    (chr7) · genome-track-multi · plotly · pyplots.ai" is centered at the top in a
+    large font. Track 1 (Genes) shows the EGFR gene structure with dark blue rectangles
+    for exons connected by a thin light-blue intron line, with small directional arrows
+    indicating the + strand. "EGFR (+)" label appears above in blue. Light blue background
+    shading. Track 2 (Coverage) is a filled area chart in semi-transparent blue showing
+    RNA-seq read depth (0-60x range), with peaks corresponding to exon positions and
+    a notable spike near the 3' end. Subtle horizontal gridlines on this track only.
+    Track 3 (Variants) shows lollipop markers — orange circles for SNPs and purple
+    diamonds for Indels — with stem height encoding quality scores (0-100 range).
+    Light blue background shading. Track 4 (Regulatory) shows colored rectangles for
+    Promoters (purple), Enhancers (blue), and CTCF binding sites (yellow/orange).
+    A Plotly rangeslider at the bottom shows a miniature overview. A horizontal legend
+    at the bottom labels SNP, Indel, Promoter, Enhancer, and CTCF. "Genomic Position
+    (bp)" x-axis label with comma-formatted coordinates.
   criteria_checklist:
     visual_quality:
       score: 27
@@ -54,41 +53,41 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 28pt, labels 18-22pt, ticks
-          16pt). Minor awkward line break on Variants y-axis label.
+        comment: 'All font sizes explicitly set (title 28pt, axis titles 22pt, track
+          labels 18pt bold, ticks 16pt). Minor: Variants y-axis label wraps awkwardly.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions or overlap observed.
+        comment: No text collisions or overlap anywhere.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: All elements visible. Some exons in dense middle region slightly
-          hard to distinguish.
+        comment: All elements visible. Dense exon cluster in middle slightly hard
+          to distinguish individually.
       - id: VQ-04
         name: Color Accessibility
-        score: 3
-        max: 4
-        passed: true
-        comment: Good overall palette but regulatory track uses red-green (Promoter
-          vs Enhancer) problematic for colorblind viewers.
-      - id: VQ-05
-        name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good 4-track layout with appropriate height ratios. Plot fills canvas
-          well.
+        comment: Colorblind-safe palette with purple, blue, yellow for regulatory.
+          Red-green issue from attempt 1 fixed.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good 4-track layout. Rangeslider minimap shows regulatory elements
+          creating visual clutter in static PNG.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Genomic Position (bp) with units. All tracks labeled.
+        comment: Genomic Position (bp) with units. All tracks labeled with bold names.
     design_excellence:
       score: 13
       max: 20
@@ -98,22 +97,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom color palette, plotly_white template, good typography. Above
-          defaults but not publication level.
+        comment: Custom cohesive palette, plotly_white template, good typography hierarchy.
+          Above defaults but not publication-grade.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Alternating track shading, clean template, generous spacing. Could
-          hide unnecessary tick labels.
+        comment: Alternating track shading, subtle grid on coverage only, hidden ticks
+          on non-quantitative tracks, track dividers.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: EGFR oncogene context, coverage-exon correlation, quality-encoded
-          lollipops create visual hierarchy.
+        comment: EGFR context meaningful. Coverage-exon correlation tells biological
+          story. Quality-encoded lollipop heights.
     spec_compliance:
       score: 15
       max: 15
@@ -130,21 +129,22 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: exon/intron/strand, coverage area, lollipop
-          variants, regulatory rectangles, track labels.'
+        comment: 'All features present: exon rectangles, intron lines, strand arrows,
+          coverage area, lollipop variants, regulatory rectangles.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Genomic coordinates correctly shared across all tracks.
+        comment: Genomic coordinates on shared x-axis, all data correctly mapped per
+          track.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title includes spec-id, library, pyplots.ai. Legend correctly labels
-          all categories.
+        comment: Title format correct with descriptive prefix. Legend labels match
+          data categories.
     data_quality:
       score: 15
       max: 15
@@ -154,22 +154,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all genomic data types: gene structure, coverage, variants
-          (SNP + indel), regulatory elements (3 types).'
+        comment: 'All genomic data types with variety: 28 exons, both SNPs and Indels,
+          three regulatory element types.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: EGFR on chr7 is a real oncogene. Realistic rs-numbers, biologically
-          accurate regulatory types.
+        comment: EGFR on chr7 is a real cancer gene. Realistic rs-numbers and regulatory
+          types.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Genomic coordinates correct for EGFR. Coverage 0-60x realistic for
-          RNA-seq. Quality scores 20-99 plausible.
+        comment: Coordinates in correct range for EGFR. Coverage 0-60x and quality
+          20-99 are plausible.
     code_quality:
       score: 10
       max: 10
@@ -179,7 +179,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat script: imports, data, plot, save. No functions or classes.'
+        comment: 'Linear script: imports, seed, data, plot, save. No functions or
+          classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -197,15 +198,16 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized code with appropriate complexity.
+        comment: Clean, well-organized. Iteration patterns appropriate for the data
+          structure.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html. Current API.
+        comment: Saves plot.png (1600x900 scale=3) and plot.html. Current API.
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -213,15 +215,15 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of make_subplots, go.Scatter, add_shape, add_annotation.
-          Could use update_traces more efficiently.
+        comment: Good use of make_subplots, go.Scatter, add_shape, add_annotation,
+          update_layout patterns.
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: HTML export with hover tooltips, shapes API, custom row_heights.
-          Missing range slider and linked brushing.
+        comment: Rangeslider for genomic navigation, hovertemplate for custom tooltips,
+          HTML export, fill=toself for polygons.
   verdict: REJECTED
 impl_tags:
   dependencies: []
@@ -229,12 +231,13 @@ impl_tags:
   - subplots
   - annotations
   - hover-tooltips
-  - html-export
   - custom-legend
+  - html-export
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
+  - grid-styling
   - edge-highlighting
