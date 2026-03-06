@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 heatmap-stripes-climate: Climate Warming Stripes
 Library: bokeh 3.8.2 | Python 3.14.3
-Quality: 88/100 | Created: 2026-03-06
+Quality: 83/100 | Created: 2026-03-06
 """
 
 import numpy as np
