@@ -1,0 +1,222 @@
+library: plotnine
+specification_id: heatmap-stripes-climate
+created: '2026-03-06T02:36:57Z'
+updated: '2026-03-06T02:52:23Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22746425929
+issue: 4423
+python_version: 3.14.3
+library_version: 0.15.3
+preview_url: https://storage.googleapis.com/pyplots-images/plots/heatmap-stripes-climate/plotnine/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/heatmap-stripes-climate/plotnine/plot_thumb.png
+preview_html: null
+quality_score: 90
+review:
+  strengths:
+  - Faithful recreation of Ed Hawkins warming stripes design with carefully chosen
+    9-color gradient
+  - Perfect spec compliance — all requirements met including minimalist chrome, symmetric
+    colormap, 3:1 aspect ratio, and no gaps
+  - Clean idiomatic plotnine code with good use of grammar of graphics patterns
+  - Realistic climate data generation with plausible trend shape and 1961-1990 baseline
+  weaknesses:
+  - Title could be slightly larger or use bolder weight for more visual impact
+  - Blue-to-red colormap while canonical could explore more colorblind-friendly variations
+  image_description: 'The plot displays climate warming stripes — a series of vertical
+    colored bars spanning from 1850 to 2024. The left side is dominated by deep blues
+    (#08306b range) and medium blues (#2171b5, #6baed6), representing negative temperature
+    anomalies. The middle section transitions through lighter blues and whites near
+    the 1961-1990 baseline period. The right side (recent decades) shows a dramatic
+    shift to oranges (#fc9272), reds (#de2d26), and deep crimsons (#67000d), representing
+    accelerating positive anomalies. The title "heatmap-stripes-climate · plotnine
+    · pyplots.ai" is centered above the stripes in black text. No axes, tick marks,
+    gridlines, or legends are present — the visualization is pure color encoding.
+    The aspect ratio is approximately 3:1 (wide and short), and the stripes fill the
+    canvas edge-to-edge with no gaps.'
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title explicitly set to size=24, clearly readable. Only text element
+          needed for minimalist warming stripes.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping elements whatsoever.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Every stripe distinct with good color saturation. Bars fill equal
+          width with no gaps.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 3
+        max: 4
+        passed: true
+        comment: Blue-to-red diverging colormap is canonical and spec-required. Good
+          luminance variation but not optimal for deuteranopia.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Stripes fill canvas edge-to-edge. ~3.2:1 aspect ratio matches spec
+          requirement.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title correctly formatted. No axes needed per spec.
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom 9-color gradient with carefully chosen hex values. theme_void
+          creates clean minimalist aesthetic faithful to Ed Hawkins design.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: theme_void removes all chrome. Minimal margins. expand=(0,0) ensures
+          seamless stripes. Very polished.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Blue-to-red color progression communicates warming trend. Post-1980
+          acceleration clearly visible.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct warming stripes visualization using geom_tile.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: no axes/labels/gridlines, blue-to-red
+          diverging colormap, equal-width bars, ~3:1 ratio, symmetric color scale.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Years on x-axis, anomaly mapped to fill color. Correct.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title correctly formatted. Legend appropriately hidden.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Full range of anomalies. Shows early cool period, baseline transition,
+          and post-1980 acceleration.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Climate temperature anomalies modeled after HadCRUT/NASA GISS datasets.
+          Neutral scientific topic.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Years 1850-2024, anomalies baselined to 1961-1990. Realistic acceleration
+          pattern.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean Imports → Data → Plot → Save structure. No functions or classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set before data generation.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used including after_stat in aes mapping.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean Pythonic code. Data generation sophisticated but appropriate.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with dpi=300. Current plotnine API.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic grammar of graphics. after_stat('1') is a clever plotnine
+          technique for constant y mapping.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses after_stat(), scale_fill_gradientn, theme_void, grammar of graphics
+          layer composition.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques: []
+  patterns:
+  - data-generation
+  dataprep:
+  - normalization
+  styling:
+  - minimal-chrome
+  - custom-colormap
