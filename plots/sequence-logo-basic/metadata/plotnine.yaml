@@ -1,0 +1,226 @@
+library: plotnine
+specification_id: sequence-logo-basic
+created: '2026-03-06T20:27:13Z'
+updated: '2026-03-06T21:05:07Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22780525163
+issue: 4421
+python_version: 3.14.3
+library_version: 0.15.3
+preview_url: https://storage.googleapis.com/pyplots-images/plots/sequence-logo-basic/plotnine/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/sequence-logo-basic/plotnine/plot_thumb.png
+preview_html: null
+quality_score: 83
+review:
+  strengths:
+  - Colorblind-safe palette with good contrast between all four nucleotide colors
+  - Data storytelling through yellow highlight on most conserved position with annotation
+  - Realistic bioinformatics data with good variation across positions
+  - Clean grammar of graphics composition with well-customized theme
+  - Explicit font sizing throughout ensures readability at target resolution
+  weaknesses:
+  - Letters are white text overlaid on colored bars rather than stretched glyphs filling
+    their allocated height as spec requires
+  - Small letter labels at bottom of stacks overlap in cramped low-frequency segments
+  - Font size scaling approach (proportional to height with clip) is somewhat hacky
+  image_description: 'The plot shows a sequence logo for a 10-position DNA transcription
+    factor binding site motif. Each position has stacked colored rectangles representing
+    nucleotides: A (green, #009E73), C (blue, #0072B2), G (orange/yellow, #E69F00),
+    and T (pink, #CC79A7). Stack heights represent information content in bits (y-axis
+    ranges 0 to ~1.6). White bold letter labels are overlaid on the rectangles. Position
+    8 is highlighted with a pale yellow background rectangle and an italic "most conserved"
+    annotation above it — this position shows a dominant green A bar reaching ~1.35
+    bits. Position 5 has no visible bars (uniform distribution = 0 bits). The title
+    reads "sequence-logo-basic · plotnine · pyplots.ai" in bold at the top. The background
+    is light gray (#FAFAFA), with subtle horizontal grid lines and solid axis lines.
+    A "Nucleotide" legend appears on the right side.'
+  criteria_checklist:
+    visual_quality:
+      score: 26
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 24pt, axis titles 20pt, tick
+          labels 16pt, legend 14-16pt'
+      - id: VQ-02
+        name: No Overlap
+        score: 4
+        max: 6
+        passed: false
+        comment: Small letter labels at bottom of stacks overlap in low-frequency
+          segments
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Main rectangles clearly visible, very thin segments at stack bottoms
+          harder to distinguish
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Colorblind-safe palette: green, blue, orange, pink with good contrast'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good 16:9 proportions, slight wasted vertical space above tallest
+          bar
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Information content (bits) with units, Position descriptive for ordinal
+          axis
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Custom colorblind-safe palette, white letter overlays, yellow highlight,
+          #FAFAFA background'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: X-grid removed, subtle y-grid, custom background, axis lines present
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Yellow highlight on position 8 with most conserved annotation creates
+          focal point
+    spec_compliance:
+      score: 13
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 4
+        max: 5
+        passed: false
+        comment: Colored stacked rectangles approximate sequence logo but letters
+          not rendered as stretched glyphs
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: Has stacked letters, info content scaling, DNA colors, correct axes.
+          Missing true stretched glyphs
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=position, Y=information content in bits, correct and complete
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct title format and Nucleotide legend with A, C, G, T
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Varying conservation levels from 0 bits (pos 5) to ~1.35 bits (pos
+          8)
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Transcription factor binding site motif with biologically plausible
+          frequencies
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Frequencies sum to 1, info content correctly computed, max 2 bits
+          for DNA
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports, data, computation, plot, save'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hardcoded frequency data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports are used
+      - id: CQ-04
+        name: Code Elegance
+        score: 1
+        max: 2
+        passed: false
+        comment: Font size scaling with clip is hacky, highlight dataframe adds verbosity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with dpi=300, current plotnine API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Good grammar of graphics: layered geoms, scale_fill_manual, coord_cartesian,
+          theme_minimal'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: scale_size_identity, annotate, fine-grained element theme control
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - normalization
+  styling:
+  - edge-highlighting
+  - grid-styling

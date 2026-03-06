@@ -1,0 +1,224 @@
+library: matplotlib
+specification_id: sequence-logo-basic
+created: '2026-03-06T20:25:27Z'
+updated: '2026-03-06T20:36:39Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22780524847
+issue: 4421
+python_version: 3.14.3
+library_version: 3.10.8
+preview_url: https://storage.googleapis.com/pyplots-images/plots/sequence-logo-basic/matplotlib/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/sequence-logo-basic/matplotlib/plot_thumb.png
+preview_html: null
+quality_score: 92
+review:
+  strengths:
+  - Excellent glyph rendering using TextPath + Affine2D transforms — the proper matplotlib
+    technique for sequence logos
+  - Conserved core highlight with FancyBboxPatch adds meaningful data storytelling
+  - Biologically realistic ETS-family binding site data with clear conservation patterns
+  - 'Full spec compliance: all required features implemented correctly'
+  - Clean, well-structured code with all font sizes explicitly set
+  weaknesses:
+  - Color comment claims teal for A but uses standard green (#1b7837) — minor inconsistency
+  - Very small letters at low-information positions are hard to distinguish individually
+  image_description: 'The plot displays a DNA sequence logo for a 10-position transcription
+    factor binding site motif. Positions 1-10 are shown on the x-axis, with information
+    content (bits) on the y-axis ranging from 0 to 2.0. At each position, nucleotide
+    letters (A, C, G, T) are stacked vertically as scaled glyphs, with height proportional
+    to their contribution to information content. Colors are: A=green, C=blue, G=orange,
+    T=purple. Positions 3-6 form a highly conserved core (highlighted with a pale
+    yellow rounded rectangle and labeled "Conserved core"), showing dominant G, A,
+    G, T letters reaching ~1.4-1.6 bits. Positions 1, 8, and 10 show near-zero information
+    (uniform distribution). Position 2 has moderate conservation (dominant C). Position
+    9 shows a strong T. A color legend in the upper right identifies all four nucleotides.
+    Top and right spines are removed, with a subtle y-axis grid. The title reads "sequence-logo-basic
+    · matplotlib · pyplots.ai".'
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 24pt, axis labels 20pt, ticks
+          16pt, legend 14pt'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text collisions anywhere
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Letter glyphs well-sized at conserved positions; very small at low-info
+          positions but correct behavior
+      - id: VQ-04
+        name: Color Accessibility
+        score: 3
+        max: 4
+        passed: true
+        comment: Green/blue/orange/purple avoids red-green conflict; comment claims
+          teal but uses standard green
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good 16:9 proportions, tight_layout, plot fills canvas well
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive labels with units: Position, Information content (bits)'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom nucleotide palette, highlighted conserved core, refined legend,
+          clean typography hierarchy
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines removed, subtle y-axis grid, rounded highlight box, generous
+          whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Yellow highlight on conserved core with annotation creates clear
+          focal point and biological story
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct sequence logo with stacked letters scaled by information
+          content
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features: vertical stacking, frequency ordering, info content
+          scaling, standard colors, scaled glyphs'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=position (1-10), Y=information content (0-2 bits)
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct title format and nucleotide color legend
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Full range: uniform, moderate, and highly conserved positions'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: ETS-family transcription factor binding site motif with plausible
+          GAGT core
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Frequencies sum to 1, information content correct for DNA (max 2
+          bits)
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports, data, compute, plot, style, save'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic with hardcoded frequency data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean TextPath + Affine2D + PathPatch approach
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with dpi=300, current API
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Ax-based API, TextPath with Affine2D transforms for glyph rendering
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: TextPath, Affine2D, FancyBboxPatch, PathPatch, custom Line2D legend
+          handles
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  - patches
+  - manual-ticks
+  patterns:
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - grid-styling
+  - alpha-blending
