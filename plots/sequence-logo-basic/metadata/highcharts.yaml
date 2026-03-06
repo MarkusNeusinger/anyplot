@@ -1,0 +1,242 @@
+library: highcharts
+specification_id: sequence-logo-basic
+created: '2026-03-06T20:29:10Z'
+updated: '2026-03-06T21:06:51Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22780525150
+issue: 4421
+python_version: 3.14.3
+library_version: unknown
+preview_url: https://storage.googleapis.com/pyplots-images/plots/sequence-logo-basic/highcharts/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/sequence-logo-basic/highcharts/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/sequence-logo-basic/highcharts/plot.html
+quality_score: 80
+review:
+  strengths:
+  - Creative stacked column approach to sequence logo in Highcharts with CSS-scaled
+    letter glyphs
+  - Excellent biologically realistic data with real ETS-family TF binding site and
+    proper GGAATT consensus
+  - Clean well-structured code with correct information content calculation
+  - 'Good use of Highcharts-specific features: HTML data labels, CallbackFunction,
+    per-point styling'
+  - Effective data storytelling with subtitle and natural visual hierarchy from IC
+    scaling
+  - Thoughtful visual refinement with subtle grid, styled typography, and appropriate
+    margins
+  weaknesses:
+  - Minor nucleotides render as thin colored strips rather than readable letter glyphs
+  - T letters at positions 6-7 show CSS scaleY distortion
+  - Green/red A/T color pairing not ideal for colorblind accessibility
+  - White letter approach creates slightly washed-out aesthetic compared to traditional
+    colored-letter logos
+  image_description: 'The plot displays a stacked column chart implementing a DNA
+    sequence logo for an ETS-family transcription factor binding site across 10 positions.
+    The x-axis shows "Position" (1-10) and the y-axis shows "Information content (bits)"
+    (0-2). The conserved GGAATT core motif is clearly visible: G (orange bars) dominates
+    positions 2-3, A (green bars) dominates positions 4-5, and T (red/dark bars) dominates
+    positions 6-7 with tall stacks reaching ~1.5 bits. Positions 1, 8, and 10 have
+    low information content with small multi-colored bar stacks. Position 9 is essentially
+    empty (uniform distribution = 0 IC). Letters are rendered as white CSS-scaled
+    glyphs inside colored bars with text-shadow. Minor nucleotides appear as thin
+    colored strips at stack tops. The background is light grey (#fafafa) with subtle
+    dashed gridlines. Title reads "sequence-logo-basic · highcharts · pyplots.ai"
+    with a subtitle identifying the ETS-family motif and conserved GGAATT core.'
+  criteria_checklist:
+    visual_quality:
+      score: 23
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Font sizes explicitly set for all text elements. Letter glyphs clear
+          for dominant nucleotides but unreadable for minor contributors.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Minor visual clutter at stack tops where thin strips overlap with
+          data labels. Main content fully readable.
+      - id: VQ-03
+        name: Element Visibility
+        score: 4
+        max: 6
+        passed: true
+        comment: Dominant letters clearly visible. Minor nucleotide bars render as
+          thin colored strips without legible glyphs. T letters show some CSS scaleY
+          distortion.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 4
+        passed: true
+        comment: Standard DNA colors with green/red A/T pairing problematic for colorblind
+          viewers. White letter overlay partially mitigates.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good canvas utilization ~55-60%. Appropriate margins. Slight imbalance
+          with position 9 dead space.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive labels with units: Position and Information content
+          (bits).'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Custom nucleotide palette, styled subtitle, light background, thoughtful
+          typography. Above defaults but white-on-colored-bar approach slightly washed
+          out.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Dashed grid lines with 0.06 opacity, removed tick marks, clean axis
+          styling, generous margins.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtitle identifies GGAATT core. IC-based heights create natural
+          visual hierarchy showing conservation pattern.
+    spec_compliance:
+      score: 13
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 4
+        max: 5
+        passed: true
+        comment: Creative stacked column approach to sequence logo. Correct concept
+          but not traditional SVG glyph-based logo.
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: Stacked letters ordered by frequency, IC-scaled heights, standard
+          DNA colors. CSS scaleY works for dominant letters but small bars lack proper
+          glyphs.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=position, Y=IC in bits. Correctly calculated entropy and information
+          content.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct title format. Legend appropriately disabled.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows conserved positions (2-7), variable positions (1, 8, 10), and
+          uniform distribution (9). Good range of conservation levels.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: ETS-family TF binding site is a real, well-characterized biological
+          motif with established GGAATT consensus.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: IC 0-2 bits correct for DNA. Frequencies sum to 1 per position. Biologically
+          plausible conservation levels.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear flow with no functions or classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic with hardcoded frequency matrix.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports are used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-structured. JavaScript callbacks complex but necessary for the
+          approach.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png via container screenshot. Current API.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Proper use of highcharts-core API: Chart with container, HighchartsOptions,
+          ColumnSeries, CallbackFunction, to_js_literal.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses HTML data labels with CSS transforms, per-point color, CallbackFunction
+          for custom formatters, useHTML tooltips.
+  verdict: REJECTED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - html-export
+  - hover-tooltips
+  - layer-composition
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - grid-styling
