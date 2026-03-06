@@ -1,7 +1,7 @@
 library: plotly
 specification_id: sequence-logo-basic
 created: '2026-03-06T20:26:49Z'
-updated: '2026-03-06T20:40:12Z'
+updated: '2026-03-06T20:51:08Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 22780525003
 issue: 4421
@@ -10,38 +10,37 @@ library_version: 6.6.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/sequence-logo-basic/plotly/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/sequence-logo-basic/plotly/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/sequence-logo-basic/plotly/plot.html
-quality_score: 80
+quality_score: 87
 review:
   strengths:
-  - Excellent colorblind-safe palette (Wong colors) avoiding red-green confusion
-  - Clean data storytelling with most conserved annotation and position 4 uniform-distribution
-    contrast
-  - 'Perfect code quality: deterministic hardcoded PWM, clean linear structure, appropriate
-    complexity'
-  - Good interactive hover templates showing position, nucleotide, frequency, and
-    IC values
-  - Correct information content calculation with proper entropy formula
+  - True SVG path letter glyphs that stretch to fill their allocated height — authentic
+    sequence logo rendering
+  - Excellent colorblind-safe Wong palette (green, blue, orange, burnt-orange)
+  - Conservation annotations at positions 3 and 7 create clear focal points
+  - Interactive hover templates showing position, nucleotide, frequency, and IC height
+  - Correct information content calculation with well-varied PWM data
   weaknesses:
-  - Letters rendered as text annotations on bars instead of stretched glyphs filling
-    allocated height as spec requires
-  - T color is pink (#CC79A7) instead of red per standard DNA sequence logo convention
-  - No position reaches maximum conservation (~2 bits) limiting range demonstration
-  - Library mastery could be stronger with Plotly shapes or SVG paths for letter rendering
+  - Helper function svg_path_to_plotly() breaks KISS structure (though justified by
+    complexity)
+  - Conservation annotation font size (13pt) could be larger for better readability
+  - No position reaches maximum 2-bit conservation, slightly limiting range demonstration
   image_description: 'The plot displays a 10-position DNA transcription factor binding
-    site motif as a stacked bar chart approximation of a sequence logo. At each position,
-    colored bars represent four nucleotides stacked vertically, with total stack height
-    proportional to information content in bits. The colors are: A = teal/green (#009E73),
-    C = blue (#0072B2), G = amber/orange (#E69F00), T = pink/mauve (#CC79A7). Bold
-    white letter labels are overlaid on bars that are tall enough to be legible. Positions
-    3 and 7 have the highest conservation (~1.15 bits), while position 4 is nearly
-    flat (uniform distribution, ~0 bits). A subtle gray "most conserved" annotation
-    with a downward triangle marks position 3. The title reads "sequence-logo-basic
-    · plotly · pyplots.ai" centered at the top, with a horizontal legend showing all
-    four nucleotides. The background is white with a subtle dotted y-axis grid. X-axis
-    labeled "Position" (1-10), y-axis labeled "Information content (bits)" (0-1.2).'
+    site as a true sequence logo with SVG-rendered letter glyphs. Each position shows
+    stacked nucleotide letters (A, C, G, T) with height proportional to information
+    content in bits. The letters are rendered as stretched SVG path shapes — not text
+    overlays — creating an authentic sequence logo appearance. Colors follow the standard
+    DNA scheme: A = teal-green (#009E73), C = blue (#0072B2), G = amber-orange (#E69F00),
+    T = burnt-orange/red (#D55E00), all from the colorblind-safe Wong palette. Position
+    3 shows a tall blue C (~1.7 bits) and position 7 shows a tall red-orange T (~1.8
+    bits), both annotated with downward triangle and bit values. Position 4 is empty
+    (uniform distribution = 0 bits). The title "sequence-logo-basic · plotly · pyplots.ai"
+    is centered at top. A horizontal legend (A, C, G, T) sits below the title. X-axis
+    labeled "Position" (1-10), Y-axis labeled "Information content (bits)" (0-2.0).
+    Background is white with subtle dotted y-grid lines. Only bottom and left axes
+    are drawn.'
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -49,45 +48,42 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 28, labels 22, ticks 18, letter
-          annotations 16-42). Minor deduction for small letter annotations on shorter
-          bars.
+        comment: All font sizes explicitly set (title 28, labels 22, ticks 18, legend
+          20). Conservation annotations at 13pt slightly small.
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Generally clean layout, some smaller bar segments have slightly cramped
-          letter annotations at positions 2, 9, 10.
+        comment: No overlapping elements. Letters well-spaced within positions.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Bars clearly visible and well-sized with bar width 0.75. White letter
-          annotations provide good contrast against colored bars.
+        comment: SVG letter glyphs clearly visible. Very small letters at low-IC positions
+          are tiny but discernible.
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Excellent colorblind-safe Wong palette (teal, blue, amber, pink).
-          Avoids red-green confusion entirely.
+        comment: Excellent colorblind-safe Wong palette. Avoids red-green confusion.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions, plot fills canvas well. Generous but appropriate
-          margins. Nothing cut off.
+        comment: Good proportions, plot fills canvas well. Y-axis to 2.1 appropriate
+          for DNA max.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Position and Information content (bits) are descriptive with units.
+        comment: Position and Information content (bits) — descriptive with units.
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -95,54 +91,50 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Thoughtful colorblind-safe palette, clean typography with Arial Black
-          for letters. Above defaults but not publication-exceptional.
+        comment: Custom Wong palette, clean typography, above defaults but not publication-exceptional.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Plotly_white template, subtle dotted grid, only bottom/left axes,
-          generous whitespace. Good refinement.
+        comment: Subtle dotted grid, only bottom/left axes, generous margins. Good
+          refinement.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Most conserved annotation adds focal point. Position 4 uniform distribution
-          provides contrast. Above default display.
+        comment: Conservation annotations create focal points. Empty position 4 provides
+          contrast.
     spec_compliance:
-      score: 11
+      score: 15
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 3
+        score: 5
         max: 5
         passed: true
-        comment: Stacked bars as sequence logo approximation. Spec requires stretched
-          letter glyphs, not text on bars.
+        comment: True sequence logo with SVG path stretched letter glyphs.
       - id: SC-02
         name: Required Features
-        score: 2
+        score: 4
         max: 4
         passed: true
-        comment: Has stacking, ordering, IC calc, colors. Missing stretched glyphs
-          and T should be red not pink.
+        comment: 'All features: stacking by frequency, IC scaling, standard colors,
+          stretched glyphs.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=positions 1-10, Y=IC in bits. Correct IC calculation with entropy
-          formula.
+        comment: X=position, Y=IC bits. Correctly mapped.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Legend shows all four nucleotides with matching
-          colors.
+        comment: Correct title format and legend with matching colors.
     data_quality:
       score: 14
       max: 15
@@ -152,88 +144,86 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Shows high conservation (pos 3,7), low conservation (pos 4), medium
-          positions. Good variety but no maximum conservation example.
+        comment: Shows high, zero, and moderate conservation. Could show near-maximum
+          2 bits.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Transcription factor binding site motif is a real bioinformatics
-          application. Neutral scientific context.
+        comment: Transcription factor binding site — genuine bioinformatics context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: IC values 0 to ~1.15 bits, within 0-2 bit DNA range. Frequencies
-          sum to 1 per position. Realistic PWM values.
+        comment: IC 0-1.85 bits, realistic for DNA. Frequencies sum to 1.
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports, data, IC calculation, plot, style, save.
-          No functions or classes.'
+        comment: Clean flow but includes helper function svg_path_to_plotly() which
+          breaks no-functions rule.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic with hardcoded position weight matrix.
+        comment: Fully deterministic with hardcoded PWM.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy and plotly.graph_objects imported, both used.
+        comment: Only numpy and plotly.graph_objects, both used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity. Clean loop structure with sorted indices
-          and font scaling logic.
+        comment: SVG path approach is complex but necessary. Well-commented and readable.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png (4800x2700) and plot.html. Current Plotly API.
+        comment: Saves plot.png (4800x2700) and plot.html. Current API.
     library_mastery:
-      score: 6
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Uses go.Bar with base parameter for stacking, go.Figure, add_annotation,
-          update_layout. Correct GO patterns.
+        comment: 'Advanced Plotly: SVG shapes in data coordinates, invisible bars
+          for hover, custom legend.'
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Interactive hover templates with rich data, HTML export, hoverlabel
-          customization are Plotly-distinctive features.
+        comment: SVG path shapes, interactive hover templates, HTML export — distinctively
+          Plotly.
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - hover-tooltips
   - custom-legend
+  - hover-tooltips
   - html-export
+  - patches
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
-  - edge-highlighting
   - grid-styling
+  - edge-highlighting
