@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 genome-track-multi: Genome Track Viewer
-Library: matplotlib | Python 3.13
-Quality: pending | Created: 2026-03-06
+Library: matplotlib 3.10.8 | Python 3.14.3
+Quality: 87/100 | Created: 2026-03-06
 """
 
 import matplotlib.patches as mpatches
