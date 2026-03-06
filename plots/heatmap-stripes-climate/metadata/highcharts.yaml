@@ -1,0 +1,227 @@
+library: highcharts
+specification_id: heatmap-stripes-climate
+created: '2026-03-06T02:38:34Z'
+updated: '2026-03-06T03:07:02Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22746425909
+issue: 4423
+python_version: 3.14.3
+library_version: unknown
+preview_url: https://storage.googleapis.com/pyplots-images/plots/heatmap-stripes-climate/highcharts/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/heatmap-stripes-climate/highcharts/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/heatmap-stripes-climate/highcharts/plot.html
+quality_score: 91
+review:
+  strengths:
+  - Publication-quality recreation of Ed Hawkins iconic warming stripes with excellent
+    5-stop diverging color scale
+  - 'All issues from attempt 2 addressed: white gap fixed, dead code removed, standard
+    canvas size used'
+  - Perfect data quality with realistic climate warming phases and appropriate scale
+  - Clean minimal code with consistent raw JSON approach throughout
+  - Effective use of Highcharts colorAxis for symmetric diverging color mapping
+  weaknesses:
+  - Does not use the highcharts-core Python API (constructs raw JSON instead)
+  - Aspect ratio is 16:9 rather than the spec-suggested ~3:1
+  - Thin dark artifact visible at very bottom edge of canvas
+  image_description: The plot displays classic Ed Hawkins-style climate warming stripes
+    as a full-canvas sequence of vertical colored bars spanning 1850-2024. The left
+    portion shows medium-to-dark blues representing negative temperature anomalies
+    in the 19th century. These transition through lighter blues and near-white bars
+    around the mid-20th century. The right portion shows a dramatic progression through
+    pinks to intense crimson and deep red, representing accelerating positive warming
+    anomalies in recent decades. All chart chrome is removed — no axes, tick marks,
+    labels, or gridlines — leaving only the pure color-encoded stripes. The title
+    "heatmap-stripes-climate · highcharts · pyplots.ai" appears at the bottom center
+    in subtle gray text (36px). The stripes fill the full 4800x2700 canvas with no
+    visible white gaps at top or sides. A very thin dark strip is visible at the absolute
+    bottom edge below the title area.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title font size explicitly set at 36px and clearly readable. Only
+          one text element by spec design
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping elements; minimalist design with only the title as
+          text
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Every stripe clearly distinguishable, bars fill width with no gaps,
+          smooth color transitions
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue-white-red diverging colormap is colorblind-friendly with symmetric
+          scale
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Stripes fill full 4800x2700 standard canvas with no white gaps. Major
+          improvement from attempt 2
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Spec requires no axes/labels; title present and correctly formatted
+    design_excellence:
+      score: 17
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: Publication-quality warming stripes with custom 5-stop blue-white-red
+          color scale
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: All chrome removed perfectly. Minor thin dark artifact at bottom
+          edge
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Warming stripes tell compelling story through pure color with realistic
+          warming phases
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct: warming stripes as vertical colored bars using heatmap'
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: All features present except aspect ratio is 16:9 not ~3:1 as spec
+          suggests
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Years mapped to x-position, anomalies mapped to color via colorAxis
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct, legend correctly disabled
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Full 175-year range showing negative, zero, and positive anomalies
+          with natural variability
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Synthetic data closely mimics real HadCRUT global temperature anomalies
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Anomalies range -0.5 to +1.1C, realistic for global mean temperature
+          anomalies
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean linear flow, no unnecessary functions/classes, dead code removed
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set for deterministic data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports are used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-structured code with appropriate complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png, uses current Highcharts API
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses correct Highcharts JSON config patterns but does not leverage
+          highcharts-core Python API
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses Highcharts-specific colorAxis with diverging stops and heatmap
+          module
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  - pillow
+  techniques:
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - custom-colormap

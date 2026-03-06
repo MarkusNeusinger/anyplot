@@ -1,0 +1,226 @@
+library: plotly
+specification_id: heatmap-stripes-climate
+created: '2026-03-06T02:36:28Z'
+updated: '2026-03-06T03:02:08Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22746425940
+issue: 4423
+python_version: 3.14.3
+library_version: 6.6.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/heatmap-stripes-climate/plotly/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/heatmap-stripes-climate/plotly/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/heatmap-stripes-climate/plotly/plot.html
+quality_score: 92
+review:
+  strengths:
+  - Faithful recreation of Ed Hawkins warming stripes with custom 7-stop colorscale
+  - Excellent data storytelling through the inherently narrative visualization format
+  - Volcanic event dips add realistic scientific detail to the synthetic data
+  - Interactive hover with year/anomaly/classification labels leverages Plotly strengths
+  - Clean minimalist design with subtle decade markers and muted year annotations
+  - HTML export with proper interactive configuration
+  weaknesses:
+  - Year annotations at 0.7 opacity could be slightly more visible
+  image_description: The plot displays climate warming stripes spanning 1850-2024
+    as a single row of vertical colored bars. The left portion (earlier years) is
+    dominated by shades of blue (dark navy through medium blue to light blue), while
+    the right portion (recent decades) transitions through oranges and reds to dark
+    crimson. A white center marks the zero-anomaly point. The title "heatmap-stripes-climate
+    · plotly · pyplots.ai" is centered at top in dark gray at 28pt. Subtle year labels
+    "1850" and "2024" appear at the bottom-left and bottom-right in muted gray with
+    0.7 opacity. Three thin semi-transparent white vertical lines mark the decades
+    1900, 1950, and 2000. The stripes fill the canvas edge-to-edge with minimal margins,
+    maintaining the specified ~3:1 wide aspect ratio (4800x1599px). No axes, gridlines,
+    or tick marks are present — faithful to Ed Hawkins' original warming stripes design.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title at 28pt explicitly set and readable. Year annotations at 16pt
+          with 0.7 opacity intentionally subtle but readable.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text elements anywhere.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Every stripe clearly visible with distinct colors. No gaps, smooth
+          transitions.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 3
+        max: 4
+        passed: true
+        comment: Blue-to-red diverging scale per spec. Distinguishable for most colorblind
+          types. Lightness variation aids perception.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Stripes fill canvas edge-to-edge. 3:1 aspect ratio matches spec.
+          Minimal margins maximize data area.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title in correct format. Axes intentionally absent per spec. Subtle
+          year annotations provide context.
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom 7-stop colorscale, semi-transparent decade markers, muted
+          annotations. Clearly above defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: All axes/spines/gridlines removed. Subtle decade markers. Minimized
+          margins. Every detail supports minimalist aesthetic.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Blue-to-red progression immediately communicates warming trend. Volcanic
+          dips add narrative depth. Decade markers anchor temporally.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct warming stripes using go.Heatmap with single-row z-array.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec requirements met: no axes/labels/gridlines, diverging colormap,
+          no gaps, symmetric scale.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=years, Z=anomalies. Range correctly set for full bar coverage.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format. No legend needed for minimalist warming
+          stripes.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows positive and negative anomalies, warming trend, volcanic dips,
+          natural variability.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Global temperature anomalies - real scientific context. Neutral topic.
+          Values match known patterns.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Trend from -0.35 to +0.85C with realistic noise and volcanic dips
+          matching historical records.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean linear flow: imports, data, colorscale, plot, layout, save.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set before all random operations.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only numpy and plotly.graph_objects - both used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-organized. Volcanic events dict and np.where classification
+          are concise.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot.png and plot.html. Current Plotly API.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of go.Heatmap, add_shape, add_annotation, update_layout.
+          Solid graph_objects API.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Interactive hover with customdata/hovertemplate, HTML export with
+          CDN config. Distinctly Plotly features.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - custom-colormap
