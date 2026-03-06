@@ -1,0 +1,238 @@
+library: bokeh
+specification_id: tree-decision
+created: '2026-03-06T21:38:55Z'
+updated: '2026-03-06T22:09:32Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22782764651
+issue: 4569
+python_version: 3.14.3
+library_version: 3.8.2
+preview_url: https://storage.googleapis.com/pyplots-images/plots/tree-decision/bokeh/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/tree-decision/bokeh/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/tree-decision/bokeh/plot.html
+quality_score: 85
+review:
+  strengths:
+  - Perfect spec compliance with all required features (decision/chance/terminal nodes,
+    EMV values, pruned branches, probabilities)
+  - Excellent data quality with realistic business scenario and correct EMV rollback
+    calculations
+  - Good use of Bokeh-specific features (HoverTool, BoxAnnotation, HTML export)
+  - Clean visual storytelling with optimal path emphasis through solid/dashed lines
+    and background band
+  - Well-organized clean code following KISS principles
+  weaknesses:
+  - EMV labels overlap with node shapes at decision nodes D1 and D2
+  - Significant empty space at the bottom of the canvas reduces layout efficiency
+  - Terminal triangle markers are slightly small relative to other node shapes
+  image_description: 'The plot displays a two-stage investment decision tree with
+    a left-to-right layout on a light blue-grey background (#F7F9FB). The root decision
+    node (blue square, left side) shows EMV $248K and branches into three options:
+    "Launch Product" (solid line, optimal path), "License Tech" (dashed, pruned with
+    red X), and "Do Nothing" (dashed, pruned with red X). The "Launch Product" branch
+    leads to a purple chance node (EMV $248K) splitting into "High Demand (p=0.6)"
+    and "Low Demand (p=0.4)". High Demand leads to a second blue decision node (EMV
+    $380K) with "Expand" (optimal) and "Don''t Expand" (pruned) options. The Expand
+    branch leads to another purple chance node (EMV $380K) splitting into "Success
+    (p=0.7)" yielding $500K and "Failure (p=0.3)" yielding $100K. Terminal nodes are
+    amber right-pointing triangles with payoff values. A top-left legend shows Decision
+    Node (blue square), Chance Node (purple circle), Terminal Node (amber triangle),
+    and Pruned (suboptimal) with dashed line and red X. Title reads "tree-decision
+    · bokeh · pyplots.ai" in dark blue.'
+  criteria_checklist:
+    visual_quality:
+      score: 25
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 36pt, labels 20pt, values 19-20pt).
+          Minor size inconsistency between value labels.
+      - id: VQ-02
+        name: No Overlap
+        score: 4
+        max: 6
+        passed: true
+        comment: EMV labels overlap or sit very close to decision node shapes at D1
+          and D2. Branch labels well-placed.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Node shapes clearly visible with good sizing. Terminal triangles
+          slightly small compared to decision squares.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue, purple, amber palette is colorblind-safe with good contrast.
+          Red cross marks distinct.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Tree occupies top 70% of canvas with significant empty space at bottom.
+          Horizontal spread good.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Axes appropriately hidden for tree diagram. Title correctly formatted.
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Custom color palette with intentional border colors, subtle background
+          band, clean background. Above defaults but not publication-level.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Axes and grid hidden, outline removed, min borders set, right-angle
+          connectors look professional.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Optimal path emphasized through solid vs dashed lines, reduced opacity,
+          red cross marks, and subtle background band.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct decision tree with proper node shapes: squares, circles,
+          triangles.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: node shapes, branch labels, probabilities,
+          EMV values, pruned branches.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Left-to-right layout, probabilities sum to 1.0, EMV calculations
+          correct.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format. Legend includes all four entry types.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Two-stage tree with all node types, multiple decision points, pruned
+          branches at both levels.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Investment/product launch scenario with realistic business decisions.
+          Neutral context.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values in $K range plausible for business decisions. Probabilities
+          consistent. EMV calculations verified.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports, data, plot, styling, save. No functions or
+          classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: All data deterministic (hardcoded values).
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: numpy, bokeh.io, bokeh.models, bokeh.plotting.'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-structured code with appropriate complexity for tree
+          visualization.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png and plot.html. Current Bokeh API.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses ColumnDataSource, figure API, Label, BoxAnnotation. Good Bokeh
+          patterns.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: HoverTool for interactive inspection, HTML export, BoxAnnotation.
+          Bokeh-specific features adding genuine interactivity.
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - hover-tooltips
+  - custom-legend
+  - html-export
+  patterns:
+  - columndatasource
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - alpha-blending
+  - edge-highlighting

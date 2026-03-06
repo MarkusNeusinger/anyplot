@@ -1,0 +1,240 @@
+library: highcharts
+specification_id: tree-decision
+created: '2026-03-06T21:39:22Z'
+updated: '2026-03-06T22:11:39Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22782764820
+issue: 4569
+python_version: 3.14.3
+library_version: unknown
+preview_url: https://storage.googleapis.com/pyplots-images/plots/tree-decision/highcharts/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/tree-decision/highcharts/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/tree-decision/highcharts/plot.html
+quality_score: 90
+review:
+  strengths:
+  - Perfect spec compliance with all required decision tree features including correctly
+    oriented right-pointing terminal triangles
+  - Excellent data storytelling with optimal vs pruned paths immediately distinguishable
+    through multiple visual channels
+  - Professional design with gradient background, drop shadows, and refined color
+    palette
+  - Strong library mastery combining highcharts-core Python API with Highcharts renderer
+    for custom SVG drawing
+  - Comprehensive realistic business scenario covering all decision tree aspects
+  weaknesses:
+  - Minor label proximity near D2 node where EMV label crowds the marker
+  - Some unused canvas space in bottom-right; legend could be better integrated
+  - Pruned terminal triangles slightly small compared to other node markers
+  image_description: 'The plot displays a decision tree diagram on a light grey background
+    (#F8F9FA) with a subtle gradient in the plot area. The title "tree-decision ·
+    highcharts · pyplots.ai" appears at the top in dark grey at 56px, with a subtitle
+    "Product Launch Decision Analysis — Expected Monetary Value Rollback" beneath
+    it. The tree flows left-to-right with smooth bezier curve connections. The root
+    decision node (D1) is a blue (#306998) square on the left labeled "EMV: $560K".
+    Two branches extend: "Launch Product" (solid blue, 5px) leads to an orange (#E8833A)
+    circle chance node (C1, EMV: $560K), and "Keep Current" (dashed grey with red
+    double-strike pruning marks) leads to a grey circle (C2, EMV: $325K). From C1,
+    "High Demand (0.6)" leads to a teal (#2A9D8F) right-pointing triangle ($800K)
+    and "Low Demand (0.4)" leads to a second blue decision node (D2, EMV: $200K).
+    D2 branches to "Discount" (teal terminal, $200K) and "Withdraw" (pruned grey terminal,
+    -$100K) with red pruning marks. C2 branches to pruned grey terminals for $400K
+    and $250K. Drop shadows appear behind decision and chance nodes. A comprehensive
+    legend on the right identifies Decision Node, Chance Node, Terminal (Optimal),
+    Terminal (Pruned), Optimal Path, and Pruned Branch.'
+  criteria_checklist:
+    visual_quality:
+      score: 26
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (56px title, 32px subtitle, 30-34px
+          labels). All text clearly readable. Pruned branch labels slightly less prominent.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Most text well-separated. Minor proximity between D2 EMV label and
+          square marker.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Decision and chance nodes well-sized (radius 38). Custom SVG right-pointing
+          triangles visible. Pruned elements appropriately muted.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue, orange, teal, grey palette is colorblind-safe with redundant
+          encoding.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Left-to-right tree uses canvas well horizontally. Some unused space
+          in bottom-right.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Axes appropriately hidden for tree diagram. Title and subtitle descriptive.
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom palette, gradient background, drop shadows, clean typography,
+          bezier curves. Strong design above defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Axes hidden, gradient background, plot shadow, node shadows, generous
+          whitespace, text outlines.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy between optimal and pruned paths. Red pruning
+          marks signal rejection. EMV values guide rollback analysis.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct decision tree with squares, circles, right-pointing triangles,
+          left-to-right layout.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: node shapes, probabilities, EMV, pruning
+          marks, distinct colors, branch labels.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Two-stage decision correctly mapped. Probabilities sum to 1.0. EMV
+          calculations correct.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct. Legend comprehensive with all node types and
+          path styles.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows all decision tree aspects including two-stage decisions, pruning
+          at multiple levels, positive and negative payoffs.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Product launch decision — classic neutral business context with meaningful
+          labels.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Monetary values $200K-$800K realistic for product launch. Sensible
+          probabilities.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports, data, chart config, series, edges, HTML, screenshot.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic with hardcoded coordinates and values.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-structured with clean data definitions. Custom JS appropriately
+          complex.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png via Selenium. Uses current highcharts-core API.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses highcharts-core Python API for chart structure. Supplements
+          with renderer JS for custom edges.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Highcharts renderer API for bezier paths, data URI SVG markers, HTML
+          tooltips, series-based legend management.
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - bezier-curves
+  - annotations
+  - custom-legend
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - gradient-fill
+  - edge-highlighting
