@@ -1,0 +1,28 @@
+# Specification-level metadata for stereonet-equal-area
+# Auto-synced to PostgreSQL on push to main
+
+spec_id: stereonet-equal-area
+title: Structural Geology Stereonet (Equal-Area Projection)
+
+# Specification tracking
+created: "2026-03-06T19:53:36Z"
+updated: null
+issue: 4576
+suggested: MarkusNeusinger
+
+# Classification tags (applies to all library implementations)
+# See docs/reference/tagging-system.md for detailed guidelines
+tags:
+  plot_type:
+    - polar
+    - scatter
+  data_type:
+    - numeric
+    - categorical
+  domain:
+    - science
+    - engineering
+  features:
+    - advanced
+    - color-mapped
+    - annotated
