@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 sequence-logo-basic: Sequence Logo for Motif Visualization
 Library: pygal 3.1.0 | Python 3.14.3
 Quality: 82/100 | Created: 2026-03-06
@@ -10,6 +10,7 @@ from pygal.style import Style
 
 
 # Data — ETS transcription factor binding site motif (10 positions)
+# Positions 2-7 form the conserved GGAATT core
 frequencies = {
     1: {"A": 0.40, "C": 0.20, "G": 0.25, "T": 0.15},
     2: {"A": 0.10, "C": 0.05, "G": 0.80, "T": 0.05},
@@ -36,6 +37,9 @@ for pos, freqs in frequencies.items():
             entropy -= f * np.log2(f)
     info_content[pos] = max_entropy - entropy
 
+# Identify conserved core (IC > 0.5 bits) for visual emphasis
+core_positions = {pos for pos, ic in info_content.items() if ic > 0.5}
+
 # Scale each nucleotide height by frequency * information content
 # Build per-nucleotide series with letter labels inside bars
 stacked_data = {nt: [] for nt in nucleotides}
@@ -43,32 +47,34 @@ for pos in sorted(frequencies.keys()):
     ic = info_content[pos]
     for nt in nucleotides:
         height = round(frequencies[pos][nt] * ic, 4)
-        # Show nucleotide letter inside bar for significant segments
-        show_letter = height >= 0.12
+        show_letter = height >= 0.10
+        is_core = pos in core_positions
         stacked_data[nt].append(
             {
                 "value": height,
-                "label": f"Pos {pos}: {nt} = {frequencies[pos][nt]:.0%} × {ic:.2f} bits",
-                "formatter": lambda x, letter=nt, show=show_letter: letter if show else "",
+                "label": (
+                    f"{'[core] ' if is_core else ''}Pos {pos}: {nt} = {frequencies[pos][nt]:.0%} x {ic:.2f} bits"
+                ),
+                "formatter": (lambda x, letter=nt, show=show_letter: letter if show else ""),
             }
         )
 
-# Style — refined DNA colors with strong contrast
-# Conserved core emphasis through color saturation; softer grid
+# Colorblind-safe DNA palette: teal A, blue C, amber G, purple T
+# Avoids red-green confusion while maintaining visual distinctiveness
 custom_style = Style(
     background="white",
-    plot_background="#fafafa",
+    plot_background="#f8f9fa",
     foreground="#2d2d2d",
-    foreground_strong="#1a1a1a",
-    foreground_subtle="#eeeeee",
-    colors=("#0d7a22", "#1d4ed8", "#d97706", "#b91c1c"),
-    opacity=0.95,
+    foreground_strong="#111111",
+    foreground_subtle="#e0e0e0",
+    colors=("#0f766e", "#1d4ed8", "#d97706", "#7c3aed"),
+    opacity=0.92,
     opacity_hover=1.0,
-    title_font_size=34,
+    title_font_size=36,
     label_font_size=22,
     major_label_font_size=20,
     legend_font_size=22,
-    value_font_size=22,
+    value_font_size=24,
     title_font_family="sans-serif",
     label_font_family="sans-serif",
     major_label_font_family="sans-serif",
@@ -78,38 +84,48 @@ custom_style = Style(
     tooltip_font_family="monospace",
 )
 
+# X-labels: mark conserved core positions for emphasis
+x_labels = []
+for pos in sorted(frequencies.keys()):
+    if pos in core_positions:
+        label = f"*{pos}*"
+    else:
+        label = str(pos)
+    x_labels.append(label)
+
 # Plot
 chart = pygal.StackedBar(
     width=4800,
     height=2700,
     style=custom_style,
     title="sequence-logo-basic · pygal · pyplots.ai",
-    x_title="Position",
+    x_title="Position (* = conserved core, IC > 0.5 bits)",
     y_title="Information content (bits)",
     show_x_guides=False,
     show_y_guides=True,
     show_minor_y_labels=False,
     margin=60,
-    margin_bottom=100,
-    spacing=8,
+    margin_bottom=120,
+    spacing=6,
     legend_at_bottom=True,
     legend_at_bottom_columns=4,
     legend_box_size=28,
     print_values=True,
     print_values_position="center",
-    rounded_bars=2,
-    y_labels_major_count=5,
+    rounded_bars=3,
+    y_labels_major_count=6,
     truncate_legend=-1,
-    tooltip_border_radius=8,
+    tooltip_border_radius=10,
     tooltip_fancy_mode=True,
     min_scale=0,
-    range=(0, 1.5),
+    range=(0, 1.6),
     x_label_rotation=0,
+    secondary_style=custom_style,
+    inner_radius=0,
     js=[],
 )
 
-# Custom x-labels with motif annotation
-chart.x_labels = [str(pos) for pos in sorted(frequencies.keys())]
+chart.x_labels = x_labels
 
 for nt in nucleotides:
     chart.add(nt, stacked_data[nt])
