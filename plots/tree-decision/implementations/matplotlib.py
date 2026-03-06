@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 tree-decision: Decision Tree Visualization with Probabilities
-Library: matplotlib | Python 3.13
-Quality: pending | Created: 2026-03-06
+Library: matplotlib 3.10.8 | Python 3.14.3
+Quality: 84/100 | Created: 2026-03-06
 """
 
 import matplotlib.patches as mpatches
