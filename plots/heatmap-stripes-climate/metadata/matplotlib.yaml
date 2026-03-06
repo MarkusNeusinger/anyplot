@@ -1,0 +1,227 @@
+library: matplotlib
+specification_id: heatmap-stripes-climate
+created: '2026-03-06T02:35:55Z'
+updated: '2026-03-06T02:57:51Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22746425924
+issue: 4423
+python_version: 3.14.3
+library_version: 3.10.8
+preview_url: https://storage.googleapis.com/pyplots-images/plots/heatmap-stripes-climate/matplotlib/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/heatmap-stripes-climate/matplotlib/plot_thumb.png
+preview_html: null
+quality_score: 93
+review:
+  strengths:
+  - Faithful recreation of Ed Hawkins warming stripes concept with clean minimalist
+    execution
+  - Custom 9-stop colormap with symmetric TwoSlopeNorm creates balanced professional
+    color encoding
+  - Piecewise data generation mirrors real climate periods (pre-1910, 1910-1945, 1945-1975,
+    post-1975)
+  - Path effects on title add subtle polish against light background
+  - Efficient imshow-based rendering avoids bar-by-bar iteration
+  weaknesses:
+  - Bottom canvas area (~30%) is underutilized - stripes could extend further or composition
+    could be rebalanced
+  image_description: The plot displays climate warming stripes — a sequence of 175
+    vertical colored bars (1850-2024) rendered as a single-row heatmap. The left side
+    shows predominantly deep and medium blues representing negative temperature anomalies
+    (cooler years). The center transitions through lighter blues and whites (near-zero
+    anomalies around mid-20th century). The right side progresses through salmon,
+    orange-red, and deep crimson indicating increasingly positive anomalies (recent
+    warming). The title "heatmap-stripes-climate · matplotlib · pyplots.ai" appears
+    at the top in dark gray (#333333) with a subtle white stroke path effect. The
+    background is light gray (#f7f7f7) matching the colormap center. No axes, labels,
+    ticks, or gridlines are present — a faithful minimalist warming stripes visualization.
+    The stripes occupy roughly the upper 56% of the canvas at a ~3:1 aspect ratio.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title explicitly set at 24pt with fontweight medium, clearly readable.
+          No other text needed per spec minimalist design.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Only one text element (title) well separated from stripes. No collisions.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Stripes rendered via imshow with nearest interpolation, each year
+          distinctly visible, no gaps.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Custom 9-stop blue-white-red diverging colormap, colorblind-safe.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good width utilization (94%) but noticeable empty space below stripes
+          (~30% of canvas).
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No axes/labels by spec design. Title is descriptive and follows required
+          format.
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom colormap, path effects, background matching colormap center.
+          Strong thoughtful design above defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Excellent minimalism with axis off, custom facecolor, path effects.
+          Minor bottom whitespace issue.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Blue-to-red progression immediately communicates warming. Piecewise
+          data mirrors real climate periods.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct warming stripes using imshow as single-row heatmap.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: diverging colormap, no gaps, no axes/labels/ticks,
+          ~3:1 ratio, symmetric scale.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Year to horizontal position, anomaly to color. Correct mapping.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct. No legend needed for single-variable color
+          encoding.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Full range from cold to warm anomalies with gradual historical transition
+          across 175 years.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Global temperature anomalies relative to 1961-1990 baseline. Neutral
+          scientific topic.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Anomalies range from approximately -0.3 to +1.0 degrees C, realistic
+          for global temperature records.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean imports-data-plot-save flow. No functions or classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set before random noise generation.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: patheffects, pyplot, numpy, LinearSegmentedColormap,
+          TwoSlopeNorm.'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean Pythonic code. Piecewise trend construction is elegant. imshow
+          with reshape is efficient.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with dpi=300, current matplotlib API.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert use of imshow for stripe rendering, TwoSlopeNorm, ax.set_position
+          for precise layout.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: LinearSegmentedColormap.from_list, TwoSlopeNorm, patheffects, imshow
+          extent/interpolation control.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques: []
+  patterns:
+  - data-generation
+  - explicit-figure
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - custom-colormap
