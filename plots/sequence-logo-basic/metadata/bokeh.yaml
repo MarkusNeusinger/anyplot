@@ -1,7 +1,7 @@
 library: bokeh
 specification_id: sequence-logo-basic
 created: '2026-03-06T20:26:34Z'
-updated: '2026-03-06T20:47:40Z'
+updated: '2026-03-06T20:57:47Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 22780525045
 issue: 4421
@@ -10,109 +10,100 @@ library_version: 3.8.2
 preview_url: https://storage.googleapis.com/pyplots-images/plots/sequence-logo-basic/bokeh/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/sequence-logo-basic/bokeh/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/sequence-logo-basic/bokeh/plot.html
-quality_score: 70
+quality_score: 78
 review:
   strengths:
-  - 'Excellent data choice: real CREB1 transcription factor binding motif with biologically
-    accurate frequencies'
-  - 'Perfect code quality: clean KISS structure, deterministic data, all imports used'
-  - Correct information content calculation with proper entropy formula
-  - 'Clean visual refinement: removed grid, outline, minor ticks; subtle background'
+  - 'Excellent data choice: real CREB1 binding motif with scientifically accurate
+    frequencies'
+  - Good use of Bokeh-distinctive features (HoverTool, HTML dual export)
+  - Clean code structure with well-commented font scaling logic
+  - Professional visual refinement (removed grid, subtle background, clean legend)
+  - Perfect code quality score
   weaknesses:
-  - 'Critical (unfixed from attempt 1): Y-range extends to 2.15 but max IC is only
-    1.15 bits - nearly half the canvas is empty'
-  - Letters rendered as white text on colored rectangles, not as colored stretched
-    glyphs per spec
-  - No color legend for base-to-color mapping
-  - White text on very thin rectangles at low-IC positions is illegible
-  - No Bokeh-distinctive interactive features (HoverTool would show base, frequency,
-    IC on hover)
-  image_description: 'The plot displays a CREB1 transcription factor binding motif
-    as a sequence logo across 10 positions. Each position shows stacked colored rectangles
-    (A=green #2CA02C, C=blue #1F77B4, G=orange #FF7F0E, T=red #D62728) with white
-    letter labels centered on them. The y-axis shows "Information content (bits)"
-    ranging from 0 to 2.15 bits, and the x-axis shows "Position" numbered 1-10. Position
-    1 has very low information content (~0.06 bits) with barely visible tiny stacked
-    blocks; position 10 is similarly low (~0.015 bits). The conserved core (positions
-    2-9) shows tall stacks: position 3 (G dominant) reaches ~1.15 bits, positions
-    4-6 and 8 reach ~0.98 bits. The background is light gray (#FAFAFA) with no grid
-    lines and no outline. White text letters (up to 63pt) are placed on the colored
-    rectangles. At low-IC positions, the thin rectangles make white text illegible.
-    The y-range extends to 2.15 bits while max data is only 1.15 bits, leaving ~47%
-    of vertical space empty. No color legend is provided. Title reads "CREB1 Binding
-    Motif · sequence-logo-basic · bokeh · pyplots.ai".'
+  - Letters are plain text, not stretched glyphs — does not match the spec core requirement
+    for a true sequence logo appearance
+  - Low-IC positions (1, 10) have overlapping tiny letters that are hard to distinguish
+  - Some empty vertical space above data could be tightened
+  image_description: 'The plot displays a sequence logo for the CREB1 transcription
+    factor binding site motif across 10 positions. Letters (A, C, G, T) are stacked
+    vertically at each position with heights proportional to their information content
+    contribution. Standard DNA colors are used: A=green, C=blue, G=orange/yellow,
+    T=red. The title reads "CREB1 Binding Motif · sequence-logo-basic · bokeh · pyplots.ai".
+    X-axis labeled "Position" (1-10), Y-axis labeled "Information content (bits)"
+    (0-1.2). Highly conserved positions (3: G, 4: A, 5: C, 6: G, 8: C, 9: A) show
+    large dominant letters. Low-information positions (1, 10) have small, cramped
+    letters near the baseline. A legend on the right side shows colored squares for
+    each base. Background is light gray (#FAFAFA), no grid lines, clean layout. Letters
+    are rendered as text glyphs of varying font size rather than stretched/scaled
+    glyphs filling their allocated rectangular space.'
   criteria_checklist:
     visual_quality:
-      score: 20
+      score: 23
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set (36pt title, 28pt labels, 24pt ticks).
-          Dynamic letter sizes 14-63pt. White text on thin rectangles at low-IC positions
-          is illegible.
+        comment: All font sizes explicitly set. Most letters readable, but positions
+          1 and 10 have tiny letters due to low IC.
       - id: VQ-02
         name: No Overlap
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: White text on very thin colored slices at low-IC positions overflows
-          rectangle boundaries. Some horizontal overflow at adjacent positions.
+        passed: true
+        comment: Position 1 has overlapping tiny letters. Position 10 also shows minor
+          cramping.
       - id: VQ-03
         name: Element Visibility
         score: 4
         max: 6
         passed: true
-        comment: Conserved positions 2-9 clearly visible. Positions 1 and 10 have
-          extremely thin rectangles barely distinguishable.
+        comment: Dominant letters at high-IC positions are well-sized. Minor bases
+          at low-IC positions barely distinguishable.
       - id: VQ-04
         name: Color Accessibility
         score: 3
         max: 4
         passed: true
-        comment: Standard DNA colors mostly distinguishable. Green/red pairing not
-          ideal for deuteranopia.
+        comment: Standard sequence logo colors. Green vs orange could challenge some
+          colorblind types.
       - id: VQ-05
         name: Layout & Canvas
-        score: 2
+        score: 3
         max: 4
-        passed: false
-        comment: NOT FIXED from attempt 1. Y-range to 2.15 but max IC is 1.15, wasting
-          47% of vertical space.
+        passed: true
+        comment: Good canvas utilization. Some empty space at top of plot.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Position and Information content (bits) are descriptive with units.
+        comment: Position and Information content (bits) - descriptive with units.
     design_excellence:
-      score: 10
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Functional colored-rectangle approach with clean background. Not
-          the standard sequence logo aesthetic.
+        passed: true
+        comment: Thoughtful bioinformatics colors, clean background, above defaults
+          but not publication-level.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Grid removed, outline removed, subtle background. Excessive empty
-          vertical space significantly detracts.
+        passed: true
+        comment: Grid removed, outline removed, subtle background, clean tick styling.
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
-        passed: false
-        comment: CREB1 data creates natural hierarchy through height variation. No
-          additional visual emphasis or annotation.
+        passed: true
+        comment: CREB1 TGACGTCA core motif visually apparent through letter size hierarchy.
     spec_compliance:
       score: 11
       max: 15
@@ -121,28 +112,27 @@ review:
         name: Plot Type
         score: 3
         max: 5
-        passed: false
-        comment: Colored rectangles with white text instead of stretched colored letter
-          glyphs as spec requires.
+        passed: true
+        comment: Sequence logo but letters are plain text, not stretched glyphs as
+          spec requires.
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 2
         max: 4
         passed: true
-        comment: Stacking, ordering, IC scaling, standard colors present. Stretched
-          glyph rendering missing.
+        comment: Most features present but stretched glyph requirement not met.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=position, Y=information content correctly mapped.
+        comment: X=position, Y=IC bits. Correct mapping.
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Title format correct. No color legend for base-to-color mapping.
+        passed: true
+        comment: Title format correct. Legend shows all four bases with matching colors.
     data_quality:
       score: 14
       max: 15
@@ -152,21 +142,19 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Shows conserved and variable positions across the full IC range.
+        comment: Shows highly conserved and variable positions. Good IC range.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: CREB1 is a real well-studied transcription factor with accurate consensus
-          motif.
+        comment: CREB1 TF binding site is a real, well-studied biological motif.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: IC values 0-1.15 bits realistic for DNA binding motif. Frequencies
-          sum to 1.
+        comment: IC 0-1.2 bits, appropriate for DNA. Frequencies sum to 1 per position.
     code_quality:
       score: 10
       max: 10
@@ -176,13 +164,13 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, calculation, plot, save.'
+        comment: Linear flow with no functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic with hardcoded frequency data.
+        comment: Deterministic hardcoded frequency matrix.
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -194,37 +182,38 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Clean loop logic with elegant np.where guard for log2(0).
+        comment: Clean, well-structured. HoverTool is legitimate Bokeh feature.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png via export_png and HTML output.
+        comment: Saves as plot.png via export_png and HTML.
     library_mastery:
-      score: 5
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Uses ColumnDataSource, figure, rect and text glyphs idiomatically
-          but basic pattern.
+        comment: Good use of ColumnDataSource, figure, text glyph, Legend/LegendItem.
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 4
         max: 5
-        passed: false
-        comment: Rect+text glyph composition and dual PNG/HTML output. No HoverTool
-          or other Bokeh-distinctive interactive features.
+        passed: true
+        comment: HoverTool with invisible rectangles and HTML dual export are distinctly
+          Bokeh.
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
-  - manual-ticks
+  - hover-tooltips
+  - custom-legend
   - html-export
+  - manual-ticks
   patterns:
   - data-generation
   - columndatasource
@@ -232,5 +221,4 @@ impl_tags:
   dataprep:
   - normalization
   styling:
-  - edge-highlighting
   - minimal-chrome
