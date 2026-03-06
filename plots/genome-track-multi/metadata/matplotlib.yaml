@@ -1,0 +1,236 @@
+library: matplotlib
+specification_id: genome-track-multi
+created: '2026-03-06T17:01:25Z'
+updated: '2026-03-06T17:14:31Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22773343271
+issue: 4422
+python_version: 3.14.3
+library_version: 3.10.8
+preview_url: https://storage.googleapis.com/pyplots-images/plots/genome-track-multi/matplotlib/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/genome-track-multi/matplotlib/plot_thumb.png
+preview_html: null
+quality_score: 90
+review:
+  strengths:
+  - All font sizes now meet library guidelines (title 24pt, labels 20pt, ticks 16pt)
+  - Excellent spec compliance with all 4 required tracks fully implemented
+  - Biologically realistic HOXA gene cluster data with coverage peaks correlating
+    with exon positions
+  - Clean visual design with custom palette, rounded patches, path effects, and alternating
+    track backgrounds
+  - Efficient use of LineCollection for variant stems and FancyBboxPatch for genomic
+    features
+  - Variant markers appropriately sized (s=150/120)
+  weaknesses:
+  - Gene name annotations (14pt) and regulatory inner labels (12pt) slightly below
+    tick-size guideline
+  - Design Excellence could be pushed further with more refined typography hierarchy
+  image_description: 'The plot displays a multi-track genome browser view of the HOXA
+    gene cluster on chromosome 7 (chr7:27.20-27.28 Mb). Four horizontal tracks are
+    stacked vertically sharing a common genomic x-axis formatted in megabases. Track
+    1 (Genes): Four genes (HOXA1-HOXA4) shown with dark blue rounded rectangles for
+    exons connected by thin blue intron lines, with chevron arrows indicating strand
+    direction (right-pointing for + strand, left-pointing for - strand on HOXA3).
+    Gene names labeled above with white stroke outlines. Light blue-gray background.
+    Track 2 (Coverage): A filled area plot in soft blue showing RNA-seq read depth
+    (0-~120), with distinct peaks at exon positions and low baseline in intergenic
+    regions. Subtle y-grid lines. White background. Track 3 (Variants): Lollipop plot
+    with 15 variants - orange circles for SNPs and brown diamonds for indels - stem
+    height encoding quality scores (0-100). Legend in upper right. Light blue-gray
+    background. Track 4 (Regulatory): Colored rounded rectangles - green Promoters,
+    orange Enhancers, purple Insulators - with single-letter labels inside larger
+    elements. Three-column legend. White background. Title: "genome-track-multi ·
+    matplotlib · pyplots.ai". X-axis: "Genomic Position — chr7 (Mb)".'
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title 24pt, labels 20pt, ticks 16pt all explicitly set. Gene annotations
+          at 14pt and regulatory inner labels at 12pt slightly below guideline.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: All text fully readable, no collisions anywhere.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Exon rectangles, coverage area, variant lollipops (s=150/120), and
+          regulatory rectangles all well-sized.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue/orange/green/purple palette is colorblind-safe with good contrast.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Four tracks fill canvas well with sensible height ratios and tight
+          spacing.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive labels with units on x-axis and informative y-labels
+          per track.
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom palette, FancyBboxPatch, path effects, alternating backgrounds.
+          Above defaults but not publication-grade.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines removed, subtle y-grid, tight spacing, alternating backgrounds.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Coverage peaks align with exons, strand direction clear, regulatory
+          elements near gene starts.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Multi-track genome browser with 4 stacked tracks sharing x-axis.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: gene exons/introns/strand, coverage area,
+          variant lollipops, regulatory rectangles.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Genomic positions correctly on x-axis, all data properly mapped.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct, variant and regulatory legends present with
+          correct labels.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Four genes, both strands, SNPs and indels, three regulatory types.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: HOXA gene cluster on chr7 is a real genomic locus with plausible
+          data.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Genomic positions, coverage depth, and quality scores all realistic.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat structure with no functions or classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set at top.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: mpatches, patheffects, pyplot, numpy, LineCollection.'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean code with LineCollection for efficient batch rendering.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png, dpi=300, bbox_inches='tight'. No deprecated API.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Axes methods throughout, gridspec_kw, sharex, FuncFormatter. Good
+          idiomatic matplotlib.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: FancyBboxPatch, LineCollection, patheffects, gridspec height_ratios
+          are matplotlib-specific.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - subplots
+  - patches
+  - annotations
+  - custom-legend
+  - manual-ticks
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  - explicit-figure
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
+  - grid-styling
