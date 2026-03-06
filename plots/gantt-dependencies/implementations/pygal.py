@@ -1,6 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 gantt-dependencies: Gantt Chart with Dependencies
 Library: pygal 3.1.0 | Python 3.14
+Quality: 81/100 | Updated: 2026-03-06
 """
 
 import re

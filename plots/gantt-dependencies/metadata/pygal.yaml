@@ -1,7 +1,7 @@
 library: pygal
 specification_id: gantt-dependencies
 created: '2026-01-15T21:04:11Z'
-updated: '2026-03-06T21:18:13Z'
+updated: '2026-03-06T21:35:59Z'
 generated_by: claude-opus-4-6
 workflow_run: 21046151934
 issue: 3830
@@ -10,35 +10,40 @@ library_version: 3.1.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/gantt-dependencies/pygal/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/gantt-dependencies/pygal/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/gantt-dependencies/pygal/plot.html
-quality_score: 79
+quality_score: 81
 review:
   strengths:
-  - Excellent data quality with realistic software project scenario covering 16 tasks
-    across 5 phases with comprehensive dependency coverage
-  - 'All spec requirements met: phase aggregate bars with diamond markers, correct
-    title format, dependency arrows, color-coded grouping'
-  - Clean dependency arrow routing with elbow connectors and properly sized arrowheads
-  - 'Good visual refinement: alternating row backgrounds, subtle dashed gridlines,
-    translucent phase bars'
+  - Creative use of HorizontalStackedBar with transparent offset to simulate Gantt
+    positioning
+  - 'Excellent data quality: realistic software project with proper dependency chains
+    and critical path'
+  - 'Full spec compliance: all required features (dependencies, grouping, aggregates)
+    present'
+  - Good visual distinction between critical and non-critical paths (bold/solid vs
+    dashed/light)
+  - Custom legend with all phase colors and critical path indicator
+  - Diamond markers on phase aggregate bars add professional polish
   weaknesses:
-  - pygal used mostly as SVG scaffolding rather than its charting API — low library
-    mastery
-  - No critical path highlighting or milestone emphasis for stronger data storytelling
-  - Arrow routing could be more elegant — some paths cross near task bars
+  - Heavy SVG post-processing (regex parsing, manual element injection) makes code
+    fragile
+  - Library mastery limited by pygal lack of native Gantt support
+  - Some dependency arrows are small and hard to trace through the chart
+  - Color accessibility could be improved with higher-contrast palette choices
   image_description: 'The plot displays a horizontal Gantt chart titled "gantt-dependencies
-    · pygal · pyplots.ai" at 4800x2700 px on a white background. Sixteen tasks are
-    listed on the Y-axis organized across 5 color-coded phases: steel blue (#306998)
+    · pygal · pyplots.ai" on a white background at 4800×2700 px. Sixteen tasks are
+    listed on the Y-axis, organized across 5 color-coded phases: steel blue (#306998)
     for Requirements (3 tasks), gold (#E6A817) for Design (4 tasks), teal (#2A9D8F)
     for Development (3 tasks), coral (#E76F51) for Testing (3 tasks), and purple (#7B68AE)
-    for Deployment (3 tasks). Phase header rows (marked with a triangle prefix) display
-    translucent aggregate bars with diamond markers at start/end spanning each phase''s
-    full duration, set against light gray row backgrounds. Individual task bars have
-    rounded corners at 0.9 opacity. Dark gray elbow-connector arrows with triangular
-    arrowheads show finish-to-start dependencies between tasks. Dashed vertical guide
-    lines mark month boundaries (Jan-Jun 2025) with month labels below the plot area.
-    A custom legend at the bottom shows all 5 category colors plus a dependency arrow
-    entry, well-separated below the month labels and x-axis label "Project Timeline
-    (Jan - Jun 2025)". Subtle alternating row backgrounds provide visual structure.'
+    for Deployment (3 tasks). Phase header rows (prefixed with ▶) display translucent
+    aggregate bars with diamond markers at start and end. Individual task bars have
+    rounded corners and use solid opacity for critical-path tasks versus dashed/lighter
+    styling for non-critical tasks. Red elbow-connector arrows with triangular arrowheads
+    show critical-path dependencies, while gray arrows show non-critical dependencies.
+    Dashed vertical guide lines mark month boundaries (Jan–Jun 2025) with month labels
+    at the bottom. A custom legend at the bottom shows all 5 category colors plus
+    a Critical Path arrow entry. An x-axis label reads "Project Timeline (Jan – Jun
+    2025)". Alternating row backgrounds (light gray for phases, subtle alternating
+    for tasks) provide visual structure.'
   criteria_checklist:
     visual_quality:
       score: 25
@@ -49,43 +54,45 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set in Style and custom SVG elements (26-56px).
-          All text clearly readable.
+        comment: Font sizes explicitly set in Style (title=56, label=24, major_label=26,
+          legend=26, value=20) and custom SVG text at 26-30px. All text clearly readable.
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Legend well-separated below month labels. No significant text collisions.
-          Minor crowding near plot edge.
+        comment: Legend well-separated below month labels. Minor crowding on some
+          long task labels but all readable.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Task bars clearly visible. Phase aggregate bars distinguishable.
-          Dependency arrows visible at 3.5px with arrowheads.
+        comment: Task bars clearly visible with good opacity. Some dependency arrows
+          are small and harder to follow.
       - id: VQ-04
         name: Color Accessibility
         score: 3
         max: 4
         passed: true
-        comment: Five distinct hues with good lightness variation. Generally colorblind-safe.
+        comment: Five distinct hues reasonably distinguishable. Could improve contrast
+          for colorblind viewers.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good canvas utilization. Some unused space at bottom below legend.
+        comment: Chart fills most of canvas well. Some right-side bars extend close
+          to edge.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive Project Timeline label with date range. Month labels
-          with year.
+        comment: Project Timeline (Jan - Jun 2025) provides descriptive context with
+          month labels.
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -93,22 +100,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom 5-color palette, rounded corners, diamond markers, monospace
-          typography. Above defaults but not publication-ready.
+        comment: Custom 5-color palette, monospace font, rounded bars, diamond markers,
+          critical path distinction. Above defaults.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Subtle dashed gridlines, alternating row backgrounds, translucent
-          phase bars, properly positioned legend.
+        comment: Alternating row backgrounds, subtle phase shading, clean white background,
+          custom legend, generous spacing.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Color coding and phase aggregates guide viewer. No critical path
-          highlighting or milestone emphasis.
+        passed: true
+        comment: Critical path highlighted with bold borders and red arrows. Phase
+          groupings guide the eye. Clear visual hierarchy.
     spec_compliance:
       score: 15
       max: 15
@@ -118,28 +125,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct horizontal Gantt chart with finish-to-start dependency arrows.
+        comment: Gantt chart with horizontal bars on timeline axis. Correct chart
+          type.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Dependencies, color grouping, phase aggregate bars with diamond markers,
-          task hierarchy all present.
+        comment: Dependencies, grouping, aggregates, critical path, proper scheduling
+          all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Timeline on X-axis, tasks on Y-axis, dependencies connect end-to-start
-          correctly.
+        comment: Tasks correctly positioned on Jan-Jun 2025 timeline.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Exact title format. Custom legend shows all categories plus dependency
-          arrow.
+        comment: Correct title format. Custom legend with all categories and critical
+          path entry.
     data_quality:
       score: 15
       max: 15
@@ -149,22 +156,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 16 tasks, 5 phases, parallel tasks, multi-predecessor dependencies,
-          varying durations, full dependency chain.
+        comment: 16 tasks, 5 phases, multiple dependency chains, parallel tasks, critical
+          path.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Software development lifecycle — real, neutral, universally understood
-          scenario.
+        comment: Software development project lifecycle - realistic and neutral.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 6-month timeline with realistic 1-4 week task durations. No temporal
-          dependency violations.
+        comment: 6-month project with 1-4 week task durations. Sensible scheduling.
     code_quality:
       score: 9
       max: 10
@@ -174,51 +179,50 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, chart config, SVG generation, custom
-          elements, save.'
+        comment: 'Linear flow: data → chart → SVG → post-processing → PNG. No functions
+          or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic with hardcoded dates and task definitions.
+        comment: Fully deterministic with hardcoded dates and task data.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: datetime.date, cairosvg, pygal, pygal.style.Style.'
+        comment: 'All imports used: re, date, timedelta, cairosvg, pygal, Style.'
       - id: CQ-04
         name: Code Elegance
         score: 1
         max: 2
         passed: true
-        comment: Well-organized but extensive raw SVG string manipulation is verbose
-          and fragile.
+        comment: SVG regex parsing is fragile but necessary. Clean overall structure.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png via cairosvg.svg2png(). Current pygal 3.1.0 API.
+        comment: Saves as plot.png via cairosvg. Current pygal API.
     library_mastery:
-      score: 3
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: pygal HorizontalBar used as SVG scaffolding. Empty series with None
-          values, then manual SVG injection for actual visualization.
+        passed: true
+        comment: Creative HorizontalStackedBar with transparent offset. Proper Style,
+          x_labels, value_formatter. Heavy SVG post-processing.
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
         passed: false
-        comment: Only Style system and basic chart config used. Core visualization
-          is manual SVG that could use any SVG tool.
+        comment: Per-value inline styling and stacking behavior are pygal-specific
+          but core visualization relies on raw SVG injection.
   verdict: REJECTED
 impl_tags:
   dependencies:
@@ -227,9 +231,8 @@ impl_tags:
   - custom-legend
   - annotations
   patterns:
-  - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
-  - grid-styling
+  - edge-highlighting
