@@ -1,7 +1,7 @@
 library: highcharts
 specification_id: gantt-dependencies
 created: '2026-01-15T21:03:37Z'
-updated: '2026-02-25T14:40:00Z'
+updated: '2026-02-25T22:47:15Z'
 generated_by: claude-opus-4-6
 workflow_run: 21046152003
 issue: 3830
@@ -10,148 +10,170 @@ library_version: 1.10.3
 preview_url: https://storage.googleapis.com/pyplots-images/plots/gantt-dependencies/highcharts/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/gantt-dependencies/highcharts/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/gantt-dependencies/highcharts/plot.html
-quality_score: null
+quality_score: 91
 review:
   strengths:
-  - Excellent use of Highcharts Gantt module with native dependency connector support
-  - Clear visual representation of task relationships with well-styled arrow connectors
-  - Good colorblind-safe color palette for phase differentiation
-  - Realistic software development project scenario with meaningful task dependencies
-  - Proper HTML export alongside PNG for interactive features
+  - Expert use of Highcharts Gantt module with specialized ganttChart() constructor
+    and built-in dependency connector system
+  - Critical path visualization with bold red connectors creates excellent data storytelling
+    and visual hierarchy
+  - Cohesive custom color palette (slate blue, amber, muted purple, teal) with professional
+    typography
+  - Comprehensive project data covering sequential, parallel, and multi-dependency
+    task relationships
+  - Clean code with both static PNG and interactive HTML output
   weaknesses:
-  - Python project_data dictionary is defined but not directly used in the chart config
-    (JavaScript handles data inline)
-  - Missing explicit group headers with aggregate timeline bars as mentioned in spec
-  - Some whitespace could be better utilized on the right side of the chart
-  image_description: |-
-    The plot displays a Gantt chart showing a software development project schedule with 12 tasks organized across 4 phases: Requirements Phase (blue - 3 tasks), Design Phase (yellow/gold - 3 tasks), Development Phase (purple/magenta - 3 tasks), and Testing Phase (cyan - 3 tasks). The chart spans from January 1, 2024 to March 25, 2024.
-
-    Task bars are displayed as colored horizontal rectangles with task names displayed both on the left Y-axis labels and as white text on the bars themselves. Dependency arrows (gray connector lines) clearly show finish-to-start relationships between tasks, with arrows flowing from the end of predecessor tasks to the start of successor tasks. The arrows include rounded corners and arrow markers at the endpoints.
-
-    The title "gantt-dependencies · highcharts · pyplots.ai" appears at the top with a subtitle "Software Development Project Schedule with Task Dependencies". X-axis shows weekly date intervals. A legend at the bottom identifies the four phases by color.
+  - Chart dimensions (4800x2550) slightly deviate from standard formats (4800x2700
+    or 3600x3600)
+  - Legend placement at the very bottom-right edge could be more prominent
+  - Minor visual competition between connector lines and data labels in dense areas
+  image_description: 'The plot displays a Gantt chart for a Software Development Project
+    spanning January to late March 2024, organized into four color-coded phases: Requirements
+    (slate blue #306998), Design (amber #D4920B), Development (muted purple #7B5EA7),
+    and Testing (teal #0F8B8D). The title reads "gantt-dependencies · highcharts ·
+    pyplots.ai" in dark text at the top, with a subtitle "Software Development Project
+    Schedule — Critical Path & Phase Dependencies." The x-axis shows weekly date markers
+    (Jan 1 through Mar 25) with light grid lines. The y-axis lists 18 rows: 4 phase
+    headers with aggregate bars, 12 individual task bars, and 2 diamond-shaped milestones
+    ("Requirements Baseline ✓" and "Release Ready ★" in dark navy). Dependency connectors
+    are clearly visible — bold red lines for the critical path and lighter gray dashed
+    lines for non-critical dependencies, each with arrowhead end markers. A custom
+    legend at the bottom right explains "Critical Path" (red solid) and "Non-Critical"
+    (gray dashed). The background is off-white (#FAFBFC) with subtle alternating row
+    shading. Data labels appear on each bar with white text outline for readability.'
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 26
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 7
+        max: 8
         passed: true
-        comment: Title, axis labels, and task names are all clearly readable. Task
-          names on bars could be slightly larger for optimal readability at full resolution.
+        comment: All font sizes explicitly set (title 44px, subtitle 32px, axis labels
+          22-26px, data labels 22px with text outline). Minor competition between
+          some data labels and connector lines.
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: No overlapping text elements. Task bars are well-spaced and labels
-          are clear.
+        comment: Minimal overlap; some connector lines cross text areas and aggregate
+          bar labels partially obscured by child task rendering.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Task bars are appropriately sized with good contrast. Dependency
-          arrows are clearly visible with proper line width.
+        comment: Task bars, connectors, and milestones clearly visible. Milestone
+          diamonds and legend elements somewhat small relative to canvas.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Uses colorblind-safe palette (blue, yellow, purple, cyan) avoiding
-          red-green combinations.
+        comment: 'Excellent colorblind-safe palette: slate blue, amber, muted purple,
+          teal. Critical red vs non-critical gray highly distinguishable.'
       - id: VQ-05
-        name: Layout Balance
+        name: Layout & Canvas
         score: 3
-        max: 5
+        max: 4
         passed: true
-        comment: Good use of canvas space, though there is some whitespace on the
-          right side beyond the chart content.
+        comment: Good canvas usage at 4800x2550 (close to but not exactly standard
+          4800x2700). Legend at very bottom-right edge.
       - id: VQ-06
-        name: Axis Labels
+        name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis shows descriptive task names, X-axis shows formatted dates
-          (month and day).
-      - id: VQ-07
-        name: Grid & Legend
-        score: 2
-        max: 2
+        comment: Date-formatted x-axis labels and descriptive task names on y-axis.
+          Self-explanatory for Gantt chart.
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
         passed: true
-        comment: Subtle grid lines (light gray), legend well-positioned at bottom.
+        comment: 'Strong design: cohesive custom palette, intentional typography hierarchy,
+          rounded bars, off-white background with alternating rows.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Good refinement: subtle grid colors, alternating row shading, generous
+          spacing, disabled unnecessary chrome. Room for polish in legend and grid.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Critical path in bold red creates clear focal point. Non-critical
+          de-emphasized. Phase colors and milestones guide viewer through project
+          lifecycle.
     spec_compliance:
-      score: 24
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct Gantt chart type with proper horizontal task bars.
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Tasks correctly mapped to Y-axis positions, dates to X-axis timeline.
-      - id: SC-03
+        comment: Correct Gantt chart with dependencies using specialized ganttChart()
+          constructor.
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Has dependencies with connector arrows, phase grouping via colors/legend.
-          Missing explicit group headers showing aggregate timeline spans.
-      - id: SC-04
-        name: Data Range
+        comment: 'All spec requirements present: dependency arrows, visual styles,
+          group headers, indentation, legend, correct scheduling, hierarchy.'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis shows full date range from Jan 1 to beyond Mar 25, all tasks
-          visible.
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X-axis maps to timeline (Jan-Mar 2024), y-axis maps to hierarchical
+          task structure.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies all four phases with matching colors.
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses correct format gantt-dependencies · highcharts · pyplots.ai.
+        comment: Title follows exact format. Custom legend explains critical path
+          vs non-critical styles.
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows both sequential and parallel dependencies, tasks across multiple
-          phases. Good variety including multi-dependency tasks. Missing explicit
-          milestone markers.
+        comment: 'Comprehensive: 4 phases, 12 tasks, 2 milestones. Sequential, parallel,
+          and multi-dependency relationships shown.'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Software development project is an excellent, realistic scenario
-          with believable task sequences.
+        comment: Software development lifecycle is a real-world, neutral scenario
+          with authentic task names.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Task durations are realistic (1-4 weeks). Some overlap in testing
-          starting before dev complete is realistic.
+        comment: 3-month project timeline with realistic task durations of 5 days
+          to 3 weeks.
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -159,54 +181,63 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → config → render structure without functions/classes.
+        comment: 'Linear flow: imports, download JS, chart config, HTML, screenshot,
+          cleanup, save HTML.'
       - id: CQ-02
         name: Reproducibility
-        score: 1
-        max: 3
-        passed: false
-        comment: No random data used but the Python project_data dict is defined but
-          not used in the final chart config (JavaScript handles data inline).
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Fully deterministic: all dates and task data are hardcoded constants.'
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used (tempfile, time, urllib.request, Path, selenium).
+        comment: 'All imports used: tempfile, time, urllib.request, Path, selenium.'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Highcharts Gantt API.
+        comment: Clean, well-commented code with structured chart config. No fake
+          functionality.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html.
-    library_features:
-      score: 4
-      max: 5
+        comment: Saves as plot.png via container.screenshot(). Also generates plot.html.
+          Uses current Highcharts 11.4.8.
+    library_mastery:
+      score: 10
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 4
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Excellent use of Highcharts Gantt module with native dependency connectors,
-          series grouping, interactive tooltips (in HTML version), and proper ganttChart
-          API.
+        comment: 'Expert Highcharts Gantt API usage: ganttChart(), parent-child hierarchy,
+          dependency objects, milestones, connectors config, renderer API.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Leverages Highcharts-unique Gantt module: built-in dependency connectors
+          with routing, parent-child grouping, milestone support, renderer API for
+          custom legend.'
   verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
   techniques:
   - html-export
-  - annotations
+  - custom-legend
   patterns:
   - data-generation
-  dataprep:
-  - time-series
+  dataprep: []
   styling:
   - grid-styling
+  - edge-highlighting
