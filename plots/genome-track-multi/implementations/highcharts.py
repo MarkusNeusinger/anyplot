@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 genome-track-multi: Genome Track Viewer
 Library: highcharts unknown | Python 3.14.3
 Quality: 89/100 | Created: 2026-03-06
@@ -322,6 +322,22 @@ Highcharts.chart('container', {{
             borderWidth: 0,
             enableMouseTracking: false
         }},
+        // Variant track legend (inline)
+        {{
+            type: 'scatter',
+            name: 'Variant Legend',
+            yAxis: 2,
+            data: [
+                {{ x: {region_start + 800}, y: 105, dataLabels: {{ enabled: true, format: '\\u25cf SNP',
+                    align: 'left', x: 5,
+                    style: {{ fontSize: '22px', color: '#E67E22', fontWeight: 'bold', textOutline: 'none' }} }} }},
+                {{ x: {region_start + 3600}, y: 105, dataLabels: {{ enabled: true, format: '\\u25c6 Indel',
+                    align: 'left', x: 5,
+                    style: {{ fontSize: '22px', color: '#8E44AD', fontWeight: 'bold', textOutline: 'none' }} }} }}
+            ],
+            marker: {{ enabled: false }},
+            enableMouseTracking: false
+        }},
 
         // Regulatory track - Enhancers
         {{
@@ -329,10 +345,10 @@ Highcharts.chart('container', {{
             name: 'Enhancers',
             yAxis: 3,
             data: {enhancer_arearange_json},
-            color: '#27AE60',
+            color: '#2196A4',
             fillOpacity: 0.7,
             lineWidth: 1,
-            lineColor: '#1E8449',
+            lineColor: '#17757F',
             connectNulls: false,
             tooltip: {{ pointFormat: '<b>Enhancer</b>' }}
         }},
@@ -342,10 +358,10 @@ Highcharts.chart('container', {{
             name: 'Promoters',
             yAxis: 3,
             data: {promoter_arearange_json},
-            color: '#C0392B',
+            color: '#D4A017',
             fillOpacity: 0.7,
             lineWidth: 1,
-            lineColor: '#922B21',
+            lineColor: '#B8860B',
             connectNulls: false,
             tooltip: {{ pointFormat: '<b>Promoter</b>' }}
         }},
@@ -356,9 +372,9 @@ Highcharts.chart('container', {{
             yAxis: 3,
             data: [
                 {{ x: {region_start + 500}, y: 0.28, dataLabels: {{ enabled: true, format: '\\u25a0 Enhancer',
-                    style: {{ fontSize: '22px', color: '#27AE60', fontWeight: 'bold', textOutline: 'none' }} }} }},
+                    style: {{ fontSize: '22px', color: '#2196A4', fontWeight: 'bold', textOutline: 'none' }} }} }},
                 {{ x: {region_start + 500}, y: 0.72, dataLabels: {{ enabled: true, format: '\\u25a0 Promoter',
-                    style: {{ fontSize: '22px', color: '#C0392B', fontWeight: 'bold', textOutline: 'none' }} }} }}
+                    style: {{ fontSize: '22px', color: '#D4A017', fontWeight: 'bold', textOutline: 'none' }} }} }}
             ],
             marker: {{ enabled: false }},
             enableMouseTracking: false
