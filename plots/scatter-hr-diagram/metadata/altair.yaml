@@ -1,0 +1,232 @@
+library: altair
+specification_id: scatter-hr-diagram
+created: '2026-03-07T06:48:09Z'
+updated: '2026-03-07T07:13:09Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22794049042
+issue: 4558
+python_version: 3.14.3
+library_version: 6.0.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/scatter-hr-diagram/altair/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/scatter-hr-diagram/altair/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/scatter-hr-diagram/altair/plot.html
+quality_score: 90
+review:
+  strengths:
+  - Domain-appropriate spectral type color palette matching astrophysical convention
+  - 'Clean visual refinement: removed view strokes, hidden ticks, very subtle grid
+    (0.12 opacity)'
+  - Excellent data quality with realistic stellar populations and the Sun as a reference
+    anchor
+  - Interactive legend selection (selection_point) is a distinctive Altair feature
+  - Region labels positioned thoughtfully in clear areas to guide the viewer
+  weaknesses:
+  - A-type stars (light steel blue at 0.5 opacity) are somewhat faint against the
+    white background
+  - F and G spectral type colors are close in hue, reducing colorblind accessibility
+    slightly
+  - Region label font size (15pt) slightly below ideal for the canvas size
+  image_description: 'The plot displays a Hertzsprung-Russell diagram as a scatter
+    plot with reversed x-axis (high temperature ~40k K on left, low ~2k K on right)
+    and logarithmic y-axis for luminosity (1e-5 to 1e+7 solar luminosities). Stars
+    are colored by spectral type: O (dark blue), B (medium blue), A (light steel blue),
+    F (dark gold), G (bright yellow), K (orange), M (red-orange). The main sequence
+    runs diagonally from upper-left to lower-right. Four region labels in italic gray
+    identify Main Sequence, Red Giants, Supergiants, and White Dwarfs. The Sun is
+    marked with a gold cross marker and labeled "Sun ☉" at approximately 5778 K, 1.0
+    L☉. Title reads "scatter-hr-diagram · altair · pyplots.ai" in the top-left. A
+    spectral type legend sits in the upper-right. The background is clean white with
+    very subtle grid lines. View strokes and tick marks are removed for a polished
+    appearance.'
+  criteria_checklist:
+    visual_quality:
+      score: 26
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 28pt, axis titles 22pt, tick
+          labels 16pt, legend title 18pt. Region labels at 15pt slightly below ideal.'
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Region labels positioned in clear areas. Minor proximity of Main
+          Sequence label to data points.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Size=40 with opacity=0.5 appropriate for 360 points. A-type stars
+          somewhat faint against white background.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 3
+        max: 4
+        passed: true
+        comment: Spectral colors follow astrophysical convention with good luminance
+          variation. F and G types somewhat close.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills canvas well at 1600x900, balanced margins, legend positioned
+          appropriately.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Surface Temperature (K) and Luminosity (L/L☉) both descriptive with
+          units.
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom spectral-type color palette matching astrophysical convention.
+          Custom title/axis colors. Clearly above defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: View strokes removed, tick marks hidden, very subtle grid (0.12 opacity),
+          muted domain colors.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: HR diagram story clearly told with main sequence diagonal, distinct
+          regions, Sun reference, and region labels guiding the viewer.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct scatter plot type.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Reversed x-axis, log y-axis, spectral type colors, four region labels,
+          Sun reference point.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Temperature on X (reversed), Luminosity on Y (log scale), correct
+          ranges.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct, legend shows O through M in correct order.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All four stellar regions represented with appropriate counts. All
+          seven spectral types present.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real astrophysics scenario with astronomically accurate parameters.
+          Sun at correct 5778 K, 1.0 L☉.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Realistic stellar parameters for all populations.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean imports-data-chart-save structure, no functions or classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: altair, numpy, pandas.'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-organized. Good use of np.select for spectral type assignment.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with scale_factor=3.0 and plot.html. Current API.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Good use of Altair declarative grammar: encode, Scale, Axis, layer
+          composition, alt.condition for selection.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Interactive legend selection (selection_point with bind=legend),
+          tooltip encoding, HTML export alongside PNG.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - grid-styling
+  - alpha-blending
