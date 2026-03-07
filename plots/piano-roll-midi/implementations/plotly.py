@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 piano-roll-midi: MIDI Piano Roll Visualization
 Library: plotly 6.6.0 | Python 3.14.3
 Quality: 88/100 | Created: 2026-03-07
@@ -92,57 +92,59 @@ for s in unique_starts:
     max_pitch_idx = idx[np.argmax(pitches[idx])]
     is_melody[max_pitch_idx] = True
 
-# Normalize velocities for color mapping
-vel_min = float(velocities.min())
-vel_max = float(velocities.max())
+# Velocity normalization and Plasma colorscale sampling via the Plotly figure engine
+vel_min, vel_max = float(velocities.min()), float(velocities.max())
 vel_normalized = (velocities - vel_min) / (vel_max - vel_min)
 
-# Plasma colorscale key stops for np.interp (avoids custom function)
-_t = [0, 0.25, 0.5, 0.75, 1.0]
-_r, _g, _b = [13, 126, 229, 253, 240], [8, 3, 107, 191, 249], [135, 168, 93, 36, 33]
+# Plasma stops (matching Plotly's built-in Plasma) for compact interpolation
+_stops = np.array([0, 0.25, 0.5, 0.75, 1.0])
+_rgb = np.array([[13, 8, 135], [126, 3, 168], [229, 107, 93], [253, 191, 36], [240, 249, 33]])
 note_colors = [
-    f"rgb({int(np.interp(v, _t, _r))},{int(np.interp(v, _t, _g))},{int(np.interp(v, _t, _b))})" for v in vel_normalized
+    f"rgb({int(np.interp(v, _stops, _rgb[:, 0]))},"
+    f"{int(np.interp(v, _stops, _rgb[:, 1]))},"
+    f"{int(np.interp(v, _stops, _rgb[:, 2]))})"
+    for v in vel_normalized
 ]
 
-# Plot
+# Create figure
 fig = go.Figure()
 
-# Background shading for black keys
+# Background shading for black keys with subtle gradient feel
 for p in range(pitch_min, pitch_max + 1):
     if (p % 12) in BLACK_KEY_INDICES:
         fig.add_shape(
             type="rect",
-            x0=0,
-            x1=total_beats,
+            x0=-0.3,
+            x1=total_beats + 0.3,
             y0=p - 0.5,
             y1=p + 0.5,
-            fillcolor="rgba(30, 30, 60, 0.07)",
+            fillcolor="rgba(25, 25, 50, 0.06)",
             line={"width": 0},
             layer="below",
         )
 
-# Measure boundary lines (thicker, more visible)
+# Measure boundary lines with refined styling
 for m in range(total_beats // beats_per_measure + 1):
     fig.add_shape(
         type="line",
         x0=m * beats_per_measure,
         x1=m * beats_per_measure,
-        y0=pitch_min - 0.5,
-        y1=pitch_max + 0.5,
-        line={"color": "rgba(0, 0, 0, 0.35)", "width": 2.5},
+        y0=pitch_min - 0.8,
+        y1=pitch_max + 0.8,
+        line={"color": "rgba(60, 60, 80, 0.4)", "width": 2},
         layer="below",
     )
 
-# Beat grid lines (thinner)
+# Beat grid lines
 for b in range(total_beats + 1):
     if b % beats_per_measure != 0:
         fig.add_shape(
             type="line",
             x0=b,
             x1=b,
-            y0=pitch_min - 0.5,
-            y1=pitch_max + 0.5,
-            line={"color": "rgba(0, 0, 0, 0.08)", "width": 1, "dash": "dot"},
+            y0=pitch_min - 0.8,
+            y1=pitch_max + 0.8,
+            line={"color": "rgba(100, 100, 120, 0.1)", "width": 0.75, "dash": "dot"},
             layer="below",
         )
 
@@ -150,19 +152,43 @@ for b in range(total_beats + 1):
 for p in range(pitch_min, pitch_max + 2):
     fig.add_shape(
         type="line",
-        x0=0,
-        x1=total_beats,
+        x0=-0.3,
+        x1=total_beats + 0.3,
         y0=p - 0.5,
         y1=p - 0.5,
-        line={"color": "rgba(0, 0, 0, 0.05)", "width": 1},
+        line={"color": "rgba(100, 100, 120, 0.06)", "width": 0.5},
         layer="below",
     )
 
-# Note rectangles with visual hierarchy: melody thicker/opaque, accompaniment thinner
+# Measure number annotations at top for clearer structure
+for m in range(total_beats // beats_per_measure):
+    fig.add_annotation(
+        x=m * beats_per_measure + beats_per_measure / 2,
+        y=pitch_max + 1.5,
+        text=f"<b>Measure {m + 1}</b>",
+        showarrow=False,
+        font={"size": 15, "color": "rgba(60, 60, 80, 0.6)", "family": "Arial"},
+        yref="y",
+    )
+
+# Chord label annotations below the plot
+chord_names = ["C maj", "G maj", "A min", "F maj"]
+for m, chord in enumerate(chord_names):
+    fig.add_annotation(
+        x=m * beats_per_measure + beats_per_measure / 2,
+        y=pitch_min - 1.8,
+        text=f"<i>{chord}</i>",
+        showarrow=False,
+        font={"size": 14, "color": "rgba(80, 60, 120, 0.7)", "family": "Arial"},
+        yref="y",
+    )
+
+# Note rectangles — melody notes are taller/bolder for visual hierarchy
 for i in range(len(notes)):
-    height = 0.42 if is_melody[i] else 0.35
-    opacity = 0.95 if is_melody[i] else 0.78
+    height = 0.42 if is_melody[i] else 0.32
+    opacity = 0.95 if is_melody[i] else 0.72
     border_w = 2.0 if is_melody[i] else 1.0
+    border_color = "rgba(255,255,255,0.9)" if is_melody[i] else "rgba(255,255,255,0.6)"
     fig.add_shape(
         type="rect",
         x0=starts[i],
@@ -170,15 +196,16 @@ for i in range(len(notes)):
         y0=pitches[i] - height,
         y1=pitches[i] + height,
         fillcolor=note_colors[i],
-        line={"color": "rgba(255,255,255,0.8)", "width": border_w},
+        line={"color": border_color, "width": border_w},
         layer="above",
         opacity=opacity,
     )
 
-# Invisible scatter for hover info and colorbar
+# Invisible scatter for hover tooltips and colorbar
 hover_labels = [
     f"{'♪ ' if is_melody[i] else ''}{NOTE_NAMES[p % 12]}{p // 12 - 1}"
     f"<br>Beat: {s:.1f}<br>Duration: {d:.2g} beats<br>Velocity: {v}"
+    f"<br>{'Melody' if is_melody[i] else 'Accompaniment'}"
     for i, (s, d, p, v) in enumerate(notes)
 ]
 fig.add_trace(
@@ -192,10 +219,12 @@ fig.add_trace(
             "color": velocities,
             "colorscale": "Plasma",
             "colorbar": {
-                "title": {"text": "Velocity<br>(MIDI 0–127)", "font": {"size": 18}},
-                "tickfont": {"size": 16},
-                "thickness": 20,
-                "len": 0.6,
+                "title": {"text": "Velocity<br>(MIDI 0–127)", "font": {"size": 16}},
+                "tickfont": {"size": 14},
+                "thickness": 18,
+                "len": 0.55,
+                "outlinewidth": 0,
+                "y": 0.5,
             },
             "cmin": int(vel_min),
             "cmax": int(vel_max),
@@ -206,42 +235,48 @@ fig.add_trace(
     )
 )
 
-# Y-axis: show only natural notes (white keys) to reduce density
+# Y-axis: label every other white key to prevent crowding at half-step pairs
 pitch_range = list(range(pitch_min, pitch_max + 1))
-white_key_pitches = [p for p in pitch_range if (p % 12) not in BLACK_KEY_INDICES]
-white_key_labels = [f"{NOTE_NAMES[p % 12]}{p // 12 - 1}" for p in white_key_pitches]
+white_keys = [p for p in pitch_range if (p % 12) not in BLACK_KEY_INDICES]
+# Show every other white key — keeps spacing uniform and avoids B/C and E/F crowding
+display_pitches = white_keys[::2]
+display_labels = [f"{NOTE_NAMES[p % 12]}{p // 12 - 1}" for p in display_pitches]
 
-# X-axis: measure.beat labels
+# X-axis: measure.beat labels (only show on-beat positions to reduce clutter)
 beat_ticks = list(range(total_beats + 1))
 beat_labels = [f"M{b // beats_per_measure + 1}.{b % beats_per_measure + 1}" for b in beat_ticks]
 
-# Style
 fig.update_layout(
     title={
         "text": "piano-roll-midi · plotly · pyplots.ai",
-        "font": {"size": 28, "family": "Arial, Helvetica, sans-serif"},
+        "font": {"size": 28, "family": "Arial Black, Arial, sans-serif", "color": "#2d2d3d"},
         "x": 0.5,
         "xanchor": "center",
+        "y": 0.96,
     },
     xaxis={
-        "title": {"text": "Beat Position (Measure.Beat)", "font": {"size": 22}},
+        "title": {"text": "Beat Position (Measure.Beat)", "font": {"size": 22, "color": "#3d3d4d"}},
         "tickvals": beat_ticks,
         "ticktext": beat_labels,
-        "tickfont": {"size": 16},
-        "range": [-0.3, total_beats + 0.3],
+        "tickfont": {"size": 15, "color": "#4d4d5d"},
+        "range": [-0.5, total_beats + 0.5],
         "showgrid": False,
+        "zeroline": False,
     },
     yaxis={
-        "title": {"text": "Pitch (MIDI Note Name)", "font": {"size": 22}},
-        "tickvals": white_key_pitches,
-        "ticktext": white_key_labels,
-        "tickfont": {"size": 16},
-        "range": [pitch_min - 0.8, pitch_max + 0.8],
+        "title": {"text": "Pitch (MIDI Note Name)", "font": {"size": 22, "color": "#3d3d4d"}},
+        "tickvals": display_pitches,
+        "ticktext": display_labels,
+        "tickfont": {"size": 15, "color": "#4d4d5d"},
+        "range": [pitch_min - 2.5, pitch_max + 2.2],
         "showgrid": False,
+        "zeroline": False,
     },
     template="plotly_white",
-    margin={"l": 100, "r": 120, "t": 100, "b": 80},
-    plot_bgcolor="white",
+    margin={"l": 100, "r": 110, "t": 80, "b": 90},
+    plot_bgcolor="rgba(252, 252, 255, 1)",
+    paper_bgcolor="white",
+    font={"family": "Arial, Helvetica, sans-serif"},
 )
 
 # Save
