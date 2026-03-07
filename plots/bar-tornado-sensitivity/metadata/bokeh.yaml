@@ -1,0 +1,230 @@
+library: bokeh
+specification_id: bar-tornado-sensitivity
+created: '2026-03-07T08:45:33Z'
+updated: '2026-03-07T09:06:43Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22795810084
+issue: 4566
+python_version: 3.14.3
+library_version: 3.8.2
+preview_url: https://storage.googleapis.com/pyplots-images/plots/bar-tornado-sensitivity/bokeh/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/bar-tornado-sensitivity/bokeh/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/bar-tornado-sensitivity/bokeh/plot.html
+quality_score: 90
+review:
+  strengths:
+  - Full spec compliance with all required tornado diagram features (reference line,
+    sorting, dual colors, annotations)
+  - Effective visual hierarchy through alpha gradient on bars by influence rank
+  - 'Well-refined styling: removed y-grid, subtle x-grid, hidden y-axis spines, custom
+    background'
+  - Good use of Bokeh-specific features (HoverTool, LabelSet, Span, HTML export)
+  - Realistic neutral data context (renewable energy NPV sensitivity analysis)
+  - HoverTool bug from attempt 2 properly fixed
+  weaknesses:
+  - Value annotation font at 17pt could be 18pt+ for optimal legibility at 4800x2700
+  - Data effects are mostly symmetric around base case; asymmetric impacts would better
+    demonstrate tornado nuances
+  - Legend placement in bottom-right corner somewhat isolated from chart data
+  image_description: 'The plot displays a horizontal tornado diagram for NPV Sensitivity
+    Analysis of a renewable energy project. Ten parameters are listed on the y-axis,
+    sorted by influence magnitude with "Electricity Price ($/MWh)" at the top (widest
+    bar spanning ~$6.2M to ~$18.8M) and "Salvage Value ($M)" at the bottom (narrowest
+    bar, ~$12.0M to ~$13.0M). A dark vertical reference line marks the base case NPV
+    at $12.5M with a bold label "Base Case: $12.5M" positioned above the bars. Bars
+    extend left (dark navy blue, "Low Scenario") and right (amber/gold, "High Scenario")
+    from the base line. Each bar has bold value annotations at its ends (e.g., "$6.2M",
+    "$18.8M"). The bars use an alpha gradient — more opaque for wider/more influential
+    parameters, creating clear visual hierarchy. Background is light gray (#fafafa)
+    with white border fill, x-grid is subtle dashed lines, y-grid is removed, y-axis
+    line and ticks are hidden. The legend sits in the bottom-right corner with "Low
+    Scenario" (blue) and "High Scenario" (amber). X-axis reads "Net Present Value
+    ($M)" with ticks at 5, 10, 15, 20. Bokeh toolbar is visible at top-right.'
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 30pt, labels 22pt, ticks 18pt,
+          annotations 17pt bold). Annotations slightly below 18pt guideline but bold
+          compensates.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text. Value annotations sit cleanly at bar ends on
+          separate rows.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Bars well-sized with height=0.6 and good spacing. Alpha gradient
+          adds differentiation.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue and amber colorblind-safe with excellent luminance contrast.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Plot fills canvas well. Legend somewhat isolated in bottom-right.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: X-axis with units. Y-axis parameters include units in parentheses.
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom blue/amber palette, alpha gradient for hierarchy, multi-tone
+          typography. Clearly above defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Y-grid removed, x-grid subtle dashed, outline removed, y-axis hidden,
+          custom background.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Alpha gradient creates visual hierarchy. Tornado shape guides the
+          eye. Value annotations quantify.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct horizontal tornado chart with dual-direction bars.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: reference line, sorting, dual colors, labels,
+          annotations.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=NPV output, Y=parameters. Correctly mapped.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title includes required format. Legend labels match data.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Good variety in bar widths. Characteristic tornado shape. Effects
+          somewhat symmetric.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Renewable energy NPV with real-world financial parameters. Neutral
+          domain.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: NPV values realistic for mid-size renewable energy project.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports, data, sort, sources, plot, styling, save.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic hardcoded data.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: HoverTool bug fixed. Clean, appropriate complexity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot.png and plot.html. Current API.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of ColumnDataSource, categorical y_range, hbar, LabelSet,
+          Span, Label, HoverTool.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: HoverTool, HTML export, alpha via CDS column, LabelSet — distinctly
+          Bokeh features.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - hover-tooltips
+  - html-export
+  patterns:
+  - columndatasource
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling
