@@ -1,0 +1,22 @@
+spec_id: heatmap-loss-triangle
+title: Actuarial Loss Development Triangle
+
+# Specification tracking
+created: "2026-03-06T19:53:43Z"
+updated: null
+issue: 4581
+suggested: MarkusNeusinger
+
+# Classification tags
+tags:
+  plot_type:
+    - heatmap
+  data_type:
+    - numeric
+    - matrix
+  domain:
+    - finance
+  features:
+    - annotated
+    - color-mapped
+    - cumulative

@@ -1,0 +1,28 @@
+# Specification-level metadata for psychrometric-basic
+# Auto-synced to PostgreSQL on push to main
+
+spec_id: psychrometric-basic
+title: Psychrometric Chart for HVAC
+
+# Specification tracking
+created: "2026-03-06T19:54:00Z"
+updated: null
+issue: 4583
+suggested: MarkusNeusinger
+
+# Classification tags (applies to all library implementations)
+# See docs/reference/tagging-system.md for detailed guidelines
+tags:
+  plot_type:
+    - line
+    - contour
+  data_type:
+    - numeric
+    - continuous
+  domain:
+    - engineering
+    - energy
+  features:
+    - advanced
+    - annotated
+    - multi

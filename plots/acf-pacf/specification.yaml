@@ -1,0 +1,28 @@
+# Specification-level metadata for acf-pacf
+# Auto-synced to PostgreSQL on push to main
+
+spec_id: acf-pacf
+title: Autocorrelation and Partial Autocorrelation (ACF/PACF) Plot
+
+# Specification tracking
+created: "2026-03-07T20:31:52Z"
+updated: null
+issue: 4663
+suggested: MarkusNeusinger
+
+# Classification tags (applies to all library implementations)
+# See docs/reference/tagging-system.md for detailed guidelines
+tags:
+  plot_type:
+    - bar
+    - stem
+  data_type:
+    - timeseries
+    - numeric
+  domain:
+    - statistics
+    - finance
+  features:
+    - correlation
+    - multi
+    - annotated

@@ -1,0 +1,229 @@
+library: pygal
+specification_id: piano-roll-midi
+created: '2026-03-07T19:55:12Z'
+updated: '2026-03-07T20:43:33Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22805912215
+issue: 4565
+python_version: 3.14.3
+library_version: 3.1.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/piano-roll-midi/pygal/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/piano-roll-midi/pygal/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/piano-roll-midi/pygal/plot.html
+quality_score: 76
+review:
+  strengths:
+  - 'Excellent musical data: realistic I-V-vi-IV chord progression with bass, chords,
+    and melody layers spanning full dynamic range'
+  - 'Major improvement in library mastery: pygal used idiomatically with native XY
+    chart, series, and Style system'
+  - Colorblind-safe viridis-like palette with meaningful velocity band labels using
+    musical dynamics notation
+  - Clean KISS code structure with native pygal output methods
+  weaknesses:
+  - Missing spec-required alternating black/white key row shading
+  - Missing differentiated grid lines for measure boundaries vs beat divisions
+  - Legend text partially obscured by legend color boxes
+  - Significant vertical space wasted by empty pitch rows
+  - sys.path manipulation workaround for import shadowing
+  image_description: 'The plot displays a MIDI piano roll visualization spanning 32
+    beats (8 measures) of a I-V-vi-IV chord progression. The y-axis shows pitch names
+    from C3 to G5 with labels at every semitone, and the x-axis shows "Time (beats)"
+    from 0 to 32. Notes appear as thick horizontal colored line segments on a pygal
+    XY chart: dark purple for pp (65-74), steel blue for p (75-84), teal for mp (85-94),
+    yellow-green for f (95-104), and bright yellow for ff (105-115) — a viridis-like
+    sequential palette. Three musical layers are clearly visible: long bass notes
+    at the bottom (C3, G3, A3, F3), block chord voicings in the middle register (C4-A4),
+    and shorter melodic notes at the top (B4-G5). The background is light off-white
+    (#f8f8f6). Grid lines are present both vertically and horizontally but are uniform
+    — no differentiation between beat and measure boundaries. There is no alternating
+    black/white key row shading. A legend at the bottom shows velocity bands with
+    musical dynamic labels (pp, p, mp, f, ff), though legend text is partially obscured
+    by the color box squares. The title "piano-roll-midi · pygal · pyplots.ai" appears
+    at top in monospace font. Many y-axis rows for pitches with no notes (D3, D#3,
+    E3, C#4, D#4, etc.) consume vertical space without contributing data.'
+  criteria_checklist:
+    visual_quality:
+      score: 22
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: Font sizes explicitly set (title=56, labels=22, legend=24). Readable
+          but y-axis labels somewhat small for 4800x2700 canvas
+      - id: VQ-02
+        name: No Overlap
+        score: 4
+        max: 6
+        passed: true
+        comment: Legend color boxes partially obscure legend text labels. Y-axis dense
+          with many unused pitch rows
+      - id: VQ-03
+        name: Element Visibility
+        score: 4
+        max: 6
+        passed: true
+        comment: Thick XY line segments work as note rectangles but very short notes
+          (0.5 beats) appear as small stubs
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Viridis-like palette is colorblind-safe with strong perceptual ordering
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 2
+        max: 4
+        passed: true
+        comment: Good horizontal fill but significant vertical space wasted by empty
+          pitch rows
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Time (beats) with units, Pitch with note names, correct title format
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Viridis-inspired palette, monospace font, off-white background. Above
+          defaults but not publication-level
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Grid present but undifferentiated, no beat vs measure distinction,
+          moderate customization
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Three musical layers visible with velocity coloring. No measure labels
+          or chord annotations for general viewers
+    spec_compliance:
+      score: 13
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct piano roll with horizontal note segments on pitch-time grid
+      - id: SC-02
+        name: Required Features
+        score: 2
+        max: 4
+        passed: false
+        comment: Missing alternating black/white key row shading and stronger measure
+          boundary lines
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=time, Y=pitch with names, length=duration, color=velocity band
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct title format, velocity legend with musical dynamic labels
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Full range of durations, velocities, chords, melody, bass lines
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real I-V-vi-IV chord progression, universally recognized harmonic
+          pattern
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: MIDI pitches C3-G5, velocities 65-115, 32 beats in 4/4 time
+    code_quality:
+      score: 8
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean linear flow: imports, data, helpers, style, chart, render'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: All data hardcoded and deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 1
+        max: 2
+        passed: false
+        comment: os and sys imported solely for sys.path workaround
+      - id: CQ-04
+        name: Code Elegance
+        score: 1
+        max: 2
+        passed: false
+        comment: sys.path manipulation hack is fragile; velocity band grouping is
+          clean
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Native render_to_png() and render_to_file()
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses pygal.XY idiomatically with Style, series, y_labels dict, legend_at_bottom
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: allow_interruptions=True for None-separated segments, dual SVG+PNG
+          output, full Style system
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - manual-ticks
+  - html-export
+  patterns:
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - grid-styling

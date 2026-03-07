@@ -1,0 +1,227 @@
+library: highcharts
+specification_id: bar-tornado-sensitivity
+created: '2026-03-07T08:51:50Z'
+updated: '2026-03-07T09:30:14Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22795810128
+issue: 4566
+python_version: 3.14.3
+library_version: unknown
+preview_url: https://storage.googleapis.com/pyplots-images/plots/bar-tornado-sensitivity/highcharts/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/bar-tornado-sensitivity/highcharts/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/bar-tornado-sensitivity/highcharts/plot.html
+quality_score: 89
+review:
+  strengths:
+  - Perfect spec compliance with all required tornado diagram features implemented
+  - Excellent data quality with realistic NPV sensitivity analysis and correct inverse
+    effects
+  - Strong visual design with custom blue/gold palette and emphasis on top parameter
+  - Clean, well-structured code with deterministic data
+  weaknesses:
+  - Minor Base Case label overlap with x-axis tick at zero
+  - Right side of canvas has some unused space
+  - Could use chart.to_js_literal() for more idiomatic Highcharts rendering
+  image_description: 'The plot displays a horizontal bar chart (tornado diagram) for
+    NPV sensitivity analysis. Ten parameters are listed on the y-axis, sorted by total
+    range with Discount Rate at the top and Inflation Rate at the bottom. Two series
+    are shown: "Low Scenario" in steel blue (#306998) and "High Scenario" in amber/gold
+    (#E8A838). Bars extend left (negative change) and right (positive change) from
+    a vertical reference line at zero labeled "Base Case." The top parameter (Discount
+    Rate) uses darker color variants for visual emphasis. Data labels show numeric
+    values at bar ends (e.g., -4.4, 4.7). The title reads "bar-tornado-sensitivity
+    · highcharts · pyplots.ai" with a subtitle "NPV Sensitivity Analysis — Base Case:
+    $12.5M." The x-axis is labeled "Change in NPV ($M)" ranging from -5 to 6. Background
+    is white with a subtle light gray plot area and dotted grid lines.'
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 48px, subtitle 34px, axis labels
+          30px, tick labels 26px, data labels 26px'
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Minor overlap between Base Case plot line label and x-axis 0 tick
+          label
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Bars clearly visible with appropriate sizing and good padding between
+          groups
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue and amber/gold palette is colorblind-safe with excellent contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good proportions overall, slight excess space on right side of canvas
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: X-axis labeled Change in NPV ($M) with units, descriptive parameter
+          names on y-axis
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom blue/gold palette with emphasis colors on top parameter, professional
+          typography, subtle plot background
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Dotted grid at low opacity, removed axis lines/ticks, border radius
+          on bars, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Top parameter emphasized with darker colors, sorted by magnitude,
+          subtitle provides base case context
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct horizontal bar chart creating tornado diagram shape
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: reference line, sorting, dual colors,
+          labels, data labels'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X-axis correctly shows change in NPV, y-axis shows parameters with
+          correct inverse effects
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title follows exact format, legend correctly labels Low and High
+          Scenario
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 10 parameters with varying ranges, inverse effects, characteristic
+          tornado shape
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: NPV sensitivity analysis for capital investment with realistic financial
+          parameters
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Base NPV $12.5M with variations ±$0.5M to ±$4.7M, realistic for capital
+          project
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean linear flow: imports, data, chart config, series, render,
+          screenshot'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: All data is deterministic with hardcoded values
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports are used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean and well-organized, per-point color override for emphasis is
+          elegant
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png via Selenium screenshot, current API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Proper highcharts_core usage but uses json.dumps(to_dict()) instead
+          of to_js_literal()
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses plotLines, plotBackgroundColor, per-point colors, borderRadius,
+          textOutline, floating legend
+  verdict: REJECTED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - html-export
+  - hover-tooltips
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - grid-styling

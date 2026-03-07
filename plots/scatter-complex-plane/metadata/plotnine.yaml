@@ -1,0 +1,230 @@
+library: plotnine
+specification_id: scatter-complex-plane
+created: '2026-03-04T20:26:38Z'
+updated: '2026-03-04T20:58:11Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22687521661
+issue: 4427
+python_version: 3.14.3
+library_version: 0.15.3
+preview_url: https://storage.googleapis.com/pyplots-images/plots/scatter-complex-plane/plotnine/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/scatter-complex-plane/plotnine/plot_thumb.png
+preview_html: null
+quality_score: 89
+review:
+  strengths:
+  - Excellent spec compliance with all required features present and well-implemented
+  - Strong data storytelling with parallelogram rule demonstrating complex addition
+  - Custom color palette with intentional visual hierarchy (halo rings, size variation,
+    color categories)
+  - Clean idiomatic plotnine code using layered grammar of graphics effectively
+  - Perfect data quality with educational context showing roots of unity and complex
+    arithmetic
+  weaknesses:
+  - Annotation label font size (9) is slightly small compared to other text elements
+  - Central area where vectors converge is somewhat crowded
+  - DE-03 storytelling could be stronger with more visual emphasis on the parallelogram
+    addition rule
+  image_description: 'The plot shows an Argand diagram (complex plane) on a square
+    canvas with a light gray panel background. The title "scatter-complex-plane ·
+    plotnine · pyplots.ai" appears in large bold text at the top. The x-axis is labeled
+    "Re(z)" and y-axis "Im(z)", both ranging from -2 to 2. A dashed gray unit circle
+    is centered at the origin with an italic "|z| = 1" label at 45 degrees. Light
+    gray reference axes cross through the origin. There are 11 points in three categories:
+    5 dark navy blue points (5th roots of unity, ω0–ω4) sitting on the unit circle
+    with subtle halo rings, 5 orange points (arbitrary complex numbers z₁–z₅) spread
+    across all quadrants, and 1 green point (z₁+z₂) showing complex addition. Arrows
+    extend from the origin to each point. Dotted green lines form the parallelogram
+    rule from z₁ and z₂ to their sum. Each point has a white-background label box
+    showing its name and rectangular form (e.g., "z₃ = 0.40+1.80i"). A bottom legend
+    distinguishes the three categories: "5th Root of Unity (|z| = 1)", "Arbitrary
+    Point", and "Sum (z₁ + z₂)".'
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set. Annotation labels at size=9 slightly
+          small but readable with white-fill boxes.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Labels use geom_label with white background preventing most issues.
+          Some crowding near origin where vectors converge.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Points clearly visible with appropriate sizing for 11 data points.
+          Halo rings on roots of unity add emphasis.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Navy blue, orange, and green are distinguishable for all color vision
+          types.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square 12x12 format with equal aspect ratio. Good canvas utilization
+          with balanced margins.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Re(z) and Im(z) are descriptive standard notation for complex plane.
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom three-color palette with intentional hierarchy. Halo rings,
+          styled label boxes, refined typography. Above configured defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: theme_minimal base, minor grid removed, major grid very subtle, light
+          panel background, styled legend with border.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Parallelogram rule for complex addition, size hierarchy, halo rings
+          guide the eye. Good hierarchy but could push storytelling further.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Argand diagram with scatter points and vectors.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All required features present: axes through origin, dashed unit
+          circle, vectors with arrows, equal aspect ratio, annotations, distinct colors.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Real part on x-axis, imaginary on y-axis. All data visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title follows exact format. Legend labels are descriptive and accurate.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows 5th roots of unity, arbitrary points across all quadrants,
+          and complex addition with parallelogram rule.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Mathematics/education context with roots of unity and complex arithmetic.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values span ±2, unit circle at radius 1. Sensible scale for the domain.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports, data, plot, save. No functions or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: All data is deterministic, no random generation.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports are used in the plot construction.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-structured layered grammar approach. HA-splitting workaround
+          is practical for plotnine.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png at 300 dpi.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expertly uses plotnine grammar of graphics: layered geoms, aes mappings,
+          scale functions, coord_fixed, guide_legend.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses scale_size_identity/scale_alpha_identity, guide_legend(override_aes),
+          geom_label with boxstyle. Distinctive ggplot2/plotnine patterns.
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  - custom-legend
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling

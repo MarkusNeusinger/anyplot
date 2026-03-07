@@ -1,0 +1,234 @@
+library: pygal
+specification_id: heatmap-stripes-climate
+created: '2026-03-06T02:36:57Z'
+updated: '2026-03-06T03:14:45Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22746425916
+issue: 4423
+python_version: 3.14.3
+library_version: 3.1.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/heatmap-stripes-climate/pygal/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/heatmap-stripes-climate/pygal/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/heatmap-stripes-climate/pygal/plot.html
+quality_score: 87
+review:
+  strengths:
+  - Excellent warming stripes visualization with custom 9-stop Ed Hawkins-style diverging
+    palette
+  - Strong data storytelling - warming trend immediately visible through pure color
+    encoding
+  - Dual output (PNG + interactive HTML) leverages pygal SVG strengths with year/anomaly
+    tooltips
+  - Realistic temperature anomaly data with appropriate scale and variability
+  - Very clean minimalist design faithful to the warming stripes concept
+  weaknesses:
+  - Duplicated chart configuration between PNG and HTML versions adds code verbosity
+  - Regex SVG post-processing to remove axis lines is fragile
+  - Year labels deviate slightly from no-labels spec requirement
+  - sys.path manipulation adds import complexity
+  image_description: 'The plot displays climate warming stripes spanning 1850-2024
+    as a sequence of contiguous vertical colored bars. The left portion is dominated
+    by deep blues and medium blues, representing negative temperature anomalies from
+    the 1850s through early 1900s. The center transitions through lighter blues and
+    near-white bars around the mid-20th century (near-zero anomalies). The right portion
+    progresses through salmon/orange tones to deep reds and maroons for the most recent
+    decades, clearly communicating accelerating warming. The title "heatmap-stripes-climate
+    · pygal · pyplots.ai" is centered at the top in dark text. Only two year labels
+    appear at the bottom corners: "1850" (left) and "2024" (right). The canvas is
+    4800x1600px (3:1 aspect ratio) with a white background. No axes, gridlines, or
+    legends are present — this is a minimalist pure-color visualization.'
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Font sizes explicitly set (title=48, label=24, major_label=28). Title
+          and year labels clearly readable.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text. Only two year labels plus title, all well-separated.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Bars clearly visible creating warming stripes effect. Minor SVG-to-PNG
+          rendering artifacts create faint seams.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue-to-red diverging colormap appropriate for warming stripes. Symmetric
+          around zero.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: 3:1 aspect ratio per spec. Plot fills most of canvas. Bottom margin
+          slightly large.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title follows required format. Minimal year labels provide essential
+          temporal context.
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom 9-stop Ed Hawkins-style diverging palette. Intentional minimalism.
+          Above configured default.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Excellent minimalism: no grid, no guides, no spines, zero spacing.
+          Clean white background.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Blue-to-red progression makes warming trend immediately obvious.
+          Data choice reinforces narrative.
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct: warming stripes as sequential vertical colored bars, one
+          per year.'
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: 'All features present. Minor deviation: year labels added despite
+          spec saying no labels.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X-axis maps to years (1850-2024), color maps to temperature anomaly.
+          All 175 years represented.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title follows required format. No legend correct for single-series
+          viz.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Full range: negative anomalies (blues), near-zero (whites), positive
+          (reds). Clear warming trend with variability.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Global temperature anomalies relative to 1961-1990 baseline. Neutral
+          scientific topic. Matches real observations.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Anomalies ~-0.5 to +1.2C, realistic for global temperature record.
+          Noise level creates plausible variability.
+    code_quality:
+      score: 8
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Follows imports-data-plot-save flow but duplicates chart config for
+          HTML version. sys.path workaround adds complexity.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set for deterministic data generation.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: importlib, re, sys, numpy, pygal, Style, cairosvg.'
+      - id: CQ-04
+        name: Code Elegance
+        score: 1
+        max: 2
+        passed: true
+        comment: Duplicated chart config is verbose. Regex SVG manipulation is pragmatic
+          but fragile.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot.png via cairosvg. Current API usage.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses pygal.Bar with custom Style, per-item color dicts, x_labels.
+          Relies on regex post-processing for axis removal.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: HTML interactive version with year tooltips leverages pygal SVG interactivity.
+          x_labels_major, per-value color/label dicts.
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - cairosvg
+  techniques:
+  - html-export
+  - custom-legend
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - custom-colormap

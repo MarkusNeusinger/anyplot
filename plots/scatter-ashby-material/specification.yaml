@@ -1,0 +1,31 @@
+# Specification-level metadata for scatter-ashby-material
+# Auto-synced to PostgreSQL on push to main
+
+spec_id: scatter-ashby-material
+title: Ashby Material Selection Chart
+
+# Specification tracking
+created: "2026-03-07T20:32:38Z"
+updated: null
+issue: 4677
+suggested: MarkusNeusinger
+
+# Classification tags (applies to all library implementations)
+# See docs/reference/tagging-system.md for detailed guidelines
+tags:
+  plot_type:
+    - scatter
+    - bubble
+  data_type:
+    - numeric
+    - continuous
+    - categorical
+  domain:
+    - engineering
+    - science
+    - education
+  features:
+    - log-scale
+    - color-mapped
+    - annotated
+    - comparison

@@ -1,0 +1,238 @@
+library: plotnine
+specification_id: bar-diverging-likert
+created: '2026-03-04T06:05:46Z'
+updated: '2026-03-04T06:37:35Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22657236142
+issue: 4429
+python_version: 3.14.3
+library_version: 0.15.3
+preview_url: https://storage.googleapis.com/pyplots-images/plots/bar-diverging-likert/plotnine/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/bar-diverging-likert/plotnine/plot_thumb.png
+preview_html: null
+quality_score: 90
+review:
+  strengths:
+  - 'Flawless visual quality: all text explicitly sized, no overlap, perfect canvas
+    utilization'
+  - Custom diverging palette with contrast-aware label colors demonstrates design
+    intentionality
+  - Data sorted by net agreement creates immediate visual storytelling
+  - Vectorized cumsum computation for stacking positions is elegant and efficient
+  - 'Perfect spec compliance: all required features implemented correctly'
+  - Clean, well-structured code following KISS principles
+  weaknesses:
+  - DE-01 could reach 7-8 with more typographic refinement (e.g., custom font family,
+    more nuanced color gradients)
+  - Data lacks a question with negative net agreement, which would better showcase
+    the diverging nature of the chart
+  - LM-01 could improve with higher-level plotnine patterns if available for diverging
+    bars
+  image_description: The plot shows a horizontal diverging stacked bar chart for Likert
+    scale survey responses on employee engagement. Ten survey questions are displayed
+    on the y-axis, sorted by net agreement from highest (Team collaboration at top)
+    to lowest (Compensation & benefits at bottom). Bars diverge from a central zero
+    line, with negative responses extending left in red tones (Strongly Disagree in
+    dark red, Disagree in light pink) and positive responses extending right in blue
+    tones (Agree in light blue, Strongly Agree in dark blue). Neutral responses appear
+    in muted gray, centered and split evenly across the midpoint. Percentage labels
+    in bold appear inside bar segments >= 10%, with contrast-aware colors (white on
+    dark segments, dark text on light). A vertical center line at 0% is prominent.
+    An italic directional annotation points left for Disagree and right for Agree
+    above the bars. The title reads "bar-diverging-likert · plotnine · pyplots.ai"
+    centered at top. A horizontal legend at the bottom displays all five response
+    categories. The x-axis is labeled "Percentage of Responses" with absolute percentage
+    tick labels. The layout uses a 16:9 aspect ratio with clean, minimal styling.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title=24, axis_title=20, axis_text=16,
+          legend=16, base=14. In-bar labels size=11 bold readable.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlap. Annotation above bars. Labels suppressed for segments
+          <10%.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All bar segments visible and appropriately sized. Bar height 0.7
+          provides good separation.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Red-blue diverging palette is colorblind-safe with good contrast
+          between all categories.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills ~65-70% of canvas. Balanced margins. 16:9 aspect ratio
+          suits horizontal bars.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: X-axis 'Percentage of Responses' is descriptive. Y-axis intentionally
+          blank for question labels.
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom red-gray-blue diverging palette. Contrast-aware label colors.
+          Bold percentage labels. Professional polish above defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'theme_minimal() with targeted refinements: y-grid removed, minor
+          grid removed, x-grid subtle dashed. Prominent center line.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Sorted by net agreement creates visual hierarchy. Directional annotation
+          guides interpretation. Intuitive red-blue color coding.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct diverging stacked bar chart with horizontal orientation.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: center on neutral, diverging colors, sort
+          by net agreement, percentage labels, horizontal orientation.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Questions on Y, percentages on X. Neutral split at midpoint. All
+          data visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title in correct format. Legend at bottom with all 5 categories in
+          order.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Good variation across 10 questions. Demonstrates diverging pattern.
+          Minor: all questions have positive net agreement.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Employee engagement survey with real-world topics. Neutral and non-controversial.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Percentages sum to 100%. Realistic values for organizational surveys.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean linear flow: Imports, Data, Sort, Reshape, Position, Plot,
+          Save. No functions or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic hardcoded data.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All 18 plotnine imports are used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Vectorized cumsum for stacking. pd.Categorical for ordering. Clean
+          and Pythonic.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with dpi=300. Current plotnine API.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Strong grammar-of-graphics composition. pd.Categorical for factor
+          control. scale_*_manual for custom aesthetics. geom_rect appropriate for
+          diverging bars.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: pd.Categorical with ordered=True, guide_legend(nrow=1), grammar composition
+          with + operator, scale_y_continuous with custom labels.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  patterns:
+  - wide-to-long
+  dataprep:
+  - cumulative-sum
+  styling:
+  - grid-styling

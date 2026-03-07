@@ -1,0 +1,230 @@
+library: matplotlib
+specification_id: bar-tornado-sensitivity
+created: '2026-03-07T08:44:42Z'
+updated: '2026-03-07T09:05:22Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22795810088
+issue: 4566
+python_version: 3.14.3
+library_version: 3.10.8
+preview_url: https://storage.googleapis.com/pyplots-images/plots/bar-tornado-sensitivity/matplotlib/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/bar-tornado-sensitivity/matplotlib/plot_thumb.png
+preview_html: null
+quality_score: 90
+review:
+  strengths:
+  - Perfect spec compliance with all required tornado chart features plus optional
+    bar-end value labels
+  - Strong color palette (teal/coral) that is both aesthetically pleasing and colorblind-safe
+  - Effective data storytelling through intensity gradient on bars and bold emphasis
+    on top 3 parameters
+  - Clean visual refinement with spine removal, subtle grid, and PathEffects text
+    halos
+  - Clean, deterministic KISS code structure with all imports purposefully used
+  weaknesses:
+  - Minor excess horizontal padding on x-axis beyond data range
+  - DQ-01 could show more varied asymmetric effects across parameters
+  - LM-02 could leverage more deeply distinctive matplotlib features
+  image_description: 'The plot shows a horizontal tornado diagram for NPV sensitivity
+    analysis of a capital investment project. Ten financial parameters are listed
+    on the y-axis, sorted by total range with "Revenue Growth" (widest) at top and
+    "Salvage Value" (narrowest) at bottom. Teal bars represent "Low Scenario" and
+    warm coral bars represent "High Scenario", extending left and right from a vertical
+    dark gray base case reference line at $12.5M. An annotation "Base Case: $12.5M"
+    appears near the top of the reference line. Each bar end is labeled with its dollar
+    value (e.g., "$8.2M", "$17.3M") using white-outlined text for readability. The
+    top 3 parameters (Revenue Growth, Discount Rate, Terminal Value) have bold, slightly
+    larger y-tick labels. Bars have an intensity gradient — wider bars are more saturated,
+    narrower bars are more translucent. The x-axis shows "Net Present Value" with
+    dollar formatting ($8M to $18M). Top, right, and left spines are removed; subtle
+    vertical gridlines at alpha=0.2 are visible. A frameless legend in the lower right
+    identifies the two colors.'
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 24pt, xlabel 20pt, yticks 16-17pt,
+          xticks 16pt, legend 16pt, bar labels 11-12pt'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: All text well-separated; bar-end labels properly offset with PathEffects
+          white stroke halo
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Bars well-sized at height=0.6; intensity gradient (alpha 0.45-1.0)
+          keeps even narrower bars visible
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Teal (#2A9D8F) and coral (#E76F51) are colorblind-safe with strong
+          luminance contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: false
+        comment: Good canvas utilization with tight_layout; x-axis extends slightly
+          beyond data range
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Net Present Value with dollar formatting on ticks via FuncFormatter
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom teal/coral palette, white bar edges, per-bar intensity gradient,
+          PathEffects text outlines, bold top-3 labeling
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Top/right/left spines removed, subtle x-grid alpha=0.2, y-tick length=0,
+          frameon=False legend, white bar edgecolor
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Intensity gradient emphasizes wider bars; bold/larger font for top
+          3 parameters creates focal point; base case annotation orients viewer
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct horizontal tornado/sensitivity bar chart
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Vertical base case reference line, sorted by range, dual colors,
+          parameter labels, bar-end value labels
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X-axis is output metric (NPV), y-axis is input parameters
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct format with matching legend labels
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: 10 parameters with good range variation; asymmetric effects present;
+          both directions of sensitivity shown
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: NPV sensitivity for capital investment project, neutral financial
+          domain
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: NPV values $8M-$17M realistic for capital project analysis
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean imports → data → sort → compute deltas → plot → style → save
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic hardcoded data, no random generation
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All four imports used: patheffects, pyplot, ticker, numpy'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic, appropriate complexity with well-structured loops
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png, dpi=300, bbox_inches='tight', current API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good Axes API usage, barh with left parameter, axvline, FuncFormatter
+          for dollar formatting
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: PathEffects for text stroke outlines is distinctively matplotlib;
+          FuncFormatter for currency; per-bar alpha control
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - manual-ticks
+  patterns:
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
+  - grid-styling

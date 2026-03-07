@@ -1,0 +1,225 @@
+library: matplotlib
+specification_id: bar-diverging-likert
+created: '2026-03-04T06:05:35Z'
+updated: '2026-03-04T06:18:33Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22657236150
+issue: 4429
+python_version: 3.14.3
+library_version: 3.10.8
+preview_url: https://storage.googleapis.com/pyplots-images/plots/bar-diverging-likert/matplotlib/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/bar-diverging-likert/matplotlib/plot_thumb.png
+preview_html: null
+quality_score: 92
+review:
+  strengths:
+  - All 5 spec requirements implemented comprehensively (center on neutral, diverging
+    colors, sorted by net agreement, percentage labels, horizontal bars)
+  - Net agreement annotations on the right add genuine analytical value beyond the
+    spec
+  - Clean professional diverging color scheme with muted neutral and white edge separators
+  - Excellent text legibility with all font sizes explicitly and appropriately set
+  - Data tells a clear story with sorting and the one negative net score creating
+    a focal point
+  weaknesses:
+  - Bottom x-axis spine still visible, breaking the otherwise minimal chrome aesthetic
+  - The hasattr check in the label loop is slightly inelegant since data always comes
+    from a DataFrame
+  image_description: 'The plot displays a horizontal diverging stacked bar chart showing
+    employee engagement survey results for 10 questions. Bars diverge from a central
+    zero line, with negative responses (Strongly Disagree in dark red #c0392b, Disagree
+    in salmon #e77a6d) extending left and positive responses (Agree in light blue
+    #6dacde, Strongly Agree in dark blue #2471a3) extending right. Neutral responses
+    are shown in muted gray (#b0b0b0), split evenly across the center. Questions are
+    sorted from highest net agreement ("Resources are adequate" at +72) to lowest
+    ("Leadership inspires confidence" at -4). Percentage labels appear inside segments
+    ≥7%, with white text on dark segments and dark text on lighter ones. A "Net" column
+    on the right shows net agreement scores color-coded blue (positive) or red (negative).
+    The x-axis uses ± percentage labels at 20% intervals. The legend at the bottom
+    shows all 5 categories. Top, right, and left spines are removed. A subtle x-axis
+    grid (alpha=0.15) aids readability.'
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 24pt, xlabel 20pt, yticks 16pt,
+          xticks 16pt, legend 16pt, annotations 14pt'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text collisions; small segments (<7%) correctly omit labels
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Bar height 0.7 well-proportioned for 10 items; white edgecolor separates
+          adjacent segments
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Red-to-blue diverging scheme is colorblind-safe with luminance differences
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 16:9 canvas well-utilized; margins balanced with question labels
+          and Net column
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive xlabel with units shown via tick formatter
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom red-to-blue palette, white bar separators, bold net annotations,
+          professional typography
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Three spines removed, subtle grid, frameon=False legend, clean whitespace;
+          bottom spine still visible
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Sorted by net agreement; color-coded net column; one negative score
+          creates focal point
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct diverging stacked bar chart with horizontal orientation
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: center on neutral, diverging colors,
+          sorted, labels, horizontal'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Questions Y-axis, percentages X-axis; negative left, positive right
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct title format and legend labels match all 5 categories
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 10 questions with diverse distributions; range from +72 to -4 net
+          agreement
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Employee engagement survey is common, neutral, real-world Likert
+          scale application
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: All rows sum to 100%; values 2-48% realistic for survey data
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Flat structure: imports, data, processing, plot, style, save'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Hand-crafted deterministic data, no randomness
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All 4 imports used: plt, mticker, np, pd'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean organization with categories_order tuple list; no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png at 300 DPI; no deprecated API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Axes-level methods, ticker formatting, zorder layering
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Mixed coordinate annotations, FuncFormatter, manual diverging bar
+          positioning
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - manual-ticks
+  patterns:
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - edge-highlighting
+  - grid-styling

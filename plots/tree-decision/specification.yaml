@@ -1,0 +1,25 @@
+spec_id: tree-decision
+title: Decision Tree Visualization with Probabilities
+
+# Specification tracking
+created: "2026-03-06T19:53:14Z"
+updated: null
+issue: 4569
+suggested: MarkusNeusinger
+
+# Classification tags
+tags:
+  plot_type:
+    - tree
+    - dendrogram
+  data_type:
+    - hierarchical
+    - numeric
+    - categorical
+  domain:
+    - business
+    - finance
+  features:
+    - annotated
+    - stepwise
+    - comparison

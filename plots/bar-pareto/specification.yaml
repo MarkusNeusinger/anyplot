@@ -1,0 +1,28 @@
+# Specification-level metadata for bar-pareto
+# Auto-synced to PostgreSQL on push to main
+
+spec_id: bar-pareto
+title: Pareto Chart with Cumulative Line
+
+# Specification tracking
+created: "2026-03-06T19:51:34Z"
+updated: null
+issue: 4550
+suggested: MarkusNeusinger
+
+# Classification tags (applies to all library implementations)
+# See docs/reference/tagging-system.md for detailed guidelines
+tags:
+  plot_type:
+    - bar
+    - line
+  data_type:
+    - categorical
+    - numeric
+  domain:
+    - business
+    - engineering
+  features:
+    - cumulative
+    - ranking
+    - annotated

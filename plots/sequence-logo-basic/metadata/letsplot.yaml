@@ -1,0 +1,237 @@
+library: letsplot
+specification_id: sequence-logo-basic
+created: '2026-03-06T20:26:04Z'
+updated: '2026-03-06T20:56:37Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22780525013
+issue: 4421
+python_version: 3.14.3
+library_version: 4.8.2
+preview_url: https://storage.googleapis.com/pyplots-images/plots/sequence-logo-basic/letsplot/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/sequence-logo-basic/letsplot/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/sequence-logo-basic/letsplot/plot.html
+quality_score: 79
+review:
+  strengths:
+  - Excellent realistic data choice (TATA-box motif) that immediately communicates
+    biological meaning
+  - Semi-transparent background rectangles are a creative solution that adds structure
+    and helps visualize letter boundaries
+  - Clean well-organized code with proper information content calculation
+  - Good use of lets-plot-specific features (layer_tooltips with formatted biological
+    data, HTML export)
+  - 'Strong visual refinement: subtle grid, removed x-grid lines, explicit font sizing'
+  weaknesses:
+  - Letters are not stretched to fill their allocated height as true sequence logos
+    require — fundamental lets-plot limitation with text rendering
+  - Small-frequency letters at the base of stacks are very small and hard to read
+  - Color scheme uses green+red which is challenging for colorblind users (though
+    spec-mandated for DNA)
+  image_description: 'The plot displays a sequence logo for a 10-position DNA transcription
+    factor binding site (TATA-box-like motif). At each position, nucleotide letters
+    (A, C, G, T) are stacked vertically with heights proportional to information content
+    in bits. Standard DNA colors are used: A=green, C=blue, G=orange, T=red. Semi-transparent
+    background rectangles behind each letter stack add visual depth. Positions 2-5
+    show the conserved TATA core with large dominant letters (T, A, T, A). Positions
+    1, 9, and 10 have no visible letters (uniform distribution = 0 bits). Positions
+    7 (G) and 8 (C) show moderate conservation. The y-axis ranges from 0 to 1.4 bits
+    with subtle horizontal gridlines. A "Nucleotide" legend with colored squares appears
+    on the right. The title reads "sequence-logo-basic · letsplot · pyplots.ai". Overall
+    layout is clean with good canvas utilization.'
+  criteria_checklist:
+    visual_quality:
+      score: 23
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: Font sizes explicitly set. Main letters readable; small-frequency
+          letters at stack bases are very small due to size scaling.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Small letters at bottom of stacks slightly crowded at positions 2-4,
+          but no significant overlap.
+      - id: VQ-03
+        name: Element Visibility
+        score: 4
+        max: 6
+        passed: true
+        comment: Dominant letters clearly visible. Background rectangles aid visibility.
+          Small-frequency letters at base are quite tiny.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 3
+        max: 4
+        passed: true
+        comment: Standard DNA colors (green/blue/orange/red) as spec-mandated. Green+red
+          can challenge colorblind users.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good canvas utilization (~60%). Empty positions 1, 9, 10 create some
+          whitespace reflecting the data.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Position and Information content (bits) — descriptive with units.
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Custom DNA palette, semi-transparent background rectangles, bold
+          letters, minimal theme. Above defaults but not publication-level.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: theme_minimal(), x-grid removed, subtle y-grid only, white background,
+          generous spacing.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: TATA-box motif creates natural visual hierarchy. Conserved core dominates
+          visually.
+    spec_compliance:
+      score: 12
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 3
+        max: 5
+        passed: false
+        comment: Sequence logo with stacked letters scaled by info content, but letters
+          not stretched to fill rectangles as spec requires — lets-plot limitation.
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: Vertical stacking, info content scaling, standard colors, frequency
+          ordering, axis labels all present. Missing stretched glyph rendering.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=position, Y=information content. Correct mapping with proper calculation.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct. Legend shows all four nucleotides with correct
+          color-coded squares.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows high conservation (pos 2-5, 7-8), low conservation (pos 1,
+          9-10), and mixed (pos 6).
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: TATA-box-like transcription factor binding site — a real, well-known
+          biological motif.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Information content 0 to ~1.4 bits, realistic for 4-letter DNA alphabet
+          (max 2 bits).
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports, data, calculation, plot, save. No functions
+          or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic hardcoded frequency data.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports (numpy, pandas, lets_plot) are used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-organized code. Invisible legend points technique is
+          a reasonable workaround.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with scale=3 for 4800x2700. Current API.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Good ggplot grammar: aes(), multiple geom layers, scale_*_manual(),
+          theme customization, guides().'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses layer_tooltips() with custom formatting — a distinctive lets-plot
+          interactive feature. Also exports HTML.
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - custom-legend
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - normalization
+  styling:
+  - grid-styling
+  - alpha-blending

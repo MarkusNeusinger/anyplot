@@ -1,0 +1,29 @@
+# Specification-level metadata for bar-tornado-sensitivity
+# Auto-synced to PostgreSQL on push to main
+
+spec_id: bar-tornado-sensitivity
+title: Tornado Diagram for Sensitivity Analysis
+
+# Specification tracking
+created: "2026-03-06T19:53:01Z"
+updated: null
+issue: 4566
+suggested: MarkusNeusinger
+
+# Classification tags (applies to all library implementations)
+# See docs/reference/tagging-system.md for detailed guidelines
+tags:
+  plot_type:
+    - bar
+  data_type:
+    - numeric
+    - categorical
+  domain:
+    - finance
+    - business
+    - engineering
+  features:
+    - horizontal
+    - comparison
+    - ranking
+    - annotated

@@ -1,0 +1,25 @@
+spec_id: piano-roll-midi
+title: MIDI Piano Roll Visualization
+
+# Specification tracking
+created: "2026-03-06T19:52:49Z"
+updated: null
+issue: 4565
+suggested: MarkusNeusinger
+
+# Classification tags
+tags:
+  plot_type:
+    - heatmap
+    - bar
+  data_type:
+    - numeric
+    - discrete
+    - temporal
+  domain:
+    - music
+    - education
+  features:
+    - color-mapped
+    - annotated
+    - temporal

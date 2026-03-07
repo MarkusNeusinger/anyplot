@@ -1,0 +1,28 @@
+# Specification-level metadata for lightcurve-transit
+# Auto-synced to PostgreSQL on push to main
+
+spec_id: lightcurve-transit
+title: Astronomical Light Curve
+
+# Specification tracking
+created: "2026-03-06T19:52:23Z"
+updated: null
+issue: 4559
+suggested: MarkusNeusinger
+
+# Classification tags (applies to all library implementations)
+# See docs/reference/tagging-system.md for detailed guidelines
+tags:
+  plot_type:
+    - line
+    - scatter
+  data_type:
+    - timeseries
+    - numeric
+    - continuous
+  domain:
+    - science
+  features:
+    - annotated
+    - temporal
+    - correlation

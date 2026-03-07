@@ -1,0 +1,220 @@
+library: altair
+specification_id: bar-tornado-sensitivity
+created: '2026-03-07T08:44:54Z'
+updated: '2026-03-07T09:15:29Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22795810076
+issue: 4566
+python_version: 3.14.3
+library_version: 6.0.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/bar-tornado-sensitivity/altair/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/bar-tornado-sensitivity/altair/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/bar-tornado-sensitivity/altair/plot.html
+quality_score: 92
+review:
+  strengths:
+  - Excellent tornado shape with proper descending sort by influence magnitude
+  - Color-matched value labels at bar ends provide immediate readability
+  - Interactive hover highlight and click selection work in HTML export
+  - Clean idiomatic Altair code with good layer composition and declarative encoding
+  - Realistic NPV sensitivity scenario with well-chosen financial parameters
+  weaknesses:
+  - Value annotation labels at 16pt could be slightly larger (18pt) for better readability
+  image_description: 'The plot displays a horizontal tornado (butterfly) bar chart
+    showing NPV sensitivity analysis for 8 financial parameters. Bars extend left
+    and right from a dashed vertical base case reference line at $250M. Blue (#306998)
+    bars represent the "Low Scenario" and orange (#E8853A) bars represent the "High
+    Scenario". Parameters are sorted by total range descending: Discount Rate (widest,
+    $195-$320) at top through Inflation Rate (narrowest, $238-$265) at bottom, creating
+    the classic tornado shape. Dollar values are labeled at each bar end in bold,
+    color-matched text. The title reads "bar-tornado-sensitivity · altair · pyplots.ai"
+    with a subtitle explaining the analysis. A "Base Case: $250M" label appears near
+    the reference line. Legend at bottom shows both scenario colors. Background is
+    light gray (#FAFAFA) with muted axis chrome.'
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 28pt, axis titles 22pt, tick
+          labels 18pt, annotations 16pt). Value labels at 16pt slightly small but
+          readable.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or elements anywhere.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Bars well-sized with height=38 and cornerRadius=3, good visibility
+          at all widths.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue/orange pair is excellent for colorblind accessibility.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Chart fills canvas well with balanced margins.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: X-axis labeled Net Present Value ($M) with units.
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom Python Blue + complementary orange palette, color-matched
+          value labels, rounded corners, light background.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Grid removed, view stroke removed, #FAFAFA background, muted axis
+          colors, well-configured bottom legend.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Tornado sorting creates natural hierarchy. Subtitle contextualizes
+          insight. Base case label anchors the reader.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct horizontal tornado/butterfly bar chart.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: reference line, sorting, dual colors,
+          labels, value annotations.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Parameters on y-axis, NPV on x-axis, correct orientation.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct, legend labels match data.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 8 parameters with good variation in ranges creating clear tornado
+          shape.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: NPV sensitivity for capital investment with real financial parameter
+          names.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: NPV values $195M-$320M around $250M base case are realistic.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean imports, data, chart layers, composition, save flow.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic data, no randomness.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only altair and pandas imported, both used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean code, interactive selections are legitimate Altair features.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot.png with scale_factor=3.0 and plot.html.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert use of Altair declarative grammar, encoding types, layer composition,
+          configure methods.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses selection_point, transform_filter, x/x2 encoding, conditional
+          encoding, HTML export.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - minimal-chrome

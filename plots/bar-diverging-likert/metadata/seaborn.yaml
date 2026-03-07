@@ -1,0 +1,233 @@
+library: seaborn
+specification_id: bar-diverging-likert
+created: '2026-03-04T06:06:58Z'
+updated: '2026-03-04T06:37:35Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22657236136
+issue: 4429
+python_version: 3.14.3
+library_version: 0.13.2
+preview_url: https://storage.googleapis.com/pyplots-images/plots/bar-diverging-likert/seaborn/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/bar-diverging-likert/seaborn/plot_thumb.png
+preview_html: null
+quality_score: 92
+review:
+  strengths:
+  - Perfect spec compliance with all 5 Likert requirements implemented correctly (centered
+    neutral, diverging colors, net-agreement sorting, percentage labels, horizontal
+    orientation)
+  - 'Excellent visual polish: custom warm tan neutral, white edge separation, bold
+    emphasis on extremes, subtle grid, clean typography'
+  - Strong data storytelling through sorted order and bold emphasis on key findings
+    — viewer immediately grasps strong vs weak areas
+  - 'Successfully addressed all issues from attempt 2: switched to sns.barplot(),
+    improved neutral color accessibility, added bold emphasis on extreme questions'
+  weaknesses:
+  - Library mastery could be slightly higher if seaborn offered a native diverging
+    stacked bar function — the overlay technique is the best available approach but
+    still somewhat manual
+  - Data storytelling could be elevated further with a summary annotation or callout
+    highlighting the key insight
+  image_description: 'The plot displays a horizontal diverging stacked bar chart titled
+    "Employee Engagement Survey · bar-diverging-likert · seaborn · pyplots.ai". Eight
+    survey questions are arranged vertically, sorted by net agreement from Team collaboration
+    (most positive, top) to Compensation & benefits (most negative, bottom). Bars
+    diverge from a central black vertical line at 0%. Left side: Strongly Disagree
+    in dark red, Disagree in salmon/peach. Right side: Agree in light blue, Strongly
+    Agree in medium blue. Neutral segments in warm tan/beige are split evenly across
+    the center. Percentage labels (14pt) appear inside segments ≥10% — white text
+    on dark backgrounds, dark text on light backgrounds. X-axis shows absolute percentages
+    (0%–80%) with "Percentage" label. Legend below with all 5 Likert categories. Top/right
+    spines removed, subtle x-grid (alpha ~0.15). The extreme question labels ("Team
+    collaboration" and "Compensation & benefits") are bolded for emphasis. White edge
+    lines on bars provide clean segment separation.'
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 24pt, xlabel 20pt, yticks/xticks
+          16pt, bar labels 14pt, legend 14pt'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text; labels hidden for segments < 10%
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Bar height 0.65 with white edge lines provides clear segment separation
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: RdBu colorblind-safe palette with warm tan neutral clearly distinct
+          from blue and red tones
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 16:9 figure fills canvas well; tight_layout with bbox_inches tight
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive Percentage label with % on tick marks
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom RdBu palette with warm tan neutral, white edge separation,
+          bold emphasis on extremes — cohesive professional design
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines removed, subtle x-grid, clean central axis, white edge highlighting
+          — nearly every detail polished
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Net-agreement sorting and bold labels on extremes create clear narrative
+          arc
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct diverging stacked bar chart with neutral split at center
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: centered neutral, diverging colors, sorting,
+          percentage labels, horizontal'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Questions on Y-axis, percentages on X-axis, all correctly mapped
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title contains required format with descriptive prefix; legend labels
+          all 5 categories
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Full range from strongly positive to negative net agreement; good
+          segment size variation
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Employee engagement survey with realistic HR topics; neutral, business-appropriate
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: All rows sum to 100%; values realistic for employee surveys
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean linear flow: imports, data, sort, palette, plot, labels, style,
+          save'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hardcoded data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All 5 imports used: plt, mticker, pd, sns, Patch'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean overlay technique; concise segment labeling with threshold
+          filtering
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png at 300 dpi; current seaborn API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses sns.barplot() for all bar rendering; leverages full theming
+          ecosystem and axes-level API
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: sns.color_palette, sns.set_context, sns.despine, sns.barplot with
+          order parameter — multiple seaborn-specific features
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  - layer-composition
+  patterns:
+  - data-generation
+  - explicit-figure
+  dataprep:
+  - cumulative-sum
+  styling:
+  - edge-highlighting
+  - grid-styling

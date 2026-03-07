@@ -1,0 +1,29 @@
+# Specification-level metadata for curve-dose-response
+# Auto-synced to PostgreSQL on push to main
+
+spec_id: curve-dose-response
+title: Pharmacological Dose-Response Curve
+
+# Specification tracking
+created: "2026-03-06T19:52:15Z"
+updated: null
+issue: 4556
+suggested: MarkusNeusinger
+
+# Classification tags (applies to all library implementations)
+# See docs/reference/tagging-system.md for detailed guidelines
+tags:
+  plot_type:
+    - line
+    - scatter
+  data_type:
+    - numeric
+    - continuous
+  domain:
+    - healthcare
+    - science
+  features:
+    - curve-fitting
+    - annotated
+    - comparison
+    - color-mapped

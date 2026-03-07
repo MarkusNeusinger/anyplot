@@ -1,0 +1,27 @@
+# Specification-level metadata for scatter-constellation-diagram
+# Auto-synced to PostgreSQL on push to main
+
+spec_id: scatter-constellation-diagram
+title: Digital Modulation Constellation Diagram
+
+# Specification tracking
+created: "2026-03-06T19:52:28Z"
+updated: null
+issue: 4562
+suggested: MarkusNeusinger
+
+# Classification tags (applies to all library implementations)
+# See docs/reference/tagging-system.md for detailed guidelines
+tags:
+  plot_type:
+    - scatter
+  data_type:
+    - numeric
+    - continuous
+  domain:
+    - engineering
+    - technology
+  features:
+    - annotated
+    - 2d
+    - color-mapped

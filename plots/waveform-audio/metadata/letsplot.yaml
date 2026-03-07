@@ -1,0 +1,229 @@
+library: letsplot
+specification_id: waveform-audio
+created: '2026-03-07T15:01:44Z'
+updated: '2026-03-07T15:30:15Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22801238684
+issue: 4563
+python_version: 3.14.3
+library_version: 4.8.2
+preview_url: https://storage.googleapis.com/pyplots-images/plots/waveform-audio/letsplot/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/waveform-audio/letsplot/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/waveform-audio/letsplot/plot.html
+quality_score: 90
+review:
+  strengths:
+  - Excellent data storytelling with ASR envelope section annotations creating clear
+    narrative
+  - Creative use of geom_segment with color gradient for DAW-style waveform rendering
+  - Cohesive blue color palette from light to dark navy
+  - Perfect spec compliance with all required features
+  - Clean, well-structured code with proper min/max envelope downsampling
+  weaknesses:
+  - Minor white gaps visible between waveform segments creating streak artifacts
+  - Annotation text could be slightly larger for better visual balance
+  - Could leverage letsplot-specific features more deeply (e.g., geom_ribbon for filled
+    area)
+  image_description: 'The plot displays a DAW-style audio waveform using vertical
+    segments colored by a blue gradient (light blue for low amplitude range, dark
+    navy for high amplitude range). The x-axis shows "Time (seconds)" from 0 to 1.5s,
+    and the y-axis shows "Amplitude" from -1 to 1 with breaks at 0.5 intervals. A
+    dashed gray zero-line runs horizontally across the center. Dotted vertical lines
+    mark section boundaries at 0.05s, 0.4s, 0.7s, and 1.2s. Italic dark-blue labels
+    at the top identify five sections: "Attack", "Sustain", "Dip", "Sustain", "Release".
+    The waveform clearly shows the ASR envelope shape — a quick ramp-up, sustained
+    full amplitude, a visible amplitude dip between 0.4-0.7s, return to full amplitude,
+    and a gradual release taper. The title reads "waveform-audio · letsplot · pyplots.ai"
+    with a descriptive subtitle. An "Amplitude Range" color legend appears on the
+    right. The overall color scheme is cohesive blue tones on a clean white background
+    with subtle y-axis grid lines.'
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set. Annotation text at size=11 slightly
+          small relative to other elements but readable.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text. Section labels well-spaced.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Waveform segments clearly visible with 800 bins. Minor white gaps
+          between segments.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue gradient is fully colorblind-safe with good contrast.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills canvas well. Balanced margins with legend on right.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Time (seconds) includes units. Amplitude is self-descriptive.
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom blue gradient palette, italic section annotations, descriptive
+          subtitle. Clearly above defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: theme_minimal, x-grid removed, subtle y-grid, custom margins. Good
+          refinement.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Section annotations create clear ASR envelope narrative. Color intensity
+          adds data dimension.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct audio waveform with min/max envelope segments.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: symmetric waveform, semi-transparent,
+          zero-line, correct axes, envelope rendering.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=time, Y=amplitude correctly mapped.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct. Legend label matches mapped aesthetic.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows attack, sustain, dip, sustain, release. Harmonics create realistic
+          waveform texture.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: 220 Hz fundamental with harmonics, 22050 Hz sample rate, ASR envelope
+          — real audio engineering.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Standard audio values: 1.5s duration, 22050 sample rate, normalized
+          amplitude.'
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean imports-data-plot-save structure. No functions or classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean vectorized envelope downsampling. Appropriate complexity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png via export_ggsave with scale=3.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Good ggplot grammar: aes, geom_segment, scale_color_gradient, theme
+          customization, ggsize.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses layer_tooltips() with custom formatting (lets-plot distinctive).
+          HTML export alongside PNG.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  dataprep:
+  - binning
+  styling:
+  - custom-colormap
+  - alpha-blending
+  - grid-styling

@@ -1,0 +1,29 @@
+# Specification-level metadata for flamegraph-basic
+# Auto-synced to PostgreSQL on push to main
+
+spec_id: flamegraph-basic
+title: Flame Graph for Performance Profiling
+
+# Specification tracking
+created: "2026-03-07T20:31:52Z"
+updated: null
+issue: 4665
+suggested: MarkusNeusinger
+
+# Classification tags (applies to all library implementations)
+# See docs/reference/tagging-system.md for detailed guidelines
+tags:
+  plot_type:
+    - bar
+    - heatmap
+  data_type:
+    - hierarchical
+    - categorical
+    - numeric
+  domain:
+    - technology
+    - engineering
+  features:
+    - stacked
+    - proportional
+    - color-mapped

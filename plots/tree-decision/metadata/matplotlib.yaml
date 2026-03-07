@@ -1,0 +1,223 @@
+library: matplotlib
+specification_id: tree-decision
+created: '2026-03-06T21:34:31Z'
+updated: '2026-03-06T22:02:22Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22782764506
+issue: 4569
+python_version: 3.14.3
+library_version: 3.10.8
+preview_url: https://storage.googleapis.com/pyplots-images/plots/tree-decision/matplotlib/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/tree-decision/matplotlib/plot_thumb.png
+preview_html: null
+quality_score: 91
+review:
+  strengths:
+  - Excellent spec compliance with all required features (node shapes, EMV values,
+    pruned branches, probabilities)
+  - Professional design with custom palette, shadow effects, and refined typography
+  - Strong data storytelling through visual hierarchy (solid vs dashed lines, color-coded
+    node types, red pruned markers)
+  - Mathematically correct EMV rollback calculations
+  - Clean, well-organized flat code structure
+  weaknesses:
+  - Minor text cramping in chance node where $760K is close to edge
+  - High Demand (0.6) label slightly crowds the adjacent decision node
+  - Bottom portion of canvas has more empty space than top
+  image_description: 'The plot displays a decision tree diagram on an off-white background
+    with a left-to-right layout. The root decision node (blue rounded square, labeled
+    "EMV $760K") is on the left, branching into two paths: "Invest" (solid line upward
+    to an orange chance node labeled "EMV $760K") and "Don''t Invest" (dashed gray
+    line downward to a gray pruned terminal triangle showing "$0K" with a red X marker).
+    The chance node branches into "High Demand (0.6)" leading to a second blue decision
+    node ("EMV $1.2M") and "Low Demand (0.4)" leading to a teal terminal triangle
+    showing "$100K". The second decision node branches to "Expand" (solid line to
+    teal triangle "$1.2M") and "Maintain" (dashed pruned line to gray triangle "$800K"
+    with red X). A legend in the lower-right shows Decision Node (blue), Chance Node
+    (orange), Terminal Node (teal), and Pruned Branch (dashed red X). Title reads
+    "tree-decision · matplotlib · pyplots.ai" at the top.'
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (16-24pt). EMV text inside chance node
+          slightly cramped.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: High Demand label slightly crowds D2 node; chance node EMV text near
+          edge.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All nodes clearly sized and visible, branches well-weighted, pruned
+          markers prominent.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue/orange/teal palette is colorblind-safe with strong contrast.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good left-to-right spread; slightly more empty space in bottom area.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Axes appropriately off for tree diagram, title present.
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom palette, shadow effects, white borders, rounded box styles
+          — clearly above defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Axes off, off-white background, subtle shadows, white node borders,
+          dashed pruned lines.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Strong visual hierarchy: solid vs dashed lines, color-coded nodes,
+          red pruned markers guide viewer.'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct decision tree with squares, circles, and right-pointing triangles.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: node shapes, probabilities, payoffs, EMV,
+          pruned markers.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Left-to-right layout, correct structure, probabilities sum to 1.0.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct. Legend includes all four element types.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows all node types, pruned and active paths, two-stage decisions,
+          EMV rollback.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Investment decision under market demand uncertainty — neutral business
+          scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values $0K-$1.2M realistic; EMV math correct.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Flat script: imports, data, layout, colors, draw, save.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hardcoded data.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean iteration, appropriate complexity for custom tree rendering.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png at 300 DPI.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of Axes API, patches system, and path effects.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: FancyBboxPatch, FancyArrowPatch, SimplePatchShadow — distinctly matplotlib.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - patches
+  - custom-legend
+  patterns:
+  - explicit-figure
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - edge-highlighting

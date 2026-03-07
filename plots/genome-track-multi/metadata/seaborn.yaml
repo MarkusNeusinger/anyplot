@@ -1,0 +1,236 @@
+library: seaborn
+specification_id: genome-track-multi
+created: '2026-03-06T17:04:03Z'
+updated: '2026-03-06T17:16:27Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22773343279
+issue: 4422
+python_version: 3.14.3
+library_version: 0.13.2
+preview_url: https://storage.googleapis.com/pyplots-images/plots/genome-track-multi/seaborn/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/genome-track-multi/seaborn/plot_thumb.png
+preview_html: null
+quality_score: 90
+review:
+  strengths:
+  - Excellent spec compliance with all 4 required tracks and every specified feature
+    (exons, introns, strand arrows, coverage area, lollipop variants, regulatory rectangles)
+  - Strong data storytelling with coverage peaks aligning to exon positions, creating
+    a coherent biological narrative
+  - Professional visual design with custom color scheme, alternating track backgrounds,
+    and appropriate spine/grid management per track
+  - Clean, well-organized code with realistic genomic data
+  weaknesses:
+  - Library mastery could be higher - gene and regulatory tracks are pure matplotlib
+    patches with no seaborn involvement
+  - Legend font size (14pt) is slightly smaller than ideal for the canvas size
+  image_description: 'The plot displays a multi-track genome browser view for chr7
+    (55kb-105kb region) with four vertically stacked tracks sharing a common x-axis
+    of genomic position. The title "genome-track-multi · seaborn · pyplots.ai" appears
+    at the top in dark text. Track 1 (Genes) shows two genes: GENEA on the + strand
+    (left, with 4 dark blue exon rectangles connected by thin intron lines and a rightward
+    arrow) and GENEB on the - strand (right, with 3 exon rectangles and a leftward
+    arrow). Track 2 (Coverage) shows a filled area plot in blue (#306998) with light
+    blue fill, displaying read depth from 0-75+, with clear peaks corresponding to
+    exon positions. The background is light gray. Track 3 (Variants) shows a lollipop
+    plot with orange circles for SNPs and pink/purple diamonds for Indels, with stems
+    showing quality scores (0-100). A legend in the upper right identifies SNP and
+    Indel markers. Track 4 (Regulatory) shows colored rectangles: teal/blue for Promoters
+    and green for Enhancers, with a legend in the upper right. The x-axis shows positions
+    formatted as "60kb", "70kb", etc. with "Genomic Position (chr7)" label. Alternating
+    tracks have subtle gray background shading.'
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Font sizes explicitly set throughout (title 24, labels 20, ticks
+          16, gene labels 16). Legend fonts at 14pt slightly small but readable
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: All text and elements well-separated with no collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Exon rectangles, coverage area, lollipop markers, and regulatory
+          rectangles all clearly visible
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Colorblind-safe palette used with good contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Excellent canvas utilization with 4 tracks and well-tuned height
+          ratios
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive labels with context: Genomic Position (chr7), Coverage
+          (read depth)'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom color scheme on Python Blue, colorblind palette, white edge
+          highlighting, professional genomics aesthetic
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines removed per track, subtle y-grid (alpha=0.15), alternating
+          backgrounds, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Coverage peaks align with exons showing expression, variants in genomic
+          context, coherent biological narrative
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Multi-track genome viewer with all 4 specified track types
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: exon rectangles, intron lines, strand arrows,
+          coverage area, lollipop variants, regulatory rectangles, track labels, shared
+          x-axis, background shading'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X-axis is genomic position, y-axes appropriate per track type
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct title format, variant and regulatory legends present and
+          accurate
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Two genes on opposite strands, multiple exons, coverage with exon-correlated
+          peaks, SNPs and indels, promoters and enhancers
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Realistic genomic scenario on chr7 with plausible gene structures
+          and variant quality scores
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Coverage 25-80x realistic, quality 42-95 appropriate, 50kb window
+          reasonable
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear imports-data-plot-save structure, no functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set at top
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-organized code with appropriate complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png, dpi=300, bbox_inches=tight, current API
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of seaborn axes-level functions, set_context, set_style,
+          despine, color_palette. Gene and regulatory tracks rely on matplotlib patches
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Uses set_context, despine, color_palette, scatterplot with hue/style.
+          Most track rendering is pure matplotlib
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - subplots
+  - patches
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  - explicit-figure
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
+  - grid-styling

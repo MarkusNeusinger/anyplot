@@ -1,0 +1,28 @@
+# Specification-level metadata for scatter-connected-temporal
+# Auto-synced to PostgreSQL on push to main
+
+spec_id: scatter-connected-temporal
+title: Connected Scatter Plot with Temporal Path
+
+# Specification tracking
+created: "2026-03-07T20:32:40Z"
+updated: null
+issue: 4675
+suggested: MarkusNeusinger
+
+# Classification tags (applies to all library implementations)
+# See docs/reference/tagging-system.md for detailed guidelines
+tags:
+  plot_type:
+    - scatter
+    - line
+  data_type:
+    - numeric
+    - timeseries
+  domain:
+    - general
+    - statistics
+  features:
+    - temporal
+    - annotated
+    - color-mapped

@@ -1,0 +1,234 @@
+library: seaborn
+specification_id: sequence-logo-basic
+created: '2026-03-06T20:26:36Z'
+updated: '2026-03-06T20:58:49Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22780524945
+issue: 4421
+python_version: 3.14.3
+library_version: 0.13.2
+preview_url: https://storage.googleapis.com/pyplots-images/plots/sequence-logo-basic/seaborn/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/sequence-logo-basic/seaborn/plot_thumb.png
+preview_html: null
+quality_score: 92
+review:
+  strengths:
+  - Excellent two-panel design combining sequence logo with frequency heatmap for
+    complementary views
+  - Properly rendered letter glyphs using TextPath/PathPatch (correct technique for
+    sequence logos)
+  - Strong data storytelling with highlighted most-conserved position and annotation
+    arrow
+  - Colored heatmap y-axis labels matching logo colors — thoughtful design touch
+  - Well-chosen data showing full range of conservation levels including uniform position
+  weaknesses:
+  - Minor colorblind concern with green-red pairing (though this is the standard bioinformatics
+    convention)
+  image_description: 'The plot features a two-panel layout on a white background.
+    The top panel is a sequence logo showing 10 positions of a DNA transcription factor
+    binding site. Letters (A in green, C in blue, G in orange, T in red) are stacked
+    vertically at each position, with height proportional to information content in
+    bits (y-axis, 0–2). Position 8 has the tallest stack (~1.4 bits, dominated by
+    a large green "A") and is highlighted with a pale yellow vertical band and an
+    italic annotation "Most conserved (1.4 bits)" with a curved arrow. Position 5
+    is nearly empty (uniform distribution). The title reads "sequence-logo-basic ·
+    seaborn · pyplots.ai" in medium weight at the top. Top and right spines are removed;
+    a very subtle horizontal grid is visible. The bottom panel is a seaborn heatmap
+    showing the raw frequency matrix (4 rows: A, C, G, T × 10 columns) with annotated
+    values (.2f format), colored from white to dark blue. Y-axis labels are colored
+    to match their respective base colors (green A, blue C, orange G, red T). A "Frequency"
+    colorbar appears on the right. Both panels share "Position" as the x-axis label.'
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt,
+          heatmap annotations 12pt'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or elements; annotation well-positioned
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Letter glyphs properly scaled and clearly visible at all positions
+      - id: VQ-04
+        name: Color Accessibility
+        score: 3
+        max: 4
+        passed: true
+        comment: Standard DNA colors; green-red pairing is mild colorblind concern
+          but established convention
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Two-panel layout with 3.5:1 ratio gives proper emphasis; good use
+          of 16x9 canvas
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Position and Information content (bits) with units
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom DNA palette, two-panel layout, colored heatmap y-labels, annotation
+          with curved arrow
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines removed, subtle grid alpha=0.15, white linecolor in heatmap,
+          generous panel spacing
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Yellow highlight on most conserved position with annotation; heatmap
+          provides complementary detail
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct sequence logo with vertically stacked letters scaled by information
+          content
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features: stacked letters, IC scaling, standard colors,
+          scaled glyphs'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X-axis positions 1-10, Y-axis IC in bits 0-2 range
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct title format; letters self-identify by color and shape
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Full range: strong conservation (pos 3,7,8), moderate (pos 2,6,9),
+          none (pos 5)'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: DNA transcription factor binding site motif — real bioinformatics
+          context
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: IC values 0-1.4 bits realistic for DNA; frequencies sum to 1 per
+          position
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports, data, IC calculation, logo rendering, heatmap,
+          save'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hardcoded frequency data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-structured; TextPath/PathPatch is correct technique
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png, dpi=300, bbox_inches=tight, no deprecated API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of sns.set_context, set_style, despine, heatmap, color_palette,
+          light_palette
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: sns.heatmap with annotations, sns.light_palette for custom cmap,
+          sns.despine
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - subplots
+  - annotations
+  - patches
+  - manual-ticks
+  - colorbar
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - grid-styling
+  - custom-colormap
+  - edge-highlighting

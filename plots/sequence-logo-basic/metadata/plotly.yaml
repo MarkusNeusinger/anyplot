@@ -1,0 +1,232 @@
+library: plotly
+specification_id: sequence-logo-basic
+created: '2026-03-06T20:26:49Z'
+updated: '2026-03-06T20:58:43Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22780525003
+issue: 4421
+python_version: 3.14.3
+library_version: 6.6.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/sequence-logo-basic/plotly/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/sequence-logo-basic/plotly/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/sequence-logo-basic/plotly/plot.html
+quality_score: 86
+review:
+  strengths:
+  - Creative SVG path shapes render stretched letter glyphs matching spec requirement
+    for scaled glyphs
+  - Excellent data quality with biologically plausible PWM covering full conservation
+    range
+  - Strong design with Wong palette, annotations on conserved positions, and clean
+    visual refinement
+  - Interactive hover tooltips provide nucleotide frequency details as distinctive
+    Plotly feature
+  weaknesses:
+  - SVG path transformation code is complex and verbose, reducing code readability
+  - Small letters at low-IC positions (9-10) are crowded and hard to distinguish
+  - Position 7 T glyph appears somewhat rectangular rather than clearly T-shaped at
+    tall heights
+  image_description: 'The plot shows a DNA sequence logo for a 10-position transcription
+    factor binding site motif. Letters (A, C, G, T) are rendered as custom SVG-path
+    glyphs stacked vertically at each position, with heights proportional to information
+    content in bits. Position 3 has a tall blue C (~1.70 bits) and position 7 has
+    a near-maximum-height orange/red T (~1.97 bits), both annotated with downward
+    triangles and bit values. Position 4 is empty (zero information) with a "no signal"
+    label below. The remaining positions show varying conservation levels with stacked
+    letters of different sizes. Colors follow standard DNA conventions using Wong
+    palette variants: A=green, C=blue, G=orange, T=red-orange. The title reads "sequence-logo-basic
+    · plotly · pyplots.ai" centered at top with a horizontal legend (A, C, G, T squares)
+    below it. X-axis labeled "Position" (1-10), Y-axis labeled "Information content
+    (bits)" (0-2.0). Clean white background with subtle dotted y-grid lines.'
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 28, axis labels 22, ticks 18,
+          annotations 16/13'
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Minor crowding at low-IC positions 9-10 where small glyphs overlap
+          slightly
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: High-IC letters excellent; low-IC positions have very small letters
+          hard to distinguish
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Wong palette variants are colorblind-safe with good contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good proportions overall; some vertical wasted space in middle area
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Information content (bits) and Position - descriptive with units
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Strong design with custom SVG glyphs, Wong palette, intentional color
+          scheme, plotly_white template
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines only on bottom/left, subtle dotted y-grid, x-grid removed,
+          generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Annotations highlight conserved positions, no signal label creates
+          contrast, visual hierarchy through heights
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct sequence logo with stacked letters proportional to information
+          content
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: All major features present; T glyph at position 7 appears somewhat
+          rectangular
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X-axis positions 1-10, Y-axis IC in bits 0-2.15, correct mapping
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct, legend shows A C G T with matching colors
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Excellent variety: highly conserved, moderate, low conservation,
+          and zero information positions'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Transcription factor binding site motif with biologically plausible
+          PWM values
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: IC values correct for DNA (max ~2 bits), frequencies sum to 1.0
+    code_quality:
+      score: 8
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Follows imports-data-plot-save but SVG path transformation adds inline
+          complexity
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hardcoded PWM data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only numpy and plotly.graph_objects, both used
+      - id: CQ-04
+        name: Code Elegance
+        score: 1
+        max: 2
+        passed: true
+        comment: SVG path parsing/transformation is clever but verbose and hard to
+          follow
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png at 4800x2700, also HTML, current API
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses go.Figure, go.Bar, go.Scatter, add_shape correctly but heavy
+          SVG path manipulation is a workaround
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Leverages Plotly SVG shape system, interactive hover via invisible
+          bars, HTML export
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - grid-styling
+  - edge-highlighting

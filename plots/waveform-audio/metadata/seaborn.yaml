@@ -1,0 +1,229 @@
+library: seaborn
+specification_id: waveform-audio
+created: '2026-03-07T14:58:47Z'
+updated: '2026-03-07T15:13:55Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22801238636
+issue: 4563
+python_version: 3.14.3
+library_version: 0.13.2
+preview_url: https://storage.googleapis.com/pyplots-images/plots/waveform-audio/seaborn/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/waveform-audio/seaborn/plot_thumb.png
+preview_html: null
+quality_score: 90
+review:
+  strengths:
+  - Excellent data storytelling with loud/quiet segmentation and musical dynamics
+    annotations
+  - Cohesive blue palette with intentional hierarchy through alpha/saturation variation
+  - Thorough spec compliance with all required features including min/max envelope
+    rendering
+  - Clean well-structured code with appropriate envelope smoothing
+  - Professional visual refinement with removed spines, subtle grid, and balanced
+    layout
+  weaknesses:
+  - Library mastery limited since seaborn lacks native waveform/fill_between support;
+    core visualization relies on matplotlib
+  - Annotation font size (13pt) could be slightly larger for consistency with other
+    text elements
+  image_description: 'The plot displays an audio waveform envelope over 1 second of
+    time. The waveform is rendered as a filled area symmetric around a zero baseline,
+    with the upper and lower envelopes traced by dark blue lines. Two fill colors
+    distinguish dynamics: a darker blue (#306998) at ~55% alpha for "Loud" regions
+    and a lighter blue (#89ABD0) at ~30% alpha for "Quiet" regions. Three italic annotations
+    label musical dynamics: "Attack + Sustain" over the initial loud burst (0-0.2s),
+    "Decay" in the quieter mid-section (~0.35s), and "Second Phrase" over the second
+    loud region (~0.65-0.8s). The title reads "waveform-audio · seaborn · pyplots.ai"
+    at the top. X-axis is "Time (seconds)" from 0.0 to 1.0, Y-axis is "Amplitude"
+    from -1.00 to 1.00. A subtle horizontal zero-line is visible. Top and right spines
+    are removed. A legend in the upper right shows "Loud" and "Quiet" patches. The
+    grid is very subtle (low alpha). The overall aesthetic is clean and professional
+    with a cohesive blue palette.'
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title=24, labels=20, ticks=16, legend=14);
+          annotation text at 13pt slightly small but readable
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: All text elements well separated, no collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Envelope fills clearly visible, loud/quiet distinction apparent,
+          edge lines well-defined
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Single-hue blue scheme with good luminance contrast; colorblind-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 16:9 figure, plot fills canvas well with balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Time (seconds) with units, Amplitude descriptive for normalized signal
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Cohesive two-tone blue palette, loud/quiet color distinction with
+          intentional hierarchy, italic annotations
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines removed, subtle grid (alpha=0.15), generous whitespace, clean
+          edge colors
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Loud/quiet segmentation with musical dynamics annotations creates
+          clear narrative
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct audio waveform with filled envelope symmetric around zero
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: filled area, semi-transparent fill, zero-line,
+          min/max envelope, synthetic data'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Time on X, amplitude on Y, correct ranges
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct title format, legend shows Loud/Quiet dynamics
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows attack, sustain, decay, second phrase with dynamics variation
+          and quiet regions
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Realistic audio signal with 220Hz base, harmonics, amplitude envelope,
+          musical dynamics
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 1s duration, 22050 Hz sample rate, normalized amplitude [-1, +1]
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear imports-data-plot-save structure, no functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean implementation with appropriate complexity for envelope rendering
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with dpi=300
+    library_mastery:
+      score: 5
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses sns.set_theme, sns.lineplot with long-form DataFrame and hue,
+          sns.despine; core fill_between is matplotlib
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Leverages set_theme with context/font_scale and lineplot with hue,
+          but core visual relies on matplotlib
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  - layer-composition
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - binning
+  styling:
+  - alpha-blending
+  - grid-styling

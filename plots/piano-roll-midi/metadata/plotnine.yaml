@@ -1,0 +1,221 @@
+library: plotnine
+specification_id: piano-roll-midi
+created: '2026-03-07T19:46:37Z'
+updated: '2026-03-07T20:15:24Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22805912195
+issue: 4565
+python_version: 3.14.3
+library_version: 0.15.3
+preview_url: https://storage.googleapis.com/pyplots-images/plots/piano-roll-midi/plotnine/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/piano-roll-midi/plotnine/plot_thumb.png
+preview_html: null
+quality_score: 91
+review:
+  strengths:
+  - Excellent data storytelling with chord labels, dynamic markings, and climax annotation
+    creating a musical narrative
+  - Cohesive purple-themed design with inferno colormap that feels domain-appropriate
+  - Complete spec compliance with all required features present
+  - Realistic musical data with proper I-IV-V-I progression showing varied durations
+    and dynamics
+  - Clean use of theme_void() as a base for full visual control
+  weaknesses:
+  - Y-axis pitch labels slightly crowded where adjacent pitches are both labeled
+  image_description: The plot displays a MIDI piano roll visualization on a light
+    purple/white background. Horizontal colored rectangles represent musical notes,
+    positioned by pitch (y-axis, labeled C3 through C5 with note names) and time (x-axis,
+    0-16 beats). The inferno colormap maps velocity from dark purple (soft, ~60) to
+    yellow (loud, ~120). Alternating row shading distinguishes black keys (slightly
+    darker lavender) from white keys (lighter). Vertical dotted lines mark beats,
+    solid gray lines mark measure boundaries at beats 0, 4, 8, 12, 16. Chord labels
+    (I (C), IV (F), V (G), I (C)) appear at the top, and dynamic markings (mf, ff,
+    dim., p) at the bottom. A red italic "← climax" annotation marks the C5 note.
+    The title reads "piano-roll-midi · plotnine · pyplots.ai" in bold dark text. A
+    velocity colorbar legend is on the right side.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title=24, axis titles=20, ticks=16,
+          legend=16/14'
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Slight crowding on y-axis where adjacent pitches have labels close
+          together
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Note rectangles clearly visible with good height and contrast
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Inferno colormap is perceptually uniform and colorblind-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good 16:9 proportions, minor extra whitespace above chord labels
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Time (beats) and Pitch (note) are descriptive with units
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Cohesive purple color scheme with inferno colormap, chord numerals
+          and dynamic markings
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: theme_void base with selective restoration, subtle grid hierarchy,
+          polished legend
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Musical narrative with climax annotation, dynamic markings, chord
+          progression labels
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct piano roll with horizontal rectangles by pitch and time
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features: key shading, note names, grid lines, velocity
+          coloring, auto-fit range'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=time (beats), Y=pitch (note names), all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct title format, velocity colorbar legend present
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Chord progressions, varying durations, varying velocities, bass+melody
+          separation
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real I-IV-V-I chord progression in C major with melodic contour
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: MIDI pitches 48-72, velocities 60-115, durations 0.5-3.0 beats
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports, data, dataframes, plot, save'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set, data is deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports are used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-organized, appropriate complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with dpi=300, current API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Proper grammar of graphics with theme_void base for full control
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: theme_void, scale_fill_cmap with guide_colorbar, annotate, per-layer
+          data
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  - colorbar
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - custom-colormap
+  - grid-styling
+  - edge-highlighting

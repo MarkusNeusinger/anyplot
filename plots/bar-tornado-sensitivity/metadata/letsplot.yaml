@@ -1,0 +1,222 @@
+library: letsplot
+specification_id: bar-tornado-sensitivity
+created: '2026-03-07T08:46:47Z'
+updated: '2026-03-07T09:13:51Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22795810110
+issue: 4566
+python_version: 3.14.3
+library_version: 4.8.2
+preview_url: https://storage.googleapis.com/pyplots-images/plots/bar-tornado-sensitivity/letsplot/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/bar-tornado-sensitivity/letsplot/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/bar-tornado-sensitivity/letsplot/plot.html
+quality_score: 87
+review:
+  strengths:
+  - Excellent spec compliance with every required feature present and well-executed
+  - Strong colorblind-safe blue/orange palette with high contrast
+  - Good data storytelling with sorted bars, informative caption, and contextual subtitle
+  - Uses distinctive letsplot features (layer_tooltips, flavor_high_contrast_light)
+  - Clean readable code with deterministic data
+  weaknesses:
+  - Y-axis label is empty rather than descriptive
+  - pd.options.future.infer_string workaround adds code noise
+  - Some delta labels on bottom bars are slightly crowded
+  image_description: The plot displays a horizontal tornado diagram for NPV Sensitivity
+    Analysis. Ten financial parameters are listed on the y-axis, sorted by total impact
+    range with Revenue Growth (widest, ~9.1M range) at top and Inflation Rate (narrowest,
+    ~1.7M range) at bottom. Steel blue (#306998) bars extend leftward representing
+    the Low Scenario (NPV decrease) and burnt orange (#E8783A) bars extend rightward
+    for the High Scenario (NPV increase). A dark vertical reference line at x=0 marks
+    the base case. Each bar has bold delta labels (e.g., "-4.3", "+4.8") positioned
+    just outside the bar ends. The title reads "NPV Sensitivity Analysis · bar-tornado-sensitivity
+    · letsplot · pyplots.ai" centered at top in bold, with a subtitle "One-at-a-time
+    parameter variation from base case (NPV = $12.5M)". A legend at top shows "◀ Low
+    Scenario" and "High Scenario ▶". The caption at bottom notes "Revenue Growth and
+    Discount Rate account for over 50% of total NPV sensitivity". The background is
+    clean white with subtle vertical gridlines only. Layout is 16:9 landscape.
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 24pt, subtitle 16pt, axis titles
+          20pt, ticks 16-18pt, legend 16pt'
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Minor crowding of delta labels on smaller bottom bars
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Bars well-sized at width=0.7, alpha=0.92, all distinctly visible
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Colorblind-safe blue/orange with excellent contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good 16:9 layout but x-axis expand creates extra padding
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 1
+        max: 2
+        passed: true
+        comment: X-axis has units, y-axis label is empty string
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom palette, high-contrast flavor, bold delta labels, unicode
+          arrows in legend
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Horizontal grid removed, subtle vertical grid, minimal chrome, informative
+          caption
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Sorted by impact, caption highlights key insight, subtitle provides
+          context
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct horizontal tornado/sensitivity bar chart
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: reference line, sorted bars, two colors, parameter
+          labels, delta values'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X-axis shows NPV change, y-axis shows parameters, sorted by range
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title follows exact format, legend clearly labels scenarios with
+          arrows
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: 10 parameters with good range, both positive and negative impacts
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: NPV sensitivity for capital investment - real-world financial scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Base $12.5M with sensitivities ±0.8M to ±4.8M - realistic
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports, data, processing, plot, save'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic with hardcoded values
+      - id: CQ-03
+        name: Clean Imports
+        score: 1
+        max: 2
+        passed: false
+        comment: pd.options.future.infer_string workaround adds noise
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, appropriate complexity for long-form data construction
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot.png with scale=3 for 4800x2700
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good ggplot grammar, proper aes mapping, theme layering
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: layer_tooltips, flavor_high_contrast_light, export_ggsave with scale
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  - wide-to-long
+  dataprep: []
+  styling:
+  - grid-styling
+  - alpha-blending

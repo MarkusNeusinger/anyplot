@@ -1,0 +1,28 @@
+# Specification-level metadata for star-chart-constellation
+# Auto-synced to PostgreSQL on push to main
+
+spec_id: star-chart-constellation
+title: Star Chart with Constellations
+
+# Specification tracking
+created: "2026-03-06T19:52:21Z"
+updated: null
+issue: 4560
+suggested: MarkusNeusinger
+
+# Classification tags (applies to all library implementations)
+# See docs/reference/tagging-system.md for detailed guidelines
+tags:
+  plot_type:
+    - scatter
+    - network
+  data_type:
+    - numeric
+    - spatial
+  domain:
+    - science
+    - education
+  features:
+    - annotated
+    - color-mapped
+    - proportional

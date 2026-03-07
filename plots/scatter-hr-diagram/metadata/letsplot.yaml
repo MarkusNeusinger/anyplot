@@ -1,0 +1,260 @@
+library: letsplot
+specification_id: scatter-hr-diagram
+created: '2026-03-07T06:47:23Z'
+updated: '2026-03-07T07:19:35Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22794049034
+issue: 4558
+python_version: 3.14.3
+library_version: 4.8.2
+preview_url: https://storage.googleapis.com/pyplots-images/plots/scatter-hr-diagram/letsplot/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/scatter-hr-diagram/letsplot/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/scatter-hr-diagram/letsplot/plot.html
+quality_score: 90
+review:
+  strengths:
+  - Dark theme (#0D1117) is thematically perfect for an astrophysics diagram — stars
+    float in space-like darkness
+  - Custom spectral color palette follows real astrophysical convention with improved
+    O/B differentiation using purple (#6644CC) vs blue (#6699FF)
+  - Sun reference point prominently marked with gold color and bold label — creates
+    clear human-scale anchor
+  - Spectral class labels (O, B, A, F, G, K, M) along the top act as a secondary x-axis,
+    adding educational value
+  - Region labels guide viewer through four stellar populations with well-chosen positions
+  - Vectorized spectral type assignment using np.select is clean and Pythonic
+  - layer_tooltips() leverages letsplot-distinctive interactive hover feature with
+    formatted multi-line content
+  weaknesses:
+  - Spectral class letters A, F, G, K, M at the top are bunched together due to narrow
+    temperature ranges on the reversed scale
+  - Redundant color='spectral_type' in base ggplot aes is overridden by fixed color
+    in geom_point and hidden via guides(color='none')
+  image_description: 'The plot displays a Hertzsprung-Russell diagram on a dark background
+    (#0D1117). The x-axis shows "Surface Temperature (K)" reversed from ~40,000K on
+    the left to ~3,000K on the right with formatted tick labels. The y-axis shows
+    "Luminosity (L☉)" on a logarithmic scale from ~0.0001 to 10^6. Points are rendered
+    as filled circles with dark edge strokes (shape 21), colored by spectral type:
+    purple/violet for O types in the upper-left, blue for B types along the hot main
+    sequence, pale blue-white for A types, cream/pale yellow for F types, gold-yellow
+    for G types near the Sun, orange for K types, and red for M types in the lower-right.
+    The main sequence runs as a clear diagonal band from upper-left (hot, luminous)
+    to lower-right (cool, dim). Red Giants cluster in the upper-right with orange/red
+    colors, Supergiants scatter across the top at high luminosities, and White Dwarfs
+    appear at the bottom-center (hot but dim). The Sun is marked with a prominent
+    large gold dot at ~5,778K/1 L☉, with a bold gold "☉ Sun" label offset above. Four
+    region labels in muted blue-gray bold-italic text identify "Supergiants", "Red
+    Giants", "Main Sequence", and "White Dwarfs". Along the top of the plot, spectral
+    class letters O, B, A, F, G, K, M are displayed in light blue-gray bold text at
+    their corresponding temperature positions, simulating a secondary x-axis. A legend
+    box on the right with dark background lists all seven spectral types with matching
+    fill colors. The title "scatter-hr-diagram · letsplot · pyplots.ai" appears in
+    bold light text at the top. Very subtle dark grid lines (#171D28) provide reference
+    without distraction.'
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title=24, axis_title=20, axis_text=16,
+          legend_text=15, legend_title=17, region labels=16, sun label=17, spectral
+          axis labels=18. All perfectly readable.'
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Region labels well-positioned in sparse areas. Minor crowding of
+          spectral class letters A/F/G/K/M at top due to narrow temperature ranges.
+          Red Giants label close to data cluster but readable.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Points at size=4.5 with alpha=0.7 well-adapted for ~295 data points.
+          Sun prominently marked at size=9. Some crowding in lower-right main sequence.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 3
+        max: 4
+        passed: true
+        comment: Improved O/B differentiation with purple (#6644CC) vs blue (#6699FF).
+          A (#C8D8FF) and F (#FFF4D6) now more distinct. Adjacent types still somewhat
+          similar against dark background.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Excellent canvas utilization with ggsize(1600,900) at scale=3. Balanced
+          margins, legend well-positioned. No clipping.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Surface Temperature (K) and Luminosity (L☉) — descriptive with units.
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: Dark theme perfectly suits astronomy context. Custom spectral palette
+          with astrophysical convention. Edge-highlighted markers (shape 21 with dark
+          stroke). Professional typography hierarchy. Spectral class markers along
+          top add polish.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Minor grid removed, major grid very subtle (#171D28 at 0.3). Dark
+          legend background matches panel. Generous margins. Axis ticks customized.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Region labels guide viewer through stellar populations. Sun as golden
+          reference creates human-scale anchor. Spectral class axis adds educational
+          value. Blue-to-red color gradient naturally conveys temperature story.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct scatter plot for HR diagram.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All required features present: reversed x-axis, log y-axis, spectral
+          type coloring with conventional colors, four region labels, Sun reference.
+          Now includes optional spectral class labels along top.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Temperature on x (reversed), luminosity on y (log scale), all data
+          visible across full range.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'scatter-hr-diagram · letsplot · pyplots.ai' in correct format.
+          Legend shows all 7 spectral types with correct labels.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'All four stellar populations well-represented: 200 main sequence,
+          40 red giants, 25 supergiants, 30 white dwarfs. Good spectral type distribution
+          across populations.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Classic astrophysics visualization with physically accurate temperature-luminosity
+          relationship. Sun correctly at 5778K/1 L☉.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Temperature ~3,000-35,000K and luminosity ~0.0001-1,000,000 L☉ are
+          physically realistic for observed stellar populations.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean linear flow: imports → seed → data generation → plot construction
+          → save.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set at start.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: numpy, pandas, lets_plot, export_ggsave.'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean vectorized np.select for spectral type assignment. Well-structured
+          code with appropriate complexity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with scale=3 and plot.html.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Good ggplot grammar: aes mappings, scale_x_continuous with trans=''reverse'',
+          scale_y_log10, scale_fill_manual with limits for ordering, theme_minimal
+          with comprehensive overrides. Shape 21 with fill/stroke used correctly.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: layer_tooltips() with formatted multi-line tooltip content is a letsplot-distinctive
+          interactive feature. HTML export alongside PNG leverages letsplot's interactive
+          capabilities.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - hover-tooltips
+  - layer-composition
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - dark-theme
+  - alpha-blending
+  - edge-highlighting
+  - grid-styling

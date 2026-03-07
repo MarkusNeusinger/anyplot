@@ -1,0 +1,227 @@
+library: seaborn
+specification_id: heatmap-stripes-climate
+created: '2026-03-06T02:37:02Z'
+updated: '2026-03-06T03:04:51Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22746425905
+issue: 4423
+python_version: 3.14.3
+library_version: 0.13.2
+preview_url: https://storage.googleapis.com/pyplots-images/plots/heatmap-stripes-climate/seaborn/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/heatmap-stripes-climate/seaborn/plot_thumb.png
+preview_html: null
+quality_score: 90
+review:
+  strengths:
+  - Faithful recreation of Ed Hawkins warming stripes aesthetic with intentional minimal
+    design
+  - Custom diverging palette via sns.diverging_palette() rather than a generic colormap
+  - Realistic warming trend data with proper acceleration in recent decades
+  - Perfect spec compliance - all requirements met including symmetric color scale
+    and 3:1 aspect ratio
+  - Clean elegant code with good seaborn idiom usage
+  weaknesses:
+  - Non-standard image dimensions (5400x1800 vs allowed 4800x2700 or 3600x3600), though
+    justified by spec 3:1 aspect ratio
+  - Blue-red diverging palette has minor accessibility limitations for certain forms
+    of colorblindness
+  image_description: The plot displays classic climate warming stripes — a series
+    of 175 vertical colored bars spanning from 1850 to 2024. The left portion (earlier
+    years) shows predominantly steel blues and slate blues representing negative temperature
+    anomalies. The middle section transitions through very light blues and pinks near
+    zero anomaly. The right portion (recent decades) shifts to progressively deeper
+    reds and dark crimsons representing strong positive anomalies. The title "heatmap-stripes-climate
+    · seaborn · pyplots.ai" appears in italic gray text above the stripes. Year markers
+    "1850" and "2024" sit at the bottom-left and bottom-right corners respectively.
+    The background is a subtle light gray (#f0f0f0). No axes, gridlines, or tick marks
+    are present — pure color encoding. The aspect ratio is approximately 3:1 (wide
+    and short).
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 24pt, year markers 16pt. Perfectly
+          readable.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text elements. Title well separated from stripes.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Each stripe fills full width with zero gaps. Color intensity clearly
+          distinguishes anomaly values.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 3
+        max: 4
+        passed: true
+        comment: Custom blue-red diverging palette is canonical for warming stripes,
+          minor tritanopia concern.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good 3:1 aspect ratio per spec. Non-standard image dimensions (5400x1800)
+          but justified by spec requirement.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title correctly formatted. No axis labels needed per spec.
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom diverging palette, italic title, subtle gray background. Clearly
+          above defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: All spines removed, no grid, minimal chrome. Exactly right for warming
+          stripes.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Color progression from blues to deep reds immediately communicates
+          accelerating warming.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct warming stripes visualization with vertical colored bars.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec requirements met: no axes/labels/ticks/gridlines, diverging
+          colormap, no gaps, 3:1 ratio, symmetric scale.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Years mapped to position, anomalies to color. Correct.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title follows exact required format. No legend needed.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Full range of anomalies with realistic noise and clear warming acceleration.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Climate temperature anomalies 1850-2024, closely mimics real global
+          temperature record.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Anomalies range -0.5 to +1.3C, realistic for global mean temperature
+          anomalies.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean linear flow: Imports, Data, Plot, Style, Save. No functions/classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set before random generation.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Three imports, all used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Concatenated linspace segments elegantly model acceleration. Appropriate
+          complexity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png, dpi=300, current API.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of sns.heatmap, set_style, set_context, despine. Slight
+          reliance on matplotlib for text.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: sns.diverging_palette is seaborn-specific. sns.heatmap more convenient
+          than matplotlib equivalents.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  - matrix-construction
+  - explicit-figure
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - custom-colormap

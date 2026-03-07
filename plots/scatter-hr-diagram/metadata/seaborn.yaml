@@ -1,0 +1,237 @@
+library: seaborn
+specification_id: scatter-hr-diagram
+created: '2026-03-07T06:46:54Z'
+updated: '2026-03-07T06:58:37Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22794049015
+issue: 4558
+python_version: 3.14.3
+library_version: 0.13.2
+preview_url: https://storage.googleapis.com/pyplots-images/plots/scatter-hr-diagram/seaborn/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/scatter-hr-diagram/seaborn/plot_thumb.png
+preview_html: null
+quality_score: 91
+review:
+  strengths:
+  - Dark theme is highly appropriate for astrophysics visualization, creating an immersive
+    night-sky aesthetic
+  - KDE density contours on the main sequence are a distinctive seaborn feature that
+    adds analytical depth
+  - All four stellar regions clearly labeled with path effects for readability on
+    dark background
+  - Sun marked as a prominent reference point with star marker and bold annotation
+  - Secondary spectral class axis provides complete astrophysical context
+  - Dual legends (Spectral Type + Region) are well-separated and clearly styled
+  - Data generation follows realistic L ∝ T^3.5 relationship for main sequence stars
+  weaknesses:
+  - Markers at alpha=0.45 appear somewhat faint on the dark background, especially
+    lighter spectral types (A, F)
+  - The 'Main Sequence' rotated label overlaps with KDE contour lines and data points,
+    reducing readability
+  - Spectral type colors (A type near-white, F type pale) have lower contrast against
+    the dark background than ideal
+  image_description: |-
+    The plot displays a Hertzsprung-Russell diagram on a dark (#0D1117) background. The title "scatter-hr-diagram · seaborn · pyplots.ai" appears at the top in white text. A secondary x-axis at the top shows spectral classes O, B, A, F, G, K, M with a "Spectral Class" label. The primary x-axis shows "Surface Temperature (K)" on a reversed logarithmic scale from ~45000K (left) to ~1800K (right). The y-axis shows "Luminosity (L☉)" on a log scale from 10^-5 to 10^5.
+
+    Stars are plotted with different markers per region: circles for Main Sequence, diamonds for Red Giants, squares for Supergiants, and downward triangles for White Dwarfs. Colors follow the spectral type convention: blue shades for O/B stars (upper left), pale/white for A stars, yellow for F/G stars, orange for K, and red for M stars (lower right).
+
+    The main sequence forms a clear diagonal band from upper-left (hot, luminous) to lower-right (cool, dim), highlighted by blue KDE density contours. Red Giants cluster in the upper-right with orange/red diamond markers around luminosity 100-1000. Supergiants are scattered across the top as square markers at luminosities 10^3.5-10^5.5. White Dwarfs appear as downward triangles in the lower portion at luminosities 10^-4 to 10^-1.5.
+
+    The Sun is marked with a prominent yellow star marker (★) at approximately 5778K and luminosity 1, with a bold white "Sun" annotation. Region labels ("Supergiants", "Red Giants", "White Dwarfs", "Main Sequence") appear in italic gray text with dark stroke effects. Two legends are present: Spectral Type (lower-left) showing colored dots for O through M, and Region (upper-right) showing the four marker shapes.
+  criteria_checklist:
+    visual_quality:
+      score: 26
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 24pt, axis labels 20pt, ticks
+          16pt, region labels 14pt, Sun label 16pt'
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Rotated 'Main Sequence' label overlaps slightly with KDE contours
+          and data points; legends well-positioned
+      - id: VQ-03
+        name: Element Visibility
+        score: 4
+        max: 6
+        passed: true
+        comment: s=45 and alpha=0.45 appropriate for 375 points but lighter spectral
+          types (A, F) appear faint on dark background
+      - id: VQ-04
+        name: Color Accessibility
+        score: 3
+        max: 4
+        passed: true
+        comment: Domain-appropriate spectral colors with good differentiation; A/F
+          types have lower contrast on dark background
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 16:9 layout with tight_layout, good canvas utilization, balanced
+          margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Surface Temperature (K) and Luminosity (L☉) with units
+    design_excellence:
+      score: 17
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: Dark theme perfectly suits astrophysics context; custom spectral
+          palette, path effects, KDE contours, dual legends, star marker for Sun
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Top/right spines removed, subtle grid (alpha=0.12), dark theme with
+          custom facecolor, path effects for text readability
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: KDE contours highlight main sequence density, Sun reference provides
+          scale, region labels guide interpretation, reversed axis follows convention
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct scatter plot for HR diagram
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Reversed x-axis, log y-axis, spectral type colors, region labels,
+          Sun reference, secondary spectral class axis
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Temperature on X (reversed), luminosity on Y (log), both axes show
+          full data range
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct title format, dual legends for Spectral Type and Region with
+          matching labels
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All four stellar regions represented with varied populations across
+          all spectral types O-M
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: HR diagram with realistic stellar populations, astrophysically plausible
+          L ∝ T^3.5 relationship
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Temperature 2000-40000K, luminosity 10^-4 to 10^6 L☉, realistic stellar
+          parameter ranges
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports, data generation, plot, styling, save'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set at start
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: patheffects, pyplot, numpy, pandas, seaborn'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-organized code with appropriate complexity for a multi-featured
+          plot
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with dpi=300, current seaborn API
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of sns.scatterplot with hue/style parameters and sns.set_theme;
+          some matplotlib-level work needed for dual legends and annotations
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: sns.kdeplot density contours are a distinctive seaborn feature; hue+style
+          combo in scatterplot leverages seaborn's multi-dimensional encoding
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - twin-axes
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
+  - explicit-figure
+  dataprep:
+  - kde
+  styling:
+  - dark-theme
+  - alpha-blending
+  - edge-highlighting
+  - grid-styling

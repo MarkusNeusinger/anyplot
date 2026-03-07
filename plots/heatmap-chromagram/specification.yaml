@@ -1,0 +1,23 @@
+spec_id: heatmap-chromagram
+title: "Music Chromagram (Pitch Class Distribution over Time)"
+
+# Specification tracking
+created: "2026-03-06T19:52:49Z"
+updated: null
+issue: 4564
+suggested: MarkusNeusinger
+
+# Classification tags
+tags:
+  plot_type:
+    - heatmap
+  data_type:
+    - categorical
+    - numeric
+    - timeseries
+  domain:
+    - science
+    - education
+  features:
+    - color-mapped
+    - temporal

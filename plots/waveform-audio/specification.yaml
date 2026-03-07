@@ -1,0 +1,27 @@
+# Specification-level metadata for waveform-audio
+# Auto-synced to PostgreSQL on push to main
+
+spec_id: waveform-audio
+title: Audio Waveform Plot
+
+# Specification tracking
+created: "2026-03-06T19:52:41Z"
+updated: null
+issue: 4563
+suggested: MarkusNeusinger
+
+# Classification tags (applies to all library implementations)
+# See docs/reference/tagging-system.md for detailed guidelines
+tags:
+  plot_type:
+    - line
+    - area
+  data_type:
+    - timeseries
+    - continuous
+  domain:
+    - engineering
+    - science
+  features:
+    - basic
+    - temporal

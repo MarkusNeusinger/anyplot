@@ -1,0 +1,235 @@
+library: letsplot
+specification_id: scatter-complex-plane
+created: '2026-03-04T20:23:02Z'
+updated: '2026-03-04T20:52:29Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22687521714
+issue: 4427
+python_version: 3.14.3
+library_version: 4.8.2
+preview_url: https://storage.googleapis.com/pyplots-images/plots/scatter-complex-plane/letsplot/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/scatter-complex-plane/letsplot/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/scatter-complex-plane/letsplot/plot.html
+quality_score: 86
+review:
+  strengths:
+  - 'Full spec compliance: all required features (unit circle, vectors, annotations,
+    equal aspect) present and correct'
+  - 'Excellent data choice: 5th roots of unity + arbitrary points + complex sum demonstrates
+    mathematical richness'
+  - Three-level annotation hierarchy (name, rectangular, polar) provides comprehensive
+    information
+  - 'Effective use of lets-plot distinctive features: layer_tooltips() and flavor_high_contrast_light()'
+  - Label repulsion algorithm proactively addresses text overlap
+  weaknesses:
+  - Minor label overlaps remain in crowded areas (z6/omega2 region, omega0 near origin)
+    despite repulsion algorithm
+  - Some empty space on the right side of canvas between data and legend
+  image_description: 'The plot displays an Argand diagram (complex plane visualization)
+    with the title "scatter-complex-plane · letsplot · pyplots.ai" in bold at the
+    top and a descriptive italic subtitle. The x-axis is labeled "Real Part" and the
+    y-axis "Imaginary Part", with tick marks at integer values from -3 to 3. A dashed
+    unit circle is centered at the origin with a subtle light blue filled interior.
+    Light gray horizontal and vertical lines cross at the origin to represent the
+    real and imaginary axes. Five 5th roots of unity (ω0–ω4) are shown as blue open
+    circle markers with arrows from the origin, arranged symmetrically on the unit
+    circle. Six arbitrary complex numbers (z1–z6) are shown as orange open circle
+    markers with arrows, scattered at various magnitudes and angles. One sum point
+    (ω1+ω2) appears in magenta/pink. Each point has three annotation levels: a bold
+    colored name label, the rectangular form (a+bi) in gray, and the polar form (r,
+    θ) in lighter italic gray. A legend on the right identifies the three categories.
+    The overall color scheme uses blue, orange, and magenta against a clean white
+    background with subtle gray grid lines.'
+  criteria_checklist:
+    visual_quality:
+      score: 25
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title=26, subtitle=17, axis_title=21,
+          axis_text=17). Annotations slightly small but legible.
+      - id: VQ-02
+        name: No Overlap
+        score: 4
+        max: 6
+        passed: true
+        comment: Minor overlaps in z6/ω2 region and near ω0 at origin despite label
+          repulsion algorithm.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Points clearly visible with white-filled circle markers and colored
+          strokes. Arrows visible with open arrowheads.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue/orange/magenta palette is colorblind-safe with good luminance
+          contrast.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good proportions with coord_fixed(). Some empty space between data
+          and legend on right.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive labels: Real Part, Imaginary Part. Units N/A for dimensionless
+          coordinates.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom three-color palette, flavor_high_contrast_light(), subtle
+          filled unit circle, three-level annotation hierarchy.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: High contrast light theme, minor grid removed, major grid subtle,
+          filled unit circle interior.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Color-coded categories, unit circle provides geometric context, sum
+          point demonstrates complex addition.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Argand diagram with scatter points and vectors from origin.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: unit circle, vectors, annotations, equal aspect,
+          distinct colors.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Real part on x-axis, imaginary on y-axis. All data visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title follows exact format. Legend labels match data categories.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 5th roots of unity, arbitrary points in all quadrants, complex addition
+          sum.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Mathematical/educational context with roots of unity and complex
+          arithmetic.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Axes -3 to 3, roots at magnitude 1, arbitrary points at reasonable
+          magnitudes.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Linear flow but label repulsion algorithm adds complexity.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set at beginning.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: numpy, pandas, lets_plot, export_ggsave.'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-organized code, label repulsion serves real purpose, no fake
+          functionality.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png via export_ggsave with scale=3. Also exports HTML.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct ggplot grammar with layered geoms, aes, scales, coord_fixed(),
+          flavor_high_contrast_light().
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: layer_tooltips() for interactive HTML tooltips, HTML export, flavor_high_contrast_light().
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
+  - grid-styling

@@ -1,0 +1,247 @@
+library: letsplot
+specification_id: genome-track-multi
+created: '2026-03-06T17:05:01Z'
+updated: '2026-03-06T17:38:44Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22773343552
+issue: 4422
+python_version: 3.14.3
+library_version: 4.8.2
+preview_url: https://storage.googleapis.com/pyplots-images/plots/genome-track-multi/letsplot/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/genome-track-multi/letsplot/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/genome-track-multi/letsplot/plot.html
+quality_score: 88
+review:
+  strengths:
+  - Excellent spec compliance with all 4 track types and required sub-features (exons,
+    introns, strand arrows, lollipop markers, filled area coverage, regulatory rectangles)
+  - Biologically realistic data using the real HOXA gene cluster with plausible genomic
+    coordinates and coverage patterns
+  - Strong design with custom color palette, thoughtful typography (italic gene names,
+    bold track labels), and polished layout
+  - Good data storytelling with highlight region, peak annotation, and subtitle calling
+    out the focal point
+  - Clean well-organized code with appropriate complexity for the visualization
+  weaknesses:
+  - Minor overlap between Genes track label and HOXA1 gene name at left edge
+  - Low-quality variant lollipops have short stems making them slightly less distinct
+  - Green/red color pairing (Promoter/Indel) could improve colorblind accessibility
+  - Strand direction arrows (size=12) are somewhat small relative to other text
+  image_description: 'The plot displays a multi-track genome browser view of the HOXA
+    gene cluster on chr7 (27,200-27,280 kb). Four tracks are stacked vertically with
+    a shared genomic x-axis. The Genes track (top) shows five genes (HOXA1-HOXA5)
+    as dark blue exon rectangles connected by thin intron lines, with italic gene
+    names above and strand-direction triangles below. The Coverage track renders a
+    light blue filled area plot of RNA-seq read depth, with pronounced peaks over
+    exonic regions and a bold "Peak: 120x" annotation. The Variants track uses lollipop
+    markers — orange circles for SNPs and smaller red circles for Indels — with stem
+    height proportional to quality score. The Regulatory track at the bottom shows
+    green rectangles for Promoters and purple rectangles for Enhancers. Track labels
+    are bold-faced on the upper left of each track. Subtle gray background shading
+    and dashed divider lines separate the tracks. A faint yellow highlight region
+    spans all tracks near HOXA3. The x-axis labels show positions in kb with a "Genomic
+    Position (chr7)" axis title. Two legends at the bottom identify Variant Type (SNP/Indel)
+    and Regulatory element colors (Promoter/Enhancer). The title reads "genome-track-multi
+    · letsplot · pyplots.ai" with a subtitle describing the HOXA cluster and highlight
+    region.'
+  criteria_checklist:
+    visual_quality:
+      score: 26
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title=26, subtitle=17, axis=20, ticks=16,
+          legend=16/14, gene labels=16, track labels=14). Strand arrows (12) and peak
+          annotation (12) slightly small.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Minor overlap between Genes track label and HOXA1 gene name at left
+          edge. Otherwise all text readable.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: All elements clearly visible. Low-quality variant lollipops have
+          short stems but remain identifiable.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 3
+        max: 4
+        passed: true
+        comment: Distinct palette with blues, orange, red, green, purple. Green promoters
+          and red indels could be slightly problematic for deuteranopia.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Excellent canvas utilization. Four tracks fill vertical space well,
+          horizontal extent fully used.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: X-axis labeled Genomic Position (chr7) with kb units. Y-axis intentionally
+          blank for multi-track layout.
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom color palette, italic gene names, bold track labels, track
+          backgrounds, divider lines. Strong design above defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: theme_minimal removes spines, subtle x-only grid, generous whitespace,
+          dashed dividers, explicit plot margins.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Yellow highlight region near HOXA3, peak coverage annotation, subtitle
+          calls out focal point, coverage peaks correlate with exons.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Multi-track genome browser with all 4 required track types.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: exon rectangles, intron lines, strand arrows,
+          filled area coverage, lollipop variants, regulatory rectangles, track labels,
+          shared axis, background shading.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X-axis correctly maps genomic position, all tracks aligned to shared
+          coordinates.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title follows exact format. Legends correctly label Variant Type
+          and Regulatory elements.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all aspects: 5 genes with multiple exons, both strands, coverage
+          peaks over exons, SNPs and Indels, Promoters and Enhancers.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real HOXA gene cluster on chr7, biologically plausible gene names,
+          positions, and structure.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Realistic coordinates (27M bp on chr7), coverage up to 120x, variant
+          quality 20-99, gene sizes 8-10 kb.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Flat script: imports, seed, data generation, plot construction,
+          save. No functions or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set before all random operations.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only numpy, pandas, and lets_plot imported, all actively used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-organized with clear sections. Appropriate complexity for 4-track
+          genome viewer. No fake UI.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with scale=3, also exports HTML.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Idiomatic ggplot grammar: ggplot() + geom layers, aes mappings,
+          scales, themes. Manual y-positioning necessary but somewhat low-level.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses layer_tooltips() with custom .line() formatting — distinctive
+          lets-plot feature. Dual PNG/HTML output leverages interactive capability.
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - normalization
+  styling:
+  - alpha-blending
+  - grid-styling
+  - edge-highlighting
