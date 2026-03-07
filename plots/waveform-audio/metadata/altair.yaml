@@ -1,0 +1,226 @@
+library: altair
+specification_id: waveform-audio
+created: '2026-03-07T14:58:17Z'
+updated: '2026-03-07T15:11:56Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22801238637
+issue: 4563
+python_version: 3.14.3
+library_version: 6.0.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/waveform-audio/altair/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/waveform-audio/altair/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/waveform-audio/altair/plot.html
+quality_score: 92
+review:
+  strengths:
+  - Excellent vertical gradient fill creating a professional DAW-like aesthetic
+  - Clipping region highlighted in red with transform_filter for effective visual
+    storytelling
+  - Min/max envelope binning (2000 bins from 33075 samples) for efficient rendering
+  - 'Strong use of Altair-specific features: gradients, selections, layer composition'
+  - Complete spec compliance with all required features present
+  - Clean well-structured code with vectorized operations
+  weaknesses:
+  - Minor vertical striping visible in the area chart from individual bin rendering
+  - np.random.seed(42) is set but no random functions are actually called
+  image_description: The plot displays an audio waveform as a filled area chart with
+    time (0–1.6 seconds) on the x-axis and normalized amplitude (-1.0 to +1.0) on
+    the y-axis. The main waveform body uses a steel-blue vertical gradient that is
+    more opaque near the zero baseline and fades toward the amplitude extremes, creating
+    a polished DAW-like appearance. A clipped region around 0.15–0.25 seconds is highlighted
+    with a semi-transparent red overlay where amplitude hits ±1.0. The envelope clearly
+    shows an attack phase (0–0.05s), a loud section with clipping, a sustained region,
+    a dip around 0.4–0.7s (half amplitude), then gradual release to silence. A dashed
+    blue zero-line and faint dashed red clip-threshold lines at ±1.0 are visible.
+    The title reads "waveform-audio · altair · pyplots.ai" with a descriptive subtitle.
+    Axis labels are large and readable. Grid lines are extremely subtle. The view
+    frame is removed for a clean look.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 28pt, axis titles 22pt, tick
+          labels 18pt, subtitle 16pt'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or elements
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Waveform envelope clearly visible with gradient; slight vertical
+          striping from bin rendering
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue/red scheme distinguishable for colorblind users
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 4800x2700 with balanced margins, good canvas utilization
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Time (seconds) with units, Amplitude is appropriate for normalized
+          scale
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Strong design with vertical gradient, Python Blue palette, red clipping
+          overlay, descriptive subtitle
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: View stroke removed, grid opacity 0.12, custom axis colors, dashed
+          reference lines
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Red clipping region as focal point, amplitude dip creates narrative,
+          subtitle narrates the story
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct audio waveform as filled area chart symmetric around zero
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: filled area, semi-transparent gradient,
+          zero-line, envelope rendering, synthetic data'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=time, Y=amplitude correctly assigned with explicit scale domain
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct, no legend needed for single-series waveform
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows dynamics, clipping, amplitude dip, harmonics, attack-sustain-release
+          envelope
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: 440 Hz concert A with harmonics at 22050 Hz sample rate - real audio
+          engineering scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Realistic sample rate, duration, and normalized amplitude values
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean linear flow: imports, data, envelope, binning, chart layers,
+          compose, save'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Seed set (data is deterministic via sine waves)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All three imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-organized with vectorized binning, appropriate complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png and plot.html
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert use of declarative grammar: layered composition, encodings,
+          selections, transforms, configure'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: alt.Gradient, selection_point with nearest, transform_filter, layer
+          composition, interactive tooltips
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  dataprep:
+  - binning
+  styling:
+  - gradient-fill
+  - grid-styling

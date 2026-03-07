@@ -1,0 +1,217 @@
+library: matplotlib
+specification_id: waveform-audio
+created: '2026-03-07T14:57:54Z'
+updated: '2026-03-07T15:08:30Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22801238647
+issue: 4563
+python_version: 3.14.3
+library_version: 3.10.8
+preview_url: https://storage.googleapis.com/pyplots-images/plots/waveform-audio/matplotlib/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/waveform-audio/matplotlib/plot_thumb.png
+preview_html: null
+quality_score: 92
+review:
+  strengths:
+  - Excellent min/max envelope rendering technique that avoids aliasing at lower zoom
+    levels
+  - Phase region annotations (Attack/Sustain/Dip/Burst/Release) with color-coded backgrounds
+    create compelling data storytelling
+  - Rich synthetic audio data with realistic harmonic structure and dynamic envelope
+  - Perfect spec compliance with all required features implemented
+  - Path effects on phase labels ensure legibility over the waveform
+  weaknesses:
+  - Red and green phase label colors could be improved for deuteranopia accessibility
+  image_description: 'The plot displays an audio waveform as a filled area symmetric
+    around a zero baseline. The waveform uses Python Blue (#306998) with semi-transparent
+    fill (alpha=0.45) and darker edge lines (#1E4F72) tracing the min/max envelope.
+    Five labeled phase regions are shaded with subtle colored backgrounds (alpha=0.06):
+    "Attack" (yellow, 0-0.05s), "Sustain" (blue, 0.05-0.55s), "Dip" (red, 0.55-0.7s),
+    "Burst" (green, 0.7-0.85s), and "Release" (purple, 0.85-1.5s). Phase labels appear
+    at the top in matching colors with white stroke path effects. The x-axis shows
+    "Time (seconds)" from 0.0 to 1.5 with major ticks at 0.25s intervals and minor
+    ticks at 0.05s. The y-axis shows "Amplitude" from -1.0 to 1.0. A subtle gray zero-line
+    runs horizontally. Top and right spines are removed with subtle y-axis grid. Title
+    reads "waveform-audio · matplotlib · pyplots.ai".'
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title=24, labels=20, ticks=16, phase
+          labels=13 with white stroke'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: All text well-spaced, phase labels non-overlapping
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Min/max envelope rendering handles dense 22050 Hz data cleanly
+      - id: VQ-04
+        name: Color Accessibility
+        score: 3
+        max: 4
+        passed: true
+        comment: Phase label colors include red and green which may be hard to distinguish
+          for deuteranopia
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good proportions, 16:9, tight_layout, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Time (seconds) with units, Amplitude descriptive
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Cohesive color palette, phase regions with matching text colors,
+          path effects, intentional hierarchy
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines removed, subtle y-grid, minor x-ticks, generous whitespace,
+          well-polished
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Phase labels and colored backgrounds create clear narrative through
+          waveform structure
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct audio waveform with filled area symmetric around zero
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Filled area, semi-transparent fill, zero-line, min/max envelope,
+          synthetic data
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Time on x-axis, amplitude on y-axis, correct ranges
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct format, no legend needed for single series
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows attack, sustain, silence gap, burst, release phases
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: A3 220Hz fundamental with harmonics at 22050Hz sample rate
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Standard sample rate, real musical frequency, normalized amplitude
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat imports to data to plot to save structure
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: patheffects, pyplot, ticker, numpy'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, appropriate complexity with min/max envelope chunking
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png, dpi=300, bbox_inches=tight, current API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Proper axes methods, fill_between, axhline, axvspan, ticker locators
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses patheffects for text stroke, axvspan for phase shading, fill_between,
+          MultipleLocator
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - manual-ticks
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling
