@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 feynman-basic: Feynman Diagram for Particle Interactions
 Library: bokeh 3.8.2 | Python 3.14.3
 Quality: 84/100 | Created: 2026-03-07
@@ -35,9 +35,10 @@ propagators = [
     # Z decay products (fermions)
     {"start": v3, "end": (6.2, 5.8), "type": "fermion", "label": "\u03bc\u207b", "arrow": "forward"},
     {"start": v3, "end": (6.2, 4.2), "type": "fermion", "label": "\u03bc\u207a", "arrow": "backward"},
-    # H decay products: b quarks + gluon radiation
-    {"start": v4, "end": (6.2, 1.8), "type": "fermion", "label": "b\u0305", "arrow": "backward"},
-    {"start": v4, "end": (6.2, 0.2), "type": "gluon", "label": "g"},
+    # H decay products: b quark, b-bar quark, and gluon radiation
+    {"start": v4, "end": (6.2, 2.0), "type": "fermion", "label": "b", "arrow": "forward"},
+    {"start": v4, "end": (6.2, 0.4), "type": "fermion", "label": "b\u0305", "arrow": "backward"},
+    {"start": v4, "end": (6.0, -0.3), "type": "gluon", "label": "g"},
 ]
 
 # Color palette
@@ -55,7 +56,7 @@ p = figure(
     height=2700,
     title="feynman-basic \u00b7 bokeh \u00b7 pyplots.ai",
     x_range=Range1d(-0.6, 7.2),
-    y_range=Range1d(-0.6, 6.6),
+    y_range=Range1d(-0.8, 6.8),
     toolbar_location=None,
 )
 
@@ -68,38 +69,6 @@ p.title.text_font_size = "28pt"
 p.title.align = "center"
 p.background_fill_color = "#f8f8f8"
 
-
-def draw_wavy(p, x0, y0, x1, y1, color, n_waves=8, amplitude=0.2):
-    """Draw a wavy line (photon/Z boson)."""
-    dx, dy = x1 - x0, y1 - y0
-    length = np.sqrt(dx**2 + dy**2)
-    perp_x, perp_y = -dy / length, dx / length
-    t = np.linspace(0, 1, 400)
-    wave = amplitude * np.sin(2 * np.pi * n_waves * t)
-    wx = (x0 + t * dx) + wave * perp_x
-    wy = (y0 + t * dy) + wave * perp_y
-    p.line(wx.tolist(), wy.tolist(), line_width=4, color=color)
-
-
-def draw_gluon(p, x0, y0, x1, y1, color, n_coils=7, amplitude=0.22):
-    """Draw a curly/coiled line (gluon) using looping parametric curve."""
-    dx, dy = x1 - x0, y1 - y0
-    length = np.sqrt(dx**2 + dy**2)
-    perp_x, perp_y = -dy / length, dx / length
-    t = np.linspace(0, 1, 1000)
-    angle = 2 * np.pi * n_coils * t
-    # Slow forward progress during loops to create coil effect
-    effective_t = t - (amplitude / length) * 1.2 * np.sin(angle)
-    gx = (x0 + effective_t * dx) + amplitude * np.sin(angle) * perp_x
-    gy = (y0 + effective_t * dy) + amplitude * np.sin(angle) * perp_y
-    p.line(gx.tolist(), gy.tolist(), line_width=4, color=color)
-
-
-def draw_dashed(p, x0, y0, x1, y1, color):
-    """Draw a dashed line (scalar boson like Higgs)."""
-    p.line([x0, x1], [y0, y1], line_width=6, color=color, line_dash=[24, 12])
-
-
 # Draw all propagators
 for prop in propagators:
     x0, y0 = prop["start"]
@@ -108,6 +77,7 @@ for prop in propagators:
     dy = y1 - y0
     length = np.sqrt(dx**2 + dy**2)
     color = TYPE_COLORS[prop["type"]]
+    perp_x, perp_y = -dy / length, dx / length
 
     if prop["type"] == "fermion":
         p.line([x0, x1], [y0, y1], line_width=4, color=color)
@@ -139,17 +109,34 @@ for prop in propagators:
         )
 
     elif prop["type"] == "photon":
-        draw_wavy(p, x0, y0, x1, y1, color)
+        # Wavy line for photon/Z boson
+        n_waves = 8
+        amplitude = 0.2
+        t = np.linspace(0, 1, 400)
+        wave = amplitude * np.sin(2 * np.pi * n_waves * t)
+        wx = (x0 + t * dx) + wave * perp_x
+        wy = (y0 + t * dy) + wave * perp_y
+        p.line(wx.tolist(), wy.tolist(), line_width=4, color=color)
 
     elif prop["type"] == "gluon":
-        draw_gluon(p, x0, y0, x1, y1, color)
+        # Curly/coiled line for gluon using looping parametric curve
+        n_coils = 5
+        amplitude = 0.15
+        t = np.linspace(0, 1, 800)
+        angle = 2 * np.pi * n_coils * t
+        # Looping coil: radius creates visible loops crossing the centerline
+        loop_r = amplitude * 1.4
+        effective_t = t - (loop_r / length) * np.sin(angle)
+        gx = (x0 + effective_t * dx) + amplitude * np.sin(angle) * perp_x
+        gy = (y0 + effective_t * dy) + amplitude * np.sin(angle) * perp_y
+        p.line(gx.tolist(), gy.tolist(), line_width=3.5, color=color)
 
     elif prop["type"] == "boson":
-        draw_dashed(p, x0, y0, x1, y1, color)
+        # Dashed line for scalar boson (Higgs)
+        p.line([x0, x1], [y0, y1], line_width=6, color=color, line_dash=[24, 12])
 
     # Label offset perpendicular to the line
     mid_x, mid_y = (x0 + x1) / 2, (y0 + y1) / 2
-    perp_x, perp_y = -dy / length, dx / length
     label_dist = 0.38
     label_x = mid_x + label_dist * perp_x
     label_y = mid_y + label_dist * perp_y
@@ -175,10 +162,10 @@ p.scatter("x", "y", source=vertex_source, size=22, color=VERTEX_COLOR, line_colo
 
 # Legend: particle type key using colored labels
 legend_items = [
-    ("\u2500\u2500  fermion", FERMION_COLOR, 6.2),
-    ("\u223c\u223c  photon / Z", PHOTON_COLOR, 5.8),
-    ("\u2609\u2609  gluon", GLUON_COLOR, 5.4),
-    ("- -  scalar boson (H)", BOSON_COLOR, 5.0),
+    ("\u2500\u2500  fermion", FERMION_COLOR, 6.4),
+    ("\u223c\u223c  photon / Z", PHOTON_COLOR, 6.0),
+    ("\u2609\u2609  gluon", GLUON_COLOR, 5.6),
+    ("- -  scalar boson (H)", BOSON_COLOR, 5.2),
 ]
 for text, color, y_pos in legend_items:
     p.add_layout(
@@ -186,7 +173,7 @@ for text, color, y_pos in legend_items:
             x=-0.3,
             y=y_pos,
             text=text,
-            text_font_size="20pt",
+            text_font_size="22pt",
             text_color=color,
             text_font_style="bold",
             text_align="left",
@@ -199,9 +186,9 @@ p.add_layout(
     Arrow(
         end=NormalHead(size=20, fill_color="#aaaaaa", line_color="#aaaaaa"),
         x_start=1.5,
-        y_start=-0.3,
+        y_start=-0.5,
         x_end=5.5,
-        y_end=-0.3,
+        y_end=-0.5,
         line_width=3,
         line_color="#aaaaaa",
     )
@@ -209,9 +196,9 @@ p.add_layout(
 p.add_layout(
     Label(
         x=3.5,
-        y=-0.45,
+        y=-0.65,
         text="time",
-        text_font_size="20pt",
+        text_font_size="22pt",
         text_color="#aaaaaa",
         text_align="center",
         text_baseline="top",
@@ -222,10 +209,10 @@ p.add_layout(
 p.add_layout(
     Label(
         x=3.5,
-        y=6.2,
+        y=6.5,
         text="e\u207be\u207a \u2192 Z* \u2192 ZH \u2192 \u03bc\u207b\u03bc\u207a + bb\u0305 + g",
-        text_font_size="20pt",
-        text_color="#555555",
+        text_font_size="24pt",
+        text_color="#444444",
         text_align="center",
         text_baseline="middle",
         text_font_style="italic",
