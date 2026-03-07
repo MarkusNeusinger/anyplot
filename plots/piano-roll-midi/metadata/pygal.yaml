@@ -1,7 +1,7 @@
 library: pygal
 specification_id: piano-roll-midi
 created: '2026-03-07T19:55:12Z'
-updated: '2026-03-07T20:19:55Z'
+updated: '2026-03-07T20:33:38Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 22805912215
 issue: 4565
@@ -10,35 +10,37 @@ library_version: 3.1.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/piano-roll-midi/pygal/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/piano-roll-midi/pygal/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/piano-roll-midi/pygal/plot.html
-quality_score: 78
+quality_score: 77
 review:
   strengths:
   - 'Excellent musical data: realistic I-V-vi-IV chord progression with bass, chords,
-    and melody layers'
-  - Good velocity color mapping with colorblind-safe viridis-like palette
-  - Perfect spec compliance - all required features present
-  - 'Nice domain-specific touches: black key shading, measure numbers, musical dynamic
-    labels'
+    and melody layers showing full feature range'
+  - 'Massive improvement in library mastery: pygal now used idiomatically with native
+    XY chart, series, and Style system'
+  - Colorblind-safe viridis-like palette with meaningful velocity band labels using
+    musical dynamics notation
+  - Clean code structure with native pygal output methods
   weaknesses:
-  - Library mastery critically low - pygal used as mere SVG canvas with all visualization
-    hand-drawn via SVG injection
-  - Regex-based SVG coordinate extraction is fragile and non-idiomatic
-  - sys.path manipulation workaround is a code smell
-  - Uses cairosvg directly instead of pygal native render_to_png
-  image_description: 'The plot displays a MIDI piano roll visualization spanning 8
-    measures (32 beats) of a I-V-vi-IV chord progression. The y-axis shows pitch names
-    from C3 to G5, with black key rows (C#, D#, F#, G#, A#) shaded in subtle gray.
-    The x-axis shows time in beats (0-32) with "Time (beats)" label. Notes appear
-    as horizontal colored rectangles: dark purple for soft dynamics (p, ~65-74), blue
-    for mp (~75-84), teal for mf (~85-94), green for f (~95-104), and yellow for ff
-    (~105-115) — a viridis-like palette. Vertical grid lines mark beats (dashed) and
-    measure boundaries (solid). A categorical velocity legend appears at the bottom.
-    The title reads "piano-roll-midi · pygal · pyplots.ai" in monospace font. Three
-    clear musical layers are visible: bass (long notes at bottom), chords (mid-range
-    blocks), and melody (shorter, brighter notes at top).'
+  - Missing spec-required alternating black/white key row shading
+  - Missing differentiated beat vs measure boundary grid lines
+  - Legend text partially obscured by legend color boxes
+  - Vertical space wasted by many empty pitch rows
+  - sys.path manipulation workaround still present
+  image_description: 'The plot shows a MIDI piano roll visualization spanning 32 beats
+    (8 measures) of a I-V-vi-IV chord progression. The y-axis displays pitch names
+    from C3 to G5, and the x-axis shows "Time (beats)" from 0 to 32. Notes appear
+    as thick horizontal colored line segments on an XY chart: dark purple for pp (65-74),
+    blue for p (75-84), teal/green for mp (85-94), yellow-green for f (95-104), and
+    bright yellow for ff (105-115) — a viridis-like sequential palette. Three musical
+    layers are visible: long bass notes at the bottom (C3, G3, A3, F3), block chords
+    in the middle (C4-G4 range), and shorter melodic notes at the top (C5-G5 range).
+    A legend at the bottom shows velocity bands with dynamic markings. Vertical and
+    horizontal grid lines are present. The background is light off-white (#f8f8f6).
+    The title "piano-roll-midi · pygal · pyplots.ai" appears at the top in monospace
+    font. Some legend labels appear partially obscured by their color boxes.'
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 23
       max: 30
       items:
       - id: VQ-01
@@ -46,42 +48,42 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Font sizes explicitly set but y-axis labels appear small relative
-          to large canvas
+        comment: Font sizes explicitly set (title=56, labels=22, legend=24). Y-axis
+          labels somewhat small relative to canvas
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 4
         max: 6
         passed: true
-        comment: No text overlap; pitch labels well-spaced, notes on separate rows
+        comment: Legend color boxes partially obscure legend text labels. Dense y-axis
+          with unused pitch rows
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Notes clearly visible; some very short notes (0.5 beats) are thin
-          but discernible
+        comment: Notes rendered as thick XY lines work reasonably well but short notes
+          appear thin
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Viridis-like purple-to-yellow palette is colorblind-safe
+        comment: Viridis-like palette is colorblind-safe with good sequential contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good horizontal usage; some wasted vertical space with empty pitch
-          rows
+        comment: Good horizontal usage but vertical space wasted by empty pitch rows
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Time (beats) with units, pitch names descriptive, title correct
+        comment: Time (beats) with units, Pitch with note names, correct title format
     design_excellence:
-      score: 13
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -89,23 +91,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Thoughtful velocity palette, monospace font, black key shading. Above
+        comment: Viridis-like palette, monospace font, off-white background. Above
           defaults but not publication-level
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Beat grid with dashed/solid distinction, rounded corners, subtle
-          shading
+        comment: Grid present but no beat/measure differentiation. No black key row
+          shading. Some refinement with layout
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Three musical layers visible, velocity coloring creates dynamic emphasis
+        comment: Three musical layers visible, velocity coloring shows dynamics. No
+          explicit measure markers or chord labels
     spec_compliance:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: SC-01
@@ -113,26 +116,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct piano roll with horizontal rectangles on pitch-time grid
+        comment: Correct piano roll with horizontal note segments on pitch-time grid
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 2
         max: 4
-        passed: true
-        comment: 'All spec features present: notes, pitch, time, velocity, key shading,
-          grid, names'
+        passed: false
+        comment: Missing alternating black/white key row shading and measure boundary
+          distinction
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=time, Y=pitch, length=duration, color=velocity all correct
+        comment: X=time, Y=pitch with note names, color=velocity, length=duration
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, velocity legend with dynamic markings
+        comment: Correct title format, velocity legend with musical dynamic labels
     data_quality:
       score: 15
       max: 15
@@ -142,86 +145,82 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Varying durations, velocities, chords, melody, bass; demonstrates
-          all piano roll features
+        comment: 'Excellent variety: durations 0.5-4 beats, velocities 65-115, chords,
+          melody, bass lines'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: I-V-vi-IV chord progression with correct MIDI values and music terminology
+        comment: Real I-V-vi-IV chord progression with standard MIDI note numbers
+          and velocities
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: MIDI pitches 48-79, velocities 65-115, 32 beats in 4/4 time all realistic
+        comment: MIDI pitches 48-79 (C3-G5), velocities 65-115, 32 beats in 4/4 time
+          — all musically realistic
     code_quality:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Data-plot-save flow but includes vel_color helper function
+        comment: Clean linear data-plot-save flow, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data hardcoded, no random elements
+        comment: All data hardcoded and deterministic
       - id: CQ-03
         name: Clean Imports
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: All imports used
+        passed: false
+        comment: os and sys imported only for sys.path manipulation workaround
       - id: CQ-04
         name: Code Elegance
         score: 1
         max: 2
         passed: false
-        comment: Extensive regex SVG parsing and string manipulation is fragile and
-          complex
+        comment: Good structure overall but sys.path manipulation is fragile and inelegant
       - id: CQ-05
         name: Output & API
-        score: 0
+        score: 1
         max: 1
-        passed: false
-        comment: Uses cairosvg directly + sys.path hack instead of pygal render_to_png
+        passed: true
+        comment: Uses pygal native render_to_png() and render_to_file()
     library_mastery:
-      score: 2
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 1
+        score: 4
         max: 5
-        passed: false
-        comment: pygal used only as SVG scaffolding; all visualization is manually
-          injected SVG
+        passed: true
+        comment: Uses pygal.XY natively with Style, series, y_labels dict format,
+          legend_at_bottom
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 3
         max: 5
-        passed: false
-        comment: No distinctive pygal features leveraged; SVG output immediately hacked
-          via regex
+        passed: true
+        comment: Uses allow_interruptions for None-separated segments, dual SVG/PNG
+          output, custom Style system
   verdict: REJECTED
 impl_tags:
-  dependencies:
-  - cairosvg
+  dependencies: []
   techniques:
-  - custom-legend
   - manual-ticks
   - html-export
   patterns:
-  - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
-  - custom-colormap
-  - alpha-blending
   - grid-styling

@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 piano-roll-midi: MIDI Piano Roll Visualization
 Library: pygal 3.1.0 | Python 3.14.3
-Quality: 78/100 | Created: 2026-03-07
+Quality: 77/100 | Created: 2026-03-07
 """
 
 import os
