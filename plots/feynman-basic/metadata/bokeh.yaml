@@ -1,0 +1,227 @@
+library: bokeh
+specification_id: feynman-basic
+created: '2026-03-07T21:22:12Z'
+updated: '2026-03-07T21:54:55Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22807440282
+issue: 4667
+python_version: 3.14.3
+library_version: 3.8.2
+preview_url: https://storage.googleapis.com/pyplots-images/plots/feynman-basic/bokeh/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/feynman-basic/bokeh/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/feynman-basic/bokeh/plot.html
+quality_score: 84
+review:
+  strengths:
+  - 'Excellent physics accuracy: real Higgs-strahlung process with all four particle
+    types'
+  - Custom color palette with strong visual identity (blue fermions, gold photons,
+    green gluons, purple bosons)
+  - Legend rendered with actual line style samples matching the diagram
+  - Process equation annotation adds educational value
+  - Clean vertex styling with white-bordered black dots
+  weaknesses:
+  - Canvas utilization is suboptimal - diagram shifted left with wasted space on right
+    and bottom
+  - Legend rendering logic duplicates the main propagator drawing code, adding verbosity
+  - Minor label crowding near the H decay vertex
+  image_description: 'The plot displays a Feynman diagram for the Higgs-strahlung
+    process (e⁻e⁺ → Z* → ZH → μ⁻μ⁺ + bb̄ + g) on a warm off-white background (#f5f5f0).
+    Incoming electron (e⁻) and positron (e⁺) are shown as blue solid lines with directional
+    arrows converging at a vertex (black dot with white border) on the left. A gold
+    wavy line (Z*/γ) connects to a second vertex, which splits into an upward gold
+    wavy Z boson line and a downward purple dashed Higgs (H) line. The Z vertex produces
+    two blue fermion lines (μ⁻, μ⁺) going right, and the H vertex produces blue fermion
+    lines (b, b̄) and a green curly gluon (g) line. A custom legend in the top-left
+    shows all four line styles with matching colors: blue solid (fermion), gold wavy
+    (photon/Z), green curly (gluon), purple dashed (scalar H). A time arrow runs along
+    the bottom. The process equation is annotated at the top center. Title reads "feynman-basic
+    · bokeh · pyplots.ai".'
+  criteria_checklist:
+    visual_quality:
+      score: 26
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (28pt title, 24pt labels, 22pt time,
+          20pt legend). Perfectly readable.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Minor crowding near H decay vertex where b-bar and g labels converge.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Lines and vertices clearly visible. Wavy/curly styles render distinctly.
+          Some lines could be thicker.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue, gold, green, purple palette is colorblind-safe with good contrast.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 2
+        max: 4
+        passed: false
+        comment: Diagram shifted left with significant empty space on right and bottom.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Axes appropriately hidden. Time arrow with label serves as axis indicator.
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom color palette, warm background, vertex styling, legend with
+          rendered line samples.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Axes/grid/outline removed, subtle border box, clean background. Good
+          but canvas issues.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear physics story with particle flow, time arrow, and process equation
+          annotation.
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Feynman diagram with vertices, propagators, interaction points.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: All four line styles, vertex dots, particle labels, arrows, time
+          axis present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Vertices and propagators correctly connected. Time flows left to
+          right.
+      - id: SC-04
+        name: Title & Legend
+        score: 2
+        max: 3
+        passed: true
+        comment: Title format correct. Custom legend with line samples works well.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All 4 particle types, particle/antiparticle arrows, multiple vertices,
+          complex decay chain.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Higgs-strahlung is a real particle physics process. Neutral scientific
+          context.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 3
+        max: 4
+        passed: true
+        comment: Reasonable layout. Gluon radiation angle slightly unusual.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean linear flow: imports, data, plot, save.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic with hardcoded positions.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 1
+        max: 2
+        passed: false
+        comment: Verbose with repeated ColumnDataSource creation and duplicated legend
+          logic.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png via export_png. Also produces HTML.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of ColumnDataSource, Arrow, NormalHead, Label, BoxAnnotation.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses Bokeh-specific Arrow/NormalHead, BoxAnnotation, HTML export
+          with CDN.
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  - html-export
+  patterns:
+  - data-generation
+  - columndatasource
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - minimal-chrome
