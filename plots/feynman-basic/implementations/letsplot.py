@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 feynman-basic: Feynman Diagram for Particle Interactions
 Library: letsplot 4.8.2 | Python 3.14.3
 Quality: 88/100 | Created: 2026-03-07
@@ -9,17 +9,22 @@ import pandas as pd
 from lets_plot import (
     LetsPlot,
     aes,
+    arrow,
+    coord_fixed,
     element_rect,
     element_text,
+    geom_label,
     geom_path,
     geom_point,
-    geom_polygon,
     geom_segment,
     geom_text,
     ggplot,
     ggsave,
     ggsize,
     labs,
+    layer_tooltips,
+    scale_color_identity,
+    scale_fill_identity,
     theme,
     theme_void,
     xlim,
@@ -38,37 +43,20 @@ DARK = "#1A1A1A"
 GRAY = "#AAAAAA"
 LIGHT_BG = "#FAFAFA"
 
-# --- Vertex positions (centered, using more vertical space) ---
+# --- Vertex positions ---
 v1x, v1y = 0.30, 0.50
 v2x, v2y = 0.70, 0.50
-ext = 0.24  # longer fermion lines to fill canvas
+ext = 0.24
 
-# --- Fermion segments: (x, y, xend, yend) ---
+# --- Fermion segments with color column for identity scale ---
 segments = pd.DataFrame(
     {
         "x": [v1x - ext, v1x, v2x, v2x + ext],
         "y": [v1y + ext, v1y, v2y, v2y - ext],
         "xend": [v1x, v1x - ext, v2x + ext, v2x],
         "yend": [v1y, v1y - ext, v2y + ext, v2y],
-    }
-)
-
-# --- Arrowheads via geom_polygon (cleaner than segment pairs) ---
-hl, hw = 0.025, 0.013
-dx = segments["xend"] - segments["x"]
-dy = segments["yend"] - segments["y"]
-lens = np.sqrt(dx**2 + dy**2)
-ux, uy = dx / lens, dy / lens
-px, py = -uy, ux
-mid_frac = 0.55
-mx = segments["x"] + mid_frac * dx
-my = segments["y"] + mid_frac * dy
-
-arrow_polys = pd.DataFrame(
-    {
-        "x": np.concatenate([mx - hl * ux + hw * px, mx, mx - hl * ux - hw * px]),
-        "y": np.concatenate([my - hl * uy + hw * py, my, my - hl * uy - hw * py]),
-        "grp": np.tile(np.arange(4), 3),
+        "color": [BLUE] * 4,
+        "particle": ["e\u207b (fermion)", "e\u207a (fermion)", "\u03bc\u207b (fermion)", "\u03bc\u207a (fermion)"],
     }
 )
 
@@ -78,42 +66,34 @@ photon_x = v1x + t * (v2x - v1x)
 photon_y = v1y + 0.035 * np.sin(t * 7 * 2 * np.pi)
 photon_df = pd.DataFrame({"x": photon_x, "y": photon_y, "grp": 1})
 
-# --- Vertices ---
-vertex_df = pd.DataFrame({"x": [v1x, v2x], "y": [v1y, v2y]})
+# --- Vertices with tooltip data ---
+vertex_df = pd.DataFrame(
+    {"x": [v1x, v2x], "y": [v1y, v2y], "vertex": ["V\u2081 (annihilation)", "V\u2082 (pair creation)"]}
+)
 
-# --- Particle labels ---
+# --- Particle labels using geom_label (lets-plot distinctive: background fill) ---
 labels_df = pd.DataFrame(
     {
         "x": [v1x - ext - 0.04, v1x - ext - 0.04, v2x + ext + 0.03, v2x + ext + 0.03, (v1x + v2x) / 2],
-        "y": [v1y + ext + 0.03, v1y - ext - 0.03, v2y + ext + 0.04, v2y - ext - 0.04, v1y + 0.055],
+        "y": [v1y + ext + 0.03, v1y - ext - 0.03, v2y + ext + 0.04, v2y - ext - 0.04, v1y + 0.065],
         "label": ["e\u207b", "e\u207a", "\u03bc\u207b", "\u03bc\u207a", "\u03b3"],
+        "fill": ["white", "white", "white", "white", LIGHT_BG],
     }
 )
 
-# --- Time arrow (bottom, integrated into diagram area) ---
+# --- Time arrow (bottom) ---
 time_y = 0.14
 time_df = pd.DataFrame({"x": [0.28], "xend": [0.72], "y": [time_y], "yend": [time_y]})
-time_arrow = pd.DataFrame({"x": [0.71, 0.71, 0.72], "y": [time_y + 0.012, time_y - 0.012, time_y], "grp": [0, 0, 0]})
 time_lbl = pd.DataFrame({"x": [0.50], "y": [time_y - 0.04], "label": ["time"]})
 
-# --- Legend (compact, integrated below title on the left) ---
+# --- Legend lines (compact, upper-left) ---
 leg_x0, leg_len = 0.10, 0.08
 leg_ys = {"fermion": 0.94, "photon": 0.88, "gluon": 0.82, "boson": 0.76}
 leg_label_x = leg_x0 + leg_len + 0.02
 
-# Fermion legend line
+# Fermion legend line (with native arrow)
 leg_fermion = pd.DataFrame(
     {"x": [leg_x0], "xend": [leg_x0 + leg_len], "y": [leg_ys["fermion"]], "yend": [leg_ys["fermion"]]}
-)
-# Fermion legend arrow
-fa_mx = leg_x0 + leg_len * 0.6
-fa_hl, fa_hw = 0.015, 0.008
-leg_fermion_arrow = pd.DataFrame(
-    {
-        "x": [fa_mx - fa_hl, fa_mx, fa_mx - fa_hl],
-        "y": [leg_ys["fermion"] - fa_hw, leg_ys["fermion"], leg_ys["fermion"] + fa_hw],
-        "grp": [0, 0, 0],
-    }
 )
 
 # Photon legend wavy line
@@ -140,32 +120,64 @@ leg_labels = pd.DataFrame(
     {"x": [leg_label_x] * 4, "y": list(leg_ys.values()), "label": ["Fermion", "Photon", "Gluon", "Boson"]}
 )
 
-# --- Subtitle annotation (reaction equation, placed prominently) ---
+# --- Reaction equation annotation ---
 equation_df = pd.DataFrame(
     {"x": [0.50], "y": [0.96], "label": ["e\u207be\u207a \u2192 \u03b3 \u2192 \u03bc\u207b\u03bc\u207a"]}
 )
 
-# --- Build plot ---
+# --- Build plot using lets-plot distinctive features ---
 plot = (
     ggplot()
     + theme_void()
-    # Fermion lines
-    + geom_segment(data=segments, mapping=aes(x="x", y="y", xend="xend", yend="yend"), size=2.5, color=BLUE)
-    # Arrowheads as filled polygons
-    + geom_polygon(data=arrow_polys, mapping=aes(x="x", y="y", group="grp"), fill=BLUE, color=BLUE, size=0.5)
+    # Fermion lines with native arrow() (lets-plot distinctive feature)
+    + geom_segment(
+        data=segments,
+        mapping=aes(x="x", y="y", xend="xend", yend="yend", color="color"),
+        size=2.5,
+        arrow=arrow(angle=25, length=12, type="closed"),
+        tooltips=layer_tooltips().line("@particle"),
+    )
+    + scale_color_identity()
     # Photon wavy line
     + geom_path(data=photon_df, mapping=aes(x="x", y="y", group="grp"), size=2.5, color=GOLD)
-    # Vertices
-    + geom_point(data=vertex_df, mapping=aes(x="x", y="y"), size=12, color=DARK, shape=16)
-    # Particle labels
-    + geom_text(data=labels_df, mapping=aes(x="x", y="y", label="label"), size=24, color=DARK, fontface="italic")
-    # Time arrow
-    + geom_segment(data=time_df, mapping=aes(x="x", y="y", xend="xend", yend="yend"), size=1.0, color=GRAY)
-    + geom_polygon(data=time_arrow, mapping=aes(x="x", y="y", group="grp"), fill=GRAY, color=GRAY, size=0.5)
+    # Vertices with tooltips (lets-plot distinctive: interactive hover in HTML)
+    + geom_point(
+        data=vertex_df,
+        mapping=aes(x="x", y="y"),
+        size=12,
+        color=DARK,
+        shape=16,
+        tooltips=layer_tooltips().line("@vertex"),
+    )
+    # Particle labels with geom_label (lets-plot distinctive: label backgrounds)
+    + geom_label(
+        data=labels_df,
+        mapping=aes(x="x", y="y", label="label", fill="fill"),
+        size=24,
+        color=DARK,
+        fontface="italic",
+        label_padding=0.3,
+        label_r=0.2,
+        alpha=0.85,
+    )
+    + scale_fill_identity()
+    # Time arrow using native arrow() (lets-plot distinctive)
+    + geom_segment(
+        data=time_df,
+        mapping=aes(x="x", y="y", xend="xend", yend="yend"),
+        size=1.0,
+        color=GRAY,
+        arrow=arrow(angle=25, length=10, type="closed"),
+    )
     + geom_text(data=time_lbl, mapping=aes(x="x", y="y", label="label"), size=16, color=GRAY, fontface="italic")
     # --- Legend (top-left, compact) ---
-    + geom_segment(data=leg_fermion, mapping=aes(x="x", y="y", xend="xend", yend="yend"), size=2.0, color=BLUE)
-    + geom_polygon(data=leg_fermion_arrow, mapping=aes(x="x", y="y", group="grp"), fill=BLUE, color=BLUE, size=0.5)
+    + geom_segment(
+        data=leg_fermion,
+        mapping=aes(x="x", y="y", xend="xend", yend="yend"),
+        size=2.0,
+        color=BLUE,
+        arrow=arrow(angle=25, length=8, type="closed"),
+    )
     + geom_path(data=leg_photon, mapping=aes(x="x", y="y", group="grp"), size=2.0, color=GOLD)
     + geom_path(data=leg_gluon, mapping=aes(x="x", y="y", group="grp"), size=2.0, color=TEAL)
     + geom_segment(
@@ -174,7 +186,8 @@ plot = (
     + geom_text(data=leg_labels, mapping=aes(x="x", y="y", label="label"), size=14, color=DARK, hjust=0)
     # Reaction equation
     + geom_text(data=equation_df, mapping=aes(x="x", y="y", label="label"), size=20, color="#4A6B82")
-    # Styling
+    # Styling with coord_fixed (lets-plot distinctive: maintains aspect ratio)
+    + coord_fixed(ratio=0.5625)
     + xlim(-0.05, 1.05)
     + ylim(0.05, 1.00)
     + labs(title="feynman-basic \u00b7 letsplot \u00b7 pyplots.ai")
