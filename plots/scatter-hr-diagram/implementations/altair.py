@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 scatter-hr-diagram: Hertzsprung-Russell Diagram
 Library: altair 6.0.0 | Python 3.14.3
 Quality: 83/100 | Created: 2026-03-07
@@ -63,19 +63,22 @@ df = pd.DataFrame(
 # Sun as a reference point
 sun = pd.DataFrame({"Temperature (K)": [5778], "Luminosity (Solar)": [1.0], "label": ["Sun ☉"]})
 
-# Region label positions
+# Region label positions (placed in clear areas away from dense data)
 region_labels = pd.DataFrame(
     {
-        "Temperature (K)": [15000, 3800, 12000, 18000],
-        "Luminosity (Solar)": [0.08, 400, 80000, 0.003],
+        "Temperature (K)": [8000, 3200, 9000, 25000],
+        "Luminosity (Solar)": [0.015, 800, 200000, 0.0008],
         "text": ["Main Sequence", "Red Giants", "Supergiants", "White Dwarfs"],
     }
 )
 
+# Interactive selection: click legend to highlight spectral type
+selection = alt.selection_point(fields=["Spectral Type"], bind="legend")
+
 # Plot
 stars = (
     alt.Chart(df)
-    .mark_circle(opacity=0.75, strokeWidth=0.5, stroke="#555555")
+    .mark_circle(strokeWidth=0.5, stroke="#555555")
     .encode(
         x=alt.X(
             "Temperature (K):Q",
@@ -112,16 +115,18 @@ stars = (
             "Spectral Type:N",
             scale=alt.Scale(
                 domain=["O", "B", "A", "F", "G", "K", "M"],
-                range=["#6688cc", "#88aadd", "#aabbcc", "#ccbb88", "#ddcc44", "#ee9933", "#cc5522"],
+                range=["#4466bb", "#7799dd", "#c0d0e8", "#f0d070", "#ddcc44", "#ee9933", "#cc5522"],
             ),
             sort=["O", "B", "A", "F", "G", "K", "M"],
             legend=alt.Legend(
                 title="Spectral Type", titleFontSize=18, labelFontSize=15, symbolSize=200, orient="right"
             ),
         ),
-        size=alt.value(80),
+        size=alt.value(40),
+        opacity=alt.condition(selection, alt.value(0.55), alt.value(0.08)),
         tooltip=["Temperature (K):Q", "Luminosity (Solar):Q", "Spectral Type:N", "Region:N"],
     )
+    .add_params(selection)
 )
 
 # Sun marker
@@ -133,14 +138,14 @@ sun_point = (
 
 sun_label = (
     alt.Chart(sun)
-    .mark_text(fontSize=16, fontWeight="bold", color="#DAA520", dx=-30, dy=-15)
+    .mark_text(fontSize=16, fontWeight="bold", color="#DAA520", dx=30, dy=-18)
     .encode(x="Temperature (K):Q", y="Luminosity (Solar):Q", text="label:N")
 )
 
 # Region labels
 labels = (
     alt.Chart(region_labels)
-    .mark_text(fontSize=15, fontStyle="italic", color="#999999")
+    .mark_text(fontSize=15, fontStyle="italic", color="#888888", fontWeight="bold")
     .encode(x="Temperature (K):Q", y="Luminosity (Solar):Q", text="text:N")
 )
 
