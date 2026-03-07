@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 waveform-audio: Audio Waveform Plot
 Library: pygal 3.1.0 | Python 3.14.3
 Quality: 86/100 | Created: 2026-03-07
@@ -48,7 +48,7 @@ waveform_data = [
 envelope_upper = [
     {
         "value": (round(float(t_down[i]), 5), round(float(env_down[i]), 4)),
-        "label": f"envelope: {float(env_down[i]):.3f}",
+        "label": f"envelope: ±{float(env_down[i]):.3f}",
     }
     for i in range(n_points)
 ]
@@ -60,28 +60,39 @@ envelope_lower = [
     for i in range(n_points)
 ]
 
-# Style - refined publication quality with intentional color palette
+# Peak amplitude marker - highlight the attack transient peak for data storytelling
+peak_idx = int(np.argmax(np.abs(amp_down)))
+peak_marker = [
+    {
+        "value": (round(float(t_down[peak_idx]), 5), round(float(amp_down[peak_idx]), 4)),
+        "label": f"Peak: {float(amp_down[peak_idx]):.3f} at {float(t_down[peak_idx]):.4f}s",
+    }
+]
+
+# Style - publication quality with colorblind-safe palette
+# Using blue (#306998) + orange (#E69F00) - universally distinguishable
 custom_style = Style(
     background="white",
-    plot_background="#f8f9fa",
+    plot_background="#f5f6f8",
     foreground="#2a2a2a",
     foreground_strong="#1a1a1a",
-    foreground_subtle="#d8d8d8",
-    colors=("#306998", "#d4574e", "#d4574e"),
-    title_font_size=60,
-    label_font_size=38,
-    major_label_font_size=34,
-    legend_font_size=32,
+    foreground_subtle="#d0d0d0",
+    colors=("#306998", "#E69F00", "#E69F00", "#306998", "#999999"),
+    title_font_size=62,
+    label_font_size=40,
+    major_label_font_size=36,
+    legend_font_size=34,
     value_font_size=28,
     tooltip_font_size=28,
     stroke_width=1.8,
-    opacity=0.7,
+    opacity=0.65,
     opacity_hover=0.95,
     title_font_family="sans-serif",
     label_font_family="sans-serif",
     major_label_font_family="sans-serif",
     legend_font_family="sans-serif",
     value_font_family="sans-serif",
+    transition="200ms ease-in",
 )
 
 # X-axis labels - fewer ticks to avoid crowding
@@ -100,7 +111,7 @@ chart = pygal.XY(
     stroke_style={"width": 1.8},
     show_legend=True,
     legend_at_bottom=True,
-    legend_box_size=28,
+    legend_box_size=30,
     range=(-1.0, 1.0),
     show_x_guides=False,
     show_y_guides=True,
@@ -120,18 +131,36 @@ chart = pygal.XY(
     dots_size=0,
     explicit_size=True,
     js=[],
+    secondary_range=(-1.0, 1.0),
+    interpolate="cubic",
 )
 
 chart.add("Waveform", waveform_data)
 
-# Envelope lines showing decay boundary - thicker for visibility
+# Envelope lines showing decay boundary - thick dashed for strong visibility
 chart.add(
-    "Decay envelope", envelope_upper, stroke_style={"width": 3.5, "dasharray": "10,5"}, show_dots=False, fill=False
+    "Decay envelope",
+    envelope_upper,
+    stroke_style={"width": 4.5, "dasharray": "12,6", "linecap": "round"},
+    show_dots=False,
+    fill=False,
 )
-chart.add(None, envelope_lower, stroke_style={"width": 3.5, "dasharray": "10,5"}, show_dots=False, fill=False)
+chart.add(
+    None,
+    envelope_lower,
+    stroke_style={"width": 4.5, "dasharray": "12,6", "linecap": "round"},
+    show_dots=False,
+    fill=False,
+)
+
+# Peak transient marker - distinctive pygal per-point styling with custom node
+chart.add("Peak transient", peak_marker, stroke_style={"width": 0}, dots_size=12, show_dots=True, fill=False)
 
 # Zero reference line
-zero_line = [{"value": (0.0, 0), "label": "zero"}, {"value": (round(float(t_down[-1]), 5), 0), "label": "zero"}]
+zero_line = [
+    {"value": (0.0, 0), "label": "zero baseline"},
+    {"value": (round(float(t_down[-1]), 5), 0), "label": "zero baseline"},
+]
 chart.add(None, zero_line, stroke_style={"width": 1.5, "dasharray": "4,6"}, show_dots=False, fill=False)
 
 # Save
