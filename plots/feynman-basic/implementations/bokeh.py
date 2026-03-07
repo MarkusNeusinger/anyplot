@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 feynman-basic: Feynman Diagram for Particle Interactions
 Library: bokeh 3.8.2 | Python 3.14.3
 Quality: 88/100 | Created: 2026-03-07
@@ -6,7 +6,7 @@ Quality: 88/100 | Created: 2026-03-07
 
 import numpy as np
 from bokeh.io import export_png, save
-from bokeh.models import Arrow, ColumnDataSource, Label, NormalHead, Range1d
+from bokeh.models import Arrow, BoxAnnotation, ColumnDataSource, Label, NormalHead, Range1d
 from bokeh.plotting import figure
 from bokeh.resources import CDN
 
@@ -16,16 +16,16 @@ from bokeh.resources import CDN
 #   fermion (solid), photon/Z (wavy), boson/H (dashed), gluon (curly)
 
 # Vertices
-v1 = (1.2, 3.0)  # e-e+ annihilation
-v2 = (3.0, 3.0)  # Z*/gamma virtual propagator endpoint / ZH splitting
-v3 = (4.8, 5.0)  # Z decay vertex
-v4 = (4.8, 1.0)  # H decay vertex
+v1 = (1.5, 3.0)  # e-e+ annihilation
+v2 = (3.2, 3.0)  # Z*/gamma virtual propagator endpoint / ZH splitting
+v3 = (5.0, 4.8)  # Z decay vertex
+v4 = (5.0, 1.2)  # H decay vertex
 
 # Propagators with all 4 particle types
 propagators = [
     # Incoming fermions
-    {"start": (0.0, 5.4), "end": v1, "type": "fermion", "label": "e\u207b", "arrow": "forward"},
-    {"start": (0.0, 0.6), "end": v1, "type": "fermion", "label": "e\u207a", "arrow": "backward"},
+    {"start": (0.2, 5.0), "end": v1, "type": "fermion", "label": "e\u207b", "arrow": "forward"},
+    {"start": (0.2, 1.0), "end": v1, "type": "fermion", "label": "e\u207a", "arrow": "backward"},
     # Virtual Z/gamma (wavy)
     {"start": v1, "end": v2, "type": "photon", "label": "Z*/\u03b3"},
     # Z boson (wavy)
@@ -33,12 +33,13 @@ propagators = [
     # Higgs boson (dashed)
     {"start": v2, "end": v4, "type": "boson", "label": "H"},
     # Z decay products (fermions)
-    {"start": v3, "end": (6.2, 5.8), "type": "fermion", "label": "\u03bc\u207b", "arrow": "forward"},
-    {"start": v3, "end": (6.2, 4.2), "type": "fermion", "label": "\u03bc\u207a", "arrow": "backward"},
+    {"start": v3, "end": (6.4, 5.6), "type": "fermion", "label": "\u03bc\u207b", "arrow": "forward"},
+    {"start": v3, "end": (6.4, 4.0), "type": "fermion", "label": "\u03bc\u207a", "arrow": "backward"},
     # H decay products: b quark, b-bar quark, and gluon radiation
-    {"start": v4, "end": (6.2, 2.0), "type": "fermion", "label": "b", "arrow": "forward"},
-    {"start": v4, "end": (6.2, 0.4), "type": "fermion", "label": "b\u0305", "arrow": "backward"},
-    {"start": v4, "end": (6.0, -0.3), "type": "gluon", "label": "g"},
+    {"start": v4, "end": (6.4, 2.4), "type": "fermion", "label": "b", "arrow": "forward"},
+    {"start": v4, "end": (6.4, 1.0), "type": "fermion", "label": "b\u0305", "arrow": "backward"},
+    # Gluon radiation - angled downward-right with enough length for clean coils
+    {"start": v4, "end": (6.5, -0.2), "type": "gluon", "label": "g"},
 ]
 
 # Color palette
@@ -50,13 +51,13 @@ VERTEX_COLOR = "#1a1a1a"  # Near-black
 
 TYPE_COLORS = {"fermion": FERMION_COLOR, "photon": PHOTON_COLOR, "gluon": GLUON_COLOR, "boson": BOSON_COLOR}
 
-# Plot - use landscape for horizontal time flow
+# Plot - landscape for horizontal time flow
 p = figure(
     width=4800,
     height=2700,
     title="feynman-basic \u00b7 bokeh \u00b7 pyplots.ai",
-    x_range=Range1d(-0.6, 7.2),
-    y_range=Range1d(-0.8, 6.8),
+    x_range=Range1d(-0.3, 7.0),
+    y_range=Range1d(-0.6, 6.4),
     toolbar_location=None,
 )
 
@@ -67,7 +68,14 @@ p.outline_line_color = None
 # Style
 p.title.text_font_size = "28pt"
 p.title.align = "center"
-p.background_fill_color = "#f8f8f8"
+p.background_fill_color = "#f5f5f0"
+
+# Subtle inner border using BoxAnnotation
+p.add_layout(
+    BoxAnnotation(
+        left=0.0, right=6.8, top=6.2, bottom=-0.4, fill_alpha=0, line_color="#cccccc", line_width=2, line_alpha=0.5
+    )
+)
 
 # Draw all propagators
 for prop in propagators:
@@ -80,7 +88,9 @@ for prop in propagators:
     perp_x, perp_y = -dy / length, dx / length
 
     if prop["type"] == "fermion":
-        p.line([x0, x1], [y0, y1], line_width=4, color=color)
+        # Use ColumnDataSource for fermion lines
+        src = ColumnDataSource(data={"x": [x0, x1], "y": [y0, y1]})
+        p.line("x", "y", source=src, line_width=4, color=color)
 
         # Arrow at midpoint showing particle/antiparticle flow
         mid_x, mid_y = (x0 + x1) / 2, (y0 + y1) / 2
@@ -110,34 +120,39 @@ for prop in propagators:
 
     elif prop["type"] == "photon":
         # Wavy line for photon/Z boson
-        n_waves = 8
-        amplitude = 0.2
-        t = np.linspace(0, 1, 400)
+        n_waves = max(6, int(length * 4.5))
+        amplitude = 0.18
+        t = np.linspace(0, 1, 500)
         wave = amplitude * np.sin(2 * np.pi * n_waves * t)
         wx = (x0 + t * dx) + wave * perp_x
         wy = (y0 + t * dy) + wave * perp_y
-        p.line(wx.tolist(), wy.tolist(), line_width=4, color=color)
+        wavy_src = ColumnDataSource(data={"x": wx.tolist(), "y": wy.tolist()})
+        p.line("x", "y", source=wavy_src, line_width=4, color=color)
 
     elif prop["type"] == "gluon":
-        # Curly/coiled line for gluon using looping parametric curve
-        n_coils = 5
-        amplitude = 0.15
-        t = np.linspace(0, 1, 800)
+        # Curly/coiled line for gluon - tight loops with taper
+        n_coils = max(5, int(length * 3))
+        amplitude = 0.13
+        t = np.linspace(0, 1, 1200)
         angle = 2 * np.pi * n_coils * t
-        # Looping coil: radius creates visible loops crossing the centerline
-        loop_r = amplitude * 1.4
+        # Looping coil with controlled radius
+        loop_r = amplitude * 1.2
         effective_t = t - (loop_r / length) * np.sin(angle)
-        gx = (x0 + effective_t * dx) + amplitude * np.sin(angle) * perp_x
-        gy = (y0 + effective_t * dy) + amplitude * np.sin(angle) * perp_y
-        p.line(gx.tolist(), gy.tolist(), line_width=3.5, color=color)
+        # Taper coils at endpoints for cleaner start/end
+        taper = np.minimum(t * 6, 1.0) * np.minimum((1 - t) * 6, 1.0)
+        gx = (x0 + effective_t * dx) + amplitude * np.sin(angle) * perp_x * taper
+        gy = (y0 + effective_t * dy) + amplitude * np.sin(angle) * perp_y * taper
+        gluon_src = ColumnDataSource(data={"x": gx.tolist(), "y": gy.tolist()})
+        p.line("x", "y", source=gluon_src, line_width=3.5, color=color)
 
     elif prop["type"] == "boson":
         # Dashed line for scalar boson (Higgs)
-        p.line([x0, x1], [y0, y1], line_width=6, color=color, line_dash=[24, 12])
+        boson_src = ColumnDataSource(data={"x": [x0, x1], "y": [y0, y1]})
+        p.line("x", "y", source=boson_src, line_width=6, color=color, line_dash=[24, 12])
 
     # Label offset perpendicular to the line
     mid_x, mid_y = (x0 + x1) / 2, (y0 + y1) / 2
-    label_dist = 0.38
+    label_dist = 0.35
     label_x = mid_x + label_dist * perp_x
     label_y = mid_y + label_dist * perp_y
 
@@ -158,22 +173,70 @@ for prop in propagators:
 vertex_xs = [v1[0], v2[0], v3[0], v4[0]]
 vertex_ys = [v1[1], v2[1], v3[1], v4[1]]
 vertex_source = ColumnDataSource(data={"x": vertex_xs, "y": vertex_ys})
-p.scatter("x", "y", source=vertex_source, size=22, color=VERTEX_COLOR, line_color="white", line_width=3)
+p.scatter("x", "y", source=vertex_source, size=24, color=VERTEX_COLOR, line_color="white", line_width=3)
 
-# Legend: particle type key using colored labels
-legend_items = [
-    ("\u2500\u2500  fermion", FERMION_COLOR, 6.4),
-    ("\u223c\u223c  photon / Z", PHOTON_COLOR, 6.0),
-    ("\u2609\u2609  gluon", GLUON_COLOR, 5.6),
-    ("- -  scalar boson (H)", BOSON_COLOR, 5.2),
+# Legend with actual line samples drawn using Bokeh glyphs
+legend_x = 0.1
+legend_base_y = 6.0
+legend_spacing = 0.45
+legend_line_len = 0.5
+
+legend_entries = [
+    ("fermion", FERMION_COLOR, "solid"),
+    ("photon / Z", PHOTON_COLOR, "wavy"),
+    ("gluon", GLUON_COLOR, "curly"),
+    ("scalar (H)", BOSON_COLOR, "dashed"),
 ]
-for text, color, y_pos in legend_items:
+
+for i, (name, color, style) in enumerate(legend_entries):
+    y_pos = legend_base_y - i * legend_spacing
+    lx0 = legend_x
+    lx1 = legend_x + legend_line_len
+
+    if style == "solid":
+        leg_src = ColumnDataSource(data={"x": [lx0, lx1], "y": [y_pos, y_pos]})
+        p.line("x", "y", source=leg_src, line_width=4, color=color)
+        # Small arrow on legend fermion line
+        p.add_layout(
+            Arrow(
+                end=NormalHead(size=18, fill_color=color, line_color=color),
+                x_start=lx0 + 0.12,
+                y_start=y_pos,
+                x_end=lx1 - 0.05,
+                y_end=y_pos,
+                line_width=0,
+                line_alpha=0,
+            )
+        )
+    elif style == "wavy":
+        t_leg = np.linspace(0, 1, 200)
+        wleg = 0.08 * np.sin(2 * np.pi * 4 * t_leg)
+        leg_src = ColumnDataSource(data={"x": (lx0 + t_leg * legend_line_len).tolist(), "y": (y_pos + wleg).tolist()})
+        p.line("x", "y", source=leg_src, line_width=4, color=color)
+    elif style == "curly":
+        t_leg = np.linspace(0, 1, 400)
+        angle_leg = 2 * np.pi * 3 * t_leg
+        loop_leg = 0.06 * 1.3
+        eff_t = t_leg - (loop_leg / legend_line_len) * np.sin(angle_leg)
+        taper_leg = np.minimum(t_leg * 6, 1.0) * np.minimum((1 - t_leg) * 6, 1.0)
+        leg_src = ColumnDataSource(
+            data={
+                "x": (lx0 + eff_t * legend_line_len).tolist(),
+                "y": (y_pos + 0.06 * np.sin(angle_leg) * taper_leg).tolist(),
+            }
+        )
+        p.line("x", "y", source=leg_src, line_width=3.5, color=color)
+    elif style == "dashed":
+        leg_src = ColumnDataSource(data={"x": [lx0, lx1], "y": [y_pos, y_pos]})
+        p.line("x", "y", source=leg_src, line_width=6, color=color, line_dash=[14, 8])
+
+    # Label text next to line sample
     p.add_layout(
         Label(
-            x=-0.3,
+            x=lx1 + 0.12,
             y=y_pos,
-            text=text,
-            text_font_size="22pt",
+            text=name,
+            text_font_size="20pt",
             text_color=color,
             text_font_style="bold",
             text_align="left",
@@ -184,22 +247,22 @@ for text, color, y_pos in legend_items:
 # Time axis arrow
 p.add_layout(
     Arrow(
-        end=NormalHead(size=20, fill_color="#aaaaaa", line_color="#aaaaaa"),
+        end=NormalHead(size=20, fill_color="#999999", line_color="#999999"),
         x_start=1.5,
-        y_start=-0.5,
+        y_start=-0.35,
         x_end=5.5,
-        y_end=-0.5,
+        y_end=-0.35,
         line_width=3,
-        line_color="#aaaaaa",
+        line_color="#999999",
     )
 )
 p.add_layout(
     Label(
         x=3.5,
-        y=-0.65,
+        y=-0.5,
         text="time",
         text_font_size="22pt",
-        text_color="#aaaaaa",
+        text_color="#999999",
         text_align="center",
         text_baseline="top",
     )
@@ -209,7 +272,7 @@ p.add_layout(
 p.add_layout(
     Label(
         x=3.5,
-        y=6.5,
+        y=6.15,
         text="e\u207be\u207a \u2192 Z* \u2192 ZH \u2192 \u03bc\u207b\u03bc\u207a + bb\u0305 + g",
         text_font_size="24pt",
         text_color="#444444",
