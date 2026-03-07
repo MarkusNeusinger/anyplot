@@ -1,0 +1,24 @@
+spec_id: spectrogram-mel
+title: Mel-Spectrogram for Audio Analysis
+
+# Specification tracking
+created: "2026-03-07T20:32:10Z"
+updated: null
+issue: 4672
+suggested: MarkusNeusinger
+
+# Classification tags
+tags:
+  plot_type:
+    - heatmap
+    - spectrogram
+  data_type:
+    - numeric
+    - timeseries
+  domain:
+    - machine-learning
+    - science
+    - technology
+  features:
+    - color-mapped
+    - temporal
