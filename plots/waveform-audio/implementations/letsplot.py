@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 waveform-audio: Audio Waveform Plot
 Library: letsplot 4.8.2 | Python 3.14.3
 Quality: 79/100 | Created: 2026-03-07
@@ -30,85 +30,99 @@ signal = (
 
 # Amplitude envelope: attack-sustain-release shape
 envelope = np.ones(n_samples)
-attack = int(0.05 * sample_rate)
-release = int(0.3 * sample_rate)
-envelope[:attack] = np.linspace(0, 1, attack)
-envelope[-release:] = np.linspace(1, 0, release)
+attack_samples = int(0.05 * sample_rate)
+release_samples = int(0.3 * sample_rate)
+envelope[:attack_samples] = np.linspace(0, 1, attack_samples)
+envelope[-release_samples:] = np.linspace(1, 0, release_samples)
 envelope[int(0.4 * sample_rate) : int(0.7 * sample_rate)] *= 0.5
 
 signal = signal * envelope
 signal = signal / np.max(np.abs(signal))
 
-# Downsample using min/max envelope for clean rendering
-n_bins = 2000
-bin_size = n_samples // n_bins
-time_env = []
-amp_min = []
-amp_max = []
+# Downsample using min/max envelope — vectorized binning
+n_bins = 800
+bin_edges = np.linspace(0, n_samples, n_bins + 1, dtype=int)
+time_env = np.array([time[(bin_edges[i] + bin_edges[i + 1]) // 2] for i in range(n_bins)])
+amp_max = np.array([signal[bin_edges[i] : bin_edges[i + 1]].max() for i in range(n_bins)])
+amp_min = np.array([signal[bin_edges[i] : bin_edges[i + 1]].min() for i in range(n_bins)])
 
-for i in range(n_bins):
-    start = i * bin_size
-    end = min(start + bin_size, n_samples)
-    chunk = signal[start:end]
-    t_mid = time[start + (end - start) // 2]
-    time_env.append(t_mid)
-    amp_min.append(float(np.min(chunk)))
-    amp_max.append(float(np.max(chunk)))
+# Compute amplitude magnitude per bin for color intensity mapping
+amp_range = amp_max - amp_min
 
-time_env = np.array(time_env)
-amp_min = np.array(amp_min)
-amp_max = np.array(amp_max)
+# Segment dataframe: vertical bars from ymin to ymax at each time point
+df = pd.DataFrame({"time": time_env, "ymin": amp_min, "ymax": amp_max, "intensity": amp_range})
 
-df = pd.DataFrame(
-    {"time": np.concatenate([time_env, time_env[::-1]]), "amplitude": np.concatenate([amp_max, amp_min[::-1]])}
+# Annotation data for waveform sections
+ann_data = pd.DataFrame(
+    {
+        "time": [0.025, 0.225, 0.55, 0.95, 1.35],
+        "y": [1.07, 1.07, 1.07, 1.07, 1.07],
+        "label": ["Attack", "Sustain", "Dip", "Sustain", "Release"],
+    }
 )
 
-df_line_top = pd.DataFrame({"time": time_env, "amplitude": amp_max})
-df_line_bot = pd.DataFrame({"time": time_env, "amplitude": amp_min})
-df_zero = pd.DataFrame({"time": [0, duration], "amplitude": [0.0, 0.0]})
+# Section boundaries
+section_df = pd.DataFrame({"x": [0.05, 0.4, 0.7, 1.2]})
 
-# Plot
+# Subtitle with signal description
+subtitle = "220 Hz fundamental + harmonics \u00b7 ASR envelope with amplitude dip at 0.4\u20130.7 s"
+
+# Plot — vertical segments for DAW-style waveform rendering
 plot = (
-    ggplot()  # noqa: F405
-    + geom_polygon(  # noqa: F405
-        data=df,
-        mapping=aes(x="time", y="amplitude"),  # noqa: F405
-        fill="#306998",
-        alpha=0.35,
+    ggplot(df)  # noqa: F405
+    # Waveform bars: vertical segments colored by intensity
+    + geom_segment(  # noqa: F405
+        mapping=aes(x="time", y="ymin", xend="time", yend="ymax", color="intensity"),  # noqa: F405
+        size=1.5,
+        alpha=0.85,
+        tooltips=layer_tooltips()  # noqa: F405
+        .format("ymax", ".2f")
+        .format("ymin", ".2f")
+        .format("time", ".3f")
+        .line("Time: @time s")
+        .line("Max: @ymax")
+        .line("Min: @ymin"),
     )
-    + geom_line(  # noqa: F405
-        data=df_line_top,
-        mapping=aes(x="time", y="amplitude"),  # noqa: F405
-        color="#306998",
-        size=0.5,
+    + scale_color_gradient(low="#7bafd4", high="#1a3a5c", name="Amplitude\nRange")  # noqa: F405
+    # Zero reference line
+    + geom_hline(yintercept=0, color="#999999", size=0.5, linetype="dashed")  # noqa: F405
+    # Section boundary markers
+    + geom_vline(  # noqa: F405
+        data=section_df,
+        mapping=aes(xintercept="x"),  # noqa: F405
+        color="#CCCCCC",
+        size=0.4,
+        linetype="dotted",
     )
-    + geom_line(  # noqa: F405
-        data=df_line_bot,
-        mapping=aes(x="time", y="amplitude"),  # noqa: F405
-        color="#306998",
-        size=0.5,
+    # Section annotations for storytelling
+    + geom_text(  # noqa: F405
+        data=ann_data,
+        mapping=aes(x="time", y="y", label="label"),  # noqa: F405
+        size=11,
+        color="#1a3a5c",
+        fontface="italic",
     )
-    + geom_line(  # noqa: F405
-        data=df_zero,
-        mapping=aes(x="time", y="amplitude"),  # noqa: F405
-        color="#888888",
-        size=0.6,
-        linetype="dashed",
-    )
-    + scale_x_continuous(name="Time (seconds)")  # noqa: F405
+    + scale_x_continuous(name="Time (seconds)", limits=[0, duration])  # noqa: F405
     + scale_y_continuous(  # noqa: F405
-        name="Amplitude", limits=[-1.05, 1.05], breaks=[-1.0, -0.5, 0.0, 0.5, 1.0]
+        name="Amplitude", limits=[-1.15, 1.18], breaks=[-1.0, -0.5, 0.0, 0.5, 1.0]
     )
-    + labs(title="waveform-audio \u00b7 letsplot \u00b7 pyplots.ai")  # noqa: F405
+    + labs(  # noqa: F405
+        title="waveform-audio \u00b7 letsplot \u00b7 pyplots.ai", subtitle=subtitle
+    )
     + ggsize(1600, 900)  # noqa: F405
     + theme_minimal()  # noqa: F405
     + theme(  # noqa: F405
         axis_text=element_text(size=16),  # noqa: F405
         axis_title=element_text(size=20),  # noqa: F405
         plot_title=element_text(size=24),  # noqa: F405
-        panel_grid_major_y=element_line(color="#E0E0E0", size=0.3),  # noqa: F405
+        plot_subtitle=element_text(size=16, color="#555555"),  # noqa: F405
+        legend_text=element_text(size=14),  # noqa: F405
+        legend_title=element_text(size=16),  # noqa: F405
+        legend_position="right",  # noqa: F405
+        panel_grid_major_y=element_line(color="#E8E8E8", size=0.3),  # noqa: F405
         panel_grid_major_x=element_blank(),  # noqa: F405
         panel_grid_minor=element_blank(),  # noqa: F405
+        plot_margin=[40, 20, 20, 20],  # noqa: F405
     )
 )
 
