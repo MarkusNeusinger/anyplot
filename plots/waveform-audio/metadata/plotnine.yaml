@@ -1,0 +1,214 @@
+library: plotnine
+specification_id: waveform-audio
+created: '2026-03-07T14:58:25Z'
+updated: '2026-03-07T15:08:44Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22801238614
+issue: 4563
+python_version: 3.14.3
+library_version: 0.15.3
+preview_url: https://storage.googleapis.com/pyplots-images/plots/waveform-audio/plotnine/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/waveform-audio/plotnine/plot_thumb.png
+preview_html: null
+quality_score: 92
+review:
+  strengths:
+  - Excellent data storytelling through phase-colored waveform (Attack/Sustain/Release)
+    with boundary markers
+  - Min/max envelope downsampling properly handles dense waveform display
+  - Warm panel background and custom color palette create polished professional appearance
+  - Realistic audio data with harmonics vibrato and noise
+  - Full spec compliance with all required features implemented
+  weaknesses:
+  - Phase annotation label size (11) is smaller than other text elements
+  - Data downsampling uses list comprehensions instead of vectorized numpy reshape
+    operations
+  image_description: 'The plot displays an audio waveform as a filled ribbon symmetric
+    around a zero baseline on a warm off-white panel background (#f5f5f0). The x-axis
+    shows "Time (seconds)" from 0.00 to 1.50, and the y-axis shows "Amplitude" from
+    -1.00 to 1.00. The waveform is colored by three distinct phases: orange for the
+    short Attack phase (0-0.05s) showing rapid amplitude increase, steel blue for
+    the Sustain phase (0.05-1.10s) showing steady oscillation at ~0.75 amplitude,
+    and purple for the Release phase (1.10-1.50s) showing gradual decay to zero. Dashed
+    vertical lines mark the phase boundaries. Italic phase labels appear near the
+    top of each region. A subtle horizontal zero-line bisects the waveform. The title
+    reads "waveform-audio · plotnine · pyplots.ai" in bold at the top. Y-axis has
+    dotted grid lines; x-axis grid is removed. The waveform clearly shows the harmonic
+    content with visible beat patterns in the sustain region.'
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All major font sizes explicitly set; phase annotation labels at size=11
+          slightly small
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text elements
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Waveform clearly visible with min/max envelope rendering
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Orange/blue/purple palette is colorblind-distinguishable
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good 16:9 layout with balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Time (seconds) with units, Amplitude descriptive
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom phase palette, warm background, intentional typography hierarchy
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Removed x-grid, subtle dotted y-grid, warm panel background
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Phase-colored waveform with boundary markers creates clear narrative
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct audio waveform with filled area symmetric around zero
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: All spec features present including envelope rendering
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=time, Y=amplitude, correct mapping
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct title format, phase labels annotated directly
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows attack, sustain, release, harmonics, noise
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: 220Hz A3 note with harmonics, realistic audio scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Standard sample rate, realistic duration and amplitude
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports, data, plot, save'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-organized code
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with dpi=300
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good grammar of graphics usage with aes, geom_ribbon, scales
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Categorical fill mapping on geom_ribbon with scale_alpha_manual
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep:
+  - binning
+  styling:
+  - alpha-blending
+  - grid-styling

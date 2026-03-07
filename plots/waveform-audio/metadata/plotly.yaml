@@ -1,0 +1,224 @@
+library: plotly
+specification_id: waveform-audio
+created: '2026-03-07T14:58:40Z'
+updated: '2026-03-07T15:13:37Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22801238628
+issue: 4563
+python_version: 3.14.3
+library_version: 6.6.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/waveform-audio/plotly/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/waveform-audio/plotly/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/waveform-audio/plotly/plot.html
+quality_score: 90
+review:
+  strengths:
+  - Excellent data storytelling with attack/sustain/decay phase annotations and color-coded
+    regions
+  - Layered envelope rendering creates visual depth with inner/outer fills at different
+    opacities
+  - Perfect spec compliance with all required features implemented
+  - Realistic audio data with proper harmonics, tremolo, and amplitude envelope
+  - Clean, well-structured code following KISS pattern
+  weaknesses:
+  - Waveform still quite dense in sustain region - individual oscillation peaks merge
+    together
+  - Inner envelope scaling factor is arbitrary rather than data-derived
+  image_description: 'The plot shows an audio waveform rendered as a filled envelope
+    in semi-transparent blue (#306998) against a light background. The x-axis displays
+    "Time (seconds)" from 0 to ~1.5s, and the y-axis shows "Amplitude" from -1 to
+    +1. The waveform is symmetric around a subtle zero-line. Three phase regions are
+    annotated: "ATTACK" (green text, far left with faint green background), "SUSTAIN"
+    (gray text, center), and "DECAY" (orange text, right side with faint peach/orange
+    background). Dotted vertical lines mark phase boundaries. The envelope uses layered
+    depth — a darker inner envelope sits within a lighter outer envelope, creating
+    a gradient-like visual effect. Peak envelope lines in solid blue trace the top
+    and bottom edges for crisp definition. The title "waveform-audio · plotly · pyplots.ai"
+    appears top-left in dark bold text. Y-axis has very subtle gridlines; x-axis has
+    no grid.'
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title=28, axis labels=22, ticks=18,
+          phase labels=16'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text elements. Phase labels well-positioned above
+          waveform
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Waveform envelope clearly visible with layered depth. Dense in sustain
+          region
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Single-series Python Blue with green/orange phase markers. Colorblind-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Excellent proportions with balanced margins. Plot fills canvas well
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Time (seconds) with units. Amplitude appropriate for normalized signal
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Layered envelope with depth, phase region coloring, custom typography.
+          Clearly above defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid, controlled axis styling, custom plot background color
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Attack/sustain/decay annotations with color-coded regions guide viewer
+          through signal lifecycle
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct audio waveform as filled envelope, symmetric around zero
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: filled area, semi-transparent fill, zero-line,
+          envelope rendering'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=time, Y=amplitude correctly mapped with proper range
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct. Legend hidden appropriately for single series
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows attack/sustain/decay dynamics, harmonics, tremolo, noise, and
+          clipping boundary
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: 22050 Hz sample rate, 220 Hz fundamental (A3), realistic harmonic
+          series
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 1.5s duration, normalized amplitude -1 to +1, sensible values
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean linear flow: imports, data, envelope, plot, style, save'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set before noise generation
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only numpy and plotly.graph_objects, both used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-organized with clear section comments. Appropriate complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot.png and plot.html with correct dimensions
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of go.Scatter with fill=toself, add_hline, add_vrect, add_annotation
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses hovertemplate, spline shape, vrect, HTML export. Plotly-specific
+          patterns
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - hover-tooltips
+  - html-export
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling
