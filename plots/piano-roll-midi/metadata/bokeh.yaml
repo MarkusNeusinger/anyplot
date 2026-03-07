@@ -1,0 +1,237 @@
+library: bokeh
+specification_id: piano-roll-midi
+created: '2026-03-07T19:47:49Z'
+updated: '2026-03-07T19:59:46Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22805912200
+issue: 4565
+python_version: 3.14.3
+library_version: 3.8.2
+preview_url: https://storage.googleapis.com/pyplots-images/plots/piano-roll-midi/bokeh/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/piano-roll-midi/bokeh/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/piano-roll-midi/bokeh/plot.html
+quality_score: 90
+review:
+  strengths:
+  - 'Excellent domain-specific data: musically meaningful phrase with scale runs,
+    chord progression (I-IV-V-I), and dynamic variation that tells a clear musical
+    story'
+  - 'All spec features implemented: black/white key shading, beat/measure grid differentiation,
+    note names on y-axis, velocity color mapping, auto-fit pitch range'
+  - 'Good use of Bokeh-specific features: HoverTool, ColumnDataSource, ColorBar, level-based
+    rendering, HTML export'
+  - Clean visual design with custom grid lines, removed default chrome, and white
+    note borders for clarity
+  - Fully deterministic data with no randomness
+  weaknesses:
+  - Turbo colormap is not the most colorblind-accessible choice; viridis or cividis
+    would score higher on accessibility
+  - Manual grid line drawing via p.line loop is slightly non-idiomatic compared to
+    Bokeh grid styling options
+  image_description: The plot displays a MIDI piano roll visualization with horizontal
+    colored rectangles representing musical notes. The y-axis shows pitch names from
+    B3 to D#5, with alternating white and light gray background rows distinguishing
+    white keys from black keys on a piano. The x-axis shows time in beats from 0 to
+    16. Notes are colored using a Turbo colormap ranging from blue (low velocity/soft)
+    through green and yellow to red (high velocity/loud). Vertical grid lines mark
+    beats, with thicker/darker lines at measure boundaries (beats 0, 4, 8, 12, 16).
+    A color bar on the right indicates the velocity scale from 40 to 120. The title
+    reads "piano-roll-midi · bokeh · pyplots.ai". The musical content shows an ascending
+    C major scale (measures 1-2), descending scale (measures 3-4), block chords building
+    to a red-colored climax at beat 10 (measures 5-6), and a resolving melodic phrase
+    (measures 7-8). White borders separate individual note rectangles clearly.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 28pt, axis labels 22pt, tick
+          labels 18pt, color bar title 18pt, color bar labels 16pt'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text; y-axis note names well spaced, x-axis beat numbers
+          clear
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Note rectangles clearly visible with white borders, height 0.8 gives
+          good spacing
+      - id: VQ-04
+        name: Color Accessibility
+        score: 3
+        max: 4
+        passed: true
+        comment: Turbo palette is perceptually more uniform than rainbow but not as
+          colorblind-safe as viridis/cividis
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good canvas utilization, plot fills space well, color bar positioned
+          with adequate margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Time (beats) and Pitch (MIDI note) descriptive with units
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Turbo palette vibrant and effective; white note borders, alternating
+          key shading, clean background; above defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Default grids removed, custom beat/measure grid lines with differentiated
+          alpha/width, outline removed, generous margins
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Musical data tells a clear story with ascending crescendo, chord
+          climax, and gentle resolution
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct piano roll with horizontal rectangles positioned by pitch
+          and time
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features: duration as bar length, velocity color, key shading,
+          grid lines, note names, auto-fit range'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=time in beats, Y=pitch with note names, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct, ColorBar legend for velocity
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows varied durations (0.25-2.0 beats), velocities (55-120), scales,
+          chords, melodic passages
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Realistic C major musical phrase with scale runs, I-IV-V-I chord
+          progression, melodic resolution
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: MIDI pitches C4-D5, velocities 55-120, 8 measures - all sensible
+          for musical context
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean imports-data-plot-save structure, no functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hardcoded note data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used including save and Resources for HTML export
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, appropriate complexity, no fake UI elements
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png using current Bokeh API
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Good use of ColumnDataSource, figure, rect, LinearColorMapper, ColorBar,
+          FixedTicker; minor: manual grid lines via p.line loop'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: HoverTool with custom tooltips, HTML export, ColumnDataSource pattern,
+          level-based rendering
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - hover-tooltips
+  - manual-ticks
+  - html-export
+  patterns:
+  - data-generation
+  - columndatasource
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - custom-colormap
+  - edge-highlighting
+  - grid-styling
