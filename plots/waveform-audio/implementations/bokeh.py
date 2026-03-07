@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 waveform-audio: Audio Waveform Plot
-Library: bokeh | Python 3.13
-Quality: pending | Created: 2026-03-07
+Library: bokeh 3.8.2 | Python 3.14.3
+Quality: 85/100 | Created: 2026-03-07
 """
 
 import numpy as np
