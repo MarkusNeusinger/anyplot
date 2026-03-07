@@ -1,0 +1,220 @@
+library: seaborn
+specification_id: feynman-basic
+created: '2026-03-07T21:23:32Z'
+updated: '2026-03-07T21:52:14Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22807440241
+issue: 4667
+python_version: 3.14.3
+library_version: 0.13.2
+preview_url: https://storage.googleapis.com/pyplots-images/plots/feynman-basic/seaborn/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/feynman-basic/seaborn/plot_thumb.png
+preview_html: null
+quality_score: 90
+review:
+  strengths:
+  - Excellent physics accuracy with correct particle/antiparticle arrow conventions
+  - Comprehensive reference legend showing all 4 particle line types with color-matched
+    labels
+  - Professional clean layout with thoughtful color-coding throughout
+  - Perfect text legibility with all font sizes explicitly set
+  - Creative use of sns.lineplot with parametric DataFrames for wavy and curly lines
+  weaknesses:
+  - Library mastery limited by the inherently matplotlib-centric nature of Feynman
+    diagrams
+  - Gluon and scalar boson only appear in reference legend, not in an actual interaction
+    diagram
+  image_description: 'The plot displays a Feynman diagram for electron-positron annihilation
+    into a muon-antimuon pair (e-e+ to gamma to mu-mu+). The main diagram shows two
+    blue fermion lines entering from the upper-left (e-) and lower-left (e+) converging
+    at a left vertex dot, connected by an orange wavy photon line (gamma) to a right
+    vertex dot, from which two blue fermion lines exit to the upper-right (mu-) and
+    lower-right (mu+). Arrows on fermion lines follow correct convention (forward
+    for particles, backward for antiparticles). A gray time arrow runs left-to-right
+    below the diagram with italic "time" label. Below a thin separator line, a reference
+    legend shows all four particle line types: Fermion (blue solid + arrow), Photon
+    (orange wavy), Gluon (teal curly), and Scalar Boson (pink dashed), each with color-matched
+    labels. The title reads "feynman-basic · seaborn · pyplots.ai" at the top. The
+    background is clean white with all axes removed.'
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 24pt, particle labels 22-24pt
+          bold, reference labels 16pt bold, time label 16pt'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or elements anywhere
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Lines at lw=3, vertex dots at s=250, arrows well-sized
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Seaborn colorblind palette used throughout
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 16:9 canvas well-utilized with balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Axes appropriately off for Feynman diagram, time axis labeled
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful color-coding, professional physics diagram aesthetic above
+          defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Axes hidden, despine applied, generous whitespace, subtle separator
+          line
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear physics story with time arrow and directional fermion arrows
+          guiding viewer
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Feynman diagram with vertices and propagators
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: All 4 line styles, arrows, vertex dots, labels, time axis present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Time flows left-to-right, correct arrow conventions
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title in correct format, reference legend labels all particle types
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Main diagram shows fermions and photon; reference legend shows all
+          4 types
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Real QED process: electron-positron annihilation to muon pair'
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Schematic proportions standard for Feynman diagrams
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear flow with no functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic, no random data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: numpy, pandas, matplotlib, seaborn'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-organized with parametric curves for wavy/curly lines
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png, dpi=300, bbox_inches=tight
+    library_mastery:
+      score: 5
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses set_context, set_style, color_palette, lineplot, scatterplot,
+          despine
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Seaborn theming and DataFrame-driven lineplot used, but core drawing
+          relies on matplotlib
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
+  - explicit-figure
+  dataprep: []
+  styling:
+  - minimal-chrome

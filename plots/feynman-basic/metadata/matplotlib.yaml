@@ -1,0 +1,231 @@
+library: matplotlib
+specification_id: feynman-basic
+created: '2026-03-07T21:22:41Z'
+updated: '2026-03-07T21:37:19Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22807440227
+issue: 4667
+python_version: 3.14.3
+library_version: 3.10.8
+preview_url: https://storage.googleapis.com/pyplots-images/plots/feynman-basic/matplotlib/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/feynman-basic/matplotlib/plot_thumb.png
+preview_html: null
+quality_score: 90
+review:
+  strengths:
+  - Physically accurate Feynman diagrams with correct particle/antiparticle conventions
+  - All four particle line styles are visually distinct and well-rendered (especially
+    the parametric wavy and coiled lines)
+  - Two complementary processes (QED + QCD) showcase all particle types and create
+    narrative structure
+  - Custom color palette with warm background creates a cohesive, professional aesthetic
+  - Clean, well-structured code with appropriate complexity for the visualization
+  weaknesses:
+  - Red and orange photon/gluon colors could be closer in hue than ideal for some
+    colorblind viewers, though line styles provide redundant encoding
+  - Legend font size (15pt) is marginally below the 16pt guideline
+  image_description: 'The plot displays two Feynman diagrams on an off-white (#F8F7F5)
+    background, separated by a subtle dashed horizontal line. The top diagram is labeled
+    "QED" (rotated vertically on the left) and shows electron-positron annihilation:
+    e- and e+ fermion lines (dark blue solid arrows) converge at a left vertex (black
+    dot), connected by a red wavy photon line (gamma) to a right vertex, from which
+    mu- and mu+ fermion lines emerge. The bottom diagram is labeled "QCD" and shows
+    gluon fusion to Higgs: two orange coiled/looped gluon lines (g) enter a left vertex,
+    connected by a purple dashed Higgs boson line (H) to a right vertex, from which
+    b and b-bar fermion lines exit. All particle labels use LaTeX-rendered symbols
+    in bold at ~22pt in matching colors. A horizontal legend at the bottom shows all
+    five element types (Fermion, Photon, Gluon, Boson, Vertex) with representative
+    line styles. A time arrow runs left-to-right below the legend. The title "feynman-basic
+    · matplotlib · pyplots.ai" appears centered at the top in gray.'
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set. Legend at 15pt marginally below 16pt
+          guideline; process labels at 14pt are small but supplementary.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: All text and elements fully separated with no collisions.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Fermion arrows, wavy photon, coiled gluons, dashed boson, and vertex
+          dots all clearly visible and distinguishable.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 3
+        max: 4
+        passed: true
+        comment: Blue, red, orange, purple are generally distinguishable. Red and
+          orange could be similar for deuteranopia but line styles provide redundant
+          encoding.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Two diagrams fill canvas well with balanced whitespace. Legend positioned
+          near bottom.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Axes appropriately off for diagram. Time axis labeled. Particle symbols
+          serve as labels.
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom color palette, warm off-white background, bold LaTeX labels,
+          cohesive visual identity. Professional and polished.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Axes removed, subtle separator, frameless legend, generous whitespace.
+          Time arrow is a nice touch.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Two-process layout (QED vs QCD) creates narrative comparing electromagnetic
+          and strong force interactions.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Feynman diagram with proper physics conventions.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: All four line styles, arrows on fermions, vertex dots, particle labels,
+          time axis, clean layout.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Vertices correctly positioned, propagators connect proper vertices.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title in correct format. Legend shows all 5 element types with descriptive
+          labels.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All four particle types, both particle/antiparticle directions, two
+          distinct processes.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Real textbook physics processes: e+e- annihilation and gluon fusion
+          to Higgs.'
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Clean, symmetric diagrams with proper visual proportions.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Flat structure: imports, constants, data, plot, style, save. No
+          functions or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic, no random elements.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: matplotlib.pyplot, numpy, and Line2D all used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Parametric curves for wavy/coiled lines are elegant. Loop with type
+          dispatch is clean.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with dpi=300, bbox_inches='tight'. No deprecated
+          API.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses ax methods, annotate with arrowprops, parametric ax.plot, Line2D
+          custom legend.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Parametric curve rendering, annotate arrowprops, Line2D-based custom
+          legend are well-suited to matplotlib.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  patterns:
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - minimal-chrome
