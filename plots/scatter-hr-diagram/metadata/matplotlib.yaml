@@ -1,0 +1,234 @@
+library: matplotlib
+specification_id: scatter-hr-diagram
+created: '2026-03-07T06:46:02Z'
+updated: '2026-03-07T07:12:28Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22794049040
+issue: 4558
+python_version: 3.14.3
+library_version: 3.10.8
+preview_url: https://storage.googleapis.com/pyplots-images/plots/scatter-hr-diagram/matplotlib/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/scatter-hr-diagram/matplotlib/plot_thumb.png
+preview_html: null
+quality_score: 88
+review:
+  strengths:
+  - Full spec compliance with all required features including secondary spectral class
+    axis
+  - Excellent design sophistication with coordinated off-white theme, serif typography,
+    and path effects
+  - Sun reference point is visually prominent with star marker and glow shadow effect
+  - Region labels with background boxes and italic serif font create clear visual
+    hierarchy
+  - Astrophysically accurate data with L-proportional-to-T4 main sequence relationship
+  weaknesses:
+  - A and B spectral type colors are too similar to distinguish easily
+  - Nested ternary expressions for spectral type assignment reduce code readability
+  - Marker size slightly small for sparse high-temperature regions
+  image_description: 'The plot displays a Hertzsprung-Russell diagram on an off-white
+    (#f5f5f0) background with a 16:9 aspect ratio. Stars are scattered across the
+    plot as small colored dots (s=40, alpha=0.5) with white edge highlights. The x-axis
+    shows "Surface Temperature (K)" reversed from ~45,000K (left) to ~2,000K (right)
+    on a log scale, with a secondary top axis showing spectral classes O, B, A, F,
+    G, K, M in serif font. The y-axis shows "Luminosity (L/L_sun)" on a log scale
+    from 10^-5 to 10^6. Colors follow astrophysical convention: deep blue (O), medium
+    blue (B), pale blue-gray (A), yellow-green (F), golden yellow (G), orange (K),
+    and red (M). Four region labels in italic serif with semi-transparent background
+    boxes mark "Supergiants" (top center), "Main Sequence" (diagonal, rotated ~-42
+    degrees), "Red Giants" (right center), and "White Dwarfs" (bottom center). The
+    Sun is marked with a large golden star marker with a shadow glow effect and bold
+    "Sun" label. A legend in the lower-left shows all seven spectral types with matching
+    colored dots. Title reads "scatter-hr-diagram · matplotlib · pyplots.ai" in serif
+    font. Top and right spines are removed; remaining spines are thin gray. Subtle
+    horizontal grid lines (alpha=0.12) aid reading.'
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 24pt, axis labels 20pt, ticks
+          16pt, legend 14/16pt, region labels 16pt'
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Mostly clean; minor crowding in dense K/M main sequence region; region
+          labels have background boxes
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: s=40 with alpha=0.5 appropriate for ~365 points; white edges help;
+          slightly small in sparse regions
+      - id: VQ-04
+        name: Color Accessibility
+        score: 3
+        max: 4
+        passed: true
+        comment: Spectral convention colors but A (#7799bb) and B (#4488cc) hard to
+          distinguish
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 16:9 canvas well-utilized with tight_layout and balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive with units: Surface Temperature (K), Luminosity (L/L_sun),
+          Spectral Class'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom off-white background, spectral palette, serif typography,
+          path effects, Sun glow effect
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines removed/thinned, subtle y-grid alpha=0.12, coordinated background,
+          styled legend with shadow
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Sun as prominent reference, four region labels guide viewer, diagonal
+          Main Sequence label follows data slope
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct scatter plot for HR diagram
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features: reversed x-axis, log y-axis, spectral colors, region
+          labels, Sun reference, secondary axis'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Temperature on x (reversed), luminosity on y, full range visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct format title, legend labels match spectral types
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'All stellar populations: main sequence (250), red giants (50), supergiants
+          (35), white dwarfs (30)'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Classic astrophysics visualization, neutral scientific domain
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 3
+        max: 4
+        passed: true
+        comment: Realistic temperature ranges; white dwarf count slightly overrepresented
+          but acceptable
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean imports-data-plot-style-save structure, no functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All four imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 1
+        max: 2
+        passed: true
+        comment: Deeply nested ternary for spectral type assignment reduces readability
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with dpi=300, bbox_inches=tight
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good axes-level API, FuncFormatter, twiny(), path_effects module
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: patheffects (withStroke, withSimplePatchShadow), FuncFormatter, twiny(),
+          spine customization
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - twin-axes
+  - annotations
+  - manual-ticks
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  - explicit-figure
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
+  - grid-styling
