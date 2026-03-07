@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 scatter-hr-diagram: Hertzsprung-Russell Diagram
 Library: pygal 3.1.0 | Python 3.14.3
 Quality: 79/100 | Created: 2026-03-07
@@ -74,10 +74,6 @@ custom_style = Style(
         "#ee8833",  # K Stars — orange
         "#cc2211",  # M Stars — deep red
         "#111111",  # Sun marker — black
-        "#666666",  # Region label series (shared muted)
-        "#666666",
-        "#666666",
-        "#666666",
     ),
     font_family=font,
     title_font_family=font,
@@ -97,6 +93,9 @@ custom_style = Style(
 x_label_temps = [40000, 25000, 10000, 7500, 5000, 3500, 2500]
 x_labels = [{"value": -np.log10(t), "label": f"{t:,} K"} for t in x_label_temps]
 
+# Dot sizes per spectral group — smaller for crowded cool stars, larger for sparse hot stars
+dot_sizes = {"O/B Stars": 10, "A Stars": 9, "F/G Stars": 8, "K Stars": 6, "M Stars": 5}
+
 # Chart — XY scatter with -log10(T) x-axis for reversed, spread temperature
 chart = pygal.XY(
     width=4800,
@@ -107,7 +106,7 @@ chart = pygal.XY(
     y_title="log\u2081\u2080 Luminosity (L\u2609)",
     show_legend=True,
     legend_at_bottom=True,
-    legend_at_bottom_columns=5,
+    legend_at_bottom_columns=6,
     legend_box_size=22,
     stroke=False,
     dots_size=8,
@@ -140,11 +139,11 @@ chart = pygal.XY(
     js=[],
 )
 
-# Add each spectral group as a separate series with tooltip data
+# Add each spectral group as a separate series with per-group dot sizes
 series_order = ["O/B Stars", "A Stars", "F/G Stars", "K Stars", "M Stars"]
 for stype in series_order:
     pts = groups.get(stype, [])
-    chart.add(stype, pts, stroke=False)
+    chart.add(stype, pts, stroke=False, dots_size=dot_sizes[stype])
 
 # Add the Sun as a distinct reference point
 chart.add(
@@ -154,8 +153,8 @@ chart.add(
     dots_size=16,
 )
 
-# Region labels — positioned at representative locations for each stellar population
-# Using dots_size=4 so the label anchor point renders, with large CSS label text
+# Region labels — use None title to keep them out of the legend
+# Positioned at representative locations with CSS-styled label text
 region_labels = [
     ("Main Sequence", -np.log10(18000), 3.0),
     ("Red Giants", -np.log10(3800), 2.8),
@@ -163,7 +162,7 @@ region_labels = [
     ("White Dwarfs", -np.log10(18000), -3.0),
 ]
 for region_name, rx, ry in region_labels:
-    chart.add(region_name, [{"value": (rx, ry), "label": region_name}], stroke=False, dots_size=4, show_dots=True)
+    chart.add(None, [{"value": (rx, ry), "label": region_name}], stroke=False, dots_size=2, show_dots=True)
 
 # Save
 chart.render_to_png("plot.png")
