@@ -1,7 +1,7 @@
 library: pygal
 specification_id: feynman-basic
 created: '2026-03-07T21:25:11Z'
-updated: '2026-03-07T21:53:04Z'
+updated: '2026-03-07T22:02:23Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 22807440298
 issue: 4667
@@ -10,86 +10,78 @@ library_version: 3.1.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/feynman-basic/pygal/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/feynman-basic/pygal/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/feynman-basic/pygal/plot.html
-quality_score: 66
+quality_score: 79
 review:
   strengths:
-  - Creative sinusoidal wave approach for photon propagator — visually appropriate
-    for physics
-  - Correct physics topology for e⁻e⁺ → γ → μ⁻μ⁺ with symmetric left-to-right layout
-  - Good color choice distinguishing fermions (blue) from photon (red) and vertices
-    (black)
-  - Deterministic reproducible code with analytical data generation
-  - Appropriate use of hidden axes/grid for diagram-style visualization
+  - Clever sinusoidal numpy path for wavy photon propagator within pygal XY chart
+  - Clean symmetric layout with intentional color coding by particle type
+  - Excellent code quality — linear structure, deterministic, elegant
+  - Good use of pygal tooltip and legend features for particle identification
+  - Appropriate square canvas for symmetric diagram
   weaknesses:
-  - On-diagram particle labels do not render visibly in PNG — print_values/formatter
-    approach fails
-  - Arrowheads render as crude disconnected triangular outlines rather than clean
-    directional arrows
-  - Legend cluttered with 5 entries including empty arrowheads series and non-functional
-    Particle labels entry
-  - Significant wasted whitespace above and below the diagram
-  - Code uses two function definitions breaking KISS structure
-  image_description: 'The plot shows a Feynman diagram for electron-positron annihilation
-    (e⁻e⁺ → γ → μ⁻μ⁺) on a white background at 4800×2700 px. Four blue diagonal lines
-    represent fermion propagators connecting external particle endpoints (top-left,
-    bottom-left, top-right, bottom-right) to two central black vertex dots. Small
-    triangular arrowhead outlines appear near the vertices on fermion lines, indicating
-    particle direction. A red sinusoidal wavy line runs horizontally between the two
-    vertices, representing the virtual photon propagator. The title reads "e⁻e⁺ →
-    γ → μ⁻μ⁺ Annihilation · feynman-basic · pygal · pyplots.ai". A bottom legend lists
-    5 series: "Fermions (e⁻, e⁺, μ⁻, μ⁺)", an unnamed arrowhead series (blue square),
-    "Photon propagator (γ)", "Interaction vertices", and "Particle labels". Tiny dots
-    appear near propagator midpoints where particle labels should be, but the actual
-    text labels (e⁻, e⁺, γ, μ⁻, μ⁺) are NOT visible in the rendered PNG. No axes or
-    grid lines are shown. Significant whitespace exists above and below the diagram.'
+  - Missing arrows on fermion lines to indicate particle vs antiparticle direction
+  - No inline particle labels on propagator lines — only in legend/tooltips
+  - Only shows two particle types (fermion + photon); missing gluon or boson examples
+  - Legend text appears small relative to 3600x3600 canvas
+  image_description: The plot displays a Feynman diagram for electron-positron annihilation
+    (e⁻e⁺ → γ → μ⁻μ⁺) on a white 3600×3600 square canvas. Two dark blue lines representing
+    the electron (e⁻) and positron (e⁺) converge from the upper-left and lower-left
+    corners toward a black vertex dot positioned in the center-left of the canvas.
+    A red sinusoidal wavy line (virtual photon propagator) connects the left vertex
+    to the right vertex horizontally across the middle. Two green lines representing
+    the muon (μ⁻) and antimuon (μ⁺) diverge from the right vertex toward the upper-right
+    and lower-right corners. Two prominent black dots mark the interaction vertices.
+    The title reads "e⁻e⁺ → γ → μ⁻μ⁺ Annihilation · feynman-basic · pygal · pyplots.ai"
+    at the top. A legend at the bottom identifies all six series in three columns.
+    No axes or gridlines are shown, which is appropriate for a diagram. The overall
+    layout is clean and symmetric.
   criteria_checklist:
     visual_quality:
-      score: 22
+      score: 25
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title=38, label=24, legend=24, value=32).
-          Title and legend readable at full size.
+        comment: Font sizes explicitly set (title=36, legend=24, label=22). Legend
+          text somewhat small for 3600x3600 canvas.
       - id: VQ-02
         name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text elements. Clean, uncluttered layout.
+      - id: VQ-03
+        name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: No text overlap. Minor visual clutter from arrowhead line segments
-          near vertices.
-      - id: VQ-03
-        name: Element Visibility
-        score: 3
-        max: 6
-        passed: false
-        comment: Vertex dots and wavy photon visible. On-diagram particle labels NOT
-          visible in rendered PNG. Arrowheads render as crude triangular outlines.
+        comment: Lines visible with stroke_width 5-6. Vertex dots clear. Fermion lines
+          could be slightly thicker.
       - id: VQ-04
         name: Color Accessibility
         score: 3
         max: 4
         passed: true
-        comment: Blue/red/black palette is colorblind-distinguishable with good contrast.
+        comment: Blue/green/red palette. Blue-green may challenge some colorblind
+          viewers.
       - id: VQ-05
         name: Layout & Canvas
-        score: 2
+        score: 3
         max: 4
-        passed: false
-        comment: Diagram occupies middle horizontal band with significant wasted whitespace
-          above and below. ~35-40% canvas utilization.
+        passed: true
+        comment: Good use of square canvas. Some empty space in corners.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Axes correctly hidden for Feynman diagram. Title descriptive with
-          physics notation.
+        comment: Axes correctly hidden for diagram. Title descriptive with physics
+          notation.
     design_excellence:
-      score: 10
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -97,54 +89,49 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom color palette, custom fonts, hidden axes. Above defaults but
-          arrowheads look rough and missing visible labels reduce polish.
+        comment: Custom color palette with particle-type coding. Clean white background.
+          Above defaults but not publication-ready.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Guides hidden, clean background, deliberate margins. Wasted space
-          and arrowhead artifacts detract.
+        passed: true
+        comment: Axes and guides hidden. Minimal chrome. Legend organized in columns.
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Physics story partially told through distinct line styles. Without
-          visible particle labels, viewer relies entirely on legend.
+        passed: true
+        comment: Wavy photon propagator creates visual distinction. Color coding and
+          symmetric layout convey physics well.
     spec_compliance:
-      score: 10
+      score: 11
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: Creative XY approach for Feynman diagram. Shows fermion lines and
-          wavy photon propagator correctly.
+        comment: Creative XY chart approach. Missing arrows on fermion lines.
       - id: SC-02
         name: Required Features
         score: 2
         max: 4
         passed: false
-        comment: Wavy photon present, vertex dots present, arrowheads attempted but
-          crude. On-diagram particle labels NOT visible in rendered PNG.
+        comment: Missing arrows on fermion lines and inline particle labels on propagators.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'Correct topology: incoming particles left, outgoing right, vertices
-          in middle.'
+        comment: Vertices centered, endpoints at corners, photon horizontal.
       - id: SC-04
         name: Title & Legend
-        score: 1
+        score: 3
         max: 3
-        passed: false
-        comment: Title follows format. Legend has 5 entries including empty arrowheads
-          series and non-functional Particle labels entry.
+        passed: true
+        comment: Correct title format. Legend identifies all particle series.
     data_quality:
       score: 13
       max: 15
@@ -154,74 +141,71 @@ review:
         score: 4
         max: 6
         passed: true
-        comment: Shows fermion and photon propagators with distinct treatment. Only
-          two particle types demonstrated.
+        comment: Shows fermion, antifermion, and photon. Missing gluon/boson line
+          types.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: e⁻e⁺ annihilation to muon pair is a canonical QED process.
+        comment: Electron-positron annihilation is a real, classic QED process.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Topological positions appropriate for Feynman diagrams.
+        comment: Symmetric diagram positions match physics convention.
     code_quality:
-      score: 6
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 1
+        score: 3
         max: 3
-        passed: false
-        comment: Two function definitions (arrowhead and label_formatter) break the
-          KISS Imports-Data-Plot-Save structure.
+        passed: true
+        comment: 'Clean linear flow: imports, data, style, chart, series, save.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic with analytical sinusoidal wave.
+        comment: Fully deterministic data, no randomness.
       - id: CQ-03
         name: Clean Imports
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: math imported but redundant given numpy (could use np.hypot).
+        passed: true
+        comment: 'All imports used: numpy, pygal, Style.'
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Arrowhead raw coordinate math is over-engineered. Label formatter
-          with position-matching is hacky and does not render visibly.
+        passed: true
+        comment: Elegant sinusoidal photon path. Named series per particle.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png using current pygal API.
+        comment: Saves plot.png and plot.html. Current API.
     library_mastery:
-      score: 5
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of pygal.XY, custom Style, per-point labels, per-series
+          options.
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses pygal XY with None breaks for segments, Style class, series
-          options. Correct but not advanced.
-      - id: LM-02
-        name: Distinctive Features
-        score: 2
-        max: 5
-        passed: false
-        comment: Uses tooltip labels and HTML dual-output. Custom formatter is pygal-specific
-          but does not render visibly in PNG.
+        comment: Leverages pygal tooltips, SVG interactivity, legend_at_bottom_columns.
   verdict: REJECTED
 impl_tags:
   dependencies: []
