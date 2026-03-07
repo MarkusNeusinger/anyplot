@@ -1,4 +1,4 @@
-"""pyplots.ai
+""" pyplots.ai
 bar-tornado-sensitivity: Tornado Diagram for Sensitivity Analysis
 Library: highcharts unknown | Python 3.14.3
 Quality: 85/100 | Created: 2026-03-07
