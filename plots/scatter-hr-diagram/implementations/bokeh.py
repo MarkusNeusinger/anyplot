@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 scatter-hr-diagram: Hertzsprung-Russell Diagram
 Library: bokeh 3.8.2 | Python 3.14.3
-Quality: 86/100 | Created: 2026-03-07
+Quality: 90/100 | Created: 2026-03-07
 """
 
 import numpy as np

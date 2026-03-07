@@ -1,7 +1,7 @@
 library: bokeh
 specification_id: scatter-hr-diagram
 created: '2026-03-07T06:45:43Z'
-updated: '2026-03-07T06:50:05Z'
+updated: '2026-03-07T06:57:39Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 22794049045
 issue: 4558
@@ -10,106 +10,111 @@ library_version: 3.8.2
 preview_url: https://storage.googleapis.com/pyplots-images/plots/scatter-hr-diagram/bokeh/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/scatter-hr-diagram/bokeh/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/scatter-hr-diagram/bokeh/plot.html
-quality_score: 86
+quality_score: 90
 review:
   strengths:
-  - Excellent dark space-themed design that perfectly fits the astrophysics subject
-    matter
-  - All spec requirements met including optional spectral class labels along the top
-  - Scientifically accurate data with correct stellar populations and relationships
-  - Clean, well-structured code with good reproducibility
-  - Interactive Bokeh features (hover tooltips, toolbar) add genuine value
+  - Exceptional dark space theme perfectly domain-appropriate for astronomy
+  - All spec requirements met including optional spectral class markers along top
+  - Realistic astrophysical data with correct L proportional to T^4 main sequence
+    relationship
+  - Effective use of Bokeh interactive features (hover tooltips, click-to-hide legend,
+    HTML export)
+  - Strong visual storytelling through region labels, Sun reference point, and spectral
+    class annotations
   weaknesses:
-  - No explicit legend for spectral types or stellar regions
-  - Sun label gets lost among dense main sequence markers
-  - Yellow (F) and green-yellow (G) spectral types are hard to distinguish
-  - Could leverage more Bokeh legend/color mapping features for interactivity
+  - Legend text renders too small in the bottom-right corner at 4800x2700 resolution
+  - Adjacent spectral type colors (particularly F/G yellow-gold) may be hard to distinguish
+    for colorblind viewers
   image_description: 'The plot displays a Hertzsprung-Russell diagram on a dark navy
-    (#0a0a2a) background that evokes the night sky. The x-axis shows "Surface Temperature
-    (K)" reversed from ~50,000K on the left to ~2,000K on the right, and the y-axis
-    shows "Luminosity (L☉)" on a logarithmic scale from 10⁻⁴ to 10⁶. Stars are rendered
-    as colored scatter points with white outlines: blue (O/B types) on the left, white
-    (A) in the middle, yellow-green (F/G) center-right, orange (K) further right,
-    and red (M) at the far right. The main sequence runs diagonally from upper-left
-    to lower-right. Region labels in italic identify "Supergiants" (upper center),
-    "Red Giants" (upper right, orange text), "Main Sequence" (center), and "White
-    Dwarfs" (lower center, blue text). Spectral class letters (O, B, A, F, G, K, M)
-    appear along the top in their respective colors. The Sun is marked with a yellow
-    star marker near the center of the main sequence. The title "scatter-hr-diagram
-    · bokeh · pyplots.ai" appears at top-left. A Bokeh toolbar is visible at the right
-    edge.'
+    (#0a0a2a) background. The x-axis shows "Surface Temperature (K)" reversed from
+    ~50,000 K on the left to ~2,000 K on the right (log scale). The y-axis shows "Luminosity
+    (L☉)" on a logarithmic scale from 10^-4 to 10^6. Stars are rendered as colored
+    scatter points with white edge lines: blue/light-blue for O and B types in the
+    upper-left, white/cream for A types, yellow-gold for F and G types along the middle,
+    orange for K types, and red for M types in the lower-right. The main sequence
+    runs as a clear diagonal band from upper-left to lower-right. Red Giants cluster
+    in the upper-right region with orange and red colors. Supergiants are scattered
+    across the top of the plot at high luminosities. White Dwarfs appear in the lower
+    portion at low luminosities. The Sun is marked with a distinctive yellow star
+    marker and labeled "☀ Sun". Four region labels ("Main Sequence", "Red Giants",
+    "Supergiants", "White Dwarfs") are placed in italic near their respective clusters.
+    Spectral class letters (O, B, A, F, G, K, M) appear along the top in their corresponding
+    colors. A legend titled "Spectral Type" sits in the bottom-right corner but appears
+    quite small relative to the canvas. The title reads "scatter-hr-diagram · bokeh
+    · pyplots.ai" in the upper-left.'
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 24
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 28pt, labels 22pt, ticks 18pt,
-          region labels 22pt, spectral labels 20pt). All readable at full resolution.
+        comment: Font sizes explicitly set for title (28pt), labels (22pt), ticks
+          (18pt), annotations (20-22pt). Legend text renders small in bottom-right
+          at 4800x2700.
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: 'Minor overlap: Sun label blends into dense main sequence area with
-          nearby yellow markers.'
+        comment: Generally clean layout. Main Sequence label near data points but
+          readable. Minor crowding near Sun marker.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: ~300 points at size=12 with alpha=0.85 on dark background. Markers
-          visible with white outlines. Could be slightly larger.
+        comment: size=14 markers with alpha=0.85 and white edges work well on dark
+          background for ~300 points. Could be slightly larger.
       - id: VQ-04
         name: Color Accessibility
         score: 3
         max: 4
         passed: true
-        comment: Spectral color progression follows convention. Yellow (G) and light
-          yellow (F) hard to distinguish.
+        comment: Spectral colors follow convention. Dark background aids differentiation.
+          Adjacent types (F/G) may challenge colorblind viewers.
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Plot fills canvas well. Dark background extends to edges. Good proportions.
+        comment: Plot fills canvas well. Legend renders small and cramped in corner.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Surface Temperature (K) and Luminosity (L☉) both include units.
+        comment: Surface Temperature (K) and Luminosity (L☉) - descriptive with units.
     design_excellence:
-      score: 14
+      score: 17
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: 'Strong thematic design: dark navy background evokes space, spectral
-          colors intentional, white marker outlines add polish.'
+        comment: Excellent domain-appropriate dark space theme. Custom spectral palette,
+          coordinated text colors, intentional hierarchy.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Outline removed, minor ticks hidden, grid subtle at 0.3 alpha, axis
-          lines subdued. Good refinement.
+        comment: Outline removed, subtle dashed grid (alpha=0.3), minor ticks removed,
+          coordinated axis colors. Well-polished.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Region labels guide viewer through stellar populations. Sun marker
-          provides reference. Spectral class labels add context.
+        comment: Region labels guide viewer, Sun as reference point, spectral classes
+          along top. Clear stellar classification narrative.
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -117,26 +122,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct scatter plot type.
+        comment: Correct scatter plot for HR diagram.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All required features present: reversed x-axis, log y-axis, spectral
-          colors, region labels, Sun marker, spectral class labels.'
+        comment: 'All features: reversed x-axis, log y, color by spectral type, region
+          labels, Sun marker, spectral class markers.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Temperature on x (reversed), luminosity on y (log). Ranges appropriate.
+        comment: Temperature on x, luminosity on y, correct log scales and ranges.
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Title format correct. No explicit legend for spectral types or regions.
+        comment: Title format correct. Legend labels match spectral types.
     data_quality:
       score: 15
       max: 15
@@ -146,22 +151,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All four stellar populations represented with good variety across
-          spectral types.
+        comment: All four stellar regions with all seven spectral types. Good distribution
+          variety.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real astrophysics visualization. Sun at correct position. Main sequence
-          follows L ∝ T⁴.
+        comment: Classic astrophysics context. Sun at correct T=5778K, L=1.0. Realistic
+          temperature ranges.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Temperature 2400-50000K and luminosity 1e-4 to 1e6 L☉ are scientifically
-          accurate.
+        comment: Temperature 2400-50000K, luminosity 10^-4 to 10^6 solar. Realistic
+          L∝T^4 main sequence.
     code_quality:
       score: 10
       max: 10
@@ -171,14 +176,13 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → plot → styling → save. No functions
-          or classes.'
+        comment: 'Linear flow: imports, data, plot, style, save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set at the start.
+        comment: np.random.seed(42) set at start.
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -190,36 +194,37 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-structured code with clear data generation loops.
+        comment: Well-organized sections. Appropriate complexity for the visualization.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png via export_png. Uses current Bokeh API.
+        comment: Saves plot.png via export_png. Also exports HTML. Current API.
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Proper ColumnDataSource, figure() with axis types, Legend/LegendItem,
+          Label objects, Range1d.
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Good use of ColumnDataSource, figure configuration, scatter with
-          source, Label/Title models.
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: Uses hover tooltips with custom formatting, interactive toolbar,
-          dual output (PNG + HTML).
-  verdict: REJECTED
+        comment: Hover tooltips, click-to-hide legend, HTML export. Distinctive Bokeh
+          features.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
+  - custom-legend
   - hover-tooltips
   - html-export
   patterns:
