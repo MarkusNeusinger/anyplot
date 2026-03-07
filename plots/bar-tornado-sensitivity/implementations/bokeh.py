@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 bar-tornado-sensitivity: Tornado Diagram for Sensitivity Analysis
 Library: bokeh 3.8.2 | Python 3.14.3
-Quality: 83/100 | Created: 2026-03-07
+Quality: 88/100 | Created: 2026-03-07
 """
 
 import numpy as np

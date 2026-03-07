@@ -1,7 +1,7 @@
 library: bokeh
 specification_id: bar-tornado-sensitivity
 created: '2026-03-07T08:45:33Z'
-updated: '2026-03-07T08:49:31Z'
+updated: '2026-03-07T08:56:59Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 22795810084
 issue: 4566
@@ -10,30 +10,33 @@ library_version: 3.8.2
 preview_url: https://storage.googleapis.com/pyplots-images/plots/bar-tornado-sensitivity/bokeh/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/bar-tornado-sensitivity/bokeh/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/bar-tornado-sensitivity/bokeh/plot.html
-quality_score: 83
+quality_score: 88
 review:
   strengths:
-  - Perfect spec compliance with all required features (reference line, sorting, dual
-    colors, parameter labels)
-  - Realistic, neutral renewable energy NPV dataset with good range variation
-  - Clean, well-structured code with idiomatic Bokeh patterns
-  - Good colorblind-safe blue/gold palette with solid contrast
+  - Excellent spec compliance - all required features present and correct
+  - Strong visual hierarchy through alpha gradient on bars by influence rank
+  - Refined styling with removed y-grid, subtle x-grid, custom background, hidden
+    y-axis spines
+  - Good use of Bokeh-specific features (HoverTool, LabelSet, Span, HTML export)
+  - Realistic neutral data context (renewable energy NPV)
   weaknesses:
-  - No value annotations at bar ends to show exact NPV impact values
-  - Legend is isolated in the bottom-right corner, far from the data
-  - Design stays at well-configured default level, lacks publication-quality polish
-  - Does not leverage Bokeh interactive features like HoverTool for exact values
-  image_description: The plot displays a horizontal tornado/sensitivity analysis chart
-    for NPV of a renewable energy project. Ten parameters are arranged vertically,
-    sorted by total range with the widest bar (Electricity Price) at the top and narrowest
-    (Salvage Value) at the bottom. Blue (#306998) bars represent the "Low Scenario"
-    and gold/yellow (#FFD43B) bars represent the "High Scenario", extending left and
-    right from a dark vertical baseline at $12.5M. The x-axis is labeled "Net Present
-    Value ($M)" ranging from 4 to 20. Y-axis shows parameter names (Electricity Price,
-    Discount Rate, Capacity Factor, etc.). A legend in the bottom-right identifies
-    the two colors. The title reads "NPV Sensitivity Analysis · bar-tornado-sensitivity
-    · bokeh · pyplots.ai". The characteristic tornado shape is clearly visible. Background
-    is white with subtle dashed x-grid lines.
+  - 'HoverTool tooltip bug: low_val/high_val fields split across sources causing missing
+    values on hover'
+  - Value annotation font size (14pt) slightly small for canvas size
+  - Base Case label positioning could be improved to avoid overlap with reference
+    line
+  image_description: The plot displays a horizontal tornado diagram for NPV Sensitivity
+    Analysis of a renewable energy project. Ten parameters are listed on the y-axis,
+    sorted by influence magnitude with "Electricity Price ($/MWh)" at the top (widest
+    bar spanning ~$6.2M to ~$18.8M) and "Salvage Value ($M)" at the bottom (narrowest
+    bar). A dark vertical reference line marks the base case NPV at $12.5M with a
+    label at top. Bars extend left (dark blue, "Low Scenario") and right (amber/gold,
+    "High Scenario") from the base line. Each bar has value annotations at its ends.
+    The bars use an alpha gradient - more opaque for wider/more influential parameters,
+    creating visual hierarchy. Background is light gray (#fafafa), x-grid is subtle
+    dashed lines, y-grid is removed. The legend sits in the bottom-right corner. X-axis
+    reads "Net Present Value ($M)" with ticks at 5, 10, 15, 20. Bokeh toolbar is visible
+    at top-right.
   criteria_checklist:
     visual_quality:
       score: 27
@@ -44,63 +47,66 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set per library guide. Y-axis labels readable
-          but slightly small relative to canvas.
+        comment: Font sizes explicitly set (title 30pt, labels 22pt, ticks 18pt).
+          Annotation labels at 14pt slightly small for 4800x2700.
       - id: VQ-02
         name: No Overlap
-        score: 6
-        max: 6
-        passed: true
-        comment: No overlapping text; all labels well-spaced.
-      - id: VQ-03
-        name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Bars well-sized with height=0.65 and alpha=0.9. Smallest bars slightly
-          narrow.
+        comment: Mostly clean. Base Case label slightly cramped near reference line.
+          Bottom bars value labels close together.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Bars well-sized with height=0.6, good spacing. Alpha gradient adds
+          visual differentiation.
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Blue/gold palette is colorblind-safe with strong contrast.
+        comment: Blue and amber are colorblind-safe with excellent contrast.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Plot fills canvas reasonably. Legend in bottom-right is somewhat
-          far from data.
+        comment: Good overall layout. Some vertical spacing between bars could be
+          tighter. Legend compact in corner.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: X-axis labeled with units. Y-axis shows descriptive parameter names.
+        comment: X-axis has units. Y-axis parameter names include units.
     design_excellence:
-      score: 11
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: Well-configured default level, not publication-quality.
+        passed: true
+        comment: Custom blue/amber palette, alpha gradient for hierarchy, intentional
+          typography. Above defaults.
       - id: DE-02
         name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Y-grid removed, x-grid subtle dashed, outline removed, y-axis hidden,
+          custom background.
+      - id: DE-03
+        name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Grid dashed at low alpha, y-grid removed, outline removed.
-      - id: DE-03
-        name: Data Storytelling
-        score: 3
-        max: 6
-        passed: false
-        comment: Tornado sorting creates natural hierarchy but no additional emphasis
-          or annotations.
+        comment: Alpha gradient creates hierarchy emphasizing top-influence parameters.
+          Clear narrative through renewable energy context.
     spec_compliance:
       score: 15
       max: 15
@@ -110,27 +116,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct horizontal bar tornado chart.
+        comment: Correct horizontal tornado/bar chart with dual-direction bars.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All required features present: reference line, sorting, dual colors,
-          parameter labels.'
+        comment: 'All present: reference line, sorted by range, two colors, parameter
+          labels, value annotations.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=NPV output, Y=parameters. Correct.
+        comment: X=NPV output, Y=parameters. Correctly mapped.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct with spec-id, library, pyplots.ai. Legend labels
-          match.
+        comment: Title includes spec-id, library, pyplots.ai. Legend labels match
+          data.
     data_quality:
       score: 14
       max: 15
@@ -140,21 +146,23 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: 10 parameters with good range variation creating clear tornado shape.
+        comment: Good variety in bar widths. Shows tornado shape well. Could show
+          more asymmetric effects.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Renewable energy NPV analysis — realistic, neutral, comprehensible.
+        comment: Renewable energy NPV analysis with real-world financial parameters.
+          Neutral and comprehensible.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: NPV values $6.2M-$18.8M realistic for renewable energy project.
+        comment: NPV values realistic for mid-size renewable energy project.
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -162,13 +170,13 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear flow with no functions or classes.
+        comment: 'Linear flow: imports, data, sort, sources, plot, styling, save.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic with hardcoded data.
+        comment: Deterministic hardcoded data.
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -177,18 +185,19 @@ review:
         comment: All imports used.
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Clean, appropriate complexity. np.where usage is elegant.
+        passed: false
+        comment: HoverTool tooltip references fields split across separate sources,
+          causing missing values on hover.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png via export_png plus HTML export.
+        comment: Saves as plot.png via export_png. Also saves HTML.
     library_mastery:
-      score: 6
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -196,24 +205,26 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses ColumnDataSource, categorical y_range, hbar, Span — idiomatic
-          Bokeh.
+        comment: Good use of ColumnDataSource, categorical y_range, hbar, LabelSet,
+          Span, Label. Tooltip bug reduces score.
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 4
         max: 5
-        passed: false
-        comment: ColumnDataSource and Span are Bokeh-specific but doesn't leverage
-          HoverTool or other interactive features.
+        passed: true
+        comment: HoverTool, HTML export, alpha via CDS column, LabelSet - distinctly
+          Bokeh features.
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
+  - hover-tooltips
   - html-export
   patterns:
   - data-generation
   - columndatasource
   dataprep: []
   styling:
-  - grid-styling
   - alpha-blending
+  - grid-styling
