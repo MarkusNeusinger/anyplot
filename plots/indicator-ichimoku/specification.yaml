@@ -1,0 +1,29 @@
+# Specification-level metadata for indicator-ichimoku
+# Auto-synced to PostgreSQL on push to main
+
+spec_id: indicator-ichimoku
+title: Ichimoku Cloud Technical Indicator Chart
+
+# Specification tracking
+created: 2026-03-07T20:32:08Z
+updated: null
+issue: 4669
+suggested: MarkusNeusinger
+
+# Classification tags (applies to all library implementations)
+# See docs/reference/tagging-system.md for detailed guidelines
+tags:
+  plot_type:
+    - candlestick
+    - line
+    - area
+  data_type:
+    - timeseries
+    - numeric
+  domain:
+    - finance
+  features:
+    - advanced
+    - temporal
+    - color-mapped
+    - annotated
