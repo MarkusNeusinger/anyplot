@@ -1,7 +1,7 @@
 library: letsplot
 specification_id: bar-tornado-sensitivity
 created: '2026-03-07T08:46:47Z'
-updated: '2026-03-07T08:58:06Z'
+updated: '2026-03-07T09:06:01Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 22795810110
 issue: 4566
@@ -13,27 +13,35 @@ preview_html: https://storage.googleapis.com/pyplots-images/plots/bar-tornado-se
 quality_score: 89
 review:
   strengths:
-  - Perfect spec compliance with all required features implemented correctly
-  - Excellent data quality with realistic NPV sensitivity analysis context
-  - Clean well-structured code with deterministic data
-  - Effective use of letsplot-specific features (tooltips, flavor_high_contrast_light)
-  - Strong visual hierarchy through sorting and clear labeling
+  - Professional blue/orange color palette with strong colorblind accessibility
+  - Excellent data storytelling through tornado sorting — Revenue Growth and Discount
+    Rate immediately stand out as dominant drivers
+  - 'Rich use of lets-plot features: layer_tooltips with custom formatting, flavor_high_contrast_light,
+    categorical ordering'
+  - 'Clean visual refinement: removed y-axis gridlines, subtle x-axis grid, generous
+    whitespace, bold title hierarchy with informative subtitle'
+  - All font sizes explicitly set with good readability at full resolution
+  - Delta labels on bars provide precise quantification without cluttering the layout
   weaknesses:
-  - Bar end labels (geom_text size=11) could be slightly larger for better readability
-    at output resolution
-  - Minor crowding of delta labels near the reference line on the smallest bars
-  image_description: The plot displays a horizontal tornado/butterfly bar chart for
-    NPV Sensitivity Analysis. Ten financial parameters are listed on the y-axis, sorted
-    by total range with the widest (Revenue Growth, ~9.1 range) at top and narrowest
-    (Inflation Rate, ~1.7 range) at bottom. Blue bars (#306998) extend left from a
-    vertical reference line at 0 representing the Low Scenario impact, while orange
-    bars (#E8783A) extend right representing the High Scenario impact. Each bar is
-    labeled with its delta value (e.g., -4.3, +4.8). The title reads "NPV Sensitivity
-    Analysis · bar-tornado-sensitivity · letsplot · pyplots.ai" in bold centered text.
-    A legend at top distinguishes "Low Scenario" (blue) and "High Scenario" (orange).
-    The x-axis is labeled "Change in NPV ($M)" with values ranging from -5 to +6.
-    The layout uses a clean minimal theme with no y-axis gridlines, light x-axis gridlines,
-    and generous whitespace. The high-contrast light flavor gives it a polished appearance.
+  - Bar annotation text (size=13) is noticeably smaller than axis text — could be
+    bumped to 14-15 for better consistency
+  - Nudge logic for label positioning is slightly redundant — the conditional branches
+    produce the same result for negative deltas
+  - Legend labels with '(decrease)'/'(increase)' suffixes from scale_fill_manual appear
+    truncated in the rendered output
+  image_description: The plot shows a horizontal tornado/butterfly bar chart for NPV
+    Sensitivity Analysis. Ten financial parameters are listed on the y-axis, sorted
+    by total range with the widest bars at top (Revenue Growth) and narrowest at bottom
+    (Inflation Rate). Blue bars extend leftward representing the Low Scenario (decrease
+    in NPV) and orange bars extend rightward for the High Scenario (increase in NPV).
+    A dark vertical reference line at x=0 represents the base case. Each bar has bold
+    delta labels showing the exact change (e.g., -4.3, +4.8 for Revenue Growth). The
+    title reads "NPV Sensitivity Analysis · bar-tornado-sensitivity · letsplot · pyplots.ai"
+    in bold, centered. A subtitle states "One-at-a-time parameter variation from base
+    case (NPV = $12.5M)". The x-axis is labeled "Change in NPV ($M)" with tick marks
+    from -5 to 6. The legend at the top shows "Low Scenario" (blue) and "High Scenario"
+    (orange). The background is clean white with subtle vertical gridlines. The overall
+    layout is well-proportioned with the chart filling the canvas effectively.
   criteria_checklist:
     visual_quality:
       score: 28
@@ -44,43 +52,46 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 24, axis titles 20, axis text
-          16-18, legend 16). geom_text size=11 slightly small but readable.
+        comment: All font sizes explicitly set (title=24, subtitle=16, axis_title=20,
+          ticks=16-18, legend=16). Bar labels at size=13 bold are readable but slightly
+          small relative to axis text.
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Generally clean but delta labels on smallest bars crowd near the
-          vertical reference line.
+        comment: Minor crowding of delta labels on smallest bars (Inflation Rate,
+          Salvage Value) near the reference line, but still readable.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars well-sized with width=0.7 and alpha=0.9, clearly visible at
-          all ranges.
+        comment: Bars have good width (0.7) and alpha (0.9), tornado shape is clearly
+          visible with good size differentiation.
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Blue/orange palette is colorblind-safe with excellent contrast.
+        comment: Blue (#306998) and orange (#E8783A) are colorblind-safe with excellent
+          contrast.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 1600x900 base scaled to 4800x2700. Plot fills canvas well with balanced
-          margins.
+        comment: Chart fills canvas well at 1600x900 base, balanced margins, no cut-off
+          content.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: X-axis includes units. Y-axis shows descriptive parameter names.
+        comment: X-axis labeled 'Change in NPV ($M)' with units. Y-axis shows descriptive
+          parameter names.
     design_excellence:
-      score: 14
+      score: 15
       max: 20
       items:
       - id: DE-01
@@ -88,22 +99,24 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom blue/orange palette, flavor_high_contrast_light, bold centered
-          title. Above defaults but not publication masterpiece.
+        comment: Custom blue/orange palette, flavor_high_contrast_light, bold title
+          with informative subtitle, intentional typography hierarchy. Above defaults
+          but not publication-perfect.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Y-axis gridlines removed, minor gridlines removed, theme_minimal
-          with high-contrast flavor. Good whitespace.
+        comment: Y-axis gridlines removed, subtle x-axis grid (#E0E0E0), minor grid
+          removed, generous whitespace, theme_minimal base. Well-polished.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Sorting by range creates natural visual hierarchy. Delta labels reinforce
-          quantitative story. Tornado shape tells sensitivity story.
+        comment: Tornado sorting creates natural visual hierarchy — Revenue Growth
+          and Discount Rate immediately dominate. Subtitle provides base case context.
+          Delta labels quantify impact.
     spec_compliance:
       score: 15
       max: 15
@@ -113,26 +126,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct horizontal tornado/butterfly bar chart.
+        comment: Correct tornado/butterfly horizontal bar chart with characteristic
+          tornado shape.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: reference line, sorting, dual colors,
-          parameter labels, bar end labels.'
+        comment: Vertical reference line at base case, sorted by range, dual colors
+          for low/high, parameter names on y-axis, delta labels at bar ends.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis shows change in NPV, y-axis shows parameters. All data visible.
+        comment: X-axis shows NPV change, Y-axis shows parameters, correctly mapped.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows correct format. Legend labels match data.
+        comment: Title includes 'bar-tornado-sensitivity · letsplot · pyplots.ai'.
+          Legend clearly labels Low and High scenarios.
     data_quality:
       score: 15
       max: 15
@@ -142,21 +157,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 10 parameters with varying ranges demonstrating tornado shape well.
+        comment: 10 parameters with varying ranges from 1.7 to 9.1, showing clear
+          differentiation. Both positive and negative deltas present.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: NPV sensitivity for capital investment with realistic financial parameters.
+        comment: NPV sensitivity analysis for capital investment — realistic financial
+          modeling scenario with plausible parameter names.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: NPV in $M with sensible deltas for a capital project.
+        comment: NPV values in $M range, base case $12.5M, changes ±0.8 to ±4.8 —
+          realistic for project finance.
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -164,32 +182,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, transform, plot, save. No functions
+        comment: 'Linear flow: imports → data → transform → plot → save. No functions
           or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic with hardcoded data.
+        comment: All data is hardcoded/deterministic. No random generation.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only pandas and lets_plot, all used.
+        comment: Only pandas and lets_plot imported, both used.
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: Clean Pythonic code. Tooltips are legitimate letsplot feature.
+        comment: Nudge logic is slightly redundant — conditional branches produce
+          the same result for negative deltas. Otherwise clean.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png via export_ggsave with scale=3.
+        comment: Saves as plot.png with scale=3 using export_ggsave. Current API.
     library_mastery:
       score: 7
       max: 10
@@ -199,27 +218,27 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses ggplot grammar correctly with pd.Categorical for ordering.
+        comment: Proper ggplot grammar, pd.Categorical for ordering, scale_fill_manual,
+          theme layering. Idiomatic lets-plot.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses layer_tooltips(), flavor_high_contrast_light(), and export_ggsave
-          with scale.
+        comment: Uses layer_tooltips() with custom multi-line formatting and flavor_high_contrast_light()
+          — both distinctive lets-plot features.
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - layer-composition
   - hover-tooltips
-  - html-export
+  - layer-composition
   patterns:
   - data-generation
   - iteration-over-groups
   - wide-to-long
   dataprep: []
   styling:
-  - alpha-blending
   - grid-styling
+  - alpha-blending

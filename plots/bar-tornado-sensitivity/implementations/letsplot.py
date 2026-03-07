@@ -1,4 +1,4 @@
-"""pyplots.ai
+""" pyplots.ai
 bar-tornado-sensitivity: Tornado Diagram for Sensitivity Analysis
 Library: letsplot 4.8.2 | Python 3.14.3
 Quality: 89/100 | Created: 2026-03-07
