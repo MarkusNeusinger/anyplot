@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 scatter-hr-diagram: Hertzsprung-Russell Diagram
 Library: highcharts unknown | Python 3.14.3
 Quality: 87/100 | Created: 2026-03-07
@@ -24,8 +24,8 @@ np.random.seed(42)
 spectral_config = {
     "O": {"temp_range": (28000, 45000), "n": 10, "color": "#4169e1"},
     "B": {"temp_range": (10000, 28000), "n": 25, "color": "#7ec8e3"},
-    "A": {"temp_range": (7500, 10000), "n": 30, "color": "#e8e8ff"},
-    "F": {"temp_range": (6000, 7500), "n": 40, "color": "#f8f7e4"},
+    "A": {"temp_range": (7500, 10000), "n": 30, "color": "#c8c8ff"},
+    "F": {"temp_range": (6000, 7500), "n": 40, "color": "#ffe9a0"},
     "G": {"temp_range": (5200, 6000), "n": 50, "color": "#fff44f"},
     "K": {"temp_range": (3700, 5200), "n": 45, "color": "#ffb347"},
     "M": {"temp_range": (2400, 3700), "n": 55, "color": "#e8684a"},
@@ -65,7 +65,7 @@ chart.options.chart = {
     "backgroundColor": "#0d1117",
     "style": {"fontFamily": "'Segoe UI', Helvetica, Arial, sans-serif"},
     "marginTop": 180,
-    "marginBottom": 220,
+    "marginBottom": 300,
     "marginLeft": 280,
     "marginRight": 120,
 }
@@ -101,14 +101,14 @@ chart.options.x_axis = {
     "title": {
         "text": "Surface Temperature (K)",
         "style": {"fontSize": "40px", "color": "#c9d1d9", "fontWeight": "500"},
-        "margin": 25,
+        "margin": 40,
     },
     "labels": {"style": {"fontSize": "32px", "color": "#8b949e"}},
     "reversed": True,
     "type": "logarithmic",
     "min": 2000,
     "max": 50000,
-    "tickPixelInterval": 200,
+    "tickPixelInterval": 350,
     "gridLineWidth": 1,
     "gridLineColor": "rgba(139, 148, 158, 0.08)",
     "lineColor": "rgba(139, 148, 158, 0.3)",
@@ -295,8 +295,8 @@ setTimeout(function() {
     var spectralLabels = [
         ['O', 36000, '#4169e1'],
         ['B', 17000, '#7ec8e3'],
-        ['A', 8700, '#e8e8ff'],
-        ['F', 6750, '#f8f7e4'],
+        ['A', 8700, '#c8c8ff'],
+        ['F', 6750, '#ffe9a0'],
         ['G', 5600, '#fff44f'],
         ['K', 4400, '#ffb347'],
         ['M', 3000, '#e8684a']
