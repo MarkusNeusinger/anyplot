@@ -1,7 +1,7 @@
 library: plotly
 specification_id: bar-tornado-sensitivity
 created: '2026-03-07T08:45:38Z'
-updated: '2026-03-07T08:49:12Z'
+updated: '2026-03-07T08:56:59Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 22795810074
 issue: 4566
@@ -10,94 +10,96 @@ library_version: 6.6.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/bar-tornado-sensitivity/plotly/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/bar-tornado-sensitivity/plotly/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/bar-tornado-sensitivity/plotly/plot.html
-quality_score: 84
+quality_score: 90
 review:
   strengths:
-  - 'Perfect spec compliance: all required features present and correctly implemented'
-  - 'Excellent data choice: realistic NPV sensitivity analysis with meaningful financial
-    parameters'
-  - Clean, well-structured code with explicit font sizing throughout
-  - Good use of plotly base parameter for bidirectional bars
+  - Creative gradient opacity by influence rank creates natural visual hierarchy
+  - Largest Swing annotation and base case label provide immediate context
+  - Complete spec compliance with all required features
+  - Clean deterministic data with a realistic NPV scenario
+  - Good use of plotly go.Bar base parameter for bidirectional tornado bars
   weaknesses:
-  - Design lacks polish to reach publication quality - needs stronger visual hierarchy
-    and emphasis
-  - Left margin too tight, y-axis labels crowd the canvas edge
-  - No visual emphasis on the most influential parameter
-  - Grid styling could be more refined
-  image_description: The plot shows a horizontal tornado/butterfly bar chart for NPV
-    sensitivity analysis. Eight financial parameters are listed on the y-axis (Revenue
-    Growth at top, Working Capital at bottom), sorted by total range with widest bars
-    at top. Bars extend left and right from a dashed vertical reference line at the
-    base case value of $12.5M. Blue bars represent the "Low Scenario" and orange bars
-    represent the "High Scenario." Each bar end is labeled with its dollar value (e.g.,
-    $9.1M, $16.3M). The x-axis shows "Net Present Value ($M)" ranging from $9M to
-    $16M. A horizontal legend sits above the chart. The title reads "bar-tornado-sensitivity
-    · plotly · pyplots.ai". The background is white with subtle vertical gridlines.
+  - Bar-end value labels at 16pt could be slightly larger for optimal readability
+  - Feature coverage could show more varied asymmetric distributions across parameters
+  image_description: 'The plot displays a horizontal tornado/sensitivity chart for
+    NPV (Net Present Value) analysis of a capital investment project. Eight financial
+    parameters are sorted by total range with the widest bar (Revenue Growth, ~$7.2M
+    swing) at the top and the narrowest (Working Capital, ~$1.1M swing) at the bottom.
+    Blue bars represent the "Low Scenario" and orange bars represent the "High Scenario",
+    extending left and right from a dotted vertical base case reference line at $12.5M.
+    Each bar has dollar value labels at its ends (e.g., "$9.1M", "$16.3M"). A gradient
+    opacity effect makes wider, more influential bars appear more vivid. An annotation
+    in red-orange highlights "Largest Swing: $7.2M" for Revenue Growth. The title
+    reads "bar-tornado-sensitivity · plotly · pyplots.ai" in bold. A horizontal legend
+    at top distinguishes Low and High scenarios. The x-axis is labeled "Net Present
+    Value ($M)" with tick marks from $9M to $17M. The background is clean white with
+    very subtle vertical grid lines.'
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 28pt, axis labels 22pt, ticks
-          18pt, bar text 16pt'
+        comment: All font sizes explicitly set (title 28, axis title 22, ticks 18,
+          bar text 16). Bar-end labels slightly small but legible.
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Minor crowding near base case annotation and smallest bar end labels
+        comment: No overlap anywhere. All text fully readable.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars clearly visible with appropriate bargap
+        comment: Bars well-sized with bargap=0.25. All elements clearly visible.
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Blue/orange palette is colorblind-safe
+        comment: Blue/orange palette is colorblind-safe with good contrast.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Left margin too tight at 20px
+        comment: Good canvas utilization. Margins accommodate annotations well.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: X-axis has Net Present Value ($M) with units
+        comment: X-axis has units. Y-axis has descriptive parameter names.
     design_excellence:
-      score: 10
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: Well-configured plotly_white default, not exceptional design
+        passed: true
+        comment: Gradient opacity by rank, custom palette, Arial Black title. Above
+          defaults.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Subtle gridlines, white background, some refinement but not fully
-          polished
+        passed: true
+        comment: Subtle x-grid, no y-grid, plotly_white, generous whitespace.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Tornado sorting creates hierarchy but no emphasis on key insight
+        passed: true
+        comment: Gradient opacity creates hierarchy. Largest Swing annotation highlights
+          key finding.
     spec_compliance:
       score: 15
       max: 15
@@ -107,26 +109,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct horizontal tornado bar chart
+        comment: Correct horizontal tornado chart.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: reference line, sorted bars, two colors, labels,
-          values'
+        comment: 'All features present: reference line, sorting, dual colors, labels,
+          value annotations.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=NPV output, Y=parameters, correct mapping
+        comment: X maps to NPV, Y maps to parameters.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format and legend labels
+        comment: Title format correct. Legend labels match.
     data_quality:
       score: 14
       max: 15
@@ -136,19 +138,19 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: 8 parameters with varying ranges and inverse relationships
+        comment: 8 parameters with good variety. Some asymmetric effects shown.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: NPV sensitivity analysis for capital investment
+        comment: NPV sensitivity for capital investment. Real, neutral financial scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: NPV values $9-16M realistic for capital project
+        comment: NPV values $9M-$17M, realistic for capital project.
     code_quality:
       score: 10
       max: 10
@@ -158,31 +160,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean linear flow
+        comment: Clean linear flow. No functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic data
+        comment: Fully deterministic data.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: Both numpy and plotly.graph_objects used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean and appropriate complexity
+        comment: Clean and Pythonic. Gradient opacity via list comprehension is elegant.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png and plot.html, current API
+        comment: Saves plot.png at correct dimensions. Also exports HTML.
     library_mastery:
       score: 7
       max: 10
@@ -192,22 +194,23 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of go.Bar with base parameter, add_vline, overlay barmode
+        comment: Good use of go.Bar with base parameter, overlay mode, hovertemplate.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses plotly-specific base parameter, cliponaxis, add_vline, HTML
-          export
-  verdict: REJECTED
+        comment: Hovertemplate, cliponaxis, HTML CDN export are plotly-distinctive.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
+  - hover-tooltips
   - html-export
   patterns:
   - data-generation
   dataprep: []
   styling:
+  - gradient-fill
   - grid-styling
