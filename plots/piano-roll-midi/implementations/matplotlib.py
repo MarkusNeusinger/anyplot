@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 piano-roll-midi: MIDI Piano Roll Visualization
 Library: matplotlib 3.10.8 | Python 3.14.3
 Quality: 88/100 | Created: 2026-03-07
@@ -6,6 +6,7 @@ Quality: 88/100 | Created: 2026-03-07
 
 import matplotlib.colors as mcolors
 import matplotlib.patches as mpatches
+import matplotlib.patheffects as pe
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -90,20 +91,21 @@ pitches = np.array([n[2] for n in notes])
 pitch_min = int(pitches.min()) - 1
 pitch_max = int(pitches.max()) + 1
 
-# Velocity colormap: blue (soft) to red (loud)
-cmap = mcolors.LinearSegmentedColormap.from_list("velocity", ["#4A90D9", "#306998", "#D4A843", "#C0392B"])
+# Velocity colormap: perceptually-uniform, colorblind-safe
+cmap = plt.cm.plasma
 norm = mcolors.Normalize(vmin=40, vmax=127)
 
 # Plot
-fig, ax = plt.subplots(figsize=(16, 9))
+fig, ax = plt.subplots(figsize=(16, 9), facecolor="#FAFAFA")
+ax.set_facecolor("#FAFAFA")
 
 # Background: alternate shading for black vs white keys
 for pitch in range(pitch_min, pitch_max + 1):
     semitone = pitch % 12
     if semitone in black_keys_semitone:
-        ax.axhspan(pitch - 0.5, pitch + 0.5, color="#E8E8E8", zorder=0)
+        ax.axhspan(pitch - 0.5, pitch + 0.5, color="#E0E0E0", zorder=0)
     else:
-        ax.axhspan(pitch - 0.5, pitch + 0.5, color="#F8F8F8", zorder=0)
+        ax.axhspan(pitch - 0.5, pitch + 0.5, color="#F0F0F0", zorder=0)
 
 # Beat grid lines
 total_beats = 32
@@ -113,7 +115,7 @@ for beat in range(total_beats + 1):
     else:
         ax.axvline(beat, color="#CCCCCC", linewidth=0.6, zorder=1)
 
-# Draw note rectangles
+# Draw note rectangles with shadow effect for depth
 for start, dur, pitch, vel in notes:
     color = cmap(norm(vel))
     rect = mpatches.FancyBboxPatch(
@@ -123,8 +125,9 @@ for start, dur, pitch, vel in notes:
         boxstyle="round,pad=0.05",
         facecolor=color,
         edgecolor="white",
-        linewidth=0.8,
+        linewidth=1.0,
         zorder=2,
+        path_effects=[pe.withStroke(linewidth=2.5, foreground="#00000020"), pe.Normal()],
     )
     ax.add_patch(rect)
 
@@ -138,7 +141,7 @@ for p in visible_pitches:
     pitch_labels.append(f"{name}{octave}")
 
 ax.set_yticks(visible_pitches)
-ax.set_yticklabels(pitch_labels, fontsize=14, fontfamily="monospace")
+ax.set_yticklabels(pitch_labels, fontsize=16, fontfamily="monospace")
 
 # X-axis: beats
 beat_ticks = np.arange(0, total_beats + 1, 4)
@@ -148,19 +151,20 @@ ax.set_xticklabels([str(int(b // 4) + 1) for b in beat_ticks], fontsize=16)
 # Style
 ax.set_xlim(-0.2, total_beats + 0.2)
 ax.set_ylim(pitch_min - 0.5, pitch_max + 0.5)
-ax.set_xlabel("Measure", fontsize=20)
-ax.set_ylabel("Pitch", fontsize=20)
-ax.set_title("piano-roll-midi \u00b7 matplotlib \u00b7 pyplots.ai", fontsize=24, fontweight="medium")
-ax.spines["top"].set_visible(False)
-ax.spines["right"].set_visible(False)
+ax.set_xlabel("Measure", fontsize=20, labelpad=10)
+ax.set_ylabel("Pitch", fontsize=20, labelpad=10)
+ax.set_title("piano-roll-midi · matplotlib · pyplots.ai", fontsize=24, fontweight="medium", pad=16)
+for spine in ax.spines.values():
+    spine.set_visible(False)
 ax.tick_params(axis="both", length=0)
 
 # Colorbar for velocity
 sm = plt.cm.ScalarMappable(cmap=cmap, norm=norm)
 sm.set_array([])
 cbar = plt.colorbar(sm, ax=ax, pad=0.02, aspect=30, shrink=0.8)
-cbar.set_label("Velocity", fontsize=18)
-cbar.ax.tick_params(labelsize=14)
+cbar.set_label("Velocity (MIDI)", fontsize=18)
+cbar.ax.tick_params(labelsize=16)
+cbar.outline.set_visible(False)
 
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+plt.savefig("plot.png", dpi=300, bbox_inches="tight", facecolor=fig.get_facecolor())
