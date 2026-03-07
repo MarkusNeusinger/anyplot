@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 bar-tornado-sensitivity: Tornado Diagram for Sensitivity Analysis
 Library: seaborn 0.13.2 | Python 3.14.3
 Quality: 84/100 | Created: 2026-03-07
@@ -31,11 +31,14 @@ parameters = [
 base_npv = 120.0  # Base case NPV in $M
 
 np.random.seed(42)
-low_values = base_npv + np.array([-38, -30, -25, -18, -15, -14, -10, -8, -5, -3], dtype=float)
-high_values = base_npv + np.array([32, 28, 20, 22, 12, 11, 13, 9, 6, 4], dtype=float)
+# Some parameters have inverted relationships:
+# - Material Cost: lower cost → higher NPV (low input = positive effect)
+# - Tax Rate: lower tax → higher NPV (low input = positive effect)
+low_values = base_npv + np.array([-38, -30, 22, -18, 10, -14, -10, -8, -5, -3], dtype=float)
+high_values = base_npv + np.array([32, 28, -18, 22, -8, 11, 13, 9, 6, 4], dtype=float)
 
 # Calculate ranges and sort by total impact
-total_range = high_values - low_values
+total_range = np.abs(high_values - low_values)
 sort_idx = np.argsort(total_range)
 parameters = [parameters[i] for i in sort_idx]
 low_values = low_values[sort_idx]
@@ -45,10 +48,9 @@ high_values = high_values[sort_idx]
 low_delta = low_values - base_npv
 high_delta = high_values - base_npv
 
-# Use seaborn color palette
-palette = sns.color_palette("colorblind")
-color_low = palette[1]  # orange
-color_high = palette[0]  # blue
+# Custom palette anchored on Python Blue
+color_low = "#D4652F"  # warm copper-orange for low scenario
+color_high = "#306998"  # Python Blue for high scenario
 
 # Create long-form DataFrame for seaborn barplot
 df_low = pd.DataFrame({"Parameter": parameters, "NPV ($M)": low_delta, "Scenario": "Low Scenario"})
@@ -76,17 +78,18 @@ current_ticks = ax.get_xticks()
 ax.set_xticks(current_ticks)
 ax.set_xticklabels([f"${int(t + base_npv)}" for t in current_ticks])
 
-# Base case reference line with annotation
+# Base case reference line with annotation at top
 ax.axvline(x=0, color="#333333", linewidth=1.8, linestyle="--", zorder=3)
-ax.text(
-    1.0,
-    len(parameters) - 0.5,
+ax.annotate(
     f"Base Case ${int(base_npv)}M",
-    fontsize=13,
+    xy=(0, len(parameters) - 1),
+    xytext=(8, -20),
+    textcoords="offset points",
+    fontsize=12,
     fontweight="bold",
     color="#333333",
     ha="left",
-    va="bottom",
+    va="top",
     fontstyle="italic",
 )
 
@@ -96,8 +99,11 @@ for i, _param in enumerate(parameters):
     hv = high_values[i]
     ld = low_delta[i]
     hd = high_delta[i]
-    ax.text(ld - 1.2, i, f"${lv:.0f}M", va="center", ha="right", fontsize=12, color="#555555")
-    ax.text(hd + 1.2, i, f"${hv:.0f}M", va="center", ha="left", fontsize=12, color="#555555")
+    # Position annotations at the outer end of each bar
+    neg_x = min(ld, hd)
+    pos_x = max(ld, hd)
+    ax.text(neg_x - 1.2, i, f"${min(lv, hv):.0f}M", va="center", ha="right", fontsize=12, color="#555555")
+    ax.text(pos_x + 1.2, i, f"${max(lv, hv):.0f}M", va="center", ha="left", fontsize=12, color="#555555")
 
 # Emphasize top 3 most impactful parameters with bold labels
 ytick_labels = ax.get_yticklabels()
@@ -107,7 +113,7 @@ for i, label in enumerate(ytick_labels):
         label.set_fontsize(17)
 
 # Style refinements
-ax.set_ylabel("")
+ax.set_ylabel("Input Parameter", fontsize=20)
 ax.set_xlabel("Net Present Value ($M)", fontsize=20)
 ax.set_title("bar-tornado-sensitivity \u00b7 seaborn \u00b7 pyplots.ai", fontsize=24, fontweight="medium", pad=20)
 ax.tick_params(axis="y", labelsize=16)
