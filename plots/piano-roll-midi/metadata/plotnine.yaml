@@ -1,7 +1,7 @@
 library: plotnine
 specification_id: piano-roll-midi
 created: '2026-03-07T19:46:37Z'
-updated: '2026-03-07T19:59:00Z'
+updated: '2026-03-07T20:08:50Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 22805912195
 issue: 4565
@@ -10,35 +10,34 @@ library_version: 0.15.3
 preview_url: https://storage.googleapis.com/pyplots-images/plots/piano-roll-midi/plotnine/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/piano-roll-midi/plotnine/plot_thumb.png
 preview_html: null
-quality_score: 88
+quality_score: 87
 review:
   strengths:
-  - Excellent musical data choice with a real chord progression (I-IV-V-I) that tells
-    a harmonic story
-  - Cohesive purple-toned design with alternating key shading creates an authentic
-    DAW-like appearance
-  - Strong spec compliance with all required features including black/white key distinction,
-    beat/measure grid, note names, and velocity color mapping
-  - Good use of chord progression labels at the top to provide musical context
-  - Clean well-structured code with appropriate use of plotnine grammar of graphics
+  - Excellent musical data storytelling with chord labels, dynamic markings, and climax
+    annotation
+  - Cohesive purple/lavender color scheme with inferno velocity mapping creates professional
+    appearance
+  - Smart use of theme_void as base with selectively added-back visual elements
+  - Alternating black/white key background faithfully mirrors DAW piano roll convention
+  - Clean, well-structured code with appropriate complexity
   weaknesses:
-  - Y-axis label crowding for adjacent semitones (B3/C4, E4/F4)
-  - Large vertical gaps in pitch range between G2 and C3 waste vertical space
-  - Color gradient mid-range purple tones may be hard to distinguish for colorblind
-    viewers
-  - Axis labels lack units
+  - Minor y-axis label crowding where adjacent pitches are both labeled
+  - Gap in pitch range between low bass B2 and rest of notes creates visual dead space
+  - Colorbar label implies full 0-127 range but only shows 55-120
   image_description: 'The plot displays a MIDI piano roll visualization on a 16:9
-    canvas with a light purple-white color scheme. The title "piano-roll-midi · plotnine
-    · pyplots.ai" appears in bold dark purple at the top. The y-axis shows pitch names
-    (G2 through C5) with alternating light purple (black key) and very light lavender
-    (white key) background rows. The x-axis shows beats from 0 to 16. Four measures
-    are labeled at the top in italic: "I (C)", "IV (F)", "V (G)", "I (C)". Horizontal
-    rectangles represent notes, colored on a blue-to-red gradient based on velocity
-    (60-120 range shown in the right-side colorbar). The loudest notes (C5 climax
-    around beat 6, long C4 resolution in measure 4) appear in bright red/orange. Softer
-    notes appear in blue/purple. Beat divisions are shown as subtle dotted vertical
-    lines, with solid lines at measure boundaries. Dashed horizontal lines mark octave
-    boundaries at C notes.'
+    canvas. The background features alternating horizontal bands in light lavender
+    (#f8f7fc) for white keys and slightly darker purple (#e6e4ef) for black keys.
+    Horizontal note rectangles are positioned by pitch (y-axis, labeled with note
+    names like C3, E3, G3, C4, etc.) and time (x-axis, labeled in beats 0-16). Note
+    color maps velocity using the inferno colormap: dark purple/black for soft notes
+    (~60), through red/orange for medium, to bright yellow for loud notes (~115).
+    Vertical dotted lines mark beats, solid lines mark measure boundaries (0, 4, 8,
+    12, 16). Chord labels (I (C), IV (F), V (G), I (C)) appear at the top in italic
+    gray text. Dynamic markings (mf, ff, dim., p) are shown below the piano roll.
+    A red italic "← climax" annotation marks the C5 note at beat 6-7.5. Dashed horizontal
+    lines separate octave boundaries. The velocity colorbar legend on the right shows
+    "Velocity (MIDI 0-127)" with range 60-120. The title reads "piano-roll-midi ·
+    plotnine · pyplots.ai" in bold dark text.'
   criteria_checklist:
     visual_quality:
       score: 26
@@ -49,41 +48,41 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title=24, axis titles=20, ticks=16,
-          legend title=16, legend text=14'
+        comment: 'All font sizes explicitly set: title 24pt, axis titles 20pt, ticks
+          16pt, legend 14-16pt'
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Minor crowding on y-axis where adjacent semitones have labels very
-          close together
+        comment: Minor crowding between adjacent pitch labels but all readable
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Note rectangles well-sized with ±0.4 pitch height, all notes clearly
-          distinguishable
+        comment: Note rectangles clearly visible with dark outlines; shortest eighth
+          notes slightly small
       - id: VQ-04
         name: Color Accessibility
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Blue-to-red gradient reasonable but mid-tones may be hard to distinguish
-          for colorblind types
+        comment: Inferno colormap is perceptually uniform and colorblind-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good 16:9 utilization but large vertical gaps where no notes exist
+        comment: Good 16:9 layout but visible gap in pitch range between B2 bass and
+          upper register
       - id: VQ-06
         name: Axis Labels & Title
         score: 1
         max: 2
         passed: true
-        comment: Descriptive labels but lack units
+        comment: Time (beats) has units; Pitch (note) is descriptive but unconventional
+          unit notation
     design_excellence:
       score: 15
       max: 20
@@ -93,24 +92,23 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom palette, cohesive purple-toned background, theme_void base
-          with selective restoration
+        comment: Cohesive purple/lavender scheme, inferno velocity mapping, thoughtful
+          annotations
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: theme_void eliminates spines, subtle dotted beat grid vs solid measure
-          lines, generous whitespace
+        comment: theme_void base with selectively added elements, subtle grid hierarchy
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Chord progression labels tell musical story, velocity colors create
-          hierarchy with C5 climax visible
+        comment: Chord progression labels, dynamic markings, climax annotation create
+          musical narrative
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -118,49 +116,50 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct piano roll with horizontal rectangles on pitch×time grid
+        comment: Correct piano roll with horizontal rectangles for notes
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: note rectangles, pitch/time axes, duration
-          as length, velocity as color, key shading, grid, note names'
+        comment: 'All spec features present: note names, key shading, grid lines,
+          velocity colors, auto-fit range'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=beats, Y=pitch with MIDI note names, all data visible
+        comment: X=time in beats, Y=pitch with note names, all data visible
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: Correct format title, velocity colorbar legend
+        comment: Title format correct; colorbar label says MIDI 0-127 but range is
+          55-120
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Shows chords, melody, varying durations and velocities, 4 measures
-          with different harmonic context
+        comment: Shows chords, melody, varying durations and velocities
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Musically meaningful C-F-G-C progression with melody
+        comment: 'Real musical context: C major I-IV-V-I chord progression with melodic
+          line'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: MIDI pitches 43-72, velocities 60-115, standard 4/4 time
+        comment: 'Realistic MIDI values: pitches 47-72, velocities 60-115'
     code_quality:
       score: 10
       max: 10
@@ -170,19 +169,19 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, dataframe, background, plot, save'
+        comment: Clean imports, data, processing, plot, save structure
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seed set, data is deterministic
+        comment: np.random.seed(42) set, data is hand-crafted and deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: All imports used, clean import block
       - id: CQ-04
         name: Code Elegance
         score: 2
@@ -194,9 +193,9 @@ review:
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png, dpi=300, current API
+        comment: Saves as plot.png with dpi=300
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -204,23 +203,21 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good grammar of graphics with layered geoms, aes mappings, scales,
-          themes. theme_void as base is idiomatic
+        comment: Good grammar of graphics usage with layered geoms, aes mappings,
+          scales
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: theme_void + selective restoration, scale_fill_gradientn with guide_colorbar,
-          coord_cartesian
-  verdict: REJECTED
+        comment: theme_void base, annotate(), guide_colorbar(nbin=200), 6+ layer composition
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - layer-composition
   - annotations
+  - layer-composition
   - colorbar
-  - manual-ticks
   patterns:
   - data-generation
   dataprep: []
