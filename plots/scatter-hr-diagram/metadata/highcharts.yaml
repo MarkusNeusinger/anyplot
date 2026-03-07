@@ -1,7 +1,7 @@
 library: highcharts
 specification_id: scatter-hr-diagram
 created: '2026-03-07T06:51:32Z'
-updated: '2026-03-07T07:16:12Z'
+updated: '2026-03-07T07:23:30Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 22794049026
 issue: 4558
@@ -10,87 +10,80 @@ library_version: unknown
 preview_url: https://storage.googleapis.com/pyplots-images/plots/scatter-hr-diagram/highcharts/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/scatter-hr-diagram/highcharts/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/scatter-hr-diagram/highcharts/plot.html
-quality_score: 87
+quality_score: 93
 review:
   strengths:
-  - Exceptional dark theme design evoking the cosmos - perfect for an astronomy plot
-  - Complete spec compliance with all required features including spectral class labels,
-    region labels, and Sun reference
-  - Excellent data storytelling through marker size differentiation and visual hierarchy
-  - Realistic synthetic data using mass-luminosity relation with appropriate star
-    counts per spectral type
-  - Good use of Highcharts-specific features (renderer, plotLines, data labels, interactive
-    tooltips)
+  - Excellent dark theme perfectly suited to astronomical data visualization
+  - Strong visual hierarchy through marker size differentiation across stellar populations
+  - Complete spec compliance with all required features including spectral class labels
+    and region annotations
+  - Physically realistic data generation using T^3.5 mass-luminosity relation
+  - Creative use of Highcharts JavaScript renderer API for custom region and spectral
+    class annotations
   weaknesses:
-  - X-axis tick labels are crowded/overlapping at the high-temperature end (50k-38k
-    range)
-  - X-axis title Surface Temperature (K) appears cut off or invisible in the rendered
-    image
-  - Type A and Type F spectral colors are very similar and hard to distinguish
-  image_description: 'The plot displays a Hertzsprung-Russell diagram on a dark (#0d1117)
-    background evoking the night sky. The x-axis shows Surface Temperature (K) reversed
-    (50k on the left, 2k on the right) on a logarithmic scale with tick labels in
-    light gray. The y-axis shows Luminosity (L☉) on a logarithmic scale from 0.0001
-    to 2M. The title "scatter-hr-diagram · highcharts · pyplots.ai" appears in white
-    at the top center, with a gray subtitle. Spectral class letters (O, B, A, F, G,
-    K, M) are displayed in their respective colors along the top of the plot area.
-    Stars are color-coded: blue for O/B types, pale white/blue for A, pale yellow
-    for F, yellow for G, orange for K, and red-orange for M. Main sequence stars form
-    a clear diagonal band from upper-left (hot, luminous) to lower-right (cool, dim).
-    Supergiants appear as large gold markers at the top. Red giants are large red-orange
-    markers on the upper-right. White dwarfs are small gray-blue dots at the lower-center/left.
-    The Sun is prominently marked with a large yellow circle and "Sun ☉" label near
-    5778K, 1 L☉. Region labels (SUPERGIANTS, MAIN SEQUENCE, RED GIANTS, WHITE DWARFS)
-    appear in semi-transparent text. A vertical legend on the right lists all series.
-    Subtle dashed vertical lines mark spectral class boundaries.'
+  - Minor overlap of Sun label with nearby data points
+  image_description: The plot displays a Hertzsprung-Russell diagram on a dark background
+    (#0d1117). The title "scatter-hr-diagram · highcharts · pyplots.ai" is displayed
+    prominently at the top in white text, with a subtitle "Hertzsprung-Russell Diagram
+    — Stellar Luminosity vs Surface Temperature" in muted gray. The x-axis shows "Surface
+    Temperature (K)" reversed from 50k to 2k (left to right), and the y-axis shows
+    "Luminosity (L☉)" on a logarithmic scale from 0.0001 to 2M. Seven spectral class
+    letters (O, B, A, F, G, K, M) are displayed across the top of the plot area in
+    their respective colors (blue to red). The main sequence runs diagonally from
+    upper-left (hot, luminous O/B stars in blue) to lower-right (cool, dim M stars
+    in red-orange). Red giants appear as larger coral-colored dots in the upper-right
+    (cool but luminous). Supergiants are large golden dots scattered across the top.
+    White dwarfs are small steel-blue dots in the lower-left (hot but dim). The Sun
+    is marked with a distinctive large yellow marker with white border and "Sun ☉"
+    label near the middle of the main sequence. Region labels ("SUPERGIANTS", "MAIN
+    SEQUENCE", "RED GIANTS", "WHITE DWARFS") appear in muted colors matching their
+    populations. A vertical legend on the right lists all series.
   criteria_checklist:
     visual_quality:
-      score: 22
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (60px title, 36px subtitle, 40px axis
-          titles, 32px labels). Minor crowding in x-axis tick labels at high-temperature
-          end.
+        comment: 'All font sizes explicitly set: title 60px, subtitle 36px, axis titles
+          40px, tick labels 32px, legend 32px, region labels 36px, spectral letters
+          38px'
       - id: VQ-02
         name: No Overlap
-        score: 4
-        max: 6
-        passed: false
-        comment: X-axis tick labels at left side (50k-38k) are noticeably crowded
-          and overlapping.
-      - id: VQ-03
-        name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Excellent marker size differentiation across populations. Some Type
-          A markers blend slightly with background.
+        comment: Minor overlap of Sun label with nearby G-type star data points; all
+          other text clean
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Excellent marker size differentiation: white dwarfs 6px, main sequence
+          8px, red giants 12px, supergiants 16px, Sun 18px'
       - id: VQ-04
         name: Color Accessibility
         score: 3
         max: 4
         passed: true
-        comment: Spectral colors follow astronomical convention. Type A and Type F
-          colors are quite similar.
+        comment: Domain-appropriate spectral colors; some adjacent types similar in
+          luminance for colorblind viewers
       - id: VQ-05
         name: Layout & Canvas
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: Good proportions overall but x-axis title appears cut off or not
-          visible in rendered image.
+        passed: true
+        comment: Chart fills canvas well, generous margins, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Y-axis has Luminosity (L☉) with units. X-axis title not visible in
-          rendered image.
+        passed: true
+        comment: Surface Temperature (K) and Luminosity (L☉) with units
     design_excellence:
       score: 17
       max: 20
@@ -100,23 +93,22 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Excellent dark theme evoking the cosmos. Custom spectral color palette.
-          Intentional typography with letter-spacing. Professional-level design.
+        comment: Dark theme suited for astrophysics, custom spectral colors, intentional
+          marker size hierarchy, refined typography
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: Subtle grid at very low opacity. Faint dashed spectral boundaries.
-          No prominent spines. Generous whitespace. Semi-transparent region labels.
+        comment: Subtle grid, dark background, dashed spectral boundary lines, polished
+          legend with border-radius
       - id: DE-03
         name: Data Storytelling
         score: 5
         max: 6
         passed: true
-        comment: Strong visual hierarchy through marker size differentiation. Region
-          labels guide viewer. Sun reference point. Plot tells the stellar evolution
-          story.
+        comment: Strong visual hierarchy through marker sizes, region labels guide
+          viewer, spectral class letters provide context
     spec_compliance:
       score: 15
       max: 15
@@ -126,26 +118,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct scatter plot type.
+        comment: Correct scatter plot
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features: reversed x-axis, log y-axis, spectral colors, region
-          labels, Sun reference, spectral class labels.'
+        comment: 'All features: reversed x-axis, log y-axis, spectral type colors,
+          four region labels, Sun reference, spectral class labels'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = temperature, Y = luminosity. Full data range shown.
+        comment: Temperature on X, Luminosity on Y, axes cover full data range
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format. Legend includes all series with clear names.
+        comment: Title format correct, legend labels descriptive
     data_quality:
       score: 15
       max: 15
@@ -155,22 +147,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All stellar populations: main sequence, red giants, supergiants,
-          white dwarfs. All spectral types O through M.'
+        comment: Shows all stellar populations across all 7 spectral types plus red
+          giants, supergiants, white dwarfs
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Astrophysical HR diagram with realistic mass-luminosity relation.
-          Neutral scientific topic.
+        comment: Classic astrophysics visualization with realistic stellar classification
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Temperature 2000-45000K, luminosity 0.0001-1000000 L☉. Appropriate
-          for stellar populations.
+        comment: Realistic temperature and luminosity ranges, Sun at 5778K/1.0 L☉
     code_quality:
       score: 10
       max: 10
@@ -180,34 +170,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports, data, chart config, series, HTML rendering,
-          screenshot.'
+        comment: Imports, data generation, chart config, series, export
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-structured with clear sections. Spectral config dictionary is
-          clean.
+        comment: Clean, well-structured, appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png via container screenshot. Current highcharts-core
-          API.
+        comment: Saves as plot.png via container screenshot
     library_mastery:
       score: 8
       max: 10
@@ -217,30 +204,28 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Proper use of Chart, HighchartsOptions, ScatterSeries. Correct options
-          hierarchy. chart.to_js_literal() for HTML.
+        comment: Good use of Chart, HighchartsOptions, ScatterSeries, to_js_literal()
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Highcharts renderer for custom labels, plotLines, data labels, interactive
-          tooltips, HTML export.
-  verdict: REJECTED
+        comment: Highcharts renderer API for custom labels, interactive tooltips,
+          plotLines, HTML export
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
   techniques:
   - annotations
-  - html-export
-  - custom-legend
   - hover-tooltips
+  - html-export
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
   - dark-theme
-  - edge-highlighting
   - alpha-blending
+  - edge-highlighting
   - grid-styling
