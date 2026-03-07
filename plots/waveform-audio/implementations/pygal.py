@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 waveform-audio: Audio Waveform Plot
 Library: pygal 3.1.0 | Python 3.14.3
-Quality: 86/100 | Created: 2026-03-07
+Quality: 87/100 | Created: 2026-03-07
 """
 
 import numpy as np
