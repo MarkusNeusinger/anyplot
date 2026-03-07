@@ -1,0 +1,233 @@
+library: letsplot
+specification_id: piano-roll-midi
+created: '2026-03-07T19:47:43Z'
+updated: '2026-03-07T20:16:30Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22805912229
+issue: 4565
+python_version: 3.14.3
+library_version: 4.8.2
+preview_url: https://storage.googleapis.com/pyplots-images/plots/piano-roll-midi/letsplot/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/piano-roll-midi/letsplot/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/piano-roll-midi/letsplot/plot.html
+quality_score: 90
+review:
+  strengths:
+  - Excellent data storytelling with dynamic arc labels (pp to fff) and melody/accompaniment
+    visual hierarchy
+  - 'Comprehensive spec compliance: all required features including black key shading,
+    beat/measure grids, note names, velocity color mapping'
+  - Musically realistic data with a proper I-vi-IV-V chord progression and meaningful
+    dynamic contour
+  - Good use of lets-plot tooltips for interactive HTML version
+  - Clean, well-organized code with deterministic data
+  weaknesses:
+  - Y-axis tick text slightly small at 14pt
+  - Some eighth-note melody rectangles are quite small at higher pitches
+  - Black key row shading contrast could be slightly stronger
+  image_description: The plot displays a MIDI piano roll with horizontal rectangles
+    on a pitch-by-time grid. The x-axis shows "Time (beats)" from 0 to 32, and the
+    y-axis shows "Pitch" with white-key note names from A2 to G5. Notes are colored
+    using a plasma colormap — dark purple/blue for low velocity (soft) through pink/orange
+    to bright yellow for high velocity (loud). A velocity colorbar legend appears
+    on the right side ranging from approximately 40 to 120+. Black key rows are indicated
+    by subtle light gray horizontal bands across the full width. Thin light-gray vertical
+    lines mark individual beats, with thicker gray lines at measure boundaries (every
+    4 beats). Melody notes (upper register, C5-G5 range) are taller with dark borders
+    and full opacity, while accompaniment notes (lower register, A2-C4) are slightly
+    thinner and more transparent. Section labels in italic at the top read "pp — Building",
+    "f — Response", "pp — Restart", and "fff — Climax". Bold role labels "Melody"
+    and "Accomp." appear on the right side. The title reads "piano-roll-midi · letsplot
+    · pyplots.ai" in bold at the top. The overall palette is clean and modern with
+    a white background and light gray panel.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title=26, axes=20, ticks=16/14). Y-axis
+          tick text at 14pt slightly small but readable.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping elements. Y-axis labels well-spaced showing only white
+          keys.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Note rectangles clearly visible with good melody/accompaniment differentiation.
+          Some eighth-note melody rectangles quite small.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Plasma colormap is perceptually uniform and colorblind-safe.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good proportions at 1600x900. Plot fills canvas well with balanced
+          margins.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: X-axis includes units (beats). Y-axis uses note names. Title correct
+          format.
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Plasma colormap, clear visual hierarchy between melody and accompaniment,
+          custom panel colors. Above defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Custom beat/measure grid lines, panel background customized, black
+          key shading. Good but not every detail polished.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Section labels show dynamic arc, velocity coloring shows dynamics,
+          melody/accompaniment separation creates hierarchy.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct piano roll: horizontal rectangles on pitch-time grid.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: note rectangles, note names, velocity
+          color, black key shading, beat/measure grids.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=time, Y=pitch with note names, color=velocity. All correct.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title in correct format. Velocity colorbar legend properly labeled.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows chord progression, varied rhythms, wide velocity range, different
+          durations, multi-octave pitch spread.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real I-vi-IV-V chord progression with meaningful dynamic arc.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: MIDI pitches A2-G5, velocities 35-127, 8 measures. All realistic.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Flat structure: imports, data, plot, save. No functions or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set. Data is deterministic.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: os, numpy, pandas, lets_plot.'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-organized, clear variable names, appropriate complexity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png via ggsave with scale=3. Current API.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Proper ggplot grammar with aes, geom layers, scales, themes, coord_cartesian,
+          ggsize.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses layer_tooltips() for interactive hover info and HTML dual export.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - annotations
+  - hover-tooltips
+  - html-export
+  - custom-legend
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - custom-colormap
+  - alpha-blending
+  - grid-styling
+  - edge-highlighting
