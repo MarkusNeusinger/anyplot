@@ -1,0 +1,30 @@
+# Specification-level metadata for swimmer-clinical-timeline
+# Auto-synced to PostgreSQL on push to main
+
+spec_id: swimmer-clinical-timeline
+title: Swimmer Plot for Clinical Trial Timelines
+
+# Specification tracking
+created: "2026-03-07T20:32:12Z"
+updated: null
+issue: 4670
+suggested: MarkusNeusinger
+
+# Classification tags (applies to all library implementations)
+# See docs/reference/tagging-system.md for detailed guidelines
+tags:
+  plot_type:
+    - bar
+    - span
+  data_type:
+    - categorical
+    - timeseries
+    - numeric
+  domain:
+    - healthcare
+    - research
+  features:
+    - horizontal
+    - annotated
+    - temporal
+    - comparison
