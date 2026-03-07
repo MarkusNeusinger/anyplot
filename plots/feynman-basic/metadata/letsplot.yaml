@@ -1,0 +1,226 @@
+library: letsplot
+specification_id: feynman-basic
+created: '2026-03-07T21:22:29Z'
+updated: '2026-03-07T21:55:24Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22807440338
+issue: 4667
+python_version: 3.14.3
+library_version: 4.8.2
+preview_url: https://storage.googleapis.com/pyplots-images/plots/feynman-basic/letsplot/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/feynman-basic/letsplot/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/feynman-basic/letsplot/plot.html
+quality_score: 84
+review:
+  strengths:
+  - 'Excellent use of lets-plot distinctive features: native arrow(), geom_label backgrounds,
+    layer_tooltips for interactive hover'
+  - Clean Feynman diagram layout with proper physics notation and reaction equation
+  - Comprehensive legend showing all 4 particle types with correct line styles
+  - Professional color palette with good visual hierarchy
+  weaknesses:
+  - Data storytelling could be stronger - no visual emphasis or focal point beyond
+    basic diagram structure
+  - Legend construction is verbose with many separate DataFrames
+  - Gluon and boson line types only appear in the legend, not as propagators in the
+    actual diagram
+  image_description: 'The plot displays a Feynman diagram for electron-positron annihilation
+    (e⁻e⁺ → γ → μ⁻μ⁺) on a light gray background with a white border. Four blue diagonal
+    fermion lines with arrowheads converge at two black vertex dots in the center.
+    An orange/gold wavy photon propagator line connects the two vertices horizontally.
+    Particle labels (e⁻, e⁺, μ⁻, μ⁺) appear in rounded white boxes at the four endpoints,
+    and a γ label sits above the photon line. A reaction equation "e⁻e⁺ → γ → μ⁻μ⁺"
+    is displayed in blue-gray at the top center. A manual legend in the upper-left
+    shows four particle types: Fermion (blue arrow), Photon (gold wavy), Gluon (teal
+    curly), and Boson (purple dashed). A gray "time" arrow runs along the bottom.
+    The title "feynman-basic · letsplot · pyplots.ai" appears bold in dark blue at
+    the top-left.'
+  criteria_checklist:
+    visual_quality:
+      score: 26
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 24pt, particle labels size=24,
+          legend 14pt, equation 20pt, time label 16pt'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: All labels well-positioned, no collisions between text or elements
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Fermion lines and photon wavy line well-sized; vertex dots clearly
+          visible
+      - id: VQ-04
+        name: Color Accessibility
+        score: 3
+        max: 4
+        passed: true
+        comment: Good palette but blue and teal could challenge some deuteranopia
+          types
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good central layout but some unused space at bottom
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 1
+        max: 2
+        passed: true
+        comment: Descriptive title present; time axis label but no units (appropriate
+          for diagram type)
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom color palette, rounded label backgrounds, clean composition
+          — above defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: theme_void eliminates chrome, light background, generous whitespace,
+          polished labels
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Reaction equation provides context but no strong focal point or visual
+          emphasis
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Feynman diagram with vertices, propagators, and proper line
+          styles
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: Distinct line styles, arrows, vertex dots, particle labels, time
+          axis. Gluon/boson only in legend
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Vertices positioned correctly, time flows left to right
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; legend shows all 4 particle types
+    data_quality:
+      score: 13
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows fermion arrows, wavy photon, vertex points, all 4 line types
+          in legend
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Real QED process: electron-positron annihilation to muon pair'
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 3
+        max: 4
+        passed: true
+        comment: Symmetric layout appropriate; somewhat compressed vertically
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Flat structure: imports, colors, data, plot, save'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic — all positions hardcoded
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports are used
+      - id: CQ-04
+        name: Code Elegance
+        score: 1
+        max: 2
+        passed: false
+        comment: Verbose with many separate DataFrames for legend elements
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with ggsave(scale=3), also exports HTML
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Good ggplot grammar: aes mappings, geom layers, theme_void, coord_fixed,
+          scale_*_identity'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Native arrow(), geom_label with fill, layer_tooltips(), HTML export
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  - layer-composition
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - alpha-blending
