@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 piano-roll-midi: MIDI Piano Roll Visualization
 Library: letsplot 4.8.2 | Python 3.14.3
 Quality: 83/100 | Created: 2026-03-07
@@ -21,59 +21,69 @@ black_semitones = {1, 3, 6, 8, 10}
 black_key_pitches = {p for p in range(0, 128) if (p % 12) in black_semitones}
 
 # Chord progression: C major - A minor - F major - G major (repeated twice)
-# Wider velocity range for better color differentiation
+# Mix of whole-note and half-note accompaniment for rhythmic variety
 chords = [
-    # Measure 1: C major - building
-    (0, 4, [48, 52, 55, 60], [55, 50, 45, 60]),
+    # Measure 1: C major - building (half notes for movement)
+    (0, 2, [48, 52, 55], [55, 50, 45]),
+    (2, 2, [48, 52, 55], [60, 55, 50]),
     # Measure 2: A minor - softer
-    (4, 4, [48, 52, 57, 60], [40, 38, 35, 45]),
-    # Measure 3: F major - growing
-    (8, 4, [48, 53, 57, 60], [65, 60, 55, 70]),
+    (4, 4, [45, 52, 57, 60], [42, 40, 38, 48]),
+    # Measure 3: F major - growing (half notes)
+    (8, 2, [53, 57, 60], [65, 60, 55]),
+    (10, 2, [53, 57, 60], [72, 68, 62]),
     # Measure 4: G major - strong
-    (12, 4, [47, 50, 55, 59], [80, 75, 70, 85]),
-    # Measure 5: C major - restart softer
-    (16, 4, [48, 52, 55, 60], [45, 40, 35, 50]),
+    (12, 4, [47, 50, 55, 59], [82, 78, 72, 88]),
+    # Measure 5: C major - restart softer (half notes)
+    (16, 2, [48, 52, 55], [48, 42, 38]),
+    (18, 2, [48, 52, 55], [52, 48, 42]),
     # Measure 6: A minor - quiet
-    (20, 4, [48, 52, 57, 60], [35, 32, 30, 40]),
-    # Measure 7: F major - building to climax
-    (24, 4, [48, 53, 57, 60], [75, 70, 65, 80]),
+    (20, 4, [45, 52, 57, 60], [40, 38, 35, 45]),
+    # Measure 7: F major - building to climax (half notes)
+    (24, 2, [53, 57, 60], [75, 70, 65]),
+    (26, 2, [53, 57, 60], [85, 80, 75]),
     # Measure 8: G major -> resolve fortissimo
-    (28, 4, [47, 50, 55, 59], [95, 90, 85, 100]),
+    (28, 4, [47, 50, 55, 59], [98, 92, 88, 105]),
 ]
 
-# Melody over the chords - wider dynamic range
+# Melody with passing tones through D4-F4 range to fill the gap
 melody_notes = [
-    # Measure 1-2: ascending phrase (mf)
+    # Measure 1-2: ascending phrase through mid-range (mf)
     (0, 1, 72, 85),
     (1, 0.5, 74, 75),
     (1.5, 0.5, 76, 70),
     (2, 1, 79, 100),
-    (3, 1, 76, 80),
-    (4, 1.5, 72, 90),
-    (5.5, 0.5, 71, 65),
-    (6, 1, 69, 75),
-    (7, 0.5, 67, 55),
-    (7.5, 0.5, 69, 60),
-    # Measure 3-4: responding phrase (f)
-    (8, 1, 72, 85),
-    (9, 1, 77, 105),
-    (10, 0.5, 76, 80),
-    (10.5, 0.5, 74, 70),
-    (11, 1, 72, 85),
-    (12, 1, 71, 90),
-    (13, 0.5, 72, 75),
-    (13.5, 0.5, 74, 65),
+    (3, 0.5, 76, 80),
+    (3.5, 0.5, 72, 70),
+    (4, 1, 69, 90),
+    (5, 0.5, 67, 70),
+    (5.5, 0.5, 65, 65),  # F4 - fills gap
+    (6, 1, 64, 75),  # E4 - fills gap
+    (7, 0.5, 62, 55),  # D4 - fills gap
+    (7.5, 0.5, 64, 60),  # E4 - fills gap
+    # Measure 3-4: responding phrase, ascending through gap (f)
+    (8, 0.5, 62, 70),  # D4
+    (8.5, 0.5, 64, 75),  # E4
+    (9, 0.5, 65, 80),  # F4
+    (9.5, 0.5, 67, 85),  # G4
+    (10, 1, 72, 95),
+    (11, 1, 77, 105),
+    (12, 1, 76, 90),
+    (13, 0.5, 74, 75),
+    (13.5, 0.5, 72, 68),
     (14, 2, 76, 100),
-    # Measure 5-6: variation (pp -> mp)
+    # Measure 5-6: lyrical descent through mid-range (pp -> mp)
     (16, 0.5, 79, 95),
     (16.5, 0.5, 76, 70),
     (17, 1, 72, 80),
-    (18, 1, 74, 60),
-    (19, 1, 76, 75),
-    (20, 1.5, 72, 85),
-    (21.5, 0.5, 69, 50),
+    (18, 0.5, 69, 60),
+    (18.5, 0.5, 67, 55),
+    (19, 0.5, 65, 50),  # F4
+    (19.5, 0.5, 64, 48),  # E4
+    (20, 1, 62, 55),  # D4
+    (21, 0.5, 64, 50),  # E4
+    (21.5, 0.5, 65, 55),  # F4
     (22, 1, 67, 60),
-    (23, 1, 69, 55),
+    (23, 1, 69, 58),
     # Measure 7-8: climax and resolution (ff -> fff)
     (24, 0.5, 72, 100),
     (24.5, 0.5, 74, 95),
@@ -81,7 +91,7 @@ melody_notes = [
     (25.5, 0.5, 77, 115),
     (26, 2, 79, 127),
     (28, 1, 76, 105),
-    (29, 1, 74, 85),
+    (29, 1, 74, 88),
     (30, 2, 72, 110),
 ]
 
@@ -143,6 +153,18 @@ measure_lines = pd.DataFrame({"x": [float(m) for m in range(0, 33, 4)]})
 df_accomp = df[df["role"] == "Accompaniment"].copy()
 df_melody = df[df["role"] == "Melody"].copy()
 
+# Section labels for dynamic arc storytelling
+sections = pd.DataFrame(
+    {
+        "x": [2.0, 10.0, 18.0, 26.0],
+        "y": [pitch_max + 1.2] * 4,
+        "label": ["pp — Building", "f — Response", "pp — Restart", "fff — Climax"],
+    }
+)
+
+# Role annotations
+role_labels = pd.DataFrame({"x": [31.5, 31.5], "y": [76.0, 52.0], "label": ["Melody", "Accomp."]})
+
 # Plot
 plot = (
     ggplot()
@@ -164,7 +186,7 @@ plot = (
         mapping=aes(xmin="start", xmax="end", ymin="pitch_bottom", ymax="pitch_top", fill="velocity"),
         color="#FFFFFF",
         size=0.3,
-        alpha=0.6,
+        alpha=0.75,
         tooltips=layer_tooltips().line("@note_name").line("vel: @velocity").line("beat: @start — @end"),
     )
     # Melody notes (opaque, taller, with border)
@@ -176,10 +198,14 @@ plot = (
         alpha=1.0,
         tooltips=layer_tooltips().line("@note_name").line("vel: @velocity").line("beat: @start — @end"),
     )
-    # Perceptually-uniform color scale with wide range
-    + scale_fill_gradient2(low="#1E3A5F", mid="#7B2D8E", high="#FF6F00", midpoint=80, name="Velocity", limits=[30, 127])
-    + scale_x_continuous(name="Time (beats)", breaks=[0, 4, 8, 12, 16, 20, 24, 28, 32], limits=[0, 32])
-    + scale_y_continuous(name="Pitch", breaks=y_breaks, labels=y_labels, limits=[pitch_min - 0.5, pitch_max + 0.5])
+    # Section labels showing dynamic arc
+    + geom_text(data=sections, mapping=aes(x="x", y="y", label="label"), size=11, color="#666666", fontface="italic")
+    # Role annotations on right side
+    + geom_text(data=role_labels, mapping=aes(x="x", y="y", label="label"), size=10, color="#444444", fontface="bold")
+    # Color scale - bright low end for visibility on gray backgrounds
+    + scale_fill_gradient2(low="#4A90D9", mid="#C44EC9", high="#FF6F00", midpoint=78, name="Velocity", limits=[30, 127])
+    + scale_x_continuous(name="Time (beats)", breaks=[0, 4, 8, 12, 16, 20, 24, 28, 32], limits=[-0.5, 33])
+    + scale_y_continuous(name="Pitch", breaks=y_breaks, labels=y_labels, limits=[pitch_min - 0.5, pitch_max + 2.5])
     + labs(title="piano-roll-midi · letsplot · pyplots.ai")
     + theme_minimal()
     + theme(
