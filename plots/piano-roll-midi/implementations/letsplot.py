@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 piano-roll-midi: MIDI Piano Roll Visualization
 Library: letsplot 4.8.2 | Python 3.14.3
 Quality: 88/100 | Created: 2026-03-07
@@ -168,13 +168,13 @@ role_labels = pd.DataFrame({"x": [31.5, 31.5], "y": [76.0, 52.0], "label": ["Mel
 # Plot
 plot = (
     ggplot()
-    # Black key background shading - dark enough to be clearly visible
+    # Black key background shading - subtle distinction
     + geom_rect(
         data=bg_rows,
         mapping=aes(xmin="xmin", xmax="xmax", ymin="pitch_bottom", ymax="pitch_top"),
-        fill="#D4D4D8",
+        fill="#E8E8EC",
         color="rgba(0,0,0,0)",
-        alpha=0.8,
+        alpha=0.6,
     )
     # Beat grid lines (light)
     + geom_vline(data=beat_lines, mapping=aes(xintercept="x"), color="#E0E0E0", size=0.3)
@@ -202,24 +202,34 @@ plot = (
     + geom_text(data=sections, mapping=aes(x="x", y="y", label="label"), size=11, color="#666666", fontface="italic")
     # Role annotations on right side
     + geom_text(data=role_labels, mapping=aes(x="x", y="y", label="label"), size=10, color="#444444", fontface="bold")
-    # Color scale - bright low end for visibility on gray backgrounds
-    + scale_fill_gradient2(low="#4A90D9", mid="#C44EC9", high="#FF6F00", midpoint=78, name="Velocity", limits=[30, 127])
-    + scale_x_continuous(name="Time (beats)", breaks=[0, 4, 8, 12, 16, 20, 24, 28, 32], limits=[-0.5, 33])
-    + scale_y_continuous(name="Pitch", breaks=y_breaks, labels=y_labels, limits=[pitch_min - 0.5, pitch_max + 2.5])
+    # Perceptually uniform color scale for velocity with refined legend
+    + scale_fill_viridis(
+        name="Velocity",
+        limits=[30, 127],
+        option="plasma",
+        direction=1,
+        guide=guide_colorbar(barwidth=12, barheight=280),
+    )
+    + scale_x_continuous(name="Time (beats)", breaks=[0, 4, 8, 12, 16, 20, 24, 28, 32])
+    + scale_y_continuous(name="Pitch", breaks=y_breaks, labels=y_labels)
+    + coord_cartesian(xlim=[-0.5, 33], ylim=[pitch_min - 0.5, pitch_max + 2.5])
     + labs(title="piano-roll-midi · letsplot · pyplots.ai")
     + theme_minimal()
     + theme(
-        plot_title=element_text(size=26, face="bold"),
-        axis_title_x=element_text(size=20),
-        axis_title_y=element_text(size=20),
-        axis_text_x=element_text(size=16),
-        axis_text_y=element_text(size=14),
+        plot_title=element_text(size=26, face="bold", color="#1A1A2E"),
+        axis_title_x=element_text(size=20, color="#333333"),
+        axis_title_y=element_text(size=20, color="#333333"),
+        axis_text_x=element_text(size=16, color="#555555"),
+        axis_text_y=element_text(size=14, color="#555555"),
+        axis_line=element_line(color="#CCCCCC", size=0.5),
+        axis_ticks=element_line(color="#CCCCCC", size=0.3),
         legend_title=element_text(size=18),
         legend_text=element_text(size=14),
         legend_position="right",
         panel_grid_major=element_blank(),
         panel_grid_minor=element_blank(),
-        panel_background=element_rect(fill="#FAFAFA", color="#999999", size=0.5),
+        panel_background=element_rect(fill="#FAFAFA", color="#BBBBBB", size=0.3),
+        plot_background=element_rect(fill="#FFFFFF"),
     )
     + ggsize(1600, 900)
 )
