@@ -1,7 +1,7 @@
 library: pygal
 specification_id: scatter-hr-diagram
 created: '2026-03-07T06:46:55Z'
-updated: '2026-03-07T06:50:40Z'
+updated: '2026-03-07T07:02:11Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 22794049065
 issue: 4558
@@ -10,40 +10,39 @@ library_version: 3.1.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/scatter-hr-diagram/pygal/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/scatter-hr-diagram/pygal/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/scatter-hr-diagram/pygal/plot.html
-quality_score: 72
+quality_score: 76
 review:
   strengths:
-  - Correct astrophysical convention with reversed x-axis and spectral color coding
-  - The Sun marked as a distinct larger reference point with label
-  - Clean data generation covering all four stellar populations
-  - Good use of pygal Style system with intentional color choices
-  - Dual output (PNG + HTML) leveraging pygal SVG nature
+  - Excellent astrophysical color palette matching standard spectral type convention
+    (blue O/B through red M)
+  - Correct reversed x-axis convention for HR diagrams
+  - Good data generation with realistic stellar populations across all four regions
+  - Sun reference point clearly marked as distinct larger black dot
+  - Clean code structure with proper seeding
   weaknesses:
-  - Missing region labels for the four stellar populations (main sequence, red giants,
-    supergiants, white dwarfs) as explicitly required by spec
-  - Title format includes extra descriptive prefix before the standard spec-id · library
-    · pyplots.ai pattern
-  - Dense clustering on the cool-star side makes individual spectral groups hard to
-    distinguish
-  - O/B Stars vs A Stars color distinction (blue vs light blue) is subtle
-  image_description: 'The plot displays a Hertzsprung-Russell diagram as an XY scatter
-    plot on a white canvas with a light gray (#fafafa) plot background. The x-axis
-    shows "← Surface Temperature (K) → Cool" reversed from 40,000 K (left) to 4,000
-    K (right). The y-axis shows "log₁₀ Luminosity (L☉)" ranging from -5.0 to 7.0.
-    The title reads "Hertzsprung-Russell Diagram · scatter-hr-diagram · pygal · pyplots.ai"
-    at the top. Stars are plotted as dots color-coded by spectral type: medium blue
-    for O/B Stars, light lavender-blue for A Stars, golden yellow for F/G Stars, orange
-    for K Stars, and red for M Stars. A distinct larger black dot marks the Sun at
-    approximately (5,778 K, 0.0). The main sequence is clearly visible as a diagonal
-    band from upper-left (hot, bright) to lower-right (cool, dim). White dwarfs appear
-    as scattered blue points in the lower-center region. Red giants cluster in the
-    upper-right (cool, luminous). Supergiants span the top of the diagram. The legend
-    is placed at the bottom in a single row with 6 entries. Subtle gray grid lines
-    are visible. The cool-star region (right side) shows significant point clustering
-    with overlap among K, M, and F/G stars.'
+  - Region labels (Main Sequence, Red Giants, Supergiants, White Dwarfs) are NOT visible
+    in the rendered PNG - the print_labels + dots_size=1 approach does not produce
+    readable text in PNG output
+  - Data is overly compressed on the right side (cool stars) - K, M, F/G stars cluster
+    together making individual points hard to distinguish
+  - Lavender (A stars) is too similar to the blue (O/B stars) at small dot sizes
+  image_description: 'The plot shows a Hertzsprung-Russell diagram as an XY scatter
+    plot with the x-axis reversed (40,000 K on the left to 4,000 K on the right) and
+    log10 luminosity on the y-axis ranging from -5 to 7. Stars are color-coded by
+    spectral type: blue dots for O/B stars, light lavender for A stars, golden yellow
+    for F/G stars, orange for K stars, and red for M stars. The Sun is marked as a
+    distinct larger black dot near coordinates (~5,778 K, 0.0). The main sequence
+    diagonal band is clearly visible running from upper-left (hot, bright) to lower-right
+    (cool, dim). White dwarfs are visible as scattered blue dots in the lower-center
+    region. Red giants cluster in the upper-right. Supergiants populate the top of
+    the diagram. The background is light gray (#fafafa) with subtle grid lines. A
+    legend at the bottom shows 6 entries (5 spectral types + Sun). The title reads
+    "scatter-hr-diagram · pygal · pyplots.ai". However, the four required region labels
+    (Main Sequence, Red Giants, Supergiants, White Dwarfs) are NOT visible as text
+    annotations in the rendered PNG output.'
   criteria_checklist:
     visual_quality:
-      score: 23
+      score: 24
       max: 30
       items:
       - id: VQ-01
@@ -51,46 +50,43 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'Font sizes explicitly set and well-scaled for 4800x2700. Title 52,
-          labels 38, ticks 36, legend 32. Minor: y-axis Unicode subscripts render
-          slightly small.'
+        comment: Font sizes explicitly set (title=52, label=38, major_label=36, legend=32).
+          All text clearly readable.
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Most text clear but cool-star region has heavy point overlap among
-          K, M, and F/G stars.
+        comment: No text overlap. Minor data point crowding in cool-star region.
       - id: VQ-03
         name: Element Visibility
         score: 4
         max: 6
         passed: true
-        comment: Dots size 7 reasonable for 285 points but cool-star cluster very
-          dense. Sun dot size 14 stands out well.
+        comment: ~285 points with dots_size=7, opacity=0.7. Right side is densely
+          packed with overlapping K/M/F/G stars.
       - id: VQ-04
         name: Color Accessibility
         score: 3
         max: 4
         passed: true
-        comment: Spectral colors follow convention. O/B vs A Stars (blue vs light
-          blue) distinction is subtle.
+        comment: Blue, lavender, yellow, orange, red. Generally distinguishable but
+          lavender vs blue subtle at small sizes.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good utilization with well-configured margins. Data clusters heavily
-          on right side.
+        comment: Good canvas utilization. Data concentrated left-to-center with right
+          portion dense.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: temperature in K with directional
-          arrows, luminosity with solar units.'
+        comment: Both axes have descriptive labels with units.
     design_excellence:
-      score: 12
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -98,25 +94,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Thoughtful spectral color palette. Custom Style with intentional
-          foreground colors and opacity. Above defaults but not publication-level.
+        comment: Thoughtful spectral-type color palette. Custom style with white/fafafa
+          background. Above defaults but not publication-ready.
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Subtle grid lines, light gray plot background, opacity 0.7. No spine
-          removal (pygal limitation). Grid visible but not minimal.
+        comment: Subtle light gray grid lines, clean background, well-positioned legend.
+          Some refinement visible.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: HR diagram naturally tells stellar evolution story. Spectral color
-          coding and Sun reference create hierarchy. Missing region labels reduce
-          storytelling.
+        comment: Color-coding creates natural grouping. Sun provides anchor. Missing
+          region labels significantly reduce storytelling.
     spec_compliance:
-      score: 10
+      score: 12
       max: 15
       items:
       - id: SC-01
@@ -130,23 +125,24 @@ review:
         score: 2
         max: 4
         passed: false
-        comment: Missing region labels for main sequence, red giants, supergiants,
-          white dwarfs. Sun marked. X-axis reversed. Spectral colors present.
+        comment: Region labels (Main Sequence, Red Giants, Supergiants, White Dwarfs)
+          NOT visible in rendered PNG. print_labels approach fails.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Temperature on reversed x-axis, luminosity on y-axis. All data visible.
+        comment: Temperature on reversed x-axis, log luminosity on y-axis. All data
+          visible.
       - id: SC-04
         name: Title & Legend
-        score: 0
+        score: 2
         max: 3
-        passed: false
-        comment: Title includes extra Hertzsprung-Russell Diagram prefix before standard
-          format. Should be spec-id · library · pyplots.ai.
+        passed: true
+        comment: Title matches required format. Legend shows spectral types and Sun.
+          Region label series add noise.
     data_quality:
-      score: 13
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -154,22 +150,22 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Shows all four stellar populations with good distribution across
-          spectral types.
+        comment: Shows all four stellar populations with realistic counts. All spectral
+          types represented.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real astrophysical visualization with realistic temperature and luminosity
-          ranges.
+        comment: Astrophysics context with realistic temperature and luminosity ranges.
+          Neutral scientific topic.
       - id: DQ-03
         name: Appropriate Scale
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Temperature and luminosity ranges appropriate. Some white dwarfs
-          slightly bright for their class.
+        comment: Temperature and luminosity ranges match real stellar data. Sun correctly
+          positioned.
     code_quality:
       score: 9
       max: 10
@@ -179,59 +175,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports, data, style, chart, series, save.'
+        comment: Linear flow with no functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set at beginning.
+        comment: np.random.seed(42) set at start.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy, pygal, pygal.style.Style - all used.
+        comment: numpy, pygal, Style — all used.
       - id: CQ-04
         name: Code Elegance
         score: 1
         max: 2
         passed: true
-        comment: Negative-x trick for reversed axis adds complexity. x_value_formatter
-          compensates. Slightly verbose but functional.
+        comment: Negated x-axis trick works but is hacky. Region labels as invisible
+          dots don't produce visible results.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png via render_to_png. Current pygal API.
+        comment: Saves as plot.png and plot.html. Current pygal API.
     library_mastery:
-      score: 5
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Uses pygal.XY correctly. Custom Style is standard approach. Per-series
-          dots_size and js=[] show awareness.
+        comment: Good use of pygal.XY, Style, formatters, series model, CSS injection.
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
-        passed: true
-        comment: HTML export, custom value formatters, legend configuration. Relatively
-          standard pygal features.
+        passed: false
+        comment: Uses SVG style system and HTML export but doesn't fully leverage
+          pygal's distinctive tooltip/interactive features.
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
   - html-export
+  - custom-legend
   patterns:
   - data-generation
   - iteration-over-groups
-  dataprep: []
+  dataprep:
+  - interpolation
   styling:
   - alpha-blending
   - grid-styling
