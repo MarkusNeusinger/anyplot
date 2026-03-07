@@ -1,7 +1,7 @@
 library: matplotlib
 specification_id: scatter-hr-diagram
 created: '2026-03-07T06:46:02Z'
-updated: '2026-03-07T06:56:46Z'
+updated: '2026-03-07T07:03:45Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 22794049040
 issue: 4558
@@ -10,38 +10,39 @@ library_version: 3.10.8
 preview_url: https://storage.googleapis.com/pyplots-images/plots/scatter-hr-diagram/matplotlib/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/scatter-hr-diagram/matplotlib/plot_thumb.png
 preview_html: null
-quality_score: 86
+quality_score: 88
 review:
   strengths:
   - Perfect spec compliance with all required features including optional secondary
     spectral class axis
-  - Excellent data quality with physically accurate stellar populations spanning all
+  - Perfect data quality with physically accurate stellar populations spanning all
     four HR diagram regions
   - Domain-appropriate spectral color palette creates immediate scientific recognition
-  - Good visual storytelling with region labels, Sun focal point, and reversed axes
-    following HR diagram conventions
-  - 'Improved from attempt 1: reduced marker size, y-axis-only grid, bbox on region
-    labels, darker A/F colors'
+  - KISS code structure restored with clean inline classification logic
+  - Good visual storytelling with region labels, Sun focal point, and astrophysical
+    axis conventions
+  - Marker size now within density guidelines (s=35 for 365 points)
   weaknesses:
-  - Marker size s=60 still slightly large for 365 points causing overlap in dense
-    main sequence
-  - A-type spectral color (#99aacc) still somewhat pale against white background
-  - Code contains classify_temp helper function violating KISS principle
-  - Red Giants label position still slightly crowded despite bbox improvement
+  - Alpha=0.7 still slightly above optimal for 300+ point density
+  - F/G spectral type colors both yellowish, harder to distinguish for some colorblind
+    types
+  - Design excellence plateaued at 14/20, would need serif typography or more refined
+    techniques to push higher
   image_description: 'The plot displays a Hertzsprung-Russell diagram as a scatter
-    plot with approximately 365 data points. The x-axis shows Surface Temperature
-    (K) on a reversed logarithmic scale from ~45,000K (left) to ~2,000K (right). The
-    y-axis shows Luminosity (L/L☉) on a logarithmic scale from 10⁻⁵ to ~10⁶. A secondary
-    x-axis at the top displays Spectral Class labels (O, B, A, F, G, K, M). Points
-    are color-coded by spectral type: deep blue (O), medium blue (B), muted gray-blue
-    (A), olive-gold (F), golden yellow (G), orange (K), and dark red (M). White edge
-    highlights are visible on all markers. Four italic region labels identify "Main
+    plot with approximately 365 data points on a light #fafafa background. The x-axis
+    shows Surface Temperature (K) on a reversed logarithmic scale from ~45,000K (left)
+    to ~2,000K (right). The y-axis shows Luminosity (L/L☉) on a logarithmic scale
+    from 10⁻⁵ to ~2×10⁶. A secondary x-axis at the top displays Spectral Class labels
+    (O, B, A, F, G, K, M). Points are color-coded by spectral type: deep blue (O),
+    medium blue (B), muted gray-blue (A), olive-gold (F), golden yellow (G), orange
+    (K), and dark red (M). White edge highlights are visible on all markers at s=35.
+    Four italic region labels with semi-transparent bbox backgrounds identify "Main
     Sequence" (diagonal, rotated ~-42°), "Supergiants" (upper center), "Red Giants"
-    (right side), and "White Dwarfs" (lower center-left). The "Main Sequence" and
-    "Red Giants" labels have semi-transparent white background boxes. The Sun is marked
-    with a large star marker near center of the main sequence with a bold "Sun" label.
+    (right side), and "White Dwarfs" (lower center-left). The Sun is marked with a
+    large yellow star marker near center of the main sequence with a bold "Sun" label.
     Title reads "scatter-hr-diagram · matplotlib · pyplots.ai". Legend in upper right
-    shows all 7 spectral types. Top and right spines removed, subtle y-axis-only grid.'
+    shows all 7 spectral types with "Spectral Type" title. Top and right spines removed,
+    subtle y-axis-only grid (alpha=0.15).'
   criteria_checklist:
     visual_quality:
       score: 27
@@ -59,22 +60,21 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Region labels have bbox backgrounds; Red Giants label still slightly
-          crowded among data points
+        comment: Region labels have bbox backgrounds; minor crowding between Red Giants
+          label and nearby data
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: s=60 alpha=0.65 improved from attempt 1; still slightly large for
-          365 points causing some overlap in dense G/K region
+        comment: s=35 within guideline for 365 points; alpha=0.7 slightly above optimal
+          but compensated by small markers
       - id: VQ-04
         name: Color Accessibility
         score: 3
         max: 4
-        passed: true
-        comment: A-type (#99aacc) still somewhat pale against white background; F/G
-          distinction challenging
+        passed: false
+        comment: A-type improved; F/G types both yellowish, not perfectly colorblind-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
@@ -96,15 +96,15 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom spectral color palette, white edge highlights, star marker
-          for Sun. Above configured default but not publication-perfect
+        comment: Custom spectral palette, white edge highlights, star marker, light
+          background tint. Above defaults
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Spines removed, y-axis-only grid, secondary spectral axis, white
-          edge highlights. Good but not every detail polished
+        comment: 'Spines removed, y-axis-only grid, secondary axis, edge highlights,
+          #fafafa background'
       - id: DE-03
         name: Data Storytelling
         score: 4
@@ -127,21 +127,20 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: reversed x-axis, log y-axis, spectral coloring,
-          four region labels, Sun reference, secondary spectral class axis'
+        comment: All features present including optional secondary spectral class
+          axis
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Temperature on x (reversed), luminosity on y (log scale), all data
-          visible
+        comment: Temperature on reversed x, luminosity on log y, all data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format, legend shows all 7 spectral types with title
+        comment: Correct title format, legend shows all 7 spectral types
     data_quality:
       score: 15
       max: 15
@@ -151,8 +150,7 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All four stellar populations: main sequence (250), red giants (50),
-          supergiants (35), white dwarfs (30)'
+        comment: All four stellar populations represented across all spectral types
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -167,16 +165,15 @@ review:
         comment: Temperature 2400-40000K, luminosity 10^-4 to 10^5.5, Sun at (5778K,
           1.0)
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Has classify_temp helper function and temp_boundaries sorted list
-          adding structural complexity
+        passed: true
+        comment: Clean imports-data-plot-save structure, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -191,17 +188,16 @@ review:
         comment: Only matplotlib.pyplot and numpy imported, both used
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: classify_temp function and temp_boundaries pre-computation is over-engineered;
-          per-star loop is verbose
+        passed: true
+        comment: Clean inline comprehensions, appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300, bbox_inches='tight'
+        comment: Saves as plot.png with dpi=300, bbox_inches=tight
     library_mastery:
       score: 7
       max: 10
@@ -211,15 +207,15 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of axes methods, twiny(), scatter with per-group iteration,
-          annotate with bbox. Manual classification loops slightly verbose
+        comment: Good use of axes methods, twiny(), scatter per group, annotate with
+          bbox
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: true
-        comment: twiny() for secondary axis, star marker, rotated annotations, dual
-          log-scale — matplotlib patterns but not highly distinctive
+        passed: false
+        comment: twiny(), star marker, rotated annotations — matplotlib-specific but
+          not highly advanced
   verdict: REJECTED
 impl_tags:
   dependencies: []
