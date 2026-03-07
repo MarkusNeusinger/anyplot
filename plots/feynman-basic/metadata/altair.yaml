@@ -1,7 +1,7 @@
 library: altair
 specification_id: feynman-basic
 created: '2026-03-07T21:21:37Z'
-updated: '2026-03-07T21:41:11Z'
+updated: '2026-03-07T21:50:02Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 22807440222
 issue: 4667
@@ -10,37 +10,37 @@ library_version: 6.0.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/feynman-basic/altair/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/feynman-basic/altair/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/feynman-basic/altair/plot.html
-quality_score: 83
+quality_score: 87
 review:
   strengths:
-  - All 4 particle types demonstrated (fermion, photon, gluon, boson) — major improvement
-    from attempt 1
-  - 'Excellent physics process choice: gluon fusion Higgs production showcases all
-    particle types naturally'
-  - Custom 4-color palette is harmonious, accessible, and intentionally mapped to
-    particle types
-  - Interactive legend selection and tooltips leverage Altair distinctive interactivity
-    features
-  - Clean symmetric layout with clear directional flow from left to right
+  - Excellent spec compliance — all 4 particle types with correct line styles, arrows,
+    vertices, and labels
+  - Creative use of parametric curves (vectorized numpy) for wavy photon and curly
+    gluon lines
+  - Strong data storytelling with process annotation, time axis, and color-coded particle
+    labels
+  - Interactive legend selection for highlighting particle types is a genuinely useful
+    Altair feature
+  - Clean, well-structured code with deterministic output
   weaknesses:
-  - 'Canvas utilization: ~40% of space is underused (below time arrow, right of legend
-    area)'
-  - Helper functions break KISS structure; path generation could be more concise
-  - Still largely a coordinate-drawing approach — limited use of Altair declarative
-    data transformation strengths
-  image_description: 'The plot displays a Feynman diagram for gluon fusion Higgs production:
-    g + g → H → γ + γ. Two red curly/looped gluon lines enter from the left (labeled
-    "g" in red italic serif). A blue triangular top-quark loop connects three vertices,
-    with filled blue triangle arrows at midpoints indicating fermion flow direction
-    (labeled "t" in blue italic serif). A green dashed line represents the Higgs boson
-    connecting the right triangle vertex to the decay vertex (labeled "H" in green).
-    Two gold/yellow wavy sinusoidal photon lines exit to the upper-right and lower-right
-    (labeled "γ" in gold). Four dark vertex dots with white stroke mark interaction
-    points. A gray italic process annotation "g + g → H → γ + γ" appears near the
-    top. A dashed gray time arrow at the bottom is labeled "time". A legend on the
-    right side lists "Particle Type" with colored entries: fermion (blue), photon
-    (gold), gluon (red), boson (green). The title "feynman-basic · altair · pyplots.ai"
-    appears centered at the top. The background is clean white.'
+  - Red-green color combination (gluon/boson) is not colorblind-safe — consider using
+    purple or orange for one of these
+  - Minor canvas utilization imbalance with some empty space in center-right area
+  image_description: The plot displays a Feynman diagram for the Higgs boson production
+    via gluon fusion process (g + g → H → γ + γ). Two red curly/looped lines on the
+    left represent incoming gluons entering from the left. A blue triangular fermion
+    loop (top quarks, labeled "t") connects to both gluon vertices and a third vertex
+    on the right. Blue triangle-shaped arrow markers on each fermion edge indicate
+    particle flow direction. A green dashed line represents the Higgs boson (H) propagating
+    from the right triangle vertex to a decay vertex further right. Two golden wavy
+    lines diverge from the decay vertex — one upward and one downward — representing
+    the outgoing photons (γ). Dark vertex dots with white stroke mark all four interaction
+    points. Particle labels appear in their respective colors (g in red, t in blue,
+    H in green, γ in gold) using serif italic font. A process annotation "g + g →
+    H → γ + γ" appears near the top in gray italic. A dashed time arrow runs along
+    the bottom. The title "feynman-basic · altair · pyplots.ai" is centered at the
+    top, and a color-coded legend in the top-right shows all four particle types.
+    The background is clean white with no axes.
   criteria_checklist:
     visual_quality:
       score: 26
@@ -48,70 +48,70 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title=28, labels=24, process=20,
-          time=18, legend title=18, legend labels=16'
+        comment: Font sizes explicitly set throughout (title 28pt, labels 26pt, legend
+          16-18pt, annotation 22pt). All clearly readable.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or elements
+        comment: No overlapping text. All labels positioned with adequate spacing.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Lines at strokeWidth=2.5-3, vertex dots size=400, arrows size=350.
-          Wavy/curly lines could be marginally thicker
+        comment: All line styles (curly, wavy, straight, dashed) clearly distinguishable.
+          Vertex dots and arrow markers well-sized.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
-        passed: true
-        comment: Blue, gold, red, green palette provides excellent contrast and colorblind
-          safety
-      - id: VQ-05
-        name: Layout & Canvas
         score: 2
         max: 4
         passed: false
-        comment: Diagram occupies ~55-60% of vertical space. Wasted space below time
-          arrow and around legend
+        comment: Red and green used together for gluon and boson is problematic for
+          red-green colorblind viewers.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good canvas utilization with diagram spanning most of the width.
+          Slight whitespace imbalance in center-right area.
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: Axes correctly hidden for diagram. Time axis labeled. No conventional
-          axis labels applicable
+        comment: Axes appropriately hidden for a diagram. Time axis labeled. Title
+          descriptive.
     design_excellence:
       score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Custom 4-color palette, serif italic fonts for physics convention,
-          dark vertex dots with white stroke
+        comment: Strong design with physics-conventional color assignments, serif
+          italic particle labels, styled vertex dots. Above defaults.
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: View stroke removed, axes hidden, clean background, subtle time arrow,
-          good whitespace management
+        comment: 'Good refinement: view stroke removed, axes hidden, vertex dots styled,
+          process annotation in muted gray italic.'
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Gluon fusion process tells clear story with process annotation and
-          directional arrows
+        comment: Process annotation shows reaction path, time arrow guides reading
+          direction, color-coded labels create clear visual mapping.
     spec_compliance:
       score: 15
       max: 15
@@ -121,30 +121,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Feynman diagram with vertices, propagators, and distinct
-          line styles
+        comment: Correct Feynman diagram with all required structural elements.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All 4 particle types: fermion with arrows, photon wavy, gluon curly,
-          boson dashed. Vertex dots, labels, time axis present'
+        comment: 'All features present: distinct line styles, arrows on fermion lines,
+          vertex dots, particle labels, time axis.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Correct topology for gg → H → γγ process
+        comment: Correct spatial layout with proper vertex positions and propagator
+          connections.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title in correct format. Legend shows all 4 particle types with correct
-          color mapping
+        comment: Title in correct format. Legend correctly shows all 4 particle types.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -152,85 +151,85 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All 4 particle types demonstrated with distinct line styles and labels
+        comment: Shows all 4 particle types with distinct visual representations,
+          vertices, propagators, labels, and direction arrows.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Gluon fusion Higgs production is a real Nobel Prize-winning physics
-          process
+        comment: Higgs boson production via gluon fusion is a real, well-known particle
+          physics process. Neutral scientific context.
       - id: DQ-03
         name: Appropriate Scale
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Clean symmetric layout. Left side slightly denser with gluon lines
-          close to triangle
+        comment: Layout positions are sensible for a Feynman diagram.
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Helper functions add_wavy_path and add_curly_path break strict linear
-          flow
+        passed: true
+        comment: 'Linear structure: imports, data setup, chart layers, combine, save.
+          No functions/classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic data with no random elements
+        comment: Fully deterministic with hardcoded vertex positions and parametric
+          curves.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: altair, numpy, pandas'
+        comment: All imports used (altair, numpy, pandas).
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Path generation with append-in-loop could be more concise using vectorized
-          construction
+        passed: true
+        comment: Well-structured code with vectorized numpy for wavy/curly path generation.
+          Appropriate complexity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with scale_factor=3.0 and plot.html. Current Altair
-          6.0 API
+        comment: Saves as plot.png and plot.html. Current API.
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Uses layering, encoding channels, selection_point, transform_calculate.
-          Still largely coordinate-based drawing
+        comment: Good use of Altair declarative grammar with layered composition,
+          encoding channels, scales, and legend configuration.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Interactive legend selection via selection_point(bind=legend) with
-          conditional opacity, transform_calculate, tooltips, HTML export
+        comment: Uses selection_point for interactive legend highlighting, tooltips
+          with transform_calculate, strokeDash encoding, and HTML export.
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
   - annotations
-  - custom-legend
   - hover-tooltips
   - html-export
+  - custom-legend
   patterns:
   - data-generation
   - iteration-over-groups
