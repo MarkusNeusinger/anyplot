@@ -1,0 +1,28 @@
+# Specification-level metadata for cartogram-area-distortion
+# Auto-synced to PostgreSQL on push to main
+
+spec_id: cartogram-area-distortion
+title: Cartogram with Area Distortion by Data Value
+
+# Specification tracking
+created: "2026-03-07T20:32:19Z"
+updated: null
+issue: 4671
+suggested: MarkusNeusinger
+
+# Classification tags (applies to all library implementations)
+# See docs/reference/tagging-system.md for detailed guidelines
+tags:
+  plot_type:
+    - map
+    - choropleth
+  data_type:
+    - geospatial
+    - numeric
+  domain:
+    - general
+    - statistics
+  features:
+    - proportional
+    - color-mapped
+    - annotated
