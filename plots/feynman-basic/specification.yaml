@@ -1,0 +1,26 @@
+# Specification-level metadata for feynman-basic
+# Auto-synced to PostgreSQL on push to main
+
+spec_id: feynman-basic
+title: Feynman Diagram for Particle Interactions
+
+# Specification tracking
+created: "2026-03-07T20:31:55Z"
+updated: null
+issue: 4667
+suggested: MarkusNeusinger
+
+# Classification tags (applies to all library implementations)
+# See docs/reference/tagging-system.md for detailed guidelines
+tags:
+  plot_type:
+    - network
+  data_type:
+    - categorical
+    - relational
+  domain:
+    - science
+    - education
+  features:
+    - annotated
+    - static
