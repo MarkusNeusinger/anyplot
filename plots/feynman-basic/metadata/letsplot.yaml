@@ -1,7 +1,7 @@
 library: letsplot
 specification_id: feynman-basic
 created: '2026-03-07T21:22:29Z'
-updated: '2026-03-07T21:26:39Z'
+updated: '2026-03-07T21:37:40Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 22807440338
 issue: 4667
@@ -10,30 +10,31 @@ library_version: 4.8.2
 preview_url: https://storage.googleapis.com/pyplots-images/plots/feynman-basic/letsplot/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/feynman-basic/letsplot/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/feynman-basic/letsplot/plot.html
-quality_score: 81
+quality_score: 80
 review:
   strengths:
-  - Clean symmetric layout with proper Feynman diagram topology
-  - 'Excellent colorblind-safe color choice: blue fermions and gold photon'
-  - Wavy photon line via sinusoidal geom_path is clever
-  - Proper arrow directions following particle/antiparticle conventions
-  - Time axis indicator and descriptive subtitle with reaction equation
+  - Excellent physics accuracy with correct particle flow directions and arrow conventions
+  - Custom hand-crafted legend showing all 4 particle types with distinct line styles
+    and colors
+  - Professional color palette (blue, gold, teal, purple) with good contrast
+  - Clean diagram layout with well-placed time arrow for orientation
   weaknesses:
-  - μ⁻ label overlaps with Photon legend text in upper right
-  - Only shows 2 of 4 particle types (missing gluon curly and boson dashed lines)
-  - Wasted space at bottom of canvas below time arrow
-  - Manual arrowhead V-shapes are verbose
+  - Significant vertical whitespace — diagram does not fill the canvas well vertically
+  - Legend on the right side is spatially separated and competes for visual attention
+  - Arrowhead construction code is overly complex for 4 simple triangles
+  - Import path lets_plot.export.ggsave is non-canonical
   image_description: 'The plot displays a Feynman diagram for electron-positron annihilation
-    (e⁻e⁺ → γ → μ⁻μ⁺) on a clean white background. The bold navy title "feynman-basic
-    · letsplot · pyplots.ai" appears at the top left, with a smaller gray subtitle
-    showing the reaction equation. Two dark blue (Python Blue #306998) fermion lines
-    with V-shaped arrowheads converge from upper-left (e⁻) and lower-left (e⁺) to
-    a left vertex (black dot). A wavy gold/orange (#D4973B) photon line (γ) connects
-    the left vertex to a right vertex. Two more blue fermion lines with arrows diverge
-    from the right vertex to upper-right (μ⁻) and lower-right (μ⁺). Particle labels
-    are in italic dark text. A manual legend in the upper right shows blue "Fermion"
-    and orange "Photon" line types. A gray time arrow at the bottom indicates left-to-right
-    time flow. The μ⁻ label crowds with the "Photon" legend text in the upper right.'
+    (e⁻e⁺ → γ → μ⁻μ⁺) on a white background. Two blue solid lines with arrowheads
+    represent incoming fermions (e⁻ top-left, e⁺ bottom-left) converging at a black
+    vertex dot. A gold wavy line (γ photon propagator) connects this vertex to a second
+    black vertex dot on the right. Two outgoing blue fermion lines with arrows (μ⁻
+    top-right, μ⁺ bottom-right) emerge from the second vertex. Particle labels in
+    dark italic text are positioned near each line endpoint. A "Particle Types" legend
+    on the right side shows all four line styles: blue solid with arrow (Fermion),
+    gold wavy (Photon), teal curly (Gluon), and purple dashed (Boson). A gray time
+    arrow with italic "time" label runs left-to-right at the bottom. Title "feynman-basic
+    · letsplot · pyplots.ai" in bold navy at top-left with subtitle "Electron–Positron
+    Annihilation: e⁻e⁺ → γ → μ⁻μ⁺" in lighter blue.'
   criteria_checklist:
     visual_quality:
       score: 25
@@ -41,46 +42,43 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title=24, subtitle=18, labels=22, legend=16).
-          All readable, subtitle slightly small.
+        comment: 'All font sizes explicitly set: title=24, subtitle=18, labels=22,
+          legend=16'
       - id: VQ-02
         name: No Overlap
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: The μ⁻ particle label overlaps/crowds with the Photon legend text
-          in the upper right corner.
+        passed: true
+        comment: Mostly clean; gamma label slightly close to wavy line
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Lines, vertex dots, and wavy photon line all clearly visible and
-          well-proportioned.
+        comment: Lines and vertices clearly visible; arrowheads slightly small
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
-        passed: true
-        comment: Blue and gold palette is colorblind-safe with strong contrast.
-      - id: VQ-05
-        name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Diagram reasonably centered but wasted space at bottom below time
-          arrow.
+        comment: Blue/gold/teal/purple palette is colorblind-friendly
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 2
+        max: 4
+        passed: false
+        comment: Significant vertical whitespace above and below diagram
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Axes appropriately hidden for a diagram; descriptive title and subtitle.
+        comment: Axes appropriately hidden; title and subtitle descriptive
     design_excellence:
-      score: 15
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -88,21 +86,21 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom color palette, intentional typography hierarchy. Above defaults.
+        comment: Custom color palette, professional typography, hand-crafted legend
       - id: DE-02
         name: Visual Refinement
-        score: 5
-        max: 6
-        passed: true
-        comment: All axes/grid/spines removed. Clean white canvas. Minor crowding
-          between legend and label.
-      - id: DE-03
-        name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Reaction equation in subtitle, color-coded particle types, time direction
-          arrow guide understanding.
+        comment: All spines/grid removed, clean white canvas; vertical whitespace
+          uneven
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Diagram tells story clearly with time arrow; legend competes for
+          attention
     spec_compliance:
       score: 14
       max: 15
@@ -112,52 +110,50 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Feynman diagram with distinct line styles, vertices, and
-          proper topology.
+        comment: Correct Feynman diagram with proper line styles
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: Shows fermion and photon lines. Missing gluon (curly) and boson (dashed)
-          line styles mentioned in spec.
+        passed: true
+        comment: All line types, arrows, vertices, labels, time axis, legend present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Symmetric layout, correct vertex positions and particle flow directions.
+        comment: Correct spatial layout with incoming/outgoing particles
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: Title format correct. Manual legend for line types present and clear.
+        comment: Title format correct; manual legend well-done but label positioning
+          could be tighter
     data_quality:
       score: 13
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Demonstrates 2 of 4 particle types (fermion, photon). Missing gluon
-          and boson line styles.
+        passed: true
+        comment: Main diagram shows fermions and photon; gluon/boson only in legend
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Classic QED process. Real physics, educational, neutral.
+        comment: Real QED process, neutral and educational
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Positions and proportions appropriate for a diagram.
+        comment: Well-proportioned symmetric diagram
     code_quality:
-      score: 9
+      score: 8
       max: 10
       items:
       - id: CQ-01
@@ -165,48 +161,48 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat structure: imports, data, plot, save.'
+        comment: 'Linear flow: imports, data, plot, save'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic, no randomness.
+        comment: Fully deterministic, no randomness
       - id: CQ-03
         name: Clean Imports
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: All imports used.
+        passed: false
+        comment: Non-canonical import from lets_plot.export
       - id: CQ-04
         name: Code Elegance
         score: 1
         max: 2
         passed: false
-        comment: Arrowhead construction is verbose with manual V-shapes and a loop.
+        comment: Verbose arrowhead math and multiple separate legend DataFrames
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with scale=3, current API.
+        comment: Saves as plot.png with scale=3
     library_mastery:
-      score: 5
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of ggplot grammar with layered geoms and proper aes mappings
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: false
-        comment: Correct ggplot grammar but heavy manual work for arrowheads.
-      - id: LM-02
-        name: Distinctive Features
-        score: 2
-        max: 5
-        passed: false
-        comment: Uses geom_path for sinusoidal photon line, scale_color_identity.
-          Mostly manual drawing approach.
+        comment: Layer composition and HTML export are lets-plot features; no truly
+          distinctive capabilities used
   verdict: REJECTED
 impl_tags:
   dependencies: []
@@ -214,9 +210,9 @@ impl_tags:
   - annotations
   - layer-composition
   - custom-legend
+  - html-export
   patterns:
   - data-generation
-  - iteration-over-groups
   dataprep: []
   styling:
   - minimal-chrome
