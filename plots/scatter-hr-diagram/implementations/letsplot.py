@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 scatter-hr-diagram: Hertzsprung-Russell Diagram
 Library: letsplot 4.8.2 | Python 3.14.3
 Quality: 87/100 | Created: 2026-03-07
@@ -16,7 +16,6 @@ LetsPlot.setup_html()  # noqa: F405
 np.random.seed(42)
 
 # Main sequence stars (diagonal band from hot/bright to cool/dim)
-# Luminosity ~ T^4 approximately: log(L) = 4 * log(T/T_sun)
 n_main = 200
 main_temp = 10 ** np.random.uniform(np.log10(3000), np.log10(35000), n_main)
 main_log_lum = 4.0 * (np.log10(main_temp) - np.log10(5778))
@@ -29,7 +28,7 @@ giant_temp = np.random.uniform(3200, 5500, n_giants)
 giant_luminosity = 10 ** np.random.uniform(1.0, 3.5, n_giants)
 
 # Supergiants (very bright, wide temp range)
-n_super = 15
+n_super = 25
 super_temp = np.random.uniform(3500, 30000, n_super)
 super_luminosity = 10 ** np.random.uniform(3.5, 5.5, n_super)
 
@@ -45,49 +44,54 @@ region = (
     ["Main Sequence"] * n_main + ["Red Giants"] * n_giants + ["Supergiants"] * n_super + ["White Dwarfs"] * n_dwarfs
 )
 
-# Assign spectral types based on temperature
-spectral_type = []
-for t in temperature:
-    if t >= 30000:
-        spectral_type.append("O")
-    elif t >= 10000:
-        spectral_type.append("B")
-    elif t >= 7500:
-        spectral_type.append("A")
-    elif t >= 6000:
-        spectral_type.append("F")
-    elif t >= 5200:
-        spectral_type.append("G")
-    elif t >= 3700:
-        spectral_type.append("K")
-    else:
-        spectral_type.append("M")
+# Assign spectral types based on temperature (vectorized)
+spectral_type = np.select(
+    [
+        temperature >= 30000,
+        temperature >= 10000,
+        temperature >= 7500,
+        temperature >= 6000,
+        temperature >= 5200,
+        temperature >= 3700,
+    ],
+    ["O", "B", "A", "F", "G", "K"],
+    default="M",
+)
 
 df = pd.DataFrame(
     {"temperature": temperature, "luminosity": luminosity, "region": region, "spectral_type": spectral_type}
 )
 
-# Spectral type colors (astrophysical convention, A/F differentiated)
+# Spectral type colors (astrophysical convention with improved A/B distinction)
 spectral_colors = {
-    "O": "#5566FF",
-    "B": "#A0C4FF",
-    "A": "#B8C9FF",
-    "F": "#FFF0C8",
-    "G": "#FFE08A",
-    "K": "#FFB86C",
-    "M": "#FF7B5A",
+    "O": "#6644CC",
+    "B": "#6699FF",
+    "A": "#C8D8FF",
+    "F": "#FFF4D6",
+    "G": "#FFD866",
+    "K": "#FF9944",
+    "M": "#FF5533",
 }
 
 # Sun reference point
-sun_df = pd.DataFrame({"temperature": [5778], "luminosity": [1.0], "label": ["Sun"]})
-sun_label_df = pd.DataFrame({"temperature": [7500], "luminosity": [3.5], "label": ["Sun"]})
+sun_df = pd.DataFrame({"temperature": [5778], "luminosity": [1.0], "label": ["☉ Sun"]})
+sun_label_df = pd.DataFrame({"temperature": [7800], "luminosity": [4.0], "label": ["☉ Sun"]})
 
 # Region label positions (repositioned to avoid data overlap)
 region_labels = pd.DataFrame(
     {
-        "temperature": [25000, 5200, 18000, 18000],
-        "luminosity": [0.015, 6000, 70000, 0.0006],
+        "temperature": [25000, 5200, 14000, 18000],
+        "luminosity": [0.012, 6000, 120000, 0.0005],
         "label": ["Main Sequence", "Red Giants", "Supergiants", "White Dwarfs"],
+    }
+)
+
+# Spectral class markers along the top (secondary x-axis)
+spectral_axis_labels = pd.DataFrame(
+    {
+        "temperature": [35000, 18000, 8500, 6800, 5500, 4200, 3100],
+        "luminosity": [600000] * 7,
+        "label": ["O", "B", "A", "F", "G", "K", "M"],
     }
 )
 
@@ -95,32 +99,32 @@ region_labels = pd.DataFrame(
 plot = (
     ggplot(df, aes(x="temperature", y="luminosity", color="spectral_type"))  # noqa: F405
     + geom_point(  # noqa: F405
-        size=5,
-        alpha=0.75,
+        size=4.5,
+        alpha=0.7,
         shape=21,
-        stroke=0.4,
+        stroke=0.3,
         mapping=aes(fill="spectral_type"),  # noqa: F405
-        color="#1A1F2B",
+        color="#0D1117",
         tooltips=layer_tooltips()  # noqa: F405
+        .line("@region")
         .line("Temperature|@temperature K")
         .line("Luminosity|@luminosity L☉")
-        .line("Spectral Type|@spectral_type")
-        .line("Region|@region"),
+        .line("Spectral Type|@spectral_type"),
     )
     + geom_point(  # noqa: F405
         data=sun_df,
         mapping=aes(x="temperature", y="luminosity"),  # noqa: F405
         color="#FFD700",
         fill="#FFD700",
-        size=8,
+        size=9,
         shape=21,
-        stroke=1.5,
+        stroke=2.0,
         inherit_aes=False,
     )
     + geom_text(  # noqa: F405
         data=sun_label_df,
         mapping=aes(x="temperature", y="luminosity", label="label"),  # noqa: F405
-        size=16,
+        size=17,
         color="#FFD700",
         fontface="bold",
         inherit_aes=False,
@@ -128,11 +132,19 @@ plot = (
     + geom_text(  # noqa: F405
         data=region_labels,
         mapping=aes(x="temperature", y="luminosity", label="label"),  # noqa: F405
-        size=17,
-        color="#8899AA",
+        size=16,
+        color="#667788",
         fontface="bold_italic",
         inherit_aes=False,
         label_padding=0.4,
+    )
+    + geom_text(  # noqa: F405
+        data=spectral_axis_labels,
+        mapping=aes(x="temperature", y="luminosity", label="label"),  # noqa: F405
+        size=18,
+        color="#99AABB",
+        fontface="bold",
+        inherit_aes=False,
     )
     + scale_x_continuous(  # noqa: F405
         trans="reverse",
@@ -141,7 +153,7 @@ plot = (
         labels=["40,000", "30,000", "20,000", "10,000", "5,000", "3,000"],
     )
     + scale_y_log10(  # noqa: F405
-        name="Luminosity (L☉)"
+        name="Luminosity (L☉)", limits=[0.00005, 2000000]
     )
     + scale_fill_manual(  # noqa: F405
         values=[
@@ -163,17 +175,17 @@ plot = (
     + ggsize(1600, 900)  # noqa: F405
     + theme_minimal()  # noqa: F405
     + theme(  # noqa: F405
-        axis_text=element_text(size=16, color="#AAAAAA"),  # noqa: F405
-        axis_title=element_text(size=20, color="#CCCCCC"),  # noqa: F405
-        plot_title=element_text(size=24, color="#E0E0E0", face="bold"),  # noqa: F405
-        legend_text=element_text(size=14, color="#CCCCCC"),  # noqa: F405
-        legend_title=element_text(size=16, face="bold", color="#DDDDDD"),  # noqa: F405
-        legend_background=element_rect(fill="#1A1F2B", color="#1A1F2B"),  # noqa: F405
-        panel_grid_major=element_line(color="#1E2330", size=0.25),  # noqa: F405
+        axis_text=element_text(size=16, color="#99AABB"),  # noqa: F405
+        axis_title=element_text(size=20, color="#BBCCDD"),  # noqa: F405
+        plot_title=element_text(size=24, color="#E8ECF0", face="bold"),  # noqa: F405
+        legend_text=element_text(size=15, color="#BBCCDD"),  # noqa: F405
+        legend_title=element_text(size=17, face="bold", color="#DDDDDD"),  # noqa: F405
+        legend_background=element_rect(fill="#131820", color="#1E2530"),  # noqa: F405
+        panel_grid_major=element_line(color="#171D28", size=0.3),  # noqa: F405
         panel_grid_minor=element_blank(),  # noqa: F405
         plot_background=element_rect(fill="#0D1117", color="#0D1117"),  # noqa: F405
         panel_background=element_rect(fill="#0D1117", color="#0D1117"),  # noqa: F405
-        axis_ticks=element_line(color="#444444", size=0.3),  # noqa: F405
+        axis_ticks=element_line(color="#334455", size=0.3),  # noqa: F405
         plot_margin=[30, 40, 20, 20],
     )
 )
