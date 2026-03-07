@@ -1,7 +1,7 @@
 library: seaborn
 specification_id: piano-roll-midi
 created: '2026-03-07T19:47:15Z'
-updated: '2026-03-07T20:05:43Z'
+updated: '2026-03-07T20:15:18Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 22805912213
 issue: 4565
@@ -10,35 +10,39 @@ library_version: 0.13.2
 preview_url: https://storage.googleapis.com/pyplots-images/plots/piano-roll-midi/seaborn/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/piano-roll-midi/seaborn/plot_thumb.png
 preview_html: null
-quality_score: 87
+quality_score: 88
 review:
   strengths:
-  - Custom blue-to-purple-to-red sequential colormap eliminates the white midpoint
-    issue and provides excellent velocity differentiation
-  - Perfect spec compliance with all required features correctly implemented
-  - Realistic musical data with expressive dynamic contour that creates natural visual
-    storytelling
-  - Domain-specific design touches (black key shading, beat/measure grid hierarchy)
-    add professional polish
-  - Clean well-structured code with all font sizes explicitly set
+  - Excellent musical data with realistic chord progression and expressive melody
+    showing full dynamic range
+  - Custom colormap with cohesive color language connecting annotations to velocity
+    encoding
+  - Hierarchical grid lines (3 levels) and piano-key background shading add authentic
+    DAW-like appearance
+  - Dynamic annotations (ff/pp) create clear focal points and narrative arc
+  - Clean code structure with good reproducibility
   weaknesses:
-  - Y-axis is densely packed with ~30 pitch labels
-  - Colorbar tick font size at 14pt is slightly below the 16pt ideal
-  - Could push further toward publication-ready polish
-  image_description: The plot displays a MIDI piano roll heatmap visualization with
-    pitch names (E3 to G#5) on the y-axis and measure labels (M1-M8) on the x-axis.
-    Notes are rendered as colored rectangular cells at sixteenth-note resolution using
-    a custom blue-to-purple-to-red sequential colormap mapping velocity from ~40 (dark
-    blue, soft) to 127 (bright red, loud). Long sustained chord tones appear as wide
-    horizontal blue/dark-purple bands in the lower register (C4, E4, G4, A3, F3, etc.),
-    while shorter, louder melody notes appear as narrower warm pink/red cells in the
-    upper register (D5-G5). Background rows alternate between white and light gray
-    to distinguish black keys from white keys. Vertical grid lines mark beats (thin,
-    subtle) with thicker lines at measure boundaries. A colorbar on the right shows
-    "Velocity (MIDI 0-127)" ranging from 40 to 127. All spines are removed. The title
-    reads "piano-roll-midi · seaborn · pyplots.ai". The custom colormap successfully
-    eliminates the white midpoint issue from the previous attempt, making all velocity
-    levels clearly distinguishable from the background.
+  - 'Library mastery limited: heavy reliance on matplotlib for customization beyond
+    the core heatmap'
+  - Heatmap discretization (0.25 beats) causes minor visual artifacts vs true rectangles
+  - Y-axis tick labels at 14pt slightly below the 16pt guideline
+  image_description: 'The plot displays a MIDI piano roll visualization as a heatmap
+    on a 16:9 canvas. The y-axis shows pitch labels (note names from B2 at bottom
+    to A5 at top) with alternating light beige background shading for black-key rows
+    versus white background for white-key rows. The x-axis shows 8 measures labeled
+    M1-M8 with "Measure (4/4 time)" as the axis label. Notes appear as colored horizontal
+    blocks: sustained chord tones in the lower register (C3-G4 range) appear as long
+    dark navy/purple bars indicating low velocity, while melody notes in the upper
+    register (D5-G5 range) appear as shorter, warmer-colored blocks (coral, orange,
+    yellow) indicating higher velocity. A custom sequential colormap runs from deep
+    navy (soft/low velocity ~35) through violet and coral to warm yellow (loud/high
+    velocity ~127), shown in a vertical colorbar on the right labeled "Velocity (MIDI
+    0-127)". Hierarchical vertical grid lines mark measure boundaries (thicker) and
+    beat subdivisions (thinner). A red bold "ff" annotation appears above M5 where
+    the melody reaches fortissimo, and a blue italic "pp" annotation appears in M6
+    during a softer passage. A legend in the upper right shows "Soft (pp)" in navy
+    and "Loud (ff)" in coral. The title reads "piano-roll-midi · seaborn · pyplots.ai".
+    Spines are removed for a clean look.'
   criteria_checklist:
     visual_quality:
       score: 27
@@ -49,43 +53,45 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set. Colorbar ticks at 14pt slightly below
-          16pt ideal.
+        comment: All font sizes explicitly set; title 24pt, labels 20pt, x-ticks 16pt,
+          colorbar 16pt. Y-axis ticks at 14pt slightly below 16pt guideline.
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Y-axis has ~30 pitch labels tightly packed but no actual overlaps.
+        comment: No overlapping text. Black-key rows have empty labels preventing
+          y-axis crowding.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Heatmap cells clearly visible. Custom colormap makes all velocity
-          levels distinguishable. Some grace notes produce small cells but remain
-          visible.
+        comment: Chord tones clearly visible as long bars. Very short grace notes
+          (0.25 beat) appear as tiny cells.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Custom sequential blue-purple-red colormap is colorblind-friendly
-          with good contrast against background.
+        comment: Custom sequential colormap with good luminance variation. Not a standard
+          perceptually-uniform colormap but effective.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good 16:9 canvas utilization with well-positioned colorbar.
+        comment: Good 16:9 proportions, plot fills canvas well, colorbar appropriately
+          sized.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with contextual units.
+        comment: 'Descriptive labels with context: Measure (4/4 time), Pitch with
+          note names, Velocity colorbar.'
     design_excellence:
-      score: 14
+      score: 16
       max: 20
       items:
       - id: DE-01
@@ -93,76 +99,79 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom domain-appropriate colormap, all spines removed, black key
-          shading, differentiated grid weights. Clearly above defaults.
+        comment: Strong design with custom colormap, cohesive color language, piano-key
+          shading. Above defaults.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Spines removed, grid lines with alpha differentiation, black key
-          shading, clean white style.
+        comment: Spines removed, hierarchical 3-level grid, octave boundaries, colorbar
+          outline removed.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Velocity-driven color creates natural visual hierarchy. Dynamic peaks
-          at M5 and M7 are visually prominent.
+        comment: Musical narrative with dynamic arc, ff/pp annotations as focal points,
+          velocity color tells the story.
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Correct piano roll visualization with time-pitch grid.
+        comment: Piano roll via heatmap with 0.25-beat resolution. Correct but discretized
+          rather than true rectangles.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All spec features present including velocity color mapping, black/white
-          key shading, beat grid, auto-fitted pitch range, note names.
+        comment: 'All features present: note blocks, velocity color, key shading,
+          beat/measure grids, note names, auto-fit range.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=time, Y=pitch, color=velocity. All correctly mapped.
+        comment: X=time, Y=pitch (note names), Color=velocity. All axes show full
+          data range.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Colorbar with velocity label.
+        comment: Title in correct format. Legend shows Soft (pp) and Loud (ff) with
+          matching colors.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows sustained chords, short melody notes, grace notes, varying
-          velocities with clear phrase structure.
+        comment: Shows harmony, melody, rhythmic variety, dynamic range, both black
+          and white key pitches.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: C-Am-F-G chord progression with expressive melodic line is realistic
-          and recognizable.
+        comment: Real I-vi-IV-V chord progression with expressive melody. Standard
+          MIDI values.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: MIDI pitches 52-80, velocities 40-127, 32 beats in 4/4 time are all
-          realistic.
+        comment: 8 measures of 4/4 time, pitch range B2-A5 realistic for piano, velocity
+          35-127.
     code_quality:
       score: 10
       max: 10
@@ -172,55 +181,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: setup, data generation, matrix construction,
-          plot, save.'
+        comment: 'Linear flow: imports, setup, data, matrix, plot, save. No functions
+          or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set before random velocity generation.
+        comment: np.random.seed(42) set before random operations.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used including matplotlib.colors for custom colormap.
+        comment: 'All imports used: matplotlib.colors, matplotlib.patches, matplotlib.pyplot,
+          numpy, pandas, seaborn.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-structured. Custom colormap creation is concise.
+        comment: Well-structured, readable. Matrix construction appropriate for heatmap
+          approach.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300 and bbox_inches=tight.
+        comment: Saves as plot.png at 300 dpi with bbox_inches tight. No deprecated
+          API.
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: sns.heatmap with mask, cbar_kws, DataFrame index labels. set_context
-          and set_style for theming.
+        comment: Uses sns.heatmap with mask and cbar_kws, plus set_context, set_style,
+          despine. Heavy matplotlib for customization.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: sns.heatmap with NaN mask, cbar_kws, index labels, and theming are
-          seaborn-specific patterns.
+        comment: sns.heatmap with NaN masking, sns.set_context scaling, sns.despine.
+          Bulk of visual customization is raw matplotlib.
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
+  - annotations
+  - custom-legend
   - manual-ticks
   patterns:
   - data-generation
@@ -230,3 +244,4 @@ impl_tags:
   styling:
   - custom-colormap
   - grid-styling
+  - alpha-blending
