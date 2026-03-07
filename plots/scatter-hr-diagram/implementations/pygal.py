@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 scatter-hr-diagram: Hertzsprung-Russell Diagram
 Library: pygal 3.1.0 | Python 3.14.3
 Quality: 76/100 | Created: 2026-03-07
@@ -42,7 +42,7 @@ all_temps = np.concatenate([main_temp, giant_temp, super_temp, wd_temp])
 all_log_lums = np.concatenate([main_log_lum, giant_log_lum, super_log_lum, wd_log_lum])
 
 # Spectral type classification based on temperature
-# Use negative temperature for x-axis to reverse direction (hot left, cool right)
+# Use negative log10(temperature) for x-axis: reverses direction AND spreads cool stars
 spectral_bounds = [
     ("O/B Stars", 10000, 50000),
     ("A Stars", 7500, 10000),
@@ -55,67 +55,73 @@ groups = {name: [] for name, _, _ in spectral_bounds}
 for t, log_l in zip(all_temps, all_log_lums, strict=True):
     for name, lo, hi in spectral_bounds:
         if lo <= t < hi or (name == "O/B Stars" and t >= hi):
-            groups[name].append((-float(t), float(log_l)))
+            groups[name].append((-np.log10(float(t)), float(log_l)))
             break
 
 # Style — spectral colors matching astrophysical convention
 font = "DejaVu Sans, Helvetica, Arial, sans-serif"
 custom_style = Style(
     background="white",
-    plot_background="#fafafa",
+    plot_background="#f5f5f0",
     foreground="#2a2a2a",
     foreground_strong="#2a2a2a",
-    foreground_subtle="#e0e0e0",
-    guide_stroke_color="#e0e0e0",
+    foreground_subtle="#d8d8d8",
+    guide_stroke_color="#d8d8d8",
     colors=(
-        "#4477dd",  # O/B Stars — strong blue
-        "#c8b4e8",  # A Stars — lavender (distinct from blue)
-        "#ffdd44",  # F/G Stars — golden yellow
-        "#ff9933",  # K Stars — orange
-        "#ee4422",  # M Stars — red
-        "#222222",  # Sun marker
-        "#555555",  # Region labels (shared muted color)
-        "#555555",
-        "#555555",
-        "#555555",
+        "#3366cc",  # O/B Stars — strong blue
+        "#9966cc",  # A Stars — medium purple (distinct from blue)
+        "#ffcc22",  # F/G Stars — golden yellow
+        "#ee8833",  # K Stars — orange
+        "#cc2211",  # M Stars — deep red
+        "#111111",  # Sun marker — black
+        "#666666",  # Region label series (shared muted)
+        "#666666",
+        "#666666",
+        "#666666",
     ),
     font_family=font,
     title_font_family=font,
     title_font_size=52,
     label_font_size=38,
     major_label_font_size=36,
-    legend_font_size=32,
+    legend_font_size=30,
     legend_font_family=font,
-    value_font_size=56,
-    tooltip_font_size=26,
+    value_font_size=48,
+    tooltip_font_size=28,
     tooltip_font_family=font,
-    opacity=0.7,
+    opacity=0.65,
     opacity_hover=0.95,
 )
 
-# Chart — XY scatter with negated x-axis for reversed temperature
+# Custom x-axis labels mapping -log10(T) to temperature in K
+x_label_temps = [40000, 25000, 10000, 7500, 5000, 3500, 2500]
+x_labels = [{"value": -np.log10(t), "label": f"{t:,} K"} for t in x_label_temps]
+
+# Chart — XY scatter with -log10(T) x-axis for reversed, spread temperature
 chart = pygal.XY(
     width=4800,
     height=2700,
     style=custom_style,
     title="scatter-hr-diagram \u00b7 pygal \u00b7 pyplots.ai",
-    x_title="\u2190 Surface Temperature (K) \u2192 Cool",
+    x_title="Hot  \u2190  Surface Temperature (K)  \u2192  Cool",
     y_title="log\u2081\u2080 Luminosity (L\u2609)",
     show_legend=True,
     legend_at_bottom=True,
-    legend_at_bottom_columns=6,
+    legend_at_bottom_columns=5,
     legend_box_size=22,
     stroke=False,
-    dots_size=7,
+    dots_size=8,
     show_x_guides=True,
     show_y_guides=True,
-    xrange=(-40000, -2000),
+    x_labels=x_labels,
+    x_label_rotation=-25,
+    xrange=(-np.log10(45000), -np.log10(2200)),
     range=(-5, 7.5),
-    x_value_formatter=lambda x: f"{abs(x):,.0f} K",
+    x_value_formatter=lambda x: f"{10 ** abs(x):,.0f} K",
     value_formatter=lambda y: f"{y:.1f}",
-    margin_bottom=100,
+    margin_bottom=110,
     margin_left=80,
-    margin_right=40,
+    margin_right=60,
     margin_top=50,
     truncate_legend=-1,
     print_labels=True,
@@ -123,12 +129,18 @@ chart = pygal.XY(
     css=[
         "file://style.css",
         "file://graph.css",
-        "inline:.label{font-size:28px !important; font-family:DejaVu Sans, sans-serif !important; fill:#444 !important;}",
+        (
+            "inline:"
+            ".label{font-size:52px !important; font-weight:bold !important;"
+            " font-family:DejaVu Sans, sans-serif !important;"
+            " fill:#444 !important; paint-order:stroke fill;"
+            " stroke:white !important; stroke-width:6px !important;}"
+        ),
     ],
     js=[],
 )
 
-# Add each spectral group as a separate series
+# Add each spectral group as a separate series with tooltip data
 series_order = ["O/B Stars", "A Stars", "F/G Stars", "K Stars", "M Stars"]
 for stype in series_order:
     pts = groups.get(stype, [])
@@ -137,20 +149,21 @@ for stype in series_order:
 # Add the Sun as a distinct reference point
 chart.add(
     "Sun \u2609",
-    [{"value": (-sun_temp, sun_log_lum), "label": "The Sun (5778 K, 1 L\u2609)"}],
+    [{"value": (-np.log10(sun_temp), sun_log_lum), "label": "The Sun (5,778 K, 1 L\u2609)"}],
     stroke=False,
-    dots_size=14,
+    dots_size=16,
 )
 
-# Region labels — placed at representative positions for each stellar population
+# Region labels — positioned at representative locations for each stellar population
+# Using dots_size=4 so the label anchor point renders, with large CSS label text
 region_labels = [
-    ("Main Sequence", -22000, 1.8),
-    ("Red Giants", -3500, 3.5),
-    ("Supergiants", -25000, 6.5),
-    ("White Dwarfs", -25000, -2.5),
+    ("Main Sequence", -np.log10(18000), 3.0),
+    ("Red Giants", -np.log10(3800), 2.8),
+    ("Supergiants", -np.log10(12000), 6.2),
+    ("White Dwarfs", -np.log10(18000), -3.0),
 ]
 for region_name, rx, ry in region_labels:
-    chart.add(region_name, [{"value": (rx, ry), "label": region_name}], stroke=False, dots_size=1)
+    chart.add(region_name, [{"value": (rx, ry), "label": region_name}], stroke=False, dots_size=4, show_dots=True)
 
 # Save
 chart.render_to_png("plot.png")
