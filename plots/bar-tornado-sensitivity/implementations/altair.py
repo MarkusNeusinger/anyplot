@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 bar-tornado-sensitivity: Tornado Diagram for Sensitivity Analysis
 Library: altair 6.0.0 | Python 3.14.3
 Quality: 87/100 | Created: 2026-03-07
@@ -38,7 +38,12 @@ bars = (
     alt.Chart(df)
     .mark_bar(cornerRadius=3, height=38)
     .encode(
-        x=alt.X("value:Q", title="Net Present Value ($M)", scale=alt.Scale(domain=[185, 325])),
+        x=alt.X(
+            "value:Q",
+            title="Net Present Value ($M)",
+            scale=alt.Scale(domain=[180, 330]),
+            axis=alt.Axis(tickCount=8, grid=True),
+        ),
         x2="base:Q",
         y=alt.Y("parameter:N", sort=y_sort, title=None, axis=alt.Axis(grid=False)),
         color=alt.Color(
@@ -58,7 +63,7 @@ bars = (
 low_labels = (
     alt.Chart(df)
     .transform_filter(alt.datum.side == "Low Scenario")
-    .mark_text(fontSize=14, fontWeight="bold", dx=-18, align="right", color="#306998")
+    .mark_text(fontSize=16, fontWeight="bold", dx=-18, align="right", color="#306998")
     .encode(x="value:Q", y=alt.Y("parameter:N", sort=y_sort), text=alt.Text("value:Q", format="$,.0f"))
 )
 
@@ -66,7 +71,7 @@ low_labels = (
 high_labels = (
     alt.Chart(df)
     .transform_filter(alt.datum.side == "High Scenario")
-    .mark_text(fontSize=14, fontWeight="bold", dx=18, align="left", color="#C06A2B")
+    .mark_text(fontSize=16, fontWeight="bold", dx=18, align="left", color="#C06A2B")
     .encode(x="value:Q", y=alt.Y("parameter:N", sort=y_sort), text=alt.Text("value:Q", format="$,.0f"))
 )
 
@@ -93,15 +98,29 @@ label = (
     .encode(x="x:Q", y=alt.Y("y:N", sort=y_sort), text="label:N")
 )
 
+# Interactive highlight on hover
+highlight = alt.selection_point(on="pointerover", fields=["parameter"], empty=False)
+
+bars = bars.add_params(highlight).encode(opacity=alt.condition(highlight, alt.value(1.0), alt.value(0.75)))
+
 chart = (
     (bars + low_labels + high_labels + rule + label)
     .properties(
         width=1600,
         height=900,
-        title=alt.Title("bar-tornado-sensitivity \u00b7 altair \u00b7 pyplots.ai", fontSize=28, anchor="start"),
+        title=alt.Title(
+            "bar-tornado-sensitivity \u00b7 altair \u00b7 pyplots.ai",
+            subtitle="One-at-a-time sensitivity of NPV to key financial assumptions — wider bars indicate stronger influence",
+            fontSize=28,
+            subtitleFontSize=18,
+            subtitleColor="#666666",
+            anchor="start",
+        ),
     )
-    .configure_axis(labelFontSize=18, titleFontSize=22, gridColor="#e8e8e8", gridDash=[3, 3])
-    .configure_legend(labelFontSize=16, symbolSize=300, orient="bottom", direction="horizontal")
+    .configure_axis(labelFontSize=18, titleFontSize=22, gridColor="#e0e0e0", gridDash=[2, 4], gridOpacity=0.6)
+    .configure_legend(
+        labelFontSize=16, symbolSize=300, orient="bottom", direction="horizontal", titleFontSize=0, padding=20
+    )
     .configure_view(strokeWidth=0)
 )
 
