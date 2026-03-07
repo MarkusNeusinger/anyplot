@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 scatter-hr-diagram: Hertzsprung-Russell Diagram
 Library: bokeh 3.8.2 | Python 3.14.3
 Quality: 86/100 | Created: 2026-03-07
@@ -6,7 +6,7 @@ Quality: 86/100 | Created: 2026-03-07
 
 import numpy as np
 from bokeh.io import export_png
-from bokeh.models import ColumnDataSource, Label, Range1d, Title
+from bokeh.models import ColumnDataSource, Label, Legend, LegendItem, Range1d, Title
 from bokeh.plotting import figure, save
 
 
@@ -14,13 +14,13 @@ from bokeh.plotting import figure, save
 np.random.seed(42)
 
 spectral_colors = {
-    "O": "#6699ff",
-    "B": "#99bbff",
-    "A": "#ccddff",
-    "F": "#ffffcc",
-    "G": "#ffff66",
-    "K": "#ffaa33",
-    "M": "#ff4400",
+    "O": "#5588ff",
+    "B": "#88aaff",
+    "A": "#ccd8ff",
+    "F": "#fff4c8",
+    "G": "#ffd700",
+    "K": "#ff8c00",
+    "M": "#ff3300",
 }
 
 # Temperature ranges by spectral type (K)
@@ -114,16 +114,6 @@ temperatures = np.array(temperatures)
 luminosities = np.array(luminosities)
 
 # Plot
-source = ColumnDataSource(
-    data={
-        "temperature": temperatures,
-        "luminosity": luminosities,
-        "spectral_type": spectral_types,
-        "color": colors,
-        "region": regions,
-    }
-)
-
 p = figure(
     width=4800,
     height=2700,
@@ -144,38 +134,79 @@ p = figure(
     border_fill_color="#0a0a2a",
 )
 
-p.scatter(
-    x="temperature",
-    y="luminosity",
-    source=source,
-    size=12,
-    fill_color="color",
-    line_color="white",
-    line_width=0.5,
-    fill_alpha=0.85,
-)
+# Plot each spectral type separately for legend
+legend_items = []
+spectral_order = ["O", "B", "A", "F", "G", "K", "M"]
+for spec_type in spectral_order:
+    mask = [s == spec_type for s in spectral_types]
+    if not any(mask):
+        continue
+    src = ColumnDataSource(
+        data={
+            "temperature": temperatures[mask],
+            "luminosity": luminosities[mask],
+            "spectral_type": [spectral_types[i] for i in range(len(mask)) if mask[i]],
+            "color": [colors[i] for i in range(len(mask)) if mask[i]],
+            "region": [regions[i] for i in range(len(mask)) if mask[i]],
+        }
+    )
+    renderer = p.scatter(
+        x="temperature",
+        y="luminosity",
+        source=src,
+        size=14,
+        fill_color=spectral_colors[spec_type],
+        line_color="white",
+        line_width=0.5,
+        fill_alpha=0.85,
+    )
+    legend_items.append(LegendItem(label=f"Type {spec_type}", renderers=[renderer]))
 
-# Sun marker
+# Add legend
+legend = Legend(
+    items=legend_items,
+    location="bottom_left",
+    label_text_color="#ccccee",
+    label_text_font_size="16pt",
+    background_fill_color="#0a0a2a",
+    background_fill_alpha=0.8,
+    border_line_color="#555577",
+    border_line_width=1,
+    click_policy="hide",
+    title="Spectral Type",
+    title_text_color="#ccccee",
+    title_text_font_size="18pt",
+    title_text_font_style="bold",
+    spacing=5,
+    padding=10,
+)
+p.add_layout(legend, "right")
+
+# Sun marker with enhanced visibility
 sun_source = ColumnDataSource(data={"temperature": [5778], "luminosity": [1.0]})
 p.scatter(
     x="temperature",
     y="luminosity",
     source=sun_source,
-    size=22,
+    size=32,
     fill_color="#ffff00",
     line_color="white",
-    line_width=2,
+    line_width=3,
     marker="star",
+    fill_alpha=1.0,
 )
 p.add_layout(
     Label(
         x=5778,
         y=1.0,
-        text="Sun ☀",
-        x_offset=15,
-        y_offset=-5,
-        text_font_size="18pt",
+        text="☀ Sun",
+        x_offset=20,
+        y_offset=8,
+        text_font_size="20pt",
+        text_font_style="bold",
         text_color="#ffff00",
+        background_fill_color="#0a0a2a",
+        background_fill_alpha=0.7,
         x_units="data",
         y_units="data",
     )
@@ -184,9 +215,9 @@ p.add_layout(
 # Region labels
 region_labels = [
     ("Main Sequence", 8500, 8, "#aaaacc"),
-    ("Red Giants", 3600, 800, "#ffaa33"),
-    ("Supergiants", 6000, 150000, "#ccddff"),
-    ("White Dwarfs", 15000, 0.001, "#99bbff"),
+    ("Red Giants", 3600, 800, "#ff8c00"),
+    ("Supergiants", 6000, 150000, "#ccd8ff"),
+    ("White Dwarfs", 15000, 0.001, "#88aaff"),
 ]
 for label_text, lx, ly, lcolor in region_labels:
     p.add_layout(
@@ -197,7 +228,7 @@ for label_text, lx, ly, lcolor in region_labels:
             text_font_size="22pt",
             text_font_style="italic",
             text_color=lcolor,
-            text_alpha=0.8,
+            text_alpha=0.85,
             x_units="data",
             y_units="data",
         )
@@ -241,6 +272,8 @@ p.xgrid.grid_line_color = "#333355"
 p.ygrid.grid_line_color = "#333355"
 p.xgrid.grid_line_alpha = 0.3
 p.ygrid.grid_line_alpha = 0.3
+p.xgrid.grid_line_dash = [4, 4]
+p.ygrid.grid_line_dash = [4, 4]
 p.outline_line_color = None
 
 # Save
