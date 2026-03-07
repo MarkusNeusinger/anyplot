@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 waveform-audio: Audio Waveform Plot
 Library: plotly 6.6.0 | Python 3.14.3
-Quality: 85/100 | Created: 2026-03-07
+Quality: 90/100 | Created: 2026-03-07
 """
 
 import numpy as np
