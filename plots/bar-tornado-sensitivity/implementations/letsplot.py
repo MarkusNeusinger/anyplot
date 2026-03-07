@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 bar-tornado-sensitivity: Tornado Diagram for Sensitivity Analysis
 Library: letsplot 4.8.2 | Python 3.14.3
 Quality: 87/100 | Created: 2026-03-07
@@ -44,9 +44,27 @@ rows = []
 for _, row in df.iterrows():
     low_side = min(row["low_value"], row["high_value"])
     high_side = max(row["low_value"], row["high_value"])
+    low_delta = low_side - base_npv
+    high_delta = high_side - base_npv
 
-    rows.append({"parameter": row["parameter"], "value": low_side - base_npv, "scenario": "Low Scenario"})
-    rows.append({"parameter": row["parameter"], "value": high_side - base_npv, "scenario": "High Scenario"})
+    rows.append(
+        {
+            "parameter": row["parameter"],
+            "value": low_delta,
+            "scenario": "Low Scenario",
+            "label": f"{low_delta:+.1f}",
+            "npv": f"${low_side:.1f}M",
+        }
+    )
+    rows.append(
+        {
+            "parameter": row["parameter"],
+            "value": high_delta,
+            "scenario": "High Scenario",
+            "label": f"{high_delta:+.1f}",
+            "npv": f"${high_side:.1f}M",
+        }
+    )
 
 plot_df = pd.DataFrame(rows)
 
@@ -57,9 +75,38 @@ plot_df["parameter"] = pd.Categorical(plot_df["parameter"], categories=param_ord
 # Plot
 plot = (
     ggplot(plot_df, aes(x="value", y="parameter", fill="scenario"))  # noqa: F405
-    + geom_bar(stat="identity", width=0.7, alpha=0.9, position="identity")  # noqa: F405
+    + geom_bar(  # noqa: F405
+        stat="identity",
+        width=0.7,
+        alpha=0.9,
+        position="identity",
+        tooltips=layer_tooltips()  # noqa: F405
+        .line("@parameter")
+        .line("Scenario: @scenario")
+        .line("NPV Impact: @label $M")
+        .line("Resulting NPV: @npv"),
+    )
     + geom_vline(xintercept=0, color="#333333", size=1.2)  # noqa: F405
+    + geom_text(  # noqa: F405
+        aes(label="label"),  # noqa: F405
+        position="identity",
+        hjust=-0.1,
+        size=11,
+        color="#333333",
+        data=plot_df[plot_df["scenario"] == "High Scenario"],
+    )
+    + geom_text(  # noqa: F405
+        aes(label="label"),  # noqa: F405
+        position="identity",
+        hjust=1.1,
+        size=11,
+        color="#333333",
+        data=plot_df[plot_df["scenario"] == "Low Scenario"],
+    )
     + scale_fill_manual(values=["#306998", "#E8783A"])  # noqa: F405
+    + scale_x_continuous(  # noqa: F405
+        expand=[0.15, 0]
+    )
     + labs(  # noqa: F405
         x="Change in NPV ($M)",
         y="",
@@ -67,6 +114,7 @@ plot = (
         fill="",
     )
     + theme_minimal()  # noqa: F405
+    + flavor_high_contrast_light()  # noqa: F405
     + theme(  # noqa: F405
         plot_title=element_text(size=24, face="bold", hjust=0.5),  # noqa: F405
         axis_title_x=element_text(size=20),  # noqa: F405
@@ -81,6 +129,6 @@ plot = (
     + ggsize(1600, 900)  # noqa: F405
 )
 
-# Save
-export_ggsave(plot, filename="plot.png", path=".", scale=2)
+# Save at scale=3 for 4800x2700 output
+export_ggsave(plot, filename="plot.png", path=".", scale=3)
 export_ggsave(plot, filename="plot.html", path=".")
