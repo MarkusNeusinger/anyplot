@@ -1,0 +1,24 @@
+spec_id: probability-weibull
+title: Weibull Probability Plot for Reliability Analysis
+
+# Specification tracking
+created: "2026-03-07T20:32:08Z"
+updated: null
+issue: 4668
+suggested: MarkusNeusinger
+
+# Classification tags
+tags:
+  plot_type:
+    - scatter
+    - probability
+  data_type:
+    - numeric
+    - continuous
+  domain:
+    - engineering
+    - statistics
+  features:
+    - fitted-line
+    - log-scale
+    - annotated

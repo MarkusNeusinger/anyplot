@@ -1,0 +1,224 @@
+library: matplotlib
+specification_id: piano-roll-midi
+created: '2026-03-07T19:46:50Z'
+updated: '2026-03-07T19:58:27Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22805912198
+issue: 4565
+python_version: 3.14.3
+library_version: 3.10.8
+preview_url: https://storage.googleapis.com/pyplots-images/plots/piano-roll-midi/matplotlib/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/piano-roll-midi/matplotlib/plot_thumb.png
+preview_html: null
+quality_score: 92
+review:
+  strengths:
+  - Excellent visual design with rounded note rectangles, shadow effects, and alternating
+    key shading that authentically mimics DAW piano rolls
+  - 'Perfect spec compliance with all required features: black/white key distinction,
+    beat/measure grid hierarchy, auto-fit pitch range, velocity colorbar'
+  - Thoughtful musical data with melodic contour, dynamic build, and harmonic structure
+    that tells a story
+  - Clean well-structured code with appropriate use of matplotlib patch and path effects
+    systems
+  weaknesses: []
+  image_description: The plot displays a MIDI piano roll visualization spanning 8
+    measures (32 beats). The y-axis shows pitch names from B3 to A#5 in monospace
+    font, with alternating light gray and very light gray row backgrounds distinguishing
+    black keys from white keys. The x-axis shows measure numbers 1-9. Horizontal rounded
+    rectangles represent notes, with length indicating duration and color (from the
+    plasma colormap) indicating velocity — deep purple/magenta for soft notes through
+    orange for moderate to bright yellow for loud. Vertical grid lines mark beats
+    (thin light gray) and measure boundaries (thicker darker gray). A colorbar on
+    the right shows the velocity scale labeled "Velocity (MIDI)" ranging from 40 to
+    127. The title reads "piano-roll-midi · matplotlib · pyplots.ai". All spines are
+    removed. The background is a warm off-white. The musical data shows a clear melodic
+    contour with bass accompaniment, building to a climax in measures 6-7 with bright
+    yellow high-velocity notes.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt,
+          colorbar 18pt'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text, pitch labels and measure numbers well-spaced
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Note rectangles 0.8 units tall with rounded corners, clearly visible
+          and distinguishable
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Plasma colormap is perceptually uniform and colorblind-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good 16:9 layout, plot fills canvas well with compact colorbar
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Domain-appropriate labels: Measure, Pitch, Velocity (MIDI)'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom plasma palette, rounded FancyBboxPatch with shadow effects,
+          monospace pitch labels, alternating key shading
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: All spines removed, tick marks hidden, differentiated grid lines,
+          colorbar outline hidden
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Musical structure with dynamic build to climax, velocity color variation
+          conveys dynamics
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct piano roll with horizontal rectangles on pitch/time grid
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: key shading, beat grid, note names, velocity
+          colorbar, auto-fit range'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=time, Y=pitch, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct title format, colorbar serves as velocity legend
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows melody, bass, chords, varying durations and velocities across
+          8 measures
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Realistic musical phrase with melody, bass, and chord voicings
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: MIDI pitches 59-82 and velocities 65-127 are realistic ranges
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports, data, plot, save'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set, data is deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, appropriate complexity, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png, dpi=300, current API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Proper Axes methods, ScalarMappable for colorbar, axhspan/axvline
+          for grid
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: FancyBboxPatch with rounded boxstyle, path_effects for shadow depth,
+          axhspan for rows
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - patches
+  - manual-ticks
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - custom-colormap
+  - edge-highlighting
+  - grid-styling

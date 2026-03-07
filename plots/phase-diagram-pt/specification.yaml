@@ -1,0 +1,28 @@
+# Specification-level metadata for phase-diagram-pt
+# Auto-synced to PostgreSQL on push to main
+
+spec_id: phase-diagram-pt
+title: Thermodynamic Phase Diagram (Pressure-Temperature)
+
+# Specification tracking
+created: 2026-03-07T20:32:01Z
+updated: null
+issue: 4666
+suggested: MarkusNeusinger
+
+# Classification tags (applies to all library implementations)
+# See docs/reference/tagging-system.md for detailed guidelines
+tags:
+  plot_type:
+    - line
+    - area
+  data_type:
+    - numeric
+    - continuous
+  domain:
+    - science
+    - education
+  features:
+    - annotated
+    - phase-boundaries
+    - logarithmic
