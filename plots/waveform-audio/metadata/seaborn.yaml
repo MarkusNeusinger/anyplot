@@ -1,7 +1,7 @@
 library: seaborn
 specification_id: waveform-audio
 created: '2026-03-07T14:58:47Z'
-updated: '2026-03-07T15:02:24Z'
+updated: '2026-03-07T15:13:55Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 22801238636
 issue: 4563
@@ -10,31 +10,35 @@ library_version: 0.13.2
 preview_url: https://storage.googleapis.com/pyplots-images/plots/waveform-audio/seaborn/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/waveform-audio/seaborn/plot_thumb.png
 preview_html: null
-quality_score: 83
+quality_score: 90
 review:
   strengths:
-  - Excellent spec compliance with all required features implemented correctly (filled
-    envelope, zero-line, min/max rendering, synthetic data)
-  - Clean well-structured code with elegant envelope downsampling approach using reshape/min/max
-  - Good visual refinement with removed spines, subtle grid, and explicit font sizing
-  - Realistic audio data with 220Hz fundamental, harmonics, and amplitude envelope
-    segments
+  - Excellent data storytelling with loud/quiet segmentation and musical dynamics
+    annotations
+  - Cohesive blue palette with intentional hierarchy through alpha/saturation variation
+  - Thorough spec compliance with all required features including min/max envelope
+    rendering
+  - Clean well-structured code with appropriate envelope smoothing
+  - Professional visual refinement with removed spines, subtle grid, and balanced
+    layout
   weaknesses:
-  - Library mastery is low - seaborn is barely used beyond set_context and lineplot
-    for edges; the main fill_between is matplotlib
-  - Data storytelling could be stronger - no visual emphasis on interesting waveform
-    features
-  - Envelope rendering shows individual oscillation jaggedness that could be smoother
-  image_description: 'The plot displays an audio waveform rendered as a filled area
-    between min/max envelopes, using a light blue (#306998 Python Blue) semi-transparent
-    fill. The waveform is symmetric around a horizontal gray zero-line at y=0. The
-    x-axis shows "Time (seconds)" from 0.0 to 1.0, and the y-axis shows "Amplitude"
-    from -1.00 to 1.00. Two distinct amplitude segments are visible: an initial loud
-    section (0-0.2s) with peak amplitude ~0.75 that decays through 0.4s, followed
-    by a quieter section, then a second louder section starting around 0.55s peaking
-    near 0.7 that also decays. Individual oscillation cycles are visible within the
-    envelope. Top and right spines are removed. A subtle y-axis grid with low alpha
-    is present. The title reads "waveform-audio · seaborn · pyplots.ai".'
+  - Library mastery limited since seaborn lacks native waveform/fill_between support;
+    core visualization relies on matplotlib
+  - Annotation font size (13pt) could be slightly larger for consistency with other
+    text elements
+  image_description: 'The plot displays an audio waveform envelope over 1 second of
+    time. The waveform is rendered as a filled area symmetric around a zero baseline,
+    with the upper and lower envelopes traced by dark blue lines. Two fill colors
+    distinguish dynamics: a darker blue (#306998) at ~55% alpha for "Loud" regions
+    and a lighter blue (#89ABD0) at ~30% alpha for "Quiet" regions. Three italic annotations
+    label musical dynamics: "Attack + Sustain" over the initial loud burst (0-0.2s),
+    "Decay" in the quieter mid-section (~0.35s), and "Second Phrase" over the second
+    loud region (~0.65-0.8s). The title reads "waveform-audio · seaborn · pyplots.ai"
+    at the top. X-axis is "Time (seconds)" from 0.0 to 1.0, Y-axis is "Amplitude"
+    from -1.00 to 1.00. A subtle horizontal zero-line is visible. Top and right spines
+    are removed. A legend in the upper right shows "Loud" and "Quiet" patches. The
+    grid is very subtle (low alpha). The overall aesthetic is clean and professional
+    with a cohesive blue palette.'
   criteria_checklist:
     visual_quality:
       score: 29
@@ -42,64 +46,67 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt,
-          plus sns.set_context'
+        comment: All font sizes explicitly set (title=24, labels=20, ticks=16, legend=14);
+          annotation text at 13pt slightly small but readable
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: All text elements well separated, no collisions
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Envelope clear but individual oscillations create some visual noise
+        comment: Envelope fills clearly visible, loud/quiet distinction apparent,
+          edge lines well-defined
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Single-series Python Blue, colorblind-safe
+        comment: Single-hue blue scheme with good luminance contrast; colorblind-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good 16:9 proportions, plot fills canvas well
+        comment: 16:9 figure, plot fills canvas well with balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Time (seconds) with units, Amplitude descriptive
+        comment: Time (seconds) with units, Amplitude descriptive for normalized signal
     design_excellence:
-      score: 12
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Python Blue with semi-transparent fill, above defaults but not publication-level
+        comment: Cohesive two-tone blue palette, loud/quiet color distinction with
+          intentional hierarchy, italic annotations
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Spines removed, subtle grid, tight_layout
+        comment: Spines removed, subtle grid (alpha=0.15), generous whitespace, clean
+          edge colors
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Two-segment envelope creates some narrative but no emphasis or focal
-          point
+        passed: true
+        comment: Loud/quiet segmentation with musical dynamics annotations creates
+          clear narrative
     spec_compliance:
       score: 15
       max: 15
@@ -109,49 +116,50 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct audio waveform with filled envelope
+        comment: Correct audio waveform with filled envelope symmetric around zero
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: filled area, zero-line, envelope rendering,
-          synthetic data'
+        comment: 'All spec features present: filled area, semi-transparent fill, zero-line,
+          min/max envelope, synthetic data'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Time on x, amplitude on y, correct ranges
+        comment: Time on X, amplitude on Y, correct ranges
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format, no legend needed for single series
+        comment: Correct title format, legend shows Loud/Quiet dynamics
     data_quality:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows varying envelope, harmonics, noise, both polarities — missing
-          clipping demo
+        comment: Shows attack, sustain, decay, second phrase with dynamics variation
+          and quiet regions
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: 220Hz base with harmonics at realistic sample rate
+        comment: Realistic audio signal with 220Hz base, harmonics, amplitude envelope,
+          musical dynamics
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 22050 Hz sample rate, 1s duration, 220 Hz fundamental — all realistic
+        comment: 1s duration, 22050 Hz sample rate, normalized amplitude [-1, +1]
     code_quality:
       score: 10
       max: 10
@@ -161,13 +169,13 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports-data-plot-save flow, no functions or classes
+        comment: Linear imports-data-plot-save structure, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -179,39 +187,43 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Clean and well-structured with elegant envelope calculation
+        comment: Clean implementation with appropriate complexity for envelope rendering
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png at dpi=300, current API
+        comment: Saves as plot.png with dpi=300
     library_mastery:
-      score: 4
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 3
         max: 5
-        passed: false
-        comment: Uses sns.set_context and sns.lineplot but main visual is pure matplotlib
-          fill_between
+        passed: true
+        comment: Uses sns.set_theme, sns.lineplot with long-form DataFrame and hue,
+          sns.despine; core fill_between is matplotlib
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 2
         max: 5
         passed: false
-        comment: Only sns.set_context is distinctive; sns.lineplot could be trivially
-          replaced with ax.plot
-  verdict: REJECTED
+        comment: Leverages set_theme with context/font_scale and lineplot with hue,
+          but core visual relies on matplotlib
+  verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - annotations
+  - custom-legend
+  - layer-composition
   patterns:
   - data-generation
-  - explicit-figure
-  dataprep: []
+  - iteration-over-groups
+  dataprep:
+  - binning
   styling:
   - alpha-blending
   - grid-styling

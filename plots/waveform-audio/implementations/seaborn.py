@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 waveform-audio: Audio Waveform Plot
 Library: seaborn 0.13.2 | Python 3.14.3
-Quality: 83/100 | Created: 2026-03-07
+Quality: 90/100 | Created: 2026-03-07
 """
 
 import matplotlib.pyplot as plt
