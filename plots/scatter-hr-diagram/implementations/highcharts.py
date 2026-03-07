@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 scatter-hr-diagram: Hertzsprung-Russell Diagram
-Library: highcharts | Python 3.13
-Quality: pending | Created: 2026-03-07
+Library: highcharts unknown | Python 3.14.3
+Quality: 87/100 | Created: 2026-03-07
 """
 
 import tempfile
