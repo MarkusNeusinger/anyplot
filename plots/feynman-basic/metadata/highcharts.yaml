@@ -1,0 +1,238 @@
+library: highcharts
+specification_id: feynman-basic
+created: '2026-03-07T21:26:18Z'
+updated: '2026-03-07T21:53:01Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22807440303
+issue: 4667
+python_version: 3.14.3
+library_version: unknown
+preview_url: https://storage.googleapis.com/pyplots-images/plots/feynman-basic/highcharts/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/feynman-basic/highcharts/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/feynman-basic/highcharts/plot.html
+quality_score: 90
+review:
+  strengths:
+  - Excellent physics accuracy with correct particle types, arrow conventions, and
+    diagram topology
+  - All 4 line types demonstrated (fermion solid, photon wavy, gluon curly, boson
+    dashed) via main diagram and reference section
+  - Professional custom color palette with coordinated typography and white text outlines
+  - Clean, deterministic code with proper highcharts-core class hierarchy usage
+  - Informative subtitle and reference section enhance educational value
+  weaknesses:
+  - Some excess whitespace in the upper canvas area above the main diagram
+  - Time arrow label is very faint and positioned at the extreme edge
+  - Line Styles reference section text label is slightly crude compared to the polished
+    main diagram
+  image_description: 'The plot displays a Feynman diagram for electron-positron annihilation
+    (e⁻e⁺ → γ → μ⁻μ⁺) on a clean white background. Two dark blue straight fermion
+    lines (e⁻ from upper-left, e⁺ from lower-left) converge at a dark vertex dot on
+    the left, with V-shaped arrowheads indicating particle direction. A pink/magenta
+    wavy line representing the photon (γ) connects the left vertex to a right vertex,
+    with the γ label in pink above the midpoint. From the right vertex, two more blue
+    fermion lines diverge outward (μ⁻ upper-right, μ⁺ lower-right) with arrowheads.
+    Below the main diagram, a "Line Styles:" reference section shows a green curly/looped
+    line labeled "g (gluon)" and an orange dashed line labeled "H (scalar boson)."
+    The title reads "Electron-Positron Annihilation · feynman-basic · highcharts ·
+    pyplots.ai" with subtitle "e⁻e⁺ → γ → μ⁻μ⁺ — Quantum Electrodynamics (QED) Process."
+    A horizontal legend at the bottom lists all five element types: Fermion, Photon,
+    Gluon, Scalar Boson, Interaction Vertex. A faint "Time →" label appears at the
+    bottom right.'
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 64px, subtitle 44px, particle
+          labels 72px, reference labels 44px, legend 36px'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Labels positioned with y-offsets at 35%/65% along lines to avoid
+          arrowhead collision
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Line widths 6-8px, vertex markers radius=24 with white border, arrowheads
+          clearly visible
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue, pink, green, orange — all perceptually distinct and colorblind-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good symmetry but excess whitespace in upper portion; Time label
+          very faint at edge
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Time directional label present; axes appropriately hidden for diagram
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom coordinated palette, italic particle labels with white text
+          outlines, Segoe UI font family
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Axes hidden, no grid, clean canvas, vertex dots with white borders;
+          Line Styles text label slightly crude
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtitle explains QED process, arrow conventions shown, reference
+          section educates about all line types
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Feynman diagram with vertices, propagators, and proper particle
+          line styles
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features: solid fermions with arrows, wavy photon, curly gluon,
+          dashed boson, vertex dots, labels, time axis'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct topology for s-channel e⁻e⁺ → γ → μ⁻μ⁺ with left-to-right
+          time flow
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title includes required format with descriptive prefix; legend lists
+          all 5 element types
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All 4 particle line types, both particles and antiparticles, forward/backward
+          arrow conventions
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Canonical QED process with standard physics notation
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Physically correct diagram topology for s-channel process
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Flat structure: imports, data, series construction, chart config,
+          export'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic with hardcoded positions and trigonometric calculations
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: highcharts-core classes, PIL for cropping, selenium
+          for screenshot'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-organized loop for fermion lines, clean wave generation with
+          trigonometry
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png via Selenium screenshot, current highcharts-core
+          API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Proper highcharts-core class hierarchy with series types, to_js_literal()
+          export, Marker and dataLabels config
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: SplineSeries for wavy line, dash_style, dataLabels, z_index, States/HoverState
+          configuration
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  - pillow
+  techniques:
+  - annotations
+  - html-export
+  - custom-legend
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - edge-highlighting
