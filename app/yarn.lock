@@ -2280,10 +2280,10 @@ react-fast-compare@^3.2.2:
   resolved "https://registry.yarnpkg.com/react-fast-compare/-/react-fast-compare-3.2.2.tgz#929a97a532304ce9fee4bcae44234f1ce2c21d49"
   integrity sha512-nsO+KSNgo1SbJqJEYRE9ERzo7YtYbou/OqjSQKxV7jcKox7+usiUVZOAC+XnDOABXggQTno0Y1CpVnuWEc1boQ==
 
-react-helmet-async@^2.0.5:
-  version "2.0.5"
-  resolved "https://registry.yarnpkg.com/react-helmet-async/-/react-helmet-async-2.0.5.tgz#cfc70cd7bb32df7883a8ed55502a1513747223ec"
-  integrity sha512-rYUYHeus+i27MvFE+Jaa4WsyBKGkL6qVgbJvSBoX8mbsWoABJXdEO0bZyi0F6i+4f0NuIb8AvqPMj3iXFHkMwg==
+react-helmet-async@^3.0.0:
+  version "3.0.0"
+  resolved "https://registry.yarnpkg.com/react-helmet-async/-/react-helmet-async-3.0.0.tgz#16f31779ea4e4e01827c071b2f15301d074dd570"
+  integrity sha512-nA3IEZfXiclgrz4KLxAhqJqIfFDuvzQwlKwpdmzZIuC1KNSghDEIXmyU0TKtbM+NafnkICcwx8CECFrZ/sL/1w==
   dependencies:
     invariant "^2.2.4"
     react-fast-compare "^3.2.2"
@@ -2304,25 +2304,25 @@ react-is@^19.2.3:
   resolved "https://registry.yarnpkg.com/react-is/-/react-is-19.2.4.tgz#a080758243c572ccd4a63386537654298c99d135"
   integrity sha512-W+EWGn2v0ApPKgKKCy/7s7WHXkboGcsrXE+2joLyVxkbyVQfO3MUEaUQDHoSmb8TFFrSKYa9mw64WZHNHSDzYA==
 
-react-router-dom@^7.13.0:
-  version "7.13.0"
-  resolved "https://registry.yarnpkg.com/react-router-dom/-/react-router-dom-7.13.0.tgz#8b5f7204fadca680f0e94f207c163f0dcd1cfdf5"
-  integrity sha512-5CO/l5Yahi2SKC6rGZ+HDEjpjkGaG/ncEP7eWFTvFxbHP8yeeI0PxTDjimtpXYlR3b3i9/WIL4VJttPrESIf2g==
+react-router-dom@^7.13.1:
+  version "7.13.1"
+  resolved "https://registry.yarnpkg.com/react-router-dom/-/react-router-dom-7.13.1.tgz#74c045acc333ca94612b889cd1b1e1ee9534dead"
+  integrity sha512-UJnV3Rxc5TgUPJt2KJpo1Jpy0OKQr0AjgbZzBFjaPJcFOb2Y8jA5H3LT8HUJAiRLlWrEXWHbF1Z4SCZaQjWDHw==
   dependencies:
-    react-router "7.13.0"
+    react-router "7.13.1"
 
-react-router@7.13.0:
-  version "7.13.0"
-  resolved "https://registry.yarnpkg.com/react-router/-/react-router-7.13.0.tgz#de9484aee764f4f65b93275836ff5944d7f5bd3b"
-  integrity sha512-PZgus8ETambRT17BUm/LL8lX3Of+oiLaPuVTRH3l1eLvSPpKO3AvhAEb5N7ihAFZQrYDqkvvWfFh9p0z9VsjLw==
+react-router@7.13.1:
+  version "7.13.1"
+  resolved "https://registry.yarnpkg.com/react-router/-/react-router-7.13.1.tgz#5e2b3ebafd6c78d9775e135474bf5060645077f7"
+  integrity sha512-td+xP4X2/6BJvZoX6xw++A2DdEi++YypA69bJUV5oVvqf6/9/9nNlD70YO1e9d3MyamJEBQFEzk6mbfDYbqrSA==
   dependencies:
     cookie "^1.0.1"
     set-cookie-parser "^2.6.0"
 
-react-syntax-highlighter@^16.1.0:
-  version "16.1.0"
-  resolved "https://registry.yarnpkg.com/react-syntax-highlighter/-/react-syntax-highlighter-16.1.0.tgz#ebe0bb5ae7a3540859212cedafd767f0189c516c"
-  integrity sha512-E40/hBiP5rCNwkeBN1vRP+xow1X0pndinO+z3h7HLsHyjztbyjfzNWNKuAsJj+7DLam9iT4AaaOZnueCU+Nplg==
+react-syntax-highlighter@^16.1.1:
+  version "16.1.1"
+  resolved "https://registry.yarnpkg.com/react-syntax-highlighter/-/react-syntax-highlighter-16.1.1.tgz#928459855d375f5cfc8e646071e20d541cebcb52"
+  integrity sha512-PjVawBGy80C6YbC5DDZJeUjBmC7skaoEUdvfFQediQHgCL7aKyVHe57SaJGfQsloGDac+gCpTfRdtxzWWKmCXA==
   dependencies:
     "@babel/runtime" "^7.28.4"
     highlight.js "^10.4.1"
