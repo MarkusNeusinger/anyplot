@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 bar-tornado-sensitivity: Tornado Diagram for Sensitivity Analysis
 Library: highcharts unknown | Python 3.14.3
 Quality: 85/100 | Created: 2026-03-07
@@ -34,8 +34,6 @@ parameters = [
 ]
 
 # Realistic sensitivity: some parameters have inverse effects
-# Higher discount rate, costs, tax, duration → lower NPV (low scenario = higher NPV)
-# Higher revenue, salvage, market share → higher NPV (low scenario = lower NPV)
 low_values = [17.2, 9.2, 14.8, 14.0, 14.2, 13.8, 10.8, 13.2, 9.8, 14.5]
 high_values = [8.1, 16.5, 10.3, 11.2, 11.0, 11.4, 13.9, 12.0, 15.5, 10.8]
 
@@ -51,59 +49,69 @@ sorted_high = [round(high_values[i] - base_npv, 1) for i in sorted_indices]
 chart = Chart(container="container")
 chart.options = HighchartsOptions()
 
+# Color palette
+color_low = "#306998"
+color_high = "#E8A838"
+color_top_low = "#1A4570"
+color_top_high = "#D4880A"
+
 chart.options.chart = {
     "type": "bar",
     "width": 4800,
     "height": 2700,
     "backgroundColor": "#ffffff",
-    "marginLeft": 400,
-    "marginRight": 120,
+    "marginLeft": 420,
+    "marginRight": 140,
     "marginTop": 240,
-    "marginBottom": 200,
-    "style": {"fontFamily": "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif"},
-    "plotBackgroundColor": "#fafafa",
-    "plotBorderWidth": 1,
-    "plotBorderColor": "#e0e0e0",
+    "marginBottom": 180,
+    "style": {"fontFamily": "'Segoe UI', 'Helvetica Neue', Arial, sans-serif"},
+    "plotBackgroundColor": "#f8f9fa",
 }
 
 chart.options.title = {
     "text": "bar-tornado-sensitivity \u00b7 highcharts \u00b7 pyplots.ai",
-    "style": {"fontSize": "48px", "fontWeight": "bold", "color": "#222222"},
+    "style": {"fontSize": "48px", "fontWeight": "700", "color": "#1a1a2e", "letterSpacing": "0.5px"},
     "y": 45,
 }
 
 chart.options.subtitle = {
     "text": "NPV Sensitivity Analysis \u2014 Base Case: $12.5M",
-    "style": {"fontSize": "32px", "color": "#555555"},
-    "y": 95,
+    "style": {"fontSize": "34px", "fontWeight": "400", "color": "#555555"},
+    "y": 100,
 }
 
 chart.options.x_axis = {
     "categories": sorted_params,
     "title": {"text": None},
-    "labels": {"style": {"fontSize": "28px", "color": "#333333"}},
+    "labels": {"style": {"fontSize": "30px", "color": "#2a2a2a", "fontWeight": "500"}},
     "lineWidth": 0,
     "tickWidth": 0,
 }
 
 chart.options.y_axis = {
-    "title": {"text": "Change in NPV ($M)", "style": {"fontSize": "28px", "color": "#333333"}, "margin": 30},
-    "labels": {"style": {"fontSize": "24px", "color": "#555555"}, "format": "{value}"},
+    "title": {
+        "text": "Change in NPV ($M)",
+        "style": {"fontSize": "30px", "color": "#333333", "fontWeight": "600"},
+        "margin": 35,
+    },
+    "labels": {"style": {"fontSize": "26px", "color": "#555555"}, "format": "{value}"},
     "tickInterval": 1,
     "gridLineWidth": 1,
-    "gridLineColor": "rgba(0,0,0,0.08)",
+    "gridLineColor": "rgba(0,0,0,0.06)",
+    "gridLineDashStyle": "Dot",
     "plotLines": [
         {
             "value": 0,
-            "width": 3,
-            "color": "#333333",
+            "width": 4,
+            "color": "#1a1a2e",
             "zIndex": 5,
             "label": {
                 "text": "Base Case",
                 "align": "center",
+                "verticalAlign": "bottom",
                 "rotation": 0,
-                "style": {"fontSize": "24px", "fontWeight": "bold", "color": "#444444"},
-                "y": 25,
+                "style": {"fontSize": "24px", "fontWeight": "bold", "color": "#1a1a2e"},
+                "y": -20,
             },
         }
     ],
@@ -111,13 +119,16 @@ chart.options.y_axis = {
 
 chart.options.legend = {
     "enabled": True,
-    "itemStyle": {"fontSize": "28px", "color": "#333333"},
+    "itemStyle": {"fontSize": "30px", "fontWeight": "500", "color": "#333333"},
     "verticalAlign": "top",
     "layout": "horizontal",
     "align": "center",
-    "y": 150,
+    "y": 140,
     "floating": True,
-    "symbolRadius": 4,
+    "symbolRadius": 6,
+    "symbolHeight": 18,
+    "symbolWidth": 18,
+    "itemDistance": 50,
 }
 
 chart.options.credits = {"enabled": False}
@@ -126,38 +137,42 @@ chart.options.accessibility = {"enabled": False}
 chart.options.tooltip = {
     "headerFormat": "<b>{point.key}</b><br/>",
     "pointFormat": "{series.name}: <b>{point.y:.1f} $M</b>",
-    "style": {"fontSize": "22px"},
+    "style": {"fontSize": "24px"},
 }
 
 chart.options.plot_options = {
     "bar": {
-        "grouping": False,
+        "grouping": True,
         "borderWidth": 0,
-        "pointWidth": 80,
-        "pointPadding": 0,
-        "groupPadding": 0.15,
+        "pointPadding": 0.05,
+        "groupPadding": 0.12,
+        "borderRadius": 3,
         "dataLabels": {
             "enabled": True,
             "format": "{y:.1f}",
-            "style": {"fontSize": "22px", "fontWeight": "normal", "textOutline": "2px white", "color": "#333333"},
+            "style": {"fontSize": "26px", "fontWeight": "600", "textOutline": "3px white", "color": "#2a2a2a"},
         },
     }
 }
 
+# Create data with emphasis on top parameter (darker color)
+low_data = [{"y": sorted_low[0], "color": color_top_low}, *[{"y": v} for v in sorted_low[1:]]]
+high_data = [{"y": sorted_high[0], "color": color_top_high}, *[{"y": v} for v in sorted_high[1:]]]
+
 low_series = BarSeries()
 low_series.name = "Low Scenario"
-low_series.data = sorted_low
-low_series.color = "#306998"
+low_series.data = low_data
+low_series.color = color_low
 
 high_series = BarSeries()
 high_series.name = "High Scenario"
-high_series.data = sorted_high
-high_series.color = "#FFD43B"
+high_series.data = high_data
+high_series.color = color_high
 
 chart.add_series(low_series)
 chart.add_series(high_series)
 
-# Serialize via to_dict/JSON (avoids nested array data format from to_js_literal)
+# Serialize via to_dict/JSON for reliable rendering in headless Chrome
 config_json = json.dumps(chart.options.to_dict())
 
 # Download Highcharts JS for inline embedding (required for headless Chrome)
@@ -166,7 +181,7 @@ req = urllib.request.Request(highcharts_url, headers={"User-Agent": "Mozilla/5.0
 with urllib.request.urlopen(req, timeout=30) as response:
     highcharts_js = response.read().decode("utf-8")
 
-# Generate HTML with inline scripts (not CDN links)
+# Generate HTML with inline scripts
 html_content = f"""<!DOCTYPE html>
 <html>
 <head>
@@ -204,7 +219,6 @@ driver = webdriver.Chrome(options=chrome_options)
 driver.get(f"file://{temp_path}")
 time.sleep(5)
 
-# Use CDP to set exact device metrics for full-size screenshot
 driver.execute_cdp_cmd(
     "Emulation.setDeviceMetricsOverride", {"width": 4800, "height": 2700, "deviceScaleFactor": 1, "mobile": False}
 )
