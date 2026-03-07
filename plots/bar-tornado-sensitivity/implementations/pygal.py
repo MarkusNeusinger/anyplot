@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 bar-tornado-sensitivity: Tornado Diagram for Sensitivity Analysis
 Library: pygal 3.1.0 | Python 3.14.3
 Quality: 80/100 | Created: 2026-03-07
@@ -40,21 +40,25 @@ sorted_params = [d[0] for d in deviations]
 sorted_low_devs = [d[1] for d in deviations]
 sorted_high_devs = [d[2] for d in deviations]
 
-# Style
+# Style - refined palette with prominent zero reference line
 custom_style = Style(
     background="white",
-    plot_background="white",
-    foreground="#333333",
-    foreground_strong="#333333",
-    foreground_subtle="#cccccc",
-    colors=("#E07A5F", "#306998"),
+    plot_background="#fafafa",
+    foreground="#2d2d2d",
+    foreground_strong="#1a1a1a",
+    foreground_subtle="#e0e0e0",
+    colors=("#E07A5F", "#4A7C96"),
     title_font_size=72,
     label_font_size=44,
-    major_label_font_size=40,
-    legend_font_size=44,
+    major_label_font_size=44,
+    legend_font_size=42,
     value_font_size=34,
     value_label_font_size=34,
     tooltip_font_size=36,
+    guide_stroke_color="#e0e0e0",
+    guide_stroke_dasharray="4,4",
+    major_guide_stroke_color="#555555",
+    major_guide_stroke_dasharray="",
 )
 
 # Plot
@@ -67,20 +71,35 @@ chart = pygal.HorizontalStackedBar(
     show_legend=True,
     legend_at_bottom=True,
     legend_at_bottom_columns=2,
+    legend_box_size=30,
     show_x_guides=True,
     show_y_guides=False,
+    y_labels_major=[0],
     print_values=True,
     print_values_position="center",
     value_formatter=lambda x: f"{x:+.1f}" if x else "",
-    margin=50,
-    spacing=18,
+    margin=40,
+    margin_bottom=100,
+    spacing=20,
     truncate_label=-1,
+    rounded_bars=6,
 )
 
 chart.x_labels = sorted_params
-chart.add("Low Scenario", sorted_low_devs)
-chart.add("High Scenario", sorted_high_devs)
 
-# Save
+# Use dict-based values for custom tooltips (distinctive pygal feature)
+low_series = [
+    {"value": v, "label": f"{p}: NPV ${base_value + v:.1f}M (base ${base_value}M)"}
+    for v, p in zip(sorted_low_devs, sorted_params, strict=True)
+]
+high_series = [
+    {"value": v, "label": f"{p}: NPV ${base_value + v:.1f}M (base ${base_value}M)"}
+    for v, p in zip(sorted_high_devs, sorted_params, strict=True)
+]
+
+chart.add("Low Input Effect", low_series)
+chart.add("High Input Effect", high_series)
+
+# Save (SVG with interactive tooltips + PNG for static preview)
 chart.render_to_file("plot.html")
 chart.render_to_png("plot.png")
