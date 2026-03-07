@@ -1,7 +1,7 @@
 library: highcharts
 specification_id: bar-tornado-sensitivity
 created: '2026-03-07T08:51:50Z'
-updated: '2026-03-07T09:20:25Z'
+updated: '2026-03-07T09:30:14Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 22795810128
 issue: 4566
@@ -10,106 +10,99 @@ library_version: unknown
 preview_url: https://storage.googleapis.com/pyplots-images/plots/bar-tornado-sensitivity/highcharts/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/bar-tornado-sensitivity/highcharts/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/bar-tornado-sensitivity/highcharts/plot.html
-quality_score: 85
+quality_score: 89
 review:
   strengths:
-  - Perfect spec compliance - all required tornado diagram features implemented correctly
-  - Excellent realistic NPV sensitivity analysis data with 10 plausible financial
-    parameters
-  - Clean deterministic code with good KISS structure
-  - Thoughtful design with differentiated plot background, subtle grid, and complementary
-    blue/gold palette
-  - Data labels at bar ends provide precise deviation values for each parameter
+  - Perfect spec compliance with all required tornado diagram features implemented
+  - Excellent data quality with realistic NPV sensitivity analysis and correct inverse
+    effects
+  - Strong visual design with custom blue/gold palette and emphasis on top parameter
+  - Clean, well-structured code with deterministic data
   weaknesses:
-  - Bar overlap due to grouping:false creates slight visual ambiguity where both series
-    share the same vertical space
-  - Data labels at 22px could be slightly larger for better readability at full resolution
-  - Design could be elevated with more sophisticated typography hierarchy or emphasis
-    on the most impactful parameter
-  image_description: 'The plot displays a horizontal tornado diagram for NPV sensitivity
-    analysis. Ten financial parameters are listed on the y-axis, sorted by total range
-    from widest (Discount Rate) to narrowest (Inflation Rate), creating the characteristic
-    tornado shape. Blue bars (#306998, "Low Scenario") and gold/yellow bars (#FFD43B,
-    "High Scenario") extend left and right from a vertical reference line at 0 labeled
-    "Base Case." The title reads "bar-tornado-sensitivity · highcharts · pyplots.ai"
-    with a subtitle "NPV Sensitivity Analysis — Base Case: $12.5M." The x-axis is
-    labeled "Change in NPV ($M)" ranging from -5 to 6. Data labels appear at each
-    bar end showing exact deviation values (e.g., Discount Rate: -4.4 to 4.7). The
-    plot has a light gray (#fafafa) background with a subtle border, and a floating
-    legend at top center. The two series are layered at each row via grouping:false,
-    extending in opposite directions from the baseline.'
+  - Minor Base Case label overlap with x-axis tick at zero
+  - Right side of canvas has some unused space
+  - Could use chart.to_js_literal() for more idiomatic Highcharts rendering
+  image_description: 'The plot displays a horizontal bar chart (tornado diagram) for
+    NPV sensitivity analysis. Ten parameters are listed on the y-axis, sorted by total
+    range with Discount Rate at the top and Inflation Rate at the bottom. Two series
+    are shown: "Low Scenario" in steel blue (#306998) and "High Scenario" in amber/gold
+    (#E8A838). Bars extend left (negative change) and right (positive change) from
+    a vertical reference line at zero labeled "Base Case." The top parameter (Discount
+    Rate) uses darker color variants for visual emphasis. Data labels show numeric
+    values at bar ends (e.g., -4.4, 4.7). The title reads "bar-tornado-sensitivity
+    · highcharts · pyplots.ai" with a subtitle "NPV Sensitivity Analysis — Base Case:
+    $12.5M." The x-axis is labeled "Change in NPV ($M)" ranging from -5 to 6. Background
+    is white with a subtle light gray plot area and dotted grid lines.'
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 48px, subtitle 32px, axis labels
-          28px, ticks 24px, data labels 22px). Data labels slightly small at 22px.
+        comment: 'All font sizes explicitly set: title 48px, subtitle 34px, axis labels
+          30px, tick labels 26px, data labels 26px'
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Minor bar overlap within rows due to grouping:false, but bars extend
-          in opposite directions so visual impact is minimal.
+        comment: Minor overlap between Base Case plot line label and x-axis 0 tick
+          label
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Bars well-sized at pointWidth:80, smallest bars still distinguishable.
-          Slight visual ambiguity where bars overlap at center.
+        comment: Bars clearly visible with appropriate sizing and good padding between
+          groups
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Blue and gold are easily distinguishable for all forms of color vision
-          deficiency.
+        comment: Blue and amber/gold palette is colorblind-safe with excellent contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good use of canvas with appropriate margins. Some unused space at
-          bottom.
+        comment: Good proportions overall, slight excess space on right side of canvas
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Change in NPV ($M) is descriptive with units. Parameter names on
-          y-axis are clear.
+        comment: X-axis labeled Change in NPV ($M) with units, descriptive parameter
+          names on y-axis
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Thoughtful color choice, custom font, plot background differentiation.
-          Above defaults but not publication-ready.
+        comment: Custom blue/gold palette with emphasis colors on top parameter, professional
+          typography, subtle plot background
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Subtle grid, removed y-axis line/ticks, text outline on labels. Plot
-          border still present.
+        comment: Dotted grid at low opacity, removed axis lines/ticks, border radius
+          on bars, generous whitespace
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Tornado sorting creates natural hierarchy, subtitle provides context,
-          color contrast makes directional effects clear.
+        comment: Top parameter emphasized with darker colors, sorted by magnitude,
+          subtitle provides base case context
     spec_compliance:
       score: 15
       max: 15
@@ -119,52 +112,53 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct horizontal bar tornado diagram with bars extending from baseline.
+        comment: Correct horizontal bar chart creating tornado diagram shape
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
         comment: 'All spec features present: reference line, sorting, dual colors,
-          labels, data labels.'
+          labels, data labels'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Parameters on y-axis, change in NPV on x-axis, all 10 parameters
-          visible.
+        comment: X-axis correctly shows change in NPV, y-axis shows parameters with
+          correct inverse effects
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format and legend labels match data series.
+        comment: Title follows exact format, legend correctly labels Low and High
+          Scenario
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 10 parameters with good variety in ranges, both normal and inverse
-          effects shown.
+        comment: 10 parameters with varying ranges, inverse effects, characteristic
+          tornado shape
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: NPV sensitivity analysis with standard financial parameters is a
-          classic, neutral real-world application.
+        comment: NPV sensitivity analysis for capital investment with realistic financial
+          parameters
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Base NPV $12.5M with deviations ±0.5M to ±4.7M is realistic for a
-          mid-size capital project.
+        comment: Base NPV $12.5M with variations ±$0.5M to ±$4.7M, realistic for capital
+          project
     code_quality:
       score: 10
       max: 10
@@ -174,31 +168,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear flow with no functions or classes.
+        comment: 'Clean linear flow: imports, data, chart config, series, render,
+          screenshot'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic with hardcoded data values.
+        comment: All data is deterministic with hardcoded values
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used.
+        comment: All imports are used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized code with concise sorting logic.
+        comment: Clean and well-organized, per-point color override for emphasis is
+          elegant
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png via Selenium, uses current highcharts_core API.
+        comment: Saves as plot.png via Selenium screenshot, current API
     library_mastery:
       score: 7
       max: 10
@@ -208,22 +204,22 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Properly uses Chart, HighchartsOptions, BarSeries, and plotLines.
-          Uses JSON serialization workaround instead of to_js_literal().
+        comment: Proper highcharts_core usage but uses json.dumps(to_dict()) instead
+          of to_js_literal()
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses plotLines with labels, floating legend, plotBackgroundColor,
-          tooltips, data labels with textOutline, subtitle.
+        comment: Uses plotLines, plotBackgroundColor, per-point colors, borderRadius,
+          textOutline, floating legend
   verdict: REJECTED
 impl_tags:
   dependencies:
   - selenium
   techniques:
   - html-export
-  - annotations
+  - hover-tooltips
   patterns:
   - data-generation
   dataprep: []
