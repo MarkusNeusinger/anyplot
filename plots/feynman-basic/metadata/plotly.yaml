@@ -1,7 +1,7 @@
 library: plotly
 specification_id: feynman-basic
 created: '2026-03-07T21:21:37Z'
-updated: '2026-03-07T21:25:40Z'
+updated: '2026-03-07T21:36:56Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 22807440233
 issue: 4667
@@ -10,29 +10,36 @@ library_version: 6.6.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/feynman-basic/plotly/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/feynman-basic/plotly/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/feynman-basic/plotly/plot.html
-quality_score: 82
+quality_score: 86
 review:
   strengths:
-  - Well-crafted wavy photon line using sine wave with perpendicular displacement
-  - 'Good color coding: blue fermions, red photon with matching label colors'
-  - Interactive hover tooltips on each propagator and vertex (Plotly-specific)
-  - Clean symmetric layout with proper particle flow arrows
-  - Time axis arrow orients the reader
+  - All 4 particle types demonstrated with distinct well-crafted line styles (curly
+    gluons with taper, wavy photons with taper)
+  - Physically accurate gluon fusion Higgs production process showcasing all line
+    types
+  - Interactive hover tooltips on every element (Plotly-distinctive feature)
+  - Custom legend with actual rendered wavy/curly line samples
+  - Serif typography appropriate for physics diagrams
+  - Prominent fermion flow arrows with proper direction convention
   weaknesses:
-  - Only shows 2 of 4 particle types (missing gluon curly lines, boson dashed lines)
-  - Significant whitespace — diagram could fill more of the canvas
-  - Arrow annotations for particle flow are small relative to the diagram
-  - Helper function breaks KISS pattern
-  image_description: The plot shows a Feynman diagram for electron-positron annihilation
-    (e⁻e⁺ → μ⁻μ⁺) on a white background. Two blue straight lines enter from the upper-left
-    (e⁻) and lower-left (e⁺), converging at a left vertex marked with a black dot
-    with white border. A red wavy line (virtual photon γ, labeled in red) connects
-    the left vertex horizontally to the right vertex. Two blue straight lines exit
-    the right vertex toward the upper-right (μ⁻) and lower-right (μ⁺). Blue arrows
-    on the fermion lines indicate particle flow direction. Particle labels (e⁻, e⁺,
-    γ, μ⁻, μ⁺) are placed near the midpoints of each propagator in matching colors.
-    A gray "time" arrow runs along the bottom of the diagram. The title reads "e⁻e⁺
-    → μ⁻μ⁺ Annihilation · feynman-basic · plotly · pyplots.ai" at the top.
+  - Significant canvas underutilization — diagram sits in left-center with empty right
+    side
+  - Legend placement does not balance the overall composition
+  - Manual legend construction is verbose
+  image_description: 'The plot displays a Feynman diagram for gluon fusion Higgs production
+    with diphoton decay (gg → H → γγ) on a white background. Two green curly gluon
+    lines enter from the upper-left and lower-left, connecting to a triangular top-quark
+    loop formed by three blue straight fermion lines (labeled t, t, t̄) with prominent
+    blue direction arrows at midpoints. The right vertex of the triangle connects
+    via a purple dashed line (labeled H for Higgs boson) to a decay vertex on the
+    right. From that vertex, two red wavy photon lines (labeled γ) exit toward the
+    upper-right and lower-right. Four black vertex dots with white borders mark the
+    interaction points. A custom legend in the bottom-right area shows all four line
+    styles with matching colors: blue "Fermion (straight)", red "Photon (wavy)", green
+    "Gluon (curly)", and purple "Boson (dashed)" — using actual wavy/curly line samples.
+    A gray "time" arrow with italic label runs along the bottom. The title at top
+    reads "gg → H → γγ (Gluon Fusion) · feynman-basic · plotly · pyplots.ai" in serif
+    font.'
   criteria_checklist:
     visual_quality:
       score: 27
@@ -40,67 +47,70 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 28pt, labels 22pt, time 18pt).
-          Slightly below optimal for 4800x2700 canvas.
+        comment: 'All font sizes explicitly set: title 30pt, particle labels 24pt
+          serif, legend text 16pt, time label 20pt'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text; manual label offsets carefully placed.
+        comment: No overlapping text; manual label offsets carefully tuned per propagator
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Lines and wavy photon visible. Arrow annotations somewhat small.
+        comment: Lines width 4, vertex dots size 16 with white border, prominent arrows.
+          Slightly thick overall
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Blue-red distinction is colorblind-safe.
+        comment: Four distinct hues (blue, red, green, purple), colorblind-friendly
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 2
         max: 4
-        passed: true
-        comment: Diagram centered but significant whitespace above and below.
+        passed: false
+        comment: Diagram clustered in left-center, ~40-45% canvas utilization, unbalanced
+          whitespace
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Axes appropriately hidden. Time arrow labeled. Title descriptive.
+        comment: Axes hidden appropriately, time arrow labeled, descriptive title
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Good color scheme, clean vertex dots, well-crafted wavy line. Above
-          defaults but not publication-grade.
+        comment: Custom 4-color palette, serif typography, vertex dots with white
+          borders, tapered parametric curves
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Axes hidden, clean white background, plotly_white template.
+        comment: Axes hidden, clean background, custom legend with rendered line samples.
+          Unbalanced whitespace
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Time arrow orients viewer, color coding distinguishes particle types,
-          symmetric layout.
+        comment: Gluon fusion process tells clear physics story, color coding and
+          flow arrows guide viewer
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -108,83 +118,88 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Feynman diagram with proper topology.
+        comment: Correct Feynman diagram with proper topology
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Shows fermion and photon lines but missing gluon and boson line styles.
+        comment: All 4 line styles, vertex dots, particle labels, time axis all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Vertices and propagators correctly positioned.
+        comment: Vertices and propagators correctly positioned for gg → H → γγ via
+          top-quark loop
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows required format. No legend needed.
+        comment: Title follows required format, custom line-style legend identifies
+          all particle types
     data_quality:
-      score: 13
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 4
+        score: 6
         max: 6
         passed: true
-        comment: Shows 2 of 4 particle types. Missing gluon and boson line styles.
+        comment: All 4 particle types with distinct line styles, fermion loop, multiple
+          vertices
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: e⁻e⁺ annihilation to muon pair is a real QED process.
+        comment: Gluon fusion Higgs production — famous real physics process discovered
+          at CERN LHC
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Clean symmetric layout with appropriate vertex spacing.
+        comment: Clean layout with good vertex spacing, slightly compressed horizontally
     code_quality:
       score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Defines helper function _pos() which breaks strict KISS.
+        comment: 'Linear structure: imports → data → drawing loop → legend → layout
+          → save'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic data, no random elements.
+        comment: Fully deterministic, no random elements
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: numpy and plotly.graph_objects both used.
+        comment: numpy and plotly.graph_objects both used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: Clean loop structure, well-organized.
+        comment: Well-organized drawing loop, but manual legend construction is verbose
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with correct dimensions and HTML.
+        comment: Saves as plot.png (1600x900 scale=3) and plot.html
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -192,18 +207,21 @@ review:
         score: 3
         max: 5
         passed: true
-        comment: Correct use of go.Scatter, annotations, and layout. Standard patterns.
+        comment: Standard go.Scatter, add_annotation, add_shape patterns. Manual coordinate-based
+          drawing.
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Uses hovertemplate for interactive tooltips. Exports HTML.
+        comment: Interactive hovertemplate on every element, HTML export for full
+          interactivity
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
+  - custom-legend
   - hover-tooltips
   - html-export
   patterns:
