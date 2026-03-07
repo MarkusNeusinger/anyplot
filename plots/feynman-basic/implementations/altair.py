@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 feynman-basic: Feynman Diagram for Particle Interactions
 Library: altair 6.0.0 | Python 3.14.3
-Created: 2026-03-07
+Quality: 92/100 | Created: 2026-03-07
 """
 
 import altair as alt
