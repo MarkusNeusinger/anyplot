@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 piano-roll-midi: MIDI Piano Roll Visualization
 Library: plotly 6.6.0 | Python 3.14.3
-Quality: 84/100 | Created: 2026-03-07
+Quality: 88/100 | Created: 2026-03-07
 """
 
 import numpy as np

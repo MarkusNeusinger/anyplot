@@ -1,7 +1,7 @@
 library: plotly
 specification_id: piano-roll-midi
 created: '2026-03-07T19:50:15Z'
-updated: '2026-03-07T20:04:08Z'
+updated: '2026-03-07T20:13:52Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 22805912224
 issue: 4565
@@ -10,34 +10,36 @@ library_version: 6.6.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/piano-roll-midi/plotly/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/piano-roll-midi/plotly/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/piano-roll-midi/plotly/plot.html
-quality_score: 84
+quality_score: 88
 review:
   strengths:
-  - Full spec compliance with all required features (black/white key shading, beat/measure
-    lines, note names, velocity colorscale)
-  - Excellent data quality - realistic I-V-vi-IV progression with proper voice leading
-    and dynamics
-  - Melody vs accompaniment visual hierarchy through size and opacity differentiation
-  - Clever use of invisible scatter trace for hover tooltips and colorbar
-  - Plasma colorscale is a strong colorblind-safe choice
+  - Perfect spec compliance with all required features implemented faithfully
+  - Excellent data quality with musically coherent I-V-vi-IV chord progression and
+    varying dynamics
+  - Effective melody/accompaniment visual hierarchy creating clear data storytelling
+  - Good use of Plotly-distinctive hover tooltips with detailed musical information
+  - Clean Plasma colorscale for velocity mapping with proper colorbar
   weaknesses:
-  - Manual Plasma color interpolation function is unnecessary over-engineering
-  - Y-axis shows every semitone which is very dense
-  - Axis labels lack units/context
-  image_description: The plot displays a MIDI piano roll visualization spanning 4
-    measures of a C major I-V-vi-IV chord progression with melody. The y-axis shows
-    pitch names from G#2 to G#5, with every semitone labeled. The x-axis shows beat
-    positions labeled M1.1 through M5.1. Notes are rendered as horizontal colored
-    rectangles using the Plasma colorscale (dark purple for low velocity ~70 to bright
-    yellow for high velocity ~120). Melody notes appear taller and more opaque than
-    accompaniment notes. Black key rows have subtle gray shading to distinguish them
-    from white key rows. Vertical lines mark measure boundaries (thicker) and beat
-    divisions (thinner). A colorbar on the right indicates velocity. The title reads
-    "piano-roll-midi · plotly · pyplots.ai" centered at top. The overall background
-    is clean white using plotly_white template.
+  - Y-axis labels slightly crowded at natural half-step pairs (B/C, E/F)
+  - Manual Plasma color interpolation is verbose when Plotly has built-in colorscale
+    support
+  - Design is good but not quite publication-level polish
+  image_description: The plot displays a piano roll visualization of a 4-measure chord
+    progression (I-V-vi-IV in C major) with melody. The y-axis shows pitch as MIDI
+    note names (A2 at bottom to G5 at top), with only white-key notes labeled to reduce
+    clutter. The x-axis shows beat positions labeled as Measure.Beat (M1.1 through
+    M5.1). Each note is a horizontal rectangle whose length represents duration. Notes
+    are colored using the Plasma colorscale — dark purple/blue for low velocity (~70)
+    through pink/orange to yellow for high velocity (~120). A vertical colorbar on
+    the right is labeled "Velocity (MIDI 0-127)". Alternating light gray horizontal
+    bands distinguish black-key rows from white-key rows. Solid vertical lines mark
+    measure boundaries while dotted lines mark individual beats. Melody notes (highest
+    pitch per onset) appear slightly taller and more opaque than accompaniment, creating
+    a clear visual hierarchy. The title reads "piano-roll-midi · plotly · pyplots.ai"
+    centered at the top. Background is clean white (plotly_white template).
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -45,22 +47,22 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 28, labels 22, ticks 16, colorbar
-          20/16). Dense y-axis labels slightly compressed but readable.
+        comment: All font sizes explicitly set (title 28pt, labels 22pt, ticks 16pt,
+          colorbar 18pt). Y-axis labels slightly tight at natural half-step pairs.
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Y-axis labels for all ~40 semitones are very tightly packed. No actual
-          overlap but minimal clearance.
+        comment: No actual overlap, but y-axis note name pairs at natural half-steps
+          (B4/C5, E4/F4) are quite close together.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Note rectangles clearly visible. Melody/accompaniment differentiation
-          works. Some very short notes are small but discernible.
+        comment: Note rectangles clearly visible with good sizing. Melody/accompaniment
+          height distinction is effective.
       - id: VQ-04
         name: Color Accessibility
         score: 4
@@ -72,38 +74,40 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Good proportions, plot fills canvas well, balanced margins.
+        comment: Plot fills canvas well with balanced margins. Colorbar positioned
+          neatly.
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Beat Position and Pitch are descriptive but lack units.
+        passed: true
+        comment: 'Descriptive labels with context: Beat Position (Measure.Beat) and
+          Pitch (MIDI Note Name).'
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Plasma colorscale, plotly_white template, black key shading, melody/accompaniment
-          hierarchy. Above defaults but not publication-level.
+        comment: Plasma colorscale, white note borders, subtle black-key shading,
+          differentiated grid line weights. Clearly above defaults.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Custom beat/measure lines with varying thickness, subtle pitch separators,
-          clean white background.
+        comment: plotly_white template, custom grid with measure vs beat line styling,
+          subtle horizontal pitch grid.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Melody highlighted through size/opacity, velocity coloring adds dynamics,
-          recognizable I-V-vi-IV progression.
+        comment: Melody/accompaniment visual hierarchy creates clear focal point.
+          Velocity coloring adds dynamic context.
     spec_compliance:
       score: 15
       max: 15
@@ -113,27 +117,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct piano roll with horizontal rectangles positioned by pitch
-          and time.
+        comment: Correct piano roll visualization with horizontal rectangles.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: note names, black/white key shading,
-          beat/measure lines, velocity color, auto-fit pitch range.'
+        comment: 'All spec features present: note rectangles, note names, velocity
+          coloring, key shading, grid lines, auto-fit range.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=time in beats, Y=pitch. Correct mapping, all data visible.
+        comment: X = beat position, Y = pitch. All data correctly mapped.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Colorbar serves as velocity legend.
+        comment: Title format correct. Colorbar legend with velocity label.
     data_quality:
       score: 15
       max: 15
@@ -143,54 +146,55 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Varying durations, wide velocity range, chords, bass, melody, accompaniment.
+        comment: Shows chord voicings, varying durations, varying velocities, complete
+          4-measure progression.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: C major I-V-vi-IV chord progression with proper voice leading.
+        comment: Real musical context with recognizable I-V-vi-IV chord progression.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: MIDI pitches 45-79 and velocities 68-120 are realistic.
+        comment: MIDI pitch values (45-79) and velocities (68-120) are realistic.
     code_quality:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Contains get_plasma_color function definition, breaking flat structure.
+        passed: true
+        comment: 'Linear flow: imports, data, processing, plot, save.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hardcoded note data.
+        comment: Fully deterministic with hardcoded note data.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy and plotly.graph_objects, both used.
+        comment: Only numpy and plotly.graph_objects imported, both used.
       - id: CQ-04
         name: Code Elegance
         score: 1
         max: 2
-        passed: false
-        comment: Manual Plasma interpolation is over-engineered; duplicates Plotly
-          built-in colorscale.
+        passed: true
+        comment: Manual Plasma color interpolation is verbose. Melody classification
+          adds complexity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png and plot.html correctly.
+        comment: Saves as plot.png with correct dimensions and HTML export.
     library_mastery:
       score: 7
       max: 10
@@ -200,15 +204,15 @@ review:
         score: 3
         max: 5
         passed: true
-        comment: Uses go.Figure, add_shape, add_trace correctly. Manual color interpolation
-          bypasses Plotly colorscale system.
+        comment: Uses go.Figure with add_shape for rectangles and invisible scatter
+          for colorbar — correct approach but low-level.
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Hover tooltips on invisible scatter trace, HTML export, colorbar
-          integration, musical note symbols in hover.
+        comment: Hover tooltips with detailed note info and HTML export are genuinely
+          distinctive Plotly features.
   verdict: REJECTED
 impl_tags:
   dependencies: []
