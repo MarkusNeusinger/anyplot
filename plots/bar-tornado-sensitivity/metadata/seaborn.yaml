@@ -1,7 +1,7 @@
 library: seaborn
 specification_id: bar-tornado-sensitivity
 created: '2026-03-07T08:44:49Z'
-updated: '2026-03-07T08:48:59Z'
+updated: '2026-03-07T08:57:01Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 22795810081
 issue: 4566
@@ -10,32 +10,34 @@ library_version: 0.13.2
 preview_url: https://storage.googleapis.com/pyplots-images/plots/bar-tornado-sensitivity/seaborn/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/bar-tornado-sensitivity/seaborn/plot_thumb.png
 preview_html: null
-quality_score: 72
+quality_score: 84
 review:
   strengths:
-  - Excellent visual quality with explicit font sizing and clean layout
-  - 'Good design choices: removed spines, subtle grid, custom color palette'
-  - Strong spec compliance with correct tornado shape, sorting, and reference line
-  - Realistic, neutral NPV sensitivity data with appropriate scale
+  - Excellent spec compliance with all tornado diagram features implemented correctly
+  - Good data storytelling with bold top-3 parameter labels creating visual hierarchy
+  - Clean idiomatic seaborn code with appropriate long-form DataFrame approach
+  - Bar-end value annotations enhance readability significantly
+  - Colorblind-safe palette is a strong accessibility choice
   weaknesses:
-  - No seaborn usage at all — the implementation is pure matplotlib with no seaborn
-    import or function calls
-  - Missing bar-end value annotations that would improve readability
-  - No data storytelling emphasis (e.g., highlighting top parameters differently)
-  - Could add a base case label annotation on the reference line
-  image_description: The plot shows a horizontal tornado (butterfly) bar chart titled
-    "bar-tornado-sensitivity · seaborn · pyplots.ai". Ten financial parameters are
-    listed on the y-axis (Discount Rate at top, Inflation Rate at bottom), sorted
-    by total impact range (widest bars at top). Orange bars extend left from a dashed
-    vertical reference line at $120M (base case NPV) representing the low scenario,
-    while steel-blue bars extend right representing the high scenario. The x-axis
-    is labeled "Net Present Value ($M)" ranging from ~$80M to ~$152M. Top/right spines
-    are removed, a subtle x-axis grid is visible, and a frameless legend in the lower
-    right identifies the two series. All text is clearly readable with appropriate
-    font sizes.
+  - Base Case annotation placement is slightly awkward near x-axis area
+  - Y-axis has no label (empty string)
+  - All parameters show same directional pattern — missing inverted relationships
+  - Uses default colorblind palette rather than custom palette anchored on Python
+    Blue
+  image_description: The plot shows a horizontal tornado diagram for NPV sensitivity
+    analysis. Ten financial parameters are listed on the y-axis, sorted by impact
+    range from smallest (Inflation Rate, top) to largest (Discount Rate, bottom).
+    Bars extend left (orange, "Low Scenario") and right (blue, "High Scenario") from
+    a dashed vertical base case reference line at $120M. The x-axis shows "Net Present
+    Value ($M)" ranging from $70 to $160. Each bar has value annotations at its ends
+    (e.g., "$82M" and "$152M" for Discount Rate). The top 3 most impactful parameters
+    (Discount Rate, Revenue Growth, Material Cost) have bold, larger y-axis labels.
+    A "Base Case $120M" italic annotation sits near the bottom of the reference line.
+    The legend in the upper right shows orange for Low Scenario and blue for High
+    Scenario. The background is clean white with subtle vertical grid lines.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 26
       max: 30
       items:
       - id: VQ-01
@@ -43,39 +45,40 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title=24, xlabel=20, yticks=16, xticks=16'
+        comment: 'All font sizes explicitly set: title 24pt, xlabel 20pt, ticks 16pt,
+          annotations 12-13pt'
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No overlapping elements, bars well-spaced
+        comment: Base Case annotation overlaps slightly with bottom bar area
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars well-sized with zorder properly set
+        comment: Bars perfectly sized, tornado shape clearly visible
       - id: VQ-04
         name: Color Accessibility
-        score: 3
-        max: 4
-        passed: true
-        comment: Orange/blue colorblind-safe pair, could have slightly higher contrast
-      - id: VQ-05
-        name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good 16:9 layout, fills canvas well
+        comment: Colorblind palette with excellent contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 2
+        max: 4
+        passed: false
+        comment: Some wasted space; base case annotation placement awkward
       - id: VQ-06
         name: Axis Labels & Title
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Net Present Value ($M) includes units
+        passed: false
+        comment: X-axis has units, y-axis label is empty string
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -83,20 +86,21 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom palette, spines removed, above defaults but not publication-level
+        comment: Colorblind palette thoughtful, bold top-3 labels, but not custom
+          curated
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Top/right spines removed, subtle grid, frameless legend
+        comment: Left spine removed, y-grid disabled, x-grid subtle, dashed reference
+          line
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Sorted by impact creates natural hierarchy but no emphasis on key
-          drivers
+        passed: true
+        comment: Top 3 parameters bolded, tornado sorting, bar-end annotations
     spec_compliance:
       score: 14
       max: 15
@@ -109,23 +113,23 @@ review:
         comment: Correct horizontal tornado bar chart
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Has reference line, sorting, dual colors. Missing optional bar-end
-          labels
+        comment: All spec features present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=NPV, Y=parameters, deltas from base case correct
+        comment: X=NPV output, Y=parameters, correct
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: Title format correct, legend labels match
+        comment: Title format correct, legend labels descriptive but could better
+          match spec
     data_quality:
       score: 14
       max: 15
@@ -135,21 +139,21 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: 10 parameters with varying ranges and asymmetric effects
+        comment: 10 parameters with varied ranges, but all same directional pattern
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: NPV sensitivity for capital investment, neutral business scenario
+        comment: NPV sensitivity for capital investment, realistic scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: NPV $80-152M realistic for capital project
+        comment: NPV values $82M-$152M with $120M base are realistic
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -157,55 +161,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports-data-plot-save flow
+        comment: Clean linear flow
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set, deterministic data
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only imports what is used
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, appropriate complexity
+        comment: Clean Pythonic code with pandas concat for long-form data
       - id: CQ-05
         name: Output & API
-        score: 0
+        score: 1
         max: 1
-        passed: false
-        comment: Saves correctly but does not use seaborn API at all
+        passed: true
+        comment: Saves as plot.png, dpi=300, bbox_inches=tight
     library_mastery:
-      score: 2
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 1
+        score: 4
         max: 5
-        passed: false
-        comment: 'CRITICAL: Zero seaborn functions used, entire implementation is
-          pure matplotlib'
+        passed: true
+        comment: Good axes-level barplot with hue, set_context, despine, color_palette
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 3
         max: 5
-        passed: false
-        comment: No seaborn features whatsoever
+        passed: true
+        comment: Uses set_context, despine, color_palette colorblind, hue-based dodge=False
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
   - manual-ticks
   patterns:
   - data-generation
+  - explicit-figure
   dataprep: []
   styling:
   - grid-styling

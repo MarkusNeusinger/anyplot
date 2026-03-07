@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 bar-tornado-sensitivity: Tornado Diagram for Sensitivity Analysis
 Library: seaborn 0.13.2 | Python 3.14.3
-Quality: 72/100 | Created: 2026-03-07
+Quality: 84/100 | Created: 2026-03-07
 """
 
 import matplotlib.pyplot as plt
