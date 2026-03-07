@@ -1,9 +1,10 @@
-""" pyplots.ai
+"""pyplots.ai
 piano-roll-midi: MIDI Piano Roll Visualization
 Library: seaborn 0.13.2 | Python 3.14.3
 Quality: 84/100 | Created: 2026-03-07
 """
 
+import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -39,54 +40,62 @@ for measure in range(8):
     beat_offset = measure * 4
 
     for pitch in pitches:
-        velocity = np.random.randint(50, 80)
+        velocity = np.random.randint(40, 65)
         notes_data.append({"start": beat_offset, "duration": 4.0, "pitch": pitch, "velocity": velocity})
 
 # Melody line
 melody = [
-    (0, 0.5, 72, 100),
-    (0.5, 0.5, 74, 95),
-    (1.0, 1.0, 76, 105),
-    (2.0, 0.5, 77, 90),
-    (2.5, 0.5, 76, 85),
-    (3.0, 1.0, 74, 95),
-    (4, 0.5, 72, 100),
-    (4.5, 0.5, 71, 90),
-    (5.0, 1.0, 69, 110),
-    (6.0, 0.5, 67, 85),
-    (6.5, 0.5, 69, 90),
-    (7.0, 1.0, 71, 100),
-    (8, 1.0, 72, 105),
+    # M1: ascending phrase, accented downbeat
+    (0, 0.5, 72, 110),
+    (0.5, 0.5, 74, 90),
+    (1.0, 1.0, 76, 115),
+    (2.0, 0.5, 77, 85),
+    (2.5, 0.5, 76, 80),
+    (3.0, 1.0, 74, 90),
+    # M2: descending phrase with syncopation
+    (4, 0.5, 72, 105),
+    (4.5, 0.5, 71, 85),
+    (5.0, 1.0, 69, 120),  # accented syncopation
+    (6.0, 0.5, 67, 80),
+    (6.75, 0.25, 69, 75),  # grace note
+    (7.0, 1.0, 71, 95),
+    # M3: building intensity
+    (8, 1.0, 72, 110),
     (9.0, 0.5, 74, 95),
     (9.5, 0.5, 76, 100),
-    (10.0, 1.0, 77, 110),
-    (11.0, 1.0, 76, 90),
+    (10.0, 1.0, 77, 120),  # peak accent
+    (11.0, 1.0, 76, 85),
+    # M4: gentle descent
     (12, 0.5, 74, 95),
-    (12.5, 0.5, 72, 90),
+    (12.5, 0.5, 72, 85),
     (13.0, 1.0, 69, 100),
-    (14.0, 0.5, 67, 85),
-    (14.5, 0.5, 69, 95),
+    (14.0, 0.5, 67, 75),
+    (14.5, 0.5, 69, 90),
     (15.0, 1.0, 71, 105),
+    # M5: dramatic leap and accent
     (16, 0.5, 72, 100),
     (16.5, 0.5, 74, 90),
-    (17.0, 1.5, 76, 115),
+    (17.0, 1.5, 79, 127),  # fortissimo peak note
     (18.5, 0.5, 77, 95),
-    (19.0, 1.0, 79, 120),
-    (20, 1.0, 77, 105),
-    (21.0, 0.5, 76, 90),
-    (21.5, 0.5, 74, 85),
-    (22.0, 1.0, 72, 100),
-    (23.0, 1.0, 74, 95),
-    (24, 0.5, 76, 110),
-    (24.5, 0.5, 77, 105),
-    (25.0, 1.0, 79, 120),
-    (26.0, 0.5, 77, 95),
-    (26.5, 0.5, 76, 100),
-    (27.0, 1.0, 74, 90),
-    (28, 1.5, 72, 115),
-    (29.5, 0.5, 71, 85),
-    (30.0, 1.0, 69, 95),
-    (31.0, 1.0, 72, 110),
+    (19.0, 1.0, 76, 85),
+    # M6: softer, reflective
+    (20, 1.0, 74, 80),
+    (21.0, 0.5, 72, 70),
+    (21.5, 0.5, 71, 65),
+    (22.0, 1.0, 69, 75),
+    (23.0, 1.0, 71, 85),
+    # M7: crescendo to climax
+    (24, 0.5, 72, 95),
+    (24.5, 0.5, 74, 100),
+    (25.0, 1.0, 76, 115),
+    (26.0, 0.5, 79, 125),  # climax
+    (26.5, 0.5, 77, 110),
+    (27.0, 1.0, 76, 100),
+    # M8: resolving, diminuendo
+    (28, 1.5, 72, 105),
+    (29.5, 0.5, 71, 75),
+    (30.0, 1.0, 69, 65),
+    (31.0, 1.0, 72, 55),  # final note, soft
 ]
 
 for start, dur, pitch, vel in melody:
@@ -130,8 +139,8 @@ for beat in range(0, total_beats + 1, 4):
     if step < n_steps:
         time_labels[step] = f"M{beat // 4 + 1}"
 
-# Create blue-to-red colormap as spec suggests
-cmap = sns.color_palette("coolwarm", as_cmap=True)
+# Custom sequential blue-to-red colormap (no white midpoint that blends with background)
+cmap = mcolors.LinearSegmentedColormap.from_list("blue_purple_red", ["#306998", "#6a4c93", "#b5446e", "#e8423f"])
 
 # Black key row mask for background shading
 black_key_mask = np.array([p % 12 in BLACK_KEY_INDICES for p in pitches_flipped])
@@ -173,7 +182,7 @@ ax.set_xticks([pos + 2 / resolution for pos in measure_positions])
 ax.set_xticklabels(measure_labels_display, fontsize=16)
 
 # Y-axis styling
-ax.tick_params(axis="y", labelsize=14, length=0)
+ax.tick_params(axis="y", labelsize=16, length=0)
 ax.tick_params(axis="x", length=0)
 
 # Colorbar styling
