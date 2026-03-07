@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 bar-tornado-sensitivity: Tornado Diagram for Sensitivity Analysis
-Library: letsplot | Python 3.13
-Quality: pending | Created: 2026-03-07
+Library: letsplot 4.8.2 | Python 3.14.3
+Quality: 87/100 | Created: 2026-03-07
 """
 
 import pandas as pd
