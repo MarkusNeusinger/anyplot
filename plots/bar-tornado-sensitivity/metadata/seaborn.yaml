@@ -1,0 +1,228 @@
+library: seaborn
+specification_id: bar-tornado-sensitivity
+created: '2026-03-07T08:44:49Z'
+updated: '2026-03-07T09:04:49Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22795810081
+issue: 4566
+python_version: 3.14.3
+library_version: 0.13.2
+preview_url: https://storage.googleapis.com/pyplots-images/plots/bar-tornado-sensitivity/seaborn/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/bar-tornado-sensitivity/seaborn/plot_thumb.png
+preview_html: null
+quality_score: 91
+review:
+  strengths:
+  - Excellent data storytelling with bold top-3 parameter labels creating clear visual
+    hierarchy
+  - Custom copper-orange and Python Blue palette provides strong contrast and professional
+    appearance
+  - Complete spec compliance with all required features including bar-end value annotations
+  - Realistic NPV sensitivity data with inverted relationships showing domain understanding
+  - Clean idiomatic seaborn code using long-form DataFrame with hue parameter
+  weaknesses:
+  - Bar-end annotations at 12pt could be slightly larger for better readability at
+    full resolution
+  - Base case annotation placement near x-axis bottom is slightly crowded
+  image_description: 'The plot displays a horizontal tornado/sensitivity bar chart
+    showing NPV sensitivity analysis for 10 financial parameters. Bars extend left
+    and right from a dashed vertical base case reference line at $120M. Two colors
+    are used: a warm copper-orange for the "Low Scenario" and Python Blue for the
+    "High Scenario." Parameters are sorted by total impact range from bottom (widest:
+    Discount Rate spanning $82M-$152M) to top (narrowest: Inflation Rate spanning
+    $117M-$124M). The top 3 most impactful parameters (Discount Rate, Revenue Growth,
+    Labor Cost) have bold, larger y-axis labels. Bar-end annotations show absolute
+    NPV values in gray text. The title reads "bar-tornado-sensitivity · seaborn ·
+    pyplots.ai". A legend in the upper right identifies the two scenarios. The x-axis
+    shows "Net Present Value ($M)" with dollar-formatted ticks, and the y-axis shows
+    "Input Parameter." Spines are removed on the left, with subtle x-axis gridlines.
+    The base case annotation appears in italic bold near the bottom of the reference
+    line.'
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 24, labels 20, ticks 16, top-3
+          bold at 17). Bar-end annotations at 12pt readable but smaller side.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text; bar-end labels well-positioned outside bars.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Bars clearly visible with good width, tornado shape immediately apparent.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Copper-orange vs Python Blue is colorblind-safe with strong contrast.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good 16:9 utilization; base case annotation near x-axis area slightly
+          crowded.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive labels with units: Net Present Value ($M) and Input
+          Parameter.'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom copper-orange + Python Blue palette, intentional color choices,
+          professional appearance clearly above defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Left spine removed, y-grid disabled, x-grid subtle (alpha=0.2), edgecolor
+          none on bars, generous whitespace.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Top 3 parameters emphasized with bold/larger labels. Tornado sort
+          guides viewer. Bar-end values add context.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct horizontal tornado/sensitivity bar chart.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All required features present: base case line, sorted by range,
+          two colors, parameter labels, bar-end values.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X-axis shows NPV output metric, y-axis shows input parameters.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct. Legend labels Low Scenario/High Scenario match
+          data.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 10 parameters with varying ranges. Includes inverted relationships.
+          Full tornado shape.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: NPV sensitivity analysis for capital investment. Real financial modeling
+          parameters. Neutral business context.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: NPV range $82M-$152M with $120M base case realistic for capital investment.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean Imports-Data-Plot-Save flow. No functions or classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set, deterministic arrays.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All four imports used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean and Pythonic. Long-form DataFrame for seaborn hue is correct
+          approach.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with dpi=300, bbox_inches tight. Current API.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses sns.barplot with long-form DataFrame and hue idiomatically.
+          Leverages set_style, set_context, despine.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses set_context talk, set_style whitegrid with custom params, despine
+          left=True, dodge=False hue overlay.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - manual-ticks
+  patterns:
+  - data-generation
+  - wide-to-long
+  dataprep: []
+  styling:
+  - grid-styling
