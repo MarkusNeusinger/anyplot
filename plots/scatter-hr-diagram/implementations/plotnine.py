@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 scatter-hr-diagram: Hertzsprung-Russell Diagram
 Library: plotnine 0.15.3 | Python 3.14.3
-Quality: 81/100 | Created: 2026-03-07
+Quality: 88/100 | Created: 2026-03-07
 """
 
 import numpy as np

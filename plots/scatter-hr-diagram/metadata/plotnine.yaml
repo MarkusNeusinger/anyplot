@@ -1,7 +1,7 @@
 library: plotnine
 specification_id: scatter-hr-diagram
 created: '2026-03-07T06:46:56Z'
-updated: '2026-03-07T06:50:39Z'
+updated: '2026-03-07T06:57:31Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 22794049024
 issue: 4558
@@ -10,102 +10,104 @@ library_version: 0.15.3
 preview_url: https://storage.googleapis.com/pyplots-images/plots/scatter-hr-diagram/plotnine/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/scatter-hr-diagram/plotnine/plot_thumb.png
 preview_html: null
-quality_score: 81
+quality_score: 88
 review:
   strengths:
-  - Excellent spec compliance with all required features implemented correctly
-  - Realistic astrophysics data with proper physical relationships (L ~ T^3.5 for
-    main sequence)
-  - Domain-appropriate spectral color palette following astrophysical convention
-  - Clean code structure with good data generation approach
-  - Region labels and Sun reference point provide good data storytelling
+  - 'Excellent spec compliance: all required features implemented correctly including
+    reversed x-axis and log y-axis'
+  - Scientifically grounded data with realistic L~T^3.5 main sequence relationship
+    and appropriate stellar population counts
+  - Custom spectral color palette following astrophysical convention creates an intuitive
+    blue-to-red visual gradient
+  - Good data storytelling with four labeled regions and Sun reference point
+  - Clean, well-structured code with idiomatic plotnine grammar of graphics
   weaknesses:
-  - A and F spectral type colors (pale lavender, pale yellow) nearly invisible against
-    white background
-  - Font sizes slightly below recommended minimums for 4800x2700 output
-  - Points could be larger for better visibility, especially white dwarfs
-  - Red Giants label partially overlaps with data points
-  image_description: 'The plot shows a Hertzsprung-Russell diagram as a scatter plot
-    with reversed x-axis (high temperature on left, low on right). The y-axis is logarithmic,
-    spanning from ~10^-4 to ~10^5 solar luminosities. Points are colored by spectral
-    type using a blue-to-red gradient: O (dark blue), B (medium blue), A (pale lavender),
-    F (pale yellow), G (golden yellow), K (orange), M (red). Four regions are labeled
-    in gray italic text: "Supergiants" in the upper area, "Red Giants" in the upper-right,
-    "Main Sequence" running diagonally, and "White Dwarfs" in the lower area. The
-    Sun is marked with a star symbol near ~5778K, 1 L☉ with bold "Sun" label. The
-    title reads "scatter-hr-diagram · plotnine · pyplots.ai". A legend on the right
-    shows spectral types O through M. The background is clean white with subtle gray
-    grid lines.'
+  - Similar spectral type colors (A vs B, F vs G) reduce distinguishability
+  - Sun marker is relatively small and could be more prominent as a key reference
+    point
+  - Region labels could benefit from better positioning to avoid proximity to data
+    points
+  image_description: 'The plot displays a Hertzsprung-Russell diagram as a scatter
+    plot on a 16:9 canvas. The x-axis shows "Surface Temperature (K)" reversed from
+    ~35000K on the left to ~3000K on the right. The y-axis shows "Luminosity (L☉)"
+    on a logarithmic scale from ~10^-4 to ~10^5. Stars are color-coded by spectral
+    type: dark navy (O), medium blue (B), light blue (A), yellow-green (F), golden
+    yellow (G), orange (K), and red (M). The main sequence forms a clear diagonal
+    band from upper-left (hot, luminous) to lower-right (cool, dim). Red Giants cluster
+    in the upper-right (cool, luminous), Supergiants span the top, and White Dwarfs
+    scatter across the lower portion. The Sun is marked with a black star symbol near
+    the middle-right of the main sequence. Four region labels in gray italic text
+    identify the stellar populations. The legend on the right shows all seven spectral
+    types. The title reads "scatter-hr-diagram · plotnine · pyplots.ai" in bold. The
+    background is clean with subtle gray gridlines.'
   criteria_checklist:
     visual_quality:
-      score: 21
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 8
         max: 8
         passed: true
-        comment: Font sizes explicitly set but slightly below recommended minimums
-          (title 22 vs 24, axis 18 vs 20)
+        comment: 'All font sizes explicitly set: title=24, axis_title=20, axis_text=16,
+          legend_title=18, legend_text=16'
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Red Giants label overlaps with data points; some crowding in lower-right
-          main sequence
+        passed: true
+        comment: Minor overlap between Supergiants label and nearby data points
       - id: VQ-03
         name: Element Visibility
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: ~375 points with size=2.5; adequate but could be larger for better
-          visibility
+        passed: true
+        comment: ~375 points with size=4, alpha=0.65 appropriate; Sun marker could
+          be more prominent
       - id: VQ-04
         name: Color Accessibility
-        score: 2
-        max: 4
-        passed: false
-        comment: A (pale lavender) and F (pale yellow) spectral types have very low
-          contrast against white background
-      - id: VQ-05
-        name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good 16:9 proportions; data somewhat concentrated in right half
+        comment: Custom spectral palette but A/B and F/G types are hard to distinguish
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good 16:9 proportions, plot fills canvas well
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Surface Temperature (K) and Luminosity (L☉) with proper units
+        comment: 'Descriptive labels with units: Surface Temperature (K), Luminosity
+          (L☉)'
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Domain-appropriate spectral color palette; theme_minimal provides
-          clean base; above defaults
+        comment: Custom spectral color palette following astrophysical convention,
+          bold title, above defaults
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Spines removed via theme_minimal, minor grid removed, major grid
-          with alpha=0.3
+        comment: theme_minimal, minor grid removed, major grid subtle with alpha=0.3
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Region labels guide viewer through stellar populations; Sun reference
-          anchors diagram
+        comment: Four labeled regions guide viewer, Sun reference, spectral color
+          gradient tells temperature story
     spec_compliance:
       score: 15
       max: 15
@@ -121,20 +123,20 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Reversed x-axis, log y-axis, spectral color coding, region labels,
-          Sun reference all present
+        comment: Reversed x-axis, log y-axis, spectral type colors, four region labels,
+          Sun reference
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Temperature on x-axis, luminosity on y-axis
+        comment: Temperature on x (reversed), luminosity on y (log scale)
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend shows spectral types O-M
+        comment: Correct title format, legend labels match spectral types
     data_quality:
       score: 15
       max: 15
@@ -144,20 +146,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All four stellar populations: main sequence (250), red giants (60),
-          supergiants (25), white dwarfs (40)'
+        comment: All four stellar regions with appropriate counts
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Astrophysics context with realistic stellar data
+        comment: Real astrophysics scenario with L~T^3.5 relationship
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Temperature 2800-38000K, luminosity 10^-4 to 10^5.5 L☉
+        comment: Temperature 2800-38000K, luminosity 10^-4 to 10^5.5 solar luminosities
     code_quality:
       score: 10
       max: 10
@@ -173,7 +174,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -185,13 +186,13 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized code
+        comment: Clean pd.cut for spectral binning, well-organized
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300
+        comment: Saves as plot.png, current API
     library_mastery:
       score: 7
       max: 10
@@ -201,15 +202,15 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good grammar of graphics with layered geoms, scale transformations,
-          guide_legend override_aes
+        comment: Good grammar of graphics composition with multiple layers, inherit_aes,
+          guide_legend
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Multiple data frames with inherit_aes=False, scale_x_reverse, pd.Categorical
-          for ordering
+        comment: scale_x_reverse, scale_y_log10, pd.Categorical for legend ordering,
+          guide_legend override_aes
   verdict: REJECTED
 impl_tags:
   dependencies: []
