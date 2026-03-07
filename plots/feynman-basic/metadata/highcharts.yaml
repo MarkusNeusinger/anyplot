@@ -1,7 +1,7 @@
 library: highcharts
 specification_id: feynman-basic
 created: '2026-03-07T21:26:18Z'
-updated: '2026-03-07T21:30:17Z'
+updated: '2026-03-07T21:42:39Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 22807440303
 issue: 4667
@@ -10,35 +10,38 @@ library_version: unknown
 preview_url: https://storage.googleapis.com/pyplots-images/plots/feynman-basic/highcharts/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/feynman-basic/highcharts/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/feynman-basic/highcharts/plot.html
-quality_score: 84
+quality_score: 87
 review:
   strengths:
-  - Excellent visual design with custom color palette and clean aesthetic
-  - Scientifically accurate representation of e⁻e⁺ → γ → μ⁻μ⁺ QED process
-  - All font sizes explicitly set for the 4800x2700 canvas
-  - Perfect code quality with clean, deterministic, linear structure
-  - Good data storytelling with visual hierarchy and physics context
+  - All 4 particle line types now represented (fermion, photon, gluon, boson) addressing
+    previous feedback
+  - Scientifically accurate e⁻e⁺ → γ → μ⁻μ⁺ QED process with correct arrow conventions
+  - Professional aesthetic with custom color palette and bold italic labels with text
+    outlines
+  - 'Perfect code quality: clean, deterministic, well-structured linear code'
+  - Full spec compliance with all required features present
   weaknesses:
-  - Excessive vertical empty space wastes canvas area (VQ-05)
-  - Only shows 2 of 4 particle types mentioned in spec (no gluon or boson lines)
-  - Does not use highcharts-core Python library for idiomatic usage
+  - 'Library mastery remains low: raw dict configuration instead of highcharts-core
+    Python class hierarchy'
+  - Minor label/arrowhead overlap on antiparticle lines (e⁺, μ⁺)
+  - Some empty space between main diagram and reference line section
   image_description: 'The plot displays a Feynman diagram for electron-positron annihilation
-    (e⁻e⁺ → γ → μ⁻μ⁺) on a white background. Four blue straight lines represent fermions:
-    e⁻ and e⁺ entering from the upper-left and lower-left respectively, converging
-    at a dark vertex dot near the left-center. A pink/magenta wavy line (photon γ)
-    connects this vertex to a second dark vertex dot near the right-center. From the
-    right vertex, two more blue fermion lines diverge: μ⁻ exiting upper-right and
-    μ⁺ exiting lower-right. Blue arrowheads at the midpoints of fermion lines indicate
-    particle flow direction (forward for particles, backward for antiparticles). Particle
-    labels (e⁻, e⁺, γ, μ⁻, μ⁺) are displayed in bold italic text near their respective
-    lines. The title reads "Electron-Positron Annihilation · feynman-basic · highcharts
-    · pyplots.ai" with a subtitle "e⁻e⁺ → γ → μ⁻μ⁺ — Quantum Electrodynamics (QED)
-    Process". A "Time →" label appears at the bottom-right. A legend at the bottom
-    shows three entries: "Fermion (e⁻, μ⁻, ...)" with blue line, "Photon (γ)" with
-    pink line, and "Interaction Vertex" with dark dot.'
+    (e⁻e⁺ → γ → μ⁻μ⁺) on a white background at 4800x2700px. Four blue (#306998) straight
+    lines represent fermions: e⁻ entering from the upper-left and e⁺ from the lower-left,
+    converging at a dark vertex dot (with white border) near the left-center. A pink/magenta
+    (#D63384) wavy line (photon γ) connects the two dark vertex dots horizontally.
+    From the right vertex, μ⁻ exits upper-right and μ⁺ exits lower-right. Blue arrowheads
+    at midpoints indicate particle flow direction. Particle labels (e⁻, e⁺, γ, μ⁻,
+    μ⁺) are bold italic with white text outlines. Below the main diagram, a "Line
+    Styles:" reference section shows a green (#2E8B57) curly/looped gluon line and
+    an orange (#E67E22) dashed scalar boson line, each labeled. The title reads "Electron-Positron
+    Annihilation · feynman-basic · highcharts · pyplots.ai" with subtitle "e⁻e⁺ →
+    γ → μ⁻μ⁺ — Quantum Electrodynamics (QED) Process". A "Time →" label appears at
+    the bottom-right. A horizontal legend at the bottom lists all five entry types:
+    Fermion, Photon, Gluon, Scalar Boson, and Interaction Vertex.'
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -47,7 +50,7 @@ review:
         max: 8
         passed: true
         comment: 'All font sizes explicitly set: title 64px, subtitle 44px, particle
-          labels 72px, legend 42px, time axis 48px'
+          labels 72px, legend 36px, ref labels 44px, time axis 48px'
       - id: VQ-02
         name: No Overlap
         score: 5
@@ -60,29 +63,29 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Lines thick (lineWidth 7-8), vertex dots large (radius 24), wavy
-          photon clearly visible
+        comment: Lines thick (lineWidth 7-8), vertex dots large (radius 24) with white
+          borders, all elements clearly visible
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Blue and pink distinguishable for all color vision types, good contrast
-          on white
+        comment: Blue, pink, green, orange palette fully distinguishable for all color
+          vision types
       - id: VQ-05
         name: Layout & Canvas
-        score: 2
+        score: 3
         max: 4
-        passed: false
-        comment: Excessive vertical empty space, diagram occupies only ~40% of vertical
-          canvas
+        passed: true
+        comment: Improved with reference line section but some empty space between
+          main diagram and reference lines
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Time arrow label appropriate for Feynman diagram, hidden numeric
-          axes correct
+        comment: Time arrow label appropriate for Feynman diagram, numeric axes correctly
+          hidden
     design_excellence:
       score: 15
       max: 20
@@ -92,24 +95,24 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom blue/pink palette, italic bold labels with text outlines,
-          professional clean aesthetic
+        comment: Custom color palette, italic bold labels with white text outlines,
+          professional clean aesthetic above defaults
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: Grid and axes fully hidden, white vertex borders, clean whitespace
-          around elements
+        comment: Grid and axes fully hidden, white vertex borders, clean whitespace,
+          reference section adds polish
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
         comment: Visual hierarchy with wavy center line, directional arrows, subtitle
-          explains process, Time arrow provides context
+          explains process, reference section provides educational context
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -117,14 +120,14 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Feynman diagram with proper line styles
+        comment: Correct Feynman diagram with proper topology
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Has fermion arrows, wavy photon, vertex dots, labels, time axis.
-          Missing gluon/boson line styles
+        comment: All 4 line styles present, vertex dots, particle labels, time axis
+          labeled
       - id: SC-03
         name: Data Mapping
         score: 3
@@ -137,25 +140,25 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Title includes spec-id, library, pyplots.ai. Legend correctly labels
-          all element types
+        comment: Title follows correct format, legend labels all 5 element types
     data_quality:
-      score: 13
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Shows fermion and photon line types only. Missing gluon (curly) and
-          boson (dashed) demonstrations
+        comment: 'All 4 particle line types shown: fermion, photon, gluon, boson.
+          Reference section demonstrates remaining styles.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: e-e+ annihilation to muon pair is a real QED process studied at CERN
+        comment: e-e+ annihilation producing muon pairs is a real QED process studied
+          at CERN
       - id: DQ-03
         name: Appropriate Scale
         score: 4
@@ -189,7 +192,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Clean loop over fermion lines, clear arrowhead geometry
+        comment: Clean loop over fermion lines, clear arrowhead geometry calculations
       - id: CQ-05
         name: Output & API
         score: 1
@@ -205,14 +208,15 @@ review:
         score: 3
         max: 5
         passed: true
-        comment: Raw JSON configuration instead of highcharts-core Python classes
+        comment: Uses HighchartsOptions.from_dict() which is valid but raw dict config
+          instead of Python class hierarchy
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Uses spline for wavy line, per-point dataLabels, zIndex layering
-          but these are common charting features
+        comment: Uses spline for wavy line, per-point dataLabels, zIndex layering,
+          dashStyle but these are common charting features
   verdict: REJECTED
 impl_tags:
   dependencies:

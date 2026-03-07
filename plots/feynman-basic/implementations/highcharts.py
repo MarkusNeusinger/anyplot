@@ -1,6 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 feynman-basic: Feynman Diagram for Particle Interactions
-Library: highcharts | Python 3.14.3
+Library: highcharts unknown | Python 3.14.3
+Quality: 87/100 | Created: 2026-03-07
 """
 
 import math
