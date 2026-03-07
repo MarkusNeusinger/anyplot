@@ -1,7 +1,7 @@
 library: seaborn
 specification_id: feynman-basic
 created: '2026-03-07T21:23:32Z'
-updated: '2026-03-07T21:43:04Z'
+updated: '2026-03-07T21:52:14Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 22807440241
 issue: 4667
@@ -10,76 +10,76 @@ library_version: 0.13.2
 preview_url: https://storage.googleapis.com/pyplots-images/plots/feynman-basic/seaborn/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/feynman-basic/seaborn/plot_thumb.png
 preview_html: null
-quality_score: 85
+quality_score: 90
 review:
   strengths:
-  - Excellent visual design with color-coded particle types using colorblind-safe
-    palette
-  - Clean layout with main diagram and reference legend well-separated
-  - All 4 particle line styles demonstrated (fermion, photon, gluon, scalar boson)
-  - Creative use of sns.lineplot with DataFrames for parametric curves (wavy photon,
-    curly gluon)
-  - Deterministic, well-structured code with no unnecessary complexity
+  - Excellent physics accuracy with correct particle/antiparticle arrow conventions
+  - Comprehensive reference legend showing all 4 particle line types with color-matched
+    labels
+  - Professional clean layout with thoughtful color-coding throughout
+  - Perfect text legibility with all font sizes explicitly set
+  - Creative use of sns.lineplot with parametric DataFrames for wavy and curly lines
   weaknesses:
-  - 'Antiparticle arrow convention wrong: e+ and mu+ arrows point forward in time
-    but should point backward per spec requirement'
-  - Library mastery limited since seaborn is not designed for diagrammatic plots
-  image_description: 'The plot shows a Feynman diagram depicting electron-positron
-    annihilation into muon-antimuon pair (e-e+ -> gamma -> mu-mu+). Blue fermion lines
-    with arrowheads enter from the top-left (e-) and bottom-left (e+) converging at
-    a blue vertex dot. An orange wavy photon line (gamma) connects the left vertex
-    to a right vertex. From the right vertex, blue fermion lines diverge to mu- (top-right)
-    and mu+ (bottom-right). A gray "time" arrow runs left-to-right below the diagram.
-    At the bottom, a reference legend displays all four particle line styles: Fermion
-    (blue solid + arrow), Photon (orange wavy), Gluon (teal curly), and Scalar Boson
-    (pink dashed), each with colored labels. Title reads "feynman-basic · seaborn
-    · pyplots.ai" centered at top.'
+  - Library mastery limited by the inherently matplotlib-centric nature of Feynman
+    diagrams
+  - Gluon and scalar boson only appear in reference legend, not in an actual interaction
+    diagram
+  image_description: 'The plot displays a Feynman diagram for electron-positron annihilation
+    into a muon-antimuon pair (e-e+ to gamma to mu-mu+). The main diagram shows two
+    blue fermion lines entering from the upper-left (e-) and lower-left (e+) converging
+    at a left vertex dot, connected by an orange wavy photon line (gamma) to a right
+    vertex dot, from which two blue fermion lines exit to the upper-right (mu-) and
+    lower-right (mu+). Arrows on fermion lines follow correct convention (forward
+    for particles, backward for antiparticles). A gray time arrow runs left-to-right
+    below the diagram with italic "time" label. Below a thin separator line, a reference
+    legend shows all four particle line types: Fermion (blue solid + arrow), Photon
+    (orange wavy), Gluon (teal curly), and Scalar Boson (pink dashed), each with color-matched
+    labels. The title reads "feynman-basic · seaborn · pyplots.ai" at the top. The
+    background is clean white with all axes removed.'
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Font sizes explicitly set (22-24pt labels, 16pt reference, 24pt title).
-          All readable. Reference labels slightly small.
+        comment: 'All font sizes explicitly set: title 24pt, particle labels 22-24pt
+          bold, reference labels 16pt bold, time label 16pt'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All labels well-positioned with no collisions
+        comment: No overlapping text or elements anywhere
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Lines lw=3, vertex dots s=250, arrows mutation_scale=25 — all clearly
-          visible
+        comment: Lines at lw=3, vertex dots at s=250, arrows well-sized
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Seaborn colorblind palette; blue, orange, green, pink all distinguishable
+        comment: Seaborn colorblind palette used throughout
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good canvas use with diagram centered and reference below; some unused
-          horizontal space
+        comment: 16:9 canvas well-utilized with balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Axes correctly off for diagram; title present; time axis labeled
+        comment: Axes appropriately off for Feynman diagram, time axis labeled
     design_excellence:
-      score: 15
+      score: 16
       max: 20
       items:
       - id: DE-01
@@ -87,23 +87,24 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Strong design with colorblind palette, color-coded labels, clean
-          white background. Clearly above defaults.
+        comment: Thoughtful color-coding, professional physics diagram aesthetic above
+          defaults
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: Axis off, clean white, subtle separator, generous whitespace, well-polished
+        comment: Axes hidden, despine applied, generous whitespace, subtle separator
+          line
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: 'Clear visual hierarchy: main diagram prominent, reference below,
-          time arrow provides context'
+        comment: Clear physics story with time arrow and directional fermion arrows
+          guiding viewer
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -111,26 +112,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Feynman diagram with vertices, propagators, and labels
+        comment: Correct Feynman diagram with vertices and propagators
       - id: SC-02
         name: Required Features
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: 'Arrow convention error: e+ and mu+ arrows point forward in time
-          but spec requires antiparticle arrows backward'
+        passed: true
+        comment: All 4 line styles, arrows, vertex dots, labels, time axis present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: e-e+ -> gamma -> mu-mu+ s-channel correctly depicted
+        comment: Time flows left-to-right, correct arrow conventions
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Reference legend serves as legend.
+        comment: Title in correct format, reference legend labels all particle types
     data_quality:
       score: 14
       max: 15
@@ -140,20 +140,20 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Main diagram shows fermions and photon. Reference demonstrates all
-          4 particle types. Main uses only 2 of 4.
+        comment: Main diagram shows fermions and photon; reference legend shows all
+          4 types
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: e-e+ -> gamma -> mu-mu+ is a standard textbook QED process
+        comment: 'Real QED process: electron-positron annihilation to muon pair'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Clean, symmetric diagram layout with good proportions
+        comment: Schematic proportions standard for Feynman diagrams
     code_quality:
       score: 10
       max: 10
@@ -163,26 +163,25 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports -> theming -> figure -> main diagram -> reference
-          -> save'
+        comment: Linear flow with no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic with hardcoded positions
+        comment: Fully deterministic, no random data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used (matplotlib, numpy, pandas, seaborn)
+        comment: 'All imports used: numpy, pandas, matplotlib, seaborn'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized. Cycloid parameterization for gluon is elegant.
+        comment: Clean, well-organized with parametric curves for wavy/curly lines
       - id: CQ-05
         name: Output & API
         score: 1
@@ -197,17 +196,17 @@ review:
         name: Idiomatic Usage
         score: 3
         max: 5
-        passed: false
-        comment: Uses sns.lineplot/scatterplot with DataFrames, set_context/set_style/despine.
-          Reasonable but diagrams aren't seaborn's forte.
+        passed: true
+        comment: Uses set_context, set_style, color_palette, lineplot, scatterplot,
+          despine
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Colorblind palette, set_context for scaling, lineplot sort=False
-          for custom curves. Somewhat distinctive.
-  verdict: REJECTED
+        comment: Seaborn theming and DataFrame-driven lineplot used, but core drawing
+          relies on matplotlib
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -215,7 +214,6 @@ impl_tags:
   - custom-legend
   patterns:
   - data-generation
-  - iteration-over-groups
   - explicit-figure
   dataprep: []
   styling:
