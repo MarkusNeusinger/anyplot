@@ -1,0 +1,223 @@
+library: plotnine
+specification_id: bar-tornado-sensitivity
+created: '2026-03-07T08:45:22Z'
+updated: '2026-03-07T08:58:23Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22795810091
+issue: 4566
+python_version: 3.14.3
+library_version: 0.15.3
+preview_url: https://storage.googleapis.com/pyplots-images/plots/bar-tornado-sensitivity/plotnine/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/bar-tornado-sensitivity/plotnine/plot_thumb.png
+preview_html: null
+quality_score: 92
+review:
+  strengths:
+  - Excellent alpha-based visual hierarchy distinguishing top-3 influential parameters
+    from the rest
+  - Clean data storytelling through tornado sorting and endpoint value labels
+  - Professional color palette (orange/blue) with strong colorblind accessibility
+  - Well-executed theme customization with subtle gridlines and appropriate typography
+  - Realistic NPV sensitivity analysis with 10 plausible financial parameters
+  weaknesses:
+  - DE-01 could reach 7-8 with more typographic refinement or annotation of the base
+    case value
+  - LM-01 could improve with more advanced plotnine features
+  image_description: The plot displays a horizontal tornado (butterfly) bar chart
+    showing NPV sensitivity analysis for 10 financial parameters. Bars extend left
+    and right from a dashed vertical reference line at the base case value of $120M.
+    The top 3 parameters (Discount Rate, Revenue Growth, Material Cost) are rendered
+    at full opacity while the remaining 7 are muted with reduced alpha, creating clear
+    visual hierarchy. Orange (#D95F02) represents the Low Scenario and blue (#306998)
+    represents the High Scenario. Each bar has dollar-value labels at its endpoints
+    (e.g., "$95M", "$148M"). Parameters are sorted by total range descending, creating
+    the characteristic tornado shape. The title reads "bar-tornado-sensitivity · plotnine
+    · pyplots.ai" with the legend positioned at top. The x-axis is labeled "Net Present
+    Value ($M)" with tick marks at $100M, $120M, $140M. Y-axis parameter names are
+    bold. The background is clean minimal with subtle x-axis gridlines only.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title=24pt bold, axis_title=20pt,
+          axis_text=16pt, y-axis bold, legend=16pt, base=14pt'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text. Value labels positioned with nudge offsets,
+          parameter names well-spaced
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Bars clearly visible with width=0.7, alpha differentiation creates
+          visual layering
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Orange and blue are colorblind-safe with strong contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 16:9 aspect ratio, plot fills canvas well, expand accommodates endpoint
+          labels
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: X-axis 'Net Present Value ($M)' with units
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Strong design: custom orange/blue palette, alpha-based emphasis
+          on top-3, bold y-axis, intentional hierarchy'
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Minor grid removed, y-major grid removed, subtle x-grid, custom x-axis
+          line, good refinement
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Alpha-based hierarchy draws attention to top 3 most influential parameters
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct tornado/butterfly horizontal bar chart
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: reference line, sorting, dual colors,
+          labels, value annotations'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Parameters on y-axis, NPV on x-axis, deviations computed correctly
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct title format, descriptive legend labels
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 10 parameters with varying ranges, clear tornado shape, both positive
+          and negative deviations
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: NPV sensitivity analysis with real financial parameters
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: NPV values $95M-$148M with base $120M, realistic for business analysis
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean imports-data-compute-plot-save structure, no functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic with hardcoded values
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used, no extras
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, clean alpha hierarchy implementation
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with dpi=300, current API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good grammar of graphics usage with aes, layered geoms, coord_flip,
+          scales, theme system
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: pd.Categorical ordering, aes alpha mapping, custom scale labels,
+          guides() - plotnine-distinctive patterns
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling
