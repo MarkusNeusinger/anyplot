@@ -3,7 +3,7 @@ substitutions:
   _SERVICE_NAME: pyplots-backend
   _REGION: europe-west4
   _MEMORY: 512Mi
-  _CPU: "2"
+  _CPU: "1"
   _MIN_INSTANCES: "1"
   _MAX_INSTANCES: "3"
 
@@ -55,6 +55,7 @@ steps:
       - "--add-cloudsql-instances=pyplots:europe-west4:pyplots-db"
       - "--set-secrets=DATABASE_URL=DATABASE_URL:latest"
       - "--set-env-vars=ENVIRONMENT=production"
+      - "--execution-environment=gen2"
       - "--set-env-vars=GOOGLE_CLOUD_PROJECT=$PROJECT_ID"
       - "--set-env-vars=GCS_BUCKET=pyplots-images"
     id: "deploy"

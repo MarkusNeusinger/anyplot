@@ -841,6 +841,8 @@ class TestPlotsRouter:
         cached_response.globalCounts = {}
         cached_response.orCounts = []
         cached_response.specTitles = {}
+        cached_response.offset = 0
+        cached_response.limit = None
 
         with (
             patch(DB_CONFIG_PATCH, return_value=True),
@@ -848,6 +850,115 @@ class TestPlotsRouter:
         ):
             response = client.get("/plots/filter")
             assert response.status_code == 200
+
+    def test_filter_with_limit(self, client: TestClient, mock_spec) -> None:
+        """Filter with limit should return limited images but total of all."""
+        # Add a second impl to have 2 images
+        mock_impl2 = MagicMock()
+        mock_impl2.library_id = "seaborn"
+        mock_impl2.preview_url = TEST_IMAGE_URL
+        mock_impl2.preview_thumb = TEST_THUMB_URL
+        mock_impl2.preview_html = None
+        mock_impl2.quality_score = 85.0
+        mock_impl2.impl_tags = {}
+        mock_spec.impls.append(mock_impl2)
+
+        mock_spec_repo = MagicMock()
+        mock_spec_repo.get_all = AsyncMock(return_value=[mock_spec])
+
+        with (
+            patch(DB_CONFIG_PATCH, return_value=True),
+            patch("api.routers.plots.get_cache", return_value=None),
+            patch("api.routers.plots.set_cache"),
+            patch("api.routers.plots.SpecRepository", return_value=mock_spec_repo),
+        ):
+            response = client.get("/plots/filter?limit=1")
+            assert response.status_code == 200
+            data = response.json()
+            assert len(data["images"]) == 1
+            assert data["total"] == 2
+            assert data["limit"] == 1
+            assert data["offset"] == 0
+
+    def test_filter_with_offset(self, client: TestClient, mock_spec) -> None:
+        """Filter with offset should skip images."""
+        mock_impl2 = MagicMock()
+        mock_impl2.library_id = "seaborn"
+        mock_impl2.preview_url = TEST_IMAGE_URL
+        mock_impl2.preview_thumb = TEST_THUMB_URL
+        mock_impl2.preview_html = None
+        mock_impl2.quality_score = 85.0
+        mock_impl2.impl_tags = {}
+        mock_spec.impls.append(mock_impl2)
+
+        mock_spec_repo = MagicMock()
+        mock_spec_repo.get_all = AsyncMock(return_value=[mock_spec])
+
+        with (
+            patch(DB_CONFIG_PATCH, return_value=True),
+            patch("api.routers.plots.get_cache", return_value=None),
+            patch("api.routers.plots.set_cache"),
+            patch("api.routers.plots.SpecRepository", return_value=mock_spec_repo),
+        ):
+            response = client.get("/plots/filter?offset=1")
+            assert response.status_code == 200
+            data = response.json()
+            assert len(data["images"]) == 1
+            assert data["total"] == 2
+            assert data["offset"] == 1
+
+    def test_filter_with_limit_and_offset(self, client: TestClient, mock_spec) -> None:
+        """Filter with limit and offset combined."""
+        mock_impl2 = MagicMock()
+        mock_impl2.library_id = "seaborn"
+        mock_impl2.preview_url = TEST_IMAGE_URL
+        mock_impl2.preview_thumb = TEST_THUMB_URL
+        mock_impl2.preview_html = None
+        mock_impl2.quality_score = 85.0
+        mock_impl2.impl_tags = {}
+        mock_impl3 = MagicMock()
+        mock_impl3.library_id = "plotly"
+        mock_impl3.preview_url = TEST_IMAGE_URL
+        mock_impl3.preview_thumb = TEST_THUMB_URL
+        mock_impl3.preview_html = None
+        mock_impl3.quality_score = 80.0
+        mock_impl3.impl_tags = {}
+        mock_spec.impls.extend([mock_impl2, mock_impl3])
+
+        mock_spec_repo = MagicMock()
+        mock_spec_repo.get_all = AsyncMock(return_value=[mock_spec])
+
+        with (
+            patch(DB_CONFIG_PATCH, return_value=True),
+            patch("api.routers.plots.get_cache", return_value=None),
+            patch("api.routers.plots.set_cache"),
+            patch("api.routers.plots.SpecRepository", return_value=mock_spec_repo),
+        ):
+            response = client.get("/plots/filter?offset=1&limit=1")
+            assert response.status_code == 200
+            data = response.json()
+            assert len(data["images"]) == 1
+            assert data["total"] == 3
+            assert data["offset"] == 1
+            assert data["limit"] == 1
+
+    def test_filter_default_returns_all(self, client: TestClient, mock_spec) -> None:
+        """Filter without pagination params returns all images (backward compat)."""
+        mock_spec_repo = MagicMock()
+        mock_spec_repo.get_all = AsyncMock(return_value=[mock_spec])
+
+        with (
+            patch(DB_CONFIG_PATCH, return_value=True),
+            patch("api.routers.plots.get_cache", return_value=None),
+            patch("api.routers.plots.set_cache"),
+            patch("api.routers.plots.SpecRepository", return_value=mock_spec_repo),
+        ):
+            response = client.get("/plots/filter")
+            assert response.status_code == 200
+            data = response.json()
+            assert len(data["images"]) == data["total"]
+            assert data["offset"] == 0
+            assert data["limit"] is None
 
 
 class TestPlotsHelperFunctions:

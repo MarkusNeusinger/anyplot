@@ -187,17 +187,17 @@ jobs:
           gcloud auth activate-service-account --key-file=/tmp/gcs-key.json
 
           if [ -f "$IMPL_DIR/plot.png" ]; then
-            gsutil cp "$IMPL_DIR/plot.png" "${STAGING_PATH}/plot.png"
+            gsutil -h "Cache-Control:public, max-age=86400" cp "$IMPL_DIR/plot.png" "${STAGING_PATH}/plot.png"
             gsutil acl ch -u AllUsers:R "${STAGING_PATH}/plot.png" 2>/dev/null || true
           fi
 
           if [ -f "$IMPL_DIR/plot_thumb.png" ]; then
-            gsutil cp "$IMPL_DIR/plot_thumb.png" "${STAGING_PATH}/plot_thumb.png"
+            gsutil -h "Cache-Control:public, max-age=86400" cp "$IMPL_DIR/plot_thumb.png" "${STAGING_PATH}/plot_thumb.png"
             gsutil acl ch -u AllUsers:R "${STAGING_PATH}/plot_thumb.png" 2>/dev/null || true
           fi
 
           if [ -f "$IMPL_DIR/plot.html" ]; then
-            gsutil cp "$IMPL_DIR/plot.html" "${STAGING_PATH}/plot.html"
+            gsutil -h "Cache-Control:public, max-age=86400" cp "$IMPL_DIR/plot.html" "${STAGING_PATH}/plot.html"
             gsutil acl ch -u AllUsers:R "${STAGING_PATH}/plot.html" 2>/dev/null || true
           fi
 
