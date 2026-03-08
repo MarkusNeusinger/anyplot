@@ -9,22 +9,15 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 # Import the tool functions from the module
-# Note: These are FunctionTool objects, we need to access .fn to get the actual callable
-from api.mcp.server import get_implementation as get_implementation_tool
-from api.mcp.server import get_spec_detail as get_spec_detail_tool
-from api.mcp.server import get_tag_values as get_tag_values_tool
-from api.mcp.server import list_libraries as list_libraries_tool
-from api.mcp.server import list_specs as list_specs_tool
-from api.mcp.server import search_specs_by_tags as search_specs_by_tags_tool
-
-
-# Extract the actual functions from the FunctionTool wrappers
-list_specs = list_specs_tool.fn
-search_specs_by_tags = search_specs_by_tags_tool.fn
-get_spec_detail = get_spec_detail_tool.fn
-get_implementation = get_implementation_tool.fn
-list_libraries = list_libraries_tool.fn
-get_tag_values = get_tag_values_tool.fn
+# With FastMCP's @mcp_server.tool() decorator, these are plain async functions
+from api.mcp.server import (
+    get_implementation,
+    get_spec_detail,
+    get_tag_values,
+    list_libraries,
+    list_specs,
+    search_specs_by_tags,
+)
 
 
 @pytest.fixture
@@ -358,7 +351,8 @@ class TestMcpServerProtocol:
         """MCP server should have all 6 tools registered."""
         from api.mcp.server import mcp_server
 
-        tool_names = await mcp_server.get_tools()
+        tools = await mcp_server.list_tools()
+        tool_names = {t.name for t in tools}
         expected = {
             "list_specs",
             "search_specs_by_tags",
@@ -367,31 +361,29 @@ class TestMcpServerProtocol:
             "list_libraries",
             "get_tag_values",
         }
-        assert set(tool_names) == expected
+        assert tool_names == expected
 
     @pytest.mark.asyncio
     async def test_tool_objects_have_correct_type(self):
         """Each registered tool should be a FunctionTool with a callable fn."""
         from api.mcp.server import mcp_server
 
-        tool_names = await mcp_server.get_tools()
-        for name in tool_names:
-            tool = await mcp_server.get_tool(name)
-            assert hasattr(tool, "fn"), f"Tool {name} has no 'fn' attribute"
-            assert callable(tool.fn), f"Tool {name}.fn is not callable"
+        tools = await mcp_server.list_tools()
+        for tool in tools:
+            assert hasattr(tool, "fn"), f"Tool {tool.name} has no 'fn' attribute"
+            assert callable(tool.fn), f"Tool {tool.name}.fn is not callable"
 
     @pytest.mark.asyncio
     async def test_tool_schemas_are_valid(self):
         """Each tool should have a valid JSON Schema for its parameters."""
         from api.mcp.server import mcp_server
 
-        tool_names = await mcp_server.get_tools()
-        for name in tool_names:
-            tool = await mcp_server.get_tool(name)
+        tools = await mcp_server.list_tools()
+        for tool in tools:
             schema = tool.parameters
-            assert isinstance(schema, dict), f"Tool {name} schema is not a dict"
-            assert "properties" in schema, f"Tool {name} schema has no 'properties'"
-            assert schema.get("type") == "object", f"Tool {name} schema type is not 'object'"
+            assert isinstance(schema, dict), f"Tool {tool.name} schema is not a dict"
+            assert "properties" in schema, f"Tool {tool.name} schema has no 'properties'"
+            assert schema.get("type") == "object", f"Tool {tool.name} schema type is not 'object'"
 
     @pytest.mark.asyncio
     async def test_get_tag_values_via_call_tool(self):
