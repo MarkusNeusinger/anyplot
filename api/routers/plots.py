@@ -263,27 +263,24 @@ def _parse_filter_groups(request: Request) -> list[dict]:
     return filter_groups
 
 
-def _build_cache_key(filter_groups: list[dict], *, offset: int = 0, limit: int | None = None) -> str:
+def _build_cache_key(filter_groups: list[dict]) -> str:
     """
-    Build cache key from filter groups and pagination params.
+    Build cache key from filter groups.
+
+    Groups are sorted by category so key is stable regardless of query param order.
 
     Args:
         filter_groups: List of filter group dicts
-        offset: Pagination offset
-        limit: Pagination limit
 
     Returns:
         Cache key string
     """
     if not filter_groups:
-        base = "filter:all"
-    else:
-        cache_parts = [f"{g['category']}={','.join(sorted(g['values']))}" for g in filter_groups]
-        base = f"filter:{':'.join(cache_parts)}"
+        return "filter:all"
 
-    if limit is not None or offset:
-        base += f":o={offset}:l={limit}"
-    return base
+    normalized = sorted(filter_groups, key=lambda g: g["category"])
+    cache_parts = [f"{g['category']}={','.join(sorted(g['values']))}" for g in normalized]
+    return f"filter:{':'.join(cache_parts)}"
 
 
 def _build_spec_lookup(all_specs: list) -> dict:
@@ -409,60 +406,65 @@ async def get_filtered_plots(
     # Parse query parameters
     filter_groups = _parse_filter_groups(request)
 
-    # Check cache
-    cache_key = _build_cache_key(filter_groups, offset=offset, limit=limit)
+    # Check cache (cache stores unpaginated result; pagination applied after)
+    cache_key = _build_cache_key(filter_groups)
+    cached: FilteredPlotsResponse | None = None
     try:
         cached = get_cache(cache_key)
-        if cached:
-            return cached
     except Exception as e:
-        # Cache failures are non-fatal, log and continue
         logger.warning("Cache read failed for key %s: %s", cache_key, e)
 
-    # Fetch data from database
-    try:
-        repo = SpecRepository(db)
-        all_specs = await repo.get_all()
-    except SQLAlchemyError as e:
-        logger.error("Database query failed in get_filtered_plots: %s", e)
-        raise DatabaseQueryError("fetch_specs", str(e)) from e
+    if cached is None:
+        # Fetch data from database
+        try:
+            repo = SpecRepository(db)
+            all_specs = await repo.get_all()
+        except SQLAlchemyError as e:
+            logger.error("Database query failed in get_filtered_plots: %s", e)
+            raise DatabaseQueryError("fetch_specs", str(e)) from e
 
-    # Build data structures
-    spec_lookup = _build_spec_lookup(all_specs)
-    impl_lookup = _build_impl_lookup(all_specs)
-    all_images = _collect_all_images(all_specs)
-    spec_id_to_tags = {spec_id: spec_data["tags"] for spec_id, spec_data in spec_lookup.items()}
+        # Build data structures
+        spec_lookup = _build_spec_lookup(all_specs)
+        impl_lookup = _build_impl_lookup(all_specs)
+        all_images = _collect_all_images(all_specs)
+        spec_id_to_tags = {spec_id: spec_data["tags"] for spec_id, spec_data in spec_lookup.items()}
 
-    # Filter images
-    filtered_images = _filter_images(all_images, filter_groups, spec_lookup, impl_lookup)
+        # Filter images
+        filtered_images = _filter_images(all_images, filter_groups, spec_lookup, impl_lookup)
 
-    # Calculate counts (always from ALL filtered images, not paginated)
-    global_counts = _calculate_global_counts(all_specs)
-    counts = _calculate_contextual_counts(filtered_images, spec_id_to_tags, impl_lookup)
-    or_counts = _calculate_or_counts(filter_groups, all_images, spec_id_to_tags, spec_lookup, impl_lookup)
+        # Calculate counts (always from ALL filtered images, not paginated)
+        global_counts = _calculate_global_counts(all_specs)
+        counts = _calculate_contextual_counts(filtered_images, spec_id_to_tags, impl_lookup)
+        or_counts = _calculate_or_counts(filter_groups, all_images, spec_id_to_tags, spec_lookup, impl_lookup)
 
-    # Build spec_id -> title mapping for search/tooltips
-    spec_titles = {spec_id: data["spec"].title for spec_id, data in spec_lookup.items() if data["spec"].title}
+        # Build spec_id -> title mapping for search/tooltips
+        spec_titles = {spec_id: data["spec"].title for spec_id, data in spec_lookup.items() if data["spec"].title}
 
-    # Apply pagination
-    paginated = filtered_images[offset : offset + limit] if limit else filtered_images[offset:]
+        # Cache the full (unpaginated) result
+        cached = FilteredPlotsResponse(
+            total=len(filtered_images),
+            images=filtered_images,
+            counts=counts,
+            globalCounts=global_counts,
+            orCounts=or_counts,
+            specTitles=spec_titles,
+        )
 
-    # Build and cache response
-    result = FilteredPlotsResponse(
-        total=len(filtered_images),
+        try:
+            set_cache(cache_key, cached)
+        except Exception as e:
+            logger.warning("Cache write failed for key %s: %s", cache_key, e)
+
+    # Apply pagination on top of (possibly cached) result
+    paginated = cached.images[offset : offset + limit] if limit else cached.images[offset:]
+
+    return FilteredPlotsResponse(
+        total=cached.total,
         images=paginated,
-        counts=counts,
-        globalCounts=global_counts,
-        orCounts=or_counts,
-        specTitles=spec_titles,
+        counts=cached.counts,
+        globalCounts=cached.globalCounts,
+        orCounts=cached.orCounts,
+        specTitles=cached.specTitles,
         offset=offset,
         limit=limit,
     )
-
-    try:
-        set_cache(cache_key, result)
-    except Exception as e:
-        # Cache failures are non-fatal, log and continue
-        logger.warning("Cache write failed for key %s: %s", cache_key, e)
-
-    return result
