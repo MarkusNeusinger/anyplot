@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback, type ReactNode } from 'react';
 import { Outlet } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import Box from '@mui/material/Box';
 import Container from '@mui/material/Container';
 
@@ -76,10 +77,15 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
 // Layout component for pages with standard layout (HomePage, SpecPage, CatalogPage)
 export function Layout() {
   return (
-    <Box component="main" sx={{ minHeight: '100vh', bgcolor: '#fafafa', py: 5, position: 'relative' }}>
-      <Container maxWidth={false} sx={{ px: { xs: 2, sm: 4, md: 8, lg: 12 } }}>
-        <Outlet />
-      </Container>
-    </Box>
+    <>
+      <Helmet>
+        <meta name="robots" content="index, follow" />
+      </Helmet>
+      <Box component="main" sx={{ minHeight: '100vh', bgcolor: '#fafafa', py: 5, position: 'relative' }}>
+        <Container maxWidth={false} sx={{ px: { xs: 2, sm: 4, md: 8, lg: 12 } }}>
+          <Outlet />
+        </Container>
+      </Box>
+    </>
   );
 }
