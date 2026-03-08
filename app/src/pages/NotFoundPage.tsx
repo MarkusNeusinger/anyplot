@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
+import { Footer } from '../components';
 
 export function NotFoundPage() {
   return (
@@ -29,6 +30,7 @@ export function NotFoundPage() {
           back to pyplots.ai
         </Box>
       </Box>
+      <Footer />
     </>
   );
 }

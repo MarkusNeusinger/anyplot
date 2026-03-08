@@ -87,7 +87,7 @@ export const Header = memo(function Header({ stats, onRandom }: HeaderProps) {
     <Box component="header" sx={{ textAlign: 'center', mb: 4 }}>
       <Typography
         variant="h2"
-        component="div"
+        component="h1"
         sx={{
           fontWeight: 700,
           fontFamily: '"MonoLisa", "MonoLisa Fallback", monospace',
