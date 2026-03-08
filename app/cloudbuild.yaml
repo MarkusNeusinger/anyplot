@@ -42,7 +42,7 @@ steps:
       - "--memory"
       - "256Mi"
       - "--cpu"
-      - "2"
+      - "1"
       - "--timeout"
       - "60"
       - "--min-instances"

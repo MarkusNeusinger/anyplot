@@ -534,7 +534,7 @@ jobs:
 
           # Upload PNG (with watermark)
           if [ -f "$IMPL_DIR/plot.png" ]; then
-            gsutil cp "$IMPL_DIR/plot.png" "${STAGING_PATH}/plot.png"
+            gsutil -h "Cache-Control:public, max-age=86400" cp "$IMPL_DIR/plot.png" "${STAGING_PATH}/plot.png"
             gsutil acl ch -u AllUsers:R "${STAGING_PATH}/plot.png" 2>/dev/null || true
             echo "png_url=${PUBLIC_URL}/plot.png" >> $GITHUB_OUTPUT
             echo "uploaded=true" >> $GITHUB_OUTPUT
@@ -545,7 +545,7 @@ jobs:
 
           # Upload thumbnail
           if [ -f "$IMPL_DIR/plot_thumb.png" ]; then
-            gsutil cp "$IMPL_DIR/plot_thumb.png" "${STAGING_PATH}/plot_thumb.png"
+            gsutil -h "Cache-Control:public, max-age=86400" cp "$IMPL_DIR/plot_thumb.png" "${STAGING_PATH}/plot_thumb.png"
             gsutil acl ch -u AllUsers:R "${STAGING_PATH}/plot_thumb.png" 2>/dev/null || true
             echo "thumb_url=${PUBLIC_URL}/plot_thumb.png" >> $GITHUB_OUTPUT
             echo "::notice::Uploaded thumbnail"
@@ -553,7 +553,7 @@ jobs:
 
           # Upload HTML (interactive libraries)
           if [ -f "$IMPL_DIR/plot.html" ]; then
-            gsutil cp "$IMPL_DIR/plot.html" "${STAGING_PATH}/plot.html"
+            gsutil -h "Cache-Control:public, max-age=86400" cp "$IMPL_DIR/plot.html" "${STAGING_PATH}/plot.html"
             gsutil acl ch -u AllUsers:R "${STAGING_PATH}/plot.html" 2>/dev/null || true
             echo "html_url=${PUBLIC_URL}/plot.html" >> $GITHUB_OUTPUT
           fi

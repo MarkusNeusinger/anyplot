@@ -201,7 +201,7 @@ jobs:
           PRODUCTION="gs://pyplots-images/plots/${SPEC_ID}/${LIBRARY}"
 
           # Copy from staging to production
-          gsutil -m cp -r "${STAGING}/*" "${PRODUCTION}/" 2>/dev/null || echo "No staging files to promote"
+          gsutil -m -h "Cache-Control:public, max-age=86400" cp -r "${STAGING}/*" "${PRODUCTION}/" 2>/dev/null || echo "No staging files to promote"
 
           # Make production files public
           gsutil -m acl ch -r -u AllUsers:R "${PRODUCTION}/" 2>/dev/null || true

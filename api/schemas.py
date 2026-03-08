@@ -98,6 +98,8 @@ class FilteredPlotsResponse(BaseModel):
     globalCounts: dict[str, dict[str, int]]  # Same structure for global counts
     orCounts: list[dict[str, int]]  # Per-group OR counts
     specTitles: dict[str, str] = {}  # Mapping spec_id -> title for search/tooltips
+    offset: int = 0
+    limit: int | None = None
 
 
 class LibraryInfo(BaseModel):

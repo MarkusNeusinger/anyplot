@@ -3,7 +3,7 @@
 import logging
 from collections.abc import Callable
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Query, Request
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -263,21 +263,27 @@ def _parse_filter_groups(request: Request) -> list[dict]:
     return filter_groups
 
 
-def _build_cache_key(filter_groups: list[dict]) -> str:
+def _build_cache_key(filter_groups: list[dict], *, offset: int = 0, limit: int | None = None) -> str:
     """
-    Build cache key from filter groups.
+    Build cache key from filter groups and pagination params.
 
     Args:
         filter_groups: List of filter group dicts
+        offset: Pagination offset
+        limit: Pagination limit
 
     Returns:
         Cache key string
     """
     if not filter_groups:
-        return "filter:all"
+        base = "filter:all"
+    else:
+        cache_parts = [f"{g['category']}={','.join(sorted(g['values']))}" for g in filter_groups]
+        base = f"filter:{':'.join(cache_parts)}"
 
-    cache_parts = [f"{g['category']}={','.join(sorted(g['values']))}" for g in filter_groups]
-    return f"filter:{':'.join(cache_parts)}"
+    if limit is not None or offset:
+        base += f":o={offset}:l={limit}"
+    return base
 
 
 def _build_spec_lookup(all_specs: list) -> dict:
@@ -370,7 +376,12 @@ def _filter_images(
 
 
 @router.get("/plots/filter", response_model=FilteredPlotsResponse)
-async def get_filtered_plots(request: Request, db: AsyncSession = Depends(require_db)):
+async def get_filtered_plots(
+    request: Request,
+    db: AsyncSession = Depends(require_db),
+    limit: int | None = Query(None, ge=1),
+    offset: int = Query(0, ge=0),
+):
     """
     Get filtered plot images with counts for all filter categories.
 
@@ -399,7 +410,7 @@ async def get_filtered_plots(request: Request, db: AsyncSession = Depends(requir
     filter_groups = _parse_filter_groups(request)
 
     # Check cache
-    cache_key = _build_cache_key(filter_groups)
+    cache_key = _build_cache_key(filter_groups, offset=offset, limit=limit)
     try:
         cached = get_cache(cache_key)
         if cached:
@@ -425,7 +436,7 @@ async def get_filtered_plots(request: Request, db: AsyncSession = Depends(requir
     # Filter images
     filtered_images = _filter_images(all_images, filter_groups, spec_lookup, impl_lookup)
 
-    # Calculate counts
+    # Calculate counts (always from ALL filtered images, not paginated)
     global_counts = _calculate_global_counts(all_specs)
     counts = _calculate_contextual_counts(filtered_images, spec_id_to_tags, impl_lookup)
     or_counts = _calculate_or_counts(filter_groups, all_images, spec_id_to_tags, spec_lookup, impl_lookup)
@@ -433,14 +444,19 @@ async def get_filtered_plots(request: Request, db: AsyncSession = Depends(requir
     # Build spec_id -> title mapping for search/tooltips
     spec_titles = {spec_id: data["spec"].title for spec_id, data in spec_lookup.items() if data["spec"].title}
 
+    # Apply pagination
+    paginated = filtered_images[offset : offset + limit] if limit else filtered_images[offset:]
+
     # Build and cache response
     result = FilteredPlotsResponse(
         total=len(filtered_images),
-        images=filtered_images,
+        images=paginated,
         counts=counts,
         globalCounts=global_counts,
         orCounts=or_counts,
         specTitles=spec_titles,
+        offset=offset,
+        limit=limit,
     )
 
     try:
