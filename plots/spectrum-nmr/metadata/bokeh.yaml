@@ -1,0 +1,227 @@
+library: bokeh
+specification_id: spectrum-nmr
+created: '2026-03-09T12:51:36Z'
+updated: '2026-03-09T13:03:57Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22854183321
+issue: 4676
+python_version: 3.14.3
+library_version: 3.8.2
+preview_url: https://storage.googleapis.com/pyplots-images/plots/spectrum-nmr/bokeh/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/spectrum-nmr/bokeh/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/spectrum-nmr/bokeh/plot.html
+quality_score: 91
+review:
+  strengths:
+  - Excellent scientific accuracy with realistic Lorentzian peak shapes and correct
+    ethanol chemical shifts
+  - All spec requirements fully met including reversed x-axis, splitting patterns,
+    peak labels, and TMS reference
+  - Cohesive professional color scheme with thoughtful visual refinement (subtle grid,
+    removed outlines)
+  - 'Good use of Bokeh-specific features: HoverTool, Span, varea, and HTML interactive
+    export'
+  - Clean, well-commented code with appropriate complexity
+  weaknesses:
+  - Title superscript character slightly clipped by the top border margin
+  image_description: 'The plot displays a ¹H NMR spectrum of ethanol with chemical
+    shift (ppm) on the x-axis (reversed, 12 to 0, following NMR convention) and intensity
+    (a.u.) on the y-axis. The spectrum is rendered as a dark blue line (#306998) with
+    a light blue filled area underneath. Four labeled peaks are visible: a CH₃ triplet
+    at 1.18 ppm (tallest, ~1.0 intensity, three resolved sub-peaks), a CH₂ quartet
+    at 3.69 ppm (~0.9 intensity, four resolved sub-peaks), an OH singlet at 2.61 ppm
+    (~0.4 intensity), and a TMS reference at 0.00 ppm (~0.3 intensity). A dashed vertical
+    line marks the TMS reference. The background is light gray (#f8f9fb) with subtle
+    y-axis grid lines. The baseline is clean with minimal noise. The title reads "¹H
+    NMR Spectrum of Ethanol · spectrum-nmr · bokeh · pyplots.ai" but the superscript
+    "¹" character is slightly clipped by the top border.'
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (42pt title, 32pt labels, 26pt ticks/peaks).
+          Superscript slightly clipped.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text. Peak labels well-positioned above peaks.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Line width 3 well-adapted. Peaks sharp and well-resolved. Filled
+          area adds depth.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Single-color scheme with good contrast. No colorblind issues.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good canvas utilization. Title superscript slightly clipped at top
+          border.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Chemical Shift (ppm) and Intensity (a.u.) - descriptive with units.
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Cohesive color scheme, filled area, professional scientific aesthetic
+          above defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: X-grid removed, subtle y-grid, outline removed, minor ticks hidden,
+          custom border.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Peak labels identify functional groups and splitting patterns. Natural
+          hierarchy from peak heights.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct NMR spectrum as line plot with intensity vs chemical shift.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec requirements met: reversed x-axis, splitting patterns,
+          peak labels, TMS reference, clean baseline.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=chemical shift, Y=intensity, correctly assigned.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title follows spec format. No legend needed for single-series labeled
+          spectrum.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Demonstrates singlet, triplet, quartet splitting patterns plus TMS
+          reference.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Ethanol 1H NMR is a classic real-world chemistry example with correct
+          chemical shifts.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Standard 0-12 ppm range, realistic peak positions and J-coupling
+          constant.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports, data, figure, styling, save. No functions/classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set for baseline noise.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean Lorentzian peak generation with clear comments.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png via export_png. Also saves HTML.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of ColumnDataSource, Label, Span, HoverTool. Proper figure
+          setup.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: HoverTool with vline mode, Span annotation, varea, HTML export -
+          distinctively Bokeh.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  - columndatasource
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling
