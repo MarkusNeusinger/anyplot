@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 spectrum-nmr: NMR Spectrum (Nuclear Magnetic Resonance)
 Library: plotnine 0.15.3 | Python 3.14.3
 Quality: 87/100 | Created: 2026-03-09
@@ -8,14 +8,18 @@ import numpy as np
 import pandas as pd
 from plotnine import (
     aes,
+    annotate,
+    coord_cartesian,
     element_blank,
     element_line,
     element_rect,
     element_text,
+    geom_area,
     geom_line,
     geom_point,
     geom_segment,
     geom_text,
+    geom_vline,
     ggplot,
     labs,
     scale_x_reverse,
@@ -27,7 +31,7 @@ from plotnine import (
 
 # Data - synthetic 1H NMR spectrum of ethanol (CH3CH2OH)
 np.random.seed(42)
-chemical_shift = np.linspace(0, 12, 6000)
+chemical_shift = np.linspace(-0.5, 5.0, 6000)
 
 # Lorentzian peak shape: amplitude * width^2 / ((x - center)^2 + width^2)
 w = 0.015  # default peak width
@@ -79,19 +83,33 @@ labels_df = pd.DataFrame(
 main_labels = labels_df[labels_df["group"] == "main"]
 ref_labels = labels_df[labels_df["group"] == "ref"]
 
+# Vertical reference lines at key chemical shifts (plotnine geom_vline)
+vline_df = pd.DataFrame({"xintercept": [triplet_center, quartet_center, 2.61]})
+
 # Plot
 plot = (
     ggplot(df, aes(x="chemical_shift", y="intensity"))
-    + geom_line(color="#306998", size=0.9)
-    # Peak markers at top of each peak group
-    + geom_point(
-        data=labels_df, mapping=aes(x="x", y="peak_y"), color="#306998", size=2.5, shape="o", inherit_aes=False
+    # Filled area under spectrum using geom_area (plotnine-specific layering)
+    + geom_area(fill="#306998", alpha=0.08)
+    # Subtle vertical reference lines at peak positions
+    + geom_vline(
+        data=vline_df,
+        mapping=aes(xintercept="xintercept"),
+        color="#306998",
+        alpha=0.12,
+        size=0.5,
+        linetype="dashed",
+        inherit_aes=False,
     )
+    # Main spectrum line trace
+    + geom_line(color="#306998", size=1.0)
+    # Peak markers at top of each peak group
+    + geom_point(data=labels_df, mapping=aes(x="x", y="peak_y"), color="#306998", size=3, shape="o", inherit_aes=False)
     # Connector segments from peak tops to labels
     + geom_segment(
         data=labels_df,
         mapping=aes(x="x", xend="x", y="peak_y", yend="y"),
-        color="#c0c0c0",
+        color="#b0b0b0",
         size=0.4,
         linetype="dotted",
         inherit_aes=False,
@@ -100,25 +118,30 @@ plot = (
     + geom_text(
         data=main_labels,
         mapping=aes(x="x", y="y", label="label"),
-        size=11,
+        size=13,
         color="#1e4d6d",
         fontweight="bold",
         va="bottom",
         ha="center",
         inherit_aes=False,
     )
-    # TMS reference label (lighter, smaller)
+    # TMS reference label (lighter, de-emphasized)
     + geom_text(
         data=ref_labels,
         mapping=aes(x="x", y="y", label="label"),
-        size=10,
-        color="#555555",
+        size=11,
+        color="#777777",
         va="bottom",
         ha="center",
         inherit_aes=False,
     )
-    + scale_x_reverse(limits=(12, -0.5), breaks=list(range(13)))
+    # Baseline annotation using annotate (plotnine-specific ggplot2 feature)
+    + annotate("text", x=4.6, y=0.03, label="baseline", size=9, color="#aaaaaa", fontstyle="italic")
+    # Focused x-axis range using scale_x_reverse for NMR convention
+    + scale_x_reverse(limits=(5.0, -0.5), breaks=[0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0])
     + scale_y_continuous(breaks=[], limits=(-0.05, 1.85))
+    # coord_cartesian for precise viewport control (ggplot2-idiomatic)
+    + coord_cartesian(expand=False)
     + labs(
         x="Chemical Shift (ppm)",
         y="Intensity",
@@ -128,11 +151,11 @@ plot = (
     + theme(
         figure_size=(16, 9),
         text=element_text(size=14, color="#2d2d2d"),
-        axis_title_x=element_text(size=20, color="#2d2d2d"),
+        axis_title_x=element_text(size=20, color="#2d2d2d", margin={"t": 12}),
         axis_title_y=element_text(size=20, color="#888888"),
         axis_text_x=element_text(size=16, color="#555555"),
         axis_text_y=element_blank(),
-        plot_title=element_text(size=24, weight="bold", color="#1a1a1a"),
+        plot_title=element_text(size=24, weight="bold", color="#1a1a1a", margin={"b": 12}),
         panel_background=element_rect(fill="#fafafa", color="none"),
         plot_background=element_rect(fill="#ffffff", color="none"),
         panel_grid_major_x=element_line(color="#e8e8e8", size=0.3),
