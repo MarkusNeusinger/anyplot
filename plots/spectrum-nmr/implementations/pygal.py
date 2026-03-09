@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 spectrum-nmr: NMR Spectrum (Nuclear Magnetic Resonance)
 Library: pygal 3.1.0 | Python 3.14.3
 Quality: 83/100 | Created: 2026-03-09
@@ -85,16 +85,17 @@ chart = pygal.XY(
     print_labels=True,
     print_values=False,
     show_x_guides=False,
-    show_y_guides=False,
+    show_y_guides=True,
     show_legend=True,
     legend_at_bottom=True,
     legend_box_size=28,
-    xrange=(-12.5, 1.0),
-    range=(-0.02, 1.25),
+    xrange=(-12.5, 0.5),
+    range=(-0.02, 1.12),
     margin=50,
     margin_top=80,
     margin_bottom=200,
     margin_left=100,
+    margin_right=180,
     tooltip_fancy_mode=True,
     tooltip_border_radius=8,
     x_value_formatter=lambda x: f"{abs(x):.1f}",
@@ -121,8 +122,9 @@ for ppm, group_name in peak_info:
     peak_x = -float(chemical_shift[idx])
     peak_y = float(intensity[idx])
     label_text = f"{group_name} ({ppm:.2f} ppm)"
+    legend_label = f"{group_name} ({ppm:.1f})"
     point = {"value": (peak_x, peak_y), "label": label_text}
-    chart.add(label_text, [point], stroke=False, show_dots=True, dots_size=18)
+    chart.add(legend_label, [point], stroke=False, show_dots=True, dots_size=14)
 
 # Save
 chart.render_to_png("plot.png")
