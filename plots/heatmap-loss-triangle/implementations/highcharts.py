@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 heatmap-loss-triangle: Actuarial Loss Development Triangle
 Library: highcharts unknown | Python 3.14.3
 Quality: 83/100 | Created: 2026-03-09
@@ -70,70 +70,74 @@ for i in range(n_years):
         else:
             projected_data.append({"x": j, "y": i, "value": val})
 
-# Format age-to-age factors for subtitle
-factors_str = "   ".join(
-    [f"{development_periods[k]}\u2192{development_periods[k + 1]}: {f:.3f}" for k, f in enumerate(age_to_age)]
-)
-
 # Chart options
 chart_options = {
     "chart": {
         "type": "heatmap",
         "width": 4800,
         "height": 2700,
-        "backgroundColor": "#ffffff",
-        "marginTop": 200,
-        "marginBottom": 280,
-        "marginLeft": 200,
-        "marginRight": 260,
+        "backgroundColor": "#fafbfc",
+        "marginTop": 180,
+        "marginBottom": 380,
+        "marginLeft": 220,
+        "marginRight": 280,
+        "style": {"fontFamily": "'Segoe UI', Helvetica, Arial, sans-serif"},
         "events": {"load": "__LOAD_EVENT__"},
     },
     "title": {
         "text": "heatmap-loss-triangle \u00b7 highcharts \u00b7 pyplots.ai",
-        "style": {"fontSize": "42px", "fontWeight": "bold"},
-        "y": 30,
+        "style": {"fontSize": "44px", "fontWeight": "700", "color": "#1a1a2e"},
+        "y": 35,
     },
     "subtitle": {
         "text": "Cumulative Paid Claims ($K) \u2014 Actual vs Projected (IBNR)",
-        "style": {"fontSize": "28px", "color": "#555555"},
-        "y": 70,
+        "style": {"fontSize": "28px", "color": "#555566", "fontWeight": "400"},
+        "y": 80,
     },
     "xAxis": {
         "categories": [str(p) for p in development_periods],
         "title": {
             "text": "Development Period (Years)",
-            "style": {"fontSize": "28px", "color": "#333333"},
-            "margin": 25,
+            "style": {"fontSize": "28px", "color": "#2d2d44", "fontWeight": "600"},
+            "margin": 20,
         },
-        "labels": {"style": {"fontSize": "24px"}},
+        "labels": {"style": {"fontSize": "24px", "color": "#444455"}},
+        "lineColor": "#ccccdd",
+        "tickColor": "#ccccdd",
     },
     "yAxis": {
         "categories": [str(y) for y in accident_years],
-        "title": {"text": "Accident Year", "style": {"fontSize": "28px", "color": "#333333"}},
-        "labels": {"style": {"fontSize": "24px"}},
+        "title": {"text": "Accident Year", "style": {"fontSize": "28px", "color": "#2d2d44", "fontWeight": "600"}},
+        "labels": {"style": {"fontSize": "24px", "color": "#444455"}},
         "reversed": True,
+        "lineColor": "#ccccdd",
+        "tickColor": "#ccccdd",
     },
     "colorAxis": {
         "min": val_min,
         "max": val_max,
         "stops": [
-            [0, "#f7fbff"],
-            [0.12, "#d2e3f3"],
-            [0.25, "#9ecae1"],
-            [0.45, "#4292c6"],
-            [0.65, "#2171b5"],
-            [0.85, "#084594"],
-            [1, "#042f66"],
+            [0, "#e8f4f8"],
+            [0.1, "#b8dce8"],
+            [0.25, "#7bbcd4"],
+            [0.4, "#4a9bbe"],
+            [0.55, "#2e7da8"],
+            [0.7, "#1a5f8b"],
+            [0.85, "#0d4170"],
+            [1, "#052c54"],
         ],
-        "labels": {"style": {"fontSize": "22px"}, "formatter": "__COLORAXIS_FORMATTER__"},
+        "labels": {"style": {"fontSize": "22px", "color": "#444455"}, "formatter": "__COLORAXIS_FORMATTER__"},
     },
     "legend": {
         "align": "right",
         "layout": "vertical",
         "verticalAlign": "middle",
-        "symbolHeight": 400,
-        "itemStyle": {"fontSize": "22px"},
-        "title": {"text": "Cumulative<br/>Claims ($K)", "style": {"fontSize": "20px"}},
+        "symbolHeight": 380,
+        "itemStyle": {"fontSize": "22px", "color": "#444455"},
+        "title": {
+            "text": "Cumulative<br/>Claims ($K)",
+            "style": {"fontSize": "22px", "fontWeight": "600", "color": "#2d2d44"},
+        },
     },
     "tooltip": {"formatter": "__TOOLTIP_FORMATTER__", "style": {"fontSize": "22px"}, "useHTML": True},
     "credits": {"enabled": False},
@@ -146,8 +150,8 @@ chart_options = {
             "type": "heatmap",
             "name": "Projected (IBNR)",
             "data": projected_data,
-            "borderWidth": 3,
-            "borderColor": "#d4a853",
+            "borderWidth": 4,
+            "borderColor": "#c9952e",
         },
     ],
 }
@@ -160,11 +164,11 @@ datalabel_formatter = (
     """function() {
     var val = Highcharts.numberFormat(this.point.value, 0, '.', ',');
     var isProjected = (this.series.name === 'Projected (IBNR)');
-    var color = this.point.value > %d ? '#ffffff' : '#1a1a1a';
+    var color = this.point.value > %d ? '#ffffff' : '#1a1a2e';
     if (isProjected) {
-        return '<span style="color:' + color + ';font-size:20px;font-style:italic">' + val + '</span>';
+        return '<span style="color:' + color + ';font-size:20px;font-style:italic;letter-spacing:0.3px">' + val + '</span>';
     }
-    return '<span style="color:' + color + ';font-size:20px;font-weight:bold">' + val + '</span>';
+    return '<span style="color:' + color + ';font-size:20px;font-weight:700;letter-spacing:0.3px">' + val + '</span>';
 }"""
     % threshold
 )
@@ -184,28 +188,59 @@ coloraxis_formatter = """function() {
     return Highcharts.numberFormat(this.value, 0, '.', ',');
 }"""
 
-# Add annotation for age-to-age factors and actual/projected legend after chart loads
-load_event = """function() {
+# Build age-to-age factors as individual styled blocks
+factors_items = []
+for k, f in enumerate(age_to_age):
+    label = f"{development_periods[k]}\u2192{development_periods[k + 1]}"
+    factors_items.append({"label": label, "value": f"{f:.3f}"})
+
+factors_js_parts = []
+for idx, item in enumerate(factors_items):
+    col_x = f"x + {idx} * spacing"
+    factors_js_parts.append(
+        f"""
+    chart.renderer.rect({col_x}, fy, boxW, 56, 6)
+        .attr({{fill: '#e8eef4', stroke: '#c0cdd8', 'stroke-width': 1}}).add();
+    chart.renderer.text('{item["label"]}', {col_x} + boxW/2, fy + 22)
+        .attr({{align: 'center'}})
+        .css({{fontSize: '20px', color: '#667788', fontWeight: '500'}}).add();
+    chart.renderer.text('{item["value"]}', {col_x} + boxW/2, fy + 46)
+        .attr({{align: 'center'}})
+        .css({{fontSize: '24px', color: '#1a1a2e', fontWeight: '700'}}).add();"""
+    )
+
+factors_render = "\n".join(factors_js_parts)
+
+# Load event: render factors grid and prominent legend
+load_event = f"""function() {{
     var chart = this;
-    var y = chart.plotTop + chart.plotHeight + 110;
     var x = chart.plotLeft;
+    var plotRight = chart.plotLeft + chart.plotWidth;
+    var totalW = plotRight - x;
 
-    chart.renderer.text(
-        '<b>Age-to-Age Development Factors:</b>  %s',
-        x, y
-    ).css({fontSize: '22px', color: '#444444'}).add();
+    // Age-to-Age Development Factors header
+    var fy = chart.plotTop + chart.plotHeight + 80;
+    chart.renderer.text('Age-to-Age Development Factors', x, fy - 10)
+        .css({{fontSize: '26px', color: '#2d2d44', fontWeight: '700'}}).add();
 
-    var ly = chart.plotTop + chart.plotHeight + 155;
-    chart.renderer.rect(x, ly - 14, 28, 18, 0)
-        .attr({fill: '#4292c6', stroke: '#ffffff', 'stroke-width': 2}).add();
-    chart.renderer.text('Actual (observed)', x + 38, ly)
-        .css({fontSize: '22px', color: '#333333'}).add();
+    // Factor boxes
+    fy = fy + 10;
+    var spacing = Math.floor(totalW / 9);
+    var boxW = spacing - 10;
+    {factors_render}
 
-    chart.renderer.rect(x + 280, ly - 14, 28, 18, 0)
-        .attr({fill: '#4292c6', stroke: '#d4a853', 'stroke-width': 2}).add();
-    chart.renderer.text('Projected (IBNR estimate)', x + 318, ly)
-        .css({fontSize: '22px', color: '#333333', fontStyle: 'italic'}).add();
-}""" % factors_str.replace("'", "\\'")
+    // Actual vs Projected legend - prominent boxes
+    var ly = fy + 80;
+    chart.renderer.rect(x, ly, 40, 28, 4)
+        .attr({{fill: '#4a9bbe', stroke: '#ffffff', 'stroke-width': 3}}).add();
+    chart.renderer.text('Actual (Observed)', x + 52, ly + 20)
+        .css({{fontSize: '24px', color: '#2d2d44', fontWeight: '600'}}).add();
+
+    chart.renderer.rect(x + 340, ly, 40, 28, 4)
+        .attr({{fill: '#4a9bbe', stroke: '#c9952e', 'stroke-width': 3}}).add();
+    chart.renderer.text('Projected (IBNR Estimate)', x + 392, ly + 20)
+        .css({{fontSize: '24px', color: '#2d2d44', fontWeight: '600', fontStyle: 'italic'}}).add();
+}}"""
 
 options_json = options_json.replace('"__DATALABEL_FORMATTER__"', datalabel_formatter)
 options_json = options_json.replace('"__TOOLTIP_FORMATTER__"', tooltip_formatter)
@@ -233,7 +268,7 @@ html_content = f"""<!DOCTYPE html>
     <script>{highcharts_js}</script>
     <script>{heatmap_js}</script>
 </head>
-<body style="margin:0;background:#ffffff;">
+<body style="margin:0;background:#fafbfc;">
     <div id="container" style="width:4800px;height:2700px;"></div>
     <script>
         var opts = {options_json};
