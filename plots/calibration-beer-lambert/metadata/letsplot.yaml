@@ -1,0 +1,227 @@
+library: letsplot
+specification_id: calibration-beer-lambert
+created: '2026-03-09T10:51:34Z'
+updated: '2026-03-09T11:04:45Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22849775970
+issue: 4410
+python_version: 3.14.3
+library_version: 4.8.2
+preview_url: https://storage.googleapis.com/pyplots-images/plots/calibration-beer-lambert/letsplot/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/calibration-beer-lambert/letsplot/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/calibration-beer-lambert/letsplot/plot.html
+quality_score: 91
+review:
+  strengths:
+  - Complete spec compliance with all required features (equation, R², prediction
+    band, unknown sample with dashed lines)
+  - Excellent data storytelling through orange unknown sample focal point with dashed
+    reference lines to both axes
+  - Realistic analytical chemistry context (Cu²⁺ UV-Vis spectrophotometry at 810 nm)
+  - Clean visual design with warm background, subtle grid, and intentional color hierarchy
+  - Well-structured reproducible code following KISS principles
+  weaknesses:
+  - Library mastery could be improved by leveraging lets-plot distinctive features
+    (interactive tooltips, hover behavior)
+  - Annotation text sizes (13, 11) are slightly smaller than ideal relative to axis
+    text (16)
+  image_description: 'The plot displays a Beer-Lambert calibration curve on a warm
+    off-white (#FAFAFA) background. Seven blue (#306998) circular markers with white
+    edges represent calibration standards at concentrations 0, 2, 4, 6, 8, 10, and
+    12 mg/L. A solid blue regression line passes through the points, flanked by a
+    light blue semi-transparent prediction interval band. An orange (#D95319) diamond
+    marker indicates an unknown sample at approximately 7.5 mg/L with absorbance 0.34.
+    Dashed orange lines extend horizontally from the y-axis to the unknown point,
+    and vertically from the unknown point down to the x-axis, illustrating concentration
+    determination. The regression equation "y = 0.0453x + 0.0023" and "R² = 0.99901"
+    appear in monospace font in the upper-left area. The unknown sample is labeled
+    in orange italic text "Unknown (7.5 mg/L, A = 0.34)". Title reads "calibration-beer-lambert
+    · letsplot · pyplots.ai" in bold. X-axis: "Concentration (mg/L)", Y-axis: "Absorbance".
+    Only subtle horizontal grid lines are shown; no vertical grid. Layout is clean
+    and well-proportioned.'
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Font sizes explicitly set (title=24, axis_title=20, axis_text=16).
+          Equation and unknown label text slightly smaller than ideal.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: All text clearly separated, no collisions.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Markers well-sized for 7 data points, line width appropriate, prediction
+          band visible.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue/orange palette is colorblind-safe with excellent contrast.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 4800x2700 px output, plot fills canvas well with balanced margins.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Concentration (mg/L) includes units, Absorbance is correct (dimensionless).
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom two-color palette, white-edged markers, diamond for unknown,
+          monospace equation, italic labeling — clearly above defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines removed, subtle horizontal-only grid, warm background, generous
+          margins.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Orange dashed lines create focal point for unknown sample. Blue/orange
+          contrast establishes visual hierarchy.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct calibration curve: scatter points with linear regression
+          fit.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: equation, R², prediction band, unknown
+          sample with dashed lines.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=concentration, Y=absorbance, correct mapping.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct. No legend needed.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows blank, 6 standards, linear relationship, and unknown sample
+          interpolation.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: UV-Vis spectrophotometry of Cu²⁺ at 810 nm — real analytical chemistry.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Absorbance 0–0.54, concentrations 0–12 mg/L — realistic for UV-Vis.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean flow: imports → data → regression → plot → save.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, DataFrames for annotations is idiomatic.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot.png via export_ggsave with scale=3.
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good ggplot grammar with layered geoms, aes mappings, theme customization.
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Standard ggplot grammar without lets-plot distinctive features.
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - scipy
+  techniques:
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep:
+  - regression
+  styling:
+  - alpha-blending
+  - edge-highlighting
+  - grid-styling

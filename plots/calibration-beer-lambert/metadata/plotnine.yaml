@@ -1,0 +1,223 @@
+library: plotnine
+specification_id: calibration-beer-lambert
+created: '2026-03-09T10:48:02Z'
+updated: '2026-03-09T11:12:39Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22849775837
+issue: 4410
+python_version: 3.14.3
+library_version: 0.15.3
+preview_url: https://storage.googleapis.com/pyplots-images/plots/calibration-beer-lambert/plotnine/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/calibration-beer-lambert/plotnine/plot_thumb.png
+preview_html: null
+quality_score: 91
+review:
+  strengths:
+  - Excellent visual storytelling with unknown sample projection lines demonstrating
+    calibration workflow
+  - 'Strong design refinement: custom panel background, selective grid lines, polished
+    label boxes'
+  - Perfect spec compliance with all required features implemented
+  - Colorblind-safe with redundant shape encoding (circles vs diamonds)
+  - Clean idiomatic plotnine code with proper grammar of graphics patterns
+  weaknesses:
+  - Minor whitespace below bottom legend could be tighter
+  - Data points have very little scatter (R²=0.999), could show slightly more realistic
+    measurement noise
+  image_description: The plot displays a Beer-Lambert calibration curve on a clean
+    white/light gray background. Seven blue circular calibration standard points are
+    plotted along a strong linear regression line (blue, ~1.4pt width) with a subtle
+    light blue prediction interval band. The regression equation "y = 0.0453x + 0.0023"
+    and "R² = 0.99901" are shown in labeled boxes with a light beige fill (#F0F0EA)
+    in the upper-left area. A single red diamond marker represents the unknown sample
+    at approximately (7.5, 0.34), with gray dashed horizontal and vertical lines extending
+    to both axes to illustrate concentration determination. The x-axis is labeled
+    "Concentration (mg/L)" in bold, the y-axis "Absorbance" in bold. The title reads
+    "calibration-beer-lambert · plotnine · pyplots.ai" in bold at the top. A bottom
+    legend distinguishes "Calibration Standards" (blue circle) from "Unknown Sample"
+    (red diamond). Only horizontal y-axis grid lines are shown (subtle gray), with
+    clean axis lines on both sides.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 24pt, axis titles 20pt bold,
+          tick labels 16pt, legend 15pt'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text elements
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Points size=6 with stroke=1.2, clearly visible for 8 data points
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue vs red colorblind-safe with redundant shape encoding
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good 16:9 proportions, minor whitespace below legend
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Concentration (mg/L) with units, Absorbance (dimensionless)
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom palette, intentional typography hierarchy, label boxes with
+          beige fill, panel background
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Selective grid lines, custom panel background, axis lines, generous
+          margins
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Unknown sample projection lines create clear analytical workflow
+          narrative
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct calibration curve with scatter and linear regression
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features: equation, R², prediction band, unknown sample with
+          dashed lines'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Concentration on x, absorbance on y
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct title format and legend labels
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows blank, standards, linear relationship, unknown interpolation;
+          minimal scatter
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Authentic analytical chemistry UV-Vis spectrophotometry scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Realistic molar absorptivity, concentrations, and absorbance values
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports, data, regression, plot, save'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-organized, follows plotnine conventions
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png at 300 dpi
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of stat_smooth, geom_segment, geom_label, scale_*_manual,
+          inherit_aes
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: stat_smooth(method=lm) with confidence band, geom_label with label_r
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - scipy
+  techniques:
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep:
+  - regression
+  styling:
+  - grid-styling
+  - alpha-blending

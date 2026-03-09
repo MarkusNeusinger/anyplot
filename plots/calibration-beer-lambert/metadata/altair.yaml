@@ -1,0 +1,241 @@
+library: altair
+specification_id: calibration-beer-lambert
+created: '2026-03-09T10:49:21Z'
+updated: '2026-03-09T11:07:37Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22849775894
+issue: 4410
+python_version: 3.14.3
+library_version: 6.0.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/calibration-beer-lambert/altair/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/calibration-beer-lambert/altair/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/calibration-beer-lambert/altair/plot.html
+quality_score: 93
+review:
+  strengths:
+  - Full spec compliance with all required features perfectly implemented (regression
+    equation, R², prediction interval, unknown sample with dashed projection lines)
+  - 'Excellent use of Altair-specific features: transform_regression, selection_point
+    with interactive highlighting, layered composition'
+  - Strong data storytelling through blue/orange color contrast, diamond shape for
+    unknown, and projection lines creating clear visual hierarchy
+  - Realistic analytical chemistry context with plausible Beer-Lambert parameters
+  - Clean, well-structured code with appropriate complexity and full reproducibility
+  weaknesses:
+  - Y-axis tick labels at 0.02 increments are dense (35 tick marks); 0.05 or 0.10
+    increments would be cleaner
+  - Could push DE-01 higher with more typographic hierarchy (lighter weight for equation,
+    bolder title)
+  image_description: The plot displays a Beer-Lambert calibration curve with Absorbance
+    (y-axis, 0-0.68) versus Concentration in mg/L (x-axis, 0-15.5). Eight blue circular
+    calibration standard points are plotted at concentrations 0, 2, 4, 6, 8, 10, 12,
+    and 14 mg/L, showing a strong linear relationship. A blue regression line (strokeWidth=3)
+    fits through the data, surrounded by a subtle light blue prediction interval band
+    that widens appropriately at the extremes. An orange diamond marker represents
+    the unknown sample at approximately 8.3 mg/L with absorbance 0.38. Orange dashed
+    lines extend horizontally from the unknown point to the y-axis and vertically
+    down to the x-axis, clearly demonstrating concentration determination. The label
+    "Unknown (8.3 mg/L)" appears in bold orange near the unknown point. The regression
+    equation "y = 0.0453x + 0.0024  R² = 0.9993" is displayed in bold blue in the
+    lower-right area. The title reads "calibration-beer-lambert · altair · pyplots.ai"
+    at the top. Grid is removed, view stroke is removed, axis domains are subtle gray.
+    X-axis tick labels are clean at even intervals (0, 2, 4, ..., 14) with no crowding.
+    Y-axis ticks run at 0.02 increments. The overall design is clean and professional
+    with clear blue/orange color contrast.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 28pt, axis labels 22pt, ticks
+          18pt, annotations 20pt and 18pt'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text. Explicit x-axis tick values at [0,2,...,14]
+          eliminate crowding from previous attempt
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Markers well-sized (350-500 with highlight), unknown diamond at 400
+          distinctive, regression line strokeWidth=3
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue (#306998) and dark orange (#C46210) are colorblind-safe with
+          strong contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: false
+        comment: Good proportions at 1600x900. Y-axis domain tightened to 0.68. Dense
+          0.02-increment y-axis tick labels slightly clutter left edge
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Concentration (mg/L) with units, Absorbance correctly dimensionless
+          per spec
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful color palette, custom font family (Helvetica Neue), white-stroked
+          points, subtle domain lines. Clearly above defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Grid disabled, view stroke removed, subtle gray domain colors, custom
+          tick styling. Y-axis tick density could be refined
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Strong narrative: orange unknown with dashed projection lines creates
+          focal point. Blue/orange contrast and diamond shape create visual hierarchy'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct calibration curve with scatter points and linear regression
+          fit
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features: regression equation, R², prediction interval band,
+          unknown sample with dashed lines'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=concentration (independent), Y=absorbance (dependent) correctly
+          mapped
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct. No legend needed; elements annotated directly
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows blank, 7 calibration standards, strong linearity, prediction
+          interval widening, unknown interpolation
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: UV-Vis spectrophotometry with mg/L concentrations, realistic molar
+          absorptivity and noise
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Concentrations 0-14 mg/L, absorbance 0-0.64, realistic Beer-Lambert
+          range
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean linear flow: imports, data, regression, DataFrames, chart
+          layers, combine, save'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: altair, numpy, pandas'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity. Manual regression for prediction interval,
+          transform_regression for line
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot.png (scale_factor=3.0) and plot.html, current API
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert use: alt.layer(), transform_regression, alt.Scale/Axis encoding,
+          alt.Tooltip, configure_axis/view/title'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Altair-distinctive: transform_regression, selection_point for interactive
+          highlighting, .interactive(), HTML dual export'
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  dataprep:
+  - regression
+  styling:
+  - edge-highlighting
+  - alpha-blending
