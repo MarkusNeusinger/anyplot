@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 calibration-beer-lambert: Beer-Lambert Calibration Curve
-Library: altair | Python 3.13
-Quality: pending | Created: 2026-03-09
+Library: altair 6.0.0 | Python 3.14.3
+Quality: 86/100 | Created: 2026-03-09
 """
 
 import altair as alt
