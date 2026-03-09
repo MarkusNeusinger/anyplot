@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 calibration-beer-lambert: Beer-Lambert Calibration Curve
 Library: altair 6.0.0 | Python 3.14.3
 Quality: 89/100 | Created: 2026-03-09
@@ -59,8 +59,8 @@ unknown_vline_df = pd.DataFrame(
 )
 
 # Shared scales with tighter axis ranges
-x_scale = alt.Scale(domain=[0, 15])
-y_scale = alt.Scale(domain=[0, 0.72])
+x_scale = alt.Scale(domain=[0, 15.5], nice=False)
+y_scale = alt.Scale(domain=[0, 0.68])
 
 # Prediction interval band
 band = (
@@ -84,7 +84,12 @@ points = (
     alt.Chart(standards_df)
     .mark_point(filled=True, color="#306998", stroke="white", strokeWidth=1.5)
     .encode(
-        x=alt.X("Concentration (mg/L):Q", scale=x_scale, title="Concentration (mg/L)"),
+        x=alt.X(
+            "Concentration (mg/L):Q",
+            scale=x_scale,
+            title="Concentration (mg/L)",
+            axis=alt.Axis(values=[0, 2, 4, 6, 8, 10, 12, 14]),
+        ),
         y=alt.Y("Absorbance:Q", scale=y_scale, title="Absorbance"),
         size=alt.condition(highlight, alt.value(500), alt.value(350)),
         tooltip=[alt.Tooltip("Concentration (mg/L):Q", format=".1f"), alt.Tooltip("Absorbance:Q", format=".4f")],
@@ -155,12 +160,18 @@ chart = (
     .configure_axis(
         labelFontSize=18,
         titleFontSize=22,
+        titleFont="Helvetica Neue, Arial, sans-serif",
+        labelFont="Helvetica Neue, Arial, sans-serif",
+        titleColor="#333333",
+        labelColor="#555555",
         grid=False,
-        domainColor="#888888",
-        domainWidth=0.8,
-        tickColor="#888888",
-        tickSize=6,
+        domainColor="#aaaaaa",
+        domainWidth=0.6,
+        tickColor="#aaaaaa",
+        tickSize=5,
+        tickWidth=0.6,
     )
+    .configure_title(font="Helvetica Neue, Arial, sans-serif", color="#222222")
     .configure_view(strokeWidth=0)
     .interactive()
 )
