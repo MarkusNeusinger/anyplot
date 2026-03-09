@@ -1,0 +1,234 @@
+library: bokeh
+specification_id: calibration-beer-lambert
+created: '2026-03-09T10:51:56Z'
+updated: '2026-03-09T11:06:55Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22849775849
+issue: 4410
+python_version: 3.14.3
+library_version: 3.8.2
+preview_url: https://storage.googleapis.com/pyplots-images/plots/calibration-beer-lambert/bokeh/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/calibration-beer-lambert/bokeh/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/calibration-beer-lambert/bokeh/plot.html
+quality_score: 93
+review:
+  strengths:
+  - Excellent data storytelling with the unknown sample workflow clearly visualized
+    through color contrast and dashed projection lines
+  - Idiomatic Bokeh usage with ColumnDataSource, Band model, and renderer-specific
+    HoverTools
+  - Realistic analytical chemistry context with appropriate noise modeling and physically
+    meaningful parameters
+  - Clean, cohesive color palette with intentional typography hierarchy
+  - Dual output (PNG + HTML) leveraging Bokeh interactive capabilities
+  weaknesses:
+  - 'Color accessibility could be improved: blue-red is not the most colorblind-friendly
+    combination'
+  - The 95% Prediction Interval label at 22pt with alpha 0.7 is noticeably smaller
+    and fainter than other annotations
+  image_description: 'The plot displays a Beer-Lambert calibration curve on a light
+    blue-gray background (#F7F9FC). Seven blue circular markers represent calibration
+    standards at concentrations 0, 2, 4, 6, 8, 10, and 12 mg/L, with absorbance values
+    ranging from ~0 to ~0.55. A dark teal linear regression line passes through the
+    data points. A light blue shaded band shows the 95% prediction interval, widening
+    at the extremes. A red diamond marker at approximately (7.0, 0.32) represents
+    an unknown sample, with red dashed lines extending horizontally to the y-axis
+    and vertically to the x-axis to demonstrate concentration determination. The regression
+    equation "y = 0.0454x + 0.0015" and "R² = 0.9990" are displayed in bold dark teal
+    text in the upper-left area. An "Unknown: 7.0 mg/L" label in red appears near
+    the unknown point. A "95% Prediction Interval" label in italic blue text appears
+    near the upper portion of the band. The legend in the top-left shows "Linear Fit",
+    "Standards", and "Unknown". The title reads "calibration-beer-lambert · bokeh
+    · pyplots.ai" centered at the top. Axes are labeled "Concentration (mg/L)" and
+    "Absorbance". Grid lines are subtle dashed lines with low opacity.'
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 40pt, axis labels 28pt, tick
+          labels 22pt, legend 26pt, annotations 30-34pt'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text elements anywhere
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Marker size 36 well-adapted for 7 data points, unknown diamond size
+          40 stands out
+      - id: VQ-04
+        name: Color Accessibility
+        score: 3
+        max: 4
+        passed: true
+        comment: Blue-red distinguishable for most colorblind types but not ideal
+          combination
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills canvas well at 4800x2700 with balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Concentration (mg/L) with units, Absorbance correctly dimensionless
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom cohesive palette, custom background, intentional typography
+          hierarchy
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle dashed grid, outline removed, minor ticks removed, styled
+          legend
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Strong visual hierarchy with color contrast and marker shape variation
+          for unknown sample workflow
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct scatter with linear regression calibration curve
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: standards, regression, equation, R², PI band,
+          unknown with dashed lines'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=Concentration, Y=Absorbance, correct Beer-Lambert mapping
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct, legend labels descriptive and accurate
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Full calibration range with blank, linear relationship, noise, unknown
+          determination
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: UV-Vis calibration for copper sulfate at 810 nm, real analytical
+          chemistry
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Realistic concentrations 0-12 mg/L, absorbance 0-0.55, noise sigma
+          0.008
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear flow, no functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-organized, appropriate complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png via export_png, current API
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Excellent ColumnDataSource, figure API, model-based architecture
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: HoverTool with renderer-specific tooltips, Band model, dual PNG+HTML
+          output
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - scipy
+  techniques:
+  - annotations
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  - columndatasource
+  dataprep:
+  - regression
+  styling:
+  - alpha-blending
+  - grid-styling
+  - edge-highlighting
