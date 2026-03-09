@@ -1,0 +1,247 @@
+library: bokeh
+specification_id: heatmap-loss-triangle
+created: '2026-03-09T11:54:02Z'
+updated: '2026-03-09T12:05:40Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22852106730
+issue: 4581
+python_version: 3.14.3
+library_version: 3.8.2
+preview_url: https://storage.googleapis.com/pyplots-images/plots/heatmap-loss-triangle/bokeh/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/heatmap-loss-triangle/bokeh/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/heatmap-loss-triangle/bokeh/plot.html
+quality_score: 90
+review:
+  strengths:
+  - Excellent actual vs projected visual distinction using opacity and border style
+    — immediately communicates the triangle structure
+  - Adaptive text color (white/dark) based on cell background ensures all 100 annotations
+    are readable
+  - 'Full spec compliance with all required features: annotations, development factors,
+    color encoding, legend'
+  - Strong Bokeh idioms with HoverTool, ColumnDataSource, transform, and dual HTML/PNG
+    output
+  - Realistic actuarial data with properly diminishing development factors
+  weaknesses:
+  - Cell annotations at 17pt could be slightly larger for optimal readability at full
+    resolution
+  - Some vertical whitespace within cells could be reduced for a tighter layout
+  - Color palette, while professional, could push further toward publication-quality
+    design
+  image_description: 'The plot displays a 10x10 heatmap grid representing an actuarial
+    loss development triangle. Rows show accident years (2015-2024) on the left y-axis,
+    columns show development periods (1-10) along the top x-axis. Each cell is annotated
+    with a cumulative claims amount formatted with thousands separators. A sequential
+    blue color palette encodes magnitude — lighter blues for lower amounts (~4,000-5,000)
+    in the upper-left and darker blues for higher amounts (~30,000-40,000) in the
+    lower-right. Actual (observed) cells have solid white borders at full opacity,
+    while projected (IBNR) cells have dashed gray borders with reduced opacity (~0.55),
+    creating a clear diagonal boundary from top-right to bottom-left. A colorbar on
+    the right is labeled "Cumulative Claims ($K)". Below the grid, a horizontal legend
+    distinguishes "Actual (Observed)" from "Projected (IBNR Estimate)". Below that,
+    age-to-age development factors (F1-2: 2.500 through F9-10: 1.008) are displayed.
+    The title reads "Actuarial Loss Development Triangle · heatmap-loss-triangle ·
+    bokeh · pyplots.ai". Text colors adaptively switch between white and dark based
+    on cell background intensity.'
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 28pt, axis labels 22pt, ticks
+          18pt, annotations 17pt). Adaptive white/dark text color. Annotations slightly
+          small for 100 cells.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text anywhere in the plot.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Cells fill grid uniformly. Actual vs projected distinction immediately
+          visible via opacity and border style.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue sequential palette is colorblind-safe with strong luminance
+          contrast.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good layout overall. Cells are vertically generous, creating slight
+          excess whitespace within each cell.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive labels: Development Period (Years) and Accident Year.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Custom 9-step blue palette with white cell borders and adaptive text
+          colors. Above defaults but not publication-level stunning.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Grid removed, axis lines removed, tick lines removed, legend has
+          transparent background. Clean presentation.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Actual/projected visual distinction creates meaningful hierarchy.
+          Color intensity guides viewer through development. Development factors provide
+          context.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct triangular heatmap matrix with actual upper-left and projected
+          lower-right.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features: actual/projected distinction, cell annotations, development
+          factors, color encoding, legend.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=development periods, Y=accident years (reversed). All 100 cells
+          visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title contains required format. Legend labels correctly match data
+          categories.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Full 10x10 triangle with ~55 actual and ~45 projected cells. Development
+          factors diminish realistically.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Insurance claims reserving is a real actuarial application. Neutral,
+          professional domain.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Initial claims ~4,000-7,000K growing to ~22,000-40,000K — realistic
+          for mid-size insurance portfolio.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean linear flow: imports, seed, data, figure, styling, save. No
+          functions or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set at start.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity. Separate ColumnDataSources for actual/projected
+          is clean.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png and plot.html. Current Bokeh API.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert use of ColumnDataSource, transform(), LinearColorMapper, Legend/LegendItem,
+          ColorBar, Title.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: HoverTool for interactive tooltips, HTML export, transform() for
+          color mapping — distinctive Bokeh features.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - annotations
+  - hover-tooltips
+  - custom-legend
+  - html-export
+  patterns:
+  - data-generation
+  - matrix-construction
+  - iteration-over-groups
+  - columndatasource
+  dataprep: []
+  styling:
+  - custom-colormap
+  - alpha-blending
+  - edge-highlighting

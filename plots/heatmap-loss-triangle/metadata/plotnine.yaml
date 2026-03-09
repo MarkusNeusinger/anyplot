@@ -1,0 +1,240 @@
+library: plotnine
+specification_id: heatmap-loss-triangle
+created: '2026-03-09T11:54:51Z'
+updated: '2026-03-09T12:13:33Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22852106805
+issue: 4581
+python_version: 3.14.3
+library_version: 0.15.3
+preview_url: https://storage.googleapis.com/pyplots-images/plots/heatmap-loss-triangle/plotnine/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/heatmap-loss-triangle/plotnine/plot_thumb.png
+preview_html: null
+quality_score: 90
+review:
+  strengths:
+  - Expert plotnine grammar-of-graphics usage with multiple data-driven layers, scale_alpha_manual,
+    and scale_color_identity
+  - Complete spec compliance — every required feature implemented including actual/projected
+    distinction, cell annotations, development factors, and legend
+  - Excellent data storytelling through alpha transparency and the inclusion of a
+    catastrophe year (2019) that creates a natural visual focal point
+  - Custom perceptually-uniform blue palette with 6 stops provides good color differentiation
+  weaknesses:
+  - Cell annotation text (size=7.5) is readable but slightly compact for 5-digit numbers
+    — could benefit from being slightly larger
+  - Layout has minor unused vertical space above and below the grid area
+  image_description: The plot displays a 10x10 heatmap grid with accident years 2015-2024
+    on the Y-axis (top to bottom) and development periods 1-10 on the X-axis. Tiles
+    use a custom 6-stop blue gradient from very light (#e8f4f8) for low cumulative
+    amounts to dark navy (#0d1b2a) for high amounts. Each cell is annotated with the
+    cumulative claim amount formatted with thousands separators in either white or
+    dark text depending on tile darkness. Actual (observed) cells in the upper-left
+    triangle are fully opaque, while projected cells in the lower-right triangle are
+    semi-transparent (alpha ~0.35), creating a clear visual distinction. A "Region"
+    legend on the right shows Actual vs Projected with corresponding opacity squares.
+    A "Cumulative Amount" colorbar shows the gradient scale. Development factors (2.50
+    down to 1.01) appear in bold blue text between column positions below the main
+    grid, with a "Dev Factor" y-axis label. The title reads "heatmap-loss-triangle
+    · plotnine · pyplots.ai" in bold centered text, with subtitle "Cumulative Paid
+    Claims — Actual vs Projected · Development Factors shown below" in gray. White
+    borders separate tiles, background is white, and grid lines are fully removed.
+    The 2019 accident year clearly stands out as a catastrophe year with noticeably
+    higher values (darker tiles) across all development periods.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title=24, axis_title=20, axis_text=16,
+          legend=14/12). Cell annotations at size=7.5 readable but slightly compact
+          for 5-digit numbers.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text. All cell annotations fit cleanly within tiles.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Tiles well-sized, fill grid area. Alpha distinction between actual/projected
+          clearly visible.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue sequential palette is colorblind-safe. Alpha provides additional
+          non-color distinction.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good utilization overall; minor unused vertical space above/below
+          grid.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive labels with context: Development Period (Years), Accident
+          Year.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom 6-stop blue palette, white tile borders, alpha transparency
+          for projected values, intentional typography hierarchy. Clearly above defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Grid lines fully removed, white background, clean tile borders, subtitle
+          adds context.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Alpha differentiation tells actual-vs-projected story. 2019 catastrophe
+          year stands out visually. Dev factors guide viewer through chain-ladder
+          methodology.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct triangular heatmap with upper-left actual and lower-right
+          projected.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: actual/projected distinction, cell annotations,
+          dev factors, color encoding, legend.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=development period, Y=accident year. All 100 cells displayed.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct. Legend shows Actual vs Projected.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Full 10x10 triangle with actual/projected. 2019 catastrophe year
+          with ~50% higher base claims. Dev factors decrease realistically.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Insurance cumulative paid claims is a genuine actuarial scenario.
+          Neutral topic.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values 3,200-35,500 plausible. Dev factors 2.50-1.01 realistic chain-ladder
+          factors.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean imports-data-plot-save flow. No functions or classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used, no extras.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic. Elegant alpha mapping for region differentiation.
+          Data-driven dev factor layer.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with dpi=300, width=16, height=9.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert grammar-of-graphics: multiple geom layers with different
+          data sources, scale_alpha_manual, scale_color_identity, scale_fill_gradientn,
+          scale_y_reverse with mixed breaks/labels, inherit_aes=False.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: scale_alpha_manual for categorical legend is distinctly plotnine/ggplot.
+          Data-driven layer composition with inherit_aes=False is idiomatic.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  - matrix-construction
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - custom-colormap
+  - alpha-blending
+  - edge-highlighting
