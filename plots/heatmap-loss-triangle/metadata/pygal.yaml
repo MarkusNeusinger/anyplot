@@ -1,7 +1,7 @@
 library: pygal
 specification_id: heatmap-loss-triangle
 created: '2026-03-09T11:54:48Z'
-updated: '2026-03-09T11:59:37Z'
+updated: '2026-03-09T12:07:55Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 22852106841
 issue: 4581
@@ -10,80 +10,86 @@ library_version: 3.1.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/heatmap-loss-triangle/pygal/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/heatmap-loss-triangle/pygal/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/heatmap-loss-triangle/pygal/plot.html
-quality_score: 79
+quality_score: 84
 review:
   strengths:
-  - Excellent use of pygal extensibility by subclassing Graph for custom heatmap
-  - Clean professional blue sequential colormap with well-calculated color interpolation
-  - Realistic actuarial data with proper chain-ladder development factors
-  - Good cell annotation formatting with thousands separators and italic styling for
-    projected values
-  - Colorbar with labeled scale provides clear magnitude reference
+  - Excellent dual-colormap approach (blue actual, orange projected) creates immediate
+    visual distinction
+  - Comprehensive legend with all three visual elements (actual, projected, evaluation
+    date line)
+  - Professional actuarial data with realistic chain-ladder development factors
+  - Clean cell design with rounded corners, white gaps, and dashed inner borders for
+    projected cells
+  - Effective use of pygal extensibility by subclassing Graph for a chart type pygal
+    does not natively support
   weaknesses:
-  - Hatching pattern for projected cells does not render visibly in PNG output
-  - Diagonal latest evaluation date indicator is essentially invisible
-  - Cell value font size is small relative to canvas dimensions
-  - Development Period Years header crowds the column numbers
-  - Empty space at the bottom of the canvas is wasted
-  image_description: The plot shows a 10x10 heatmap matrix representing an actuarial
-    loss development triangle. The title "heatmap-loss-triangle · pygal · pyplots.ai"
-    is centered at the top. The x-axis is labeled "Development Period (Years)" with
-    columns 1-10, and the y-axis is labeled "Accident Year" with rows 2015-2024. Each
-    cell contains a formatted cumulative amount value with thousands separators. The
-    color gradient goes from very light blue (low values ~639) to dark navy blue (high
-    values ~6,951). A vertical colorbar on the right is labeled "Cumulative ($k)"
-    with scale markers at min, mid, and max. Development factors are displayed in
-    a row below the grid (e.g., 2.345, 1.464, ...). A legend at the bottom right distinguishes
-    "Actual" (solid blue swatch) and "Projected (IBNR)" (lighter blue with hatching).
-    Projected cells show italic text, but the diagonal hatching pattern is barely
-    visible in the PNG rendering. The overall layout is clean with a white background
-    and subtle white cell gaps.
+  - Empty space below the legend wastes canvas area
+  - Cell value font sizes could be slightly larger for improved readability
+  - Module-level n_years variable referenced from within _plot method couples class
+    to module state
+  - Development factor label font is quite small relative to the grid
+  image_description: The plot displays a 10x10 actuarial loss development triangle
+    heatmap. The title "heatmap-loss-triangle · pygal · pyplots.ai" is centered at
+    the top. Rows represent accident years 2015-2024, columns represent development
+    periods 1-10. The upper-left triangle (actual observed values) uses a sequential
+    blue colormap ranging from light blue (~639) to dark navy (~6,951). The lower-right
+    triangle (projected/IBNR values) uses an orange/amber colormap with dashed orange
+    inner borders and italic text, creating a clear visual distinction from actual
+    values. A red dashed diagonal line marks the latest evaluation date boundary between
+    actual and projected regions. Each cell contains a formatted cumulative amount
+    with thousands separators. A vertical colorbar on the right is labeled "Cumulative
+    ($k)" with scale markers. Development factors (2.345, 1.464, 1.256, etc.) appear
+    in a row below the grid labeled "Dev Factor". A three-part legend at the bottom
+    shows blue swatch for "Actual", orange swatch for "Projected (IBNR)", and a dashed
+    red line for "Evaluation Date". The background is clean white with subtle white
+    gaps between cells.
   criteria_checklist:
     visual_quality:
-      score: 23
+      score: 26
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set but cell value text (max 28px) is small
-          for 4800px canvas
+        comment: All font sizes explicitly set. All text readable, cell values slightly
+          small relative to canvas.
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Development Period (Years) header crowds column numbers 5 and 6
+        passed: true
+        comment: Generally clean layout, minor tightness between header and column
+          numbers.
       - id: VQ-03
         name: Element Visibility
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Hatching for projected cells invisible in PNG; only italic text distinguishes
-          them
+        passed: true
+        comment: All cells well-sized, blue/orange distinction very clear, dashed
+          borders on projected cells visible.
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Sequential blue colormap is colorblind-safe with good contrast
+        comment: Blue and orange colormaps are colorblind-safe with excellent contrast.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Grid fills canvas well but significant empty space below legend
+        comment: Grid fills most of canvas well but notable empty space below legend.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
         comment: Development Period (Years), Accident Year, and Cumulative ($k) all
-          present with units
+          present with units.
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -91,24 +97,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom sequential colormap, clean cell design with rounded corners,
-          above defaults
+        comment: Custom dual-colormap approach, clean cell gaps with rounded corners,
+          intentional hierarchy. Above defaults.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Clean white background, cell gaps as subtle grid, no distracting
-          elements
+        comment: Clean white background, cell gaps as subtle grid, good typography
+          with italic/weight variation.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Color gradient shows magnitude but actual vs projected distinction
-          too weak for reserving story
+        passed: true
+        comment: Dual-colormap effectively communicates actual vs projected. Diagonal
+          line reinforces evaluation date concept.
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -116,26 +122,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct heatmap triangular matrix
+        comment: Correct heatmap triangular matrix visualization.
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: Hatching invisible in PNG, diagonal evaluation date line not visible
+        passed: true
+        comment: 'All features present: annotations, color encoding, projected distinction,
+          diagonal line, dev factors, legend.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
         comment: Correct mapping of accident years to rows, development periods to
-          columns
+          columns.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend labels match
+        comment: Title format correct, legend labels match data.
     data_quality:
       score: 14
       max: 15
@@ -145,21 +152,21 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Shows development pattern, actual vs projected, dev factors; could
-          show more year variation
+        comment: Shows development progression, actual vs projected, dev factors.
+          Slight uniformity in year variation.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real actuarial domain with neutral professional context
+        comment: Genuine actuarial domain with professional neutral context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Realistic cumulative claim values in thousands with plausible development
-          factors
+        comment: Realistic cumulative claim values, plausible chain-ladder development
+          factors.
     code_quality:
       score: 9
       max: 10
@@ -168,32 +175,33 @@ review:
         name: KISS Structure
         score: 2
         max: 3
-        passed: false
-        comment: Custom class deviates from KISS but justified for pygal heatmap
+        passed: true
+        comment: Custom class justified since pygal lacks native heatmap, but adds
+          complexity.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: All imports used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-structured with justified complexity, no fake UI
+        comment: Well-structured code with justified complexity, no fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.svg
+        comment: Saves as plot.png and plot.svg.
     library_mastery:
       score: 7
       max: 10
@@ -203,15 +211,15 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correctly extends Graph class with _plot() and _compute(), uses SVG
-          node API
+        comment: Correctly extends pygal Graph class with _plot() and _compute(),
+          uses SVG node API.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Custom Graph subclass is pygal-specific, leverages internal SVG generation
-          and Style system
+        comment: Custom Graph subclass leveraging pygal internal SVG generation and
+          Style system.
   verdict: REJECTED
 impl_tags:
   dependencies: []
