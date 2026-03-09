@@ -1,7 +1,7 @@
 library: matplotlib
 specification_id: heatmap-loss-triangle
 created: '2026-03-09T11:54:31Z'
-updated: '2026-03-09T11:58:56Z'
+updated: '2026-03-09T12:07:12Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 22852106646
 issue: 4581
@@ -10,33 +10,33 @@ library_version: 3.10.8
 preview_url: https://storage.googleapis.com/pyplots-images/plots/heatmap-loss-triangle/matplotlib/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/heatmap-loss-triangle/matplotlib/plot_thumb.png
 preview_html: null
-quality_score: 86
+quality_score: 90
 review:
   strengths:
-  - Full spec compliance with every required feature present and correct
-  - Excellent data quality with realistic actuarial context and plausible values
-  - Clean code structure with appropriate complexity
-  - Thoughtful dual-colormap design distinguishing actual from projected data
-  - Italic text for projected values adds semantic meaning
-  - Adaptive text color based on cell brightness ensures readability
+  - Dual-colormap approach (Blues/Oranges) with masked arrays elegantly differentiates
+    actual vs projected regions
+  - All spec requirements fully implemented including development factors, cell annotations,
+    and legend
+  - Realistic actuarial data with appropriate scales and development patterns
+  - Clean, well-structured code with good use of matplotlib-specific features
+  - Brightness-adaptive text color ensures readability across all cells
   weaknesses:
-  - 'Font sizes below recommended minimums: tick labels 14pt (should be 16pt), cell
-    annotations 10pt (too small for 4800x2700), legend 14pt (should be 16pt)'
-  - Could leverage matplotlib higher-level heatmap APIs (imshow/pcolormesh) for more
-    idiomatic usage
-  - No distinctive matplotlib features used beyond basic patches
-  image_description: The plot displays a 10x10 grid representing an actuarial loss
-    development triangle. Rows correspond to accident years 2015-2024 (y-axis), columns
-    to development periods 1-10 (x-axis). The upper-left triangle is filled with blue
-    (Blues colormap) cells for actual/observed values, while the lower-right triangle
-    uses orange (Oranges colormap) cells for projected/estimated values. Each cell
-    is annotated with the cumulative claim amount formatted with thousands separators.
-    Projected values appear in italic text. Color intensity varies with magnitude
-    - lighter for smaller values, darker for larger. All spines are removed, cells
-    have white borders. Development factors (2.50 down to 1.01) are displayed in a
-    row beneath the grid. A legend at the bottom-left distinguishes "Actual (Observed)"
-    and "Projected (Estimated)". The title reads "heatmap-loss-triangle · matplotlib
-    · pyplots.ai" at the top.
+  - Cell annotation fontsize (12) is slightly small relative to other text elements
+    in the plot
+  - Dual colorbars consume noticeable space on the right side of the canvas
+  image_description: The plot displays a 10×10 actuarial loss development triangle
+    heatmap. Rows represent accident years (2015–2024) and columns represent development
+    periods (1–10). The upper-left triangle is colored in a blue sequential colormap
+    (actual/observed values) while the lower-right triangle uses an orange sequential
+    colormap (projected/estimated values). Each cell is annotated with the cumulative
+    claim amount formatted with thousands separators (e.g., "4,200", "30,163"). Projected
+    values appear in italic text. Text color adapts based on cell brightness—white
+    on dark cells, dark gray on light cells. Two vertical colorbars on the right side
+    show scales for "Actual ($)" and "Projected ($)". Development factors (2.50 down
+    to 1.01) are displayed below the x-axis tick labels. A legend at the bottom-left
+    distinguishes "Actual (Observed)" (blue) from "Projected (Estimated)" (orange).
+    The title reads "heatmap-loss-triangle · matplotlib · pyplots.ai". All four spines
+    are removed, and white grid lines separate cells cleanly.
   criteria_checklist:
     visual_quality:
       score: 28
@@ -44,67 +44,66 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Title 24pt and axis labels 20pt correct, but tick labels 14pt (should
-          be 16pt), cell annotations 10pt too small, legend 14pt (should be 16pt)
+        comment: Font sizes explicitly set throughout. Cell annotations at fontsize
+          12 are readable but slightly small.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All text fully readable with no collisions
+        comment: No overlapping text. White cell borders provide clean separation.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Cells well-sized and clearly visible with good color differentiation
+        comment: Cells well-sized, colors distinct across both colormaps.
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Blue vs orange is colorblind-safe, adaptive text color for contrast
+        comment: Blues vs Oranges is colorblind-safe.
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Good canvas utilization with balanced margins
+        comment: Good layout but dual colorbars consume space on right side.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: Development Period (Years), Accident
-          Year'
+        comment: Descriptive labels with units on colorbars.
     design_excellence:
-      score: 13
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Thoughtful dual-colormap design, italic for projected, adaptive text
-          color. Above defaults but not publication-ready
+        comment: Dual-colormap approach is thoughtful. Italic text for projected,
+          brightness-adaptive text color.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: All spines removed, tick marks hidden, clean white cell borders,
-          no grid
+        comment: All spines removed, tick marks hidden, white cell borders, clean
+          grid structure.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Triangle structure guides viewer from actual to projected, dev factors
-          provide analytical context
+        comment: Color transition along diagonal tells the actuarial story. Development
+          factors add context.
     spec_compliance:
       score: 15
       max: 15
@@ -114,26 +113,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct triangular matrix heatmap visualization
+        comment: Correct triangular matrix heatmap.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: distinct styling, annotations, dev factors,
-          legend, labels'
+        comment: All spec features present including dual regions, annotations, dev
+          factors, legend.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Accident years on Y, development periods on X, all data visible
+        comment: Correct axis mapping with all data visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend labels match spec
+        comment: Title format correct, legend labels match data.
     data_quality:
       score: 15
       max: 15
@@ -143,20 +142,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Complete triangle with actual/projected regions, dev factors, maturation
-          pattern
+        comment: Full triangle with actual and projected cells, development factors
+          showing maturity.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Insurance actuarial reserving is realistic and domain-appropriate
+        comment: Actuarial insurance claims - real, neutral domain.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Plausible cumulative paid claims values and development factors
+        comment: Realistic claim amounts and development factors.
     code_quality:
       score: 10
       max: 10
@@ -166,56 +165,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports-data-plot-save structure, no functions or classes
+        comment: Clean linear flow, no functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: mcolors, plt, np, Patch'
+        comment: All imports used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for dual-colormap heatmap
+        comment: Masked arrays are elegant solution for dual-region heatmap.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300 and bbox_inches=tight
+        comment: Saves as plot.png with dpi=300.
     library_mastery:
-      score: 5
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of masked arrays, imshow, FuncFormatter, Patch for legend.
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses ax methods and Patch correctly but builds heatmap from manual
-          Rectangles instead of higher-level APIs
-      - id: LM-02
-        name: Distinctive Features
-        score: 2
-        max: 5
-        passed: false
-        comment: Uses mcolors.Normalize and Patch for legend but mostly standard patterns
-  verdict: REJECTED
+        comment: Masked arrays for dual colormaps, anchor-positioned colorbars are
+          matplotlib-specific.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - colorbar
   - annotations
   - custom-legend
   - manual-ticks
-  - patches
   patterns:
   - data-generation
   - matrix-construction
