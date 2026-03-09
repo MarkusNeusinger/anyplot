@@ -1,0 +1,234 @@
+library: matplotlib
+specification_id: calibration-beer-lambert
+created: '2026-03-09T10:49:28Z'
+updated: '2026-03-09T11:01:57Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22849775865
+issue: 4410
+python_version: 3.14.3
+library_version: 3.10.8
+preview_url: https://storage.googleapis.com/pyplots-images/plots/calibration-beer-lambert/matplotlib/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/calibration-beer-lambert/matplotlib/plot_thumb.png
+preview_html: null
+quality_score: 91
+review:
+  strengths:
+  - Complete spec compliance with all required features (regression equation, R²,
+    prediction interval, unknown sample with dashed guide lines)
+  - Strong data storytelling through blue/orange color contrast creating a clear narrative
+    about calibration workflow
+  - Polished visual refinement with differentiated grid, muted spines, and custom
+    background
+  - Mathematically correct prediction interval calculation using proper t-distribution
+  - Realistic analytical chemistry data with physically plausible values
+  weaknesses:
+  - 'Minor: axis-value annotations for the unknown (fontsize=13) are slightly below
+    the 16pt recommended minimum'
+  - Library mastery could leverage more distinctive matplotlib features (e.g., PathEffects,
+    custom tick formatters)
+  image_description: 'The plot displays a Beer-Lambert calibration curve on a light
+    off-white (#FAFBFC) background. Seven blue (#306998) circular markers with white
+    edges represent calibration standards at concentrations 0, 2, 4, 6, 8, 10, and
+    12 mg/L, plotting absorbance (y-axis) versus concentration (x-axis). A solid blue
+    regression line passes through the data with a subtle light-blue 95% prediction
+    interval band. An orange (#E85D3A) diamond marker at approximately (7.0, 0.32)
+    represents the unknown sample, with dashed orange lines extending horizontally
+    to the y-axis and vertically to the x-axis. Orange text annotations mark "0.32"
+    on the y-axis and "7.0" on the x-axis. An arrow-pointed label reads "Unknown:
+    7.0 mg/L". The regression equation "y = 0.0454x + 0.0018" and "R² = 0.9990" are
+    displayed in a rounded box with blue border in the upper left. The title reads
+    "calibration-beer-lambert · matplotlib · pyplots.ai". Top and right spines are
+    removed; remaining spines are light gray. A subtle differentiated grid is visible.
+    The legend in the lower right lists all four elements.'
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All primary font sizes explicitly set (title 24, labels 20, ticks
+          16). Minor: unknown axis annotations use fontsize=13, slightly below 16pt
+          minimum.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or elements. All labels, annotations, and legend
+          well-separated.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Marker sizes s=280/320 well-adapted for 7 data points. Fit line 3px
+          clearly visible.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue/orange combination is colorblind-safe with strong luminance
+          contrast.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 16:9 aspect ratio, plot fills ~65% of canvas, balanced margins.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Concentration (mg/L) with units, Absorbance correctly unitless per
+          spec.
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Strong design with custom background, Python Blue + orange accent
+          palette, white-edged markers, styled equation box.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines removed, muted remaining spines, differentiated grid, generous
+          whitespace, muted title color.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Orange unknown against blue standards creates clear narrative. Dashed
+          guide lines demonstrate calibration workflow.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct calibration curve with scatter + linear regression.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: standards, regression line, equation/R², prediction
+          interval, unknown with dashed lines.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=concentration, Y=absorbance. All data visible within axis range.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct title format. Legend labels descriptive and accurate.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all aspects: blank, calibration standards, linear relationship,
+          prediction interval, unknown interpolation.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Beer-Lambert law / UV-Vis spectrophotometry. Neutral scientific context
+          with plausible values.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Absorbance 0-0.6 within typical linear range. Concentrations 0-12
+          mg/L realistic.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean linear flow: imports, data, regression, plot, save. No functions/classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All three imports used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity. Prediction interval math correct and necessary.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png, dpi=300. No deprecated API.
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses Axes methods throughout, proper fig/ax pattern, transform=ax.transAxes,
+          zorder management.
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Uses fill_between, annotate with arrowprops, text with bbox. Conceptually
+          replicable in other libraries.
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - scipy
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  dataprep:
+  - regression
+  styling:
+  - alpha-blending
+  - edge-highlighting
+  - grid-styling
