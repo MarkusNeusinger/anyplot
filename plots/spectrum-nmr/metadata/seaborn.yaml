@@ -1,0 +1,219 @@
+library: seaborn
+specification_id: spectrum-nmr
+created: '2026-03-09T12:53:25Z'
+updated: '2026-03-09T13:14:56Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22854183187
+issue: 4676
+python_version: 3.14.3
+library_version: 0.13.2
+preview_url: https://storage.googleapis.com/pyplots-images/plots/spectrum-nmr/seaborn/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/spectrum-nmr/seaborn/plot_thumb.png
+preview_html: null
+quality_score: 92
+review:
+  strengths:
+  - Physically accurate Lorentzian peak shapes with correct splitting patterns and
+    coupling constants
+  - Excellent color accessibility using seaborn colorblind palette with meaningful
+    color-region mapping
+  - Clean NMR-convention presentation (reversed x-axis, hidden y-ticks, minimal baseline
+    noise)
+  - Distinctive use of seaborn features (rugplot, despine, set_context, color_palette)
+  - Professional annotation system with color-matched connector lines
+  weaknesses:
+  - Per-region plotting loop could potentially be replaced with a single hue-based
+    lineplot call for more idiomatic seaborn usage
+  image_description: 'The plot displays a 1H NMR spectrum of ethanol on a light gray
+    (#fafafa) background. The x-axis shows Chemical Shift (ppm) reversed from 5.5
+    to -0.5 (NMR convention), and the y-axis shows Intensity with no tick marks. Four
+    distinct peak groups are color-coded: blue CH2 quartet near 3.69 ppm with four
+    resolved peaks, pink/magenta OH singlet near 2.61 ppm, teal/green CH3 triplet
+    near 1.18 ppm with three resolved peaks (tallest signal), and orange TMS reference
+    at 0.00 ppm. Each peak is annotated with its assignment and chemical shift value
+    via colored connector lines. Semi-transparent fills appear under each peak region.
+    Small rug marks at peak centers along the x-axis. A Peak Assignment legend with
+    shadow appears in the upper right. Top and right spines are removed. The baseline
+    is rendered in muted gray with subtle noise. Serif font family is used throughout.'
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt,
+          annotations 14pt'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: All annotations well-spaced with varying vertical offsets, no collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Line widths vary by region for emphasis, peaks sharp and well-resolved
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Seaborn colorblind palette, all colors distinguishable
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 16:9 canvas well-utilized, plot fills ~65% of area
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Chemical Shift (ppm) with units, Intensity appropriate for NMR
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Serif font, color-coded annotations, shadow legend, custom background,
+          clearly above defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Despine left+top+right, hidden y-ticks, subtle baseline, alpha-blended
+          fills
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Color coding and varying linewidths create visual hierarchy, annotations
+          guide interpretation
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct NMR spectrum as line plot with sharp peaks
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Reversed x-axis, splitting patterns, peak labels, TMS reference,
+          clean baseline
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Chemical shift on x-axis, intensity on y-axis, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct title format, legend labels match data
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows singlet, triplet, quartet, and TMS reference with correct ratios
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Ethanol 1H NMR is a classic real-world chemistry example
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Realistic chemical shifts and coupling constants for ethanol
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports, styling, data, plot, save'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All four imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Vectorized np.select, concise Lorentzian formula, no over-engineering
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with dpi=300, no deprecated API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses sns.lineplot with DataFrame, set_style/set_context, despine,
+          color_palette
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: sns.rugplot for peak markers, sns.despine(left=True), sns.set_context(talk)
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - minimal-chrome

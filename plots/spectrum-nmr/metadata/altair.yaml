@@ -1,0 +1,224 @@
+library: altair
+specification_id: spectrum-nmr
+created: '2026-03-09T12:52:18Z'
+updated: '2026-03-09T13:12:37Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22854183286
+issue: 4676
+python_version: 3.14.3
+library_version: 6.0.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/spectrum-nmr/altair/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/spectrum-nmr/altair/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/spectrum-nmr/altair/plot.html
+quality_score: 92
+review:
+  strengths:
+  - Scientifically accurate ethanol 1H NMR spectrum with correct chemical shifts,
+    coupling constants, and splitting patterns
+  - Excellent peak labeling with functional group assignments and multiplicity
+  - Clean professional design with cohesive blue palette, shaded peak regions, and
+    refined typography
+  - Effective use of Altair interactive capabilities (hover crosshair, tooltips, nearest-point
+    selection)
+  - Well-structured code with clear Lorentzian peak generation
+  weaknesses:
+  - 'Minor: top/right axis boundaries still visible (Altair limitation makes removal
+    difficult)'
+  image_description: 'The plot displays a synthetic 1H NMR spectrum of ethanol with
+    a reversed x-axis running from 5.0 to -0.4 ppm (high ppm on the left, following
+    standard NMR convention). Four distinct peak groups are visible: a CH2 quartet
+    at 3.69 ppm (4 peaks with 1:3:3:1 intensity), an OH singlet at 2.61 ppm, a CH3
+    triplet at 1.18 ppm (3 peaks with 1:2:1 intensity), and a TMS reference peak at
+    0.00 ppm. Each peak group has a subtle light-blue shaded region behind it, dashed
+    vertical drop-lines, and bold dark-blue text labels identifying the functional
+    group, multiplicity, and chemical shift value. The line is drawn in Python Blue
+    (#306998) against a clean white background with no gridlines. The title reads
+    "spectrum-nmr · altair · pyplots.ai" with an italic subtitle "Ethanol 1H NMR —
+    Synthetic 300 MHz Spectrum". Axis labels are "Chemical Shift (ppm)" and "Intensity
+    (a.u.)". The overall design is clean and professional.'
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 28pt, subtitle 17pt, axis titles
+          22pt, axis labels 18pt, peak labels 18pt bold'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text. Peak labels well-positioned above peaks
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Spectrum line at strokeWidth 1.8 clearly visible. Splitting patterns
+          sharp and well-resolved
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Single-series Python Blue with excellent contrast against white
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills ~65% of canvas. Balanced margins, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Chemical Shift (ppm) and Intensity (a.u.) - descriptive with units
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Strong design with cohesive blue palette, custom typography, shaded
+          peak regions, dashed drop-lines
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Grid removed, view stroke removed, subtle domain lines. Top/right
+          axis lines still present
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear narrative with labeled functional groups. Shaded regions and
+          labels create visual hierarchy
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct NMR spectrum as line plot with sharp peaks
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Reversed x-axis, splitting patterns, peak labels, TMS reference,
+          clean baseline
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Chemical shift on x, intensity on y. All data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct. No legend needed for single-series
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows singlet, triplet, and quartet splitting patterns
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Ethanol 1H NMR is a classic real-world example with accurate chemical
+          shifts
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Chemical shifts 0-5 ppm correct for 1H NMR. Peak positions match
+          literature
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports, data, chart layers, combine, save'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set before noise generation
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: altair, numpy, pandas - all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean Lorentzian peak generation, well-organized layer composition
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with scale_factor=3.0. Current API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Excellent use of Altair declarative grammar: layered composition,
+          encoding types, scale configuration'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Interactive selection, transform_filter for crosshair, tooltips,
+          HTML export
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  - hover-tooltips
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - grid-styling
+  - alpha-blending

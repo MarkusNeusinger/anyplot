@@ -1,0 +1,231 @@
+library: highcharts
+specification_id: spectrum-nmr
+created: '2026-03-09T12:51:55Z'
+updated: '2026-03-09T13:04:56Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22854183645
+issue: 4676
+python_version: 3.14.3
+library_version: unknown
+preview_url: https://storage.googleapis.com/pyplots-images/plots/spectrum-nmr/highcharts/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/spectrum-nmr/highcharts/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/spectrum-nmr/highcharts/plot.html
+quality_score: 90
+review:
+  strengths:
+  - 'Perfect spec compliance with all required NMR features: reversed x-axis, splitting
+    patterns, peak labels, TMS reference, and clean baseline'
+  - Scientifically accurate ethanol 1H NMR data with realistic chemical shifts, coupling
+    constants, and relative intensities
+  - 'Strong design improvements from attempt 1: lorentzian function inlined for KISS
+    compliance, plotBorderWidth removed, y-axis range tightened'
+  - Effective use of Highcharts annotations module with connector shapes for clear
+    peak labeling
+  - Professional typography hierarchy with title, subtitle, and styled annotations
+  weaknesses:
+  - LineSeries still imported from highcharts_core.options.series.area instead of
+    highcharts_core.options.series.line
+  - Minor excess vertical whitespace above tallest peak (y-axis max 1.42 vs peak at
+    1.30)
+  image_description: 'The plot displays an NMR spectrum of ethanol (1H NMR) rendered
+    as a blue (#306998) line chart on a white background. The title reads "Ethanol
+    1H NMR · spectrum-nmr · highcharts · pyplots.ai" with a subtitle "CH3CH2OH in
+    CDCl3 (400 MHz)". The x-axis shows "Chemical Shift (ppm)" reversed from 5.5 on
+    the left to -0.5 on the right (correct NMR convention). The y-axis shows "Intensity
+    (a.u.)" ranging from 0 to approximately 1.45 with dotted grid lines. Four distinct
+    peak groups are visible: a tall CH3 triplet at delta 1.18 (tallest, approximately
+    1.3 intensity, clearly showing 3 sub-peaks), a CH2 quartet at delta 3.69 (approximately
+    0.66 intensity, clearly showing 4 sub-peaks), an OH singlet at delta 2.61 (approximately
+    0.4 intensity), and a TMS reference peak at delta 0.00 (approximately 0.3 intensity).
+    All peaks are annotated with blue labels showing the functional group name, multiplicity,
+    and chemical shift value. The baseline is clean with minimal noise. The x-grid
+    is removed; only subtle dotted y-grid lines are present.'
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 52px, axis titles 36px, tick
+          labels 28px, annotations 30px, tooltip 24px'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: All text fully readable with no collisions between annotations or
+          labels
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Peaks sharp and well-resolved; lineWidth 2 appropriate for 6000-point
+          spectrum
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Single Python Blue series with strong contrast against white background
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good layout with generous spacing; minor excess vertical whitespace
+          above tallest peak
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Chemical Shift (ppm) and Intensity (a.u.) both descriptive with units
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Professional look with custom Python Blue, Segoe UI font, title/subtitle
+          hierarchy; clearly above defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Subtle dotted y-grid, x-grid removed, plotBorderWidth: 0; axis lines
+          remain on both axes'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Annotations with multiplicity labels guide viewer; subtitle provides
+          experimental context; natural visual hierarchy
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct NMR spectrum as line chart with sharp peaks from baseline
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: reversed x-axis, splitting patterns, peak
+          labels, TMS reference, clean baseline'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=chemical shift (ppm), Y=intensity (a.u.) correctly mapped with
+          reversed axis
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct title format; legend appropriately disabled for single series
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Demonstrates singlet, triplet (1:2:1), quartet (1:3:3:1), and TMS
+          reference
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real ethanol 1H NMR with scientifically accurate chemical shifts
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Chemical shifts, coupling constants, and relative intensities match
+          literature values
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean linear flow: imports, data generation, chart config, series,
+          export; no functions or classes'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set for baseline noise
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity; inline Lorentzian formula is clean and readable
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png via Selenium headless Chrome
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good Highcharts API usage; LineSeries imported from wrong submodule
+          (area instead of line)
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses annotations module, custom tooltip, reversed axis, turboThreshold
+          for large datasets
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - annotations
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - grid-styling
