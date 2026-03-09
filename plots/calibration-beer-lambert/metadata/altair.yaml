@@ -1,7 +1,7 @@
 library: altair
 specification_id: calibration-beer-lambert
 created: '2026-03-09T10:49:21Z'
-updated: '2026-03-09T10:53:20Z'
+updated: '2026-03-09T11:00:21Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 22849775894
 issue: 4410
@@ -10,33 +10,38 @@ library_version: 6.0.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/calibration-beer-lambert/altair/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/calibration-beer-lambert/altair/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/calibration-beer-lambert/altair/plot.html
-quality_score: 86
+quality_score: 89
 review:
   strengths:
-  - Perfect spec compliance with all required features (regression equation, R², prediction
-    band, unknown sample with dashed lines)
-  - Excellent data storytelling with red unknown sample creating a clear focal point
-  - Strong visual quality with explicitly set font sizes and no overlap
-  - Realistic analytical chemistry data with appropriate scales
-  - Clean code structure with reproducibility seed
+  - Full spec compliance with all required features (regression equation, R², prediction
+    interval, unknown sample with dashed lines)
+  - 'Excellent use of Altair-specific features: transform_regression, selection_point,
+    interactive zoom/pan'
+  - Strong data storytelling through blue/orange color contrast and diamond shape
+    for the unknown sample
+  - Clean, well-structured code with appropriate complexity
+  - Realistic analytical chemistry context with plausible Beer-Lambert parameters
   weaknesses:
-  - Does not use Altair transform_regression() for idiomatic library usage
-  - 'Color accessibility could improve: red is not the most accessible choice'
-  - Axis ranges extend beyond data creating wasted canvas space
-  - Default Altair axis spines remain without refinement
-  image_description: The plot displays a Beer-Lambert calibration curve. Eight blue
-    filled circle markers represent calibration standards plotted on axes with "Concentration
-    (mg/L)" (x-axis, range -2.0 to 16.0) and "Absorbance" (y-axis, range -0.10 to
-    0.80). A solid blue regression line (#306998) runs through the data with a light
-    blue/gray prediction interval band (95% CI). A red diamond marker (#E74C3C) marks
-    an unknown sample at approximately (8.3, 0.38), with red dashed horizontal and
-    vertical lines extending to both axes. The red text label reads "Unknown (8.3
-    mg/L)". The blue annotation "y = 0.0453x + 0.0024 R² = 0.9993" appears in the
-    lower right. Title reads "calibration-beer-lambert · altair · pyplots.ai" at top.
-    Grid is removed, view borders removed, clean white background.
+  - Minor x-axis tick label crowding at right edge (14.5 and 15.0 too close)
+  - Y-axis domain extends slightly beyond data range, wasting some vertical space
+  - Could push DE-01 higher with more typographic refinement
+  image_description: The plot displays a Beer-Lambert calibration curve plotting Absorbance
+    (y-axis, 0–0.72) versus Concentration in mg/L (x-axis, 0–15). Eight blue circular
+    calibration standard points are plotted from 0 to 14 mg/L, showing a strong linear
+    relationship. A blue regression line (strokeWidth=3) fits through the data, surrounded
+    by a light blue/gray prediction interval band that widens at the extremes. An
+    orange diamond marker represents the unknown sample at approximately 8.3 mg/L
+    with absorbance 0.38. Orange dashed lines extend horizontally from the unknown
+    point to the y-axis and vertically down to the x-axis, demonstrating concentration
+    determination. The label "Unknown (8.3 mg/L)" appears in orange near the unknown
+    point. The regression equation "y = 0.0453x + 0.0024  R² = 0.9993" is displayed
+    in blue in the lower-right area. The title reads "calibration-beer-lambert · altair
+    · pyplots.ai" at the top. Grid is removed, view stroke is removed, axis domains
+    are subtle gray. There is minor tick label crowding at the far right of the x-axis
+    where "14.5" and "15.0" appear very close together.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -45,40 +50,39 @@ review:
         max: 8
         passed: true
         comment: 'All font sizes explicitly set: title 28pt, axis labels 22pt, ticks
-          18pt, annotations 18-20pt'
+          18pt, annotations 20pt and 18pt'
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 4
         max: 6
-        passed: true
-        comment: All text elements clearly separated, no collisions
+        passed: false
+        comment: Minor tick label crowding at far right x-axis where 14.5 and 15.0
+          nearly touch
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Marker size=350 appropriate for 8 data points, regression line well
-          visible
+        comment: Markers well-sized (350-500), unknown diamond distinctive
       - id: VQ-04
         name: Color Accessibility
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Blue/red distinguishable for most colorblind types but red is not
-          ideal
+        comment: Blue and dark orange are colorblind-safe with strong contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
-        passed: true
-        comment: Good proportions but axis ranges extend beyond data creating wasted
-          space
+        passed: false
+        comment: Y-axis extends to 0.72 while max data is ~0.64, some unused space
+          at top
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: X-axis with units, Y-axis dimensionless (appropriate)
+        comment: Concentration (mg/L) with units, Absorbance correctly dimensionless
     design_excellence:
       score: 13
       max: 20
@@ -88,21 +92,21 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Intentional color hierarchy, white stroke on markers, diamond for
-          unknown. Above defaults but not exceptional
+        comment: Thoughtful colors, white strokes on points, subtle prediction band.
+          Above defaults but not publication-level
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Grid removed, view border removed. Axis spines remain default
+        comment: Grid disabled, view stroke removed, subtle gray domain colors
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Red dashed lines on unknown create focal point and demonstrate curve
-          usage
+        comment: Clear visual hierarchy with blue/orange contrast and diamond shape
+          for unknown
     spec_compliance:
       score: 15
       max: 15
@@ -112,25 +116,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: scatter points with linear regression'
+        comment: Correct calibration curve with scatter and regression
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: equation, R², prediction band, unknown sample'
+        comment: 'All features: standards, regression, equation, R², prediction interval,
+          unknown with dashed lines'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=Concentration, Y=Absorbance, all data visible
+        comment: X=concentration, Y=absorbance correctly mapped
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, no legend needed for single-series
+        comment: Title format correct, no legend needed for single series
     data_quality:
       score: 15
       max: 15
@@ -140,20 +145,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows blank, linear range, prediction interval, unknown determination
+        comment: Shows blank, calibration standards, linearity, prediction interval,
+          unknown determination
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: UV-Vis spectrophotometry calibration is a real analytical chemistry
+        comment: UV-Vis spectrophotometry with mg/L concentrations, realistic chemistry
           scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Absorbance 0-0.63 for 0-14 mg/L is realistic
+        comment: 'Realistic Beer-Lambert parameters: ε·l=0.045, R²=0.9993'
     code_quality:
       score: 10
       max: 10
@@ -163,7 +169,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, regression, plot layers, save'
+        comment: Clean imports-data-plot-save flow, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -175,35 +181,36 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: altair, numpy, pandas all used
+        comment: 'All imports used: altair, numpy, pandas'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriate complexity
+        comment: Appropriate complexity, manual regression serves prediction interval
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
+        comment: Saves plot.png and plot.html, current API
     library_mastery:
-      score: 5
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 5
         max: 5
-        passed: false
-        comment: Manual regression instead of transform_regression()
+        passed: true
+        comment: transform_regression, layered composition, selection_point, alt.Scale,
+          alt.Tooltip
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 4
         max: 5
-        passed: false
-        comment: Basic interactive() and tooltips only, missing transform_regression()
+        passed: true
+        comment: transform_regression, selection_point, .interactive(), HTML export
   verdict: REJECTED
 impl_tags:
   dependencies: []
