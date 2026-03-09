@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 calibration-beer-lambert: Beer-Lambert Calibration Curve
 Library: highcharts unknown | Python 3.14.3
 Quality: 80/100 | Created: 2026-03-09
@@ -56,10 +56,10 @@ chart.options.chart = {
     "width": 4800,
     "height": 2700,
     "backgroundColor": "#ffffff",
-    "spacingTop": 80,
-    "spacingBottom": 180,
-    "spacingLeft": 100,
-    "spacingRight": 100,
+    "spacingTop": 60,
+    "spacingBottom": 80,
+    "spacingLeft": 60,
+    "spacingRight": 60,
     "style": {"fontFamily": "Arial, Helvetica, sans-serif"},
 }
 
@@ -99,7 +99,22 @@ chart.options.y_axis = {
     ],
 }
 
-chart.options.legend = {"enabled": False}
+chart.options.legend = {
+    "enabled": True,
+    "align": "right",
+    "verticalAlign": "top",
+    "layout": "vertical",
+    "x": -40,
+    "y": 80,
+    "floating": True,
+    "backgroundColor": "rgba(255,255,255,0.85)",
+    "borderColor": "#cccccc",
+    "borderWidth": 1,
+    "borderRadius": 6,
+    "itemStyle": {"fontSize": "28px", "fontWeight": "normal", "color": "#444444"},
+    "symbolRadius": 6,
+    "itemMarginBottom": 8,
+}
 
 chart.options.credits = {"enabled": False}
 
@@ -115,6 +130,7 @@ band_series.line_width = 0
 band_series.marker = {"enabled": False}
 band_series.enable_mouse_tracking = False
 band_series.z_index = 0
+band_series.show_in_legend = True
 chart.add_series(band_series)
 
 # Regression line
@@ -127,6 +143,7 @@ fit_series.line_width = 5
 fit_series.marker = {"enabled": False}
 fit_series.enable_mouse_tracking = False
 fit_series.z_index = 1
+fit_series.show_in_legend = True
 chart.add_series(fit_series)
 
 # Calibration standards
@@ -142,7 +159,9 @@ standards_series.marker = {
     "lineWidth": 4,
     "fillColor": "#306998",
 }
+standards_series.data_labels = {"enabled": False}
 standards_series.z_index = 3
+standards_series.show_in_legend = True
 chart.add_series(standards_series)
 
 # Unknown sample point
@@ -157,7 +176,9 @@ unknown_series.marker = {
     "lineWidth": 4,
     "fillColor": "#c0392b",
 }
+unknown_series.data_labels = {"enabled": False}
 unknown_series.z_index = 4
+unknown_series.show_in_legend = True
 chart.add_series(unknown_series)
 
 # Annotations - equation text and unknown label
@@ -244,7 +265,7 @@ chrome_options.add_argument("--headless")
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
 chrome_options.add_argument("--disable-gpu")
-chrome_options.add_argument("--window-size=4800,2700")
+chrome_options.add_argument("--window-size=4800,2800")
 
 driver = webdriver.Chrome(options=chrome_options)
 driver.get(f"file://{temp_path}")
