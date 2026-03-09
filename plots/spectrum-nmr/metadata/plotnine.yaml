@@ -1,7 +1,7 @@
 library: plotnine
 specification_id: spectrum-nmr
 created: '2026-03-09T12:51:17Z'
-updated: '2026-03-09T12:55:39Z'
+updated: '2026-03-09T13:03:07Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 22854183385
 issue: 4676
@@ -10,33 +10,33 @@ library_version: 0.15.3
 preview_url: https://storage.googleapis.com/pyplots-images/plots/spectrum-nmr/plotnine/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/spectrum-nmr/plotnine/plot_thumb.png
 preview_html: null
-quality_score: 88
+quality_score: 87
 review:
   strengths:
-  - Excellent spec compliance with all NMR requirements met including reversed axis,
-    splitting patterns, TMS reference, and peak labels
-  - Strong data storytelling with labeled peaks showing chemical group, splitting
-    type, and ppm values
-  - Professional color hierarchy with intentional text weight/color differentiation
-  - Realistic ethanol NMR data with correct Lorentzian peak shapes and proper splitting
-    ratios
+  - 'Excellent spec compliance: all required NMR features present (reversed axis,
+    splitting patterns, TMS reference, peak labels)'
+  - 'Physically accurate data: Lorentzian peak shapes, realistic chemical shifts,
+    correct splitting ratios (1:2:1 triplet, 1:3:3:1 quartet)'
+  - Thoughtful monochromatic color hierarchy distinguishing main peaks from TMS reference
+  - Clean code structure with elegant peak generation using vectorized numpy operations
   weaknesses:
-  - Generic library usage — does not leverage plotnine-distinctive features like stat
-    layers or geom_segment
-  - Line weight (size=0.6) slightly thin for 4800x2700 output resolution
-  - Helper function _peak() deviates from flat KISS structure
-  image_description: 'The plot displays a 1H NMR spectrum of ethanol on a white canvas
-    with a light gray (#fafafa) panel background. A dark blue (#306998) line traces
-    the spectrum from 12 ppm (left) to beyond 0 ppm (right), following standard NMR
-    convention with the reversed x-axis. Four distinct peak groups are visible: a
-    tall triplet (three peaks in 1:2:1 ratio) at 1.18 ppm labeled "CH3 (triplet) 1.18
-    ppm" in bold dark blue, a quartet (four peaks in 1:3:3:1 ratio) at 3.69 ppm labeled
-    "CH2 (quartet) 3.69 ppm", a singlet at 2.61 ppm labeled "OH (singlet) 2.61 ppm",
-    and a small reference peak at 0.00 ppm labeled "TMS 0.00" in lighter gray text.
-    The baseline is clean with minimal noise. The x-axis reads "Chemical Shift (ppm)"
-    and the y-axis reads "Intensity" (with no tick marks, appropriate for NMR). The
-    title is "1H NMR of Ethanol · spectrum-nmr · plotnine · pyplots.ai" in bold. Subtle
-    vertical grid lines mark each integer ppm value.'
+  - Annotation text could be slightly larger for better legibility at full resolution
+  - X-axis range 0-12 ppm leaves the left half as empty baseline — narrowing would
+    better utilize canvas space
+  - Library mastery could be improved by leveraging more distinctive plotnine features
+  image_description: 'The plot displays a ¹H NMR spectrum of ethanol on a white background
+    with a light gray (#fafafa) panel. The x-axis labeled "Chemical Shift (ppm)" runs
+    reversed from 12 on the left to 0 on the right (correct NMR convention), with
+    tick marks at each integer. The y-axis labeled "Intensity" in gray has no tick
+    marks (appropriate for arbitrary NMR units). A blue (#306998) line trace shows
+    the spectrum baseline near zero with four distinct peak groups: a tall triplet
+    at 1.18 ppm labeled "CH₃ (triplet) 1.18 ppm", a quartet at 3.69 ppm labeled "CH₂
+    (quartet) 3.69 ppm", a singlet at 2.61 ppm labeled "OH (singlet) 2.61 ppm", and
+    a small TMS reference peak at 0.00 ppm labeled "TMS 0.00" in lighter gray. Each
+    label is connected to its peak via a dotted gray connector line with a blue dot
+    at the peak top. The title reads "¹H NMR of Ethanol · spectrum-nmr · plotnine
+    · pyplots.ai" in bold black at the top. The overall design uses a monochromatic
+    blue palette with intentional typographic hierarchy.'
   criteria_checklist:
     visual_quality:
       score: 28
@@ -44,67 +44,66 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title=24pt, axis titles=20pt, tick
-          labels=16pt, annotations=10-11pt'
+        comment: All font sizes explicitly set (title 24pt, axes 20pt, ticks 16pt).
+          Annotation text at size=11 readable but slightly small.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text; peak labels well-spaced above peaks
+        comment: No overlapping elements; labels well-positioned with connector lines
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Peaks sharp and well-resolved; line size=0.6 slightly thin for canvas
-          size
+        comment: Line weight appropriate for spectrum, peaks sharp and clearly visible
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Single-series blue with excellent contrast, colorblind-safe
+        comment: Single blue color, no accessibility issues
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good 16:9 layout but left half (4-12 ppm) is mostly empty
+        comment: Good 16:9 layout but left half (12-5 ppm) is mostly empty baseline
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Chemical Shift (ppm) with units, Intensity is standard for NMR
+        comment: Chemical Shift (ppm) with units, Intensity appropriate for NMR
     design_excellence:
-      score: 15
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Thoughtful color hierarchy with custom text colors and backgrounds,
-          clearly above defaults
+        comment: Thoughtful monochromatic blue palette with intentional typographic
+          hierarchy. Above defaults but not publication-flagship.
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: theme_minimal, y-axis removed, subtle x-grid, no y-grid, clean professional
-          look
+        comment: Y-axis ticks removed, subtle x-grid only, clean panel background.
+          Good refinement.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Peak labels with chemical group and splitting type create visual
-          hierarchy
+        comment: 'Visual hierarchy guides viewer: peak heights, TMS de-emphasized,
+          main peaks labeled with functional groups.'
     spec_compliance:
       score: 15
       max: 15
@@ -114,26 +113,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct NMR spectrum as line plot with sharp peaks
+        comment: Correct NMR spectrum with line trace and reversed x-axis
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec requirements met: reversed axis, splitting patterns, TMS,
-          labels, clean baseline'
+        comment: 'All required features present: reversed axis, splitting patterns,
+          labels, TMS, clean baseline'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=chemical shift, Y=intensity, correct mapping
+        comment: Chemical shift on x-axis, intensity on y-axis, all data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title contains spec-id, library, pyplots.ai in correct format
+        comment: Title format correct, no legend needed for single-series
     data_quality:
       score: 15
       max: 15
@@ -143,54 +142,56 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows singlet, triplet, quartet, TMS reference with correct splitting
-          ratios
+        comment: Shows singlet, triplet, quartet, and TMS reference - all major NMR
+          splitting patterns
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Ethanol NMR is a classic neutral scientific example
+        comment: Ethanol 1H NMR is a classic chemistry example, neutral scientific
+          context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Realistic chemical shifts and J-coupling values for ethanol
+        comment: Chemical shifts realistic for ethanol, Lorentzian peak shapes and
+          J-coupling values physically accurate
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Mostly linear but includes _peak() helper function
+        comment: Clean imports-data-labels-plot-save structure, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set before noise generation
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used, no unused imports
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized, appropriate complexity
+        comment: Elegant Lorentzian peak generation, clean grammar-of-graphics layering
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300, current API
+        comment: Saves as plot.png, current plotnine API
     library_mastery:
       score: 6
       max: 10
@@ -200,19 +201,21 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good grammar of graphics composition with ggplot + aes + geom_line
-          + scale_x_reverse
+        comment: Good grammar-of-graphics approach with layered geoms, proper use
+          of inherit_aes=False, separate DataFrames for annotation groups
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Basic features only; no truly distinctive plotnine capabilities leveraged
+        comment: Uses scale_x_reverse and layer composition but no truly distinctive
+          features unique to plotnine
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
+  - layer-composition
   patterns:
   - data-generation
   dataprep: []
