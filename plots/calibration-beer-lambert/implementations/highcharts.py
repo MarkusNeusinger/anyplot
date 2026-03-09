@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 calibration-beer-lambert: Beer-Lambert Calibration Curve
 Library: highcharts unknown | Python 3.14.3
-Quality: 80/100 | Created: 2026-03-09
+Quality: 89/100 | Created: 2026-03-09
 """
 
 import tempfile

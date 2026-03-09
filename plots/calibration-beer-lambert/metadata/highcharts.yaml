@@ -1,7 +1,7 @@
 library: highcharts
 specification_id: calibration-beer-lambert
 created: '2026-03-09T10:54:22Z'
-updated: '2026-03-09T11:14:01Z'
+updated: '2026-03-09T11:22:47Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 22849775869
 issue: 4410
@@ -10,79 +10,81 @@ library_version: unknown
 preview_url: https://storage.googleapis.com/pyplots-images/plots/calibration-beer-lambert/highcharts/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/calibration-beer-lambert/highcharts/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/calibration-beer-lambert/highcharts/plot.html
-quality_score: 80
+quality_score: 89
 review:
   strengths:
-  - 'All spec requirements implemented: calibration standards, regression line, prediction
-    interval, unknown sample with dashed lines'
-  - Good data storytelling with the unknown sample determination clearly visualized
-  - Custom annotation boxes with colored borders and appropriate styling
-  - Realistic UV-Vis spectrophotometry data with proper Beer-Lambert relationship
-  - Clean, linear code structure with reproducible seed
+  - Perfect spec compliance — all required features implemented correctly (equation,
+    R², prediction interval, unknown sample with dashed lines)
+  - Excellent data quality with realistic analytical chemistry context and appropriate
+    values
+  - Strong visual quality with explicitly set font sizes and clean layout
+  - Good data storytelling — the dashed projection lines from the unknown sample clearly
+    demonstrate the calibration workflow
+  - Clean, well-structured code with proper reproducibility
   weaknesses:
-  - Default Highcharts data labels display unformatted full-precision floating-point
-    values on each scatter point, creating major visual clutter
-  - 'Excessive canvas spacing (spacingBottom: 180, spacingLeft/Right: 100) wastes
-    space'
-  - Legend disabled entirely rather than showing a compact legend for standards vs
-    unknown
-  image_description: 'The plot displays a Beer-Lambert calibration curve on a white
-    background. Eight blue circular markers (with white edge highlighting) represent
-    calibration standards plotted along a blue linear regression line. A light blue
-    shaded prediction interval band surrounds the regression line. The title reads
-    "calibration-beer-lambert · highcharts · pyplots.ai" with a subtitle "UV-Vis Spectrophotometric
-    Analysis." The x-axis is labeled "Concentration (mg/L)" (0–15) and the y-axis
-    "Absorbance" (−0.1 to 0.7). A blue-bordered annotation box displays "y = 0.0452x
-    + 0.0028" and "R² = 0.99933." A red diamond marker indicates the unknown sample
-    at approximately (8.3, 0.38), with red dashed horizontal and vertical lines extending
-    to both axes. A red-bordered label reads "Unknown: 8.3 mg/L." Default Highcharts
-    data labels appear next to each scatter point showing full-precision floating-point
-    y-values (e.g., "0.0889138055061852"), creating significant visual clutter.'
+  - Canvas utilization could be tighter — y-axis range extends well beyond the data
+    range (0.8 vs data max ~0.55)
+  - Design excellence, while good, could be elevated further with more refined typography
+    or subtle background treatment
+  - Library mastery could be improved by leveraging more advanced Highcharts features
+  image_description: 'The plot displays a Beer-Lambert calibration curve on a clean
+    white background. Eight blue (#306998) circular scatter points represent calibration
+    standards at concentrations 0, 2, 4, 6, 8, 10, 12, and 14 mg/L, with absorbance
+    values following a strong linear trend from ~0.005 to ~0.55. A solid blue linear
+    regression line runs through the data, surrounded by a light blue 95% prediction
+    interval band that widens at the extremes. A red (#c0392b) diamond marker identifies
+    the unknown sample at approximately 8.3 mg/L and 0.38 absorbance. Red dashed horizontal
+    and vertical lines extend from this point to both axes, illustrating concentration
+    determination. An annotation box in the upper-left displays "y = 0.0452x + 0.0028"
+    and "R² = 0.99933" in blue text with a blue border. A second red-bordered annotation
+    labels the unknown as "Unknown: 8.3 mg/L". The legend in the top-right corner
+    lists all four series: 95% Prediction Interval, Linear Fit, Standards, and Unknown
+    Sample. Title reads "calibration-beer-lambert · highcharts · pyplots.ai". X-axis:
+    "Concentration (mg/L)", Y-axis: "Absorbance".'
   criteria_checklist:
     visual_quality:
-      score: 24
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All main text sizes explicitly set (title 52px, axes 36px, ticks
-          28px, annotations 36px/30px). Minor deduction for default scatter data labels.
+        comment: 'All font sizes explicitly set: title 52px, axis titles 36px, tick
+          labels 28px, legend 28px, annotations 36px/30px'
       - id: VQ-02
         name: No Overlap
-        score: 3
+        score: 6
         max: 6
-        passed: false
-        comment: Default Highcharts data labels show full-precision floating-point
-          values next to each point, creating visual noise and some overlap.
+        passed: true
+        comment: No overlapping text elements anywhere
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Markers well-sized (radius 16/18), line width 5, prediction band
-          visible.
+        comment: Markers radius 16-18 with white borders, line width 5, well-adapted
+          to 8 data points
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Blue and red distinction is colorblind-safe.
+        comment: Blue vs red is colorblind-safe with good contrast
       - id: VQ-05
         name: Layout & Canvas
-        score: 2
+        score: 3
         max: 4
-        passed: false
-        comment: Excessive spacingBottom (180px) and spacingLeft/Right (100px) waste
-          canvas space.
+        passed: true
+        comment: Good utilization (~60%) but y-axis extends to 0.8 with data maxing
+          at ~0.55
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Concentration (mg/L) with units, Absorbance is correct.
+        comment: Concentration (mg/L) with units, Absorbance as specified
     design_excellence:
       score: 13
       max: 20
@@ -92,24 +94,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom colors, styled annotation boxes, white marker edges. Above
-          defaults but data labels undermine polish.
+        comment: Cohesive color scheme with Python Blue and red accent, styled annotation
+          boxes, above default but not publication-level
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: X-axis grid removed, y-axis grid subtle, axis lines styled. Good
-          refinement.
+        comment: Subtle y-axis grid, x-axis grid removed, clean axis lines, generous
+          whitespace
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Clear calibration narrative with dashed lines demonstrating concentration
-          determination.
+        comment: Dashed projection lines from unknown sample clearly demonstrate calibration
+          workflow, red vs blue hierarchy
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -117,53 +119,52 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: scatter + linear regression + prediction interval band.'
+        comment: 'Correct: scatter plot with linear regression'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: standards, regression, equation/R², prediction
-          interval, unknown sample with dashed lines.'
+        comment: 'All features present: standards, regression, equation, R², prediction
+          interval, unknown with dashed lines'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=concentration, Y=absorbance, axes show full data range.
+        comment: X=concentration, Y=absorbance, correct mapping
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Title format correct. Legend disabled — acceptable but a compact
-          legend would improve clarity.
+        passed: true
+        comment: Title format correct, legend labels descriptive and accurate
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows blank + 7 standards, regression, prediction interval, and unknown
-          determination.
+        comment: Shows blank, 7 standards, linearity, scatter, unknown determination
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: UV-Vis spectrophotometry is a real, neutral analytical chemistry
-          application.
+        comment: UV-Vis spectrophotometry calibration - real analytical chemistry
+          scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Realistic absorbance and concentration values for UV-Vis measurements.
+        comment: Realistic concentrations 0-14 mg/L, absorbance within linear range,
+          R²≈0.999
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -171,49 +172,50 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, regression, chart, export.'
+        comment: Clean linear structure with no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic data.
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Missing explicit dataLabels disabled on scatter series, causing raw
-          float values to display.
+        passed: true
+        comment: Appropriate complexity, correct prediction interval math, no fake
+          UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png via Selenium screenshot.
+        comment: Saves as plot.png via Selenium screenshot
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Correct usage of Chart, HighchartsOptions, series types, plotLines,
-          annotations.
+        comment: Good use of typed series classes, HighchartsOptions, annotations
+          API, add_series pattern
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses plotLines, annotations API, AreaRangeSeries for prediction band.
+        comment: Uses plotLines for dashed references, annotations API, AreaRangeSeries,
+          zIndex layering
   verdict: REJECTED
 impl_tags:
   dependencies:
