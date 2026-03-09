@@ -1,0 +1,217 @@
+library: plotly
+specification_id: spectrum-nmr
+created: '2026-03-09T12:51:38Z'
+updated: '2026-03-09T13:03:39Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22854183200
+issue: 4676
+python_version: 3.14.3
+library_version: 6.6.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/spectrum-nmr/plotly/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/spectrum-nmr/plotly/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/spectrum-nmr/plotly/plot.html
+quality_score: 93
+review:
+  strengths:
+  - Excellent scientific accuracy with correct splitting patterns and realistic chemical
+    shift values for ethanol
+  - Cohesive color-coded design system linking annotations, arrows, and region shadings
+  - Clean visual refinement with subtle grid, minor ticks, and polished typography
+  - Good use of Plotly-specific features (hover templates, spike lines, HTML export)
+  - Perfect spec compliance with all required NMR features present
+  weaknesses:
+  - DE-01 could reach 7-8 with more distinctive design elements (e.g., integration
+    curves, more refined color palette)
+  - LM-01 could improve by using Plotly Express or more advanced graph object patterns
+  image_description: 'The plot displays an ethanol 1H NMR spectrum with the x-axis
+    reversed (5.0 to -0.5 ppm, high ppm on the left per NMR convention). The y-axis
+    shows intensity in arbitrary units ranging from 0 to approximately 1.25. Four
+    distinct peak groups are visible: a CH2 quartet near 3.69 ppm with four sharp
+    peaks, an OH singlet near 2.61 ppm, a CH3 triplet near 1.18 ppm (the tallest peaks
+    in a three-peak pattern), and a TMS reference peak at 0.00 ppm. Each peak group
+    has a subtle color-coded rectangular shading (orange for CH2, purple/lavender
+    for OH, blue for CH3, green for TMS) and matching color-coded annotation boxes
+    with arrows pointing to the peak tops. The spectrum line is dark blue (#306998)
+    with a very light fill to zero. The background is white with subtle dotted y-axis
+    grid lines. The title reads "Ethanol 1H NMR · spectrum-nmr · plotly · pyplots.ai"
+    in bold sans-serif font. Minor tick marks are visible on the x-axis at 0.1 ppm
+    intervals.'
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 28pt, labels 22pt, ticks 18pt,
+          annotations 16pt'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text, annotations well-positioned
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Sharp peaks clearly visible with 2.5px line width and fill-to-zero
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Four distinct colorblind-safe colors (blue, green, purple, orange)
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good canvas utilization with balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive labels with units: Chemical Shift δ (ppm) and Intensity
+          (a.u.)'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Strong design with coordinated color system, custom typography hierarchy
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle dotted grid, clean axes, minor ticks, polished whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Color-coded peak groups with splitting pattern labels guide the viewer
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct NMR spectrum line plot
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features: reversed x-axis, splitting patterns, peak labels,
+          TMS reference, clean baseline'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=chemical shift, Y=intensity, correct range
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title includes spec-id · library · pyplots.ai format
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows singlet, triplet, quartet, and TMS reference with correct ratios
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Ethanol is the classic NMR teaching example
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Accurate chemical shifts and realistic peak ratios
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean linear flow with no functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only numpy and plotly.graph_objects, both used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, data-driven annotation styling
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with correct dimensions
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of go.Scatter, shapes, annotations, hover templates
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Hover templates, spike lines, unified hover, HTML export
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - grid-styling
+  - alpha-blending
