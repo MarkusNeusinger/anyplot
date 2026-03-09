@@ -1,0 +1,228 @@
+library: seaborn
+specification_id: calibration-beer-lambert
+created: '2026-03-09T10:49:10Z'
+updated: '2026-03-09T11:00:51Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22849775845
+issue: 4410
+python_version: 3.14.3
+library_version: 0.13.2
+preview_url: https://storage.googleapis.com/pyplots-images/plots/calibration-beer-lambert/seaborn/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/calibration-beer-lambert/seaborn/plot_thumb.png
+preview_html: null
+quality_score: 90
+review:
+  strengths:
+  - Excellent use of sns.regplot combining scatter, regression, and CI in one call
+  - 'Strong data storytelling: unknown sample with projection lines creates a clear
+    focal point demonstrating practical calibration use'
+  - Perfect spec compliance with all required features (equation, R², prediction interval,
+    unknown sample)
+  - Realistic analytical chemistry data with appropriate Beer-Lambert values
+  - Clean, well-refined visual design with custom palette, despined axes, and subtle
+    grid
+  weaknesses:
+  - Prediction interval band could be slightly more visible (alpha=0.08 is very faint)
+  - Visual refinement could be pushed further (e.g., more refined tick styling)
+  image_description: 'The plot displays a Beer-Lambert calibration curve with "Concentration
+    (mg/L)" on the x-axis (0-16) and "Absorbance" on the y-axis (0-0.7). Eight blue
+    circular markers represent calibration standards at 0, 2, 4, 6, 8, 10, 12, and
+    14 mg/L, with white edge highlights. A blue linear regression line runs through
+    the points, accompanied by a narrow 95% confidence interval band (from sns.regplot)
+    and a wider, very subtle 95% prediction interval band in light gray. A white-bordered
+    text box in the upper left displays the equation "y = 0.0454x + 0.0016" and "R²
+    = 0.9994". An orange diamond marker at ~8.3 mg/L absorbance 0.38 represents the
+    unknown sample, with dashed orange lines projecting to both axes. An annotation
+    arrow labels it "Unknown: 8.3 mg/L". The legend in the lower right lists three
+    items: 95% Prediction Interval, Linear Fit (95% CI), and Unknown Sample. Top and
+    right spines are removed, and a subtle y-axis grid is visible. The title reads
+    "calibration-beer-lambert · seaborn · pyplots.ai".'
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt,
+          annotation 16pt, equation 18pt'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping elements; equation box, legend, and annotation well-separated
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Markers well-sized (s=280) for 8 points; prediction interval band
+          very faint (alpha=0.08)
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue and orange palette is colorblind-safe with strong contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 16:9 figure with ~60% canvas utilization and balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Concentration (mg/L) with units, Absorbance (dimensionless per spec)
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom palette, white marker edges, styled equation box, seaborn
+          ticks style with talk context
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines removed, subtle y-axis grid (alpha=0.2), generous whitespace,
+          refined marker edges
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Unknown sample with projection lines creates focal point; orange
+          vs blue color contrast guides viewer
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct: scatter plot with linear regression fit for calibration
+          curve'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features: regression equation, R², prediction interval, unknown
+          sample with dashed lines'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Concentration on x-axis, absorbance on y-axis, correct Beer-Lambert
+          relationship
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct, legend labels descriptive and match data
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows blank, calibration standards, linear fit, prediction interval,
+          and unknown interpolation
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: UV-Vis spectrophotometry calibration with realistic mg/L concentrations
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Realistic Beer-Lambert values: epsilon*l ~0.045, absorbance 0-0.63'
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports, data, regression, plot, save. No functions/classes'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: matplotlib, numpy, pandas, seaborn, scipy'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, appropriate complexity for calibration curve with prediction
+          interval
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png, dpi=300, current API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: sns.regplot for scatter+regression+CI, DataFrame API, sns.set_theme
+          and sns.despine
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: sns.regplot with CI band and sns.set_theme with context are seaborn-distinctive
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - scipy
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  - explicit-figure
+  dataprep:
+  - regression
+  styling:
+  - edge-highlighting
+  - grid-styling
+  - alpha-blending
