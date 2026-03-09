@@ -1,7 +1,7 @@
 library: pygal
 specification_id: calibration-beer-lambert
 created: '2026-03-09T10:48:59Z'
-updated: '2026-03-09T10:53:33Z'
+updated: '2026-03-09T11:03:12Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 22849775852
 issue: 4410
@@ -10,43 +10,38 @@ library_version: 3.1.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/calibration-beer-lambert/pygal/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/calibration-beer-lambert/pygal/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/calibration-beer-lambert/pygal/plot.html
-quality_score: 76
+quality_score: 82
 review:
   strengths:
-  - Realistic analytical chemistry context (copper sulfate at 810 nm) with scientifically
-    accurate data
-  - Unknown sample determination clearly visualized with red dashed crosshairs creating
-    a strong focal point
-  - Regression equation and R² value (0.9998) included demonstrating proper calibration
-  - Clean reproducible code with proper seed and linear structure
+  - Excellent data quality with realistic copper sulfate UV-Vis calibration scenario
+    (R²=0.9979)
+  - All specification features present including prediction interval and unknown sample
+    crosshair
+  - Clean well-structured code with proper seed and linear flow
+  - Good color hierarchy with blue for data/fit and red for unknown creating clear
+    visual separation
+  - Red crosshair lines create effective focal point for data storytelling
   weaknesses:
-  - Empty legend entries (two colored squares with no text) from series with empty-string
-    labels
-  - 'Prediction interval barely visible: light blue dashed lines on white background
-    are too faint'
-  - Regression equation and R² placed in legend label rather than as text annotation
-    on the plot area
-  - Prediction interval shown as two separate dashed lines rather than a filled band
+  - Empty legend entries for lower prediction interval and vertical unknown line create
+    visual gaps
+  - Prediction interval lines are thin and could use more visual weight
+  - Left axis frame/spine still visible reducing visual refinement
+  - Extended x-range beyond data wastes some canvas space
   image_description: 'The plot displays a Beer-Lambert calibration curve on a white
-    background at 4800x2700 px. The title reads "Beer-Lambert Calibration · calibration-beer-lambert
-    · pygal · pyplots.ai" in a monospace font at the top. The x-axis is labeled "Concentration
-    (mg/L)" (0.0-14.0) and the y-axis "Absorbance" (roughly -0.02 to 0.61). Seven
-    dark blue circular markers represent calibration standards at concentrations 0,
-    2, 4, 6, 8, 10, and 12 mg/L, following a clear linear trend. A solid blue regression
-    line extends across the full x-range. Two very faint light-blue dashed lines represent
-    the upper and lower bounds of a 95% prediction interval, but they are barely distinguishable
-    from the background. A red horizontal dashed line at absorbance approximately
-    0.350 extends from the y-axis to the intersection with the regression line at
-    approximately 7.66 mg/L, where a red vertical dashed line drops to the x-axis,
-    illustrating the unknown sample determination. The legend at the bottom shows:
-    "Calibration Standards", "Fit: A = 0.0453·C + 0.0028 (R² = 0.9998)", "95% Prediction
-    Interval", and "Unknown → 7.66 mg/L". Two additional empty legend entries (small
-    colored squares with no text) appear due to the lower prediction interval line
-    and vertical unknown line having empty-string labels. Subtle horizontal grid lines
-    are present on a white plot background.'
+    background. Seven dark blue circular markers represent calibration standards at
+    concentrations 0, 2, 4, 6, 8, 10, and 12 mg/L, showing a clear linear relationship
+    between concentration and absorbance (range ~0.002 to ~0.56). A solid blue regression
+    line passes through the data. Two light blue dashed lines show the 95% prediction
+    interval flanking the regression line. Red dashed crosshair lines mark an unknown
+    sample: a horizontal line from the y-axis at A=0.350 extends to the intersection
+    point, and a vertical line drops from that intersection to the x-axis at ~7.56
+    mg/L. The title reads "calibration-beer-lambert · pygal · pyplots.ai". X-axis
+    is labeled "Concentration (mg/L)" and y-axis "Absorbance". A bottom legend shows
+    four labeled entries: Calibration Standards, Fit equation with R²=0.9979, 95%
+    Prediction Interval, and Unknown → 7.56 mg/L.'
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 26
       max: 30
       items:
       - id: VQ-01
@@ -55,67 +50,65 @@ review:
         max: 8
         passed: true
         comment: Font sizes explicitly set (title=72, label=48, major_label=42, legend=42).
-          All readable but pygal monospace rendering slightly less polished.
+          All text readable. Legend text slightly small relative to chart area.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or elements anywhere.
+        comment: No text overlap anywhere. Legend entries well-spaced.
       - id: VQ-03
         name: Element Visibility
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Calibration markers and regression line visible. Prediction interval
-          dashed lines extremely faint (light blue on white, width=2).
+        comment: Calibration dots well-sized. Prediction interval dashed lines somewhat
+          thin.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Blue and red color scheme is colorblind-safe with good contrast.
+        comment: Blue/red palette is colorblind-safe. Light blue prediction interval
+          lines slightly low-contrast.
       - id: VQ-05
         name: Layout & Canvas
-        score: 2
+        score: 3
         max: 4
         passed: true
-        comment: Reasonable canvas utilization but bottom area has wasted space with
-          empty legend entries.
+        comment: Good layout with bottom legend. Some wasted space from extended x-range.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Concentration (mg/L) with units, Absorbance (dimensionless as spec
-          requires).
+        comment: X-axis with units, Y-axis correctly dimensionless.
     design_excellence:
-      score: 11
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: true
-        comment: Custom Style with white background, intentional blue/red scheme.
-          Clean but looks like well-configured default.
+        comment: Custom palette with intentional color hierarchy. Above defaults but
+          not publication-level.
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Horizontal-only grid, subtle foreground colors. Some refinement but
-          pygal default chrome remains.
+        comment: Y-guides only, subtle grid color. Axis frame still visible.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Unknown sample with red dashed lines creates clear visual narrative
-          and focal point. Color contrast guides viewer.
+        comment: Red crosshair creates clear focal point. Color contrast guides viewer
+          to unknown determination.
     spec_compliance:
-      score: 12
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -123,27 +116,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: XY scatter with linear regression fit line.'
+        comment: Correct XY scatter with regression line.
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: Regression equation in legend rather than text annotation. Prediction
-          interval as dashed lines not filled band. Unknown dashed lines work.
+        passed: true
+        comment: 'All features present: standards, regression, equation/R², prediction
+          interval, unknown crosshair.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=concentration, Y=absorbance correctly mapped.
+        comment: X=concentration, Y=absorbance. Full data range shown.
       - id: SC-04
         name: Title & Legend
-        score: 1
+        score: 2
         max: 3
-        passed: false
-        comment: Title format acceptable. Legend has two empty entries (colored squares
-          with no text) from empty-string labels.
+        passed: true
+        comment: Title format correct. Empty legend entries for lower band and vertical
+          unknown line.
     data_quality:
       score: 14
       max: 15
@@ -153,22 +146,23 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: 7 calibration standards across full range, clear linear relationship,
-          unknown sample determination.
+        comment: 7 standards including blank, regression, prediction interval, unknown
+          determination.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Copper sulfate at 810 nm - authentic analytical chemistry scenario.
+        comment: Copper sulfate at 810 nm is a real analytical chemistry scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Concentrations 0-12 mg/L, absorbance 0-0.55 realistic for UV-Vis.
+        comment: Realistic absorbance values, sensible concentrations, typical R²
+          for well-prepared calibration.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -176,13 +170,13 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, regression, chart, series, save.'
+        comment: 'Linear flow: imports, data, regression, chart, save.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42) ensures reproducible noise.
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -191,10 +185,10 @@ review:
         comment: 'All imports used: numpy, pygal, Style, scipy.stats.'
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: Generally clean but empty-string series labels create legend artifacts.
+        comment: Clean, well-structured with list comprehensions.
       - id: CQ-05
         name: Output & API
         score: 1
@@ -202,23 +196,23 @@ review:
         passed: true
         comment: Saves as plot.png via render_to_png.
     library_mastery:
-      score: 5
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Uses pygal.XY correctly with custom Style, add() for series, stroke_dasharray
-          for dashed lines.
+        comment: Good use of pygal.XY with value dicts, stroke_dasharray, legend_at_bottom,
+          custom formatters.
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Uses tooltip labels and HTML export. Generic usage overall, could
-          be replicated in any library.
+        comment: Uses value dicts and dual render but overall approach easily replicated
+          in any library.
   verdict: REJECTED
 impl_tags:
   dependencies:
