@@ -1,0 +1,233 @@
+library: highcharts
+specification_id: calibration-beer-lambert
+created: '2026-03-09T10:54:22Z'
+updated: '2026-03-09T11:34:23Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22849775869
+issue: 4410
+python_version: 3.14.3
+library_version: unknown
+preview_url: https://storage.googleapis.com/pyplots-images/plots/calibration-beer-lambert/highcharts/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/calibration-beer-lambert/highcharts/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/calibration-beer-lambert/highcharts/plot.html
+quality_score: 91
+review:
+  strengths:
+  - Excellent spec compliance with all required features implemented (equation, R²,
+    prediction interval, unknown sample with dashed lines)
+  - Strong visual storytelling through the red/blue color contrast highlighting the
+    unknown sample determination
+  - Professional design with gradient background, custom legend styling, and well-positioned
+    annotations
+  - Realistic, scientifically accurate data with appropriate noise and scale
+  - Clean, well-structured code
+  weaknesses:
+  - 'Minor: right side of canvas has some unused space beyond the data range'
+  - Legend position in upper right could potentially overlap with high data values
+    in some scenarios
+  image_description: 'The plot displays a Beer-Lambert calibration curve on a clean
+    white-to-light-grey gradient background. Eight blue circular markers (Standards)
+    are plotted showing absorbance vs. concentration from 0 to 14 mg/L, following
+    a clear linear trend from ~0.005 to ~0.62 absorbance. A solid blue regression
+    line (Linear Fit) passes through the data points, surrounded by a light blue/grey
+    95% Prediction Interval band that widens appropriately away from the mean. A red
+    diamond marker (Unknown Sample) sits at the intersection of two red dashed lines
+    — a horizontal dashed line at absorbance ~0.38 and a vertical dashed line at concentration
+    ~8.3 mg/L — demonstrating how to read an unknown concentration from the calibration
+    curve. A blue-bordered annotation box in the upper left displays "y = 0.0452x
+    + 0.0028" and "R² = 0.99933". A red-bordered label near the unknown point reads
+    "Unknown: 8.3 mg/L". The title reads "calibration-beer-lambert · highcharts ·
+    pyplots.ai" with subtitle "UV-Vis Spectrophotometric Calibration Standards". X-axis:
+    "Concentration (mg/L)", Y-axis: "Absorbance". A floating legend in the upper right
+    with white background and subtle shadow lists all four series.'
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 52px, axis titles 36px, tick
+          labels 28px, legend 28px, annotations 36px/30px'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text elements. Legend has white background and doesn't
+          obscure data
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Scatter markers radius 16 with white borders, line width 5, unknown
+          diamond radius 18 — all appropriate for 8 data points
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue (#306998) vs red (#c0392b) is colorblind-safe with high contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good layout but right side has some empty space beyond data range
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Concentration (mg/L) with units, Absorbance (dimensionless as specified)
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Strong design: gradient background, custom palette, intentional
+          color contrast, styled legend with shadow'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle dotted y-grid, no x-grid, clean axis lines, generous spacing,
+          rounded annotation boxes
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Clear visual hierarchy: red unknown with dashed crosshairs draws
+          attention, tells story of calibration curve reading'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct: scatter plot with linear regression line for calibration
+          curve'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: equation, R², prediction interval, unknown
+          sample with dashed lines'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = concentration, Y = absorbance, axes show full data range
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct, legend labels descriptive and accurate
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all aspects: blank, 8 standards, linear trend, scatter, prediction
+          interval widening, unknown interpolation'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: UV-Vis spectrophotometry calibration — real, neutral scientific scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Concentrations 0-14 mg/L, absorbance 0-0.63, realistic for UV-Vis
+          measurements
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat structure with no functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-organized, appropriate complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png via Selenium screenshot, current API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Good use of Highcharts Python API: proper series types, annotations
+          module, plotLines, container pattern'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: 'Uses Highcharts-specific features: plotLines, annotations module,
+          AreaRangeSeries, floating legend with shadow'
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - scipy
+  - selenium
+  techniques:
+  - annotations
+  - html-export
+  patterns:
+  - data-generation
+  dataprep:
+  - regression
+  styling:
+  - gradient-fill
+  - grid-styling
+  - edge-highlighting
