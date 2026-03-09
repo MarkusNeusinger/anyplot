@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 calibration-beer-lambert: Beer-Lambert Calibration Curve
 Library: plotnine 0.15.3 | Python 3.14.3
 Quality: 89/100 | Created: 2026-03-09
@@ -8,15 +8,18 @@ import numpy as np
 import pandas as pd
 from plotnine import (
     aes,
-    annotate,
     element_blank,
     element_line,
+    element_rect,
     element_text,
+    geom_label,
     geom_point,
     geom_segment,
     ggplot,
     labs,
     scale_color_manual,
+    scale_x_continuous,
+    scale_y_continuous,
     stat_smooth,
     theme,
     theme_minimal,
@@ -57,7 +60,11 @@ df_seg_v = pd.DataFrame(
 
 # Annotation text
 eq_text = f"y = {slope:.4f}x + {intercept:.4f}"
-r2_text = f"R\u00b2 = {r_squared:.5f}"
+r2_text = f"R² = {r_squared:.5f}"
+
+# Annotation label dataframe for geom_label
+df_eq = pd.DataFrame({"x": [1.5], "y": [0.49], "label": [eq_text]})
+df_r2 = pd.DataFrame({"x": [1.5], "y": [0.44], "label": [r2_text]})
 
 # Plot
 plot = (
@@ -84,23 +91,50 @@ plot = (
         df_unknown, aes(x="concentration", y="absorbance", color="series"), size=6, shape="D", inherit_aes=False
     )
     + scale_color_manual(values={"Calibration Standards": "#306998", "Unknown Sample": "#D04848"}, name=" ")
-    + annotate("text", x=1.5, y=0.48, label=eq_text, ha="left", size=15, color="#333333")
-    + annotate("text", x=1.5, y=0.44, label=r2_text, ha="left", size=15, color="#333333")
-    + labs(x="Concentration (mg/L)", y="Absorbance", title="calibration-beer-lambert \u00b7 plotnine \u00b7 pyplots.ai")
+    + geom_label(
+        df_eq,
+        aes(x="x", y="y", label="label"),
+        ha="left",
+        size=18,
+        color="#2A2A2A",
+        fill="#F5F5F0",
+        label_size=0.3,
+        label_r=0.02,
+        inherit_aes=False,
+        show_legend=False,
+    )
+    + geom_label(
+        df_r2,
+        aes(x="x", y="y", label="label"),
+        ha="left",
+        size=18,
+        color="#2A2A2A",
+        fill="#F5F5F0",
+        label_size=0.3,
+        label_r=0.02,
+        inherit_aes=False,
+        show_legend=False,
+    )
+    + scale_x_continuous(breaks=np.arange(0, 14, 2), limits=(-0.5, 13.5), expand=(0, 0.3))
+    + scale_y_continuous(breaks=np.arange(0, 0.65, 0.1), limits=(-0.02, 0.6), expand=(0, 0.01))
+    + labs(x="Concentration (mg/L)", y="Absorbance", title="calibration-beer-lambert · plotnine · pyplots.ai")
     + theme_minimal()
     + theme(
         figure_size=(16, 9),
-        text=element_text(size=14),
-        axis_title=element_text(size=20),
-        axis_text=element_text(size=16),
+        text=element_text(size=14, family="sans-serif"),
+        axis_title=element_text(size=20, weight="bold"),
+        axis_text=element_text(size=16, color="#444444"),
         plot_title=element_text(size=24, weight="bold"),
+        plot_background=element_rect(fill="white", color="white"),
         panel_grid_major_x=element_blank(),
         panel_grid_minor=element_blank(),
-        panel_grid_major_y=element_line(color="#E0E0E0", size=0.5),
+        panel_grid_major_y=element_line(color="#E8E8E8", size=0.4),
         axis_line_x=element_line(color="#333333", size=0.5),
         axis_line_y=element_line(color="#333333", size=0.5),
         legend_position="bottom",
-        legend_text=element_text(size=14),
+        legend_text=element_text(size=15),
+        legend_background=element_rect(fill="white", color="white"),
+        plot_margin=0.04,
     )
 )
 
