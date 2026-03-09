@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 spectrum-nmr: NMR Spectrum (Nuclear Magnetic Resonance)
 Library: bokeh 3.8.2 | Python 3.14.3
 Quality: 89/100 | Created: 2026-03-09
@@ -6,7 +6,7 @@ Quality: 89/100 | Created: 2026-03-09
 
 import numpy as np
 from bokeh.io import export_png, output_file, save
-from bokeh.models import ColumnDataSource, HoverTool, Label
+from bokeh.models import ColumnDataSource, HoverTool, Label, Span
 from bokeh.plotting import figure
 
 
@@ -49,10 +49,20 @@ p = figure(
     x_axis_label="Chemical Shift (ppm)",
     y_axis_label="Intensity (a.u.)",
     x_range=(12.0, -0.5),
+    background_fill_color="#f8f9fb",
 )
+
+# Filled area under the spectrum curve for visual depth
+p.varea(x="ppm", y1=0, y2="intensity", source=source, fill_color="#306998", fill_alpha=0.1)
 
 # Spectrum line
 p.line(x="ppm", y="intensity", source=source, line_color="#306998", line_width=3)
+
+# TMS reference line using Span (distinctive Bokeh feature)
+tms_line = Span(
+    location=0.0, dimension="height", line_color="#999999", line_width=1.5, line_dash="dashed", line_alpha=0.5
+)
+p.add_layout(tms_line)
 
 # Peak labels with chemical shift values
 peak_labels = [
@@ -80,23 +90,34 @@ p.add_tools(hover)
 
 # Text sizing scaled for 4800x2700 canvas
 p.title.text_font_size = "42pt"
+p.title.text_color = "#1a3d5c"
 p.xaxis.axis_label_text_font_size = "32pt"
 p.yaxis.axis_label_text_font_size = "32pt"
 p.xaxis.major_label_text_font_size = "26pt"
 p.yaxis.major_label_text_font_size = "26pt"
+p.xaxis.axis_label_text_color = "#333333"
+p.yaxis.axis_label_text_color = "#333333"
 
 # Grid styling - y-axis only, subtle
 p.xgrid.grid_line_alpha = 0
-p.ygrid.grid_line_alpha = 0.15
+p.ygrid.grid_line_alpha = 0.12
+p.ygrid.grid_line_color = "#aaaaaa"
 
-# Clean frame
+# Clean frame - remove outline and border fill
 p.outline_line_color = None
+p.border_fill_color = "#ffffff"
 
 # Axis line styling
 p.xaxis.axis_line_width = 2
 p.yaxis.axis_line_width = 2
+p.xaxis.axis_line_color = "#555555"
+p.yaxis.axis_line_color = "#555555"
 p.xaxis.major_tick_line_width = 2
 p.yaxis.major_tick_line_width = 2
+p.xaxis.major_tick_line_color = "#555555"
+p.yaxis.major_tick_line_color = "#555555"
+p.xaxis.minor_tick_line_color = None
+p.yaxis.minor_tick_line_color = None
 
 # Remove toolbar for clean export
 p.toolbar_location = None
