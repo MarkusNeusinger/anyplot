@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 heatmap-loss-triangle: Actuarial Loss Development Triangle
 Library: plotnine 0.15.3 | Python 3.14.3
 Quality: 78/100 | Created: 2026-03-09
@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 from plotnine import (
     aes,
+    annotate,
     element_blank,
     element_rect,
     element_text,
@@ -15,6 +16,7 @@ from plotnine import (
     geom_tile,
     ggplot,
     labs,
+    scale_alpha_manual,
     scale_color_identity,
     scale_fill_gradient2,
     scale_x_continuous,
@@ -69,58 +71,62 @@ df = pd.DataFrame(rows)
 # Format amounts with thousands separator for annotations
 df["label"] = df["cumulative_amount"].apply(lambda v: f"{v:,}")
 
+# Region label for legend
+df["region"] = df["is_projected"].map({False: "Actual", True: "Projected"})
+
 # Midpoint for color scale
 amount_mid = (df["cumulative_amount"].min() + df["cumulative_amount"].max()) / 2
 
 # Text color: white on dark tiles, dark on light tiles
-df["text_color"] = df["cumulative_amount"].apply(lambda v: "white" if v > amount_mid * 1.3 else "#1a1a1a")
+df["text_color"] = df["cumulative_amount"].apply(lambda v: "white" if v > amount_mid * 1.1 else "#1a1a1a")
 
-# Separate actual and projected for different alpha
-df_actual = df[~df["is_projected"]].copy()
-df_projected = df[df["is_projected"]].copy()
+# Development factors annotation row — placed below the main grid
+dev_factor_labels = [f"{f:.2f}" for f in dev_factors]
+
+# Y position for the development factors row (below the last accident year)
+dev_factor_y = max(accident_years) + 1.3
 
 # Plot
 plot = (
-    ggplot()
-    # Actual cells (full opacity)
-    + geom_tile(
-        data=df_actual,
-        mapping=aes(x="development_period", y="accident_year", fill="cumulative_amount"),
-        color="white",
-        size=1.2,
-        alpha=1.0,
-    )
-    # Projected cells (reduced opacity)
-    + geom_tile(
-        data=df_projected,
-        mapping=aes(x="development_period", y="accident_year", fill="cumulative_amount"),
-        color="white",
-        size=1.2,
-        alpha=0.55,
-    )
-    # Cell annotations
-    + geom_text(
-        data=df, mapping=aes(x="development_period", y="accident_year", label="label", color="text_color"), size=7
-    )
-    + scale_fill_gradient2(low="#e8f4f8", mid="#306998", high="#1a1a2e", midpoint=amount_mid, name="Cumulative\nAmount")
+    ggplot(df, aes(x="development_period", y="accident_year"))
+    # Heatmap tiles with alpha mapped to region for legend
+    + geom_tile(aes(fill="cumulative_amount", alpha="region"), color="white", size=1.2)
+    # Cell value annotations
+    + geom_text(aes(label="label", color="text_color"), size=6.5)
+    # Color scale
+    + scale_fill_gradient2(low="#e8f4f8", mid="#306998", high="#0d1b2a", midpoint=amount_mid, name="Cumulative\nAmount")
+    # Alpha scale creates the actual/projected legend
+    + scale_alpha_manual(values={"Actual": 1.0, "Projected": 0.35}, name="Region")
     + scale_color_identity()
-    + scale_x_continuous(breaks=development_periods, labels=[str(d) for d in development_periods])
-    + scale_y_reverse(breaks=accident_years, labels=[str(y) for y in accident_years])
+    + scale_x_continuous(breaks=development_periods, labels=[str(d) for d in development_periods], expand=(0, 0.5))
+    + scale_y_reverse(
+        breaks=accident_years + [dev_factor_y],
+        labels=[str(y) for y in accident_years] + ["Dev\nFactor"],
+        expand=(0, 0.5, 0, 1.5),
+    )
+)
+
+# Add development factor annotations below the grid (between columns they connect)
+for j, lbl in enumerate(dev_factor_labels):
+    plot = plot + annotate("text", x=j + 1.5, y=dev_factor_y, label=lbl, size=7, color="#306998", fontweight="bold")
+
+plot = (
+    plot
     + labs(
         x="Development Period (Years)",
         y="Accident Year",
         title="heatmap-loss-triangle · plotnine · pyplots.ai",
-        subtitle="Cumulative Paid Claims — Actual (solid) vs Projected (faded)",
+        subtitle="Cumulative Paid Claims — Actual vs Projected  |  Development Factors shown below",
     )
     + theme_minimal()
     + theme(
         figure_size=(16, 10),
-        plot_title=element_text(size=22, ha="center", weight="bold"),
-        plot_subtitle=element_text(size=16, ha="center", color="#555555"),
-        axis_title=element_text(size=18),
-        axis_text_x=element_text(size=14),
-        axis_text_y=element_text(size=14),
-        legend_title=element_text(size=14),
+        plot_title=element_text(size=24, ha="center", weight="bold"),
+        plot_subtitle=element_text(size=18, ha="center", color="#555555"),
+        axis_title=element_text(size=20),
+        axis_text_x=element_text(size=16),
+        axis_text_y=element_text(size=16),
+        legend_title=element_text(size=14, weight="bold"),
         legend_text=element_text(size=12),
         panel_grid_major=element_blank(),
         panel_grid_minor=element_blank(),
