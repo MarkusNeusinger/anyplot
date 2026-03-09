@@ -1,7 +1,7 @@
 library: plotly
 specification_id: calibration-beer-lambert
 created: '2026-03-09T10:51:36Z'
-updated: '2026-03-09T10:56:02Z'
+updated: '2026-03-09T11:02:48Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 22849775862
 issue: 4410
@@ -10,37 +10,35 @@ library_version: 6.6.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/calibration-beer-lambert/plotly/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/calibration-beer-lambert/plotly/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/calibration-beer-lambert/plotly/plot.html
-quality_score: 89
+quality_score: 91
 review:
   strengths:
-  - Perfect spec compliance — all required features implemented (regression line,
-    equation, R², prediction interval, unknown sample with dashed lines)
-  - Excellent visual quality with all font sizes explicitly set and well-chosen marker
-    sizes
-  - Good data storytelling with the red unknown sample creating a clear focal point
-    against blue calibration data
-  - Clean, well-structured code with appropriate complexity
-  - Dual output (PNG + HTML) leverages plotly interactive capabilities
+  - Cohesive navy blue color scheme with intentional design hierarchy
+  - All spec requirements fully implemented including prediction interval and unknown
+    sample determination
+  - Excellent data storytelling through the unknown sample focal point with dashed
+    lines
+  - Clean well-structured code with appropriate complexity
+  - Realistic analytical chemistry context with appropriate scales
   weaknesses:
-  - 'Design Excellence could be elevated to reach publication quality (DE-01: 5/8)'
-  - Visual refinement has room for improvement — gridlines could be further refined
-    (y-axis only, dashed style)
-  - Library Mastery could be improved by leveraging more plotly-specific features
-    (hovertemplate, custom hover text)
-  image_description: The plot displays a Beer-Lambert calibration curve with "Concentration
-    (mg/L)" on the x-axis (range 0–15) and "Absorbance" on the y-axis (range 0–0.7).
-    Eight blue circular markers represent calibration standards at concentrations
-    0, 2, 4, 6, 8, 10, 12, and 14 mg/L, lying along a strong linear trend. A solid
-    dark blue regression line passes through the data, flanked by a light blue shaded
-    95% prediction interval band. A boxed annotation in the upper-left area shows
-    "y = 0.0453x + 0.0020" and "R² = 0.99935". A red diamond marker at approximately
-    8.3 mg/L marks the unknown sample, with red dashed lines extending horizontally
-    to the y-axis and vertically to the x-axis. The legend in the upper-left lists
-    all four traces. The title reads "calibration-beer-lambert · plotly · pyplots.ai".
-    The background uses the plotly_white template with subtle gray gridlines.
+  - Marker sizes could be slightly larger for optimal visibility at full resolution
+  - Library mastery could push further into Plotly-specific features
+  image_description: The plot displays a Beer-Lambert calibration curve on a clean
+    white background. Eight blue circular markers (with white edges) represent calibration
+    standards at concentrations 0, 2, 4, 6, 8, 10, 12, and 14 mg/L, with absorbance
+    values ranging from ~0.003 to ~0.63. A dark navy blue regression line passes through
+    the data with a light blue semi-transparent 95% prediction interval band. A red
+    diamond marker at approximately (8.3, 0.38) represents the unknown sample, with
+    red dashed lines extending horizontally to the y-axis and vertically down to the
+    x-axis, illustrating concentration determination. An annotation box displays "y
+    = 0.0453x + 0.0020" in bold and "R² = 0.99935" with a light background and blue
+    border. The legend in the upper-left corner lists all four traces. The title reads
+    "calibration-beer-lambert · plotly · pyplots.ai" centered at top. X-axis labeled
+    "Concentration (mg/L)" and y-axis "Absorbance". Subtle dashed y-axis gridlines,
+    no x-axis grid.
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -48,64 +46,64 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 28pt, axis labels 22pt, tick
-          labels 18pt, legend 16pt, annotation 20pt'
+        comment: 'All font sizes explicitly set: title=28, labels=22, ticks=18, annotation=20,
+          legend=16'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements. Legend, annotation, and data well-separated
+        comment: No overlapping text elements
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Marker sizes 14-16 appropriate for 8 data points, line width 3, white
-          marker edges
+        comment: Markers size 14/16 with white edges clearly visible, slightly small
+          for canvas
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Blue vs red provides strong contrast and is colorblind-safe
+        comment: Blue vs red is colorblind-safe with good contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good margins, plot fills canvas well, balanced whitespace
+        comment: Good canvas utilization with balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Concentration (mg/L) with units, Absorbance correct for dimensionless
+        comment: Concentration (mg/L) with units, Absorbance dimensionless per spec
     design_excellence:
-      score: 13
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Above configured default with plotly_white, Python Blue, white marker
-          edges, bordered annotation. Not publication-exceptional
+        comment: Cohesive navy blue palette, styled annotation box, clearly above
+          defaults
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Zeroline removed, subtle grid opacity 0.08, generous margins, bordered
-          legend. Good but could push further
+        comment: X-grid removed, subtle dashed y-grid, light axis lines, generous
+          whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Red unknown sample with dashed projection lines creates clear focal
-          point. Equation annotation provides context
+        comment: Unknown sample with dashed lines creates clear focal point and demonstrates
+          calibration use
     spec_compliance:
       score: 15
       max: 15
@@ -115,51 +113,48 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct scatter with linear regression calibration curve
+        comment: Correct scatter plot with linear regression
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features: standards, regression, equation, R², prediction interval,
-          unknown with dashed lines'
+        comment: 'All required: equation, R², prediction interval, unknown with dashed
+          lines'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Concentration on x, Absorbance on y, all data visible
+        comment: X=concentration, Y=absorbance correct
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend labels descriptive and matching data
+        comment: Title format correct, legend labels descriptive
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 8 standards including blank, linear relationship with scatter, unknown
-          interpolation. Could show more residual variation
+        comment: Shows blank, standards, scatter, unknown determination
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: UV-Vis spectrophotometry scenario with realistic molar absorptivity
-          and absorbance range
+        comment: Real UV-Vis spectrophotometry calibration scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Concentrations 0-14 mg/L and absorbance 0-0.65 plausible for spectrophotometric
-          calibration
+        comment: Realistic absorptivity, absorbance range, and R² value
     code_quality:
       score: 10
       max: 10
@@ -169,13 +164,13 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports, data, regression, plot, save'
+        comment: Linear flow, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set at start
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -187,13 +182,13 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, well-implemented prediction interval
+        comment: Clean, well-organized, appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png with correct dimensions, also HTML
+        comment: Saves plot.png and plot.html, current API
     library_mastery:
       score: 7
       max: 10
@@ -203,19 +198,19 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of go.Figure, add_trace, add_shape, add_annotation, update_layout
+        comment: Good Graph Objects pattern with add_trace, add_shape, add_annotation
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses add_shape, fill=toself for prediction band, HTML export distinctive
-          to plotly
-  verdict: REJECTED
+        comment: Custom hovertemplates, fill=toself, write_html export
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
+  - hover-tooltips
   - html-export
   patterns:
   - data-generation
@@ -224,3 +219,4 @@ impl_tags:
   styling:
   - edge-highlighting
   - grid-styling
+  - alpha-blending
