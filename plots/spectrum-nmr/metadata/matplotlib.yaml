@@ -1,0 +1,220 @@
+library: matplotlib
+specification_id: spectrum-nmr
+created: '2026-03-09T12:51:54Z'
+updated: '2026-03-09T13:04:19Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22854183207
+issue: 4676
+python_version: 3.14.3
+library_version: 3.10.8
+preview_url: https://storage.googleapis.com/pyplots-images/plots/spectrum-nmr/matplotlib/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/spectrum-nmr/matplotlib/plot_thumb.png
+preview_html: null
+quality_score: 91
+review:
+  strengths:
+  - Excellent domain accuracy with Lorentzian line shapes, correct splitting ratios
+    (1:2:1 triplet, 1:3:3:1 quartet), and realistic chemical shifts
+  - Integration ratio bars below baseline add analytical value beyond basic plotting
+  - Cohesive single-color design with path effects creates a clean, professional appearance
+  - All NMR conventions correctly followed (reversed x-axis, hidden y-ticks, TMS reference)
+  weaknesses:
+  - Triplet/quartet sub-peaks are tightly spaced; slightly wider coupling constant
+    would make splitting patterns more visually striking
+  - Integration bars are subtle and could be more prominent
+  image_description: 'The plot displays an ethanol 1H NMR spectrum with chemical shift
+    (ppm) on a reversed x-axis (5 to -0.5) and Intensity on the y-axis (no tick marks,
+    standard for NMR). A blue (#306998) line with light blue fill-under traces the
+    spectrum. Four distinct peak groups are visible: a CH2 quartet at 3.69 ppm (left
+    side, showing four sub-peaks), an OH singlet at 2.61 ppm (center), a prominent
+    CH3 triplet at 1.18 ppm (three sub-peaks visible), and a small TMS reference peak
+    at 0.00 ppm (right side). Each peak is annotated with arrows pointing to peak
+    tops, labeled with group name, splitting pattern, and chemical shift value. Light
+    blue vertical highlight bands mark each peak region. Below the baseline, integration
+    ratio bars (2H, 1H, 3H) indicate hydrogen counts for each group. The molecular
+    formula CH3CH2OH appears as a faint italic watermark in the upper right. Top,
+    right, and left spines are removed. Minor x-axis ticks are visible at 0.2 ppm
+    intervals. The title reads "Ethanol 1H NMR · spectrum-nmr · matplotlib · pyplots.ai"
+    in large text.'
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt,
+          annotations 16pt'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: All annotations well-positioned with custom offsets, no collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Peaks clearly visible; triplet/quartet sub-peaks tight but discernible
+          at full resolution
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Single blue color scheme, no colorblind issues
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good canvas utilization with tight_layout, balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Chemical Shift (ppm) with units, Intensity standard for NMR
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Cohesive blue theme, path effects, highlight bands, integration bars,
+          molecule watermark
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Three spines removed, y-ticks hidden, minor ticks configured, path
+          effects for contrast
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Annotations identify splitting patterns, integration ratios guide
+          interpretation
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct NMR spectrum as line plot
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: reversed axis, splitting, labels, TMS,
+          clean baseline'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Chemical shift on x-axis (reversed), intensity on y-axis
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title contains spec-id, library, pyplots.ai; no legend needed
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Singlet, triplet, quartet, TMS reference, integration ratios all
+          shown
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Ethanol is the classic neutral NMR example
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Accurate chemical shifts and splitting ratios for ethanol
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports, data, plot, annotations, style, save'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All four imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean Lorentzian peak generation, no over-engineering
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with dpi=300
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Proper Axes methods, subplots, fill_between, annotate, axvspan
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: patheffects, axvspan, MultipleLocator, solid_capstyle are matplotlib-specific
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - manual-ticks
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - minimal-chrome
