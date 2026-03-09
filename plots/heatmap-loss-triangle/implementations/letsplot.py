@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 heatmap-loss-triangle: Actuarial Loss Development Triangle
 Library: letsplot 4.8.2 | Python 3.14.3
 Quality: 89/100 | Created: 2026-03-09
@@ -101,8 +101,8 @@ plot = (
         alpha=0.7,
     )
     # Cell value annotations (split by text color to avoid color scale conflict)
-    + geom_text(aes(x="dev_period", y="accident_year", label="label"), data=df_light_text, color="white", size=11)
-    + geom_text(aes(x="dev_period", y="accident_year", label="label"), data=df_dark_text, color="#1a1a1a", size=11)
+    + geom_text(aes(x="dev_period", y="accident_year", label="label"), data=df_light_text, color="white", size=12)
+    + geom_text(aes(x="dev_period", y="accident_year", label="label"), data=df_dark_text, color="#1a1a1a", size=12)
     # Invisible points for explicit actual/projected legend
     + geom_point(aes(x="x", y="y", color="region"), data=df_legend, size=0, alpha=0)
     + scale_color_manual(
@@ -116,11 +116,17 @@ plot = (
     + geom_text(
         aes(x="dev_period", y="accident_year", label="label"),
         data=df_factors,
-        color="#2C5F8A",
-        size=10,
+        color="#1A4D7A",
+        size=12,
         fontface="bold",
     )
-    + scale_fill_gradient(low="#E8F0FE", high="#1A3A6B", name="Cumulative\nClaims ($)")
+    + scale_fill_gradient2(
+        low="#E8F0FE",
+        mid="#4A7FB5",
+        high="#0D2240",
+        midpoint=(df["cumulative"].max() + df["cumulative"].min()) / 2,
+        name="Cumulative\nClaims ($)",
+    )
     + scale_x_discrete(limits=[str(p) for p in dev_periods])
     + scale_y_discrete(limits=y_order)
     + labs(
@@ -130,21 +136,23 @@ plot = (
         subtitle="Chain-Ladder Loss Triangle  ·  Actual (white border) vs Projected (gold border, 70% opacity)",
         caption="Bottom row: Age-to-Age Development Factors",
     )
-    + coord_fixed(ratio=0.75)
+    + coord_fixed(ratio=0.65)
     + theme_minimal()
     + flavor_darcula()
     + theme(
-        plot_title=element_text(size=24, face="bold", color="white"),
-        plot_subtitle=element_text(size=16, color="#B0BEC5"),
-        plot_caption=element_text(size=14, color="#B0BEC5"),
-        axis_title=element_text(size=20, color="#E0E0E0"),
-        axis_text=element_text(size=16, color="#C0C0C0"),
-        legend_title=element_text(size=16),
+        plot_title=element_text(size=26, face="bold", color="#FFFFFF"),
+        plot_subtitle=element_text(size=15, face="italic", color="#90A4AE"),
+        plot_caption=element_text(size=13, color="#78909C"),
+        axis_title=element_text(size=20, face="bold", color="#CFD8DC"),
+        axis_text_x=element_text(size=17, face="bold", color="#B0BEC5"),
+        axis_text_y=element_text(size=16, color="#B0BEC5"),
+        legend_title=element_text(size=16, face="bold"),
         legend_text=element_text(size=14),
         legend_position="right",
         panel_grid=element_blank(),
+        plot_margin=[40, 20, 30, 20],
     )
-    + ggsize(1600, 900)
+    + ggsize(1700, 900)
 )
 
 # Save
