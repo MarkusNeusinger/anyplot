@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 spectrum-nmr: NMR Spectrum (Nuclear Magnetic Resonance)
 Library: seaborn 0.13.2 | Python 3.14.3
-Quality: 85/100 | Created: 2026-03-09
+Quality: 88/100 | Created: 2026-03-09
 """
 
 import matplotlib.pyplot as plt
