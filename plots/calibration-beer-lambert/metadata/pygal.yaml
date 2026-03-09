@@ -1,7 +1,7 @@
 library: pygal
 specification_id: calibration-beer-lambert
 created: '2026-03-09T10:48:59Z'
-updated: '2026-03-09T11:03:12Z'
+updated: '2026-03-09T11:14:27Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 22849775852
 issue: 4410
@@ -10,38 +10,39 @@ library_version: 3.1.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/calibration-beer-lambert/pygal/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/calibration-beer-lambert/pygal/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/calibration-beer-lambert/pygal/plot.html
-quality_score: 82
+quality_score: 91
 review:
   strengths:
-  - Excellent data quality with realistic copper sulfate UV-Vis calibration scenario
-    (R²=0.9979)
-  - All specification features present including prediction interval and unknown sample
-    crosshair
-  - Clean well-structured code with proper seed and linear flow
-  - Good color hierarchy with blue for data/fit and red for unknown creating clear
-    visual separation
-  - Red crosshair lines create effective focal point for data storytelling
+  - Excellent spec compliance with all required features (regression equation, R-squared,
+    prediction interval, unknown sample crosshair)
+  - Strong library mastery with CSS injection for spine removal and rich value dicts
+    for interactive tooltips
+  - Realistic analytical chemistry context (copper sulfate UV-Vis at 810 nm)
+  - Clean visual hierarchy with blue calibration data vs red unknown determination
+  - Dual render (PNG + HTML) properly leverages pygal SVG interactivity
   weaknesses:
-  - Empty legend entries for lower prediction interval and vertical unknown line create
-    visual gaps
-  - Prediction interval lines are thin and could use more visual weight
-  - Left axis frame/spine still visible reducing visual refinement
-  - Extended x-range beyond data wastes some canvas space
+  - Prediction interval band is very narrow due to near-perfect fit (R-squared=0.9998),
+    reducing its visual impact as a teaching element
+  - Monospace font rendering from pygal SVG engine is slightly less polished than
+    proportional fonts
   image_description: 'The plot displays a Beer-Lambert calibration curve on a white
-    background. Seven dark blue circular markers represent calibration standards at
-    concentrations 0, 2, 4, 6, 8, 10, and 12 mg/L, showing a clear linear relationship
-    between concentration and absorbance (range ~0.002 to ~0.56). A solid blue regression
-    line passes through the data. Two light blue dashed lines show the 95% prediction
-    interval flanking the regression line. Red dashed crosshair lines mark an unknown
-    sample: a horizontal line from the y-axis at A=0.350 extends to the intersection
-    point, and a vertical line drops from that intersection to the x-axis at ~7.56
-    mg/L. The title reads "calibration-beer-lambert · pygal · pyplots.ai". X-axis
-    is labeled "Concentration (mg/L)" and y-axis "Absorbance". A bottom legend shows
-    four labeled entries: Calibration Standards, Fit equation with R²=0.9979, 95%
-    Prediction Interval, and Unknown → 7.56 mg/L.'
+    background with the title "calibration-beer-lambert · pygal · pyplots.ai" at the
+    top. Seven blue circular calibration standard data points are plotted at concentrations
+    0, 2, 4, 6, 8, 10, and 12 mg/L, showing a clear linear relationship between concentration
+    (x-axis, "Concentration (mg/L)") and absorbance (y-axis, "Absorbance"). A solid
+    blue regression fit line passes through the data. Two light blue dashed lines
+    show the 95% prediction interval flanking the regression line (narrow due to excellent
+    R²=0.9998 fit). A red dashed crosshair marks the unknown sample: a horizontal
+    line from the y-axis at A=0.350 to the intersection with the fit line at ~7.66
+    mg/L, then a vertical dashed line drops to the x-axis. Axis spines are hidden
+    via CSS injection. Subtle light-gray horizontal grid lines provide y-axis reference.
+    The legend at the bottom displays four items in a single row: "Calibration Standards",
+    "Fit: A = 0.0453·C + 0.0028 (R² = 0.9998)", "95% Prediction Interval", and "Unknown
+    → 7.66 mg/L". The overall appearance is clean and professional with intentional
+    color hierarchy (blue for calibration data, red for the unknown).'
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -49,66 +50,68 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title=72, label=48, major_label=42, legend=42).
-          All text readable. Legend text slightly small relative to chart area.
+        comment: Font sizes explicitly set (title=72, labels=48, major_labels=44,
+          legend=44); all readable. Minor deduction for monospace rendering.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlap anywhere. Legend entries well-spaced.
+        comment: No overlapping text anywhere. Legend, axis labels, and tick labels
+          all fully readable.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Calibration dots well-sized. Prediction interval dashed lines somewhat
-          thin.
+        comment: Calibration dots clearly visible (dots_size=18). PI bands narrow
+          due to excellent fit (R²=0.9998).
       - id: VQ-04
         name: Color Accessibility
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Blue/red palette is colorblind-safe. Light blue prediction interval
-          lines slightly low-contrast.
+        comment: Blue vs red provides excellent colorblind-safe contrast.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good layout with bottom legend. Some wasted space from extended x-range.
+        comment: Good canvas utilization with balanced margins. Legend at bottom well-positioned.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: X-axis with units, Y-axis correctly dimensionless.
+        comment: Concentration (mg/L) with units, Absorbance (dimensionless as spec
+          requires).
     design_excellence:
-      score: 12
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Custom palette with intentional color hierarchy. Above defaults but
-          not publication-level.
+        comment: Custom blue/red palette, CSS spine removal, subtle guide colors.
+          Above defaults, professional and clean.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Y-guides only, subtle grid color. Axis frame still visible.
+        comment: Spines removed via CSS, subtle y-axis-only grid, good whitespace.
+          Some refinement but monospace font limits polish.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Red crosshair creates clear focal point. Color contrast guides viewer
-          to unknown determination.
+        comment: Red unknown crosshair creates focal point. Blue-to-red hierarchy
+          guides viewer from calibration to determination.
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -116,51 +119,50 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct XY scatter with regression line.
+        comment: Correct XY scatter with linear regression calibration curve.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: standards, regression, equation/R², prediction
-          interval, unknown crosshair.'
+        comment: 'All features: regression equation, R², prediction interval, unknown
+          sample crosshair.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=concentration, Y=absorbance. Full data range shown.
+        comment: X=concentration, Y=absorbance, correctly assigned.
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Title format correct. Empty legend entries for lower band and vertical
-          unknown line.
+        comment: Title matches required format. Legend labels descriptive and accurate.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 7 standards including blank, regression, prediction interval, unknown
-          determination.
+        comment: 'Shows all calibration curve aspects: blank, standards, regression,
+          PI, unknown determination.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Copper sulfate at 810 nm is a real analytical chemistry scenario.
+        comment: Copper sulfate at 810 nm — real UV-Vis spectrophotometry scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Realistic absorbance values, sensible concentrations, typical R²
-          for well-prepared calibration.
+        comment: Concentrations 0-12 mg/L, absorbance 0-0.55, slope ~0.045 — realistic
+          for Beer-Lambert.
     code_quality:
       score: 10
       max: 10
@@ -170,13 +172,14 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, regression, chart, save.'
+        comment: 'Linear flow: imports, data, regression, chart config, series, save.
+          No functions/classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures reproducible noise.
+        comment: np.random.seed(42) set at beginning.
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -188,40 +191,44 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-structured with list comprehensions.
+        comment: Clean, well-organized. Rich value dicts and PI None-gap pattern are
+          elegant.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png via render_to_png.
+        comment: Saves as plot.png and plot.html. Current pygal API.
     library_mastery:
-      score: 6
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert pygal usage: XY chart, rich value dicts, custom Style, formatters,
+          tooltip config.'
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Good use of pygal.XY with value dicts, stroke_dasharray, legend_at_bottom,
-          custom formatters.
-      - id: LM-02
-        name: Distinctive Features
-        score: 2
-        max: 5
-        passed: false
-        comment: Uses value dicts and dual render but overall approach easily replicated
-          in any library.
-  verdict: REJECTED
+        comment: CSS injection for spines, rich value dicts for tooltips, dual render
+          PNG+HTML, tooltip_fancy_mode.
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - scipy
   techniques:
+  - hover-tooltips
   - html-export
+  - custom-legend
   patterns:
   - data-generation
   dataprep:
   - regression
   styling:
+  - minimal-chrome
   - grid-styling
