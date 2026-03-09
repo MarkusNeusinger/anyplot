@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 calibration-beer-lambert: Beer-Lambert Calibration Curve
 Library: letsplot 4.8.2 | Python 3.14.3
 Quality: 88/100 | Created: 2026-03-09
@@ -25,10 +25,10 @@ absorbance_measured[0] = max(0.002, absorbance_measured[0])
 slope, intercept, r_value, p_value, std_err = stats.linregress(concentrations, absorbance_measured)
 r_squared = r_value**2
 
-# Prediction interval
+# Prediction interval (limited to data range)
 n = len(concentrations)
 x_mean = np.mean(concentrations)
-x_fit = np.linspace(-0.5, 13.5, 200)
+x_fit = np.linspace(0, 12.5, 200)
 y_fit = slope * x_fit + intercept
 se_y = np.sqrt(np.sum((absorbance_measured - (slope * concentrations + intercept)) ** 2) / (n - 2))
 t_val = stats.t.ppf(0.975, n - 2)
@@ -47,15 +47,17 @@ df_fit = pd.DataFrame({"concentration": x_fit, "absorbance": y_fit, "upper": y_u
 
 df_unknown = pd.DataFrame({"concentration": [unknown_concentration], "absorbance": [unknown_absorbance]})
 
-df_hline = pd.DataFrame(
-    {"concentration": [0, unknown_concentration], "absorbance": [unknown_absorbance, unknown_absorbance]}
+# Segments for unknown sample dashed lines (idiomatic geom_segment)
+df_segments = pd.DataFrame(
+    {
+        "x": [0, unknown_concentration],
+        "y": [unknown_absorbance, 0],
+        "xend": [unknown_concentration, unknown_concentration],
+        "yend": [unknown_absorbance, unknown_absorbance],
+    }
 )
 
-df_vline = pd.DataFrame(
-    {"concentration": [unknown_concentration, unknown_concentration], "absorbance": [0, unknown_absorbance]}
-)
-
-eq_label = f"y = {slope:.4f}x + {intercept:.4f}\nR² = {r_squared:.5f}"
+eq_label = f"y = {slope:.4f}x + {intercept:.4f}\nR\u00b2 = {r_squared:.5f}"
 
 df_eq = pd.DataFrame({"x": [1.5], "y": [0.48], "label": [eq_label]})
 
@@ -74,9 +76,10 @@ plot = (
     + geom_ribbon(aes(x="concentration", ymin="lower", ymax="upper"), data=df_fit, fill="#306998", alpha=0.12)
     # Regression line
     + geom_line(aes(x="concentration", y="absorbance"), data=df_fit, color="#306998", size=1.8)
-    # Dashed lines for unknown sample
-    + geom_line(aes(x="concentration", y="absorbance"), data=df_hline, color="#D95319", size=1.2, linetype="dashed")
-    + geom_line(aes(x="concentration", y="absorbance"), data=df_vline, color="#D95319", size=1.2, linetype="dashed")
+    # Dashed lines for unknown sample using geom_segment
+    + geom_segment(
+        aes(x="x", y="y", xend="xend", yend="yend"), data=df_segments, color="#D95319", size=1.2, linetype="dashed"
+    )
     # Calibration standard points
     + geom_point(
         aes(x="concentration", y="absorbance"),
@@ -105,20 +108,23 @@ plot = (
         aes(x="x", y="y", label="label"), data=df_unknown_label, size=11, color="#D95319", hjust=0, fontface="italic"
     )
     # Labels and styling
-    + labs(x="Concentration (mg/L)", y="Absorbance", title="calibration-beer-lambert · letsplot · pyplots.ai")
-    + scale_x_continuous(limits=[-0.5, 14], breaks=[0, 2, 4, 6, 8, 10, 12])
-    + scale_y_continuous(limits=[-0.02, 0.6], breaks=[0, 0.1, 0.2, 0.3, 0.4, 0.5])
+    + labs(x="Concentration (mg/L)", y="Absorbance", title="calibration-beer-lambert \u00b7 letsplot \u00b7 pyplots.ai")
+    + scale_x_continuous(limits=[-0.5, 13.5], breaks=[0, 2, 4, 6, 8, 10, 12])
+    + scale_y_continuous(limits=[-0.02, 0.58], breaks=[0, 0.1, 0.2, 0.3, 0.4, 0.5])
+    + coord_cartesian(xlim=[-0.5, 13.5], ylim=[-0.02, 0.58])
     + ggsize(1600, 900)
     + theme_minimal()
     + theme(
         axis_text=element_text(size=16, color="#555555"),
         axis_title=element_text(size=20, color="#333333"),
         plot_title=element_text(size=24, color="#222222", face="bold"),
-        panel_grid_major=element_line(color="#E8E8E8", size=0.35),
+        panel_grid_major_x=element_blank(),
+        panel_grid_major_y=element_line(color="#E0E0E0", size=0.3),
         panel_grid_minor=element_blank(),
         plot_background=element_rect(fill="#FAFAFA", color="#FAFAFA"),
         panel_background=element_rect(fill="#FAFAFA", color="#FAFAFA"),
-        axis_ticks=element_line(color="#CCCCCC", size=0.3),
+        axis_ticks=element_blank(),
+        axis_ticks_length=0,
         plot_margin=[30, 40, 20, 20],
     )
 )
