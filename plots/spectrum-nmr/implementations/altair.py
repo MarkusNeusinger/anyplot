@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 spectrum-nmr: NMR Spectrum (Nuclear Magnetic Resonance)
 Library: altair 6.0.0 | Python 3.14.3
 Quality: 88/100 | Created: 2026-03-09
@@ -56,28 +56,40 @@ labels_df = pd.DataFrame(
     }
 )
 
-# Shaded regions highlighting each peak group
-regions_df = pd.DataFrame(
-    {"x": [(-0.08, 0.08), (1.02, 1.34), (2.50, 2.72), (3.52, 3.86)], "group": ["TMS", "CH\u2083", "OH", "CH\u2082"]}
-)
+# Shaded regions limited to just above each peak group (not full chart height)
 regions_data = pd.DataFrame(
     {
         "x_start": [-0.08, 1.02, 2.50, 3.52],
         "x_end": [0.08, 1.34, 2.72, 3.86],
         "y_start": [0.0, 0.0, 0.0, 0.0],
-        "y_end": [1.30, 1.30, 1.30, 1.30],
+        "y_end": [0.38, 1.12, 0.43, 0.84],
     }
+)
+
+# Vertical drop-lines at each peak center for visual anchoring
+droplines_df = pd.DataFrame(
+    {"Chemical Shift (ppm)": [0.0, 1.18, 2.61, 3.69], "y_base": [0.0, 0.0, 0.0, 0.0], "y_top": [0.30, 1.00, 0.35, 0.75]}
 )
 
 # Reversed x-axis scale (NMR convention: high ppm on left)
 x_scale = alt.Scale(domain=[5.0, -0.5])
-y_scale = alt.Scale(domain=[0, 1.30])
+y_scale = alt.Scale(domain=[0, 1.35])
+
+# Nearest-point selection for interactive highlight
+nearest = alt.selection_point(nearest=True, on="pointerover", fields=["Chemical Shift (ppm)"], empty=False)
 
 # Subtle background region shading for peak groups
 region_shading = (
     alt.Chart(regions_data)
-    .mark_rect(opacity=0.06, color="#306998")
+    .mark_rect(opacity=0.08, color="#306998", cornerRadius=3)
     .encode(x=alt.X("x_start:Q", scale=x_scale), x2="x_end:Q", y=alt.Y("y_start:Q", scale=y_scale), y2="y_end:Q")
+)
+
+# Dashed vertical drop-lines at peak centers
+drop_rules = (
+    alt.Chart(droplines_df)
+    .mark_rule(color="#306998", opacity=0.2, strokeDash=[4, 4], strokeWidth=1)
+    .encode(x=alt.X("Chemical Shift (ppm):Q", scale=x_scale), y=alt.Y("y_base:Q", scale=y_scale), y2="y_top:Q")
 )
 
 # Spectrum line
@@ -91,42 +103,81 @@ spectrum = (
     )
 )
 
+# Interactive crosshair rule on hover
+crosshair = (
+    alt.Chart(df)
+    .mark_rule(color="#999999", strokeWidth=0.8, strokeDash=[3, 3])
+    .encode(x=alt.X("Chemical Shift (ppm):Q", scale=x_scale))
+    .transform_filter(nearest)
+)
+
+# Hover point indicator
+hover_point = (
+    alt.Chart(df)
+    .mark_circle(size=60, color="#306998", opacity=0.8)
+    .encode(x=alt.X("Chemical Shift (ppm):Q", scale=x_scale), y=alt.Y("Intensity:Q", scale=y_scale))
+    .transform_filter(nearest)
+)
+
+# Invisible voronoi layer for nearest-point selection
+selectors = (
+    alt.Chart(df)
+    .mark_point(size=1, opacity=0)
+    .encode(x=alt.X("Chemical Shift (ppm):Q", scale=x_scale))
+    .add_params(nearest)
+)
+
 # Peak annotation labels
 peak_labels = (
     alt.Chart(labels_df)
-    .mark_text(fontSize=20, fontWeight="bold", color="#306998", lineBreak="\n", align="center", dy=-22)
+    .mark_text(
+        fontSize=18,
+        fontWeight="bold",
+        color="#1a4971",
+        lineBreak="\n",
+        align="center",
+        dy=-24,
+        font="Helvetica Neue, Arial, sans-serif",
+    )
     .encode(x=alt.X("Chemical Shift (ppm):Q", scale=x_scale), y=alt.Y("Intensity:Q", scale=y_scale), text="label:N")
 )
 
 # Combine layers
 chart = (
-    alt.layer(region_shading, spectrum, peak_labels)
+    alt.layer(region_shading, drop_rules, spectrum, selectors, crosshair, hover_point, peak_labels)
     .properties(
         width=1600,
         height=900,
         title=alt.Title(
             "spectrum-nmr \u00b7 altair \u00b7 pyplots.ai",
             fontSize=28,
+            fontWeight="bold",
             anchor="middle",
+            font="Helvetica Neue, Arial, sans-serif",
             subtitle="Ethanol \u00b9H NMR \u2014 Synthetic 300 MHz Spectrum",
-            subtitleFontSize=18,
-            subtitleColor="#555555",
-            subtitlePadding=6,
+            subtitleFontSize=17,
+            subtitleColor="#666666",
+            subtitlePadding=8,
+            subtitleFont="Helvetica Neue, Arial, sans-serif",
+            subtitleFontStyle="italic",
         ),
     )
     .configure_axis(
         labelFontSize=18,
         titleFontSize=22,
         titleColor="#333333",
+        titleFont="Helvetica Neue, Arial, sans-serif",
+        titleFontWeight="normal",
         labelColor="#555555",
+        labelFont="Helvetica Neue, Arial, sans-serif",
         grid=False,
-        domainColor="#aaaaaa",
-        domainWidth=0.6,
-        tickColor="#aaaaaa",
-        tickSize=5,
-        tickWidth=0.6,
+        domainColor="#999999",
+        domainWidth=0.8,
+        tickColor="#999999",
+        tickSize=6,
+        tickWidth=0.8,
     )
-    .configure_title(font="Helvetica Neue, Arial, sans-serif", color="#222222")
+    .configure_title(font="Helvetica Neue, Arial, sans-serif", color="#1a1a1a")
     .configure_view(strokeWidth=0)
     .interactive()
 )
