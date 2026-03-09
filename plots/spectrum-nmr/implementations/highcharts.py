@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 spectrum-nmr: NMR Spectrum (Nuclear Magnetic Resonance)
 Library: highcharts unknown | Python 3.14.3
-Quality: 88/100 | Created: 2026-03-09
+Quality: 90/100 | Created: 2026-03-09
 """
 
 import tempfile
