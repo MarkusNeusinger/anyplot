@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 spectrum-nmr: NMR Spectrum (Nuclear Magnetic Resonance)
 Library: plotnine 0.15.3 | Python 3.14.3
-Quality: 87/100 | Created: 2026-03-09
+Quality: 91/100 | Created: 2026-03-09
 """
 
 import numpy as np
