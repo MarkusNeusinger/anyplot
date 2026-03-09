@@ -1,0 +1,244 @@
+library: plotly
+specification_id: heatmap-loss-triangle
+created: '2026-03-09T11:57:31Z'
+updated: '2026-03-09T12:16:01Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22852106647
+issue: 4581
+python_version: 3.14.3
+library_version: 6.6.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/heatmap-loss-triangle/plotly/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/heatmap-loss-triangle/plotly/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/heatmap-loss-triangle/plotly/plot.html
+quality_score: 90
+review:
+  strengths:
+  - 'Perfect spec compliance: all 8 required features implemented including actual/projected
+    distinction, diagonal boundary, cell annotations, development factors, colorbar,
+    legend, and proper labels'
+  - Excellent data quality with realistic actuarial context and appropriate development
+    factors (2.5 to 1.01)
+  - Creative amber overlay and dashed diagonal to distinguish actual from projected
+    regions
+  - White background highlighting on boundary cells is an effective visual technique
+  - Rich Plotly hover tooltips with customdata showing accident year, development
+    period, and formatted claims
+  - Clean well-structured code with appropriate complexity for 100-cell annotation
+    generation
+  weaknesses:
+  - Minor tightness in rightmost column where boundary cell annotation approaches
+    colorbar edge
+  - Could push typographic hierarchy further with varying font weights between actual
+    and projected cells
+  image_description: The plot displays a 10x10 heatmap loss development triangle with
+    accident years 2015-2024 on the Y-axis and development periods 1-10 on the X-axis.
+    Cells are colored using a Blues colorscale encoding cumulative claim amounts ranging
+    from approximately 4,300 to 49,569. Each cell is annotated with the cumulative
+    value formatted with thousands separators in bold Arial Black font, with white
+    text on darker cells and dark text on lighter cells. A dashed diagonal line separates
+    actual (upper-left) from projected (lower-right) values, with projected cells
+    overlaid with a subtle amber/orange tint. Diagonal boundary cells have a white
+    background highlight. A legend at the top distinguishes "Actual (observed)" in
+    blue from "Projected (estimated IBNR)" in amber. Development factors (2.500 down
+    to 1.010) are displayed below the x-axis. A colorbar on the right shows "Cumulative
+    Claims ($)". The background is a soft off-white (#fafafa) using the plotly_white
+    template. The title "heatmap-loss-triangle · plotly · pyplots.ai" is centered
+    at the top.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 28pt, axis labels 22pt, tick
+          labels 17pt, cell annotations 17pt, dev factors 13pt'
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Cell annotations fit well. Minor tightness on rightmost column boundary
+          cell near colorbar
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All heatmap cells clearly visible with good color differentiation
+          and subtle amber overlay
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blues colorscale is colorblind-safe. Amber overlay provides accessible
+          distinction
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good proportions with explicit margins. Plot fills canvas well at
+          1600x900 scale=3
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive labels with units: Development Period (Years), Accident
+          Year, Cumulative Claims ($)'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful blue-amber distinction, Arial Black for values, white
+          boundary highlights, cohesive off-white background
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: plotly_white template, subtle background, dashed diagonal, generous
+          margins
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Amber overlay and diagonal communicate actual/projected boundary.
+          Dev factors provide analytical context
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct heatmap loss triangle with triangular structure
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All 8 required features present: actual/projected distinction, diagonal,
+          annotations, dev factors, colorbar, legend, labels'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Rows map to accident years 2015-2024, columns to development periods
+          1-10
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches format. Legend distinguishes Actual (observed) and
+          Projected (estimated IBNR)
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Full 10x10 triangle with ~55 actual and ~45 projected cells showing
+          increasing trends and decreasing factors
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Insurance cumulative paid claims is a real-world actuarial scenario.
+          Neutral business topic
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Claims 4000-49000 plausible for scaled triangles. Development factors
+          2.5 to 1.01 realistic
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean Imports, Data, Plot, Save flow. No functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set at the start
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only numpy and plotly.graph_objects imported, both used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity. Programmatic annotation/shape generation
+          is clean and necessary
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png and plot.html. Current Plotly API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of go.Heatmap with customdata, shapes for overlays, annotations,
+          layout configuration
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: 'Plotly-specific: customdata with hovertemplate, shapes overlay system,
+          HTML export with CDN'
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - annotations
+  - hover-tooltips
+  - html-export
+  - custom-legend
+  patterns:
+  - data-generation
+  - matrix-construction
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - custom-colormap
+  - alpha-blending

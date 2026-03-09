@@ -1,0 +1,240 @@
+library: seaborn
+specification_id: heatmap-loss-triangle
+created: '2026-03-09T11:55:02Z'
+updated: '2026-03-09T12:07:22Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22852106657
+issue: 4581
+python_version: 3.14.3
+library_version: 0.13.2
+preview_url: https://storage.googleapis.com/pyplots-images/plots/heatmap-loss-triangle/seaborn/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/heatmap-loss-triangle/seaborn/plot_thumb.png
+preview_html: null
+quality_score: 90
+review:
+  strengths:
+  - Excellent spec compliance with all required features implemented faithfully including
+    triangular structure, actual/projected distinction, development factors, and cell
+    annotations
+  - Strong data storytelling through the visual split between actual and projected
+    regions with hatching
+  - Custom colormap and adaptive text colors demonstrate design thoughtfulness
+  - Clean, well-organized code with appropriate use of seaborn mask and annotation
+    features
+  - Realistic actuarial data with proper chain-ladder development patterns
+  weaknesses:
+  - Annotation font size (13pt) is slightly small for the canvas size — could benefit
+    from 14-15pt
+  - Some matplotlib-level manipulation reduces library mastery score
+  image_description: 'The plot displays an actuarial loss development triangle as
+    a 10x10 heatmap. Rows represent accident years 2015-2024, columns represent development
+    periods 1-10. Cells are colored with a custom blue sequential colormap ranging
+    from light blue for low values to dark navy for high values. The upper-left triangle
+    contains actual/observed values with solid cell backgrounds and bold annotations;
+    the lower-right triangle shows projected (IBNR) values with diagonal hatching
+    overlay and italic annotations. Cell annotations display cumulative amounts (full
+    numbers with comma separators for values under 10K, abbreviated K format for larger
+    values). Text color adapts to background brightness — white text on dark cells,
+    dark text on light cells. A styled rounded box above the plot displays the 9 age-to-age
+    development factors in monospace font. The colorbar on the right is labeled "Cumulative
+    Claims ($K)". A legend in the bottom-right distinguishes "Actual" (solid) from
+    "Projected (IBNR)" (hatched). Title reads "heatmap-loss-triangle · seaborn · pyplots.ai".
+    X-axis: "Development Period (Years)", Y-axis: "Accident Year".'
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 24pt, labels 20pt, ticks 16pt).
+          Annotations at 13pt slightly below ideal for 4800x2700 canvas.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text. Dev factors box well-positioned. Legend sits
+          cleanly in bottom-right.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All heatmap cells clearly visible with appropriate sizing. Hatching
+          pattern is distinct.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue sequential colormap is colorblind-safe. Adaptive text colors
+          ensure readability.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills canvas well with balanced margins. Colorbar integrates
+          naturally.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive labels with context: Development Period (Years) and
+          Accident Year.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom blue colormap, white cell separators, hatching overlay, styled
+          dev factors box. Clearly above defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Clean white line separators, styled dev factors box, customized colorbar,
+          adaptive text colors.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Actual/projected visual split tells clear story. Color intensity
+          guides eye through development stages.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct triangular matrix heatmap visualization.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: actual/projected distinction, cell annotations,
+          dev factors, color encoding, legend.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=development periods, Y=accident years. All 100 cells populated
+          correctly.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title follows exact format. Legend labels Actual and Projected (IBNR)
+          are clear.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all aspects: 10 years x 10 periods, actual + projected cells,
+          decreasing dev factors.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Insurance claims reserving is a real, neutral business scenario with
+          appropriate values.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Base claims 4200-7000K growing over time. Dev factors follow realistic
+          chain-ladder pattern.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean linear flow: imports, data, plot, style, save. No functions
+          or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set at beginning.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: matplotlib.patches, plt, np, pd, sns, LinearSegmentedColormap.'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity. Dual-heatmap with masks is clean. Text color
+          adaptation is necessary.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with dpi=300 and bbox_inches=tight. Current API.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses sns.heatmap with mask, annot, fmt, cbar_kws effectively. Some
+          matplotlib-level code needed.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Leverages seaborn mask parameter and annot with custom DataFrame
+          — distinctive seaborn features.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - annotations
+  - custom-legend
+  - patches
+  patterns:
+  - data-generation
+  - matrix-construction
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - custom-colormap
+  - edge-highlighting

@@ -1,0 +1,242 @@
+library: letsplot
+specification_id: heatmap-loss-triangle
+created: '2026-03-09T11:54:11Z'
+updated: '2026-03-09T12:24:31Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22852106910
+issue: 4581
+python_version: 3.14.3
+library_version: 4.8.2
+preview_url: https://storage.googleapis.com/pyplots-images/plots/heatmap-loss-triangle/letsplot/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/heatmap-loss-triangle/letsplot/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/heatmap-loss-triangle/letsplot/plot.html
+quality_score: 90
+review:
+  strengths:
+  - Professional dark theme (Darcula) with custom blue gradient creates a visually
+    striking and cohesive design
+  - 'Complete spec compliance: all required features including actual/projected distinction,
+    cell annotations, development factors row, and legend'
+  - Realistic actuarial data with plausible chain-ladder development factors
+  - Smart text color switching (white on dark cells, dark on light cells) ensures
+    readability across the full color range
+  - Clean code structure with no unnecessary complexity
+  weaknesses:
+  - Canvas utilization could be slightly improved; some empty dark space around edges
+  - Library mastery could go further with more lets-plot-specific features
+  image_description: 'The plot displays an actuarial loss development triangle on
+    a dark background (Darcula theme). The title "heatmap-loss-triangle · letsplot
+    · pyplots.ai" is shown in large white bold text at the top, with an italic grey
+    subtitle explaining the actual vs projected encoding. The Y-axis labeled "Accident
+    / Origin Year" lists years 2015–2024 plus a "Factor" row at the bottom. The X-axis
+    labeled "Development Period (Years)" shows periods 1–10. Each cell contains a
+    formatted cumulative claim amount with thousands separators (e.g., "10,622", "80,707").
+    The color gradient runs from light blue (low values ~8,000) to dark navy blue
+    (high values ~82,000). Actual cells (upper-left triangle) have white borders,
+    while projected cells (lower-right triangle) have gold/orange borders with slightly
+    reduced opacity. The diagonal boundary between actual and projected regions is
+    clearly visible. A "Cell Region" legend on the right shows square markers for
+    actual (white border) and projected (gold border). A continuous "Cumulative Claims
+    ($)" color scale legend is also present. The bottom "Factor" row has a light grey
+    background with bold blue text showing age-to-age development factors (2.500,
+    1.450, 1.220, 1.120, 1.070, 1.040, 1.025, 1.015, 1.008, —). A caption reads "Bottom
+    row: Age-to-Age Development Factors."'
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title=26, subtitle=15, axis_title=20,
+          axis_text=16-17, legend=14-16, caption=13, cell text=12. All text clearly
+          readable.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: All cell annotations fit within tiles. No text collisions.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Tiles well-sized with clear borders. Color gradient provides good
+          differentiation. Gold vs white borders distinct.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue sequential palette is colorblind-safe. Gold/white border distinction
+          does not rely on red-green.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Heatmap fills majority of canvas. Some dark space at edges but reasonable
+          for dark theme.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive labels with context: Development Period (Years), Accident
+          / Origin Year.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Dark Darcula theme with custom blue gradient, gold accent borders,
+          text color switching. Strong design above defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Grid removed, dark theme, custom factor row styling, generous margins.
+          Above defaults but could be further refined.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Triangular actual/projected boundary creates clear narrative. Color
+          gradient guides the eye. Factor row provides analytical context.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct triangular matrix heatmap visualization.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: actual/projected styling, cell annotations
+          with thousands separators, development factors, color encoding, legend.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=development periods, Y=accident years. All 100 cells displayed
+          with correct triangular structure.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct. Cell Region legend with actual/projected distinction
+          present.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Full 10x10 triangle with ~55 actual and ~45 projected cells. Development
+          factors shown.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Realistic actuarial/insurance context with plausible years and development
+          periods.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Claims range 8K-82K realistic. Development factors decrease from
+          2.500 to 1.008.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports, data generation, dataframe construction, plot,
+          save. No functions or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: numpy, pandas, lets_plot all used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-structured. Text color split into two geom_text layers is clean.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png via ggsave with scale=3.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Good ggplot grammar: geom_tile/geom_text layering, scale_fill_gradient2,
+          coord_fixed, guide_legend with override_aes.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses flavor_darcula() (lets-plot exclusive), HTML export, guide_legend
+          with override_aes.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  - custom-legend
+  - html-export
+  patterns:
+  - data-generation
+  - matrix-construction
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - dark-theme
+  - custom-colormap
+  - alpha-blending
+  - edge-highlighting
