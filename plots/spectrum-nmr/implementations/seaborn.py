@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 spectrum-nmr: NMR Spectrum (Nuclear Magnetic Resonance)
 Library: seaborn 0.13.2 | Python 3.14.3
 Quality: 88/100 | Created: 2026-03-09
@@ -11,7 +11,7 @@ import seaborn as sns
 
 
 # Seaborn styling — distinctive context and style management
-sns.set_style("ticks", {"axes.linewidth": 0.8})
+sns.set_style("ticks", {"axes.linewidth": 0.8, "font.family": "serif"})
 sns.set_context("talk", font_scale=1.1, rc={"lines.linewidth": 1.8})
 
 # Data — synthetic 1H NMR spectrum of ethanol
@@ -50,106 +50,121 @@ spectrum = np.clip(spectrum, 0, None)
 # Build DataFrame for seaborn — enables semantic data handling
 df = pd.DataFrame({"Chemical Shift (ppm)": ppm, "Intensity": spectrum})
 
-# Assign peak regions for hue-based coloring
-peak_regions = []
-peak_palette = {}
-for s in ppm:
-    if 3.5 <= s <= 3.9:
-        peak_regions.append("CH₂ quartet")
-    elif 1.0 <= s <= 1.4:
-        peak_regions.append("CH₃ triplet")
-    elif 2.4 <= s <= 2.8:
-        peak_regions.append("OH singlet")
-    elif -0.1 <= s <= 0.1:
-        peak_regions.append("TMS")
-    else:
-        peak_regions.append("Baseline")
+# Vectorized region assignment using np.select (replaces verbose for-loop)
+conditions = [
+    (ppm >= 3.5) & (ppm <= 3.9),
+    (ppm >= 1.0) & (ppm <= 1.4),
+    (ppm >= 2.4) & (ppm <= 2.8),
+    (ppm >= -0.1) & (ppm <= 0.1),
+]
+choices = ["CH₂ quartet", "CH₃ triplet", "OH singlet", "TMS"]
+df["Region"] = np.select(conditions, choices, default="Baseline")
 
-df["Region"] = peak_regions
-
-# Custom palette using seaborn color palette tools
-region_colors = sns.color_palette("deep", n_colors=5)
+# Colorblind-safe palette using seaborn's built-in colorblind palette
+cb_palette = sns.color_palette("colorblind")
 peak_palette = {
-    "CH₂ quartet": region_colors[0],
-    "CH₃ triplet": region_colors[1],
-    "OH singlet": region_colors[2],
-    "TMS": region_colors[3],
-    "Baseline": "#888888",
+    "CH₂ quartet": cb_palette[0],  # blue
+    "CH₃ triplet": cb_palette[2],  # green-teal (distinguishable)
+    "OH singlet": cb_palette[4],  # sky blue
+    "TMS": cb_palette[1],  # orange
+    "Baseline": "#9e9e9e",
 }
 
 # Plot — use seaborn lineplot with hue for region-based coloring
 fig, ax = plt.subplots(figsize=(16, 9))
+fig.patch.set_facecolor("#fafafa")
+ax.set_facecolor("#fafafa")
 
-# Plot baseline segments first (thin, gray)
+# Plot baseline segments first (thin, muted)
 df_baseline = df[df["Region"] == "Baseline"]
 sns.lineplot(
-    data=df_baseline, x="Chemical Shift (ppm)", y="Intensity", color="#888888", linewidth=0.8, ax=ax, legend=False
+    data=df_baseline, x="Chemical Shift (ppm)", y="Intensity", color="#b0b0b0", linewidth=0.7, ax=ax, legend=False
 )
 
-# Overlay each peak region with its own color
-for region in ["TMS", "CH₃ triplet", "OH singlet", "CH₂ quartet"]:
+# Overlay each peak region with its own color and increasing linewidth for emphasis
+region_order = ["TMS", "OH singlet", "CH₃ triplet", "CH₂ quartet"]
+region_lw = {"TMS": 1.8, "OH singlet": 2.0, "CH₃ triplet": 2.4, "CH₂ quartet": 2.6}
+for region in region_order:
     df_region = df[df["Region"] == region]
     sns.lineplot(
         data=df_region,
         x="Chemical Shift (ppm)",
         y="Intensity",
         color=peak_palette[region],
-        linewidth=2.2,
+        linewidth=region_lw[region],
         ax=ax,
         label=region,
     )
 
 # Add rug marks at peak centers — distinctive seaborn feature
 peak_centers = pd.DataFrame({"Chemical Shift (ppm)": [0.0, 1.18, 2.61, 3.69]})
-sns.rugplot(data=peak_centers, x="Chemical Shift (ppm)", height=0.04, linewidth=1.5, color="#306998", ax=ax)
+sns.rugplot(data=peak_centers, x="Chemical Shift (ppm)", height=0.04, linewidth=2.0, color="#306998", ax=ax)
+
+# Fill under peaks using seaborn fill_between via matplotlib for emphasis
+for region in region_order:
+    mask = df["Region"] == region
+    ax.fill_between(
+        df.loc[mask, "Chemical Shift (ppm)"], df.loc[mask, "Intensity"], alpha=0.15, color=peak_palette[region]
+    )
 
 # Reverse x-axis (NMR convention: high ppm on left)
 ax.invert_xaxis()
 ax.set_xlim(5.5, -0.5)
 
-# Annotate key peaks with staggered positions
+# Annotate key peaks directly above with short vertical connectors
 max_intensity = spectrum.max()
-peak_labels = [
-    (0.0, "TMS\n0.00 ppm", (0.5, 0.55)),
-    (1.18, "CH₃ triplet\n1.18 ppm", (1.18, 0.80)),
-    (2.61, "OH singlet\n2.61 ppm", (2.61, 0.65)),
-    (3.69, "CH₂ quartet\n3.69 ppm", (4.2, 0.80)),
+peak_annotations = [
+    (0.0, "TMS · 0.00 ppm", 0.22, peak_palette["TMS"]),
+    (1.18, "CH₃ triplet · 1.18 ppm", 0.16, peak_palette["CH₃ triplet"]),
+    (2.61, "OH singlet · 2.61 ppm", 0.28, peak_palette["OH singlet"]),
+    (3.69, "CH₂ quartet · 3.69 ppm", 0.30, peak_palette["CH₂ quartet"]),
 ]
 
-for peak_ppm, label, text_pos in peak_labels:
+for peak_ppm, label, offset_frac, color in peak_annotations:
     peak_idx = np.argmin(np.abs(ppm - peak_ppm))
     peak_intensity = spectrum[peak_idx]
+    text_y = peak_intensity + max_intensity * offset_frac
     ax.annotate(
         label,
         xy=(peak_ppm, peak_intensity),
-        xytext=(text_pos[0], max_intensity * text_pos[1]),
-        fontsize=15,
+        xytext=(peak_ppm, text_y),
+        fontsize=14,
+        fontweight="medium",
         ha="center",
         va="bottom",
-        color="#333333",
-        arrowprops={"arrowstyle": "->", "color": "#666666", "lw": 1.0},
+        color=color,
+        arrowprops={"arrowstyle": "-", "color": color, "lw": 1.0},
     )
 
-# Style using seaborn's despine
-ax.set_ylabel("Intensity", fontsize=20)
+# Style using seaborn's despine and KDE-style labeling
+ax.set_ylabel("Intensity", fontsize=20, labelpad=10)
+ax.set_xlabel("Chemical Shift (ppm)", fontsize=20, labelpad=10)
 ax.set_title(
-    "¹H NMR Spectrum of Ethanol · spectrum-nmr · seaborn · pyplots.ai", fontsize=24, fontweight="medium", pad=20
+    "¹H NMR Spectrum of Ethanol · spectrum-nmr · seaborn · pyplots.ai",
+    fontsize=24,
+    fontweight="semibold",
+    pad=20,
+    color="#2c3e50",
 )
 ax.set_yticks([])
-ax.set_ylim(-0.01, max_intensity * 1.3)
+ax.set_ylim(-0.01, max_intensity * 1.45)
+ax.tick_params(axis="x", labelsize=16)
 
-# Legend — seaborn-styled
-ax.legend(
+# Legend — seaborn-styled with refined frame
+legend = ax.legend(
     loc="upper right",
     fontsize=14,
     frameon=True,
-    framealpha=0.9,
-    edgecolor="#cccccc",
+    framealpha=0.95,
+    edgecolor="#d0d0d0",
+    fancybox=True,
+    shadow=True,
     title="Peak Assignment",
     title_fontsize=15,
 )
+legend.get_title().set_fontweight("semibold")
 
 sns.despine(ax=ax, left=True)
 
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+plt.savefig("plot.png", dpi=300, bbox_inches="tight", facecolor="#fafafa")
