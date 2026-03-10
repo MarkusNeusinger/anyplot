@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 pictogram-basic: Pictogram Chart (Isotype Visualization)
 Library: bokeh 3.8.2 | Python 3.14.3
 Quality: 87/100 | Created: 2026-03-10
@@ -6,15 +6,24 @@ Quality: 87/100 | Created: 2026-03-10
 
 import numpy as np
 from bokeh.io import export_png, output_file, save
-from bokeh.models import BoxAnnotation, ColumnDataSource, CustomJSTickFormatter, FixedTicker, Label, Range1d, Title
+from bokeh.models import (
+    BoxAnnotation,
+    ColumnDataSource,
+    CustomJSTickFormatter,
+    FixedTicker,
+    HoverTool,
+    Label,
+    Range1d,
+    Title,
+)
 from bokeh.plotting import figure
 
 
 # Data - Fruit production (thousands of tonnes)
 categories = ["Apples", "Oranges", "Bananas", "Grapes", "Mangoes"]
-values = [35, 22, 18, 28, 12]
+values = [35, 23, 17, 28, 11]
 icon_value = 5
-colors = ["#306998", "#E8963E", "#F2C94C", "#7B68AE", "#5DA87E"]
+colors = ["#306998", "#E07B39", "#C9556B", "#7B68AE", "#5DA87E"]
 
 # Sort by value descending for visual hierarchy
 sorted_data = sorted(zip(categories, values, colors, strict=True), key=lambda x: x[1], reverse=True)
@@ -23,7 +32,7 @@ values = [d[1] for d in sorted_data]
 colors = [d[2] for d in sorted_data]
 
 # Build icon grid positions
-full_x, full_y, full_c, full_alpha = [], [], [], []
+full_x, full_y, full_c, full_alpha, full_cat, full_val = [], [], [], [], [], []
 bg_x, bg_y = [], []
 wedge_x, wedge_y, wedge_c, wedge_end, wedge_alpha = [], [], [], [], []
 n_cats = len(categories)
@@ -32,7 +41,7 @@ radius = 0.40
 # Emphasis: top category full opacity, bottom fades for visual hierarchy
 alphas = [1.0, 0.88, 0.88, 0.82, 0.72]
 
-for i, (_cat, val, color) in enumerate(zip(categories, values, colors, strict=True)):
+for i, (cat, val, color) in enumerate(zip(categories, values, colors, strict=True)):
     n_full = int(val // icon_value)
     remainder = val % icon_value
     fraction = remainder / icon_value
@@ -43,6 +52,8 @@ for i, (_cat, val, color) in enumerate(zip(categories, values, colors, strict=Tr
         full_y.append(y)
         full_c.append(color)
         full_alpha.append(alphas[i])
+        full_cat.append(cat)
+        full_val.append(f"{val}k tonnes")
 
     if fraction > 0:
         bg_x.append(n_full)
@@ -58,15 +69,18 @@ max_icons = max(int(np.ceil(v / icon_value)) for v in values)
 p = figure(
     width=4800,
     height=2700,
-    x_range=Range1d(-0.7, max_icons + 1.2),
+    x_range=Range1d(-0.65, max_icons + 0.2),
     y_range=Range1d(-0.85, n_cats - 0.2),
     toolbar_location=None,
-    title="Fruit Production · pictogram-basic · bokeh · pyplots.ai",
+    title="pictogram-basic · bokeh · pyplots.ai",
 )
 
 # Subtitle with units context — centered to match title
 subtitle = Title(
-    text="Annual output in thousands of tonnes", text_font_size="22pt", text_color="#777777", align="center"
+    text="Fruit Production — Annual output in thousands of tonnes",
+    text_font_size="24pt",
+    text_color="#777777",
+    align="center",
 )
 p.add_layout(subtitle, "above")
 
@@ -77,10 +91,16 @@ for i in range(n_cats):
         p.add_layout(band)
 
 # Full icons
-full_source = ColumnDataSource(data={"x": full_x, "y": full_y, "color": full_c, "alpha": full_alpha})
-p.circle(
+full_source = ColumnDataSource(
+    data={"x": full_x, "y": full_y, "color": full_c, "alpha": full_alpha, "category": full_cat, "value": full_val}
+)
+circles = p.circle(
     x="x", y="y", radius=radius, source=full_source, color="color", alpha="alpha", line_color="white", line_width=3
 )
+
+# Interactive hover tooltip (Bokeh-specific feature for HTML output)
+hover = HoverTool(renderers=[circles], tooltips=[("Category", "@category"), ("Production", "@value")])
+p.add_tools(hover)
 
 # Partial icon backgrounds (gray circles)
 if bg_x:
@@ -114,13 +134,14 @@ for i, (_cat, val) in enumerate(zip(categories, values, strict=True)):
     font_size = "24pt" if i == 0 else "22pt"
     font_style = "bold" if i == 0 else "normal"
     val_label = Label(
-        x=n_icons + 0.15,
+        x=n_icons + 0.1,
         y=y,
-        text=f"{val:,} k",
+        text=f"{val:,}k",
         text_font_size=font_size,
         text_font_style=font_style,
         text_color="#333333" if i == 0 else "#555555",
         text_baseline="middle",
+        text_align="left",
         x_units="data",
         y_units="data",
     )
@@ -168,7 +189,7 @@ p.border_fill_color = "#FFFFFF"
 p.min_border_left = 220
 p.min_border_bottom = 100
 p.min_border_top = 80
-p.min_border_right = 60
+p.min_border_right = 200
 
 # Save
 export_png(p, filename="plot.png")
