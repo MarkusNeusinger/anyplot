@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 pictogram-basic: Pictogram Chart (Isotype Visualization)
 Library: seaborn 0.13.2 | Python 3.14.3
-Quality: 76/100 | Created: 2026-03-10
+Quality: 84/100 | Created: 2026-03-10
 """
 
 import matplotlib.colors as mcolors
