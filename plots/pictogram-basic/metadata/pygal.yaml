@@ -1,0 +1,220 @@
+library: pygal
+specification_id: pictogram-basic
+created: '2026-03-10T22:41:49Z'
+updated: '2026-03-10T23:06:47Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22927470299
+issue: 4674
+python_version: 3.14.3
+library_version: 3.1.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/pictogram-basic/pygal/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/pictogram-basic/pygal/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/pictogram-basic/pygal/plot.html
+quality_score: 87
+review:
+  strengths:
+  - Clever use of pygal.Dot as a pictogram approximation with dot matrix data construction
+  - 'Strong data storytelling: title communicates the insight, descending order, saturated
+    leader color'
+  - Clean visual design with hidden guides, white background, and custom color palette
+  - Well-structured, deterministic code with clear comments explaining design choices
+  - Good feature coverage showing both exact multiples and remainders
+  weaknesses:
+  - Partial values shown as smaller dots rather than partially-filled icons — less
+    intuitive for the pictogram concept
+  - Some empty canvas space to the right for shorter rows creates slight visual imbalance
+  image_description: 'The plot displays a dot chart (pygal.Dot) used as a pictogram
+    approximation for fruit production data. Five categories are arranged as horizontal
+    rows: Apples (top), Oranges, Bananas, Grapes, and Mangoes (bottom). Each category
+    has large circular dots where each full dot represents 5,000 tonnes of production.
+    Apples has 7 full-sized steel blue dots spanning to 35k; Oranges has 4 full gold
+    dots plus 1 smaller partial dot (22k); Bananas has 3 full teal dots plus 1 small
+    partial dot (18k); Grapes has 3 full purple dots (15k); Mangoes has 1 full brick-red
+    dot plus 1 smaller partial dot (8k). The x-axis shows cumulative values (5k through
+    35k). The title reads "Fruit Production — Apples Lead at 4× Mangoes (each dot
+    ≈ 5 000 tonnes)" with a subtitle "pictogram-basic · pygal · pyplots.ai". A horizontal
+    legend at the bottom shows all five categories with their respective colors. The
+    background is clean white with no grid lines.'
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title=54, labels=48, major_label=38,
+          legend=38). Clearly readable. Title could be marginally larger.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or data elements
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Full dots large and prominent. Smallest partial dots (0.6 ratio)
+          are noticeably tiny.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Five distinct hues distinguishable for colorblind viewers
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good utilization with generous margins. Some empty space to the right
+          for shorter rows.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive title with units, x-axis with scale, category labels
+          on y-axis
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom palette with intentional hierarchy, sans-serif typography,
+          clean white background
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Guides hidden, foreground_subtle transparent, generous margins, minimal
+          chrome
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Title tells story, descending order, saturated leader color creates
+          focal point
+    spec_compliance:
+      score: 13
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 4
+        max: 5
+        passed: true
+        comment: pygal.Dot as pictogram approximation. Partial values as smaller dots
+          rather than partially-filled icons.
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: Consistent unit, legend, partial representation, grid-like rows,
+          left labels all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Categories on y-axis, values by dot count on x-axis, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title includes spec-id · library · pyplots.ai. Legend shows all categories.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: 5 categories with good variation, exact multiples and remainders
+          shown
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Fruit production in thousands of tonnes, neutral real-world topic
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Realistic values for fruit production volumes
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean linear flow, no functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic with hardcoded data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only pygal and Style imported, both used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-commented, elegant dot_data construction
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png and plot.html, current API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of pygal.Dot, Style config, idiomatic chart.add() and render_to_png
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: pygal.Dot is distinctive, uses dot_size, legend_at_bottom_columns,
+          dual output
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques: []
+  patterns:
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - minimal-chrome
