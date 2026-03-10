@@ -1,7 +1,7 @@
 """ pyplots.ai
 pictogram-basic: Pictogram Chart (Isotype Visualization)
 Library: letsplot 4.8.2 | Python 3.14.3
-Quality: 86/100 | Created: 2026-03-10
+Quality: 87/100 | Created: 2026-03-10
 """
 
 from lets_plot import *

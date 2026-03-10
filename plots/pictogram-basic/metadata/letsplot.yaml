@@ -1,7 +1,7 @@
 library: letsplot
 specification_id: pictogram-basic
 created: '2026-03-10T22:42:32Z'
-updated: '2026-03-10T22:52:37Z'
+updated: '2026-03-10T23:00:35Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 22927470515
 issue: 4674
@@ -10,31 +10,34 @@ library_version: 4.8.2
 preview_url: https://storage.googleapis.com/pyplots-images/plots/pictogram-basic/letsplot/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/pictogram-basic/letsplot/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/pictogram-basic/letsplot/plot.html
-quality_score: 86
+quality_score: 87
 review:
   strengths:
-  - Title format now correct (pictogram-basic · letsplot · pyplots.ai) — fixed from
-    attempt 1
-  - Value labels at row ends improve data storytelling and canvas utilization
-  - Perfect spec compliance with all required pictogram features
-  - Clean deterministic code with appropriate complexity
-  - Interactive tooltips leverage lets-plot distinctive capabilities
+  - Perfect spec compliance with all pictogram features (partial icons, unit legend,
+    grid layout, category labels)
+  - Top producer annotation and high-to-low ordering create good data storytelling
+  - 'Clean minimal design: grid removed, ticks removed, white tile borders provide
+    polish'
+  - Interactive tooltips via layer_tooltips() leverage lets-plot distinctive capabilities
+  - Fully deterministic, clean KISS code structure
   weaknesses:
-  - Design excellence still has room for improvement — no strong focal point or visual
-    emphasis
-  - Value label font size (18pt) slightly below guideline; could match y-axis at 20pt
-  - Empty space gap between short rows and their value labels reduces visual cohesion
+  - Value label font size (18pt) slightly below 20pt guideline for optimal legibility
+  - Design excellence could be further elevated with more typographic refinement or
+    color gradients
+  - Some empty canvas space remains in the bottom-right area
   image_description: 'The plot displays a pictogram chart titled "pictogram-basic
-    · letsplot · pyplots.ai" with the subtitle "Fruit Production — Each square represents
-    5 thousand tonnes." Five fruit categories are arranged vertically with labels
+    · letsplot · pyplots.ai" with subtitle "Fruit Production — Each square represents
+    5 thousand tonnes." Five fruit categories are arranged vertically with bold labels
     on the left y-axis: Apples (top, steel blue, 7 full squares), Oranges (orange,
     4 full + 1 partial at ~40% opacity), Bananas (golden yellow, 3 full + 1 partial
     at ~60% opacity), Grapes (purple, 2 full + 1 partial at ~40% opacity), and Mangoes
-    (green, 1 full + 1 partial at ~60% opacity). Each square has white borders separating
-    them. Value labels appear at the right end of each row in bold dark gray text
-    ("35k tonnes", "22k tonnes", "18k tonnes", "12k tonnes", "8k tonnes"). Background
-    is clean white with no grid lines, no axis ticks, and no x-axis labels. Categories
-    are ordered from highest to lowest value.'
+    (teal green, 1 full + 1 partial at ~60% opacity). Each square has white borders
+    separating them cleanly. Value labels appear at the right end of each row in bold
+    dark gray text ("35k tonnes", "22k tonnes", "18k tonnes", "12k tonnes", "8k tonnes").
+    A "★ Top producer" annotation in blue appears above the Apples value, creating
+    a focal point. The background is a subtle light gray panel on white, with no grid
+    lines, no axis ticks, and no x-axis labels. Categories are ordered from highest
+    to lowest value.'
   criteria_checklist:
     visual_quality:
       score: 28
@@ -46,42 +49,45 @@ review:
         max: 8
         passed: true
         comment: 'Font sizes explicitly set: title 24pt bold, subtitle 20pt, y-axis
-          20pt bold, value labels 18pt bold. Labels at 18pt slightly below 20pt guideline.'
+          20pt bold, value labels 18pt bold. Labels at 18pt slightly below 20pt guideline
+          but perfectly readable.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements anywhere; spacing is clean.
+        comment: No overlapping elements; spacing between rows, squares, and labels
+          is clean.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Squares are large and clearly visible with appropriate sizing and
-          white borders.
+        comment: Squares are large, clearly visible with white borders providing clean
+          separation.
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Five distinct colors all distinguishable for colorblind viewers.
+        comment: Blue, orange, gold, purple, teal green — all distinguishable for
+          colorblind viewers.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Value labels improve canvas utilization but moderate empty space
-          remains between short rows and labels.
+        comment: Value labels and annotation improve canvas utilization. Some empty
+          space at bottom-right area.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Correct title format, descriptive category labels, unit context in
-          subtitle.
+        comment: Correct title format, subtitle provides unit context with Each square
+          represents 5 thousand tonnes.
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -89,22 +95,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom 5-color palette, white tile borders, bold value labels. Above
-          defaults but not publication-level.
+        comment: Custom 5-color palette with good harmony, white tile borders, bold
+          value labels, Top producer annotation. Above defaults but not publication-level.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Grid removed, ticks removed, x-axis text removed, spines removed.
-          White borders add polish.
+        comment: Grid removed, ticks removed, x-axis hidden, subtle light gray panel
+          background. White tile borders add polish.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Value labels and high-to-low ordering guide the viewer, but no strong
-          focal point or emphasis.
+        comment: Top producer annotation creates focal point. High-to-low ordering
+          guides the viewer. Value labels provide immediate context.
     spec_compliance:
       score: 15
       max: 15
@@ -114,27 +120,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct pictogram/isotype chart using repeated square icons.
+        comment: Correct pictogram/isotype chart using repeated square icons representing
+          fixed quantities.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: fixed unit value, partial icons, grid
-          arrangement, labels, unit legend in subtitle.'
+        comment: 'All spec features present: fixed unit value, partial icons via alpha,
+          grid arrangement, left-aligned labels, unit legend in subtitle.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Categories on Y-axis, icon count on X-axis, all data correctly mapped.
+        comment: Categories on Y-axis, icon count on X-axis, all data correctly mapped
+          and visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title format correct: pictogram-basic · letsplot · pyplots.ai. Categories
-          self-explanatory via y-axis labels.'
+        comment: Title format pictogram-basic · letsplot · pyplots.ai correct. Categories
+          self-explanatory via y-axis labels.
     data_quality:
       score: 14
       max: 15
@@ -144,7 +152,8 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Shows varying quantities with partial icons at different fill levels.
+        comment: Shows 5 categories with varying quantities (8-35), partial icons
+          at different fill levels. Good variety.
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -157,7 +166,8 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Values are plausible for fruit production volumes.
+        comment: Values plausible for fruit production volumes with sensible icon-to-value
+          ratio.
     code_quality:
       score: 10
       max: 10
@@ -173,13 +183,13 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic with hardcoded values.
+        comment: Fully deterministic with hardcoded values, no randomness.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Single standard import from lets_plot.
+        comment: Single standard wildcard import from lets_plot.
       - id: CQ-04
         name: Code Elegance
         score: 2
@@ -202,8 +212,8 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of ggplot grammar with aes, geom_tile, scale_alpha_identity,
-          scale_fill_manual, theme_minimal.
+        comment: Good ggplot grammar with aes, geom_tile, scale_alpha_identity, scale_fill_manual,
+          theme_minimal, element_blank.
       - id: LM-02
         name: Distinctive Features
         score: 3
