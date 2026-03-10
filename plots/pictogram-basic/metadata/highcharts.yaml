@@ -1,0 +1,234 @@
+library: highcharts
+specification_id: pictogram-basic
+created: '2026-03-10T22:44:59Z'
+updated: '2026-03-10T23:22:58Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22927470302
+issue: 4674
+python_version: 3.14.3
+library_version: unknown
+preview_url: https://storage.googleapis.com/pyplots-images/plots/pictogram-basic/highcharts/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/pictogram-basic/highcharts/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/pictogram-basic/highcharts/plot.html
+quality_score: 93
+review:
+  strengths:
+  - Excellent data storytelling with annotation bracket showing 2.9x difference and
+    subtitle highlighting key insight
+  - Clean colorblind-safe palette with strong visual hierarchy (top producer emphasis
+    via larger circles)
+  - Partial icons represented through opacity - creative and effective approach
+  - 'Polished visual refinement: removed all chrome, alternating row bands, white
+    circle borders'
+  - Uses distinctive Highcharts renderer API for custom bracket annotation
+  weaknesses:
+  - Inter-row vertical spacing slightly excessive, leaving some unused canvas area
+  - LM-01 could be higher with more advanced Highcharts patterns (e.g., custom point
+    symbols, drilldown)
+  image_description: 'The plot displays a pictogram chart with 5 fruit categories
+    (Apples, Grapes, Oranges, Bananas, Strawberries) arranged as horizontal rows on
+    an off-white (#FAFBFC) background. Each row uses large colored circles with white
+    borders, where each circle represents 5k tons of annual production. Apples (blue
+    #306998, 7 circles, 35k) has the longest row with slightly larger circles for
+    emphasis. Grapes (purple #7B68A8, 5 circles, 25k), Oranges (orange #E8813B, 4
+    full + 1 partial, 22k), Bananas (amber #D4A017, 3 full + 1 partial, 18k), and
+    Strawberries (crimson #C0392B, 2 full + 1 partial, 12k) follow. Partial icons
+    use reduced opacity to represent fractional remainders. Alternating light blue
+    bands separate rows. Data labels (e.g., "35k", "12k") appear next to the last
+    icon in each row. A dashed blue bracket annotation on the right connects the Apples
+    and Strawberries rows with a "2.9x difference" callout label. The title reads
+    "pictogram-basic · highcharts · pyplots.ai" and the subtitle states "Annual Fruit
+    Production — each ● = 5k tons" with an accent-colored highlight "Apples lead at
+    nearly 3× Strawberries".'
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 46px, subtitle 30px, y-axis
+          labels 36px, data labels 30px, tooltip 24px'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text. Data labels well-positioned with x-offset
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Circles large (radius 44-50) with white borders, clearly visible
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Colorblind-safe palette: blue, purple, orange, amber, crimson'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good layout overall. Right margin generous for annotation. Inter-row
+          spacing slightly excessive
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Subtitle provides unit context. Category labels descriptive. Axes
+          appropriately hidden
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Strong design: custom palette, white circle borders, off-white background,
+          styled subtitle with accent callout'
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: All spines/grid/ticks removed. Alternating plot bands. White circle
+          borders. Generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Annotation bracket with 2.9x difference, subtitle highlights key
+          insight, top producer emphasis
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct pictogram chart using scatter circles as icons
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: unit value, legend, partial icons, grid
+          rows, category labels'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Categories on Y-axis, icon positions on X-axis. Correct horizontal
+          layout
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title exactly matches format. Series named with categories. Unit
+          legend in subtitle
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Full icons, partial icons, varying quantities, exact multiples, various
+          remainders
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Fruit production in thousands of tons - real-world plausible and
+          neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values sensible for fruit production context. Good range 12k-35k
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear structure: imports, data, chart config, series loop, HTML,
+          screenshot'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic hardcoded data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-organized. Annotation JS appropriate complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png via Selenium screenshot
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of scatter series, options API, per-point data labels, plot
+          bands, tooltip config
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses Highcharts renderer API for custom bracket annotation, hover
+          states, inline HTML subtitles
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - annotations
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - edge-highlighting
