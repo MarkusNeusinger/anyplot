@@ -1,0 +1,224 @@
+library: seaborn
+specification_id: pictogram-basic
+created: '2026-03-10T22:42:01Z'
+updated: '2026-03-10T23:06:45Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22927470202
+issue: 4674
+python_version: 3.14.3
+library_version: 0.13.2
+preview_url: https://storage.googleapis.com/pyplots-images/plots/pictogram-basic/seaborn/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/pictogram-basic/seaborn/plot_thumb.png
+preview_html: null
+quality_score: 87
+review:
+  strengths:
+  - Custom fruit-inspired color palette with faded variants for partial icons — cohesive
+    and visually appealing
+  - Excellent data storytelling with sorted values, highlighted top category, and
+    bold annotation
+  - 'Clean visual refinement: all spines removed, no grid, generous whitespace'
+  - Creative use of seaborn stripplot for pictogram layout
+  - Perfect code quality with clean structure and deterministic data
+  weaknesses:
+  - Partial icons use faded color rather than half-filled shapes as spec suggests
+  - Red and rosy pink may be less distinguishable under certain color vision deficiencies
+  - Some unused canvas space to the right of annotations
+  image_description: 'The plot displays a pictogram chart titled "pictogram-basic
+    · seaborn · pyplots.ai". Five fruit categories are listed vertically on the left:
+    Apples, Grapes, Oranges, Bananas, and Strawberries (sorted descending by value).
+    Each category has a row of colored circles — Apples in rich red (7 full), Grapes
+    in deep purple (5 full + 1 faded partial), Oranges in warm orange (4 full + 1
+    faded partial), Bananas in golden yellow (3 full + 1 faded partial), and Strawberries
+    in rosy pink (2 full + 1 faded partial). Faded/lighter circles represent partial
+    values. Value annotations appear to the right of each row (35k, 28k, 22k, 18k,
+    12k) with the top category (Apples) bolded. A subtle pink highlight band spans
+    the Apples row. The bottom annotation reads "● = 5 thousand tonnes (lighter =
+    partial value)" and the x-axis label says "Icons (each = 5 thousand tonnes)".
+    All spines are removed, giving a clean, minimal appearance. White background with
+    white-edged circles.'
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set. Title 24pt, categories 20pt, annotations
+          16pt. X-axis label at 16pt slightly below recommended 20pt.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or elements anywhere.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Icons at size=25 clearly visible, well-spaced, white edge outlines
+          enhance distinction.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 3
+        max: 4
+        passed: true
+        comment: Custom 5-hue palette. Red and pink may be less distinguishable for
+          some color vision deficiencies.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good canvas use overall. Some unused space on the right after value
+          annotations.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: X-axis label includes units. Title follows correct format.
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom fruit-inspired palette, white edge highlights, clean typography.
+          Above defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: All spines removed, no grid, generous whitespace, subtle highlight
+          band.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Sorted values, highlighted top category with band and bold annotation.
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct pictogram chart with repeated icons per category.
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: All features present. Partial icons use faded color instead of half-filled
+          shapes.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Categories on Y, icons on X, all data correctly mapped.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct title format. Unit legend annotation clearly explains values.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: 5 categories with varying values and partial icons. Could show one
+          category with no partial remainder.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Fruit production in thousands of tonnes — real-world, neutral, comprehensible.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values 12-35 thousand tonnes for fruits are realistic.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear flow with no functions or classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hardcoded data.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-structured code.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png at 300 DPI. Current seaborn API.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of sns.stripplot, sns.set_theme, sns.despine with axes-level
+          API.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Creative use of stripplot for pictogram layout. Heavy matplotlib
+          customization dilutes seaborn-native feel.
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - edge-highlighting
+  - minimal-chrome
