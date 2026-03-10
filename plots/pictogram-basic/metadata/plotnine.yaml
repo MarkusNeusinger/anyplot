@@ -1,7 +1,7 @@
 library: plotnine
 specification_id: pictogram-basic
 created: '2026-03-10T22:41:03Z'
-updated: '2026-03-10T22:55:14Z'
+updated: '2026-03-10T23:05:36Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 22927470238
 issue: 4674
@@ -10,37 +10,39 @@ library_version: 0.15.3
 preview_url: https://storage.googleapis.com/pyplots-images/plots/pictogram-basic/plotnine/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/pictogram-basic/plotnine/plot_thumb.png
 preview_html: null
-quality_score: 84
+quality_score: 87
 review:
   strengths:
-  - 'Significant improvement over attempt 1: per-fruit color palette eliminates monotone
-    issue and adds visual interest'
-  - Sorted data with end-of-row value labels creates clear visual hierarchy and data
-    storytelling
-  - Dynamic x-axis limit fixes wasted canvas space from previous attempt
-  - Perfect code quality — clean, deterministic, elegantly structured
-  - theme_void with careful typography creates a professional, infographic-like aesthetic
+  - 'Excellent partial icon rendering: dashed outline + left-aligned fill is a creative
+    and clear approach that matches the spec''s half-filled requirement'
+  - Colorblind-safe palette with five well-separated hues (blue, purple, orange, green,
+    dark red) — significant improvement from previous attempts
+  - 'Perfect data quality: realistic fruit production context with good value range
+    and feature coverage'
+  - Clean infographic aesthetic with theme_void, bold typography, and value labels
+    creating professional polish
+  - 'Flawless code quality: deterministic, clean imports, elegant structure'
   weaknesses:
-  - Orange and golden colors may be too similar for colorblind viewers — needs a more
-    carefully chosen colorblind-safe palette
-  - Partial icons use alpha fading rather than a visually half-filled approach (the
-    spec specifically mentions half-filled)
-  - No formal legend element — unit indication is only in the caption
-  - Library mastery could be stronger with more distinctive plotnine features
+  - Library mastery remains generic — the tile-grid approach doesn't leverage plotnine-distinctive
+    features
+  - Legend annotation is informal (annotate) rather than a structured legend element
+  - Value label font size (14) slightly below ideal threshold for 4800x2700 output
   image_description: 'The plot displays a pictogram chart titled "pictogram-basic
     · plotnine · pyplots.ai" in bold black text at the top. Five fruit categories
-    are listed on the left y-axis: Apples, Grapes, Oranges, Bananas, and Strawberries
-    (sorted highest to lowest). Each category has a row of colored square tiles —
-    Apples in steel blue (#306998, 7 full squares), Grapes in purple (#7B4F8A, 5 full
-    + 1 faded), Oranges in orange (#E8783A, 4 full + 1 faded), Bananas in golden (#D4A843,
-    3 full + 1 faded), and Strawberries in dark red (#C0392B, 2 full + 1 faded). Partial
-    units are rendered as faded (reduced alpha) squares. Bold gray value labels ("35k",
-    "28k", "22k", "18k", "12k") appear at the end of each row. A caption at the bottom
-    reads "Each square = 5 thousand tonnes · Faded = partial unit". The background
-    is white with no grid lines, no spines, and no x-axis text. Layout is 16:9 landscape.'
+    are listed on the left y-axis in large gray text: Apples, Grapes, Oranges, Bananas,
+    and Strawberries, sorted from highest to lowest value. Each category has a horizontal
+    row of colored square tiles — Apples in steel blue (7 full squares), Grapes in
+    purple (5 full + 1 partial), Oranges in orange (4 full + 1 partial), Bananas in
+    green (3 full + 1 partial), and Strawberries in dark red (2 full + 1 partial).
+    Partial icons are rendered with a left-aligned filled portion inside a dashed
+    outline, clearly indicating fractional units. Bold gray value labels ("35k", "28k",
+    "22k", "18k", "12k") appear at the end of each row. A gray square annotation at
+    the bottom-right reads "= 5k tonnes". A caption at the bottom reads "Partial squares
+    show fractional units · Source: FAO estimates". The background is white with no
+    grid lines, no spines, and no x-axis text (theme_void). Layout is 16:9 landscape.'
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -48,43 +50,44 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title 26pt bold, y-axis 20pt, caption 15pt, value labels size=14
-          bold. All explicitly set and readable.
+        comment: Title 26pt bold, y-axis 20pt, value labels size=14 bold, caption
+          14pt. All explicitly set. Value label font size slightly below ideal 16pt
+          threshold.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
         comment: No overlapping elements. Categories well-spaced, value labels clear
-          of tiles.
+          of tiles, partial icons clean.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Tiles well-sized (0.78x0.7) with good spacing. Partial units clearly
-          distinguishable via alpha.
+        comment: Tiles well-sized (0.82x0.70) with clear gaps. Partial icons use dashed
+          outline + left-fill which is highly visible.
       - id: VQ-04
         name: Color Accessibility
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Custom 5-color palette generally distinguishable, but orange and
-          golden may be hard to differentiate for deuteranopia.
+        comment: Blue, purple, orange, green, dark red — five well-separated hues
+          distinguishable under all common color vision deficiencies.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Dynamic x-limit improves canvas use. Slight empty space at bottom
-          beneath caption.
+        comment: Good canvas utilization with dynamic x-axis limit. Slight empty space
+          in bottom-right area.
       - id: VQ-06
         name: Axis Labels & Title
         score: 1
         max: 2
         passed: true
-        comment: Category labels descriptive. Units appear only in caption, not in
-          axis label.
+        comment: Category labels descriptive. Units appear in legend annotation and
+          caption, not directly on axis.
     design_excellence:
       score: 15
       max: 20
@@ -94,23 +97,24 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: 'Strong design: custom per-fruit palette starting with Python Blue,
-          bold typography, theme_void, value labels.'
+        comment: 'Strong design: custom per-fruit palette, bold typography, theme_void
+          infographic aesthetic, creative dashed-outline partial icons.'
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: theme_void removes all chrome, generous margins, clean tile spacing.
+        comment: theme_void removes all chrome. Generous margins. Clean tile spacing.
+          Dashed outlines on partial tiles add refinement.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
         comment: Data sorted by value with end-of-row labels creates clear visual
-          hierarchy.
+          hierarchy. Viewer immediately sees relative quantities.
     spec_compliance:
-      score: 13
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -118,14 +122,16 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct pictogram chart with repeated icon tiles per category.
+        comment: Correct pictogram chart with repeated icon tiles per category, matching
+          ISOTYPE style.
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Most features present. Partial icons use alpha fading rather than
-          half-filled shapes as spec suggests.
+        comment: 'All spec requirements met: consistent unit value, partial icons
+          with left-filled approach, grid-like row arrangement, category labels on
+          left, legend.'
       - id: SC-03
         name: Data Mapping
         score: 3
@@ -137,19 +143,19 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Title format correct. Caption serves as unit legend but no formal
-          legend element.
+        comment: Title format correct. Unit legend present as annotation but informal
+          rather than formal legend element.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 5 categories with varying values (12-35), both full and partial icons
-          shown.
+        comment: 5 categories with varying values (12-35), full and partial icons
+          both shown, includes no-remainder case.
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -161,7 +167,8 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Values 12-35k tonnes plausible for fruit production.
+        comment: Values 12-35k tonnes plausible for fruit production. Unit value of
+          5k produces readable icon counts.
     code_quality:
       score: 10
       max: 10
@@ -171,7 +178,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports-data-expansion-plot-save flow.
+        comment: Clean imports-data-tile construction-plot-save flow. No functions
+          or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -183,19 +191,20 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports used.
+        comment: All 14 plotnine imports are used. pandas imported and used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean loop, elegant alpha for partial units, strict=True in zip.
+        comment: Clean loop with strict=True, elegant two-tile approach for partial
+          icons, well-organized layer separation.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300.
+        comment: Saves as plot.png with dpi=300. Current API.
     library_mastery:
       score: 6
       max: 10
@@ -205,15 +214,15 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Good ggplot grammar: aes, geom_tile+geom_text layers, scale_*_identity,
-          Categorical ordering, theme_void.'
+        comment: 'Good ggplot grammar: aes, layered geom_tile + geom_text, scale_*_identity,
+          pd.Categorical ordering, theme_void, annotate.'
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: scale_alpha_identity and scale_fill_identity are plotnine patterns
-          but overall approach is fairly generic.
+        comment: scale_*_identity patterns are plotnine-idiomatic but the tile-grid
+          pictogram approach could be replicated in other libraries.
   verdict: REJECTED
 impl_tags:
   dependencies: []

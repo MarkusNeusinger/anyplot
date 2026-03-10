@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 pictogram-basic: Pictogram Chart (Isotype Visualization)
 Library: plotnine 0.15.3 | Python 3.14.3
-Quality: 84/100 | Created: 2026-03-10
+Quality: 87/100 | Created: 2026-03-10
 """
 
 import pandas as pd
