@@ -1,0 +1,228 @@
+library: letsplot
+specification_id: pictogram-basic
+created: '2026-03-10T22:42:32Z'
+updated: '2026-03-10T23:11:06Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22927470515
+issue: 4674
+python_version: 3.14.3
+library_version: 4.8.2
+preview_url: https://storage.googleapis.com/pyplots-images/plots/pictogram-basic/letsplot/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/pictogram-basic/letsplot/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/pictogram-basic/letsplot/plot.html
+quality_score: 90
+review:
+  strengths:
+  - Excellent pictogram layout with well-sized tiles, white borders, and alternating
+    row bands for readability
+  - Strong data storytelling with Top producer annotation, sorted categories, and
+    clear value labels
+  - Full spec compliance including partial icons via alpha transparency for fractional
+    remainders
+  - Clean layered composition using lets-plot grammar of graphics idiomatically
+  - Interactive tooltips and HTML export leverage lets-plot distinctive features
+  weaknesses:
+  - Layout has slightly more whitespace on the right side than optimal
+  - Could use more distinctive icon shapes instead of plain squares to enhance the
+    pictogram concept
+  image_description: 'The plot displays a pictogram chart titled "pictogram-basic
+    · letsplot · pyplots.ai" with subtitle "Fruit Production — Each square represents
+    5 thousand tonnes". Five fruit categories are arranged vertically from top to
+    bottom: Apples (7 blue squares, 35k tonnes), Oranges (4 full orange + 1 partial
+    square, 22k tonnes), Bananas (3 full yellow + 1 partial square, 18k tonnes), Grapes
+    (2 full purple + 1 partial square, 12k tonnes), and Mangoes (1 full green + 1
+    partial square, 8k tonnes). Partial squares use reduced opacity to indicate fractional
+    values. Alternating light gray background bands appear behind odd-indexed rows
+    (Apples, Bananas, Mangoes) for visual rhythm. Bold value labels (e.g., "35k tonnes")
+    appear to the right of each row. A blue "★ Top producer" annotation appears above
+    the Apples row. White borders separate each tile. The overall design is clean
+    with a white background, no grid lines, no axis spines, and category labels on
+    the left y-axis.'
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 24pt, subtitle 20pt, axis text
+          20pt, value labels 20pt, annotation 16pt'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text elements, well-spaced layout
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Tiles well-sized at 0.82 width/height, white borders provide clear
+          separation, partial icons clearly visible
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Five distinct colors (blue, orange, yellow, purple, green) are colorblind-distinguishable
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good canvas utilization but slightly more whitespace on right side
+          than needed
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive title with correct format, subtitle serves as unit legend,
+          category labels on y-axis
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom color palette, white-bordered tiles, alternating row bands,
+          professional infographic style
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Grid removed, spines removed, clean white background, alternating
+          bands, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Top producer annotation creates focal point, sorted data, value labels
+          aid comparison
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct pictogram chart with repeated square icons per category
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Consistent unit value, unit legend in subtitle, partial icons via
+          alpha, grid-like rows, category labels on left
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Categories on y-axis, icon count on x-axis, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct, subtitle serves as pictogram legend
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows varying quantities and partial icons across 5 categories with
+          good range (8-35)
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Fruit production in thousands of tonnes - real-world, neutral, comprehensible
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values plausible for fruit production quantities
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports, data, plot, save - no functions or classes'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic with hardcoded values
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Single import from lets_plot
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean data construction loop, well-structured layered plot composition
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with scale=3, also HTML export
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Proper ggplot grammar with layered geoms, scales, and theme customization
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses layer_tooltips() for interactive hover, scale_alpha_identity(),
+          HTML export
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - edge-highlighting
+  - alpha-blending
