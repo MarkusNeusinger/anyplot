@@ -1,7 +1,7 @@
 library: seaborn
 specification_id: pictogram-basic
 created: '2026-03-10T22:42:01Z'
-updated: '2026-03-10T22:53:34Z'
+updated: '2026-03-10T23:00:50Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 22927470202
 issue: 4674
@@ -10,45 +10,44 @@ library_version: 0.13.2
 preview_url: https://storage.googleapis.com/pyplots-images/plots/pictogram-basic/seaborn/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/pictogram-basic/seaborn/plot_thumb.png
 preview_html: null
-quality_score: 84
+quality_score: 88
 review:
   strengths:
-  - Excellent spec compliance with all required pictogram features including partial
-    icons via faded colors
-  - Good data storytelling with sorted categories, highlight band on leader, and bold
-    annotation creating visual hierarchy
-  - Clean code structure with elegant faded-color approach for partial values
-  - Fully deterministic, well-organized DataFrame-based approach
+  - Excellent spec compliance with all pictogram features implemented (partial icons,
+    unit legend, left-aligned grid layout)
+  - Creative use of seaborn stripplot for pictogram layout — idiomatic and distinctive
+  - Strong visual refinement with removed spines, clean whitespace, and polished details
+  - Good data storytelling with sorted values, highlight band on leader, and bold
+    top annotation
+  - Clean, readable code with appropriate complexity
   weaknesses:
-  - Color palette is custom but not from a standard colorblind-safe palette — purple
-    and blue may be confusable
-  - Library mastery could be stronger — core visualization relies on basic scatterplot
-    rather than leveraging distinctive seaborn features
-  - Legend annotation font size (15pt) slightly below the 16pt guideline
-  image_description: 'The plot displays a pictogram chart with 5 fruit categories
-    arranged vertically: Apples (top), Grapes, Oranges, Bananas, and Strawberries
-    (bottom). Each category has a row of circular icons where each full circle represents
-    5 thousand tonnes of production. Apples has 7 full dark blue circles (35k), Grapes
-    has 5 full purple circles plus 1 lighter partial circle (28k), Oranges has 4 full
-    orange circles plus 1 faded partial (22k), Bananas has 3 full yellow circles plus
-    1 lighter partial (18k), and Strawberries has 2 full red circles plus 1 faded
-    pink partial (12k). The top category (Apples) is highlighted with a subtle light
-    blue background band. Value annotations appear to the right of each row, with
-    the top value in bold. The title reads "pictogram-basic · seaborn · pyplots.ai"
-    and a bottom legend states "● = 5 thousand tonnes (lighter = partial value)".
-    All spines are removed, creating a clean white background.'
+  - Vertical spacing between categories is slightly too generous, reducing canvas
+    efficiency
+  - Color palette is the standard seaborn colorblind set — functional but not distinctive
+  - No axis label explaining the x-dimension
+  image_description: 'The plot displays a pictogram chart titled "pictogram-basic
+    · seaborn · pyplots.ai" showing fruit production data. Five categories are listed
+    vertically on the left: Apples, Grapes, Oranges, Bananas, and Strawberries. Each
+    category has a horizontal row of colored circles: Apples in blue (7 full circles,
+    35k), Grapes in orange (5 full + 1 faded partial, 28k), Oranges in teal/green
+    (4 full + 1 faded partial, 22k), Bananas in red-orange (3 full + 1 faded partial,
+    18k), and Strawberries in purple/pink (2 full + 1 faded partial, 12k). The top
+    category (Apples) has a subtle light blue background band for emphasis, and its
+    value annotation is bold. All circles have white edge outlines. A legend at the
+    bottom reads "● = 5 thousand tonnes (lighter = partial value)". All spines are
+    removed, no grid is shown, and the background is clean white.'
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title 24pt, y-labels 20pt, annotations
-          16pt). Legend annotation slightly small at 15pt.
+        comment: 'All font sizes explicitly set: title 24pt, y-ticks 20pt, annotations
+          16pt, legend 16pt'
       - id: VQ-02
         name: No Overlap
         score: 6
@@ -60,29 +59,29 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Circle markers at s=900 are well-sized and clearly distinguishable
+        comment: Circle markers well-sized (size=25), faded partials clearly distinguishable
       - id: VQ-04
         name: Color Accessibility
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Five distinct hues but purple and blue may be confusable for deuteranopia
-          viewers
+        comment: Seaborn colorblind palette, all five colors well-differentiated
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good layout, some unused canvas space on right side for shorter rows
+        comment: Good 16:9 proportions, slightly generous vertical spacing between
+          categories
       - id: VQ-06
         name: Axis Labels & Title
         score: 1
         max: 2
         passed: true
-        comment: Category labels descriptive, no axis units but legend provides unit
-          context
+        comment: Category labels present, legend explains units, but no formal axis
+          labels
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -90,21 +89,20 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom palette, white edge highlights, clean typography. Above default
-          but not publication-level.
+        comment: Above defaults with white edges, faded partials, highlight band,
+          bold top annotation
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: All spines removed, x-axis hidden, clean background, generous spacing
+        comment: Spines removed, no grid, tick marks removed, clean whitespace throughout
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Sorted by value, highlight band on leader, bold annotation creates
-          hierarchy
+        comment: Sorted values, top category highlighted with band and bold annotation
     spec_compliance:
       score: 15
       max: 15
@@ -114,26 +112,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct pictogram chart with repeated icons
+        comment: Correct pictogram chart with repeated circle icons in horizontal
+          rows
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features: repeated icons, partial icons, grid rows, left labels,
-          legend'
+        comment: 'All features: unit value, legend, partial icons, grid layout, left-aligned,
+          category labels'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Categories on y-axis, icon count maps to quantity correctly
+        comment: Categories on y-axis, icon counts on x-axis, all data correctly mapped
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend annotation present and descriptive
+        comment: Correct title format, legend annotation explains icon meaning and
+          partial values
     data_quality:
       score: 14
       max: 15
@@ -143,20 +143,21 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Shows full and partial icons with varying quantities across 5 categories
+        comment: Good value variation, multiple partial icons shown, but Apples has
+          no partial
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Fruit production in thousands of tonnes — real, neutral scenario
+        comment: Fruit production in thousands of tonnes — real, neutral, comprehensible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values plausible for fruit production, unit of 5k tonnes per icon
-          is sensible
+        comment: Values 12k-35k plausible for fruit production, unit=5 creates readable
+          icon counts
     code_quality:
       score: 10
       max: 10
@@ -166,33 +167,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean linear flow, no functions or classes
+        comment: 'Clean linear flow: imports, data, color mapping, plot, styling,
+          save'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic data
+        comment: Fully deterministic with hardcoded data values
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All four imports used
+        comment: 'All imports used: matplotlib.colors, plt, pd, sns'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean implementation with elegant faded-color approach
+        comment: Clean, well-structured code with appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300
+        comment: Saves as plot.png, dpi=300, bbox_inches=tight, current seaborn API
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -200,24 +202,24 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of sns.scatterplot, set_style, set_context, despine, color_palette
+        comment: Good use of stripplot, set_theme, despine, color_palette. DataFrame-centric
+          approach
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Core visualization relies on basic scatterplot; styling uses seaborn
-          ecosystem but not distinctive features
+        passed: true
+        comment: Creative use of stripplot with jitter=False for pictogram layout,
+          set_theme context=talk
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - manual-ticks
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
   - edge-highlighting
-  - minimal-chrome
+  - alpha-blending
