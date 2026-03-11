@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 spectrogram-mel: Mel-Spectrogram for Audio Analysis
 Library: plotnine 0.15.3 | Python 3.14.3
 Quality: 89/100 | Created: 2026-03-11
@@ -8,13 +8,16 @@ import numpy as np
 import pandas as pd
 from plotnine import (
     aes,
-    annotate,
     coord_cartesian,
     element_blank,
     element_rect,
     element_text,
     geom_raster,
+    geom_segment,
+    geom_text,
     ggplot,
+    guide_colorbar,
+    guides,
     labs,
     scale_fill_gradientn,
     scale_x_continuous,
@@ -91,13 +94,18 @@ y_ticks_hz = [f for f in y_ticks_hz if f <= sample_rate / 2]
 y_ticks_band = np.interp(y_ticks_hz, mel_center_freqs, np.arange(n_mels))
 
 
-# Annotation positions: convert Hz to mel band index for key frequency regions
-def hz_to_band(hz):
-    return float(np.interp(hz, mel_center_freqs, np.arange(n_mels)))
+# Annotation data — grammar-of-graphics approach: data-driven geom layers
+f0_band = float(np.interp(220, mel_center_freqs, np.arange(n_mels)))
+h3_band = float(np.interp(880, mel_center_freqs, np.arange(n_mels)))
 
+df_labels = pd.DataFrame(
+    {"x": [2.85, 2.85], "y": [f0_band, h3_band], "label": ["F\u2080", "3rd"], "color": ["#fcffa4", "#fb9b06"]}
+)
+df_reflines = pd.DataFrame(
+    {"x": [0.0, 0.0], "xend": [duration, duration], "y": [f0_band, h3_band], "yend": [f0_band, h3_band]}
+)
 
-# Plot - using geom_raster for smooth, gap-free rendering (plotnine-native)
-# annotate() layers add frequency region labels — a distinctive plotnine feature
+# Plot — geom_raster for smooth spectrogram, data-driven geom_text/geom_segment for annotations
 plot = (
     ggplot(df, aes(x="Time (s)", y="mel_band", fill="Power (dB)"))
     + geom_raster(interpolate=True)
@@ -116,23 +124,41 @@ plot = (
         ],
         name="Power (dB)",
     )
-    + annotate(
-        "text",
-        x=2.85,
-        y=hz_to_band(220),
-        label="F₀",
+    + guides(fill=guide_colorbar(nbin=256, display="raster"))
+    + geom_text(
+        aes(x="x", y="y", label="label"),
+        data=df_labels.iloc[[0]],
+        inherit_aes=False,
         color="#fcffa4",
         size=11,
         ha="right",
         fontweight="bold",
         alpha=0.85,
     )
-    + annotate("text", x=2.85, y=hz_to_band(880), label="3rd", color="#fb9b06", size=9, ha="right", alpha=0.7)
-    + annotate(
-        "segment", x=0.0, xend=duration, y=hz_to_band(220), yend=hz_to_band(220), color="#fcffa4", alpha=0.15, size=0.4
+    + geom_text(
+        aes(x="x", y="y", label="label"),
+        data=df_labels.iloc[[1]],
+        inherit_aes=False,
+        color="#fb9b06",
+        size=9,
+        ha="right",
+        alpha=0.7,
     )
-    + annotate(
-        "segment", x=0.0, xend=duration, y=hz_to_band(880), yend=hz_to_band(880), color="#fb9b06", alpha=0.12, size=0.3
+    + geom_segment(
+        aes(x="x", xend="xend", y="y", yend="yend"),
+        data=df_reflines.iloc[[0]],
+        inherit_aes=False,
+        color="#fcffa4",
+        alpha=0.15,
+        size=0.4,
+    )
+    + geom_segment(
+        aes(x="x", xend="xend", y="y", yend="yend"),
+        data=df_reflines.iloc[[1]],
+        inherit_aes=False,
+        color="#fb9b06",
+        alpha=0.12,
+        size=0.3,
     )
     + scale_x_continuous(expand=(0, 0))
     + scale_y_continuous(breaks=y_ticks_band.tolist(), labels=[str(f) for f in y_ticks_hz], expand=(0, 0))
