@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 probability-weibull: Weibull Probability Plot for Reliability Analysis
 Library: pygal 3.1.0 | Python 3.14.3
-Quality: 83/100 | Created: 2026-03-11
+Quality: 85/100 | Created: 2026-03-11
 """
 
 import numpy as np

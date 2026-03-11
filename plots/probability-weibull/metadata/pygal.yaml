@@ -1,7 +1,7 @@
 library: pygal
 specification_id: probability-weibull
 created: '2026-03-11T21:54:05Z'
-updated: '2026-03-11T22:08:59Z'
+updated: '2026-03-11T22:17:13Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 22976096712
 issue: 4668
@@ -10,36 +10,39 @@ library_version: 3.1.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/probability-weibull/pygal/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/probability-weibull/pygal/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/probability-weibull/pygal/plot.html
-quality_score: 83
+quality_score: 85
 review:
   strengths:
-  - Excellent spec compliance — all required features implemented including bonus
-    B10 life marker
-  - Strong data storytelling with visual hierarchy (larger markers for key reference
-    points, dashed reference line)
-  - Clean, well-structured code with good comments and reproducible output
-  - Good use of pygal-specific features (per-point labels, custom formatters, dual
-    PNG/HTML output)
-  - Realistic turbine blade fatigue data in an appropriate engineering context
+  - Excellent spec compliance with all Weibull probability plot features (log x-axis,
+    linearized Weibull y-axis, fitted line, censored/failure distinction, 63.2% reference,
+    B10 life)
+  - Strong data quality with realistic turbine blade fatigue-life scenario and proper
+    Weibull parameter estimation
+  - Clean well-structured code with proper statistical computation (median rank, linear
+    regression on linearized data)
+  - Good use of pygal-specific features (per-point tooltips, custom formatters, dict-based
+    labels, HTML export)
+  - Thoughtful visual design with custom Style, subtle grid, and clear focal points
   weaknesses:
-  - Visual refinement could be improved — grid lines and frame/border are still somewhat
-    prominent
-  - Layout has wasted space in the lower probability region where no data points exist
-  - Legend area at bottom is somewhat crowded with 6 entries
-  - Color palette, while functional, lacks the refined harmony of publication-quality
-    work
+  - Legend has 6 items making the bottom legend area dense
+  - B10 marker color is close to fit line color reducing distinctiveness
+  - On-chart text annotations for key parameters would strengthen data storytelling
+  - Color palette could be more harmonious - red and goldenrod are somewhat jarring
+    together
   image_description: The plot displays a Weibull probability plot for turbine blade
-    fatigue life data. The x-axis shows "Time to Failure (hours, log scale)" with
-    tick labels from 1,000 to 15,000. The y-axis shows "Cumulative Failure Probability"
-    with Weibull-linearized tick labels at 1%, 5%, 10%, 20%, 50%, 63.2%, 80%, 90%,
-    95%, and 99%. A blue-gray fitted line runs diagonally from lower-left to upper-right.
-    Red dots (18 failures) are scattered along the fitted line showing the observed
-    data. Dark goldenrod/yellow dots (5 censored observations) are placed on the fitted
-    line at their respective time values. A dashed gray horizontal line marks the
-    63.2% characteristic life level. A large blue dot marks the B10 life at ~2,640h,
-    and an orange dot marks the η (characteristic life) at the 63.2% intersection
-    (~7,772h). The legend at bottom displays 6 entries across 2 rows. The background
-    is white with a light gray (#f8f8f8) plot area and subtle dashed grid lines.
+    fatigue-life data on a white background. The x-axis shows "Time to Failure (hours,
+    log scale)" with logarithmic tick marks at 1,000 through 15,000. The y-axis shows
+    "Cumulative Failure Probability" with Weibull-linearized scale from 1% to 99%,
+    including a 63.2% tick. A blue-gray diagonal fitted line runs from lower-left
+    to upper-right. Red circular markers represent 18 failure data points scattered
+    along the fitted line. Dark goldenrod/yellow markers show 5 censored (suspended)
+    observations placed on the fitted line at their respective times. A dashed horizontal
+    gray line marks the 63.2% characteristic life level. A large teal/dark-blue dot
+    marks B10 = 2,640h at approximately 10% probability. An orange-red marker indicates
+    η = 7,772h at the 63.2% intersection. The title reads "Turbine Blade Fatigue Life
+    · probability-weibull · pygal · pyplots.ai". A bottom legend with 3 columns shows
+    all 6 series entries. Grid lines are subtle dashed gray. Overall layout is clean
+    with good use of canvas space.
   criteria_checklist:
     visual_quality:
       score: 25
@@ -50,44 +53,45 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title=56, labels=40, major_labels=36,
-          legend=34). All text readable. Legend text slightly small.
+        comment: Font sizes explicitly set (title=56, labels=40, major_label=36, legend=36).
+          All text readable. Legend text slightly small.
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: No significant text overlap. Data points cluster in mid-range but
-          remain distinguishable.
+        comment: No significant text overlap. Some data point clustering in 2500-3500h
+          range but markers don't obscure each other.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Dots well-sized (10-12 for data, 18 for markers). Fitted line clearly
-          visible. Censored vs failure points distinguishable.
+        comment: Dots well-sized (10-12px), fitted line distinct. Censored vs failure
+          clearly distinguishable. B10 marker blends slightly with fit line.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Blue, red, and goldenrod are colorblind-distinguishable. Good contrast
-          on light gray background.
+        comment: Blue, red, goldenrod, gray palette. Distinguishable for most colorblind
+          types. Red and goldenrod could be more separated.
       - id: VQ-05
         name: Layout & Canvas
-        score: 2
+        score: 3
         max: 4
         passed: true
-        comment: Plot fills canvas horizontally but lower probability region (1%-5%)
-          has wasted vertical space. Legend area takes notable space.
+        comment: Good canvas utilization ~60%. Legend at bottom well-organized in
+          3 columns. Bottom margin slightly generous.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units on both axes.
+        comment: X-axis with units (hours, log scale), Y-axis descriptive (Cumulative
+          Failure Probability).
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -95,22 +99,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom color palette, light gray background, custom fonts. Above
-          defaults but not publication-level.
+        comment: Custom Style with intentional palette, custom fonts, good typography
+          hierarchy. Above defaults but not publication-ready.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Dashed grid guides, configured margins, light gray background. Grid
-          and frame could be more subtle.
+        comment: Subtle dashed grid, white background, generous margins. Good whitespace.
+          Could be more minimal.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Good hierarchy: larger B10/eta markers, dashed 63.2% reference line,
-          parameter values in legend labels.'
+        comment: 'Clear hierarchy: large eta/B10 markers as focal points, 63.2% reference
+          line, annotated parameters in legend. Could add on-chart annotations.'
     spec_compliance:
       score: 15
       max: 15
@@ -127,47 +131,46 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: log x, Weibull y, fitted line, median rank,
-          censored distinction, 63.2% line, plus B10 bonus.'
+        comment: 'All features: log x-axis, Weibull y-axis, fitted line with beta/eta,
+          median rank, censored distinction, 63.2% reference, B10 life.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X maps to log(time), Y maps to Weibull-linearized probability. Full
-          range with padding.
+        comment: X = time (log-transformed), Y = cumulative probability (Weibull-linearized).
+          Full data range shown.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title includes spec-id, library, pyplots.ai. Legend labels descriptive
-          with counts and parameters.
+        comment: Title format correct. Legend labels descriptive with counts and parameter
+          values.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows failures and censored data, fitted line, reference lines. Good
-          failure time variety.
+        comment: Shows failures (18) and censored (5), fitted line, characteristic
+          life, B10 life, shape parameter. All Weibull analysis aspects covered.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Turbine blade fatigue life — classic reliability engineering scenario,
-          neutral domain.
+        comment: 'Turbine blade fatigue-life: real engineering scenario, neutral topic.'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 1,000-15,000h range realistic for turbine blades. Beta=2.5 appropriate
-          for wear-out. Eta=7,772h plausible.
+        comment: Failure times 1500-13000h, beta=2.08 (increasing failure rate), eta=7772h.
+          Realistic turbine blade values.
     code_quality:
       score: 10
       max: 10
@@ -177,32 +180,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, calculations, chart, save. No functions/classes.'
+        comment: Imports -> data -> computation -> plot -> save. No functions/classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output.
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: numpy, pygal, Style, scipy.stats.'
+        comment: numpy, pygal, Style, scipy.stats all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-commented, appropriate complexity. Per-point tooltips
-          without over-engineering.
+        comment: Clean, well-organized. Appropriate complexity for Weibull analysis.
+          Vectorized numpy operations.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png via render_to_png(). Also generates HTML.
+        comment: Saves as plot.png via render_to_png(). Current pygal API.
     library_mastery:
       score: 7
       max: 10
@@ -212,22 +215,21 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good pygal.XY usage with Style, per-point label dicts, custom formatters,
-          y_labels with value/label dicts.
+        comment: Good use of pygal.XY, Style class, per-point tooltip dicts, custom
+          axis labels, value formatters.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Per-point label dicts, value_formatter/x_value_formatter, tooltip
-          config, dual PNG+HTML output.
-  verdict: REJECTED
+        comment: Per-point label dicts, dual formatters, dict-based axis labels, HTML
+          export, tooltip_fancy_mode.
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - scipy
   techniques:
   - manual-ticks
-  - custom-legend
   - hover-tooltips
   - html-export
   patterns:
@@ -236,4 +238,3 @@ impl_tags:
   - regression
   styling:
   - grid-styling
-  - alpha-blending
