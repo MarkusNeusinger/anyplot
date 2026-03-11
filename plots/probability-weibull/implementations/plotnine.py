@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 probability-weibull: Weibull Probability Plot for Reliability Analysis
 Library: plotnine 0.15.3 | Python 3.14.3
-Quality: 81/100 | Created: 2026-03-11
+Quality: 87/100 | Created: 2026-03-11
 """
 
 import numpy as np

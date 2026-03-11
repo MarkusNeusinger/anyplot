@@ -1,7 +1,7 @@
 library: plotnine
 specification_id: probability-weibull
 created: '2026-03-11T21:52:08Z'
-updated: '2026-03-11T21:56:13Z'
+updated: '2026-03-11T22:03:13Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 22976096449
 issue: 4668
@@ -10,106 +10,109 @@ library_version: 0.15.3
 preview_url: https://storage.googleapis.com/pyplots-images/plots/probability-weibull/plotnine/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/probability-weibull/plotnine/plot_thumb.png
 preview_html: null
-quality_score: 81
+quality_score: 87
 review:
   strengths:
-  - All specification requirements implemented correctly with proper Weibull mathematics
-  - Excellent data quality with realistic reliability engineering context (beta=2.74,
-    eta=4663 hrs)
-  - Clean well-structured code following KISS principles with proper seed
-  - Good colorblind-safe color choices (blue/orange)
-  - Proper median rank calculation and Weibull axis transformation
+  - 'Excellent spec compliance: all required features implemented correctly including
+    median rank formula, censored point distinction, and characteristic life reference'
+  - Strong data storytelling with the red diamond highlight at the characteristic
+    life intersection and parameter annotations
+  - Clean confidence band implementation using geom_ribbon adds statistical depth
+  - Well-structured code with clear linear flow and proper reproducibility
   weaknesses:
-  - Design is clean but not exceptional - needs more visual polish for publication
-    quality
-  - Censored observations placed at fixed y-position rather than integrated into visual
-    narrative
-  - No formal legend - relies on text annotations instead of aes mapping
-  - Annotation text sizes (10-12) noticeably smaller than axis text
-  - Generic ggplot patterns without plotnine-distinctive features
-  image_description: The plot displays a Weibull probability plot with a blue fitted
-    line running diagonally from lower-left to upper-right. The x-axis shows "Time
-    to Failure (hours)" on a logarithmic scale from 1000 to 10000. The y-axis shows
-    "Cumulative Failure Probability" on a linearized Weibull scale with tick marks
+  - The 63.2% annotation text slightly crowds nearby data points in the upper-middle
+    area
+  - Censored points placed at fixed arbitrary y-position could benefit from clearer
+    visual separation
+  - 'Visual refinement could be pushed further: panel border removal, grid line opacity
+    adjustments'
+  - 'Design not yet publication-level: needs more sophisticated typography hierarchy
+    and marker styling refinements'
+  image_description: The plot displays a Weibull probability plot with the title "probability-weibull
+    · plotnine · pyplots.ai" in bold at the top. The x-axis shows "Time to Failure
+    (hours)" with log-scaled tick marks at 1000, 2000, 3000, 5000, 7000, and 10000.
+    The y-axis shows "Cumulative Failure Probability" with Weibull-linearized ticks
     at 1%, 5%, 10%, 20%, 40%, 63.2%, 80%, 90%, and 99%. Blue filled circles represent
-    25 failure data points that closely follow the fitted line. Orange triangle markers
-    are placed along the bottom of the plot representing 7 censored observations.
-    A dashed gray horizontal reference line marks the 63.2% characteristic life level,
-    labeled on the right. An annotation in the upper-left shows β = 2.74, η = 4663
-    hrs, R² = 0.978. The title reads "probability-weibull · plotnine · pyplots.ai"
-    in bold at the top. The background uses a minimal theme with subtle gray grid
-    lines.
+    failure data points aligned along a blue fitted regression line, accompanied by
+    a light blue confidence band (ribbon). Orange triangles mark censored observations
+    placed at a fixed low y-position near the bottom. A dotted horizontal reference
+    line at 63.2% and a dotted vertical line at the characteristic life (~4663 hrs)
+    intersect at a red diamond marker. Annotations display "63.2% → η = 4663 hrs"
+    in red near the diamond and "β = 2.74  η = 4663 hrs  R² = 0.978" in blue near
+    the upper-left. A legend on the right distinguishes "Failure" (blue circle) and
+    "Censored" (orange triangle). The background is subtly off-white with only horizontal
+    y-axis grid lines in light gray.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title=24, axis_title=20, axis_text=16).
-          Annotation text at size 10-12 slightly small but readable.
+        comment: 'All font sizes explicitly set: title 24pt, axis titles 20pt, axis
+          text 16pt, legend 14-16pt'
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No overlapping text elements anywhere.
+        comment: Minor crowding near 63.2% annotation where text slightly overlaps
+          nearby data points
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Markers visible at size=4 with good alpha. Could be slightly larger
-          for ~32 data points.
+        comment: Markers well-sized for ~32 data points; censored triangles visible
+          but could be slightly larger
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Blue and orange provide excellent colorblind-safe contrast.
+        comment: Blue/orange palette is colorblind-safe with good contrast
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good 16:9 proportions. Slight wasted space at top and bottom margins.
+        comment: Good proportions, balanced margins, plot fills canvas well
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units on x-axis, probability percentages
-          on y-axis.
+        comment: Descriptive labels with units
     design_excellence:
-      score: 10
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Clean minimal look with Python Blue. Well-configured but looks like
-          a good library default rather than custom design.
+        passed: true
+        comment: Custom color palette, bold annotations, confidence band; above defaults
+          but not publication-level
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: theme_minimal removes spines, grid alpha=0.2 is subtle, minor grid
-          removed. Some refinement but could go further.
+        passed: true
+        comment: Minor grid removed, subtle horizontal-only grid, custom panel background,
+          good whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Parameter annotations guide viewer to key insights. 63.2% reference
-          adds context. But no strong visual focal point.
+        passed: true
+        comment: Clear visual hierarchy with characteristic life highlight, confidence
+          band, parameter annotations
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -118,26 +121,26 @@ review:
         max: 5
         passed: true
         comment: Correct Weibull probability plot with log x-axis and linearized Weibull
-          CDF y-axis.
+          y-axis
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: log x, Weibull y, fitted line, beta/eta, median
-          rank, censored distinction, 63.2% line.'
+        comment: 'All features present: fitted line, parameters, median rank, censored
+          distinction, 63.2% reference'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=time to failure, Y=cumulative probability, correctly mapped.
+        comment: X/Y correctly assigned, axes show full data range
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Title format correct. No formal legend — uses text annotations instead.
+        comment: Correct title format, descriptive legend labels
     data_quality:
       score: 14
       max: 15
@@ -147,21 +150,20 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Shows failures and censored observations. Data follows fitted line
-          well. Could benefit from more spread.
+        comment: Good mix of failures and censored data, data follows Weibull distribution
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Turbine blade fatigue-life scenario with realistic parameters.
+        comment: Realistic reliability engineering scenario with plausible component
+          lifetime data
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Time 1000-10000 hours, beta~2.7, eta~4600 hours — realistic for reliability
-          engineering.
+        comment: Realistic beta, eta, and failure time range for engineering context
     code_quality:
       score: 10
       max: 10
@@ -171,33 +173,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean Imports-Data-Fit-Plot-Save flow with no functions or classes.
+        comment: 'Linear flow: imports, data, fit, plot, save'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity. Weibull math is necessary.
+        comment: Clean, well-organized, appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300.
+        comment: Saves as plot.png with dpi=300
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -205,15 +207,15 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Good grammar of graphics: ggplot + geom layers + scale + theme.
-          Uses separate dataframes correctly.'
+        comment: 'Good use of ggplot grammar: aes mappings, layered geoms, scale_*_manual,
+          theme customization'
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Mostly generic ggplot patterns. Doesn't leverage plotnine-specific
-          features like stat layers or after_stat.
+        passed: true
+        comment: Grammar of graphics composition, guide_legend with override_aes,
+          scale_shape_manual
   verdict: REJECTED
 impl_tags:
   dependencies:
@@ -222,6 +224,7 @@ impl_tags:
   - annotations
   - layer-composition
   - manual-ticks
+  - custom-legend
   patterns:
   - data-generation
   dataprep:
