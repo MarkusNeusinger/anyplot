@@ -1,7 +1,7 @@
 library: seaborn
 specification_id: probability-weibull
 created: '2026-03-11T21:52:04Z'
-updated: '2026-03-11T21:55:46Z'
+updated: '2026-03-11T22:07:40Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 22976096464
 issue: 4668
@@ -10,104 +10,108 @@ library_version: 0.13.2
 preview_url: https://storage.googleapis.com/pyplots-images/plots/probability-weibull/seaborn/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/probability-weibull/seaborn/plot_thumb.png
 preview_html: null
-quality_score: 84
+quality_score: 89
 review:
   strengths:
-  - Excellent spec compliance with all required Weibull probability plot features
-    correctly implemented
-  - Strong data quality with realistic turbine blade fatigue context and appropriate
-    parameter values
-  - Good visual design with custom probability tick labels, parameter annotation box,
-    and clean spine removal
-  - 'Correct Weibull statistics: median rank plotting positions, linear regression
-    on log-transformed data, proper beta/eta estimation'
+  - 'Excellent spec compliance: all required features (log axis, Weibull linearization,
+    median rank, censored distinction, 63.2% reference, parameter annotations) implemented
+    correctly'
+  - 'Perfect visual quality: all font sizes explicitly set, no overlap, good marker
+    sizing, colorblind-safe palette'
+  - Realistic turbine blade fatigue data with appropriate Weibull parameters (beta
+    ~2.16 wear-out, eta ~9133 h)
+  - Clean parameter annotation box with beta, eta, and R-squared in monospace font
   weaknesses:
-  - Seaborn is not imported or used - this is a pure matplotlib implementation. Must
-    use seaborn plotting functions (e.g., sns.scatterplot()) to qualify as a seaborn
-    implementation
-  - Tick label font size is 14pt instead of the recommended 16pt
-  image_description: The plot displays a Weibull probability plot for turbine blade
-    fatigue life. The x-axis shows "Time to Failure (hours)" with logarithmically-spaced
-    tick labels from 1,000 to 18,000. The y-axis shows "Cumulative Failure Probability"
-    with Weibull-linearized probability tick labels from 1.0% to 99.0%. Blue filled
-    circles represent failure data points (~25 points), and orange hollow diamond
-    markers represent censored/suspended observations (~7 points). A red dashed line
-    shows the Weibull fit. A gray dotted horizontal reference line marks 63.2% (characteristic
-    life) with a text label. A white annotation box in the bottom-right displays beta
-    = 2.16 (shape), eta = 9133 h (scale), and R-squared = 0.9548 in monospace font.
-    Top and right spines are removed, with a subtle grid (alpha=0.15). The legend
-    in the upper-left shows "Failure", "Censored (suspended)", and "Weibull fit".
-    The title reads "Turbine Blade Fatigue Life · probability-weibull · seaborn ·
-    pyplots.ai".
+  - Grid on both axes rather than y-only grid for cleaner visual refinement
+  - No specific reliability insight highlighted beyond the generic 63.2% reference
+    (e.g., B10 life annotation)
+  - Library mastery limited by inherently custom nature of Weibull probability plots
+    - could use sns.color_palette() or sns.rugplot
+  image_description: The plot shows a Weibull probability plot for turbine blade fatigue
+    life data. The x-axis displays "Time to Failure (hours)" on an effective logarithmic
+    scale with custom tick labels at 1,000 to 18,000. The y-axis shows "Cumulative
+    Failure Probability" on a linearized Weibull scale with probability tick labels
+    from 1.0% to 99.0%. Blue filled circles represent failure data points (25 observations),
+    and orange hollow diamond markers represent censored/suspended observations (7
+    points). A red dashed line shows the Weibull fit traversing the data from lower-left
+    to upper-right. A horizontal dotted gray line marks the 63.2% characteristic life
+    threshold with a text label. A parameter annotation box in the bottom-right corner
+    displays beta = 2.16 (shape), eta = 9133 h (scale), and R-squared = 0.9548 in
+    monospace font with a rounded border. The legend in the upper-left lists Failure,
+    Censored (suspended), and Weibull fit. Title reads "Turbine Blade Fatigue Life
+    · probability-weibull · seaborn · pyplots.ai". Top and right spines are removed,
+    grid is very subtle at alpha=0.15.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title 24, labels 20, ticks 14). Tick labels
-          14pt instead of recommended 16pt.
+        comment: 'All font sizes explicitly set: title 24pt, axis labels 20pt, ticks
+          16pt, legend 16pt, annotations 14-15pt'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data elements
+        comment: No text collisions anywhere. Legend, parameter box, and reference
+          label all well-positioned
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Marker size s=180 well-suited for ~32 data points. Both marker types
-          clearly distinguishable.
+        comment: Marker size s=180 appropriate for 32 data points. Hollow diamonds
+          clearly distinct from filled circles
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Blue and orange palette is colorblind-safe
+        comment: Blue/orange/red palette is colorblind-safe with good contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 aspect, tight_layout applied, good canvas utilization
+        comment: 16:9 layout with tight_layout. Plot fills canvas well with balanced
+          margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: X-axis has units (hours), Y-axis describes quantity with % in tick
-          labels
+        comment: Time to Failure (hours) with units, Cumulative Failure Probability
+          descriptive
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Custom color palette, hollow vs filled markers, monospace parameter
-          box. Above defaults but not publication-masterpiece.
+        comment: Custom palette with intentional meaning, monospace parameter box,
+          custom tick labels on both axes
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Top/right spines removed, subtle grid alpha=0.15, tight_layout. Good
-          refinement.
+        comment: Spines removed, grid alpha=0.15, clean annotation box. Grid on both
+          axes rather than y-only
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 63.2% reference line, parameter annotation box, and censored data
-          distinction create meaningful hierarchy.
+        comment: 63.2% reference line and parameter annotations provide context. No
+          B10 life or specific reliability insight highlighted
     spec_compliance:
       score: 15
       max: 15
@@ -118,26 +122,28 @@ review:
         max: 5
         passed: true
         comment: Correct Weibull probability plot with log x-axis and linearized Weibull
-          CDF y-axis
+          y-axis
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: log x, Weibull y, fit line, beta/eta,
-          median rank, censored distinction, 63.2% line'
+        comment: 'All features: log axis, Weibull linearization, median rank, censored
+          markers, 63.2% reference, parameters'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X maps to time-to-failure, Y maps to cumulative failure probability
+        comment: Time on x, cumulative probability on y, custom tick labels show real
+          values
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows correct format, legend labels are descriptive
+        comment: Title includes spec-id, library, pyplots.ai with descriptive prefix.
+          Legend labels accurate
     data_quality:
       score: 15
       max: 15
@@ -147,21 +153,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows failures, censored observations, fit line, parameters, characteristic
-          life reference
+        comment: Shows failures and censored data across full range, data follows
+          Weibull on probability paper
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Turbine blade fatigue life is a classic reliability engineering scenario
+        comment: Turbine blade fatigue life - classic reliability engineering scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Hours in 1000-18000 range with beta~2.16 and eta~9133h are plausible
-          for turbine blade fatigue
+        comment: 1500-13000 hours realistic for turbine blades, beta~2.16 wear-out
+          mode, eta~9133 h plausible
     code_quality:
       score: 10
       max: 10
@@ -171,49 +177,49 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, calculations, plotting, save'
+        comment: 'Linear flow: imports, data, plot, save. No functions or classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set before data generation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: 'All imports used: sys, matplotlib, numpy, pandas, seaborn, scipy'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized, appropriate complexity
+        comment: Appropriate complexity for Weibull probability plot, no over-engineering
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300
+        comment: Saves as plot.png at dpi=300 with bbox_inches=tight
     library_mastery:
-      score: 2
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 1
+        score: 3
         max: 5
-        passed: false
-        comment: Seaborn is not imported or used. Entire plot built with matplotlib
-          scatter/plot calls.
+        passed: true
+        comment: Uses seaborn axes-level API with DataFrames, sns.set_style, sns.despine.
+          Core is custom matplotlib work
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 2
         max: 5
         passed: false
-        comment: 'No seaborn features used: no styling, no plotting functions, no
-          color palettes.'
+        comment: sns.despine and sns.set_style are seaborn-specific but scatter/line
+          plotting is generic matplotlib-equivalent
   verdict: REJECTED
 impl_tags:
   dependencies:
@@ -223,7 +229,6 @@ impl_tags:
   - annotations
   patterns:
   - data-generation
-  - iteration-over-groups
   - explicit-figure
   dataprep:
   - regression
