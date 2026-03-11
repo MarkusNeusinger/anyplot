@@ -1,0 +1,230 @@
+library: seaborn
+specification_id: scatter-ashby-material
+created: '2026-03-11T15:01:26Z'
+updated: '2026-03-11T15:24:34Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22958872796
+issue: 4677
+python_version: 3.14.3
+library_version: 0.13.2
+preview_url: https://storage.googleapis.com/pyplots-images/plots/scatter-ashby-material/seaborn/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/scatter-ashby-material/seaborn/plot_thumb.png
+preview_html: null
+quality_score: 92
+review:
+  strengths:
+  - Excellent use of sns.kdeplot for material family envelopes — distinctive seaborn
+    approach to Ashby bubble regions
+  - Strong data storytelling with Lightweight & Stiff annotation and E/rho guide lines
+    providing engineering context
+  - Realistic material property data with accurate values for all 7 families
+  - Clean visual design with custom palette, colored label borders, and subtle grid
+    styling
+  - Full spec compliance including optional guide lines feature
+  weaknesses:
+  - Minor label crowding in the upper-right where Ceramics, Metals, and Composites
+    families overlap spatially
+  - Log-transform workaround for KDE is functional but not seaborn native pattern
+  image_description: 'The plot displays an Ashby material selection chart as a log-log
+    scatter plot of Density (kg/m³) on the x-axis vs Young''s Modulus (GPa) on the
+    y-axis. Seven material families are shown with distinct colors and marker styles:
+    Metals (dark blue circles, upper-right), Ceramics (red squares, upper-center),
+    Composites (teal plus signs, center-upper), Natural Materials (light blue triangles,
+    center), Polymers (orange X marks, center-right), Elastomers (purple diamonds,
+    lower-right), and Foams (golden diamonds, lower-left). Each family is enclosed
+    by a semi-transparent KDE envelope. Bold colored labels with white-background
+    rounded boxes identify each family. Three diagonal dashed guide lines show constant
+    E/ρ ratios (0.001, 0.1, 10) in light gray. A "Lightweight & Stiff ↗" annotation
+    in the upper-left region guides interpretation. Title reads "scatter-ashby-material
+    · seaborn · pyplots.ai". Top and right spines are removed. A subtle y-axis-only
+    grid is present. The layout is clean and professional with good use of the 16:9
+    canvas.'
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt,
+          family labels 14pt'
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Minor crowding in upper-right where Ceramics/Metals/Composites cluster,
+          all readable
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: s=80 with alpha=0.7 appropriate for ~116 points, different marker
+          styles aid distinction
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Custom 7-color palette with good perceptual separation, no red-green
+          only distinction
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 16:9 figsize with tight_layout, data fills log-log space well, balanced
+          margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Density (kg/m³) and Young's Modulus (GPa) — descriptive with units
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom palette, colored label borders, marker style mapping — above
+          defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines removed, y-axis-only grid at alpha=0.12, subtle guide lines,
+          white marker edges
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Lightweight & Stiff annotation, E/rho guide lines, KDE envelopes
+          create visual hierarchy
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Log-log scatter with family bubble regions — correct Ashby chart
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: log scales, envelopes, labels, colors,
+          guide lines'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=density, Y=modulus, both correctly log-scaled
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct title format, on-chart family labels serve as legend
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 7 families spanning 3+ orders of magnitude in both properties
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Classic materials science with realistic property values
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Density 25-8900 kg/m³, modulus 0.001-450 GPa match real ranges
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports → data → plot → save'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set before random generation
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: matplotlib, numpy, pandas, seaborn'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-organized, appropriate complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png, dpi=300, current API
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good axes-level API usage, set_context/set_style/despine idiomatic;
+          log-transform for KDE is pragmatic workaround
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: sns.kdeplot for family envelopes and style mapping in scatterplot
+          are distinctive seaborn features
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - manual-ticks
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - kde
+  styling:
+  - alpha-blending
+  - edge-highlighting
+  - grid-styling

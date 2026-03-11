@@ -1,0 +1,231 @@
+library: plotly
+specification_id: scatter-ashby-material
+created: '2026-03-11T15:00:18Z'
+updated: '2026-03-11T15:30:04Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22958872772
+issue: 4677
+python_version: 3.14.3
+library_version: 6.6.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/scatter-ashby-material/plotly/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/scatter-ashby-material/plotly/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/scatter-ashby-material/plotly/plot.html
+quality_score: 90
+review:
+  strengths:
+  - Excellent convex hull envelopes with semi-transparent fills create the signature
+    Ashby chart appearance
+  - E/rho performance index guide lines with proper label add engineering insight
+    beyond basic visualization
+  - Rich hover tooltips showing material family, density, modulus, and E/rho ratio
+    leverage Plotly interactivity
+  - Correlated bivariate normal data generation in log-space produces realistic material
+    family clusters
+  - Clean, well-structured code with appropriate complexity for the visualization
+  weaknesses:
+  - Minor label proximity between Composites and Ceramics regions could be improved
+    with slight offset logic
+  - Could push marker differentiation further with different marker shapes per family
+    for redundant encoding
+  image_description: 'The plot is a log-log Ashby material selection chart with "Density
+    (kg/m³)" on the x-axis (range 10–20k) and "Young''s Modulus (GPa)" on the y-axis
+    (range 0.001–1000). Seven material families are displayed as scatter points with
+    convex hull envelopes: Metals (steel blue, upper-right), Ceramics (red, high modulus),
+    Polymers (purple, mid-density low-modulus), Composites (cyan, between ceramics
+    and polymers), Elastomers (orange, low modulus), Foams (olive-green, low density
+    and modulus), and Natural Materials (brown, mid-range). Each family has a bold
+    label at its centroid with a semi-transparent white background. Diagonal dotted
+    guide lines for E/ρ = constant are drawn across the chart with a rotated italic
+    label in the upper-left. The legend "Material Family" is in the bottom-right corner.
+    The title reads "scatter-ashby-material · plotly · pyplots.ai" centered at the
+    top. The background is a very light gray with extremely subtle gridlines.'
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 28pt, axis labels 22pt, ticks
+          18pt, annotations 18pt, legend 16pt'
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Minor proximity between Composites and Ceramics labels, but all text
+          readable
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Marker size 12 with white edges and 0.82 opacity works well for ~160
+          points; hull fills at 0.15 opacity
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Seven-color colorblind-safe palette with good contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good canvas utilization with balanced margins and well-positioned
+          legend
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive labels with units: Density (kg/m³) and Young''s Modulus
+          (GPa)'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom palette, white marker edges, semi-transparent hull fills,
+          refined annotation styling
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: plotly_white with custom bg, very subtle grid, no mirrored axes,
+          generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Convex hull groupings and E/rho guide lines create visual hierarchy
+          and engineering context
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct log-log scatter with convex hull bubble regions
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: log scales, hull envelopes, labels, guide
+          lines'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=density, Y=modulus, both log scale spanning full range
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct title format and legend with all 7 material families
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 7 families spanning 3+ orders of magnitude with correlated distributions
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Classic materials science Ashby chart, neutral educational context
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Physically plausible property ranges for all material families
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean imports-data-plot-save flow with appropriate loop
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set at top
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: numpy, plotly.graph_objects, scipy.spatial.ConvexHull'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no over-engineering
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot.png at 4800x2700 via scale=3
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic Graph Objects approach with add_trace, add_annotation,
+          update_layout
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: hovertemplate with customdata, fill=toself for hulls, legendgroup,
+          HTML export
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - scipy
+  techniques:
+  - annotations
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
+  - grid-styling
