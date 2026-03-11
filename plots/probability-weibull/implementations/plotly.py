@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 probability-weibull: Weibull Probability Plot for Reliability Analysis
 Library: plotly 6.6.0 | Python 3.14.3
 Quality: 73/100 | Created: 2026-03-11
@@ -39,66 +39,107 @@ failure_t = all_times[failure_mask]
 failure_prob = failure_ranks[failure_mask]
 
 # Weibull linearization: ln(t) vs ln(-ln(1-F))
-ln_t = np.log(failure_t)
-weibull_y = np.log(-np.log(1 - failure_prob))
+weibull_y_failures = np.log(-np.log(1 - failure_prob))
 
-# Fit line: weibull_y = beta * ln(t) - beta * ln(eta)
-slope, intercept, r_value, _, _ = stats.linregress(ln_t, weibull_y)
+# Fit line in Weibull space: weibull_y = beta * ln(t) - beta * ln(eta)
+slope, intercept, r_value, _, _ = stats.linregress(np.log(failure_t), weibull_y_failures)
 beta_fit = slope
 eta_fit = np.exp(-intercept / beta_fit)
 
-# Plot
+# Probability tick values and labels for Weibull y-axis
+prob_ticks = [0.01, 0.02, 0.05, 0.10, 0.20, 0.50, 0.632, 0.90, 0.95, 0.99]
+prob_labels = ["1%", "2%", "5%", "10%", "20%", "50%", "63.2%", "90%", "95%", "99%"]
+weibull_tick_vals = [np.log(-np.log(1 - p)) for p in prob_ticks]
+
+# Plot - using Weibull linearized y-axis
 fig = go.Figure()
 
-t_range = np.linspace(np.log(failure_t.min() * 0.5), np.log(failure_t.max() * 1.5), 200)
-fit_y = beta_fit * t_range - beta_fit * np.log(eta_fit)
-fit_prob = 1 - np.exp(-np.exp(fit_y))
+# Fitted line (straight in Weibull space)
+t_range = np.logspace(np.log10(failure_t.min() * 0.5), np.log10(failure_t.max() * 1.5), 200)
+fit_weibull_y = beta_fit * np.log(t_range) - beta_fit * np.log(eta_fit)
 
 fig.add_trace(
     go.Scatter(
-        x=np.exp(t_range),
-        y=fit_prob,
+        x=t_range,
+        y=fit_weibull_y,
         mode="lines",
-        name=f"Weibull Fit (β={beta_fit:.2f}, η={eta_fit:.0f}h)",
-        line={"color": "#306998", "width": 3},
+        name="Weibull Fit",
+        line={"color": "#306998", "width": 3.5},
+        hovertemplate="Time: %{x:.0f}h<br>Probability: %{customdata:.1%}<extra>Weibull Fit</extra>",
+        customdata=1 - np.exp(-np.exp(fit_weibull_y)),
     )
 )
 
+# Failure data points
 fig.add_trace(
     go.Scatter(
         x=failure_t,
-        y=failure_prob,
+        y=weibull_y_failures,
         mode="markers",
         name="Failures",
-        marker={"size": 12, "color": "#306998", "line": {"color": "white", "width": 1.5}},
+        marker={"size": 14, "color": "#306998", "line": {"color": "white", "width": 1.5}},
+        hovertemplate="Time: %{x:.0f}h<br>Probability: %{customdata:.1%}<br>Rank: %{text}<extra>Failure</extra>",
+        customdata=failure_prob,
+        text=[f"{i + 1}/{n_failures}" for i in range(n_failures)],
     )
 )
 
+# Censored data points - estimate their probability from the fitted model
 censored_t = all_times[is_censored]
-censored_prob = 1 - np.exp(-((censored_t / eta_fit) ** beta_fit))
+censored_weibull_y = beta_fit * np.log(censored_t) - beta_fit * np.log(eta_fit)
+censored_prob_est = 1 - np.exp(-np.exp(censored_weibull_y))
 
 fig.add_trace(
     go.Scatter(
         x=censored_t,
-        y=censored_prob,
+        y=censored_weibull_y,
         mode="markers",
         name="Censored (suspended)",
-        marker={"size": 13, "color": "white", "line": {"color": "#E85D3A", "width": 2.5}, "symbol": "circle"},
+        marker={
+            "size": 14,
+            "color": "rgba(232, 93, 58, 0.15)",
+            "line": {"color": "#E85D3A", "width": 3},
+            "symbol": "diamond",
+        },
+        hovertemplate="Time: %{x:.0f}h<br>Est. Probability: %{customdata:.1%}<extra>Censored</extra>",
+        customdata=censored_prob_est,
     )
 )
 
-# 63.2% reference line
+# 63.2% reference line (characteristic life) in Weibull coordinates
+weibull_632 = np.log(-np.log(1 - 0.632))
 fig.add_hline(
-    y=0.632,
+    y=weibull_632,
     line_dash="dash",
     line_color="#999999",
     line_width=1.5,
-    annotation_text="63.2% (characteristic life)",
+    annotation_text="63.2% — characteristic life",
     annotation_position="top left",
     annotation_font={"size": 16, "color": "#666666"},
 )
 
-# Style
+# On-plot annotation for fitted parameters
+fig.add_annotation(
+    x=np.log10(eta_fit * 1.3),
+    y=weibull_tick_vals[2],
+    xref="x",
+    yref="y",
+    text=(
+        f"<b>Weibull Parameters</b><br>"
+        f"β (shape) = {beta_fit:.2f}<br>"
+        f"η (scale) = {eta_fit:.0f}h<br>"
+        f"R² = {r_value**2:.4f}"
+    ),
+    showarrow=False,
+    font={"size": 16, "color": "#333333"},
+    align="left",
+    bgcolor="rgba(255,255,255,0.85)",
+    bordercolor="rgba(0,0,0,0.15)",
+    borderwidth=1,
+    borderpad=8,
+)
+
+# Style - Weibull probability paper with custom y-axis ticks
 fig.update_layout(
     title={"text": "probability-weibull · plotly · pyplots.ai", "font": {"size": 28}, "x": 0.5},
     xaxis={
@@ -110,17 +151,20 @@ fig.update_layout(
         "gridwidth": 1,
         "showline": True,
         "linecolor": "rgba(0,0,0,0.3)",
+        "minor": {"showgrid": True, "gridcolor": "rgba(0,0,0,0.04)"},
     },
     yaxis={
-        "title": {"text": "Cumulative Failure Probability", "font": {"size": 22}},
+        "title": {"text": "Cumulative Failure Probability (Weibull Scale)", "font": {"size": 22}},
         "tickfont": {"size": 18},
-        "tickformat": ".0%",
-        "range": [0, 1],
+        "tickmode": "array",
+        "tickvals": weibull_tick_vals,
+        "ticktext": prob_labels,
         "showgrid": True,
         "gridcolor": "rgba(0,0,0,0.08)",
         "gridwidth": 1,
         "showline": True,
         "linecolor": "rgba(0,0,0,0.3)",
+        "range": [weibull_tick_vals[0] - 0.3, weibull_tick_vals[-1] + 0.3],
     },
     template="plotly_white",
     legend={"font": {"size": 18}, "x": 0.02, "y": 0.98, "bgcolor": "rgba(255,255,255,0.8)"},
