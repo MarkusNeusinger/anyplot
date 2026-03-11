@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 scatter-ashby-material: Ashby Material Selection Chart
 Library: letsplot 4.8.2 | Python 3.14.3
 Quality: 83/100 | Created: 2026-03-11
@@ -11,7 +11,9 @@ from lets_plot import (
     aes,
     element_blank,
     element_line,
+    element_rect,
     element_text,
+    geom_abline,
     geom_point,
     geom_polygon,
     geom_text,
@@ -139,54 +141,101 @@ for family in df["family"].unique():
 
 df_envelopes = pd.DataFrame(envelope_rows)
 
-# Compute label positions (centroid of each family)
+# Compute label positions with manual offsets to avoid crowding
+label_offsets = {
+    "Metals": (0.15, 0.2),
+    "Ceramics": (-0.25, 0.25),
+    "Composites": (-0.2, -0.2),
+    "Polymers": (0.0, 0.0),
+    "Elastomers": (0.0, 0.0),
+    "Foams": (0.0, 0.0),
+    "Natural Materials": (0.0, 0.0),
+}
 label_rows = []
 for family in df["family"].unique():
     sub = df[df["family"] == family]
-    cx = 10 ** np.log10(sub["density"]).mean()
-    cy = 10 ** np.log10(sub["modulus"]).mean()
+    log_cx = np.log10(sub["density"]).mean()
+    log_cy = np.log10(sub["modulus"]).mean()
+    off_x, off_y = label_offsets.get(family, (0, 0))
+    cx = 10 ** (log_cx + off_x)
+    cy = 10 ** (log_cy + off_y)
     label_rows.append({"family": family, "density": cx, "modulus": cy})
 
 df_labels = pd.DataFrame(label_rows)
 
-# Palette: colorblind-safe, distinct for 7 families
-palette = ["#306998", "#E5883E", "#2A9D8F", "#8B5CF6", "#E63946", "#A8DADC", "#6D4C41"]
+# Performance index guide lines: E/rho = const (lightweight stiffness)
+# On log-log: log(E) = log(rho) + log(C), slope=1
+# Three guide lines for E/rho = 0.01, 0.1, 1 GPa/(kg/m^3)
+guide_rows = []
+for c, label in [(0.001, "E/\u03c1 = 0.001"), (0.01, "E/\u03c1 = 0.01"), (0.1, "E/\u03c1 = 0.1")]:
+    guide_rows.append({"intercept": np.log10(c), "label": label})
+
+# Palette: colorblind-safe with better distinction between Metals and Composites
+# Metals=dark blue, Polymers=orange, Ceramics=teal, Composites=magenta/pink,
+# Elastomers=red, Foams=sky blue, Natural=brown
+palette = ["#1B4F72", "#E5883E", "#2A9D8F", "#C850C0", "#E63946", "#5DADE2", "#795548"]
 
 # Plot
 plot = (
     ggplot()
-    + geom_polygon(data=df_envelopes, mapping=aes(x="density", y="modulus", fill="family"), alpha=0.15)
+    # Performance index guide lines (E/rho = constant, slope=1 on log-log)
+    + geom_abline(intercept=np.log10(0.001), slope=1, color="#BDBDBD", size=0.6, linetype="dashed")
+    + geom_abline(intercept=np.log10(0.01), slope=1, color="#BDBDBD", size=0.6, linetype="dashed")
+    + geom_abline(intercept=np.log10(0.1), slope=1, color="#BDBDBD", size=0.6, linetype="dashed")
+    # Guide line labels positioned within visible area
+    + geom_text(
+        data=pd.DataFrame(
+            {
+                "density": [35, 35, 35],
+                "modulus": [0.035, 0.35, 3.5],
+                "label": ["E/\u03c1 = 10\u207b\u00b3", "E/\u03c1 = 10\u207b\u00b2", "E/\u03c1 = 10\u207b\u00b9"],
+            }
+        ),
+        mapping=aes(x="density", y="modulus", label="label"),
+        size=9,
+        color="#9E9E9E",
+        angle=38,
+        hjust=0,
+    )
+    + geom_polygon(data=df_envelopes, mapping=aes(x="density", y="modulus", fill="family"), alpha=0.18)
     + geom_point(
         data=df,
         mapping=aes(x="density", y="modulus", color="family"),
-        size=5,
-        alpha=0.8,
+        size=7,
+        alpha=0.85,
         tooltips=layer_tooltips()
         .line("@material")
         .line("Family|@family")
-        .line("Density|@{density} kg/m³")
+        .line("Density|@{density} kg/m\u00b3")
         .line("Modulus|@{modulus} GPa"),
     )
     + geom_text(
-        data=df_labels, mapping=aes(x="density", y="modulus", label="family"), size=12, color="#333333", fontface="bold"
+        data=df_labels,
+        mapping=aes(x="density", y="modulus", label="family"),
+        size=13,
+        color="#1A1A1A",
+        fontface="bold",
+        label_padding=0.3,
     )
-    + scale_x_log10(name="Density (kg/m³)")
+    + scale_x_log10(name="Density (kg/m\u00b3)")
     + scale_y_log10(name="Young's Modulus (GPa)")
     + scale_color_manual(values=palette, name="Material Family")
     + scale_fill_manual(values=palette)
     + guides(fill="none")
-    + labs(title="scatter-ashby-material · letsplot · pyplots.ai")
+    + labs(title="scatter-ashby-material \u00b7 letsplot \u00b7 pyplots.ai")
     + theme_minimal()
     + theme(
         axis_title=element_text(size=20, margin=[10, 10, 10, 10]),
-        axis_text=element_text(size=16),
-        plot_title=element_text(size=24, margin=[0, 0, 12, 0]),
-        plot_margin=[30, 30, 20, 20],
-        legend_title=element_text(size=16),
+        axis_text=element_text(size=16, color="#555555"),
+        plot_title=element_text(size=24, face="bold", margin=[0, 0, 14, 0]),
+        plot_margin=[30, 40, 20, 20],
+        plot_background=element_rect(fill="#FAFAFA", color="#FAFAFA"),
+        legend_title=element_text(size=16, face="bold"),
         legend_text=element_text(size=14),
         panel_grid_major=element_line(size=0.3, color="#E0E0E0"),
         panel_grid_minor=element_blank(),
         legend_position="right",
+        legend_background=element_rect(fill="#FAFAFA", color="#FAFAFA"),
     )
     + ggsize(1600, 900)
 )
