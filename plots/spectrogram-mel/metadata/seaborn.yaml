@@ -1,0 +1,237 @@
+library: seaborn
+specification_id: spectrogram-mel
+created: '2026-03-11T19:41:49Z'
+updated: '2026-03-11T20:07:06Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22970857219
+issue: 4672
+python_version: 3.14.3
+library_version: 0.13.2
+preview_url: https://storage.googleapis.com/pyplots-images/plots/spectrogram-mel/seaborn/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/spectrogram-mel/seaborn/plot_thumb.png
+preview_html: null
+quality_score: 93
+review:
+  strengths:
+  - Cohesive dark theme design with golden accent color creates a professional, polished
+    aesthetic
+  - Two-panel layout with waveform + spectrogram provides excellent context and data
+    storytelling
+  - Harmonic annotations (f0, 2f0, 3f0) add educational value about overtone series
+  - Full spec compliance with all required parameters and features
+  - Excellent synthesized audio data showing varied notes, harmonics, and transients
+  - Good use of seaborn-specific features (mako palette, set_theme, heatmap, despine)
+  weaknesses:
+  - Waveform line could be slightly thicker for better visibility at smaller display
+    sizes
+  - Library mastery could be higher if more seaborn-distinctive features were leveraged
+  image_description: The plot features a dark-themed two-panel layout. The top panel
+    displays a waveform (golden/yellow line with subtle fill) showing audio amplitude
+    over 4 seconds, with note labels (C4, E4, G4, C5, A4, F4, D4, C4) in golden text
+    at the top and subtle dashed white boundary lines between notes. The bottom panel
+    is a mel-spectrogram heatmap using the seaborn "mako" colormap (dark blue through
+    teal to bright yellow-green). The x-axis shows time from 0.0 to 4.0 seconds with
+    0.5s intervals. The y-axis shows mel-scaled frequency with Hz labels at 100, 200,
+    500, 1k, 2k, 4k, and 8k Hz. A colorbar on the right shows Power (dB) from -80
+    to 0. Harmonic annotations (f0, 2f0, 3f0) with yellow triangle markers appear
+    on the final C4 note segment. The spectrogram clearly shows fundamental frequencies
+    and harmonics for each note as bright horizontal bands, with onset transients
+    visible as vertical bright lines. The title reads "spectrogram-mel · seaborn ·
+    pyplots.ai" in white bold text.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title=24pt, labels=20pt, ticks=16pt,
+          note labels=15pt, colorbar=18pt'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text elements, note labels well-spaced, Hz labels
+          don't collide
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Spectrogram has excellent contrast, waveform linewidth=0.6 slightly
+          thin but visible
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Mako colormap is perceptually uniform and colorblind-safe, good contrast
+          on dark background
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Two-panel layout with 1:5 ratio well-proportioned, spectrogram fills
+          canvas, colorbar positioned well
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Time (s), Frequency (mel scale), Power (dB) - all descriptive with
+          units
+    design_excellence:
+      score: 17
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: Cohesive dark theme with mako palette and golden accents, professional
+          polish above defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines despined and styled, subtle boundaries, refined colorbar,
+          generous padding
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Two-panel layout connects waveform to spectrogram, note labels and
+          harmonic annotations guide viewer
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct mel-spectrogram with power spectrum as 2D heatmap
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: dB scale, sequential colormap, Hz labels,
+          colorbar, correct parameters'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=time, Y=mel frequency, color=power in dB, all correct
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format, no legend needed for heatmap with
+          colorbar
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Multiple notes, visible harmonics, onset transients, noise floor,
+          full dynamic range
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Musical melody with named notes C4-C5, realistic audio analysis scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Standard sample rate 22050 Hz, 4s duration, appropriate frequency
+          and dB ranges
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports, audio synthesis, STFT, mel filterbank, plotting,
+          save'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set before random operations
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used including os/sys for path workaround
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, appropriate complexity, manual filterbank avoids librosa dependency
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with dpi=300 and bbox_inches=tight
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of sns.set_theme, set_context, heatmap, lineplot, despine
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses seaborn-exclusive mako palette, set_theme with rc, heatmap cbar_kws,
+          despine
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - scipy
+  techniques:
+  - subplots
+  - colorbar
+  - annotations
+  - manual-ticks
+  patterns:
+  - data-generation
+  - matrix-construction
+  - iteration-over-groups
+  dataprep:
+  - binning
+  styling:
+  - dark-theme
+  - custom-colormap
+  - alpha-blending
