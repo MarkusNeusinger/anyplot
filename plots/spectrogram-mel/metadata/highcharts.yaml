@@ -1,7 +1,7 @@
 library: highcharts
 specification_id: spectrogram-mel
 created: '2026-03-11T19:42:07Z'
-updated: '2026-03-11T19:46:44Z'
+updated: '2026-03-11T19:58:04Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 22970857403
 issue: 4672
@@ -10,84 +10,81 @@ library_version: unknown
 preview_url: https://storage.googleapis.com/pyplots-images/plots/spectrogram-mel/highcharts/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/spectrogram-mel/highcharts/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/spectrogram-mel/highcharts/plot.html
-quality_score: 83
+quality_score: 88
 review:
   strengths:
-  - Excellent spec compliance with all required features implemented correctly (mel
-    scale, dB conversion, colorbar, correct parameters)
-  - Professional dark theme with hand-crafted inferno colormap stops creates strong
-    visual identity
-  - Clean well-structured code with manual mel filterbank avoiding external audio
-    library dependencies
-  - Good interactive tooltips showing time frequency and power values
-  - Proper font sizing throughout with explicit size settings
+  - Excellent dark theme with inferno-like custom colormap that suits the audio/spectrogram
+    domain perfectly
+  - Rich, musically accurate synthesized data with four distinct temporal sections,
+    harmonics, and percussive transients
+  - All spec requirements fully met including proper mel filterbank, dB conversion,
+    and parameter choices
+  - Clean, well-structured code with clear section organization
+  - Full marks on Spec Compliance, Data Quality, and Code Quality
   weaknesses:
-  - 3200 Hz percussive transient bursts appear as a nearly continuous bright horizontal
-    band instead of showing distinct onset events
-  - Data storytelling could be improved with more visual hierarchy or emphasis on
-    key spectral features
-  - Colorbar/legend positioning is slightly far from the main plot area
-  - Does not use highcharts-core Python library - builds raw dict config instead
+  - Plot bands for section labels (G3 phrase, E4 peak) are effectively invisible at
+    0.02 opacity and 22px font size
+  - Upper ~40% of frequency axis shows mostly empty dark space, underutilizing the
+    canvas
+  - Heatmap cells have noticeably blocky/discrete appearance from downsampling
   image_description: The plot displays a mel-spectrogram on a dark navy background
-    (#1a1a2e) using an inferno/magma-like sequential colormap ranging from black/dark
-    purple (-80 dB) through magenta/orange to bright yellow (0 dB). The title "spectrogram-mel
+    (#1a1a2e) using an inferno/magma-inspired colormap ranging from deep black/purple
+    (low power) through orange to bright yellow (high power). The title "spectrogram-mel
     · highcharts · pyplots.ai" appears at the top in light gray, with a subtitle "Mel-scaled
-    power spectrum of synthesized audio (dB)". The x-axis shows "Time (s)" from ~0.05
-    to ~3.76, and the y-axis shows "Frequency (Hz, mel-scaled)" with mel-band edge
-    labels at 15, 190, 407, 677, 1014, 1433, 1953, 2602, 3408, 4411, 5659, 7212, and
-    9144 Hz. A vertical colorbar on the right is labeled "Power (dB)" with ticks from
-    -80 dB to 0 dB. The spectrogram shows strong harmonic energy in the lower frequencies
-    (below ~700 Hz) with visible temporal modulation patterns from the vibrato and
-    envelope-shaped harmonics. A very bright continuous horizontal band appears near
-    3408 Hz (the 3200 Hz percussive transient component). The upper frequencies (above
-    ~4500 Hz) are mostly quiet dark purple. The overall visual appearance is professional
-    with good color contrast.
+    power spectrum — ascending melodic phrase G3→C4→E4→C4 with percussive transients"
+    below it. The x-axis shows "Time (s)" from ~0.05 to ~3.76 with evenly spaced tick
+    labels. The y-axis shows "Frequency (Hz, mel-scaled)" from 15 Hz at the bottom
+    to 9144 Hz at the top. A vertical colorbar on the right is labeled "Power (dB)"
+    ranging from 0 dB to -80 dB. The lower frequency range (15–700 Hz) shows strong
+    bright yellow/orange energy with clear temporal evolution matching the melodic
+    phrase. Percussive transients appear as bright spots around 3408 Hz at several
+    time points. The upper frequency range (above ~4000 Hz) is mostly dark purple
+    with faint transient energy. The heatmap cells have a slightly blocky/discrete
+    appearance due to downsampling.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 52px, subtitle 30px, axis titles
-          34px, tick labels 26px). All text readable.
+        comment: 'All font sizes explicitly set: title 52px, subtitle 30px, axis titles
+          34px, tick labels 26px, legend title 28px'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text. Tick label step intervals prevent crowding.
+        comment: No overlapping text, tick labels use step intervals, generous margins
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Heatmap cells clearly visible with good color differentiation. Slight
-          blockiness from downsampling.
+        comment: Heatmap cells visible but slightly blocky from downsampling
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Inferno/magma sequential colormap is colorblind-safe with excellent
-          contrast on dark background.
+        comment: Inferno/magma sequential colormap is colorblind-safe with good contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Plot fills ~60% of canvas. Colorbar legend slightly separated from
-          main plot area.
+        comment: Good proportions but upper frequency range shows mostly empty dark
+          space
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Time (s), Frequency (Hz, mel-scaled), Power (dB) all descriptive
-          with units.
+        comment: Time (s), Frequency (Hz, mel-scaled), Power (dB) - all descriptive
+          with units
     design_excellence:
       score: 13
       max: 20
@@ -97,22 +94,22 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Dark theme with hand-crafted inferno color stops. Custom background,
-          thoughtful typography hierarchy. Clearly above defaults.
+        comment: Strong dark theme, custom inferno colormap with 10 stops, custom
+          typography, thoughtful subtitle
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Grid lines removed, axis lines removed, dark background provides
-          clean canvas. Colorbar spacing could be tighter.
+        comment: Grid and spines removed, clean dark background, but plotBands nearly
+          invisible at 0.02 opacity
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: false
-        comment: Harmonic structure visible but viewer must interpret patterns themselves.
-          No particular focal point or guided emphasis.
+        comment: Subtitle narrates melodic phrase but plotBand section labels invisible
+          in rendered output
     spec_compliance:
       score: 15
       max: 15
@@ -122,51 +119,50 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct heatmap representation of mel-spectrogram.
+        comment: Correct mel-spectrogram using heatmap with mel-scaled frequency axis
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: mel scale, dB conversion, sequential
-          colormap, colorbar, correct parameters.'
+        comment: 'All spec requirements met: dB scale, sequential colormap, time axis,
+          mel freq labels, colorbar, correct parameters'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=time(s), Y=mel-frequency(Hz), color=power(dB). All correct.
+        comment: X=time, Y=mel frequency, color=power in dB correctly mapped
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format. Colorbar labeled Power (dB).
+        comment: Title matches required format, colorbar labeled Power (dB)
     data_quality:
-      score: 12
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 4
+        score: 6
         max: 6
         passed: true
-        comment: Shows harmonics and temporal modulation but 3200 Hz transients appear
-          as continuous band rather than distinct bursts.
+        comment: Four temporal sections, harmonics, percussive transients, vibrato,
+          noise floor
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Synthesized musical phrase with vibrato, harmonics, and percussive
-          elements. Good neutral domain.
+        comment: Real musical note frequencies G3/C4/E4, realistic sample rate and
+          audio synthesis
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sample rate 22050 Hz, 4s duration, -80 to 0 dB range. All realistic
-          for audio analysis.
+        comment: All values physically realistic for audio analysis domain
     code_quality:
       score: 10
       max: 10
@@ -176,59 +172,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data synthesis, spectrogram, mel filterbank,
-          chart config, render.'
+        comment: 'Linear flow: imports, synthesis, spectrogram, mel filterbank, Highcharts
+          config, export'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42) set at start
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized. Manual mel filterbank avoids librosa dependency.
+        comment: Well-organized with clear section comments, pragmatic downsampling
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png via selenium. Also saves plot.html for interactive
-          version.
+        comment: Saves plot.png via Selenium, also generates plot.html
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Builds chart config as raw Python dict rather than using highcharts-core
-          Python API.
+        comment: 'Good use of highcharts-core API: Chart, HighchartsOptions, HeatmapSeries,
+          colorAxis, plotBands, tooltip formatting'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses colorAxis with custom stops, interactive tooltips, heatmap module,
-          and HTML export.
+        comment: Uses colorAxis with gradient stops, plotBands, rich tooltip formatting,
+          HTML export alongside PNG
   verdict: REJECTED
 impl_tags:
   dependencies:
   - scipy
   - selenium
   techniques:
-  - html-export
+  - colorbar
   - hover-tooltips
+  - html-export
   patterns:
   - data-generation
   - matrix-construction

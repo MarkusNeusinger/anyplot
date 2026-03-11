@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 spectrogram-mel: Mel-Spectrogram for Audio Analysis
 Library: highcharts unknown | Python 3.14.3
-Quality: 83/100 | Created: 2026-03-11
+Quality: 88/100 | Created: 2026-03-11
 """
 
 import tempfile
