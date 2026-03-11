@@ -1,0 +1,239 @@
+library: bokeh
+specification_id: spectrogram-mel
+created: '2026-03-11T19:42:55Z'
+updated: '2026-03-11T20:09:08Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22970857215
+issue: 4672
+python_version: 3.14.3
+library_version: 3.9.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/spectrogram-mel/bokeh/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/spectrogram-mel/bokeh/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/spectrogram-mel/bokeh/plot.html
+quality_score: 92
+review:
+  strengths:
+  - Mel filterbank computed from scratch with proper triangular filters demonstrating
+    deep audio signal processing understanding
+  - Magma colormap on dark background is industry-standard for spectrograms and looks
+    professional
+  - Musical narrative (C Major Arpeggio to descending passage) with annotations creates
+    excellent data storytelling
+  - All font sizes explicitly scaled for 4800x2700 canvas with careful typography
+    hierarchy
+  - Vectorized quad construction is efficient and clean
+  - HoverTool adds genuine interactive value for the HTML export
+  weaknesses:
+  - LM-01 could reach 5/5 with use of Bokeh built-in image glyph (p.image) instead
+    of manually constructing quads
+  - DE-02 could benefit from removing the outline line entirely for a cleaner aesthetic
+  image_description: The plot displays a mel-spectrogram on a dark (#000004) background
+    using the Magma256 sequential colormap. The title "spectrogram-mel · bokeh · pyplots.ai"
+    appears at the top left in bold dark text. The x-axis is labeled "Time (seconds)"
+    spanning 0 to ~4 seconds, and the y-axis shows "Frequency (Hz)" on a logarithmic
+    scale with mel-spaced tick marks at 50, 100, 200, 500, 1000, 2000, 4000, and 8000
+    Hz. Bright yellow-white horizontal bands clearly depict individual musical notes
+    with visible harmonic overtones above each fundamental. A white dashed bounding
+    box in the left portion annotates "C Major Arpeggio (C4 → E4 → G4 → C5)" in italic
+    white text, while the right portion shows "Descending (A4 → F4 → D4)". Dotted
+    white horizontal reference lines mark the C4 (261 Hz) and C5 (523 Hz) frequencies
+    with bold labels at the right edge. A colorbar on the right displays "Power (dB)"
+    ranging from approximately −100 to −20 dB. The spectrogram clearly shows the ascending
+    arpeggio followed by a descending passage, with visible attack/release envelopes,
+    harmonic structure, and a subtle noise floor.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: 42pt title, 32pt axis labels, 24pt
+          tick labels, 22pt annotations'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: All text elements well-positioned, annotations in upper region away
+          from dense data
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Mel band quads clearly visible with excellent contrast, harmonic
+          structure distinguishable
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Magma256 is perceptually uniform and colorblind-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills canvas well with explicitly set margins, colorbar properly
+          positioned
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Time (seconds) and Frequency (Hz) - descriptive with units
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Strong design: Magma on dark background, intentional typography
+          hierarchy, white annotation overlays'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid (alpha=0.12, dashed), minor ticks removed, custom background/border
+          colors
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Dashed box highlights ascending arpeggio, separate label for descending
+          passage, C4/C5 frequency guides
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct mel-spectrogram with proper mel filterbank computed from
+          scratch
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec requirements met: dB scale, Magma colormap, time x-axis,
+          mel-scaled y-axis, colorbar in dB, correct parameters'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=time in seconds, Y=mel-frequency in Hz on log scale
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format, colorbar serves as scale reference
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Rich audio: 7 notes with 4 harmonics each, attack/release envelopes,
+          background noise'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Musical melody context (C Major Arpeggio) is realistic and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sample rate 22050 Hz, 4-second duration, musical frequencies - all
+          realistic
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean imports-data-plot-save structure, no functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set at start
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: numpy, bokeh models, Magma256, scipy.signal'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, vectorized quad construction, no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png via export_png and plot.html via save
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Excellent use of ColumnDataSource, quad glyphs, layout system, ColorBar,
+          FixedTicker
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: HoverTool with formatted tooltips, HTML export, BoxAnnotation - distinctively
+          Bokeh features
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - scipy
+  techniques:
+  - colorbar
+  - annotations
+  - hover-tooltips
+  - manual-ticks
+  - html-export
+  patterns:
+  - data-generation
+  - matrix-construction
+  - columndatasource
+  dataprep:
+  - binning
+  styling:
+  - custom-colormap
+  - grid-styling
+  - dark-theme
