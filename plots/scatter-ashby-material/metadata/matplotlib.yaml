@@ -1,7 +1,7 @@
 library: matplotlib
 specification_id: scatter-ashby-material
 created: '2026-03-11T14:59:01Z'
-updated: '2026-03-11T15:03:28Z'
+updated: '2026-03-11T15:13:30Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 22958872802
 issue: 4677
@@ -10,75 +10,78 @@ library_version: 3.10.8
 preview_url: https://storage.googleapis.com/pyplots-images/plots/scatter-ashby-material/matplotlib/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/scatter-ashby-material/matplotlib/plot_thumb.png
 preview_html: null
-quality_score: 87
+quality_score: 88
 review:
   strengths:
+  - Full spec compliance with all required and optional features including performance
+    index guide lines
   - Excellent data quality with realistic engineering material values across 7 families
-  - Full spec compliance including optional guide lines for performance indices
-  - Strong design with custom palette, removed spines, and subtle grid
-  - Clean convex hull implementation with smart jitter for collinear point handling
-  - Well-structured code following KISS principles
+    spanning 4+ orders of magnitude
+  - Smooth Bezier convex hull envelopes using matplotlib PathPatch — both visually
+    appealing and a distinctive library feature
+  - Strong design with custom palette, removed spines, warm background, and subtle
+    grid layering
+  - 'Smart engineering touches: label offsets for crowded regions, hash-based per-family
+    jitter for reproducibility'
   weaknesses:
-  - Foams and Composites colors are too similar (both teal-green), hurting colorblind
-    accessibility
-  - Guide line annotation text at fontsize 10 is too small relative to other text
-    elements
-  - Upper-right region is crowded with Ceramics, Metals, and Composites labels competing
-    for space
-  - Does not leverage distinctive matplotlib features (e.g., PathPatch for smoother
-    envelopes)
+  - Upper-right region remains crowded where Ceramics, Metals, and Composites hulls/labels
+    compete for space
+  - 'Red-green color pair (Ceramics #C0392B / Composites #2E8B57) suboptimal for deuteranopia
+    despite spatial separation'
+  - Helper function breaks strict KISS linear flow (though justified by complexity)
   image_description: 'The plot displays a log-log scatter chart of Density (kg/m³)
     on the x-axis vs Young''s Modulus (GPa) on the y-axis — a classic Ashby material
-    selection chart. Seven material families are shown: Ceramics (red, upper right,
-    highest modulus), Metals (blue, far right, high density and modulus), Composites
-    (teal/green, upper-middle), Natural Materials (olive/gold, center), Polymers (orange,
-    middle-right), Foams (light teal, lower-left spanning low density and low modulus),
-    and Elastomers (purple, lower-right with low modulus but moderate density). Each
-    family is represented by scatter points with white edge highlights, semi-transparent
-    convex hull envelopes, and bold colored labels with light background boxes at
-    their geometric centers. Two dashed gray guide lines for constant E/ρ performance
-    indices are displayed diagonally. The title reads "scatter-ashby-material · matplotlib
-    · pyplots.ai" in bold at the top. The background is a warm off-white (#FAFAFA),
-    all spines are removed, and subtle major/minor grid lines are visible.'
+    selection chart. Seven material families are plotted: Ceramics (red, upper-center,
+    highest modulus ~60-440 GPa), Metals (steel blue, far right, high density 1700-11300
+    kg/m³), Composites (sea green, upper-middle, 1400-2000 kg/m³), Natural Materials
+    (olive/gold, center, medium range), Polymers (orange, middle, ~900-1400 kg/m³),
+    Foams (tan/golden, lower-left, very low density 30-200 kg/m³), and Elastomers
+    (purple, lower-center, very low modulus 0.003-0.05 GPa). Each family has scatter
+    points with white edges (s=120, alpha=0.7), smooth Bézier convex hull envelopes
+    with semi-transparent fills and colored borders, and bold colored labels with
+    light background boxes. Two dashed gray guide lines show constant E/ρ performance
+    indices with rotated text annotations. The title reads "scatter-ashby-material
+    · matplotlib · pyplots.ai" in bold at top. Background is warm off-white (#FAFAFA),
+    all spines are removed, subtle major/minor gridlines are visible.'
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All main text sizes explicitly set. Guide line labels at fontsize
-          10 are too small.
+        comment: 'All font sizes explicitly set: title 24pt bold, axis labels 20pt,
+          ticks 16pt, family labels 13pt bold, guide text 14pt.'
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Ceramics/Metals/Composites labels crowded in upper-right. Background
-          boxes prevent unreadability.
+        comment: Upper-right region has Ceramics/Metals/Composites labels in close
+          proximity. Background boxes prevent unreadability but area is visually crowded.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Markers s=120 alpha=0.7 appropriate for ~105 points. Convex hulls
-          subtle but visible.
+        comment: Markers s=120 alpha=0.7 appropriate for ~105 points. Smooth Bezier
+          hulls visible with fill and edge. Slightly large per guidelines.
       - id: VQ-04
         name: Color Accessibility
         score: 3
         max: 4
         passed: false
-        comment: Foams (#7FADA0) and Composites (#5BA58B) too similar in hue for colorblind
-          viewers.
+        comment: Red (#C0392B) and green (#2E8B57) pair suboptimal for deuteranopia.
+          Spatial separation mitigates but not ideal.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good 16:9 layout with tight_layout, canvas well utilized.
+        comment: Good 16:9 layout with tight_layout. Canvas well-utilized.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -94,22 +97,22 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom cohesive palette, warm background, white edges, bbox labels,
-          guide lines. Above defaults.
+        comment: Custom cohesive palette, warm background, white edge highlights,
+          bold colored labels with bbox, smooth Bezier envelopes. Above defaults.
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: All spines removed, subtle major/minor grid, generous whitespace.
-          Guide line labels could be more polished.
+        comment: All spines removed, subtle major/minor grid, generous whitespace,
+          warm background.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
         comment: Family separation and guide lines add engineering context. Lacks
-          strong focal point or highlighted insight.
+          single strong focal point.
     spec_compliance:
       score: 15
       max: 15
@@ -119,7 +122,7 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Log-log scatter with labeled bubble regions — exactly as specified.
+        comment: Log-log scatter with labeled bubble/hull regions — exactly as specified.
       - id: SC-02
         name: Required Features
         score: 4
@@ -162,33 +165,37 @@ review:
         passed: true
         comment: All values physically realistic for the materials represented.
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Clean imports-data-plot-save flow with well-structured loop.
+        passed: false
+        comment: Defines smooth_hull_patch() function rather than pure linear flow.
+          Justified but breaks strict KISS.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set for jitter reproducibility.
+        comment: np.random.seed(42) set. Hash-based RandomState for per-family jitter
+          is deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: matplotlib, numpy, scipy.spatial.ConvexHull.'
+        comment: 'All imports used: matplotlib.patches, matplotlib.path, matplotlib.pyplot,
+          numpy, scipy.spatial.ConvexHull.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity. Smart jitter for collinear hull points.
+        comment: Appropriate complexity for smooth Bezier envelopes. Smart jitter
+          for collinear hull points.
       - id: CQ-05
         name: Output & API
         score: 1
@@ -196,7 +203,7 @@ review:
         passed: true
         comment: Saves as plot.png, dpi=300, bbox_inches=tight. Current API.
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -204,20 +211,23 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Proper fig/ax pattern, ax methods, log scales, zorder management.
+        comment: Proper fig/ax pattern, ax methods, log scales, zorder management,
+          PathPatch usage.
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Standard scatter/fill/plot/text. ConvexHull from scipy. No distinctive
-          matplotlib features.
+        passed: true
+        comment: Uses matplotlib.path.Path with CURVE4 Bezier commands and PathPatch
+          for smooth envelopes — distinctive matplotlib feature.
   verdict: REJECTED
 impl_tags:
   dependencies:
   - scipy
   techniques:
   - annotations
+  - bezier-curves
+  - patches
   patterns:
   - data-generation
   - iteration-over-groups
