@@ -34,7 +34,7 @@ interface SpecDetail {
 export function SpecPage() {
   const { specId, library: urlLibrary } = useParams();
   const navigate = useNavigate();
-  const { trackEvent } = useAnalytics();
+  const { trackPageview, trackEvent } = useAnalytics();
   const { librariesData } = useAppData();
 
   const [specData, setSpecData] = useState<SpecDetail | null>(null);
@@ -100,25 +100,22 @@ export function SpecPage() {
     (libraryId: string) => {
       setImageLoaded(false);
       navigate(`/${specId}/${libraryId}`, { replace: true });
-      trackEvent('switch_library', { spec: specId, library: libraryId });
     },
-    [specId, navigate, trackEvent]
+    [specId, navigate]
   );
 
   // Handle implementation click (in overview mode)
   const handleImplClick = useCallback(
     (libraryId: string) => {
       navigate(`/${specId}/${libraryId}`);
-      trackEvent('select_implementation', { spec: specId, library: libraryId });
     },
-    [specId, navigate, trackEvent]
+    [specId, navigate]
   );
 
   // Handle image click (in detail mode - go back to overview)
   const handleImageClick = useCallback(() => {
     navigate(`/${specId}`);
-    trackEvent('back_to_overview', { spec: specId, library: selectedLibrary || undefined });
-  }, [specId, selectedLibrary, navigate, trackEvent]);
+  }, [specId, navigate]);
 
   // Handle download
   const handleDownload = useCallback(
@@ -171,12 +168,12 @@ export function SpecPage() {
   useEffect(() => {
     if (specData) {
       if (isOverviewMode) {
-        trackEvent('view_spec_overview', { spec: specId });
+        trackPageview(`/${specId}`);
       } else if (selectedLibrary) {
-        trackEvent('view_spec', { spec: specId, library: selectedLibrary });
+        trackPageview(`/${specId}/${selectedLibrary}`);
       }
     }
-  }, [specData, isOverviewMode, selectedLibrary, specId, trackEvent]);
+  }, [specData, isOverviewMode, selectedLibrary, specId, trackPageview]);
 
   // Loading state
   if (loading) {

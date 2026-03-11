@@ -1,0 +1,229 @@
+library: bokeh
+specification_id: pictogram-basic
+created: '2026-03-10T22:46:04Z'
+updated: '2026-03-10T23:17:21Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22927470258
+issue: 4674
+python_version: 3.14.3
+library_version: 3.8.2
+preview_url: https://storage.googleapis.com/pyplots-images/plots/pictogram-basic/bokeh/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/pictogram-basic/bokeh/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/pictogram-basic/bokeh/plot.html
+quality_score: 90
+review:
+  strengths:
+  - Excellent pictogram implementation with proper partial icon rendering via wedges
+    on gray backgrounds
+  - Strong visual hierarchy through value-sorted rows, alpha gradation, and bold emphasis
+    on top category
+  - Clean, professional design with removed spines, alternating row bands, and custom
+    color palette
+  - Dual output (PNG + HTML) with legitimate interactive HoverTool for HTML version
+  - Perfect spec compliance — all required features implemented
+  weaknesses:
+  - 'Minor: right-side canvas space is underutilized for shorter category rows (inherent
+    to pictogram layout)'
+  - Library mastery could be higher with additional Bokeh-specific features
+  image_description: 'The plot displays a pictogram chart (isotype visualization)
+    of fruit production data. Five categories are shown in rows sorted by value descending:
+    Apples (35k, blue/teal, 7 full circles), Grapes (28k, purple, 5 full + 1 partial),
+    Oranges (23k, orange, 4 full + 1 partial), Bananas (17k, rose/pink, 3 full + 1
+    partial), and Mangoes (11k, green, 2 full + 1 partial). Each circle represents
+    5,000 tonnes. Partial values are shown as wedge fills on gray background circles.
+    The title reads "pictogram-basic · bokeh · pyplots.ai" with subtitle "Fruit Production
+    — Annual output in thousands of tonnes". Category labels appear on the left y-axis
+    in bold. Value annotations (e.g., "35k") appear to the right of each row. Alternating
+    light gray row bands add visual structure. A legend at the bottom reads "Each
+    ● = 5,000 tonnes". The layout is clean with removed spines, no grid, white background,
+    and generous padding.'
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 36pt, subtitle 24pt, y-axis
+          labels 26pt, value annotations 22-24pt, legend 26pt'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping elements, circles well-spaced
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Circles large and clearly visible, partial icons distinct against
+          gray backgrounds
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Five distinct hues, no red-green only distinction
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Plot fills ~60% of canvas, some inherent empty space on right for
+          shorter rows
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title in correct format, subtitle provides context with units
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom color palette, white circle borders, alternating row bands,
+          alpha hierarchy, bold emphasis on top category
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines removed, grid removed, alternating row bands, white line borders,
+          generous padding
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Data sorted descending, alpha gradation, bold/larger font for top
+          category creates visual hierarchy
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct pictogram/isotype chart with repeated icons
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features: repeated icons, unit value, partial icons, grid
+          rows, category labels, legend'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Categories correctly mapped to rows, values accurately represented
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct, legend shows unit value
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Full and partial icons, good value range (11-35), 5 categories
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Fruit production in thousands of tonnes, real-world plausible and
+          neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values 11k-35k tonnes plausible for fruit production
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear flow, no functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hardcoded data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports are used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-structured, HoverTool is legitimate Bokeh feature
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png and plot.html, current API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of ColumnDataSource, glyphs, FixedTicker, CustomJSTickFormatter,
+          BoxAnnotation, Label
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: HoverTool, CustomJSTickFormatter, dual PNG+HTML output are Bokeh-distinctive
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - hover-tooltips
+  - html-export
+  - manual-ticks
+  - patches
+  patterns:
+  - data-generation
+  - columndatasource
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - alpha-blending
+  - edge-highlighting

@@ -112,9 +112,8 @@ export function HomePage() {
       const specId = img.spec_id || '';
       const library = img.library;
       navigate(`/${specId}/${library}`);
-      trackEvent('navigate_to_spec', { spec: specId, library });
     },
-    [navigate, trackEvent, saveScrollPosition]
+    [navigate, saveScrollPosition]
   );
 
   // Close tooltip when clicking anywhere

@@ -50,7 +50,7 @@ export function GridSizeToggle({ imageSize, onImageSizeChange, onTrackEvent }: T
   const handleToggle = () => {
     const newSize = imageSize === 'normal' ? 'compact' : 'normal';
     onImageSizeChange(newSize);
-    onTrackEvent('toggle_grid_size', { size: newSize });
+    onTrackEvent('grid_resize', { size: newSize });
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {

@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import CssBaseline from '@mui/material/CssBaseline';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { AppRouter } from './router';
+import { reportWebVitals } from './analytics/reportWebVitals';
 
 // Import MonoLisa font - hosted on GCS (all text uses MonoLisa)
 import './styles/fonts.css';
@@ -46,3 +47,5 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     </ThemeProvider>
   </React.StrictMode>
 );
+
+reportWebVitals();

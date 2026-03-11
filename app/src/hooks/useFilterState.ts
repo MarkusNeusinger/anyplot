@@ -225,7 +225,7 @@ export function useFilterState({
       // Clear animation state
       setTimeout(() => setRandomAnimation(null), 1000);
 
-      onTrackEvent('random', { category: randomCategory, value: randomValue, method });
+      onTrackEvent('random_filter', { category: randomCategory, value: randomValue, method });
     },
     [filterCounts, globalCounts, onTrackEvent]
   );

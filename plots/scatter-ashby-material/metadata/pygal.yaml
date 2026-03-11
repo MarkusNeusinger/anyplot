@@ -1,0 +1,232 @@
+library: pygal
+specification_id: scatter-ashby-material
+created: '2026-03-11T14:58:15Z'
+updated: '2026-03-11T15:31:10Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22958872731
+issue: 4677
+python_version: 3.14.3
+library_version: 3.1.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/scatter-ashby-material/pygal/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/scatter-ashby-material/pygal/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/scatter-ashby-material/pygal/plot.html
+quality_score: 81
+review:
+  strengths:
+  - Excellent data quality with realistic engineering material properties across 7
+    families spanning the full Ashby chart range
+  - Colorblind-safe palette with teal replacing green, all families distinguishable
+  - Creative SVG post-processing to add family labels and E/rho performance index
+    guide lines
+  - Family labels with white stroke for readability against data points
+  - Proper logarithmic scaling on both axes spanning 5+ orders of magnitude
+  weaknesses:
+  - Color palette defined twice (lines 120-139) — first definition immediately overridden
+  - Dot opacity at 0.38 is quite low making some isolated points faint
+  - Title adds descriptive prefix before the required spec-id format
+  - No true convex-hull envelopes or bubble regions — relies on large dots to suggest
+    clusters
+  image_description: 'The plot displays an Ashby material selection chart on a log-log
+    scale with Density (kg/m³) on the x-axis and Young''s Modulus (GPa) on the y-axis.
+    Seven material families are plotted as large colored dots: Metals (steel blue,
+    upper right, densely clustered around 7000-19300 kg/m³ and 45-411 GPa), Ceramics
+    (brick red, upper area around 2400-15600 kg/m³ and 65-680 GPa), Polymers (teal/cyan,
+    middle band around 900-2200 kg/m³ and 0.5-3.6 GPa), Composites (golden amber,
+    middle-upper around 1100-2900 kg/m³ and 8-210 GPa), Elastomers (purple, lower
+    region around 860-1850 kg/m³ and 0.001-0.025 GPa), Foams (neutral gray, lower-left
+    around 25-500 kg/m³ and 0.012-3.5 GPa), and Natural Materials (earth brown, mid-range
+    around 160-1900 kg/m³ and 0.3-20 GPa). Each family has a bold colored label with
+    white stroke placed near its cluster centroid. Two dashed gray diagonal guide
+    lines show E/ρ = 0.01 and E/ρ = 10⁻⁴ performance indices. The title reads "Density
+    vs Young''s Modulus · scatter-ashby-material · pygal · pyplots.ai". A horizontal
+    legend at the bottom lists all 7 families with colored boxes. The plot background
+    is light gray (#f5f6f8) against a white canvas.'
+  criteria_checklist:
+    visual_quality:
+      score: 26
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Font sizes explicitly set (title=38, labels=22, major_labels=20,
+          legend=20). Guide line labels slightly small at edge.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Minor overlap in dense Metals cluster. Family labels well-positioned
+          with white stroke.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Large dots visible but opacity=0.38 makes isolated points slightly
+          faint.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Colorblind-safe palette with teal replacing green. All 7 colors distinguishable.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good canvas utilization. Slight excess margin on right side.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive with units: Density (kg/m³) and Young''s Modulus (GPa).'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Custom palette, font family, styled background, white-stroke labels.
+          Above defaults but not publication-ready.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Light gray plot background, subtle grid, custom margins and spacing,
+          bottom legend.
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Family labels and E/rho guide lines create visual hierarchy and engineering
+          context.
+    spec_compliance:
+      score: 13
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct log-log scatter plot for material properties.
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: All features present. Large dots approximate bubble regions but not
+          true convex hulls.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Density on x-axis, modulus on y-axis. All data visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 2
+        max: 3
+        passed: true
+        comment: Title has extra descriptive prefix. Legend correctly lists all 7
+          families.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 7 families spanning full range of engineering materials from foams
+          to ceramics.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real engineering materials with accurate property values. Classic
+          Ashby chart context.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: All values physically correct for listed materials.
+    code_quality:
+      score: 8
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Mostly linear but includes helper function and complex SVG post-processing.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set for jitter.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 1
+        max: 2
+        passed: true
+        comment: Duplicate color palette definition. SVG manipulation verbose but
+          necessary.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png via cairosvg.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good pygal.XY usage with Style, label dicts, logarithmic mode, formatters.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Leverages pygal SVG output for post-processing. Uses tooltip system
+          with custom labels.
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - cairosvg
+  techniques:
+  - annotations
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling

@@ -27,7 +27,8 @@
     "react-dom": "^19.2.4",
     "react-helmet-async": "^3.0.0",
     "react-router-dom": "^7.13.1",
-    "react-syntax-highlighter": "^16.1.1"
+    "react-syntax-highlighter": "^16.1.1",
+    "web-vitals": "^5.1.0"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

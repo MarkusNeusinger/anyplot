@@ -1,0 +1,227 @@
+library: plotnine
+specification_id: pictogram-basic
+created: '2026-03-10T22:41:03Z'
+updated: '2026-03-10T23:18:00Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22927470238
+issue: 4674
+python_version: 3.14.3
+library_version: 0.15.3
+preview_url: https://storage.googleapis.com/pyplots-images/plots/pictogram-basic/plotnine/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/pictogram-basic/plotnine/plot_thumb.png
+preview_html: null
+quality_score: 88
+review:
+  strengths:
+  - Excellent spec compliance — all required pictogram features implemented faithfully
+  - Strong design with custom colorblind-safe palette and clean infographic aesthetic
+    via theme_void
+  - Clever partial tile implementation using layered geom_tile with dashed outlines
+    and proportional fills
+  - Data sorted by value creates natural visual hierarchy
+  - Value labels provide immediate data comprehension
+  - Perfect code quality — clean, deterministic, well-structured
+  weaknesses:
+  - Partial tile fill alignment appears slightly imprecise in some rows
+  - Some unused whitespace below the chart and to the right of shorter rows
+  image_description: 'The plot displays a pictogram chart (isotype visualization)
+    for fruit production data. Five categories are arranged vertically from top to
+    bottom: Apples (blue, #306998), Grapes (purple, #8E44AD), Oranges (orange, #E67E22),
+    Bananas (green, #27AE60), and Strawberries (dark red, #C0392B). Each category
+    has a row of colored rectangular tiles where each full tile represents 5,000 tonnes.
+    Apples has 7 full tiles (35k), Grapes has 5 full + 1 partial (28k), Oranges has
+    4 full + 1 partial (22k), Bananas has 3 full + 1 partial (18k), and Strawberries
+    has 2 full + 1 partial (12k). Partial tiles are shown with a dashed outline and
+    a proportionally-filled left-aligned portion at low opacity. Value labels (e.g.,
+    "35k") appear in bold gray text to the right of each row. The title "pictogram-basic
+    · plotnine · pyplots.ai" is bold and centered at the top. A bottom legend reads
+    "Each ■ = 5k tonnes" with a blue tile sample. A caption at the bottom left states
+    "Partial squares show fractional units · Source: FAO estimates". The background
+    is clean white (theme_void).'
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title 26pt, category labels 20pt, value labels size=16, all explicitly
+          set. Caption at 14pt slightly small.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text anywhere.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Full tiles clearly visible. Partial tile fill alignment slightly
+          off in some rows.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Colorblind-safe palette with well-separated hues.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Chart fills ~50-60% of canvas. Some unused whitespace below and to
+          the right.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive category labels, correct title format, legend provides
+          unit context.
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom colorblind-safe palette, dashed outlines for partial tiles,
+          cohesive infographic aesthetic.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: theme_void removes all chrome, generous whitespace, caption with
+          source attribution.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Data sorted by value creates visual hierarchy. Value labels provide
+          immediate comprehension.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct pictogram/isotype chart with repeated tiles.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: unit value, partial icons, grid rows,
+          left-aligned, category labels, legend.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Categories on y-axis, icon count along x-axis.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct title format. Legend indicates unit value clearly.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Good variation in values with different partial fill amounts. Could
+          include one evenly-divisible category.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Fruit production in thousands of tonnes. Real-world, neutral domain.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values 12k-35k tonnes plausible for fruit production.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Imports → data → plot → save. No functions or classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic data.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-structured layered approach, appropriate complexity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with dpi=300.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Strong grammar-of-graphics: aes mapping, multiple geom layers, scale_fill_manual,
+          theme_void.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Layer composition with multiple geom_tile layers, guide_legend, scale_color_identity.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - alpha-blending

@@ -1,0 +1,232 @@
+library: letsplot
+specification_id: spectrogram-mel
+created: '2026-03-11T19:40:37Z'
+updated: '2026-03-11T19:53:41Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22970857648
+issue: 4672
+python_version: 3.14.3
+library_version: 4.9.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/spectrogram-mel/letsplot/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/spectrogram-mel/letsplot/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/spectrogram-mel/letsplot/plot.html
+quality_score: 90
+review:
+  strengths:
+  - Excellent dark theme aesthetic with custom color palette well-suited for spectrogram
+    visualization
+  - Perfect spec compliance with all required features implemented
+  - Manual STFT and mel filterbank computation without external dependencies
+  - Note annotations (C4, E4, G4, C5) add data storytelling and guide the viewer
+  - 'Good use of lets-plot distinctive features: formatted tooltips, flavor_darcula'
+  - dB range clipping effectively emphasizes musical content over noise
+  weaknesses:
+  - Colorbar area slightly cramped on the right edge
+  - Could push design further with more dramatic visual hierarchy
+  image_description: 'The plot displays a mel-spectrogram on a dark navy/indigo background
+    (custom dark theme). The x-axis shows "Time (s)" from 0 to ~2.8s, and the y-axis
+    shows "Frequency (Hz)" with mel-scaled labels at 100, 200, 500, 1k, 2k, 5k, and
+    10k Hz. The inferno colormap renders power from dark purple (~-10 dB) through
+    magenta/orange to bright yellow (~45 dB). Four sequential notes are visible as
+    bright horizontal bands with clear harmonic overtones extending upward: C4 (~0-0.7s),
+    E4 (~0.7-1.4s), G4 (~1.4-2.1s), and C5 (~2.1-2.8s). White bold note labels (C4,
+    E4, G4, C5) are placed at each note''s fundamental frequency and midpoint time.
+    The colorbar on the right is labeled "Power (dB)". The title "spectrogram-mel
+    · letsplot · pyplots.ai" appears top-left in light gray. Grid lines are very subtle
+    dark blue. The overall aesthetic is a polished dark theme with good contrast between
+    the bright spectrogram content and the dark background.'
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title=24, axis_title=20, axis_text=16,
+          legend_title=16, legend_text=14, geom_text size=14'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text; y-axis Hz labels well-spaced, note annotations
+          well-positioned
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Higher resolution downsampling produces smooth tiles; harmonics and
+          fundamentals clearly distinguishable
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Inferno is perceptually uniform and colorblind-safe with excellent
+          contrast on dark background
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good proportions; slight crowding of colorbar label on right edge
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Time (s) and Frequency (Hz) - descriptive with units
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom dark theme with intentional color palette, inferno colormap,
+          flavor_darcula base, white bold note annotations
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Axis lines removed, subtle thin grid lines, minor grid removed, legend
+          background matched, custom margins
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Note annotations guide viewer through ascending arpeggio; dB clipping
+          emphasizes musical content
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct mel-spectrogram with manual mel filter bank and STFT computation
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: dB scale, inferno colormap, time x-axis,
+          mel-scaled y-axis with Hz labels, colorbar in dB'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=time(s), Y=mel band index mapped to Hz, fill=power in dB
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; colorbar labeled Power (dB)
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows fundamentals, harmonics, vibrato, envelope shaping, noise floor,
+          ascending frequency progression
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: C major arpeggio with harmonics and vibrato is musically meaningful
+          and realistic
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Standard sample rate (22050 Hz), correct musical frequencies, 3-second
+          duration
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean linear flow: imports, synthesis, STFT, mel filterbank, plot,
+          save'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: numpy, pandas, lets_plot'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-organized, appropriate complexity for manual STFT/mel computation
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot.png with scale=3 and plot.html via ggsave
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good ggplot grammar with geom_tile, geom_text, scale_fill_viridis,
+          theme composition with flavor_darcula
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses layer_tooltips() with formatting, flavor_darcula, HTML export
+          - recognizably lets-plot features
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - manual-ticks
+  - annotations
+  - hover-tooltips
+  - layer-composition
+  patterns:
+  - data-generation
+  - matrix-construction
+  - iteration-over-groups
+  dataprep:
+  - binning
+  styling:
+  - dark-theme
+  - custom-colormap
+  - grid-styling

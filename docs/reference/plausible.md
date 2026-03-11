@@ -52,22 +52,12 @@ https://pyplots.ai/{category}/{value}/{category}/{value}/...
 
 ## Custom Events
 
-### Navigation Events
+### Conversions
 
 | Event Name | Properties | Where | Description |
 |------------|-----------|-------|-------------|
-| `navigate_to_spec` | `spec`, `library` | HomePage | User clicks image card to view spec detail |
-| `switch_library` | `spec`, `library` | SpecPage | User switches library via pills in detail view |
-| `select_implementation` | `spec`, `library` | SpecPage | User clicks implementation card in overview mode |
-| `back_to_overview` | `spec`, `library` | SpecPage | User clicks main image to return to overview |
-| `catalog_rotate` | `spec` | CatalogPage | User clicks image in catalog to rotate library |
-
-### Code Interaction Events
-
-| Event Name | Properties | Where | Description |
-|------------|-----------|-------|-------------|
-| `copy_code` | `spec`, `library`, `method`, `page` | Multiple | User copies code to clipboard |
-| `download_image` | `spec`, `library`, `page` | SpecPage | User downloads PNG image |
+| `copy_code` | `spec`, `library`, `method`, `page` | ImageCard.tsx, SpecPage.tsx, SpecTabs.tsx | User copies code to clipboard |
+| `download_image` | `spec`, `library`, `page` | SpecPage.tsx | User downloads PNG image |
 
 **Copy methods**:
 - `card`: Quick copy button on image card (home grid)
@@ -79,15 +69,26 @@ https://pyplots.ai/{category}/{value}/{category}/{value}/...
 - `spec_overview`: SpecPage showing all library implementations
 - `spec_detail`: SpecPage showing single library implementation
 
-### Filter & Search Events
+### Discovery
 
 | Event Name | Properties | Where | Description |
 |------------|-----------|-------|-------------|
-| `search` | `query`, `category` | FilterBar | User searches and selects value |
-| `search_no_results` | `query` | FilterBar | Search query returns no results (debounced 200ms) |
-| `random` | `category`, `value`, `method` | HomePage | User triggers random filter |
-| `filter_remove` | `category`, `value` | HomePage | User removes a filter |
-| `toggle_grid_size` | `size` | FilterBar | User toggles between normal/compact view |
+| `search` | `query`, `category` | FilterBar.tsx | User searches and selects value |
+| `search_no_results` | `query` | FilterBar.tsx | Search query returns no results (debounced 200ms) |
+
+### Feature Usage
+
+| Event Name | Properties | Where | Description |
+|------------|-----------|-------|-------------|
+| `random_filter` | `category`, `value`, `method` | useFilterState.ts | User triggers random filter |
+| `filter_remove` | `category`, `value` | useFilterState.ts | User removes a filter |
+| `grid_resize` | `size` | ToolbarActions.tsx | User toggles between normal/compact view |
+| `tab_toggle` | `action`, `tab`, `library` | SpecTabs.tsx | User opens or closes a tab |
+| `catalog_rotate` | `spec` | CatalogPage.tsx | User clicks image in catalog to rotate library |
+| `open_interactive` | `spec`, `library` | SpecOverview.tsx, SpecDetailView.tsx | User opens interactive HTML view |
+| `suggest_spec` | - | CatalogPage.tsx | User clicks "suggest spec" link |
+| `report_issue` | `spec`, `library`? | SpecPage.tsx | User clicks "report issue" link |
+| `tag_click` | `param`, `value`, `source` | SpecTabs.tsx | User clicks a tag chip to filter |
 
 **Random methods**:
 - `click`: Shuffle icon clicked
@@ -98,26 +99,34 @@ https://pyplots.ai/{category}/{value}/{category}/{value}/...
 - `normal`: Larger cards (1-3 columns)
 - `compact`: Smaller cards (2-6 columns)
 
-### Tab Interaction Events
-
-| Event Name | Properties | Where | Description |
-|------------|-----------|-------|-------------|
-| `tab_click` | `tab`, `library` | SpecTabs | User opens a tab |
-| `tab_collapse` | `library` | SpecTabs | User closes currently open tab |
+**Tab toggle actions**:
+- `open`: User opened a tab
+- `close`: User closed a tab
 
 **Tab names**: `code`, `specification`, `implementation`, `quality`
 
-### External Link Events
+### External/Internal Link Events
 
 | Event Name | Properties | Where | Description |
 |------------|-----------|-------|-------------|
-| `external_link` | `destination`, `spec`, `library` | Footer | User clicks external link in footer |
-| `open_interactive` | `spec`, `library` | SpecPage | User opens interactive HTML view |
-| `suggest_spec` | - | CatalogPage | User clicks "suggest spec" link |
-| `report_issue` | `spec`, `library`? | SpecPage | User clicks "report issue" link |
+| `external_link` | `destination`, `spec`?, `library`? | Footer.tsx, LegalPage.tsx | User clicks external link |
+| `internal_link` | `destination`, `spec`?, `library`? | Footer.tsx | User clicks internal link in footer |
 
-**External destinations**: `linkedin`, `github`, `stats`
-**Internal destinations**: `legal`, `mcp`
+**External destinations (Footer)**: `github`, `stats`, `linkedin`
+**External destinations (LegalPage)**: `linkedin`, `x`, `github_personal`
+**Internal destinations**: `mcp`, `legal`
+
+### Performance (Core Web Vitals)
+
+| Event Name | Properties | Where | Description |
+|------------|-----------|-------|-------------|
+| `LCP` | `value`, `rating` | reportWebVitals.ts | Largest Contentful Paint (rounded to nearest 100ms) |
+| `CLS` | `value`, `rating` | reportWebVitals.ts | Cumulative Layout Shift (2 decimal places) |
+| `INP` | `value`, `rating` | reportWebVitals.ts | Interaction to Next Paint (rounded to nearest 50ms) |
+
+**Rating values**: `good`, `needs-improvement`, `poor` (per web-vitals thresholds)
+
+CWV tracking is production-only and dynamically imported (zero dev/bundle cost).
 
 ---
 
@@ -213,17 +222,21 @@ To see event properties in Plausible dashboard, you **MUST** register them as cu
 
 | Property | Description | Used By Events |
 |----------|-------------|----------------|
-| `spec` | Plot specification ID | `copy_code`, `download_image`, `navigate_to_spec`, `switch_library`, `select_implementation`, `back_to_overview`, `catalog_rotate`, `external_link`, `open_interactive`, `og_image_view` |
-| `library` | Library name (matplotlib, seaborn, etc.) | `copy_code`, `download_image`, `navigate_to_spec`, `switch_library`, `select_implementation`, `back_to_overview`, `external_link`, `open_interactive`, `tab_click`, `tab_collapse`, `og_image_view` |
-| `method` | Action method (card, image, tab, click, space, doubletap) | `copy_code`, `random` |
+| `spec` | Plot specification ID | `copy_code`, `download_image`, `catalog_rotate`, `external_link`, `internal_link`, `open_interactive`, `report_issue`, `tag_click`, `og_image_view` |
+| `library` | Library name (matplotlib, seaborn, etc.) | `copy_code`, `download_image`, `external_link`, `internal_link`, `open_interactive`, `tab_toggle`, `og_image_view` |
+| `method` | Action method (card, image, tab, click, space, doubletap) | `copy_code`, `random_filter` |
 | `page` | Page context (home, catalog, spec_overview, spec_detail) | `copy_code`, `download_image`, `og_image_view` |
 | `platform` | Bot/platform name (twitter, whatsapp, teams, etc.) | `og_image_view` |
-| `category` | Filter category (lib, spec, plot, data, dom, feat, dep, tech, pat, prep, style) | `search`, `random`, `filter_remove` |
-| `value` | Filter value | `random`, `filter_remove` |
+| `category` | Filter category (lib, spec, plot, data, dom, feat, dep, tech, pat, prep, style) | `search`, `random_filter`, `filter_remove` |
+| `value` | Filter value | `random_filter`, `filter_remove`, `tag_click` |
 | `query` | Search query text | `search`, `search_no_results` |
-| `destination` | External link target (linkedin, github, stats) | `external_link` |
-| `tab` | Tab name (code, specification, implementation, quality) | `tab_click` |
-| `size` | Grid size (normal, compact) | `toggle_grid_size` |
+| `destination` | Link target (github, stats, linkedin, mcp, legal) | `external_link`, `internal_link` |
+| `tab` | Tab name (code, specification, implementation, quality) | `tab_toggle` |
+| `action` | Toggle action (open, close) | `tab_toggle` |
+| `size` | Grid size (normal, compact) | `grid_resize` |
+| `param` | URL parameter name for tag | `tag_click` |
+| `source` | Source page context | `tag_click` |
+| `rating` | CWV rating (good, needs-improvement, poor) | `LCP`, `CLS`, `INP` |
 | `filter_lib` | Library filter value (for og:image) | `og_image_view` |
 | `filter_spec` | Specification filter value (for og:image) | `og_image_view` |
 | `filter_plot` | Plot type filter value (for og:image) | `og_image_view` |
@@ -246,25 +259,30 @@ To see event properties in Plausible dashboard, you **MUST** register them as cu
 |-----------|------|-------------|
 | `copy_code` | Custom Event | Track code copies (primary conversion) |
 | `download_image` | Custom Event | Track image downloads |
-| `navigate_to_spec` | Custom Event | Track spec navigation |
 | `search` | Custom Event | Track successful searches |
 | `search_no_results` | Custom Event | Track failed searches (content gaps) |
-| `random` | Custom Event | Track random filter usage |
+| `random_filter` | Custom Event | Track random filter usage |
 | `filter_remove` | Custom Event | Track filter removal |
-| `toggle_grid_size` | Custom Event | Track view preference |
+| `grid_resize` | Custom Event | Track view preference |
+| `tab_toggle` | Custom Event | Track tab interactions |
 | `external_link` | Custom Event | Track outbound clicks |
+| `internal_link` | Custom Event | Track internal navigation links |
 | `open_interactive` | Custom Event | Track interactive mode usage |
 | `suggest_spec` | Custom Event | Track spec suggestion clicks |
 | `report_issue` | Custom Event | Track issue report clicks |
-| `tab_click` | Custom Event | Track tab interactions |
+| `tag_click` | Custom Event | Track tag filter clicks |
+| `catalog_rotate` | Custom Event | Track catalog image rotation |
 | `og_image_view` | Custom Event | Track og:image requests from social media bots |
+| `LCP` | Custom Event | Largest Contentful Paint (Core Web Vital) |
+| `CLS` | Custom Event | Cumulative Layout Shift (Core Web Vital) |
+| `INP` | Custom Event | Interaction to Next Paint (Core Web Vital) |
 
 ### Funnels (Optional)
 
 **Example funnel**: Home → Spec → Copy
 
 1. Pageview `/` (home)
-2. `navigate_to_spec` event
+2. Pageview `/{spec_id}/{library}` (spec detail)
 3. `copy_code` event
 
 ### Dashboard Widgets
@@ -276,7 +294,8 @@ Recommended custom widgets:
 3. **Copy Journey**: `copy_code` breakdown by `page`
 4. **Search Terms**: `search` breakdown by `query`
 5. **Missing Content**: `search_no_results` breakdown by `query`
-6. **View Preference**: `toggle_grid_size` breakdown by `size`
+6. **View Preference**: `grid_resize` breakdown by `size`
+7. **CWV Performance**: `LCP` / `CLS` / `INP` breakdown by `rating`
 
 ---
 
@@ -323,25 +342,25 @@ User lands on pyplots.ai
 |-------|------------|---------------|
 | `copy_code` | `spec`, `library`, `method`, `page` | ImageCard.tsx, SpecPage.tsx, SpecTabs.tsx |
 | `download_image` | `spec`, `library`, `page` | SpecPage.tsx |
-| `navigate_to_spec` | `spec`, `library` | HomePage.tsx |
-| `switch_library` | `spec`, `library` | SpecPage.tsx |
-| `select_implementation` | `spec`, `library` | SpecPage.tsx |
-| `back_to_overview` | `spec`, `library` | SpecPage.tsx |
-| `catalog_rotate` | `spec` | CatalogPage.tsx |
 | `search` | `query`, `category` | FilterBar.tsx |
 | `search_no_results` | `query` | FilterBar.tsx |
-| `random` | `category`, `value`, `method` | useFilterState.ts |
+| `random_filter` | `category`, `value`, `method` | useFilterState.ts |
 | `filter_remove` | `category`, `value` | useFilterState.ts |
-| `toggle_grid_size` | `size` | FilterBar.tsx |
-| `tab_click` | `tab`, `library` | SpecTabs.tsx |
-| `tab_collapse` | `library` | SpecTabs.tsx |
-| `external_link` | `destination`, `spec`, `library` | Footer.tsx |
-| `open_interactive` | `spec`, `library` | SpecPage.tsx |
+| `grid_resize` | `size` | ToolbarActions.tsx |
+| `tab_toggle` | `action`, `tab`, `library` | SpecTabs.tsx |
+| `tag_click` | `param`, `value`, `source` | SpecTabs.tsx |
+| `catalog_rotate` | `spec` | CatalogPage.tsx |
+| `open_interactive` | `spec`, `library` | SpecOverview.tsx, SpecDetailView.tsx |
 | `suggest_spec` | - | CatalogPage.tsx |
 | `report_issue` | `spec`, `library`? | SpecPage.tsx |
-| `view_spec_overview` | `spec` | SpecPage.tsx |
-| `view_spec` | `spec`, `library` | SpecPage.tsx |
+| `external_link` | `destination`, `spec`?, `library`? | Footer.tsx, LegalPage.tsx |
+| `internal_link` | `destination`, `spec`, `library` | Footer.tsx |
+| `LCP` | `value`, `rating` | reportWebVitals.ts |
+| `CLS` | `value`, `rating` | reportWebVitals.ts |
+| `INP` | `value`, `rating` | reportWebVitals.ts |
 | `og_image_view` | `page`, `platform`, `spec`?, `library`?, `filter_*`? | api/analytics.py (server-side) |
+
+**Total: 19 client-side + 1 server-side = 20 events**
 
 ---
 
@@ -419,17 +438,26 @@ quality        # Quality score breakdown tab
 
 ### `destination` Values
 ```
-linkedin  # LinkedIn profile link
-github    # GitHub repository link
-stats     # Plausible stats dashboard link
-legal     # Legal page (internal link)
-mcp       # MCP documentation page (internal link)
+github          # GitHub repository link (Footer)
+stats           # Plausible stats dashboard link (Footer)
+linkedin        # LinkedIn profile link (Footer, LegalPage)
+x               # X/Twitter profile link (LegalPage)
+github_personal # Personal GitHub link (LegalPage)
+mcp             # MCP documentation page (internal link, Footer)
+legal           # Legal page (internal link, Footer)
 ```
 
 ### `size` Values
 ```
 normal   # Larger cards (1-3 columns)
 compact  # Smaller cards (2-6 columns)
+```
+
+### `rating` Values (Core Web Vitals)
+```
+good              # Within recommended thresholds
+needs-improvement # Between good and poor thresholds
+poor              # Exceeds poor threshold
 ```
 
 ---
@@ -439,6 +467,7 @@ compact  # Smaller cards (2-6 columns)
 - **Plausible setup**: `app/index.html` (lines 59-68)
 - **Analytics hook**: `app/src/hooks/useAnalytics.ts`
 - **Pageview building**: `buildPlausibleUrl()` in useAnalytics.ts
+- **Core Web Vitals**: `app/src/analytics/reportWebVitals.ts`
 - **Event tracking**: Passed via `onTrackEvent` prop throughout component tree
 
 ## Testing
@@ -464,26 +493,29 @@ window.plausible = function(...args) { console.log('Plausible:', args); };
 - [x] Plausible script loaded
 - [x] Manual pageview tracking
 - [x] Filter-based URL generation
-- [x] Navigation events (`navigate_to_spec`, `switch_library`, etc.)
 - [x] Code copy events with journey tracking (`copy_code` + `page`)
 - [x] Download tracking (`download_image` + `page`)
 - [x] Search events (`search`, `search_no_results`)
-- [x] Random filter events (`random`)
+- [x] Random filter events (`random_filter`)
 - [x] Filter removal tracking (`filter_remove`)
-- [x] Grid size toggle tracking (`toggle_grid_size`)
-- [x] Tab interaction events (`tab_click`, `tab_collapse`)
-- [x] External link events (`external_link`, `open_interactive`)
-- [x] Contribution link events (`suggest_spec`, `report_issue`)
+- [x] Grid size toggle tracking (`grid_resize`)
+- [x] Tab interaction events (`tab_toggle`)
+- [x] Tag click events (`tag_click`)
+- [x] External link events (`external_link`)
+- [x] Internal link events (`internal_link`)
+- [x] Feature link events (`open_interactive`, `suggest_spec`, `report_issue`)
+- [x] Catalog rotation (`catalog_rotate`)
+- [x] Core Web Vitals tracking (`LCP`, `CLS`, `INP`)
 - [x] Server-side og:image tracking (`og_image_view`) with platform detection
 
 ### Plausible Dashboard Checklist
 
-- [ ] Register all custom properties (see table above, including `platform` and `filter_*`)
-- [ ] Create goals for key events (including `og_image_view`)
+- [ ] Register all custom properties (see table above, including `rating`, `action`, `param`, `source`, `platform`, `filter_*`)
+- [ ] Create goals for key events (including `LCP`, `CLS`, `INP`)
 - [ ] Set up funnels (optional)
 - [ ] Create custom dashboard widgets (optional)
 
 ---
 
-**Last Updated**: 2026-01-07
-**Status**: Production-ready with full journey tracking and server-side og:image analytics
+**Last Updated**: 2026-03-10
+**Status**: Production-ready with full journey tracking, Core Web Vitals, and server-side og:image analytics

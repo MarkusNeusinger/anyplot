@@ -202,17 +202,18 @@ export function SpecTabs({
   }, [code, specId, libraryId, onTrackEvent]);
 
   const handleTabChange = (_: React.SyntheticEvent, newValue: number) => {
+    // In overview mode, only Spec tab exists at index 0
+    const tabNames = overviewMode
+      ? ['specification']
+      : ['code', 'specification', 'implementation', 'quality'];
+
     // Toggle: clicking same tab collapses it
     if (tabIndex === newValue) {
+      onTrackEvent?.('tab_toggle', { action: 'close', tab: tabNames[tabIndex], library: libraryId || undefined });
       setTabIndex(null);
-      onTrackEvent?.('tab_collapse', { library: libraryId });
     } else {
       setTabIndex(newValue);
-      // In overview mode, only Spec tab exists at index 0
-      const tabNames = overviewMode
-        ? ['specification']
-        : ['code', 'specification', 'implementation', 'quality'];
-      onTrackEvent?.('tab_click', { tab: tabNames[newValue], library: libraryId });
+      onTrackEvent?.('tab_toggle', { action: 'open', tab: tabNames[newValue], library: libraryId || undefined });
     }
   };
 

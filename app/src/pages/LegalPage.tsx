@@ -404,7 +404,7 @@ export function LegalPage() {
         </Paper>
 
         <Typography sx={{ textAlign: 'center', fontSize: '0.8rem', color: '#9ca3af', mt: 2 }}>
-          Last updated: January 2026
+          Last updated: March 2026
         </Typography>
       </Box>
 

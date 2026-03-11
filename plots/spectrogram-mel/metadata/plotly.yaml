@@ -1,0 +1,227 @@
+library: plotly
+specification_id: spectrogram-mel
+created: '2026-03-11T19:38:21Z'
+updated: '2026-03-11T19:50:52Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22970857444
+issue: 4672
+python_version: 3.14.3
+library_version: 6.6.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/spectrogram-mel/plotly/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/spectrogram-mel/plotly/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/spectrogram-mel/plotly/plot.html
+quality_score: 92
+review:
+  strengths:
+  - Excellent data storytelling with four well-placed annotations guiding viewer through
+    key spectral features
+  - Manual STFT and mel filterbank computation avoids external dependencies while
+    producing accurate results
+  - Strong visual design with Inferno colorscale, clean layout, and subtle reference
+    lines
+  - Full spec compliance with all required parameters and features implemented correctly
+  weaknesses:
+  - Library mastery could be stronger — the heavy lifting is in numpy with Plotly
+    mainly rendering a heatmap
+  - Annotation font size (14pt) is slightly small relative to axis labels
+  image_description: 'The plot displays a mel-spectrogram using the Inferno colorscale
+    on a white background. The x-axis shows "Time (s)" from 0 to ~3.8 seconds, and
+    the y-axis shows "Frequency (Hz)" on a logarithmic scale with custom tick labels
+    at 50, 100, 200, 500, 1k, 2k, 4k, and 8k Hz. The colorbar on the right is labeled
+    "dB" with a range from -80 to 0. Bright yellow-white horizontal bands are clearly
+    visible at the harmonic frequencies (440 Hz, 880 Hz, 1320 Hz), and a diagonal
+    bright sweep rises from lower-left to upper-right representing the chirp signal.
+    A decaying tone near 3000-4000 Hz fades over the first ~2 seconds. The lower frequencies
+    show a noisy texture. Four white-arrow annotations with dark background boxes
+    label key features: "Harmonics (A4)", "Chirp sweep", "Decaying tone", and "Noise
+    floor". Subtle dotted white reference lines appear at 440 Hz, 1 kHz, and 4 kHz.
+    Title reads "spectrogram-mel · plotly · pyplots.ai" centered at the top.'
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 28pt, axis labels 22pt, ticks
+          16-18pt'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text, annotations well-positioned with arrow offsets
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Heatmap clearly visible, Inferno provides excellent dynamic range
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Inferno is perceptually uniform and colorblind-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills ~65% of canvas with balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Time (s) and Frequency (Hz) both descriptive with units
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Strong design: Inferno colorscale, custom annotations with dark
+          backgrounds, refined colorbar'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Grid removed, plotly_white template, subtle reference lines, generous
+          whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Four annotations guide viewer to key spectral features with reference
+          lines at meaningful frequencies
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct mel-spectrogram with mel-scaled frequency axis
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: dB scale, sequential colormap, correct
+          parameters'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=time, Y=mel-frequency with Hz labels, full data range covered
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title correctly formatted and centered, no legend needed
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Rich signal with harmonics, chirp, decaying tone, noise, amplitude
+          envelope
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Audio analysis is a real, neutral scientific domain with standard
+          components
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 22050 Hz sample rate, 4s duration, audible frequencies, -80 to 0
+          dB range
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports, signal, STFT, mel filterbank, plot, save'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set before noise generation
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only numpy and plotly.graph_objects, both fully used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-structured manual STFT and mel filterbank, appropriate complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot.png and plot.html with current API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of go.Heatmap, update_layout, add_shape, add_annotation
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Custom hovertemplate, hoverlabel styling, HTML export, annotation
+          arrows
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - annotations
+  - manual-ticks
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  - matrix-construction
+  - iteration-over-groups
+  dataprep:
+  - binning
+  styling:
+  - custom-colormap
