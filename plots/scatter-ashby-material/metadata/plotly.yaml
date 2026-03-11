@@ -1,7 +1,7 @@
 library: plotly
 specification_id: scatter-ashby-material
 created: '2026-03-11T15:00:18Z'
-updated: '2026-03-11T15:12:06Z'
+updated: '2026-03-11T15:21:43Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 22958872772
 issue: 4677
@@ -10,40 +10,36 @@ library_version: 6.6.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/scatter-ashby-material/plotly/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/scatter-ashby-material/plotly/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/scatter-ashby-material/plotly/plot.html
-quality_score: 85
+quality_score: 87
 review:
   strengths:
-  - Full spec compliance with all required features including optional performance
-    index guide lines
-  - Realistic material property data with physically correct ranges for all 7 families
-  - 'Good Plotly-specific features: interactive hover tooltips, HTML export, fill=toself
-    for convex hulls'
-  - Clean code with explicit font sizing throughout and proper reproducibility seed
-  - Effective log-scale data generation using log-uniform distribution
+  - Perfect spec compliance with all required and optional features (convex hulls,
+    guide lines, log scales, family labels)
+  - Excellent data quality with physically accurate material properties across 7 families
+  - 'Strong plotly-specific features: interactive hover with E/rho values, HTML export,
+    fill=toself envelopes'
+  - Clean, reproducible code with correlated bivariate normal data generation in log-space
+  - Good visual refinement with subtle grid, translucent fills, and white marker edges
   weaknesses:
-  - E/rho guide line label at rgba(0,0,0,0.55) is too faint — hard to read against
-    the dotted lines and data
-  - Composites (#1B9E77) and Polymers (#2CA02C) are too similar in hue for colorblind
+  - Red-green color combination (Ceramics/Composites) is suboptimal for colorblind
     accessibility
-  - Ceramics and Metals regions overlap in upper-right, creating visual clutter with
-    nearby labels
-  - Data within each family is uniformly random rather than showing realistic property
-    correlations
-  image_description: 'The plot displays a log-log scatter chart titled "scatter-ashby-material
-    · plotly · pyplots.ai" with Density (kg/m³) on the x-axis and Young''s Modulus
-    (GPa) on the y-axis. Seven material families are shown: Metals (steel blue, upper-right),
-    Ceramics (coral red, upper-center-right), Polymers (green, center-right), Composites
-    (teal, upper-center), Elastomers (orange, lower-center), Foams (cyan, spanning
-    the lower-left), and Natural Materials (brown, center). Each family has scattered
-    data points (size ~13, white edges, 0.85 opacity) enclosed by semi-transparent
-    convex hull envelopes with matching fill colors at 15% opacity. Bold family labels
-    sit at each region''s centroid with white semi-transparent backgrounds. Faint
-    dotted diagonal guide lines for E/ρ = const span the chart, with a light "E/ρ
-    = const" label in the upper-right that is quite hard to read. The legend ("Material
-    Family") is in the lower-right with a subtle border. Background is off-white (#FAFAFA)
-    with very subtle gridlines. The Ceramics and Metals regions overlap somewhat in
-    the upper-right quadrant. The Composites (teal) and Polymers (green) colors appear
-    somewhat similar.'
+  - Family annotation labels at 15pt could be slightly larger for the canvas size
+  - Minor marker overlap in denser clusters (Metals, Polymers)
+  image_description: 'The plot displays an Ashby Material Selection Chart as a log-log
+    scatter plot with "Density (kg/m³)" on the x-axis and "Young''s Modulus (GPa)"
+    on the y-axis. Seven material families are shown: Metals (steel blue, upper-right,
+    ~5000–11000 kg/m³, ~50–220 GPa), Ceramics (red, upper-middle-right, ~2200–4000
+    kg/m³, ~180–500 GPa), Polymers (purple, middle-right, ~900–1500 kg/m³, ~0.2–4
+    GPa), Composites (green, middle-upper-right, ~1400–2200 kg/m³, ~10–180 GPa), Elastomers
+    (orange, lower-middle-right, ~900–1300 kg/m³, ~0.001–0.1 GPa), Foams (olive-yellow,
+    lower-left, ~20–300 kg/m³, ~0.001–1 GPa), and Natural Materials (brown, center,
+    ~150–1300 kg/m³, ~0.5–20 GPa). Each family has a translucent convex hull envelope
+    with colored borders and individual scatter markers (size 14) with white edge
+    lines. Bold family labels are placed at centroids with white semi-transparent
+    backgrounds. Diagonal dotted guide lines for E/ρ = const are drawn across the
+    plot with a rotated label. The title "scatter-ashby-material · plotly · pyplots.ai"
+    is centered at top. A legend titled "Material Family" is positioned in the lower-right
+    corner. Background is light gray (#FAFAFA) with very subtle gridlines.'
   criteria_checklist:
     visual_quality:
       score: 26
@@ -51,47 +47,46 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 28pt, axis labels 22pt, ticks
-          18pt, annotations 15pt, legend title 18pt, legend items 16pt'
+        comment: Title 28pt, axis labels 22pt, ticks 18pt all explicitly set. Annotation
+          labels at 15pt are readable but slightly small.
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Ceramics and Metals convex hull envelopes overlap in upper-right
-          quadrant; Composites label sits close to Ceramics region creating visual
-          clutter
+        passed: true
+        comment: Convex hulls for Polymers and Elastomers nearly touching. Minor marker
+          overlap in denser clusters.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Markers size 13 with opacity 0.85 and white edges are clearly visible;
-          slightly small for ~160 data points but adequate
+        comment: Markers at size 14 with white edges well-visible. Some overlap in
+          denser clusters like Metals and Polymers.
       - id: VQ-04
         name: Color Accessibility
         score: 3
         max: 4
-        passed: false
-        comment: Composites (#1B9E77 teal) and Polymers (#2CA02C green) not sufficiently
-          distinct for deuteranopia; Metals blue and Foams cyan also somewhat similar
+        passed: true
+        comment: Seven distinct colors but red-green combination for Ceramics/Composites
+          is suboptimal for colorblind users.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good canvas utilization (1600x900), balanced margins, plot fills
-          ~65% of canvas
+        comment: Good canvas utilization, balanced margins, legend well-positioned
+          in lower-right.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Both axes descriptive with units: Density (kg/m³), Young''s Modulus
-          (GPa)'
+        comment: 'Descriptive labels with units: Density (kg/m³) and Young''s Modulus
+          (GPa).'
     design_excellence:
       score: 13
       max: 20
@@ -101,22 +96,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom 7-color palette, semi-transparent hull fills, white marker
-          edges, off-white background. Above defaults but not publication-level
+        comment: Custom palette, translucent fills, white marker edges, plotly_white
+          template. Above defaults but not publication-level.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: plotly_white template, subtle gridlines (0.06 opacity), custom axis
-          line colors, mirror=False removes redundant spines
+        comment: Subtle gridlines at 0.06 opacity, clean template, only bottom/left
+          axis lines. Good refinement.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Classic Ashby layout naturally creates spatial story with material
-          families separated by properties; E/rho guide lines add engineering context
+        comment: E/rho guide lines add engineering context. Spatial separation reveals
+          material trade-offs. Hover templates include E/rho values.
     spec_compliance:
       score: 15
       max: 15
@@ -126,51 +121,52 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct log-log scatter plot with material family bubble regions
-          via convex hulls
+        comment: Correct log-log scatter plot with material families as bubble regions.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: log scales, convex hull envelopes, family
-          labels, axis labels with units, distinct colors, guide lines'
+        comment: Log scales, convex hulls, family labels, axis labels with units,
+          distinct colors, E/rho guide lines all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=density, Y=modulus, correct mapping spanning full realistic range
+        comment: X = density, Y = Young's modulus — correct mapping.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format, legend titled Material Family with all 7 families
+        comment: Title format correct. Legend titled Material Family with correct
+          labels.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 7 material families spanning 3+ orders of magnitude in both properties;
-          uniform random rather than correlated within families
+        comment: 7 material families spanning realistic property ranges with convex
+          hulls, scatter points, and guide lines.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Classic materials science density vs Young's modulus scenario, neutral
-          educational domain
+        comment: Classic density vs Young's modulus Ashby chart — standard materials
+          science tool with neutral scientific context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Realistic ranges for all material families matching real-world values
+        comment: Density 20-11000 kg/m³ and modulus 0.001-500 GPa are physically accurate
+          for each material family.
     code_quality:
       score: 10
       max: 10
@@ -180,34 +176,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data dict, generation loop, plot loop, guide
-          lines, layout, save'
+        comment: 'Clean linear flow: imports, data generation, plot creation, layout,
+          save.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set at top
+        comment: np.random.seed(42) set before data generation.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: numpy, plotly.graph_objects, scipy.spatial.ConvexHull'
+        comment: numpy, plotly.graph_objects, scipy.spatial.ConvexHull — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, clean and readable
+        comment: Clean, well-structured with correlated bivariate normal generation
+          in log-space.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png and plot.html, current Plotly API
+        comment: Saves as plot.png and plot.html. Current API used.
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -215,15 +212,15 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of go.Figure, go.Scatter, add_annotation, update_layout
-          dict pattern
+        comment: Proper use of go.Figure, add_trace, add_annotation, update_layout.
+          Graph objects API used correctly.
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Uses hovertemplate, fill=toself for hulls, HTML export - Plotly-distinctive
-          features
+        comment: Custom hover templates with customdata for E/rho, HTML export, fill=toself
+          for convex hulls.
   verdict: REJECTED
 impl_tags:
   dependencies:
@@ -232,6 +229,7 @@ impl_tags:
   - annotations
   - hover-tooltips
   - html-export
+  - custom-legend
   patterns:
   - data-generation
   - iteration-over-groups
