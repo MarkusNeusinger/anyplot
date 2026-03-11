@@ -1,7 +1,7 @@
 library: pygal
 specification_id: spectrogram-mel
 created: '2026-03-11T19:41:13Z'
-updated: '2026-03-11T19:45:27Z'
+updated: '2026-03-11T19:57:30Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 22970857385
 issue: 4672
@@ -10,34 +10,33 @@ library_version: 3.1.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/spectrogram-mel/pygal/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/spectrogram-mel/pygal/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/spectrogram-mel/pygal/plot.html
-quality_score: 81
+quality_score: 83
 review:
   strengths:
-  - Perfect spec compliance — all mel-spectrogram requirements met including colorbar,
-    mel-scaled Hz labels, and correct STFT parameters
-  - Creative solution extending pygal Graph class for an unsupported chart type (mel-spectrogram)
-  - Excellent data choice with musical arpeggio showing harmonics, decay envelopes,
-    and frequency variation
-  - Inferno colormap with smooth interpolation provides excellent visual quality and
-    accessibility
-  - Custom mel filterbank implementation avoids librosa dependency
+  - Full spec compliance with all required features (dB scale, mel-scaled Hz labels,
+    colorbar, correct parameters)
+  - Excellent data quality with realistic C-major arpeggio showing fundamentals, harmonics,
+    and envelope decay
+  - Note annotations add effective storytelling by labeling each note onset
+  - Custom inferno colormap with smooth 19-color interpolation provides professional
+    appearance
+  - Good colorblind accessibility with perceptually uniform colormap
   weaknesses:
-  - sys.path manipulation for import collision is hacky and fragile
-  - Class and function definitions violate KISS flat structure
-  - Design could benefit from more visual storytelling emphasis
-  - Slight pixelation from aggressive downsampling (96x150 cells)
-  - Margin/whitespace could be tightened for better canvas utilization
-  image_description: The plot displays a mel-spectrogram with an inferno colormap
-    (dark purple to bright yellow). The title "spectrogram-mel · pygal · pyplots.ai"
-    is centered at the top. The x-axis is labeled "Time (s)" ranging from 0.0 to 3.0,
-    and the y-axis is labeled "Frequency (Hz)" with mel-scaled tick marks at 100,
-    200, 500, 1.0k, 2.0k, 4.0k, and 8.0k Hz. A vertical colorbar on the right is labeled
-    "dB" with tick values from 0 to -80. The spectrogram clearly shows six distinct
-    notes of a C-major arpeggio pattern (ascending C4, E4, G4, C5, then descending
-    G4, E4) as bright horizontal bands at their fundamental frequencies and harmonics
-    (2nd and 3rd harmonics visible). Each note shows an exponential decay envelope.
-    A subtle broadband noise floor is visible throughout. The plot area fills the
-    canvas well with a dark border around the spectrogram region.
+  - sys.path manipulation hack for import collision is fragile and inelegant
+  - Custom class and standalone functions break KISS principle
+  - Annotation text labels could be slightly larger for better visibility
+  - Some wasted vertical space above 4kHz where signal energy is minimal
+  image_description: The plot displays a mel-spectrogram of a synthesized C-major
+    arpeggio (C4→E4→G4→C5→G4→E4) over 3 seconds. The inferno colormap ranges from
+    dark black/purple (low power, -80 dB) through orange to bright yellow (high power,
+    0 dB). The x-axis shows "Time (s)" from 0.0 to 3.0, and the y-axis shows "Frequency
+    (Hz)" with mel-scaled labels at 100, 200, 500, 1.0k, 2.0k, 4.0k, and 8.0k Hz.
+    Six note segments are clearly visible with bright horizontal bands at fundamental
+    frequencies and their 2nd/3rd harmonics, each decaying exponentially. Circle markers
+    with white text labels (C4, E4, G4, C5, G4, E4) annotate each note onset. A colorbar
+    on the right labeled "dB" shows the scale from -80 to 0. The title reads "spectrogram-mel
+    · pygal · pyplots.ai". The background noise floor is visible as a consistent purple
+    layer. Overall layout is clean with good proportions.
   criteria_checklist:
     visual_quality:
       score: 27
@@ -48,64 +47,68 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=72px, axis labels=52px, ticks=38px,
-          colorbar=36px). Readable at full resolution.
+        comment: All font sizes explicitly set (title 72px, axis labels 52px, ticks
+          38px, annotations 38px, colorbar 36px). Annotation labels slightly small
+          relative to other text.
       - id: VQ-02
         name: No Overlap
-        score: 6
-        max: 6
-        passed: true
-        comment: No overlapping text anywhere. Y-axis Hz labels well-spaced.
-      - id: VQ-03
-        name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Spectrogram cells clearly visible with good color contrast. Slight
-          pixelation from downsampling.
+        comment: No significant overlap. Note annotations positioned at fundamental
+          frequencies with circle markers and text shadows. Some labels close vertically
+          but legible.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Spectrogram cells well-adapted to data density. Harmonics, fundamentals,
+          and envelope decay clearly visible.
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Inferno colormap is colorblind-safe with excellent perceptual uniformity.
+        comment: Inferno is perceptually uniform and colorblind-safe. Excellent contrast.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good canvas use but generous margins waste some space.
+        comment: Good proportions. Colorbar well-positioned. Some empty spectral space
+          above 4kHz.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Time (s), Frequency (Hz), and dB colorbar label with units.
+        comment: Time (s), Frequency (Hz) with units, dB on colorbar.
     design_excellence:
-      score: 12
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Custom inferno colormap, clean axis border, professional appearance.
-          Above defaults but not publication-level.
+        comment: Custom inferno colormap with 19-color interpolation, clean white
+          background, explicit font styling. Professional appearance above defaults.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Custom axis rendering with clean ticks, no extraneous pygal chrome.
-          Good detail.
+        comment: Pygal defaults hidden, custom-drawn axes with tick marks, clean border,
+          generous margins.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Arpeggio pattern creates visual interest but no explicit emphasis
-          or focal point.
+        passed: true
+        comment: Note annotations at onset points tell the C-major arpeggio story.
+          Circle markers guide viewer through melodic progression.
     spec_compliance:
       score: 15
       max: 15
@@ -115,51 +118,54 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct mel-spectrogram visualization.
+        comment: Correct mel-spectrogram with mel-warped frequency axis and dB power
+          spectrum.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec requirements met: dB scale, sequential colormap, time axis,
-          mel-scaled Hz labels, colorbar, correct STFT params.'
+        comment: 'All spec features present: dB scale, inferno colormap, time axis,
+          mel Hz labels, colorbar, correct FFT parameters, synthesized audio.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=time, Y=mel-frequency correctly mapped.
+        comment: X=time, Y=mel frequency, color=power in dB. All correctly mapped.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. No legend needed for single-series spectrogram.
+        comment: Title format correct. No legend needed for single-representation
+          spectrogram.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Multiple notes with harmonics, decay envelopes, noise floor, mel-scale
-          warping visible.
+        comment: Shows fundamentals, harmonics, envelope decay, noise floor, ascending-descending
+          arpeggio pattern.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Musical arpeggio (C4, E4, G4, C5) is realistic and neutral.
+        comment: C-major arpeggio is a realistic musical audio scenario. Neutral domain.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Standard sample rate, real note frequencies, appropriate duration.
+        comment: 22050 Hz sample rate, standard musical frequencies, -80 to 0 dB range.
+          All realistic.
     code_quality:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: CQ-01
@@ -167,8 +173,8 @@ review:
         score: 1
         max: 3
         passed: false
-        comment: Defines custom class and helper functions. Necessary for pygal but
-          violates KISS.
+        comment: Custom MelSpectrogramChart class and standalone functions break KISS
+          principle.
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -177,22 +183,22 @@ review:
         comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: All imports used.
+        passed: false
+        comment: sys.path manipulation hack for import collision is fragile.
       - id: CQ-04
         name: Code Elegance
         score: 1
         max: 2
         passed: false
-        comment: sys.path manipulation hack reduces elegance.
+        comment: sys.path workaround is a code smell. Manual SVG creation is verbose.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png and plot.svg correctly.
+        comment: Saves as plot.png, uses current pygal API.
     library_mastery:
       score: 6
       max: 10
@@ -202,22 +208,24 @@ review:
         score: 3
         max: 5
         passed: true
-        comment: Correctly extends Graph base class with _plot() and _compute(). Uses
-          SVG node system and Style class.
+        comment: Uses pygal Graph subclass pattern with _plot()/_compute() and Style
+          class. Most rendering is manual SVG creation.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Custom Graph subclass pattern is distinctive to pygal. Uses view/box
-          system and SVG node API.
+        comment: Custom Graph subclass with _plot()/_compute() overrides and svg.node()
+          API are pygal-specific patterns.
   verdict: REJECTED
 impl_tags:
   dependencies:
   - scipy
   techniques:
   - colorbar
+  - annotations
   - manual-ticks
+  - html-export
   patterns:
   - data-generation
   - matrix-construction
