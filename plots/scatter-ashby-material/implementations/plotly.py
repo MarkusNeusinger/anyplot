@@ -1,4 +1,4 @@
-"""pyplots.ai
+""" pyplots.ai
 scatter-ashby-material: Ashby Material Selection Chart
 Library: plotly 6.6.0 | Python 3.14.3
 Quality: 85/100 | Created: 2026-03-11
