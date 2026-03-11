@@ -1,7 +1,7 @@
 library: plotnine
 specification_id: scatter-ashby-material
 created: '2026-03-11T14:59:54Z'
-updated: '2026-03-11T15:03:44Z'
+updated: '2026-03-11T15:11:41Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 22958872760
 issue: 4677
@@ -10,35 +10,45 @@ library_version: 0.15.3
 preview_url: https://storage.googleapis.com/pyplots-images/plots/scatter-ashby-material/plotnine/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/scatter-ashby-material/plotnine/plot_thumb.png
 preview_html: null
-quality_score: 82
+quality_score: 83
 review:
   strengths:
-  - Excellent spec compliance - all required Ashby chart features implemented correctly
-  - Realistic material property data with appropriate ranges for all six families
-  - Clean convex hull computation with padding for visually pleasing envelopes
-  - Good use of plotnine grammar of graphics for layering hulls and points
-  - Well-structured reproducible code with clean KISS architecture
+  - Excellent spec compliance - all required Ashby chart features correctly implemented
+    (15/15)
+  - Color palette significantly improved from attempt 1 - cyan Composites now clearly
+    distinct from orange-red Ceramics
+  - Idiomatic plotnine usage with geom_text for family labels (fixed from annotate
+    loop)
+  - Label nudge offsets reduce crowding in the dense upper-right region
+  - Perfect code quality - clean KISS architecture with reproducible seed
+  - Realistic material property data spanning correct physical ranges
   weaknesses:
-  - Ceramics and Composites colors too similar - hard to distinguish in overlap region
-  - Label crowding in upper-right where Ceramics Metals and Composites regions overlap
-  - Family centroid labels could use geom_text instead of annotate loop for idiomatic
-    plotnine
-  - Point size could be slightly larger for better visibility at full resolution
+  - Design Excellence remains the main gap (12/20) - no visual hierarchy or storytelling
+    beyond basic grouping
+  - Family labels could be larger (geom_text size=13 to 15-16) for better readability
+    at full resolution
+  - No performance index guide lines (E/rho diagonal lines) which would enhance engineering
+    storytelling
+  - Library Mastery limited - convex hull is scipy-computed, missing opportunity for
+    plotnine-native features
   image_description: 'The plot displays a log-log scatter chart of Density (kg/m³)
     on the x-axis versus Young''s Modulus (GPa) on the y-axis. Six material families
-    are shown: Metals (steel blue), Ceramics (burnt orange-red), Polymers (green),
-    Composites (orange), Elastomers (purple), and Foams (olive-brown). Each family
-    is represented by individual scatter points overlaid on semi-transparent convex
-    hull envelopes. Family labels are placed at the centroid of each hull region.
-    The title reads "scatter-ashby-material · plotnine · pyplots.ai" in bold at the
-    top. A legend titled "Material Family" is positioned on the right side with a
-    light gray background. The panel background is light gray (#FAFAFA) with subtle
-    major grid lines. The x-axis spans from ~30 to ~10,000 kg/m³ and the y-axis from
-    ~0.001 to ~500 GPa. In the upper-right region, the Ceramics and Metals hulls overlap
-    significantly, causing some label crowding.'
+    are shown: Metals (steel blue, #306998), Ceramics (burnt orange-red, #C75B39),
+    Polymers (green, #4DAF4A), Composites (cyan, #17BECF), Elastomers (purple, #984EA3),
+    and Foams (olive-brown, #A6761D). Each family is represented by individual scatter
+    points (size=4.5, alpha=0.8) overlaid on semi-transparent convex hull envelopes
+    (alpha=0.15). Bold family labels are placed near each hull centroid with manual
+    nudge offsets applied for Ceramics (up), Composites (down), and Metals (right)
+    to reduce crowding. The title "scatter-ashby-material · plotnine · pyplots.ai"
+    appears in bold at the top. A legend titled "Material Family" sits on the right
+    with a light gray background. The panel has a very light gray background (#F8F9FA)
+    with subtle major grid lines (alpha=0.4). Minor grid lines are removed. The x-axis
+    spans ~30 to ~10,000 kg/m³ and the y-axis from ~0.001 to ~500 GPa. Foams occupy
+    the lower-left, Elastomers and Polymers are at mid-density/low-modulus, while
+    Ceramics and Metals cluster in the upper-right with some hull overlap.'
   criteria_checklist:
     visual_quality:
-      score: 24
+      score: 26
       max: 30
       items:
       - id: VQ-01
@@ -46,34 +56,36 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title=24, axes=20, ticks=16). Centroid
-          labels at size=11 slightly small.
+        comment: Font sizes explicitly set (title=24, axes=20, ticks=16, legend=16/18).
+          Family labels at geom_text size=13 are readable but could be slightly larger.
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Ceramics/Metals hull overlap causes label crowding in upper-right
-          region.
+        comment: Improved from attempt 1 with label nudge offsets. Ceramics/Metals
+          hulls still overlap in upper-right but labels are better separated.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Points size=3.5 alpha=0.75 visible for ~131 points. Could be slightly
-          larger.
+        comment: Points at size=4.5 alpha=0.8 well-adapted for ~131 points. Improved
+          from attempt 1 (was 3.5/0.75).
       - id: VQ-04
         name: Color Accessibility
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Ceramics and Composites colors too similar (both warm orange tones).
+        comment: Palette now has excellent perceptual separation. Composites changed
+          from warm orange to cyan, resolving previous similarity issue.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good 16:9 layout. Some wasted space in lower-right quadrant.
+        comment: Good 16:9 proportions with well-positioned legend. Some spatial imbalance
+          with Foams spread far left.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -82,7 +94,7 @@ review:
         comment: 'Descriptive labels with units: Density (kg/m³), Young''s Modulus
           (GPa).'
     design_excellence:
-      score: 13
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -90,22 +102,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom palette, themed legend, customized panel. Above defaults but
-          not publication-grade.
+        comment: Custom palette, themed legend, customized panel background. Above
+          defaults but not publication-grade.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Minor grid removed, major grid subtle, panel background customized,
-          legend styled.
+        comment: Minor grid removed, major grid subtle (alpha=0.4), panel border removed,
+          legend styled. Good refinement.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Convex hulls create effective visual grouping. Log-log axes enable
-          meaningful comparison.
+        comment: Convex hull envelopes group materials effectively. No performance
+          index guide lines for engineering context.
     spec_compliance:
       score: 15
       max: 15
@@ -178,13 +190,13 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports used.
+        comment: All imports used including scipy.spatial.ConvexHull.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-structured. Hull computation loop is necessary.
+        comment: Clean, well-structured. Hull expansion and nudge logic is purposeful.
       - id: CQ-05
         name: Output & API
         score: 1
@@ -200,14 +212,15 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good grammar of graphics usage. Annotate loop could be geom_text.
+        comment: Good grammar of graphics with geom_text for labels (fixed from attempt
+          1). Uses guide_legend override_aes and pd.Categorical.
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Hull computation is scipy-based. No distinctive plotnine features
-          leveraged.
+        comment: Layer composition and guide_legend override_aes are ggplot-specific.
+          Hull computation is scipy-based, not plotnine-native.
   verdict: REJECTED
 impl_tags:
   dependencies:
@@ -215,6 +228,7 @@ impl_tags:
   techniques:
   - annotations
   - layer-composition
+  - custom-legend
   patterns:
   - data-generation
   - iteration-over-groups
