@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 scatter-ashby-material: Ashby Material Selection Chart
 Library: bokeh 3.8.2 | Python 3.14.3
 Quality: 84/100 | Created: 2026-03-11
@@ -7,7 +7,7 @@ Quality: 84/100 | Created: 2026-03-11
 import numpy as np
 import pandas as pd
 from bokeh.io import export_png
-from bokeh.models import ColumnDataSource, HoverTool, Label, Legend, LegendItem, Range1d
+from bokeh.models import ColumnDataSource, HoverTool, Label, Legend, LegendItem, Range1d, Title
 from bokeh.plotting import figure, save
 from scipy.spatial import ConvexHull
 
@@ -68,15 +68,15 @@ families = {
     },
 }
 
-# Colorblind-safe palette (avoids teal/blue confusion)
+# Colorblind-safe palette - deuteranopia-friendly (no brown/gold confusion)
 colors = {
     "Metals": "#306998",
     "Polymers": "#E8833A",
     "Ceramics": "#B5494E",
     "Composites": "#5BA05B",
     "Elastomers": "#9B6FB8",
-    "Foams": "#C4A632",
-    "Natural Materials": "#8B6C42",
+    "Foams": "#D4A84B",
+    "Natural Materials": "#6B8E8E",
 }
 
 # Emphasis levels for visual hierarchy (key structural families emphasized)
@@ -122,18 +122,20 @@ p.add_tools(
 for c_val, label_text, lx, ly in [(0.01, "E/\u03c1 = 0.01", 5000, 0.01 * 5000), (1.0, "E/\u03c1 = 1", 500, 1.0 * 500)]:
     guide_x = [10, 50000]
     guide_y = [c_val * 10, c_val * 50000]
-    p.line(guide_x, guide_y, line_color="#888888", line_width=2, line_dash="dashed", line_alpha=0.6)
+    p.line(guide_x, guide_y, line_color="#777777", line_width=2.5, line_dash="dashed", line_alpha=0.5)
     p.add_layout(
         Label(
             x=lx,
             y=ly,
             text=label_text,
             text_font_size="18pt",
-            text_font_style="italic",
-            text_color="#666666",
-            text_alpha=0.9,
+            text_font_style="normal",
+            text_color="#555555",
+            text_alpha=1.0,
             x_offset=10,
             y_offset=-15,
+            background_fill_color="#FAFAFA",
+            background_fill_alpha=0.7,
         )
     )
 
@@ -226,41 +228,60 @@ for family_name in families:
 legend = Legend(
     items=legend_items,
     location="top_right",
-    label_text_font_size="16pt",
-    glyph_height=35,
-    glyph_width=35,
-    spacing=10,
-    padding=15,
+    label_text_font_size="17pt",
+    glyph_height=45,
+    glyph_width=45,
+    spacing=12,
+    padding=18,
     margin=20,
-    background_fill_alpha=0.75,
+    background_fill_alpha=0.8,
     background_fill_color="#FFFFFF",
-    border_line_alpha=0.3,
+    border_line_alpha=0.2,
+    border_line_color="#CCCCCC",
 )
 p.add_layout(legend, "right")
 
-# Style
+# Style - refined typography and visual polish
 p.title.text_font_size = "28pt"
 p.title.text_font_style = "normal"
+p.title.text_color = "#333333"
+p.add_layout(
+    Title(
+        text="Young's Modulus vs Density — Material Selection Map",
+        text_font_size="16pt",
+        text_color="#888888",
+        text_font_style="italic",
+    ),
+    "above",
+)
 p.xaxis.axis_label_text_font_size = "22pt"
 p.yaxis.axis_label_text_font_size = "22pt"
+p.xaxis.axis_label_text_color = "#444444"
+p.yaxis.axis_label_text_color = "#444444"
 p.xaxis.major_label_text_font_size = "18pt"
 p.yaxis.major_label_text_font_size = "18pt"
+p.xaxis.major_label_text_color = "#555555"
+p.yaxis.major_label_text_color = "#555555"
 
-p.xgrid.grid_line_alpha = 0.15
+# Minimal grid - horizontal only for cleaner look on log-log
+p.xgrid.grid_line_alpha = 0.08
 p.ygrid.grid_line_alpha = 0.15
 p.xgrid.grid_line_width = 1
 p.ygrid.grid_line_width = 1
+p.xgrid.grid_line_dash = [4, 4]
 
 p.outline_line_color = None
 p.xaxis.minor_tick_line_color = None
 p.yaxis.minor_tick_line_color = None
 p.xaxis.major_tick_line_color = None
 p.yaxis.major_tick_line_color = None
-p.xaxis.axis_line_color = "#CCCCCC"
-p.yaxis.axis_line_color = "#CCCCCC"
+p.xaxis.axis_line_color = None
+p.yaxis.axis_line_color = None
 
 p.background_fill_color = "#FAFAFA"
 p.border_fill_color = "#FFFFFF"
+p.min_border_left = 80
+p.min_border_bottom = 60
 
 # Save
 export_png(p, filename="plot.png")
