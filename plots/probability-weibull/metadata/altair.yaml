@@ -1,0 +1,242 @@
+library: altair
+specification_id: probability-weibull
+created: '2026-03-11T21:55:41Z'
+updated: '2026-03-11T22:21:17Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22976096566
+issue: 4668
+python_version: 3.14.3
+library_version: 6.0.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/probability-weibull/altair/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/probability-weibull/altair/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/probability-weibull/altair/plot.html
+quality_score: 93
+review:
+  strengths:
+  - Excellent Weibull probability paper implementation with proper linearized y-axis
+    using Vega expressions for probability tick labels
+  - All spec requirements fully met including median rank formula, censored point
+    distinction, fitted line, parameter annotations, and 63.2% reference line
+  - Professional design with custom color palette, refined typography hierarchy, and
+    subtle grid styling
+  - 'Effective use of Altair-specific features: interactive hover, tooltips, layered
+    composition, Vega expressions'
+  - Realistic turbine blade fatigue data with plausible engineering parameter values
+  weaknesses:
+  - Legend uses opacity=0 hack to generate separate legend layer, could be slightly
+    cleaner
+  - Axis domain lines still visible (minor refinement opportunity)
+  image_description: The plot displays a Weibull probability plot on a light gray
+    (#FAFBFC) background. The title "probability-weibull · altair · pyplots.ai" appears
+    top-left in dark bold text (28pt) with a gray subtitle "Turbine Blade Fatigue-Life
+    Analysis — Weibull Distribution Fit" below it. The x-axis is "Time to Failure
+    (hours)" on a logarithmic scale from ~800 to 10k with SI-prefix formatting (1k,
+    2k, etc.). The y-axis is "Cumulative Failure Probability" with Weibull-linearized
+    probability labels (1%, 5%, 10%, 20%, 50%, 63.2%, 90%, 95%). Blue filled circles
+    with white stroke represent 25 failure observations, while orange open triangles
+    represent 5 censored observations. A dark gray dashed fitted line runs diagonally
+    through the data points. A light gray dashed horizontal reference line at 63.2%
+    is labeled "63.2% Characteristic Life" in italic gray text. Parameter annotation
+    in the lower-right reads "beta = 2.21  eta = 5428 hrs" in bold dark text. A boxed
+    legend in the upper-right corner shows "Observation Type" with Failure (circle)
+    and Censored (triangle) entries.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 28pt, axis titles 22pt, tick
+          labels 18pt, legend 16pt, annotation 21pt'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text elements. Legend in upper-right, annotation in
+          lower-right
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Point size 220 well-adapted for ~30 points. Filled circles vs open
+          triangles excellent distinction
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue/orange colorblind-safe palette with redundant shape encoding
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills canvas well at 1600x900. Balanced margins, nothing cut
+          off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive with units: Time to Failure (hours), Cumulative Failure
+          Probability'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom palette, professional typography hierarchy, clearly above
+          defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: View border removed, subtle y-grid only, custom domain colors, good
+          whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Fitted line and annotated parameters guide interpretation. 63.2%
+          reference adds engineering context
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Weibull probability plot with log x-axis and linearized Weibull
+          y-axis
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features: log x, Weibull y, fitted line, parameters, censored
+          markers, 63.2% reference'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X maps time on log scale, Y maps cumulative probability on Weibull
+          scale
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct. Legend shows Observation Type with Failure/Censored
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Both failures (25) and censored (5) shown. Full range from ~1% to
+          ~90% probability
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Turbine blade fatigue-life analysis is a classic reliability engineering
+          scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 1000-8000 hours realistic for turbine blades. Beta=2.2, eta=5400
+          are plausible values
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports, data, Weibull calculations, chart layers,
+          combine, save'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set at start
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: altair, numpy, pandas, scipy.stats'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity. Vega expression for y-axis labels is clean
+          Altair pattern
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot.png with scale_factor=3.0 and plot.html. Current Altair
+          API
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Good declarative grammar: proper encodings, layered composition,
+          alt.Scale/Axis config'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Vega expressions for y-axis labels, interactive selection_point,
+          tooltips, HTML export
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - scipy
+  techniques:
+  - annotations
+  - layer-composition
+  - custom-legend
+  - hover-tooltips
+  - manual-ticks
+  - html-export
+  patterns:
+  - data-generation
+  dataprep:
+  - regression
+  styling:
+  - grid-styling
+  - edge-highlighting
