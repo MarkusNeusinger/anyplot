@@ -1,7 +1,7 @@
 library: bokeh
 specification_id: scatter-ashby-material
 created: '2026-03-11T15:00:40Z'
-updated: '2026-03-11T15:05:05Z'
+updated: '2026-03-11T15:13:50Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 22958872826
 issue: 4677
@@ -10,34 +10,37 @@ library_version: 3.8.2
 preview_url: https://storage.googleapis.com/pyplots-images/plots/scatter-ashby-material/bokeh/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/scatter-ashby-material/bokeh/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/scatter-ashby-material/bokeh/plot.html
-quality_score: 78
+quality_score: 83
 review:
   strengths:
-  - Excellent realistic material property data spanning appropriate orders of magnitude
-  - Convex hull envelopes effectively communicate material family groupings — faithful
-    to the Ashby chart concept
-  - 'Good use of Bokeh-specific features: HoverTool tooltips, HTML export, ColumnDataSource'
-  - Clean visual style with subtle grid, removed ticks, and cohesive muted color palette
-  - Correct log-log scaling with appropriate axis ranges
+  - Perfect spec compliance and data quality with authentic materials science data
+    across all required Ashby chart features
+  - 'Significant improvement from attempt 1: scipy.ConvexHull replaces manual Graham
+    scan, legend restored, visual hierarchy added via emphasis dict'
+  - Clean flat code structure with no functions/classes, proper seed, all imports
+    used
+  - 'Good use of Bokeh-specific features: HoverTool, HTML export, ColumnDataSource'
+  - Performance index guide lines add engineering context beyond basic spec requirements
   weaknesses:
-  - Ceramics and Metals envelope overlap makes the upper-right region cluttered
-  - Family labels placed at centroids can overlap with data points or neighboring
-    envelopes
-  - Manual convex hull function violates KISS — should use scipy or inline the logic
-  - All material families are treated equally with no visual hierarchy or storytelling
-    emphasis
-  - Legend disabled without alternative quick-reference
-  image_description: The plot shows a log-log scatter chart with 7 material families
-    displayed as colored convex hull envelopes on a white background. Metals (steel
-    blue, upper-right) and Ceramics (muted red, upper-right) occupy high-modulus/high-density
-    regions with overlapping envelopes. Composites (green) sit in the upper-middle
-    area. Natural Materials (teal) span the mid-range. Polymers (orange) cluster at
-    moderate density with low-to-moderate modulus. Foams (gold/yellow) form a narrow
-    diagonal band in the lower-left. Elastomers (purple) appear at moderate density
-    with very low modulus. Each family has a text label at its centroid. The title
-    "scatter-ashby-material · bokeh · pyplots.ai" is at the top-left. X-axis reads
-    "Density (kg/m³)" and Y-axis reads "Young's Modulus (GPa)". Grid lines are subtle.
-    Tick marks are removed. The overall layout is clean with good use of the canvas.
+  - Guide line labels at 14pt/alpha 0.7/#999999 are nearly invisible — increase font
+    size and contrast
+  - Visual hierarchy via marker size differences (15-20px) is too subtle to perceive
+    at this resolution
+  - Ceramics/Metals hull overlap in upper-right makes that region cluttered
+  - Legend glyphs on right side are small — color swatches are tiny
+  image_description: 'The plot shows a log-log scatter chart at 4800x2700 with 7 material
+    families displayed as colored convex hull envelopes on a light gray (#FAFAFA)
+    background. Metals (steel blue) occupy the upper-right with high density and modulus.
+    Ceramics (muted red) overlap with Metals in the upper region. Composites (green)
+    sit in the upper-middle area. Natural Materials (brown/tan) span mid-range values.
+    Polymers (orange) cluster at moderate density with low-to-moderate modulus. Foams
+    (gold/yellow) form a diagonal band in the lower-left. Elastomers (purple) appear
+    at moderate density with very low modulus. Each family has a bold text label positioned
+    near the top of its hull. Two dashed guide lines for E/rho performance indices
+    are visible but very faint. A legend listing all 7 families appears on the right
+    side. Title "scatter-ashby-material · bokeh · pyplots.ai" is at top-left. X-axis:
+    "Density (kg/m³)", Y-axis: "Young''s Modulus (GPa)". Grid lines are subtle (alpha
+    0.15), tick marks removed, axis lines lightened.'
   criteria_checklist:
     visual_quality:
       score: 24
@@ -48,36 +51,37 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title 28pt, labels 22pt, ticks 18pt, hull
-          labels 20pt). All readable.
+        comment: All font sizes explicitly set (title 28pt, labels 22pt, ticks 18pt,
+          hull labels 18pt, legend 16pt). Guide line labels at 14pt are borderline
+          too faint.
       - id: VQ-02
         name: No Overlap
         score: 4
         max: 6
         passed: true
-        comment: Ceramics/Metals envelopes overlap; some family labels overlap with
-          neighboring envelopes or data points.
+        comment: Ceramics and Metals hull envelopes overlap significantly in upper-right.
+          Some label proximity issues with Natural Materials near Composites.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Markers at size=18 with alpha=0.75 are well-visible for ~105 data
-          points.
+        comment: Markers with variable sizes (15-20) and alpha=0.75 well-visible for
+          ~105 points. Markers within dense hulls slightly crowd.
       - id: VQ-04
         name: Color Accessibility
         score: 3
         max: 4
         passed: true
-        comment: 7 distinct colors. Teal and steel blue could be confused by colorblind
-          viewers.
+        comment: 7-color palette avoids pure red-green pairs. Brown and gold could
+          be confused by some colorblind viewers.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good canvas use at 4800x2700. Some empty space in corners inherent
-          to log-log data distribution.
+        comment: Good canvas use at 4800x2700. Legend on right. Some empty space in
+          lower-right inherent to log-log data.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -94,24 +98,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom muted color palette, clean background, removed ticks. Above
-          defaults but not publication-quality.
+        comment: Custom 7-color muted palette, emphasis hierarchy, clean light background,
+          white marker edges. Above defaults but not publication-ready.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Grid alpha=0.2, ticks removed, outline removed. Good refinement but
-          spines still present.
+        comment: Grid alpha 0.15, ticks removed, outline removed, axis lines lightened.
+          Good refinement.
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: Convex hulls communicate family groupings. No clear focal point or
-          visual hierarchy among families.
+        comment: Visual hierarchy via emphasis dict and guide lines for E/rho. Hierarchy
+          is too subtle — size differences imperceptible, guide labels nearly invisible.
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -126,8 +130,8 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: 'All required features present: log scales, envelopes, labels, units,
-          distinct colors, tooltips.'
+        comment: 'All required: log scales, hull envelopes, family labels, axis labels
+          with units, distinct colors, guide lines.'
       - id: SC-03
         name: Data Mapping
         score: 3
@@ -136,46 +140,46 @@ review:
         comment: Density on x-axis, Young's modulus on y-axis. All data visible.
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Title format correct. Legend hidden; hull labels serve as identification
-          but no traditional legend.
+        comment: Title format correct. Legend with all 7 families present on right
+          side.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 7 material families spanning orders of magnitude. Good variety with
-          overlapping regions.
+        comment: 7 material families spanning 5 orders of magnitude in density and
+          6 in modulus. Overlapping regions and wide separations.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Real-world material properties: aluminum, steel, tungsten, etc.
-          Authentic materials science data.'
+        comment: Real-world material properties with plausible values. Authentic materials
+          science data.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Realistic values for all material families across density and modulus
-          ranges.
+        comment: Density 25-19300 kg/m³ and modulus 0.0008-400 GPa match real material
+          property ranges.
     code_quality:
-      score: 7
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 1
+        score: 3
         max: 3
-        passed: false
-        comment: Defines _convex_hull helper function, violating flat script structure.
+        passed: true
+        comment: 'Flat script: imports, data, plot, style, save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -187,20 +191,20 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports used.
+        comment: 'All imports used: numpy, pandas, bokeh modules, scipy.spatial.ConvexHull.'
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Manual Graham scan adds ~20 lines of complexity. scipy.spatial.ConvexHull
-          would be cleaner.
+        passed: true
+        comment: Clean use of scipy.ConvexHull. Emphasis and label_offsets dicts well-organized.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png via export_png. Also saves HTML.
+        comment: Saves plot.png via export_png and plot.html via save. Current Bokeh
+          API.
     library_mastery:
       score: 7
       max: 10
@@ -210,22 +214,25 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of ColumnDataSource, figure, patch, scatter, Label, HoverTool.
+        comment: Good use of ColumnDataSource, figure, patch, scatter, Label, HoverTool,
+          Legend/LegendItem, Range1d.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: HoverTool tooltips, HTML export, ColumnDataSource — distinctively
-          Bokeh features.
+        comment: HoverTool tooltips, dual output (PNG + HTML), ColumnDataSource pattern
+          — distinctively Bokeh.
   verdict: REJECTED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - scipy
   techniques:
   - annotations
   - hover-tooltips
   - html-export
   - patches
+  - custom-legend
   patterns:
   - data-generation
   - iteration-over-groups
