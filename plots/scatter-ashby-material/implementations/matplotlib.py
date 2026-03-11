@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 scatter-ashby-material: Ashby Material Selection Chart
 Library: matplotlib 3.10.8 | Python 3.14.3
 Quality: 88/100 | Created: 2026-03-11
@@ -48,56 +48,20 @@ families = {
 family_colors = {
     "Metals": "#306998",
     "Polymers": "#E07B39",
-    "Ceramics": "#C0392B",
-    "Composites": "#2E8B57",
+    "Ceramics": "#A0522D",
+    "Composites": "#1A9E9E",
     "Elastomers": "#8B6BAE",
     "Foams": "#D4A76A",
     "Natural\nMaterials": "#BFA24E",
 }
 
 # Label offsets (in log10 data coords) to reduce crowding in upper-right
-label_offsets = {"Metals": (0.15, -0.15), "Ceramics": (-0.15, 0.15), "Composites": (-0.2, -0.1)}
+label_offsets = {"Metals": (0.25, -0.25), "Ceramics": (-0.2, 0.2), "Composites": (-0.35, -0.2)}
 
 # Plot
 fig, ax = plt.subplots(figsize=(16, 9))
 fig.patch.set_facecolor("#FAFAFA")
 ax.set_facecolor("#FAFAFA")
-
-
-def smooth_hull_patch(log_points, padding=0.08):
-    """Create a smooth Bézier PathPatch envelope around points in log space."""
-    hull = ConvexHull(log_points)
-    vertices = log_points[hull.vertices]
-    # Close the polygon
-    vertices = np.vstack([vertices, vertices[0]])
-
-    # Expand slightly outward from centroid for padding
-    centroid = np.mean(vertices[:-1], axis=0)
-    directions = vertices - centroid
-    norms = np.linalg.norm(directions, axis=1, keepdims=True)
-    norms = np.where(norms == 0, 1, norms)
-    vertices = vertices + directions / norms * padding
-
-    # Build cubic Bézier path for smooth curves
-    n = len(vertices) - 1
-    codes = [mpath.Path.MOVETO]
-    pts = [vertices[0]]
-    for i in range(n):
-        p0 = vertices[i]
-        p1 = vertices[(i + 1) % n]
-        # Control points at 1/3 and 2/3 along each edge, pulled toward centroid
-        ctrl1 = p0 + (p1 - p0) * 0.33
-        ctrl2 = p0 + (p1 - p0) * 0.67
-        pts.extend([ctrl1, ctrl2, p1])
-        codes.extend([mpath.Path.CURVE4, mpath.Path.CURVE4, mpath.Path.CURVE4])
-    codes.append(mpath.Path.CLOSEPOLY)
-    pts.append(pts[0])
-
-    # Convert back from log space to data space
-    pts_arr = np.array(pts)
-    pts_data = np.column_stack([10 ** pts_arr[:, 0], 10 ** pts_arr[:, 1]])
-
-    return mpath.Path(pts_data, codes)
 
 
 for family_name, data in families.items():
@@ -116,11 +80,28 @@ for family_name, data in families.items():
     log_pts_jittered = log_pts + jitter
 
     try:
-        path = smooth_hull_patch(log_pts_jittered)
-        patch_fill = mpatches.PathPatch(path, facecolor=color, edgecolor="none", alpha=0.15, zorder=2)
-        patch_edge = mpatches.PathPatch(path, facecolor="none", edgecolor=color, alpha=0.4, linewidth=1.5, zorder=3)
-        ax.add_patch(patch_fill)
-        ax.add_patch(patch_edge)
+        hull = ConvexHull(log_pts_jittered)
+        hull_verts = np.vstack([log_pts_jittered[hull.vertices], log_pts_jittered[hull.vertices[0]]])
+        centroid = np.mean(hull_verts[:-1], axis=0)
+        directions = hull_verts - centroid
+        norms = np.where(
+            np.linalg.norm(directions, axis=1, keepdims=True) == 0, 1, np.linalg.norm(directions, axis=1, keepdims=True)
+        )
+        hull_verts = hull_verts + directions / norms * 0.08
+        n_verts = len(hull_verts) - 1
+        codes = [mpath.Path.MOVETO]
+        pts = [hull_verts[0]]
+        for i in range(n_verts):
+            p0, p1 = hull_verts[i], hull_verts[(i + 1) % n_verts]
+            pts.extend([p0 + (p1 - p0) * 0.33, p0 + (p1 - p0) * 0.67, p1])
+            codes.extend([mpath.Path.CURVE4, mpath.Path.CURVE4, mpath.Path.CURVE4])
+        codes.append(mpath.Path.CLOSEPOLY)
+        pts.append(pts[0])
+        pts_arr = np.array(pts)
+        pts_data = np.column_stack([10 ** pts_arr[:, 0], 10 ** pts_arr[:, 1]])
+        path = mpath.Path(pts_data, codes)
+        ax.add_patch(mpatches.PathPatch(path, facecolor=color, edgecolor="none", alpha=0.15, zorder=2))
+        ax.add_patch(mpatches.PathPatch(path, facecolor="none", edgecolor=color, alpha=0.4, linewidth=1.5, zorder=3))
     except Exception:
         pass
 
