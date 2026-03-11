@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 spectrogram-mel: Mel-Spectrogram for Audio Analysis
 Library: matplotlib 3.10.8 | Python 3.14.3
-Quality: 88/100 | Created: 2026-03-11
+Quality: 90/100 | Created: 2026-03-11
 """
 
 import matplotlib.pyplot as plt

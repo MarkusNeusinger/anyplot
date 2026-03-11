@@ -1,7 +1,7 @@
 library: matplotlib
 specification_id: spectrogram-mel
 created: '2026-03-11T19:38:18Z'
-updated: '2026-03-11T19:42:39Z'
+updated: '2026-03-11T19:50:53Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 22970857203
 issue: 4672
@@ -10,30 +10,33 @@ library_version: 3.10.8
 preview_url: https://storage.googleapis.com/pyplots-images/plots/spectrogram-mel/matplotlib/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/spectrogram-mel/matplotlib/plot_thumb.png
 preview_html: null
-quality_score: 88
+quality_score: 90
 review:
   strengths:
-  - Excellent visual quality with all font sizes explicitly set and magma colormap
-    providing strong contrast
-  - Rich synthesized audio data with multiple components (melody, harmonics, percussion,
-    rising tone) creating an informative spectrogram
-  - Complete manual mel-spectrogram computation without external dependencies (no
-    librosa required)
-  - Perfect spec compliance with all required features implemented correctly
+  - Comprehensive synthesized audio signal with multiple distinct components (melody,
+    harmonics, percussion, rising tone) creating a visually rich spectrogram
+  - Manual mel-spectrogram computation avoids external audio library dependencies
+    while producing correct results
+  - Cohesive dark theme with magma colormap, removed spines, and custom colorbar styling
+    create professional appearance
+  - All spec requirements fully met including exact parameters (n_fft=2048, hop_length=512,
+    n_mels=128)
   weaknesses:
-  - Design excellence could be elevated further with additional refinement
-  - Mel filterbank nested loop is verbose compared to vectorized alternatives
-  - Could benefit from more distinctive matplotlib features to push library mastery
-    higher
-  image_description: The plot displays a mel-spectrogram using the magma colormap
-    on a dark background. The x-axis shows "Time (s)" from 0.0 to ~3.8s, the y-axis
-    shows "Frequency (Hz)" with mel-scaled tick labels at 64, 128, 256, 512, 1k, 2k,
-    4k, and 8k Hz. A colorbar on the right indicates "Power (dB)" from -80 to 0. The
-    spectrogram reveals a melodic pattern with clearly visible fundamental and harmonic
-    curves sweeping in the lower frequency range, periodic vertical percussive bursts
-    every 0.5 seconds, and a rising diagonal tone from ~500 Hz to ~2000 Hz appearing
-    in the second half. The title reads "spectrogram-mel · matplotlib · pyplots.ai".
-    Top and right spines are removed. Gouraud shading provides smooth color transitions.
+  - Data storytelling could be stronger - reference lines at 300 Hz and 1000 Hz are
+    too subtle (alpha=0.08) to serve as meaningful guides
+  - Dark theme with magma is a well-known spectrogram convention rather than a distinctive
+    design choice
+  image_description: 'The plot displays a mel-spectrogram on a dark background (#0a0a0f)
+    using the magma colormap. The x-axis shows "Time (s)" from 0.0 to ~3.8 seconds,
+    and the y-axis shows "Frequency (Hz)" with mel-scaled labels at 64, 128, 256,
+    512, 1k, 2k, 4k, and 8k Hz. A colorbar on the right is labeled "Power (dB)" with
+    ticks from 0 to -80 dB. The spectrogram reveals a rich synthesized audio signal:
+    curved harmonic bands (fundamental ~220 Hz with harmonics) undulate in the lower-mid
+    frequency range, bright vertical lines appear at regular 0.5-second intervals
+    representing percussive noise bursts, and a clear ascending diagonal line rises
+    from ~500 Hz to ~2000 Hz in the second half. The title reads "spectrogram-mel
+    · matplotlib · pyplots.ai". All spines are removed, and two very subtle dashed
+    horizontal reference lines appear at ~300 Hz and ~1000 Hz.'
   criteria_checklist:
     visual_quality:
       score: 30
@@ -45,63 +48,65 @@ review:
         max: 8
         passed: true
         comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt,
-          colorbar 20pt/16pt'
+          colorbar label 20pt, colorbar ticks 14pt'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All text fully readable, no collisions
+        comment: All text elements well-spaced with no collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Spectrogram clearly visible with excellent contrast; gouraud shading
-          provides smooth transitions
+        comment: Spectrogram clearly visible with good contrast; Gouraud shading produces
+          smooth transitions
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Magma is perceptually uniform and colorblind-safe
+        comment: Magma is perceptually uniform and colorblind-safe with excellent
+          contrast on dark background
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions with tight_layout and well-placed colorbar
+        comment: 16:9 figure fills canvas well with tight_layout; colorbar adjacent
+          and well-proportioned
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Time (s), Frequency (Hz), Power (dB) — all descriptive with units
+        comment: Time (s) and Frequency (Hz) with units; colorbar Power (dB)
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Magma colormap with gouraud shading and spine removal — above defaults
-          but not publication-extraordinary
+        comment: Cohesive dark theme with magma colormap, custom text colors, styled
+          colorbar. Strong design above defaults
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Spines removed, no grid (appropriate), colorbar well-placed with
-          minimal padding
+        comment: All spines removed, subtle reference lines, custom colorbar outline
+          styling, generous whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Multi-component audio creates clear visual narrative with distinct
-          focal points
+        comment: Multiple audio components create visual interest but reference lines
+          too subtle to guide the viewer
     spec_compliance:
       score: 15
       max: 15
@@ -111,26 +116,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct mel-spectrogram with mel-scaled frequency axis
+        comment: Correct mel-spectrogram with power spectrum on mel-scaled frequency
+          axis
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: dB scale, magma colormap, time/freq axes,
-          colorbar, correct parameters'
+        comment: 'All spec features present: dB scale, magma colormap, time axis,
+          mel-scaled y-axis, colorbar, correct parameters'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=time, Y=mel frequency, color=power dB
+        comment: X=time, Y=mel frequency bands, color=power in dB
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format; no legend needed for spectrogram
+        comment: Title follows exact format. No legend needed for continuous colormap
     data_quality:
       score: 14
       max: 15
@@ -140,24 +146,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows harmonics, frequency modulation, percussive bursts, and rising
-          tone
+        comment: Shows harmonics, percussive transients, frequency sweeps, and broadband
+          noise
       - id: DQ-02
         name: Realistic Context
         score: 4
         max: 5
         passed: true
-        comment: Plausible synthesized audio at standard sample rate but not a specific
-          named scenario
+        comment: Synthesized audio with melody, harmonics, and percussion is plausible
+          but lacks specific real-world labeling
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 22050 Hz sample rate, 4s duration, 220 Hz fundamental, -80 to 0 dB
-          range
+        comment: 'Standard audio analysis values: 22050 Hz sample rate, 4s duration,
+          -80 to 0 dB range'
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -165,32 +171,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean linear structure with no functions or classes
+        comment: 'Linear flow: imports, data synthesis, STFT, mel filterbank, plot,
+          save'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set for percussive burst randomness
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: 'All 4 imports used: plt, np, Normalize, FuncFormatter'
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Nested for-loop mel filterbank construction is verbose; could use
-          vectorized numpy
+        passed: true
+        comment: Well-structured manual mel computation; appropriate complexity for
+          the task
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300, bbox_inches='tight'
+        comment: Saves as plot.png at 300 dpi, current matplotlib API
     library_mastery:
       score: 7
       max: 10
@@ -200,16 +207,16 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of ax methods, pcolormesh, fig.colorbar, Normalize, spine
-          management
+        comment: Good use of ax methods, pcolormesh, FuncFormatter, Normalize, fig.colorbar.
+          Heavy numpy computation shifts focus from matplotlib API
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: pcolormesh with gouraud shading, Normalize from matplotlib.colors,
-          custom mel-scale tick positioning
-  verdict: REJECTED
+        comment: pcolormesh with Gouraud shading, rasterized=True, FuncFormatter,
+          Normalize for colormap control
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -222,4 +229,5 @@ impl_tags:
   dataprep:
   - binning
   styling:
+  - dark-theme
   - custom-colormap
