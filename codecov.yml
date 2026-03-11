@@ -5,8 +5,14 @@ coverage:
         target: auto
         threshold: 1%
     patch:
-      default:
+      backend:
         target: 80%
+        flags:
+          - backend
+      frontend:
+        target: 80%
+        flags:
+          - frontend
 
   # Only report coverage for tested source code
   # plots/ has 2242 .py files (59K lines) that are intentionally not unit tested
