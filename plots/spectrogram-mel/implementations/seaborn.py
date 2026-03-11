@@ -1,8 +1,17 @@
-""" pyplots.ai
+"""pyplots.ai
 spectrogram-mel: Mel-Spectrogram for Audio Analysis
 Library: seaborn 0.13.2 | Python 3.14.3
 Quality: 84/100 | Created: 2026-03-11
 """
+
+import os
+import sys
+
+
+# Avoid local seaborn.py shadowing the real seaborn package
+_script_dir = os.path.dirname(os.path.abspath(__file__))
+if _script_dir in sys.path:
+    sys.path.remove(_script_dir)
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -10,6 +19,22 @@ import pandas as pd
 import seaborn as sns
 from scipy.signal import stft
 
+
+sys.path.insert(0, _script_dir)
+
+# Seaborn theming for distinctive look
+sns.set_theme(
+    style="dark",
+    rc={
+        "axes.facecolor": "#1a1a2e",
+        "figure.facecolor": "#0f0f1a",
+        "text.color": "#e0e0e0",
+        "axes.labelcolor": "#e0e0e0",
+        "xtick.color": "#c0c0c0",
+        "ytick.color": "#c0c0c0",
+    },
+)
+sns.set_context("talk", font_scale=1.1)
 
 # Data
 np.random.seed(42)
@@ -20,7 +45,8 @@ hop_length = 512
 n_mels = 128
 t = np.linspace(0, duration, int(sample_rate * duration), endpoint=False)
 
-# Synthesize audio: melody with harmonics
+# Synthesize audio: melody with harmonics and percussive transients
+note_names = ["C4", "E4", "G4", "C5", "A4", "F4", "D4", "C4"]
 freqs_melody = [261.6, 329.6, 392.0, 523.3, 440.0, 349.2, 293.7, 261.6]
 segment_len = len(t) // len(freqs_melody)
 audio = np.zeros_like(t)
@@ -29,11 +55,13 @@ for i, freq in enumerate(freqs_melody):
     end = start + segment_len if i < len(freqs_melody) - 1 else len(t)
     seg_t = t[start:end]
     envelope = np.exp(-2.0 * (seg_t - seg_t[0]) / (seg_t[-1] - seg_t[0] + 1e-9))
+    # Add click transient at note onset
+    onset_env = np.exp(-80.0 * (seg_t - seg_t[0]))
     audio[start:end] = (
         0.6 * np.sin(2 * np.pi * freq * seg_t)
         + 0.3 * np.sin(2 * np.pi * 2 * freq * seg_t)
         + 0.1 * np.sin(2 * np.pi * 3 * freq * seg_t)
-    ) * envelope
+    ) * envelope + 0.15 * onset_env * np.sin(2 * np.pi * 5 * freq * seg_t)
 audio += 0.02 * np.random.randn(len(audio))
 
 # Compute STFT
@@ -65,28 +93,29 @@ mel_spec_db -= mel_spec_db.max()
 
 # Build DataFrame for seaborn heatmap (flip so low freq at bottom)
 mel_center_freqs = 700.0 * (10.0 ** (mel_points[1:-1] / 2595.0) - 1.0)
-time_labels = [f"{t:.1f}" for t in times_stft]
-freq_labels = [f"{f:.0f}" for f in mel_center_freqs]
 mel_spec_flipped = mel_spec_db[::-1]
-freq_labels_flipped = freq_labels[::-1]
 
-df_spec = pd.DataFrame(mel_spec_flipped, index=freq_labels_flipped, columns=time_labels)
+df_spec = pd.DataFrame(mel_spec_flipped, index=np.arange(n_mels), columns=np.arange(mel_spec_flipped.shape[1]))
+
+# Use seaborn color palette to build custom colormap
+cmap_colors = sns.color_palette("magma", as_cmap=True)
 
 # Plot
 fig, ax = plt.subplots(figsize=(16, 9))
-sns.heatmap(
+hm = sns.heatmap(
     df_spec,
     ax=ax,
-    cmap="magma",
+    cmap=cmap_colors,
     vmin=-80,
     vmax=0,
-    cbar_kws={"label": "Power (dB)", "pad": 0.02},
+    cbar_kws={"label": "Power (dB)", "pad": 0.015, "aspect": 30, "shrink": 0.85},
     xticklabels=False,
     yticklabels=False,
+    rasterized=True,
 )
 
 # X-axis: time ticks
-x_tick_seconds = [0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0]
+x_tick_seconds = np.arange(0, 4.5, 0.5)
 x_tick_positions = [np.argmin(np.abs(times_stft - s)) for s in x_tick_seconds]
 ax.set_xticks(x_tick_positions)
 ax.set_xticklabels([f"{s:.1f}" for s in x_tick_seconds])
@@ -103,17 +132,59 @@ for freq in tick_freqs:
 ax.set_yticks(tick_positions_y)
 ax.set_yticklabels(tick_labels_y)
 
-# Colorbar styling
+# Colorbar refinement
 cbar = ax.collections[0].colorbar
-cbar.ax.tick_params(labelsize=14)
-cbar.set_label("Power (dB)", fontsize=20)
+cbar.ax.tick_params(labelsize=14, colors="#c0c0c0")
+cbar.set_label("Power (dB)", fontsize=18, color="#e0e0e0")
+cbar.outline.set_edgecolor("#444466")
+cbar.outline.set_linewidth(0.8)
 
-# Style
-ax.set_xlabel("Time (s)", fontsize=20)
-ax.set_ylabel("Frequency (mel scale)", fontsize=20)
-ax.set_title("spectrogram-mel · seaborn · pyplots.ai", fontsize=24, fontweight="medium")
-ax.tick_params(axis="both", labelsize=16)
+# Note boundary lines and labels for storytelling
+for i in range(1, len(freqs_melody)):
+    boundary_time = i * segment_len / sample_rate
+    x_pos = np.argmin(np.abs(times_stft - boundary_time))
+    ax.axvline(x=x_pos, color="#ffffff", alpha=0.12, linewidth=0.8, linestyle="--")
+
+# Label notes at top of plot
+for i, name in enumerate(note_names):
+    mid_time = (i + 0.5) * segment_len / sample_rate
+    x_pos = np.argmin(np.abs(times_stft - mid_time))
+    ax.text(x_pos, -1.5, name, ha="center", va="bottom", fontsize=12, color="#ffcc66", fontweight="bold", alpha=0.85)
+
+# Harmonic bracket annotations on the last note (C4) to show overtone series
+last_note_mid = (len(freqs_melody) - 0.5) * segment_len / sample_rate
+x_anno = np.argmin(np.abs(times_stft - last_note_mid))
+for h, label in [(1, "f\u2080"), (2, "2f\u2080"), (3, "3f\u2080")]:
+    freq_h = freqs_melody[0] * h
+    mel_idx = np.argmin(np.abs(mel_center_freqs - freq_h))
+    y_pos = n_mels - 1 - mel_idx
+    ax.plot(x_anno, y_pos, marker="<", color="#ffcc66", markersize=6, alpha=0.85)
+    ax.text(
+        x_anno + 3,
+        y_pos,
+        label,
+        fontsize=11,
+        color="#ffcc66",
+        fontweight="bold",
+        alpha=0.9,
+        va="center",
+        ha="left",
+        bbox={"boxstyle": "round,pad=0.15", "facecolor": "#1a1a2e", "edgecolor": "none", "alpha": 0.7},
+    )
+
+# Style refinement
+ax.set_xlabel("Time (s)", fontsize=20, labelpad=10)
+ax.set_ylabel("Frequency (mel scale)", fontsize=20, labelpad=10)
+ax.set_title(
+    "spectrogram-mel \u00b7 seaborn \u00b7 pyplots.ai", fontsize=24, fontweight="bold", pad=20, color="#ffffff"
+)
+ax.tick_params(axis="both", labelsize=16, length=4, width=0.8)
+
+# Remove heavy spines, add subtle border
+for spine in ax.spines.values():
+    spine.set_edgecolor("#444466")
+    spine.set_linewidth(0.8)
 
 # Save
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+plt.savefig("plot.png", dpi=300, bbox_inches="tight", facecolor=fig.get_facecolor())
