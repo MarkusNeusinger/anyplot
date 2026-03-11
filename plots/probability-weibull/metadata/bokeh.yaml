@@ -1,0 +1,231 @@
+library: bokeh
+specification_id: probability-weibull
+created: '2026-03-11T21:54:22Z'
+updated: '2026-03-11T22:18:54Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22976096528
+issue: 4668
+python_version: 3.14.3
+library_version: 3.9.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/probability-weibull/bokeh/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/probability-weibull/bokeh/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/probability-weibull/bokeh/plot.html
+quality_score: 91
+review:
+  strengths:
+  - Excellent spec compliance with all required features including median rank, censored
+    data distinction, and 63.2% reference line
+  - Strong Bokeh idiom usage with ColumnDataSource, HoverTool, Band glyph, and HTML
+    export
+  - Professional visual design with cohesive color palette and good annotation placement
+  - Realistic turbine blade fatigue data with appropriate Weibull parameters
+  - Confidence band around the fitted line adds statistical rigor
+  weaknesses:
+  - Minor clustering of data points in upper probability range reduces individual
+    point readability
+  - DE-02 could be higher with further spine refinement
+  image_description: The plot displays a Weibull probability plot for turbine blade
+    fatigue life data. The x-axis shows "Time to Failure (hours)" on a logarithmic
+    scale with tick marks at 1000, 2000, 3000, 5000, 7000, and 10000 hours. The y-axis
+    shows "Cumulative Failure Probability" with Weibull-linearized tick marks at 1.0%,
+    5.0%, 10.0%, 20.0%, 50.0%, 63.2%, 90.0%, and 99.0%. Twenty-five dark blue filled
+    circles represent failure observations, and five hollow blue circles represent
+    censored (suspended) observations. A dark blue fitted line runs through the data
+    with a light blue/gray confidence band. An orange dashed horizontal reference
+    line marks the 63.2% characteristic life level, labeled "63.2% (Characteristic
+    Life)" on the right. Parameter annotations in the upper left show β = 2.21 (shape),
+    η = 5428 h (scale), R² = 0.9590 in bold dark blue text. A B10 = 1957 h annotation
+    with a diamond marker indicates the 10% failure probability life. The legend in
+    the bottom right identifies "Weibull Fit", "Failures", and "Censored". The background
+    is clean white with no x-grid and subtle y-gridlines. The title reads "Turbine
+    Blade Fatigue Life · probability-weibull · bokeh · pyplots.ai".
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 40pt, axis labels 28pt, ticks
+          22pt, legend 26pt). B10 label slightly small.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text elements
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Markers size=30 appropriate for 30 data points, some clustering in
+          upper range
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Colorblind-safe blue with orange accent, shape-based censored distinction
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good canvas utilization with balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive labels with units
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Strong design with cohesive blue palette and orange accent, professional
+          typography
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Good refinement: no x-grid, subtle y-grid, outline removed, light
+          axis lines'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Good hierarchy with parameter annotation, B10 life, and 63.2% reference
+          line
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Weibull probability plot with log x and linearized Weibull
+          y
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: All spec features present including median rank, censored distinction,
+          63.2% line
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct X=log(time), Y=Weibull-linearized CDF
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct title format and accurate legend labels
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows failures and censored data with good spread across time range
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Turbine blade fatigue life is a classic reliability engineering scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Realistic failure times and shape parameter for turbine components
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear flow with no functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean and appropriately complex, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot.png and plot.html with current API
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert Bokeh patterns: ColumnDataSource, HoverTool, Band, Span,
+          Label, ticker overrides'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: HoverTool with per-renderer tooltips, Band glyph, HTML export
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - scipy
+  techniques:
+  - annotations
+  - manual-ticks
+  - hover-tooltips
+  - html-export
+  - custom-legend
+  patterns:
+  - data-generation
+  - columndatasource
+  dataprep:
+  - regression
+  styling:
+  - alpha-blending
+  - edge-highlighting
+  - grid-styling

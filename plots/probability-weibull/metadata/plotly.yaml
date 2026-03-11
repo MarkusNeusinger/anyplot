@@ -1,0 +1,245 @@
+library: plotly
+specification_id: probability-weibull
+created: '2026-03-11T21:53:38Z'
+updated: '2026-03-11T22:15:22Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22976096501
+issue: 4668
+python_version: 3.14.3
+library_version: 6.6.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/probability-weibull/plotly/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/probability-weibull/plotly/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/probability-weibull/plotly/plot.html
+quality_score: 92
+review:
+  strengths:
+  - Complete spec compliance with all required Weibull probability plot features including
+    linearized y-axis
+  - Excellent data storytelling with B10 life annotation, characteristic life reference,
+    confidence band, and parameter box
+  - Strong visual distinction between failures (filled blue circles) and censored
+    points (hollow orange diamonds) using both color and shape
+  - All font sizes explicitly set for perfect readability at target resolution
+  - Rich Plotly-specific hover tooltips with failure rank and probability values
+  - 90% confidence band adds meaningful statistical context
+  weaknesses:
+  - LM-01 could reach 5/5 with more advanced Plotly patterns (e.g., custom buttons,
+    range sliders)
+  - DE-02 could reach 5-6/6 with fully removed axis lines for a cleaner minimal look
+  image_description: 'The plot displays a Weibull probability plot for turbine blade
+    fatigue-life data on a light gray-white background. The x-axis is logarithmic,
+    labeled "Time to Failure (hours)" ranging from ~600 to 10,000 with subtle minor
+    gridlines. The y-axis uses a linearized Weibull scale labeled "Cumulative Failure
+    Probability (Weibull Scale)" with custom probability tick labels at 1%, 2%, 5%,
+    10%, 20%, 50%, 63.2%, 90%, 95%, and 99%. Twenty-five large filled blue circle
+    markers (#306998) with white edge highlights represent failure data points, arranged
+    approximately along a straight line (correct for Weibull probability paper). Five
+    orange-red hollow diamond markers (#E85D3A) represent censored/suspended observations.
+    A solid blue fitted line (width 3.5) runs through the data. A light blue 90% confidence
+    band (filled area) surrounds the fitted line. A dotted gray horizontal reference
+    line at 63.2% is annotated "63.2% — characteristic life (η ≈ 4625h)". A dotted
+    vertical line drops from the characteristic life intersection to the x-axis. A
+    B10 life annotation with arrow points to the 10% probability level showing "B10
+    = 2501h". A parameter annotation box in the lower-right displays "Weibull Parameters:
+    β (shape) = 2.44, η (scale) = 4625h, R² = 0.9785" with a subtle border. The legend
+    in the upper-left identifies four series: 90% Confidence, Weibull Fit, Failures,
+    and Censored (suspended). Title reads "probability-weibull · plotly · pyplots.ai"
+    centered at top.'
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title=28, axis labels=22, ticks=18,
+          legend=17, annotations=15-17'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text. Legend, parameter box, B10 annotation, and 63.2%
+          reference label all well-positioned
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Markers size=18 with white edge optimally sized for <30 data points.
+          Line width=3.5 is clear
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue vs orange-red is colorblind-safe, also distinguished by shape
+          and fill
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 4800x2700 output, plot fills canvas well with balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive labels with units: Time to Failure (hours), Cumulative
+          Failure Probability (Weibull Scale)'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Strong design: intentional two-color palette, white marker edges,
+          confidence band, styled annotation boxes'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle gridlines (6% opacity), minor gridlines (3%), custom background
+          color, clear refinement above defaults
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Multiple layers: 63.2% reference, B10 annotation, parameter box,
+          confidence band, failures vs censored'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Weibull probability plot with log x and linearized Weibull
+          y-axis
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features: log x, Weibull y, fitted line, parameters, median
+          rank, censored distinction, 63.2% line'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=time to failure, Y=cumulative probability on Weibull scale, all
+          data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct, legend labels accurate and descriptive
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows failures, censored data, fitted line, confidence band, parameters,
+          R², characteristic life, B10 life
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Turbine blade fatigue-life data is a classic, neutral reliability
+          engineering scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Shape=2.5, scale=5000h for turbine blades is realistic, 25 failures
+          + 5 censored
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports, data, calculations, plot, save. No functions
+          or classes'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set at start
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: numpy, plotly.graph_objects, scipy.stats all actively used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-organized, appropriate complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot.png with correct dimensions plus HTML export
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of go.Figure, go.Scatter, add_hline/add_vline, add_annotation,
+          custom tickvals/ticktext
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Hovertemplate with customdata, HTML export, filled scatter for confidence
+          band
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - scipy
+  techniques:
+  - annotations
+  - manual-ticks
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - regression
+  styling:
+  - alpha-blending
+  - edge-highlighting
+  - grid-styling

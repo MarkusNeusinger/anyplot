@@ -1,0 +1,234 @@
+library: plotnine
+specification_id: probability-weibull
+created: '2026-03-11T21:52:08Z'
+updated: '2026-03-11T22:11:54Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22976096449
+issue: 4668
+python_version: 3.14.3
+library_version: 0.15.3
+preview_url: https://storage.googleapis.com/pyplots-images/plots/probability-weibull/plotnine/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/probability-weibull/plotnine/plot_thumb.png
+preview_html: null
+quality_score: 90
+review:
+  strengths:
+  - Excellent spec compliance — every required feature implemented correctly (Weibull
+    y-axis, median rank, censored distinction, 63.2% reference, parameter annotations)
+  - Strong data storytelling with red diamond focal point, connector annotation, and
+    parameter summary creating clear visual hierarchy
+  - Professional color palette with blue/orange/red scheme that is cohesive and colorblind-accessible
+  - Confidence band adds statistical depth beyond spec requirements
+  - Realistic turbine blade fatigue data with appropriate Weibull parameters
+  weaknesses:
+  - Minor point clustering in the 40-80% probability region could benefit from slightly
+    smaller markers or more transparency
+  - Library mastery could be enhanced with more plotnine-distinctive features
+  image_description: The plot displays a Weibull probability plot for turbine blade
+    fatigue-life analysis. The x-axis shows "Time to Failure (hours)" with log-spaced
+    ticks from 1,000 to 10,000, and the y-axis shows "Cumulative Failure Probability"
+    with Weibull-linearized scale from 1% to 99%. Blue filled circles represent 25
+    failure observations following a linear trend on the Weibull paper. Orange triangles
+    along the bottom (near 1%) represent 7 censored observations. A blue fitted regression
+    line passes through the failure data with a light blue confidence band. A red
+    diamond marker highlights the characteristic life intersection at the 63.2% reference
+    line, with dashed gray reference lines (horizontal at 63.2%, vertical at eta).
+    A red italic annotation "eta = 4,663 hrs (63.2%)" with a connector line points
+    to the diamond. A blue bold annotation in the upper-left shows "beta = 2.74 ·
+    eta = 4,663 hrs · R² = 0.978". The title reads "probability-weibull · plotnine
+    · pyplots.ai" in bold, with a gray italic subtitle "Turbine blade fatigue-life
+    analysis — 25 failures, 7 censored observations". A legend on the right distinguishes
+    Failure (blue circle) and Censored (orange triangle). The overall design is clean
+    with a minimal theme, subtle grid, and light panel background.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title=24, axis titles=20, ticks=16,
+          legend=14-16'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlap. Annotations well-positioned away from data clusters
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Points visible with size=5, alpha=0.88. Minor clustering in 40-80%
+          region
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue/orange palette is colorblind-safe with strong luminance contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 16:9 layout fills canvas well with balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive labels with units: Time to Failure (hours), Cumulative
+          Failure Probability'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom cohesive palette, intentional hierarchy, confidence band,
+          diamond highlight, connector annotation
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: theme_minimal, minor grid removed, subtle major grid, custom panel
+          background, legend border
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Red diamond focal point at characteristic life, parameter annotation,
+          subtitle frames real-world scenario
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Weibull probability plot with log x-axis and linearized Weibull
+          y-axis
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features: log scale, Weibull y-axis, fitted line with beta/eta,
+          median rank, censored distinction, 63.2% reference'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=time, Y=cumulative probability. Full data range shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct. Legend labels match data categories
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows failures and censored data, good spread, confidence band adds
+          depth
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Turbine blade fatigue-life analysis is a classic neutral reliability
+          engineering scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Failure times 1000-7000 hrs realistic. Beta=2.74 indicates wear-out,
+          eta=4663 hrs plausible
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean imports-data-plot-save structure, no functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) ensures deterministic output
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used in implementation
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, well-organized sections, no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with dpi=300, current plotnine API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Idiomatic grammar of graphics: ggplot + geom layers, aes mappings,
+          scale overrides, guide customization'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Grammar of graphics layering, scale_*_manual with shared legend,
+          guide_legend(override_aes), theme system
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - scipy
+  techniques:
+  - annotations
+  - layer-composition
+  - custom-legend
+  - manual-ticks
+  patterns:
+  - data-generation
+  dataprep:
+  - regression
+  styling:
+  - alpha-blending
+  - grid-styling
