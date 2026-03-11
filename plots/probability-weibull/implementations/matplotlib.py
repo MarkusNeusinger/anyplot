@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 probability-weibull: Weibull Probability Plot for Reliability Analysis
 Library: matplotlib 3.10.8 | Python 3.14.3
 Quality: 89/100 | Created: 2026-03-11
@@ -18,6 +18,9 @@ n_failures = 24
 n_censored = n_total - n_failures
 
 failure_times = np.sort(stats.weibull_min.rvs(shape_true, scale=scale_true, size=n_failures))
+# Add slight deviations to a few points to show diagnostic value
+failure_times[2] *= 0.75
+failure_times[-3] *= 1.25
 censored_times = np.sort(np.random.uniform(2000, 10000, size=n_censored))
 
 all_times = np.concatenate([failure_times, censored_times])
@@ -64,7 +67,8 @@ fit_y = beta * np.log(fit_x) - beta * np.log(eta)
 y_632 = np.log(-np.log(1 - 0.632))
 
 # Plot
-fig, ax = plt.subplots(figsize=(16, 9))
+fig, ax = plt.subplots(figsize=(16, 9), facecolor="#FAFAFA")
+ax.set_facecolor("#FAFAFA")
 
 ax.plot(fit_x, fit_y, color="#306998", linewidth=3, zorder=2, label="Weibull fit")
 ax.scatter(
@@ -100,7 +104,7 @@ ax.text(
     fontsize=18,
     ha="right",
     va="bottom",
-    bbox={"boxstyle": "round,pad=0.4", "facecolor": "white", "edgecolor": "#cccccc", "alpha": 0.9},
+    bbox={"boxstyle": "round,pad=0.5", "facecolor": "white", "edgecolor": "#306998", "alpha": 0.95, "linewidth": 1.5},
 )
 
 # CDF probability labels on right y-axis
@@ -110,8 +114,11 @@ ax2 = ax.twinx()
 ax2.set_ylim(ax.get_ylim())
 ax2.set_yticks(prob_y)
 ax2.set_yticklabels([f"{p * 100:.1f}%" for p in prob_levels])
-ax2.tick_params(axis="y", labelsize=14)
+ax2.tick_params(axis="y", labelsize=14, colors="#555555")
 ax2.spines["top"].set_visible(False)
+ax2.spines["left"].set_visible(False)
+ax2.spines["bottom"].set_visible(False)
+ax2.set_ylabel("Cumulative Probability", fontsize=16, color="#555555")
 
 # Style
 ax.set_xscale("log")
@@ -121,9 +128,13 @@ ax.set_title("probability-weibull \u00b7 matplotlib \u00b7 pyplots.ai", fontsize
 ax.tick_params(axis="both", labelsize=16)
 ax.spines["top"].set_visible(False)
 ax.spines["right"].set_visible(False)
-ax.legend(fontsize=16, loc="upper left")
+ax.legend(fontsize=16, loc="upper left", framealpha=0.95, edgecolor="#cccccc", fancybox=True)
 ax.xaxis.set_major_formatter(ticker.FuncFormatter(lambda x, _: f"{x:,.0f}"))
-ax.yaxis.grid(True, alpha=0.2, linewidth=0.8)
+ax.yaxis.grid(True, alpha=0.15, linewidth=0.8, color="#888888")
+ax.xaxis.grid(True, alpha=0.08, linewidth=0.5, color="#888888")
+for spine in ["bottom", "left"]:
+    ax.spines[spine].set_color("#888888")
+    ax.spines[spine].set_linewidth(0.8)
 
 plt.tight_layout()
 plt.savefig("plot.png", dpi=300, bbox_inches="tight")
