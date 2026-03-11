@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 spectrogram-mel: Mel-Spectrogram for Audio Analysis
 Library: plotnine 0.15.3 | Python 3.14.3
 Quality: 87/100 | Created: 2026-03-11
@@ -8,10 +8,11 @@ import numpy as np
 import pandas as pd
 from plotnine import (
     aes,
+    coord_cartesian,
     element_blank,
     element_rect,
     element_text,
-    geom_tile,
+    geom_raster,
     ggplot,
     labs,
     scale_fill_gradientn,
@@ -61,46 +62,37 @@ mel_high = 2595.0 * np.log10(1.0 + (sample_rate / 2) / 700.0)
 mel_points = np.linspace(mel_low, mel_high, n_mels + 2)
 hz_points = 700.0 * (10.0 ** (mel_points / 2595.0) - 1.0)
 
-filterbank = np.zeros((n_mels, power_spec.shape[0]))
-for i in range(n_mels):
-    lower, center, upper = hz_points[i], hz_points[i + 1], hz_points[i + 2]
-    for j, freq in enumerate(freq_bins):
-        if lower <= freq <= center and center != lower:
-            filterbank[i, j] = (freq - lower) / (center - lower)
-        elif center < freq <= upper and upper != center:
-            filterbank[i, j] = (upper - freq) / (upper - center)
+# Vectorized mel filterbank using numpy broadcasting
+lower = hz_points[:-2, np.newaxis]  # (n_mels, 1)
+center = hz_points[1:-1, np.newaxis]  # (n_mels, 1)
+upper = hz_points[2:, np.newaxis]  # (n_mels, 1)
+freqs = freq_bins[np.newaxis, :]  # (1, n_freq)
+
+rising = np.where((freqs >= lower) & (freqs <= center) & (center != lower), (freqs - lower) / (center - lower), 0.0)
+falling = np.where((freqs > center) & (freqs <= upper) & (upper != center), (upper - freqs) / (upper - center), 0.0)
+filterbank = rising + falling
 
 # Apply mel filterbank and convert to dB
 mel_spec = filterbank @ power_spec
 mel_spec_db = 10 * np.log10(np.maximum(mel_spec, 1e-10))
 mel_spec_db -= mel_spec_db.max()
 
-# Build long-form DataFrame using log-frequency for even tile spacing
+# Build long-form DataFrame with evenly-spaced mel band indices for smooth raster
 mel_center_freqs = 700.0 * (10.0 ** (mel_points[1:-1] / 2595.0) - 1.0)
-log_freqs = np.log10(np.maximum(mel_center_freqs, 1.0))
-log_heights = np.diff(np.log10(np.maximum(hz_points, 1.0)))
-
-time_step = time_bins[1] - time_bins[0] if len(time_bins) > 1 else hop_length / sample_rate
 time_grid, mel_idx_grid = np.meshgrid(time_bins, np.arange(n_mels))
 
-df = pd.DataFrame(
-    {
-        "Time (s)": time_grid.ravel(),
-        "log_freq": log_freqs[mel_idx_grid.ravel()],
-        "tile_height": log_heights[mel_idx_grid.ravel()],
-        "Power (dB)": mel_spec_db.ravel(),
-    }
-)
+df = pd.DataFrame({"Time (s)": time_grid.ravel(), "mel_band": mel_idx_grid.ravel(), "Power (dB)": mel_spec_db.ravel()})
 
-# Y-axis tick positions at key mel band edges
+# Y-axis tick positions: map Hz values to mel band indices
 y_ticks_hz = [64, 128, 256, 512, 1024, 2048, 4096, 8000]
 y_ticks_hz = [f for f in y_ticks_hz if f <= sample_rate / 2]
-y_ticks_log = [np.log10(f) for f in y_ticks_hz]
+# Convert Hz to mel band index via interpolation
+y_ticks_band = np.interp(y_ticks_hz, mel_center_freqs, np.arange(n_mels))
 
-# Plot
+# Plot - using geom_raster for smooth, gap-free rendering (plotnine-native)
 plot = (
-    ggplot(df, aes(x="Time (s)", y="log_freq", fill="Power (dB)"))
-    + geom_tile(aes(height="tile_height"), width=time_step, color=None)
+    ggplot(df, aes(x="Time (s)", y="mel_band", fill="Power (dB)"))
+    + geom_raster(interpolate=True)
     + scale_fill_gradientn(
         colors=[
             "#000004",
@@ -117,7 +109,8 @@ plot = (
         name="Power (dB)",
     )
     + scale_x_continuous(expand=(0, 0))
-    + scale_y_continuous(breaks=y_ticks_log, labels=[str(f) for f in y_ticks_hz], expand=(0, 0))
+    + scale_y_continuous(breaks=y_ticks_band.tolist(), labels=[str(f) for f in y_ticks_hz], expand=(0, 0))
+    + coord_cartesian(ylim=(0, n_mels - 1))
     + labs(x="Time (s)", y="Frequency (Hz)", title="spectrogram-mel \u00b7 plotnine \u00b7 pyplots.ai")
     + theme_minimal()
     + theme(
@@ -131,7 +124,8 @@ plot = (
         legend_title=element_text(size=16, weight="bold"),
         legend_text=element_text(size=14),
         legend_position="right",
-        legend_key_height=40,
+        legend_key_height=60,
+        legend_key_width=14,
         panel_grid_major=element_blank(),
         panel_grid_minor=element_blank(),
         panel_background=element_rect(fill="#000004", color="none"),
