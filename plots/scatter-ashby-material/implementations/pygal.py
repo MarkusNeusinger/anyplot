@@ -1,9 +1,10 @@
-""" pyplots.ai
+"""pyplots.ai
 scatter-ashby-material: Ashby Material Selection Chart
 Library: pygal 3.1.0 | Python 3.14.3
 Quality: 81/100 | Created: 2026-03-11
 """
 
+import math
 import re
 
 import cairosvg
@@ -123,7 +124,7 @@ family_colors = (
     "#F39C12",  # Composites — amber
     "#9B59B6",  # Elastomers — purple
     "#95A5A6",  # Foams — silver gray
-    "#D35400",  # Natural Materials — burnt orange
+    "#8B4513",  # Natural Materials — saddle brown
 )
 
 # Style — refined grid, clean background
@@ -132,7 +133,7 @@ custom_style = Style(
     plot_background="#f8f9fa",
     foreground="#2c3e50",
     foreground_strong="#2c3e50",
-    foreground_subtle="#e8e8e8",
+    foreground_subtle="#f0f0f0",
     colors=family_colors,
     opacity=0.35,
     opacity_hover=0.92,
@@ -168,10 +169,10 @@ chart = pygal.XY(
     logarithmic=True,
     x_value_formatter=lambda x: f"{x:,.0f}",
     value_formatter=lambda x: f"{x:.3g}",
-    margin_top=20,
-    margin_bottom=50,
-    margin_left=20,
-    margin_right=20,
+    margin_top=30,
+    margin_bottom=60,
+    margin_left=30,
+    margin_right=30,
     tooltip_border_radius=8,
     tooltip_fancy_mode=True,
     print_values=False,
@@ -222,13 +223,13 @@ label_elements = []
 
 # Label offset adjustments to avoid overlap with dots
 label_offsets = {
-    "Metals": (0, -38),
-    "Ceramics": (0, -38),
-    "Polymers": (0, -32),
-    "Composites": (0, -38),
-    "Elastomers": (0, -32),
-    "Foams": (130, -32),
-    "Natural Materials": (0, -32),
+    "Metals": (0, -42),
+    "Ceramics": (0, -42),
+    "Polymers": (0, -36),
+    "Composites": (-80, -42),
+    "Elastomers": (0, -36),
+    "Foams": (130, -36),
+    "Natural Materials": (60, -36),
 }
 
 for serie_idx, circles in series_circles.items():
@@ -244,16 +245,73 @@ for serie_idx, circles in series_circles.items():
         label_elements.append(
             f'<text x="{label_x:.1f}" y="{label_y:.1f}" '
             f'font-family="Trebuchet MS, Helvetica, sans-serif" '
-            f'font-size="20" font-weight="bold" fill="{color}" '
+            f'font-size="25" font-weight="bold" fill="{color}" '
             f'text-anchor="{anchor}" '
-            f'stroke="white" stroke-width="4" paint-order="stroke">'
+            f'stroke="white" stroke-width="5" paint-order="stroke">'
             f"{name}</text>"
         )
 
-# Insert labels before closing </svg>
+# Add E/ρ constant performance index guide lines via SVG
+# Derive plot area bounds from circle positions across all series
+guide_elements = []
+all_cx = [cx for circles in series_circles.values() for cx, cy in circles]
+all_cy = [cy for circles in series_circles.values() for cx, cy in circles]
+
+if all_cx and all_cy:
+    # Use min/max circle positions as proxy for plot area, with small padding
+    svg_x_min, svg_x_max = min(all_cx), max(all_cx)
+    svg_y_min, svg_y_max = min(all_cy), max(all_cy)  # note: SVG y is inverted
+
+    # Known data ranges from the dataset
+    log_x_min = math.log10(min(d for f in families.values() for d in f["density"]) * 0.9)
+    log_x_max = math.log10(max(d for f in families.values() for d in f["density"]) * 1.1)
+    log_y_min = math.log10(min(m for f in families.values() for m in f["modulus"]) * 0.9)
+    log_y_max = math.log10(max(m for f in families.values() for m in f["modulus"]) * 1.1)
+
+    def data_to_svg(log_x, log_y):
+        frac_x = (log_x - log_x_min) / (log_x_max - log_x_min)
+        frac_y = (log_y - log_y_min) / (log_y_max - log_y_min)
+        sx = svg_x_min + frac_x * (svg_x_max - svg_x_min)
+        sy = svg_y_max - frac_y * (svg_y_max - svg_y_min)  # SVG y inverted
+        return sx, sy
+
+    # E/ρ guide lines: E = C * ρ  →  log(E) = log(C) + log(ρ)  (slope=1 on log-log)
+    for c_val, label_text in [(0.01, "E/ρ = 0.01"), (0.0001, "E/ρ = 10⁻⁴")]:
+        log_c = math.log10(c_val)
+        ly1 = log_x_min + log_c
+        ly2 = log_x_max + log_c
+        lx1, lx2 = log_x_min, log_x_max
+        # Clip to y bounds
+        if ly1 < log_y_min:
+            lx1 = log_y_min - log_c
+            ly1 = log_y_min
+        if ly2 > log_y_max:
+            lx2 = log_y_max - log_c
+            ly2 = log_y_max
+        if ly1 > log_y_max or ly2 < log_y_min:
+            continue
+        sx1, sy1 = data_to_svg(lx1, ly1)
+        sx2, sy2 = data_to_svg(lx2, ly2)
+        guide_elements.append(
+            f'<line x1="{sx1:.1f}" y1="{sy1:.1f}" x2="{sx2:.1f}" y2="{sy2:.1f}" '
+            f'stroke="#bbbbbb" stroke-width="1.5" stroke-dasharray="12,6" opacity="0.5"/>'
+        )
+        # Label at the upper-right end of the line
+        guide_elements.append(
+            f'<text x="{sx2 - 10:.1f}" y="{sy2 - 8:.1f}" '
+            f'font-family="Trebuchet MS, Helvetica, sans-serif" '
+            f'font-size="16" fill="#999999" text-anchor="end" font-style="italic">'
+            f"{label_text}</text>"
+        )
+
+# Insert labels and guide lines before closing </svg>
+all_overlays = ""
+if guide_elements:
+    all_overlays += '<g class="guide-lines">' + "".join(guide_elements) + "</g>"
 if label_elements:
-    labels_group = '<g class="family-labels">' + "".join(label_elements) + "</g>"
-    svg_string = svg_string.replace("</svg>", labels_group + "</svg>")
+    all_overlays += '<g class="family-labels">' + "".join(label_elements) + "</g>"
+if all_overlays:
+    svg_string = svg_string.replace("</svg>", all_overlays + "</svg>")
 
 # Save outputs
 with open("plot.html", "w") as f:
