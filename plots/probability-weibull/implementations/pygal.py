@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 probability-weibull: Weibull Probability Plot for Reliability Analysis
 Library: pygal 3.1.0 | Python 3.14.3
 Quality: 82/100 | Created: 2026-03-11
@@ -57,6 +57,14 @@ censored_y_on_line = slope * ln_censored_x + intercept
 # 63.2% reference line (characteristic life): F = 0.632 → ln(-ln(1-0.632)) ≈ 0.0
 ref_y = np.log(-np.log(1 - 0.632))
 
+# B10 life: F = 0.10 → time where 10% of units have failed
+b10_y = np.log(-np.log(1 - 0.10))
+b10_ln_x = (b10_y - intercept) / slope
+b10_hours = np.exp(b10_ln_x)
+
+# Characteristic life intersection: where fitted line crosses 63.2%
+eta_ln_x = (ref_y - intercept) / slope
+
 # Axis labels — convert back from log/Weibull scale for readability
 x_tick_values = [1000, 2000, 3000, 5000, 7000, 10000, 15000]
 x_tick_ln = [np.log(v) for v in x_tick_values]
@@ -65,7 +73,7 @@ prob_levels = [0.01, 0.05, 0.10, 0.20, 0.50, 0.632, 0.80, 0.90, 0.95, 0.99]
 y_tick_weibull = [np.log(-np.log(1.0 - p)) for p in prob_levels]
 y_tick_labels = [f"{p * 100:.1f}%" if p == 0.632 else f"{p * 100:.0f}%" for p in prob_levels]
 
-# Style
+# Style — dark orange for censored (high contrast on light bg)
 font = "DejaVu Sans, Helvetica, Arial, sans-serif"
 custom_style = Style(
     background="white",
@@ -75,7 +83,7 @@ custom_style = Style(
     foreground_subtle="#e0e0e0",
     guide_stroke_color="#e0e0e0",
     guide_stroke_dasharray="4, 4",
-    colors=("#306998", "#d64541", "#888888"),
+    colors=("#306998", "#d64541", "#B8860B", "#888888", "#d64541", "#306998"),
     font_family=font,
     title_font_family=font,
     title_font_size=56,
@@ -86,7 +94,7 @@ custom_style = Style(
     value_font_size=28,
     tooltip_font_size=28,
     tooltip_font_family=font,
-    opacity=0.80,
+    opacity=0.85,
     opacity_hover=0.95,
     stroke_opacity=1,
     stroke_opacity_hover=1,
@@ -98,7 +106,7 @@ x_max_ln = np.log(18000)
 y_min_w = np.log(-np.log(1 - 0.005))
 y_max_w = np.log(-np.log(1 - 0.995))
 
-# Chart
+# Chart with tooltip configuration
 chart = pygal.XY(
     width=4800,
     height=2700,
@@ -128,6 +136,8 @@ chart = pygal.XY(
     y_labels=[float(v) for v in y_tick_weibull],
     x_value_formatter=lambda x: f"{np.exp(x):,.0f}",
     value_formatter=lambda y: f"{(1 - np.exp(-np.exp(y))) * 100:.1f}%",
+    tooltip_border_radius=8,
+    tooltip_fancy_mode=True,
 )
 
 # Override label display for y-axis
@@ -144,12 +154,21 @@ chart.add(
     stroke_style={"width": 10, "linecap": "round", "linejoin": "round"},
 )
 
-# Failure data points
-failure_points = [(float(x), float(y)) for x, y in zip(ln_x_failures, weibull_y_failures, strict=True)]
+# Failure data points with per-point tooltip labels
+failure_points = [
+    {
+        "value": (float(x), float(y)),
+        "label": f"Failure at {np.exp(x):,.0f}h — F={((1 - np.exp(-np.exp(y))) * 100):.1f}%",
+    }
+    for x, y in zip(ln_x_failures, weibull_y_failures, strict=True)
+]
 chart.add(f"Failures (n={n_failures})", failure_points, stroke=False, dots_size=12)
 
-# Censored data points
-censored_points = [(float(x), float(y)) for x, y in zip(ln_censored_x, censored_y_on_line, strict=True)]
+# Censored data points — dark goldenrod for high contrast on light gray bg
+censored_points = [
+    {"value": (float(x), float(y)), "label": f"Censored at {np.exp(x):,.0f}h (suspended test)"}
+    for x, y in zip(ln_censored_x, censored_y_on_line, strict=True)
+]
 chart.add(f"Censored (n={n_censored})", censored_points, stroke=False, dots_size=10)
 
 # 63.2% reference line (characteristic life)
@@ -160,6 +179,28 @@ chart.add(
     stroke=True,
     show_dots=False,
     stroke_style={"width": 6, "dasharray": "24, 12", "linecap": "round"},
+)
+
+# Characteristic life annotation — marker at η intersection with 63.2% line
+eta_marker = [
+    {
+        "value": (float(eta_ln_x), float(ref_y)),
+        "label": f"η = {eta_est:,.0f}h (Characteristic Life)",
+        "formatter": lambda x: f"η = {eta_est:,.0f}h",
+    }
+]
+chart.add(f"η = {eta_est:,.0f}h", eta_marker, stroke=False, dots_size=18, formatter=lambda x: f"η = {eta_est:,.0f}h")
+
+# B10 life annotation — marker at 10% failure probability
+b10_marker = [
+    {
+        "value": (float(b10_ln_x), float(b10_y)),
+        "label": f"B10 = {b10_hours:,.0f}h (10% failure life)",
+        "formatter": lambda x: f"B10 = {b10_hours:,.0f}h",
+    }
+]
+chart.add(
+    f"B10 = {b10_hours:,.0f}h", b10_marker, stroke=False, dots_size=18, formatter=lambda x: f"B10 = {b10_hours:,.0f}h"
 )
 
 # Save
