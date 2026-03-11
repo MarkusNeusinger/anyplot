@@ -1,9 +1,11 @@
-""" pyplots.ai
+"""pyplots.ai
 scatter-ashby-material: Ashby Material Selection Chart
 Library: matplotlib 3.10.8 | Python 3.14.3
 Quality: 87/100 | Created: 2026-03-11
 """
 
+import matplotlib.patches as mpatches
+import matplotlib.path as mpath
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.spatial import ConvexHull
@@ -47,16 +49,56 @@ family_colors = {
     "Metals": "#306998",
     "Polymers": "#E07B39",
     "Ceramics": "#C0392B",
-    "Composites": "#5BA58B",
+    "Composites": "#2E8B57",
     "Elastomers": "#8B6BAE",
-    "Foams": "#7FADA0",
+    "Foams": "#D4A76A",
     "Natural\nMaterials": "#BFA24E",
 }
+
+# Label offsets (in log10 data coords) to reduce crowding in upper-right
+label_offsets = {"Metals": (0.15, -0.15), "Ceramics": (-0.15, 0.15), "Composites": (-0.2, -0.1)}
 
 # Plot
 fig, ax = plt.subplots(figsize=(16, 9))
 fig.patch.set_facecolor("#FAFAFA")
 ax.set_facecolor("#FAFAFA")
+
+
+def smooth_hull_patch(log_points, padding=0.08):
+    """Create a smooth Bézier PathPatch envelope around points in log space."""
+    hull = ConvexHull(log_points)
+    vertices = log_points[hull.vertices]
+    # Close the polygon
+    vertices = np.vstack([vertices, vertices[0]])
+
+    # Expand slightly outward from centroid for padding
+    centroid = np.mean(vertices[:-1], axis=0)
+    directions = vertices - centroid
+    norms = np.linalg.norm(directions, axis=1, keepdims=True)
+    norms = np.where(norms == 0, 1, norms)
+    vertices = vertices + directions / norms * padding
+
+    # Build cubic Bézier path for smooth curves
+    n = len(vertices) - 1
+    codes = [mpath.Path.MOVETO]
+    pts = [vertices[0]]
+    for i in range(n):
+        p0 = vertices[i]
+        p1 = vertices[(i + 1) % n]
+        # Control points at 1/3 and 2/3 along each edge, pulled toward centroid
+        ctrl1 = p0 + (p1 - p0) * 0.33
+        ctrl2 = p0 + (p1 - p0) * 0.67
+        pts.extend([ctrl1, ctrl2, p1])
+        codes.extend([mpath.Path.CURVE4, mpath.Path.CURVE4, mpath.Path.CURVE4])
+    codes.append(mpath.Path.CLOSEPOLY)
+    pts.append(pts[0])
+
+    # Convert back from log space to data space
+    pts_arr = np.array(pts)
+    pts_data = np.column_stack([10 ** pts_arr[:, 0], 10 ** pts_arr[:, 1]])
+
+    return mpath.Path(pts_data, codes)
+
 
 for family_name, data in families.items():
     density = np.array(data["density"], dtype=float)
@@ -66,7 +108,7 @@ for family_name, data in families.items():
     # Scatter points
     ax.scatter(density, modulus, s=120, alpha=0.7, color=color, edgecolors="white", linewidth=0.8, zorder=4)
 
-    # Convex hull envelope in log space
+    # Smooth Bézier convex hull envelope using matplotlib PathPatch
     log_pts = np.column_stack([np.log10(density), np.log10(modulus)])
 
     # Add slight jitter to handle collinear points
@@ -74,18 +116,20 @@ for family_name, data in families.items():
     log_pts_jittered = log_pts + jitter
 
     try:
-        hull = ConvexHull(log_pts_jittered)
-        hull_indices = np.append(hull.vertices, hull.vertices[0])
-        hull_density = 10 ** log_pts[hull_indices, 0]
-        hull_modulus = 10 ** log_pts[hull_indices, 1]
-        ax.fill(hull_density, hull_modulus, alpha=0.15, color=color, zorder=2)
-        ax.plot(hull_density, hull_modulus, color=color, alpha=0.4, linewidth=1.5, zorder=3)
+        path = smooth_hull_patch(log_pts_jittered)
+        patch_fill = mpatches.PathPatch(path, facecolor=color, edgecolor="none", alpha=0.15, zorder=2)
+        patch_edge = mpatches.PathPatch(path, facecolor="none", edgecolor=color, alpha=0.4, linewidth=1.5, zorder=3)
+        ax.add_patch(patch_fill)
+        ax.add_patch(patch_edge)
     except Exception:
         pass
 
-    # Label at geometric center
-    center_x = 10 ** np.mean(np.log10(density))
-    center_y = 10 ** np.mean(np.log10(modulus))
+    # Label at geometric center with optional offset
+    center_x_log = np.mean(np.log10(density))
+    center_y_log = np.mean(np.log10(modulus))
+    dx, dy = label_offsets.get(family_name, (0, 0))
+    center_x = 10 ** (center_x_log + dx)
+    center_y = 10 ** (center_y_log + dy)
     ax.text(
         center_x,
         center_y,
@@ -99,7 +143,7 @@ for family_name, data in families.items():
         bbox={"boxstyle": "round,pad=0.3", "facecolor": "#FAFAFA", "edgecolor": "none", "alpha": 0.85},
     )
 
-# Guide line for constant E/rho (lightweight stiffness index)
+# Guide lines for constant E/rho (lightweight stiffness index)
 guide_density = np.logspace(1, 5, 100)
 for c_val, label_text in [(0.01, r"$E/\rho = 10$ kPa$\cdot$m$^3$/kg"), (1, r"$E/\rho = 1$ GPa$\cdot$m$^3$/Mg")]:
     guide_modulus = c_val * guide_density / 1000
@@ -114,8 +158,8 @@ for c_val, label_text in [(0.01, r"$E/\rho = 10$ kPa$\cdot$m$^3$/kg"), (1, r"$E/
             guide_density[mid],
             guide_modulus[mid] * 1.3,
             label_text,
-            fontsize=10,
-            color="#999999",
+            fontsize=14,
+            color="#777777",
             rotation=28,
             ha="center",
             va="bottom",
