@@ -1,0 +1,223 @@
+library: matplotlib
+specification_id: probability-weibull
+created: '2026-03-11T21:52:05Z'
+updated: '2026-03-11T22:05:00Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22976096471
+issue: 4668
+python_version: 3.14.3
+library_version: 3.10.8
+preview_url: https://storage.googleapis.com/pyplots-images/plots/probability-weibull/matplotlib/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/probability-weibull/matplotlib/plot_thumb.png
+preview_html: null
+quality_score: 92
+review:
+  strengths:
+  - Complete implementation of all spec requirements including specialized Weibull
+    linearized y-axis
+  - Excellent dual y-axis design bridging raw Weibull scale with interpretable cumulative
+    probability percentages
+  - Strong visual design with custom background, styled annotation box, and differentiated
+    grid intensities
+  - Realistic turbine blade fatigue data with deliberate deviations adding diagnostic
+    interest
+  - Clean, well-structured code with appropriate use of scipy for Weibull distribution
+  weaknesses:
+  - LM-02 could be higher with more distinctive matplotlib features (e.g., custom
+    tick locator, PathEffects)
+  - 'DE-01 stays at 6: could reach 7-8 with more color variation or typographic hierarchy'
+  image_description: The plot displays a Weibull probability plot for turbine blade
+    fatigue life on a warm off-white (#FAFAFA) background. The x-axis uses a logarithmic
+    scale labeled "Time to Failure (hours)" ranging from ~1,000 to ~20,000. The left
+    y-axis shows the linearized Weibull scale ln(-ln(1-F)) from about -5 to +2, while
+    a secondary right y-axis displays cumulative probability percentages (1.0% to
+    99.0%). Filled blue (#306998) circles represent failure data points, and hollow
+    blue circles mark censored observations. A solid blue fitted line runs through
+    the data. A red dashed horizontal reference line marks the 63.2% characteristic
+    life level. A styled annotation box in the lower right shows β = 2.26 (shape)
+    and η = 7481 h (scale). A legend in the upper left identifies all four elements.
+    The title reads "probability-weibull · matplotlib · pyplots.ai".
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt,
+          legend 16pt, annotation 18pt'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: All text fully readable, no collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Markers s=200 appropriate for ~30 points, fit line linewidth=3
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue vs red dashed, filled vs hollow markers; colorblind-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 16:9 figure, tight_layout, balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Time to Failure (hours) with units, ln(-ln(1-F)) descriptive
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom palette, warm background, styled annotation box, dual y-axis
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines removed, differentiated grid intensities, customized spine
+          color
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Dual y-axis bridges raw and interpretable scales, 63.2% reference
+          line guides viewer
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Weibull probability plot with log x and linearized y
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features: log x, linearized y, fitted line, parameters, median
+          rank, censored distinction, 63.2% line'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=time to failure (log), Y=ln(-ln(1-F)), correct Weibull linearization
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct title format and matching legend labels
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows failures, censored, fit, parameters, data deviations for diagnostic
+          interest
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Turbine blade fatigue life data, genuine reliability engineering
+          scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Shape ~2.5, scale ~8000h realistic for turbine blade fatigue
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports, data, plot, style, save'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: pyplot, ticker, numpy, scipy.stats'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, appropriate complexity for specialized Weibull plot
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png, dpi=300, bbox_inches='tight'
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good Axes methods, twinx, FuncFormatter, tick_params, spines management
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: twinx dual axis, FuncFormatter, fine-grained spine/grid control
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - scipy
+  techniques:
+  - twin-axes
+  - annotations
+  - manual-ticks
+  patterns:
+  - data-generation
+  dataprep:
+  - regression
+  styling:
+  - edge-highlighting
+  - grid-styling
