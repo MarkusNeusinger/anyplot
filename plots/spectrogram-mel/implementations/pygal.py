@@ -1,26 +1,23 @@
-""" pyplots.ai
+"""pyplots.ai
 spectrogram-mel: Mel-Spectrogram for Audio Analysis
 Library: pygal 3.1.0 | Python 3.14.3
 Quality: 81/100 | Created: 2026-03-11
 """
 
-import sys
+import sys as _sys
 
 import numpy as np
 from scipy import signal
 
 
-# Temporarily remove current directory from path to avoid name collision
-_cwd = sys.path[0] if sys.path[0] else "."
-if _cwd in sys.path:
-    sys.path.remove(_cwd)
-
+# Temporarily hide current directory to avoid pygal.py name collision
+_orig_path = _sys.path.copy()
+_sys.path = [p for p in _sys.path if p not in ("", ".") and not p.endswith("/implementations")]
 from pygal.graph.graph import Graph  # noqa: E402
 from pygal.style import Style  # noqa: E402
 
 
-# Restore path
-sys.path.insert(0, _cwd)
+_sys.path = _orig_path
 
 
 class MelSpectrogramChart(Graph):
@@ -31,41 +28,24 @@ class MelSpectrogramChart(Graph):
         self.time_bins = kwargs.pop("time_bins", [])
         self.mel_freq_labels = kwargs.pop("mel_freq_labels", [])
         self.mel_freq_positions = kwargs.pop("mel_freq_positions", [])
+        self.note_annotations = kwargs.pop("note_annotations", [])
         self.db_min = kwargs.pop("db_min", -80)
         self.db_max = kwargs.pop("db_max", 0)
-        self.colormap = kwargs.pop(
-            "colormap",
-            [
-                "#000004",
-                "#1b0c41",
-                "#4a0c6b",
-                "#781c6d",
-                "#a52c60",
-                "#cf4446",
-                "#ed6925",
-                "#fb9b06",
-                "#f7d13d",
-                "#fcffa4",
-            ],
-        )
+        self.colormap = kwargs.pop("colormap", [])
         super().__init__(*args, **kwargs)
 
     def _interpolate_color(self, value, min_val, max_val):
         if max_val == min_val:
             return self.colormap[-1]
-        normalized = (value - min_val) / (max_val - min_val)
-        normalized = max(0, min(1, normalized))
+        normalized = max(0, min(1, (value - min_val) / (max_val - min_val)))
         pos = normalized * (len(self.colormap) - 1)
         idx1 = int(pos)
         idx2 = min(idx1 + 1, len(self.colormap) - 1)
         frac = pos - idx1
-        c1 = self.colormap[idx1]
-        c2 = self.colormap[idx2]
-        r1, g1, b1 = int(c1[1:3], 16), int(c1[3:5], 16), int(c1[5:7], 16)
-        r2, g2, b2 = int(c2[1:3], 16), int(c2[3:5], 16), int(c2[5:7], 16)
-        r = int(r1 + (r2 - r1) * frac)
-        g = int(g1 + (g2 - g1) * frac)
-        b = int(b1 + (b2 - b1) * frac)
+        c1, c2 = self.colormap[idx1], self.colormap[idx2]
+        r = int(int(c1[1:3], 16) + (int(c2[1:3], 16) - int(c1[1:3], 16)) * frac)
+        g = int(int(c1[3:5], 16) + (int(c2[3:5], 16) - int(c1[3:5], 16)) * frac)
+        b = int(int(c1[5:7], 16) + (int(c2[5:7], 16) - int(c1[5:7], 16)) * frac)
         return f"#{r:02x}{g:02x}{b:02x}"
 
     def _plot(self):
@@ -74,219 +54,172 @@ class MelSpectrogramChart(Graph):
 
         n_mels = len(self.spectrogram_data)
         n_time = len(self.spectrogram_data[0]) if n_mels > 0 else 0
-
-        min_val = self.db_min
-        max_val = self.db_max
+        min_val, max_val = self.db_min, self.db_max
 
         plot_width = self.view.width
         plot_height = self.view.height
 
-        label_margin_left = 300
-        label_margin_bottom = 200
-        label_margin_top = 80
-        label_margin_right = 300
+        margin_left, margin_right = 280, 280
+        margin_top, margin_bottom = 60, 180
 
-        available_width = plot_width - label_margin_left - label_margin_right
-        available_height = plot_height - label_margin_bottom - label_margin_top
+        avail_w = plot_width - margin_left - margin_right
+        avail_h = plot_height - margin_bottom - margin_top
+        cell_w = avail_w / n_time
+        cell_h = avail_h / n_mels
 
-        cell_width = available_width / n_time
-        cell_height = available_height / n_mels
-
-        x_offset = self.view.x(0) + label_margin_left
-        y_offset = self.view.y(n_mels) + label_margin_top
+        x0 = self.view.x(0) + margin_left
+        y0 = self.view.y(n_mels) + margin_top
 
         plot_node = self.nodes["plot"]
-        spec_group = self.svg.node(plot_node, class_="mel-spectrogram")
+        grp = self.svg.node(plot_node, class_="mel-spectrogram")
 
-        # Draw cells (mel band 0 at bottom, highest mel band at top)
+        # Draw spectrogram cells (mel band 0 at bottom)
         for i in range(n_mels):
             for j in range(n_time):
                 value = self.spectrogram_data[n_mels - 1 - i][j]
                 color = self._interpolate_color(value, min_val, max_val)
-                x = x_offset + j * cell_width
-                y = y_offset + i * cell_height
-                rect = self.svg.node(spec_group, "rect", x=x, y=y, width=cell_width + 0.5, height=cell_height + 0.5)
+                rect = self.svg.node(
+                    grp, "rect", x=x0 + j * cell_w, y=y0 + i * cell_h, width=cell_w + 0.5, height=cell_h + 0.5
+                )
                 rect.set("fill", color)
                 rect.set("stroke", "none")
 
-        # Axes border
-        border = self.svg.node(
-            spec_group, "rect", x=x_offset, y=y_offset, width=available_width, height=available_height
-        )
+        # Border
+        border = self.svg.node(grp, "rect", x=x0, y=y0, width=avail_w, height=avail_h)
         border.set("fill", "none")
         border.set("stroke", "#333333")
         border.set("stroke-width", "3")
 
-        # X-axis label
         axis_label_size = 52
-        x_label_x = x_offset + available_width / 2
-        x_label_y = y_offset + available_height + 150
-        text_node = self.svg.node(spec_group, "text", x=x_label_x, y=x_label_y)
-        text_node.set("text-anchor", "middle")
-        text_node.set("fill", "#333333")
-        text_node.set("style", f"font-size:{axis_label_size}px;font-weight:bold;font-family:sans-serif")
-        text_node.text = "Time (s)"
+        tick_font_size = 38
+
+        # X-axis label
+        tx = self.svg.node(grp, "text", x=x0 + avail_w / 2, y=y0 + avail_h + 145)
+        tx.set("text-anchor", "middle")
+        tx.set("fill", "#333333")
+        tx.set("style", f"font-size:{axis_label_size}px;font-weight:bold;font-family:sans-serif")
+        tx.text = "Time (s)"
 
         # Y-axis label
-        y_label_x = x_offset - 220
-        y_label_y = y_offset + available_height / 2
-        text_node = self.svg.node(
-            spec_group, "text", x=y_label_x, y=y_label_y, transform=f"rotate(-90, {y_label_x}, {y_label_y})"
-        )
-        text_node.set("text-anchor", "middle")
-        text_node.set("fill", "#333333")
-        text_node.set("style", f"font-size:{axis_label_size}px;font-weight:bold;font-family:sans-serif")
-        text_node.text = "Frequency (Hz)"
+        yl_x, yl_y = x0 - 210, y0 + avail_h / 2
+        ty = self.svg.node(grp, "text", x=yl_x, y=yl_y, transform=f"rotate(-90, {yl_x}, {yl_y})")
+        ty.set("text-anchor", "middle")
+        ty.set("fill", "#333333")
+        ty.set("style", f"font-size:{axis_label_size}px;font-weight:bold;font-family:sans-serif")
+        ty.text = "Frequency (Hz)"
 
         # X-axis ticks
-        tick_font_size = 38
-        n_x_ticks = 6
+        n_x_ticks = 7
         for i in range(n_x_ticks):
-            tick_x = x_offset + (i / (n_x_ticks - 1)) * available_width
-            tick_y = y_offset + available_height
-            line = self.svg.node(spec_group, "line", x1=tick_x, y1=tick_y, x2=tick_x, y2=tick_y + 15)
+            frac = i / (n_x_ticks - 1)
+            tick_x = x0 + frac * avail_w
+            tick_y = y0 + avail_h
+            line = self.svg.node(grp, "line", x1=tick_x, y1=tick_y, x2=tick_x, y2=tick_y + 15)
             line.set("stroke", "#333333")
             line.set("stroke-width", "2")
-            time_val = self.time_bins[int(i / (n_x_ticks - 1) * (len(self.time_bins) - 1))]
-            text_node = self.svg.node(spec_group, "text", x=tick_x, y=tick_y + 55)
-            text_node.set("text-anchor", "middle")
-            text_node.set("fill", "#333333")
-            text_node.set("style", f"font-size:{tick_font_size}px;font-family:sans-serif")
-            text_node.text = f"{time_val:.1f}"
+            time_val = self.time_bins[int(frac * (len(self.time_bins) - 1))]
+            tt = self.svg.node(grp, "text", x=tick_x, y=tick_y + 55)
+            tt.set("text-anchor", "middle")
+            tt.set("fill", "#333333")
+            tt.set("style", f"font-size:{tick_font_size}px;font-family:sans-serif")
+            tt.text = f"{time_val:.1f}"
 
-        # Y-axis ticks at mel band edge frequencies
+        # Y-axis ticks
         for freq_hz, norm_pos in zip(self.mel_freq_labels, self.mel_freq_positions, strict=True):
-            tick_x = x_offset
-            tick_y = y_offset + (1 - norm_pos) * available_height
-            line = self.svg.node(spec_group, "line", x1=tick_x - 15, y1=tick_y, x2=tick_x, y2=tick_y)
+            tick_x = x0
+            tick_y = y0 + (1 - norm_pos) * avail_h
+            line = self.svg.node(grp, "line", x1=tick_x - 15, y1=tick_y, x2=tick_x, y2=tick_y)
             line.set("stroke", "#333333")
             line.set("stroke-width", "2")
-            text_node = self.svg.node(spec_group, "text", x=tick_x - 25, y=tick_y + 12)
-            text_node.set("text-anchor", "end")
-            text_node.set("fill", "#333333")
-            text_node.set("style", f"font-size:{tick_font_size}px;font-family:sans-serif")
-            if freq_hz >= 1000:
-                text_node.text = f"{freq_hz / 1000:.1f}k"
-            else:
-                text_node.text = f"{int(freq_hz)}"
+            lbl = self.svg.node(grp, "text", x=tick_x - 25, y=tick_y + 12)
+            lbl.set("text-anchor", "end")
+            lbl.set("fill", "#333333")
+            lbl.set("style", f"font-size:{tick_font_size}px;font-family:sans-serif")
+            lbl.text = f"{freq_hz / 1000:.1f}k" if freq_hz >= 1000 else f"{int(freq_hz)}"
+
+        # Note annotations at each onset for storytelling emphasis
+        annot_size = 38
+        for note_name, norm_y, time_frac in self.note_annotations:
+            ax = x0 + time_frac * avail_w
+            ay = y0 + (1 - norm_y) * avail_h
+            # Circle marker with dark outline for visibility
+            marker = self.svg.node(grp, "circle", cx=ax, cy=ay, r=14)
+            marker.set("fill", "none")
+            marker.set("stroke", "#000000")
+            marker.set("stroke-width", "4")
+            marker.set("opacity", "0.6")
+            marker2 = self.svg.node(grp, "circle", cx=ax, cy=ay, r=14)
+            marker2.set("fill", "none")
+            marker2.set("stroke", "#ffffff")
+            marker2.set("stroke-width", "2.5")
+            # Text shadow for readability
+            shadow = self.svg.node(grp, "text", x=ax + 22, y=ay + 6)
+            shadow.set("fill", "#000000")
+            shadow.set("opacity", "0.7")
+            shadow.set("style", f"font-size:{annot_size}px;font-weight:bold;font-family:sans-serif")
+            shadow.text = note_name
+            # Label
+            at = self.svg.node(grp, "text", x=ax + 20, y=ay + 4)
+            at.set("fill", "#ffffff")
+            at.set("style", f"font-size:{annot_size}px;font-weight:bold;font-family:sans-serif")
+            at.text = note_name
 
         # Colorbar
-        colorbar_width = 50
-        colorbar_height = available_height * 0.8
-        colorbar_x = x_offset + available_width + 60
-        colorbar_y = y_offset + (available_height - colorbar_height) / 2
+        cb_w, cb_h = 50, avail_h * 0.85
+        cb_x = x0 + avail_w + 50
+        cb_y = y0 + (avail_h - cb_h) / 2
 
-        n_segments = 80
-        segment_height = colorbar_height / n_segments
+        n_segments = 100
+        seg_h = cb_h / n_segments
         for i in range(n_segments):
-            seg_value = min_val + (max_val - min_val) * (n_segments - 1 - i) / (n_segments - 1)
-            seg_color = self._interpolate_color(seg_value, min_val, max_val)
-            seg_y = colorbar_y + i * segment_height
-            self.svg.node(
-                spec_group,
-                "rect",
-                x=colorbar_x,
-                y=seg_y,
-                width=colorbar_width,
-                height=segment_height + 1,
-                fill=seg_color,
-            )
+            seg_val = min_val + (max_val - min_val) * (n_segments - 1 - i) / (n_segments - 1)
+            seg_color = self._interpolate_color(seg_val, min_val, max_val)
+            self.svg.node(grp, "rect", x=cb_x, y=cb_y + i * seg_h, width=cb_w, height=seg_h + 1, fill=seg_color)
 
         # Colorbar border
-        self.svg.node(
-            spec_group,
-            "rect",
-            x=colorbar_x,
-            y=colorbar_y,
-            width=colorbar_width,
-            height=colorbar_height,
-            fill="none",
-            stroke="#333333",
-        )
+        self.svg.node(grp, "rect", x=cb_x, y=cb_y, width=cb_w, height=cb_h, fill="none", stroke="#333333")
 
-        # Colorbar tick labels
+        # Colorbar ticks
         cb_label_size = 36
-        n_cb_ticks = 6
-        for i in range(n_cb_ticks):
-            pos = i / (n_cb_ticks - 1)
+        for i in range(6):
+            pos = i / 5
             val = max_val - (max_val - min_val) * pos
-            text_y = colorbar_y + pos * colorbar_height + cb_label_size * 0.35
-            tick_line = self.svg.node(
-                spec_group,
-                "line",
-                x1=colorbar_x + colorbar_width,
-                y1=colorbar_y + pos * colorbar_height,
-                x2=colorbar_x + colorbar_width + 10,
-                y2=colorbar_y + pos * colorbar_height,
+            ty_pos = cb_y + pos * cb_h + cb_label_size * 0.35
+            tl = self.svg.node(
+                grp, "line", x1=cb_x + cb_w, y1=cb_y + pos * cb_h, x2=cb_x + cb_w + 10, y2=cb_y + pos * cb_h
             )
-            tick_line.set("stroke", "#333333")
-            tick_line.set("stroke-width", "2")
-            text_node = self.svg.node(spec_group, "text", x=colorbar_x + colorbar_width + 20, y=text_y)
-            text_node.set("fill", "#333333")
-            text_node.set("style", f"font-size:{cb_label_size}px;font-family:sans-serif")
-            text_node.text = f"{val:.0f}"
+            tl.set("stroke", "#333333")
+            tl.set("stroke-width", "2")
+            ct = self.svg.node(grp, "text", x=cb_x + cb_w + 20, y=ty_pos)
+            ct.set("fill", "#333333")
+            ct.set("style", f"font-size:{cb_label_size}px;font-family:sans-serif")
+            ct.text = f"{val:.0f}"
 
         # Colorbar title
-        cb_title_size = 42
-        cb_title_x = colorbar_x + colorbar_width / 2
-        cb_title_y = colorbar_y - 30
-        text_node = self.svg.node(spec_group, "text", x=cb_title_x, y=cb_title_y)
-        text_node.set("text-anchor", "middle")
-        text_node.set("fill", "#333333")
-        text_node.set("style", f"font-size:{cb_title_size}px;font-weight:bold;font-family:sans-serif")
-        text_node.text = "dB"
+        cbt = self.svg.node(grp, "text", x=cb_x + cb_w / 2, y=cb_y - 25)
+        cbt.set("text-anchor", "middle")
+        cbt.set("fill", "#333333")
+        cbt.set("style", "font-size:42px;font-weight:bold;font-family:sans-serif")
+        cbt.text = "dB"
 
     def _compute(self):
-        n_mels = len(self.spectrogram_data) if len(self.spectrogram_data) > 0 else 1
-        n_time = (
-            len(self.spectrogram_data[0]) if len(self.spectrogram_data) > 0 and len(self.spectrogram_data[0]) > 0 else 1
-        )
+        n_mels = len(self.spectrogram_data) if self.spectrogram_data else 1
+        n_time = len(self.spectrogram_data[0]) if self.spectrogram_data and self.spectrogram_data[0] else 1
         self._box.xmin = 0
         self._box.xmax = n_time
         self._box.ymin = 0
         self._box.ymax = n_mels
 
 
-# Mel-scale helper functions
-def hz_to_mel(hz):
-    return 2595.0 * np.log10(1.0 + hz / 700.0)
-
-
-def mel_to_hz(mel):
-    return 700.0 * (10.0 ** (mel / 2595.0) - 1.0)
-
-
-def mel_filterbank(n_mels, n_fft, sample_rate):
-    fmax = sample_rate / 2.0
-    mel_min = hz_to_mel(0)
-    mel_max = hz_to_mel(fmax)
-    mel_points = np.linspace(mel_min, mel_max, n_mels + 2)
-    hz_points = mel_to_hz(mel_points)
-    bin_points = np.floor((n_fft + 1) * hz_points / sample_rate).astype(int)
-
-    filters = np.zeros((n_mels, n_fft // 2 + 1))
-    for m in range(1, n_mels + 1):
-        f_left = bin_points[m - 1]
-        f_center = bin_points[m]
-        f_right = bin_points[m + 1]
-        for k in range(f_left, f_center):
-            if f_center != f_left:
-                filters[m - 1, k] = (k - f_left) / (f_center - f_left)
-        for k in range(f_center, f_right):
-            if f_right != f_center:
-                filters[m - 1, k] = (f_right - k) / (f_right - f_center)
-
-    return filters, hz_points[1:-1]
-
-
-# Data - synthesize audio with multiple frequency components
+# --- Data generation ---
 np.random.seed(42)
 
 sample_rate = 22050
 duration = 3.0
 t = np.linspace(0, duration, int(sample_rate * duration), endpoint=False)
 
-# Melody: sequence of notes with harmonics (C4, E4, G4, C5 arpeggio pattern)
+# C-major arpeggio: C4 → E4 → G4 → C5 → G4 → E4 (ascending then descending)
+note_names = ["C4", "E4", "G4", "C5", "G4", "E4"]
 note_freqs = [261.6, 329.6, 392.0, 523.3, 392.0, 329.6]
 note_duration = duration / len(note_freqs)
 audio_signal = np.zeros_like(t)
@@ -300,62 +233,95 @@ for idx, freq in enumerate(note_freqs):
     audio_signal[start:end] += 0.5 * envelope * np.sin(2 * np.pi * 2 * freq * note_t)
     audio_signal[start:end] += 0.25 * envelope * np.sin(2 * np.pi * 3 * freq * note_t)
 
-# Add subtle broadband noise
 audio_signal += 0.02 * np.random.randn(len(t))
 
-# Compute mel spectrogram
+# --- Mel spectrogram computation ---
 n_fft = 2048
 hop_length = 512
 n_mels_count = 128
 
+
+def hz_to_mel(hz):
+    return 2595.0 * np.log10(1.0 + hz / 700.0)
+
+
+def mel_to_hz(mel):
+    return 700.0 * (10.0 ** (mel / 2595.0) - 1.0)
+
+
+fmax = sample_rate / 2.0
+mel_min = hz_to_mel(0)
+mel_max = hz_to_mel(fmax)
+mel_points = np.linspace(mel_min, mel_max, n_mels_count + 2)
+hz_points = mel_to_hz(mel_points)
+bin_points = np.floor((n_fft + 1) * hz_points / sample_rate).astype(int)
+
+mel_filters = np.zeros((n_mels_count, n_fft // 2 + 1))
+for m in range(1, n_mels_count + 1):
+    f_left, f_center, f_right = bin_points[m - 1], bin_points[m], bin_points[m + 1]
+    for k in range(f_left, f_center):
+        if f_center != f_left:
+            mel_filters[m - 1, k] = (k - f_left) / (f_center - f_left)
+    for k in range(f_center, f_right):
+        if f_right != f_center:
+            mel_filters[m - 1, k] = (f_right - k) / (f_right - f_center)
+
 # STFT
-frequencies_stft, times_stft, Zxx = signal.stft(
-    audio_signal, fs=sample_rate, nperseg=n_fft, noverlap=n_fft - hop_length
-)
+_, times_stft, Zxx = signal.stft(audio_signal, fs=sample_rate, nperseg=n_fft, noverlap=n_fft - hop_length)
 power_spectrum = np.abs(Zxx) ** 2
 
-# Apply mel filterbank
-mel_filters, mel_center_freqs = mel_filterbank(n_mels_count, n_fft, sample_rate)
+# Apply mel filterbank and convert to dB
 mel_spec = mel_filters @ power_spectrum
-
-# Convert to dB
 mel_spec_db = 10 * np.log10(mel_spec + 1e-10)
-db_max = np.max(mel_spec_db)
-mel_spec_db = mel_spec_db - db_max  # Normalize so max is 0 dB
+db_max_val = np.max(mel_spec_db)
+mel_spec_db = mel_spec_db - db_max_val
 db_floor = -80.0
 mel_spec_db = np.maximum(mel_spec_db, db_floor)
 
-# Downsample for pygal rendering performance
-time_step = max(1, len(times_stft) // 150)
-mel_step = max(1, n_mels_count // 96)
+# Higher-resolution display (reduce pixelation)
+time_step = max(1, len(times_stft) // 220)
+mel_step = max(1, n_mels_count // 128)
 mel_spec_display = mel_spec_db[::mel_step, ::time_step]
 times_display = times_stft[::time_step]
 
-# Compute y-axis tick positions (Hz labels at key mel band edges)
+# Y-axis tick positions
 tick_freqs_hz = [100, 200, 500, 1000, 2000, 4000, 8000]
-tick_freqs_hz = [f for f in tick_freqs_hz if f <= sample_rate / 2]
-n_display_mels = mel_spec_display.shape[0]
+mel_max_val = hz_to_mel(fmax)
 mel_tick_positions = []
 mel_tick_labels = []
 for f in tick_freqs_hz:
-    mel_val = hz_to_mel(f)
-    mel_max_val = hz_to_mel(sample_rate / 2)
-    norm_pos = mel_val / mel_max_val
+    norm_pos = hz_to_mel(f) / mel_max_val
     if 0 <= norm_pos <= 1:
         mel_tick_positions.append(norm_pos)
         mel_tick_labels.append(f)
 
-# Inferno colormap
-inferno_colormap = [
+# Note annotations for storytelling: mark each note onset with its name
+annotations = []
+for idx, (name, freq) in enumerate(zip(note_names, note_freqs, strict=True)):
+    time_frac = (idx * note_duration + note_duration * 0.08) / duration
+    freq_norm = hz_to_mel(freq) / mel_max_val
+    annotations.append((name, freq_norm, time_frac))
+
+# Inferno colormap (extended for smoother gradients)
+inferno_colors = [
     "#000004",
+    "#0d0829",
     "#1b0c41",
+    "#2c105c",
     "#4a0c6b",
+    "#651a80",
     "#781c6d",
+    "#8c2981",
     "#a52c60",
+    "#b73779",
     "#cf4446",
+    "#dd513a",
     "#ed6925",
+    "#f4821a",
     "#fb9b06",
+    "#f7cf3a",
     "#f7d13d",
+    "#f9e969",
     "#fcffa4",
 ]
 
@@ -374,7 +340,7 @@ custom_style = Style(
     font_family="sans-serif",
 )
 
-# Plot
+# Chart
 chart = MelSpectrogramChart(
     width=4800,
     height=2700,
@@ -384,13 +350,14 @@ chart = MelSpectrogramChart(
     time_bins=times_display.tolist(),
     mel_freq_labels=mel_tick_labels,
     mel_freq_positions=mel_tick_positions,
+    note_annotations=annotations,
     db_min=db_floor,
     db_max=0,
-    colormap=inferno_colormap,
+    colormap=inferno_colors,
     show_legend=False,
-    margin=120,
-    margin_top=200,
-    margin_bottom=100,
+    margin=80,
+    margin_top=180,
+    margin_bottom=60,
     show_x_labels=False,
     show_y_labels=False,
 )
