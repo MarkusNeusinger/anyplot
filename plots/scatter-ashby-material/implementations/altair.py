@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 scatter-ashby-material: Ashby Material Selection Chart
 Library: altair 6.0.0 | Python 3.14.3
 Quality: 83/100 | Created: 2026-03-11
@@ -52,8 +52,8 @@ families = {
         ],
     },
     "Ceramics": {
-        "density": (2200, 6000),
-        "modulus": (70, 450),
+        "density": (2500, 6000),
+        "modulus": (150, 450),
         "materials": [
             "Alumina",
             "Silicon Carbide",
@@ -133,56 +133,52 @@ for family, group in df.groupby("family"):
     cx, cy = np.mean(log_x), np.mean(log_y)
     pts = np.column_stack([log_x, log_y])
 
-    # Simple convex hull (Graham scan)
-    def _cross(o, a, b):
-        return (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0])
+    # Convex hull via monotone chain
+    if len(pts) >= 3:
+        sp = sorted(map(tuple, pts))
 
-    sorted_pts = sorted(map(tuple, pts))
-    if len(sorted_pts) >= 3:
-        lower = []
-        for p in sorted_pts:
-            while len(lower) >= 2 and _cross(lower[-2], lower[-1], p) <= 0:
-                lower.pop()
-            lower.append(p)
-        upper = []
-        for p in reversed(sorted_pts):
-            while len(upper) >= 2 and _cross(upper[-2], upper[-1], p) <= 0:
-                upper.pop()
-            upper.append(p)
-        hull = lower[:-1] + upper[:-1]
+        def cross(o, a, b):
+            return (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0])
+
+        lo, up = [], []
+        for p in sp:
+            while len(lo) >= 2 and cross(lo[-2], lo[-1], p) <= 0:
+                lo.pop()
+            lo.append(p)
+        for p in reversed(sp):
+            while len(up) >= 2 and cross(up[-2], up[-1], p) <= 0:
+                up.pop()
+            up.append(p)
+        hull_pts = lo[:-1] + up[:-1]
     else:
-        hull = sorted_pts
+        hull_pts = list(map(tuple, pts))
 
     # Pad the hull outward from centroid
-    pad = 0.25
+    pad = 0.2
     hull_padded = []
-    for hx, hy in hull:
+    for hx, hy in hull_pts:
         dx, dy = hx - cx, hy - cy
         dist = np.sqrt(dx**2 + dy**2) or 1e-6
         hull_padded.append((hx + pad * dx / dist, hy + pad * dy / dist))
 
-    # Smooth the hull by interpolating more points along the boundary
+    # Convert to angles and sort for proper polygon ordering
+    angles = [np.arctan2(hy - cy, hx - cx) for hx, hy in hull_padded]
+    hull_padded = [p for _, p in sorted(zip(angles, hull_padded, strict=True))]
     hull_padded.append(hull_padded[0])  # close the polygon
-    smooth_pts = []
-    for j in range(len(hull_padded) - 1):
-        x0, y0 = hull_padded[j]
-        x1, y1 = hull_padded[j + 1]
-        for t in np.linspace(0, 1, 8, endpoint=False):
-            smooth_pts.append((x0 + t * (x1 - x0), y0 + t * (y1 - y0)))
 
-    for i, (xi, yi) in enumerate(smooth_pts):
+    for i, (xi, yi) in enumerate(hull_padded):
         envelope_rows.append({"family": family, "density": 10**xi, "modulus": 10**yi, "pt_order": i})
 
 df_envelope = pd.DataFrame(envelope_rows)
 
 # Family label positions (geometric center in log space, nudged to avoid overlap)
 label_nudge = {
-    "Metals": (0.2, -0.2),
-    "Polymers": (-0.1, 0.3),
-    "Ceramics": (-0.2, 0.3),
-    "Composites": (-0.15, -0.35),
-    "Elastomers": (0.15, 0.25),
-    "Foams": (-0.2, -0.15),
+    "Metals": (0.3, -0.25),
+    "Polymers": (-0.15, 0.35),
+    "Ceramics": (-0.35, 0.4),
+    "Composites": (-0.3, -0.35),
+    "Elastomers": (0.25, 0.3),
+    "Foams": (-0.25, -0.2),
 }
 family_centers = []
 for family, group in df.groupby("family"):
@@ -245,7 +241,7 @@ points = (
 # Family labels with halo effect for readability
 label_bg = (
     alt.Chart(df_labels)
-    .mark_text(fontSize=15, fontWeight="bold", opacity=0.9)
+    .mark_text(fontSize=16, fontWeight="bold", opacity=0.9)
     .encode(
         x=alt.X("density_center:Q", scale=x_scale),
         y=alt.Y("modulus_center:Q", scale=y_scale),
@@ -256,7 +252,7 @@ label_bg = (
 
 labels = (
     alt.Chart(df_labels)
-    .mark_text(fontSize=15, fontWeight="bold", opacity=0.9)
+    .mark_text(fontSize=16, fontWeight="bold", opacity=0.9)
     .encode(
         x=alt.X("density_center:Q", scale=x_scale),
         y=alt.Y("modulus_center:Q", scale=y_scale),
@@ -277,7 +273,7 @@ df_guides = pd.DataFrame(guide_lines_rows)
 
 guides = (
     alt.Chart(df_guides)
-    .mark_line(strokeDash=[6, 4], strokeWidth=1.2, opacity=0.35)
+    .mark_line(strokeDash=[6, 4], strokeWidth=1.4, opacity=0.4)
     .encode(
         x=alt.X("density:Q", scale=x_scale),
         y=alt.Y("modulus:Q", scale=y_scale),
@@ -296,7 +292,7 @@ df_guide_labels = pd.DataFrame(guide_label_data)
 
 guide_labels = (
     alt.Chart(df_guide_labels)
-    .mark_text(fontSize=11, fontStyle="italic", opacity=0.45, angle=328, dy=-12)
+    .mark_text(fontSize=14, fontStyle="italic", opacity=0.6, angle=328, dy=-14)
     .encode(
         x=alt.X("density:Q", scale=x_scale),
         y=alt.Y("modulus:Q", scale=y_scale),
