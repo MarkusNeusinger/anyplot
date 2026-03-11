@@ -1,0 +1,234 @@
+library: letsplot
+specification_id: scatter-ashby-material
+created: '2026-03-11T15:01:59Z'
+updated: '2026-03-11T15:31:33Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22958872781
+issue: 4677
+python_version: 3.14.3
+library_version: 4.8.2
+preview_url: https://storage.googleapis.com/pyplots-images/plots/scatter-ashby-material/letsplot/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/scatter-ashby-material/letsplot/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/scatter-ashby-material/letsplot/plot.html
+quality_score: 87
+review:
+  strengths:
+  - Excellent Ashby chart with all 7 material families clearly distinguished by color
+    and elliptical envelopes
+  - Realistic material property data with named engineering materials spanning appropriate
+    ranges
+  - E/rho performance index guide lines add genuine engineering value
+  - Smart label positioning with manual offsets and leader lines to avoid crowding
+  - Interactive tooltips via layer_tooltips() leverage lets-plot distinctive capabilities
+  - Clean well-structured code with eigendecomposition-based envelope generation
+  weaknesses:
+  - Guide line labels (size=10) are slightly small compared to other text elements
+  - Ceramics and Composites envelopes overlap noticeably in the upper-center region
+  - Some empty canvas space in upper-left and lower-right corners
+  image_description: 'The plot displays an Ashby material selection chart on log-log
+    axes. The x-axis shows "Density (kg/m³)" ranging from ~30 to ~20,000, and the
+    y-axis shows "Young''s Modulus (GPa)" from ~0.001 to ~300+. Seven material families
+    are rendered as semi-transparent colored elliptical envelopes with individual
+    scatter points inside: Metals (steel blue, upper right), Polymers (warm orange,
+    center), Ceramics (teal, upper center), Composites (violet, upper center), Elastomers
+    (rose, lower center), Foams (sky blue, lower left), and Natural Materials (amber/gold,
+    center-left). Each family has a bold black text label, with dotted leader lines
+    connecting displaced labels to their envelope centers. Three dashed diagonal guide
+    lines labeled E/ρ = 10⁻³, 10⁻², 10⁻¹ show constant performance indices. A legend
+    titled "Material Family" appears on the right. The background is light gray with
+    a white panel, subtle grid lines, and no minor grid. Title: "scatter-ashby-material
+    · letsplot · pyplots.ai" with subtitle "Young''s Modulus vs Density — Material
+    Selection Landscape".'
+  criteria_checklist:
+    visual_quality:
+      score: 26
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Font sizes explicitly set throughout. Guide line labels slightly
+          small at size=10.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Ceramics/Composites envelopes overlap in upper-center. Labels readable
+          via manual offsets and leader lines.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Points size=7 alpha=0.88 visible for ~55 points. Envelopes alpha=0.22
+          appropriate.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Custom colorblind-safe palette with 7 perceptually distinct colors.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good layout, plot fills majority of canvas. Some empty space in corners
+          due to data distribution.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive labels with units: Density (kg/m³) and Young''s Modulus
+          (GPa).'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom palette, typography hierarchy, professional Ashby chart appearance.
+          Clearly above defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: theme_minimal, subtle grid, custom backgrounds, generous margins.
+          Good refinement.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Layered envelopes + points + labels create hierarchy. E/rho guide
+          lines add engineering context.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct log-log scatter Ashby chart.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: log scales, envelopes, labels, units, guide
+          lines.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=density, Y=modulus on log scales. Correct mapping.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct. Legend titled Material Family with correct
+          labels.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 7 material families with 7-10 named materials each spanning full
+          property ranges.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real engineering materials with correct names. Classic materials
+          science context.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values match real material property data.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean Imports-Data-Plot-Save flow. No functions or classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) ensures deterministic output.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used, no unused imports.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-organized. Eigendecomposition for envelopes is appropriate and
+          elegant.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: ggsave with scale=3 produces correct output.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good ggplot grammar with proper layer composition, aes mappings,
+          scales, themes.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses layer_tooltips() for interactive hover and HTML export - distinctive
+          lets-plot features.
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling

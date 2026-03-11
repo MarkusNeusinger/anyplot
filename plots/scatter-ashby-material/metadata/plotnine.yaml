@@ -1,0 +1,232 @@
+library: plotnine
+specification_id: scatter-ashby-material
+created: '2026-03-11T14:59:54Z'
+updated: '2026-03-11T15:26:13Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22958872760
+issue: 4677
+python_version: 3.14.3
+library_version: 0.15.3
+preview_url: https://storage.googleapis.com/pyplots-images/plots/scatter-ashby-material/plotnine/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/scatter-ashby-material/plotnine/plot_thumb.png
+preview_html: null
+quality_score: 89
+review:
+  strengths:
+  - Perfect spec compliance with all required features including performance index
+    guide lines
+  - Excellent use of stat_ellipse for material family envelopes — idiomatic plotnine
+    approach
+  - Realistic materials science data with appropriate property ranges across 6 families
+  - 'Strong visual refinement: subtle grid, no spines, styled legend, light panel
+    background'
+  - E/ρ guide lines add genuine engineering storytelling value
+  weaknesses:
+  - Label crowding in the upper-right where Ceramics, Metals, and Composites regions
+    overlap
+  - Some empty space in the lower-right portion of the canvas
+  image_description: 'The plot displays an Ashby material selection chart as a log-log
+    scatter plot. The title reads "scatter-ashby-material · plotnine · pyplots.ai"
+    in bold black text with a subtitle "Density vs. stiffness with E/ρ performance
+    index lines" in gray. The x-axis shows "Density (kg/m³)" ranging from ~10 to ~10,000,
+    and the y-axis shows "Young''s Modulus (GPa)" ranging from ~0.01 to ~500. Six
+    material families are displayed with distinct colors: Metals (blue), Ceramics
+    (orange-red), Polymers (green), Composites (yellow), Elastomers (purple), and
+    Foams (brown/olive). Each family has scatter points enclosed in semi-transparent
+    elliptical envelopes with thin gray borders. Bold family name labels are positioned
+    at each group''s centroid. Three dashed diagonal guide lines labeled E/ρ = 0.001,
+    E/ρ = 0.1, and E/ρ = 10 cross the plot in light gray. A styled legend box on the
+    right lists all six material families. The background is a very light gray (#F8F9FA)
+    with subtle major grid lines and no minor grid lines or spines.'
+  criteria_checklist:
+    visual_quality:
+      score: 26
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 24pt, subtitle 16pt, axis titles
+          20pt, tick text 16pt, legend title 18pt, legend text 16pt'
+      - id: VQ-02
+        name: No Overlap
+        score: 4
+        max: 6
+        passed: true
+        comment: Ceramics/Metals/Composites labels crowded in upper-right, ellipses
+          overlap significantly but labels remain readable
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Points at size 4.5 with alpha 0.8 well-visible for ~131 data points,
+          slight overlap in Ceramics/Metals cluster
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Custom palette with 6 distinct hues, good colorblind separation,
+          no red-green only distinction
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good 16:9 layout, legend well-placed, some empty space in lower-right
+          inherent to data distribution
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive with units: Density (kg/m³) and Young''s Modulus (GPa)'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom palette, intentional typography hierarchy, styled legend,
+          light panel background. Clearly above defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: theme_minimal, minor grid removed, subtle major grid, light panel
+          background, styled legend background, generous margins
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: E/ρ performance index guide lines add engineering storytelling, subtitle
+          explains purpose, labeled family envelopes create visual hierarchy
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct log-log scatter plot comparing material properties
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features: log scales, family envelopes, labels, axis labels
+          with units, distinct colors, guide lines'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=density, Y=modulus, both axes show full data range on log scales
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct, legend Material Family with all six families
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 6 material families spanning wide property ranges, demonstrates full
+          Ashby chart spectrum
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Classic density vs Young's modulus Ashby chart, standard tool in
+          materials science education
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All property ranges realistic: foams 25-300 kg/m³, metals 2700-8900
+          kg/m³, ceramics 150-450 GPa'
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean imports → data → plot → save, no functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set at start
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All plotnine imports are used in the plot construction
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-organized, log-space generation appropriate for Ashby
+          charts
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with dpi=300, current plotnine API
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert grammar of graphics usage: ggplot + aes + layered geoms +
+          scales + guides + theme'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: stat_ellipse with geom=polygon for family envelopes is a distinctive
+          plotnine/ggplot2 feature
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  - custom-legend
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling
