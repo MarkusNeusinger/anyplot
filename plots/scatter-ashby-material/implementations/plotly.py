@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 scatter-ashby-material: Ashby Material Selection Chart
 Library: plotly 6.6.0 | Python 3.14.3
 Quality: 85/100 | Created: 2026-03-11
@@ -12,24 +12,32 @@ from scipy.spatial import ConvexHull
 # Data - Density (kg/m^3) vs Young's Modulus (GPa) for material families
 np.random.seed(42)
 
+# Colorblind-safe palette: blue, red, purple, green, orange, olive, brown
 families = {
-    "Metals": {"density": (4500, 11000), "modulus": (40, 250), "n": 30, "color": "#306998"},
-    "Ceramics": {"density": (2200, 4200), "modulus": (150, 500), "n": 25, "color": "#D4513D"},
-    "Polymers": {"density": (900, 1500), "modulus": (0.2, 4), "n": 25, "color": "#2CA02C"},
-    "Composites": {"density": (1400, 2200), "modulus": (10, 200), "n": 22, "color": "#1B9E77"},
-    "Elastomers": {"density": (900, 1300), "modulus": (0.001, 0.1), "n": 20, "color": "#E6932E"},
-    "Foams": {"density": (20, 300), "modulus": (0.001, 1), "n": 20, "color": "#17BECF"},
-    "Natural Materials": {"density": (150, 1300), "modulus": (0.5, 20), "n": 18, "color": "#8C564B"},
+    "Metals": {"density": (5000, 11000), "modulus": (50, 220), "n": 30, "color": "#306998", "corr": 0.4},
+    "Ceramics": {"density": (2200, 4000), "modulus": (180, 500), "n": 25, "color": "#D4513D", "corr": 0.3},
+    "Polymers": {"density": (900, 1500), "modulus": (0.2, 4), "n": 25, "color": "#9467BD", "corr": 0.5},
+    "Composites": {"density": (1400, 2200), "modulus": (10, 180), "n": 22, "color": "#2CA02C", "corr": 0.6},
+    "Elastomers": {"density": (900, 1300), "modulus": (0.001, 0.1), "n": 20, "color": "#FF7F0E", "corr": 0.3},
+    "Foams": {"density": (20, 300), "modulus": (0.001, 1), "n": 20, "color": "#BCBD22", "corr": 0.7},
+    "Natural Materials": {"density": (150, 1300), "modulus": (0.5, 20), "n": 18, "color": "#8C564B", "corr": 0.5},
 }
 
-# Generate realistic log-uniform data for each family
+# Generate log-uniform data with realistic intra-family correlations
 data = {}
 for family, props in families.items():
     log_d_min, log_d_max = np.log10(props["density"][0]), np.log10(props["density"][1])
     log_m_min, log_m_max = np.log10(props["modulus"][0]), np.log10(props["modulus"][1])
     n = props["n"]
-    log_density = np.random.uniform(log_d_min, log_d_max, n)
-    log_modulus = np.random.uniform(log_m_min, log_m_max, n)
+    r = props["corr"]
+    # Correlated bivariate normal in log-space, then clip to range
+    mean = [0.5 * (log_d_min + log_d_max), 0.5 * (log_m_min + log_m_max)]
+    std_d = (log_d_max - log_d_min) / 4
+    std_m = (log_m_max - log_m_min) / 4
+    cov = [[std_d**2, r * std_d * std_m], [r * std_d * std_m, std_m**2]]
+    pts = np.random.multivariate_normal(mean, cov, n)
+    log_density = np.clip(pts[:, 0], log_d_min, log_d_max)
+    log_modulus = np.clip(pts[:, 1], log_m_min, log_m_max)
     data[family] = {"density": 10**log_density, "modulus": 10**log_modulus}
 
 # Plot
@@ -62,15 +70,24 @@ for family, props in families.items():
             )
         )
 
-    # Scatter points
+    # Scatter points with E/rho performance index in hover
+    e_over_rho = m / (d / 1000)  # GPa per (Mg/m³)
     fig.add_trace(
         go.Scatter(
             x=d,
             y=m,
             mode="markers",
             name=family,
-            marker={"size": 13, "color": color, "line": {"width": 1, "color": "white"}, "opacity": 0.85},
-            hovertemplate=f"<b>{family}</b><br>Density: %{{x:.0f}} kg/m³<br>Modulus: %{{y:.3g}} GPa<extra></extra>",
+            legendgroup=family,
+            marker={"size": 14, "color": color, "line": {"width": 1.5, "color": "white"}, "opacity": 0.85},
+            customdata=np.column_stack([e_over_rho]),
+            hovertemplate=(
+                f"<b>{family}</b><br>"
+                "Density: %{x:.0f} kg/m³<br>"
+                "Modulus: %{y:.3g} GPa<br>"
+                "E/ρ: %{customdata[0]:.3g} GPa·m³/Mg"
+                "<extra></extra>"
+            ),
         )
     )
 
@@ -101,7 +118,7 @@ for gv in guide_values:
                 x=density_range[mask],
                 y=modulus_line[mask],
                 mode="lines",
-                line={"color": "rgba(0, 0, 0, 0.12)", "width": 1, "dash": "dot"},
+                line={"color": "rgba(0, 0, 0, 0.18)", "width": 1.2, "dash": "dot"},
                 showlegend=False,
                 hoverinfo="skip",
             )
@@ -109,13 +126,15 @@ for gv in guide_values:
 
 # Guide line label
 fig.add_annotation(
-    x=np.log10(18000),
-    y=np.log10(18000 * 0.01),
+    x=np.log10(40),
+    y=np.log10(40 * 1),
     xref="x",
     yref="y",
-    text="E/ρ = const",
+    text="<b>E/ρ = const</b>",
     showarrow=False,
-    font={"size": 14, "color": "rgba(0, 0, 0, 0.55)"},
+    font={"size": 15, "color": "#444444"},
+    bgcolor="rgba(255, 255, 255, 0.85)",
+    borderpad=3,
     textangle=-38,
 )
 
