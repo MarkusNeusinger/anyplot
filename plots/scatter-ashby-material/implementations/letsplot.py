@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 scatter-ashby-material: Ashby Material Selection Chart
 Library: letsplot 4.8.2 | Python 3.14.3
 Quality: 85/100 | Created: 2026-03-11
@@ -16,6 +16,7 @@ from lets_plot import (
     geom_abline,
     geom_point,
     geom_polygon,
+    geom_segment,
     geom_text,
     ggplot,
     ggsave,
@@ -126,6 +127,9 @@ df = pd.DataFrame(rows)
 envelope_rows = []
 n_pts = 80
 theta = np.linspace(0, 2 * np.pi, n_pts, endpoint=False)
+# Per-family envelope scale: tighter for Foams to avoid extending into empty space
+envelope_scales = {"Foams": 1.8, "Elastomers": 2.2}
+default_scale = 2.4
 for family in df["family"].unique():
     sub = df[df["family"] == family]
     log_x = np.log10(sub["density"].values)
@@ -134,22 +138,22 @@ for family in df["family"].unique():
     dx, dy = log_x - cx, log_y - cy
     cov = np.array([[np.mean(dx * dx), np.mean(dx * dy)], [np.mean(dx * dy), np.mean(dy * dy)]])
     eigvals, eigvecs = np.linalg.eigh(cov)
-    scale = 2.6
+    scale = envelope_scales.get(family, default_scale)
     for t in theta:
         pt = eigvecs @ (np.sqrt(np.maximum(eigvals, 0.01)) * scale * np.array([np.cos(t), np.sin(t)]))
         envelope_rows.append({"family": family, "density": 10 ** (cx + pt[0]), "modulus": 10 ** (cy + pt[1])})
 
 df_envelopes = pd.DataFrame(envelope_rows)
 
-# Compute label positions with manual offsets to avoid crowding
+# Compute label positions with manual offsets to separate crowded center labels
 label_offsets = {
     "Metals": (0.15, 0.2),
-    "Ceramics": (-0.25, 0.25),
-    "Composites": (-0.2, -0.2),
-    "Polymers": (0.0, 0.0),
-    "Elastomers": (0.0, 0.0),
-    "Foams": (0.0, 0.0),
-    "Natural Materials": (0.0, 0.0),
+    "Ceramics": (-0.25, 0.3),
+    "Composites": (0.25, 0.35),
+    "Polymers": (0.3, -0.25),
+    "Elastomers": (0.0, -0.15),
+    "Foams": (-0.15, 0.15),
+    "Natural Materials": (-0.35, -0.15),
 }
 label_rows = []
 for family in df["family"].unique():
@@ -163,25 +167,32 @@ for family in df["family"].unique():
 
 df_labels = pd.DataFrame(label_rows)
 
-# Performance index guide lines: E/rho = const (lightweight stiffness)
-# On log-log: log(E) = log(rho) + log(C), slope=1
-# Three guide lines for E/rho = 0.01, 0.1, 1 GPa/(kg/m^3)
-guide_rows = []
-for c, label in [(0.001, "E/\u03c1 = 0.001"), (0.01, "E/\u03c1 = 0.01"), (0.1, "E/\u03c1 = 0.1")]:
-    guide_rows.append({"intercept": np.log10(c), "label": label})
+# Leader lines connecting labels to envelope centers for displaced labels
+leader_rows = []
+for family in df["family"].unique():
+    sub = df[df["family"] == family]
+    log_cx = np.log10(sub["density"]).mean()
+    log_cy = np.log10(sub["modulus"]).mean()
+    off_x, off_y = label_offsets.get(family, (0, 0))
+    if abs(off_x) > 0.2 or abs(off_y) > 0.2:
+        leader_rows.append(
+            {"x": 10**log_cx, "y": 10**log_cy, "xend": 10 ** (log_cx + off_x), "yend": 10 ** (log_cy + off_y)}
+        )
 
-# Palette: colorblind-safe with better distinction between Metals and Composites
-# Metals=dark blue, Polymers=orange, Ceramics=teal, Composites=magenta/pink,
-# Elastomers=red, Foams=sky blue, Natural=brown
+df_leaders = pd.DataFrame(leader_rows)
+
+# Palette: colorblind-safe with high distinction
+# Metals=dark blue, Polymers=warm orange, Ceramics=teal, Composites=magenta,
+# Elastomers=crimson, Foams=sky blue, Natural=brown
 palette = ["#1B4F72", "#E5883E", "#2A9D8F", "#C850C0", "#E63946", "#5DADE2", "#795548"]
 
 # Plot
 plot = (
     ggplot()
     # Performance index guide lines (E/rho = constant, slope=1 on log-log)
-    + geom_abline(intercept=np.log10(0.001), slope=1, color="#BDBDBD", size=0.6, linetype="dashed")
-    + geom_abline(intercept=np.log10(0.01), slope=1, color="#BDBDBD", size=0.6, linetype="dashed")
-    + geom_abline(intercept=np.log10(0.1), slope=1, color="#BDBDBD", size=0.6, linetype="dashed")
+    + geom_abline(intercept=np.log10(0.001), slope=1, color="#D0D0D0", size=0.5, linetype="dashed")
+    + geom_abline(intercept=np.log10(0.01), slope=1, color="#D0D0D0", size=0.5, linetype="dashed")
+    + geom_abline(intercept=np.log10(0.1), slope=1, color="#D0D0D0", size=0.5, linetype="dashed")
     # Guide line labels positioned within visible area
     + geom_text(
         data=pd.DataFrame(
@@ -192,50 +203,65 @@ plot = (
             }
         ),
         mapping=aes(x="density", y="modulus", label="label"),
-        size=9,
-        color="#9E9E9E",
+        size=8,
+        color="#AAAAAA",
         angle=38,
         hjust=0,
     )
-    + geom_polygon(data=df_envelopes, mapping=aes(x="density", y="modulus", fill="family"), alpha=0.18)
+    # Elliptical envelopes
+    + geom_polygon(data=df_envelopes, mapping=aes(x="density", y="modulus", fill="family"), alpha=0.22)
+    # Data points with interactive tooltips
     + geom_point(
         data=df,
         mapping=aes(x="density", y="modulus", color="family"),
         size=7,
-        alpha=0.85,
+        alpha=0.88,
+        shape=16,
         tooltips=layer_tooltips()
+        .format("density", ".0f")
+        .format("modulus", ".3g")
         .line("@material")
         .line("Family|@family")
         .line("Density|@{density} kg/m\u00b3")
         .line("Modulus|@{modulus} GPa"),
     )
+    # Leader lines from envelope center to displaced labels
+    + geom_segment(
+        data=df_leaders,
+        mapping=aes(x="x", y="y", xend="xend", yend="yend"),
+        color="#999999",
+        size=0.4,
+        linetype="dotted",
+    )
+    # Family labels
     + geom_text(
         data=df_labels,
         mapping=aes(x="density", y="modulus", label="family"),
-        size=13,
+        size=12,
         color="#1A1A1A",
         fontface="bold",
         label_padding=0.3,
     )
     + scale_x_log10(name="Density (kg/m\u00b3)")
-    + scale_y_log10(name="Young's Modulus (GPa)")
+    + scale_y_log10(name="Young\u2019s Modulus (GPa)")
     + scale_color_manual(values=palette, name="Material Family")
     + scale_fill_manual(values=palette)
     + guides(fill="none")
     + labs(title="scatter-ashby-material \u00b7 letsplot \u00b7 pyplots.ai")
     + theme_minimal()
     + theme(
-        axis_title=element_text(size=20, margin=[10, 10, 10, 10]),
+        axis_title=element_text(size=20, color="#333333", margin=[10, 10, 10, 10]),
         axis_text=element_text(size=16, color="#555555"),
-        plot_title=element_text(size=24, face="bold", margin=[0, 0, 14, 0]),
+        plot_title=element_text(size=24, face="bold", color="#1A1A1A", margin=[0, 0, 14, 0]),
         plot_margin=[30, 40, 20, 20],
-        plot_background=element_rect(fill="#FAFAFA", color="#FAFAFA"),
+        plot_background=element_rect(fill="#F7F7F7", color="#F7F7F7"),
+        panel_background=element_rect(fill="#FFFFFF", color="#E8E8E8", size=0.5),
         legend_title=element_text(size=16, face="bold"),
         legend_text=element_text(size=14),
-        panel_grid_major=element_line(size=0.3, color="#E0E0E0"),
+        panel_grid_major=element_line(size=0.25, color="#ECECEC"),
         panel_grid_minor=element_blank(),
         legend_position="right",
-        legend_background=element_rect(fill="#FAFAFA", color="#FAFAFA"),
+        legend_background=element_rect(fill="#F7F7F7", color="#F7F7F7"),
     )
     + ggsize(1600, 900)
 )
