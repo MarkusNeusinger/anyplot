@@ -1,7 +1,7 @@
 library: letsplot
 specification_id: probability-weibull
 created: '2026-03-11T21:52:45Z'
-updated: '2026-03-11T21:56:37Z'
+updated: '2026-03-11T22:09:16Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 22976097191
 issue: 4668
@@ -10,33 +10,37 @@ library_version: 4.9.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/probability-weibull/letsplot/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/probability-weibull/letsplot/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/probability-weibull/letsplot/plot.html
-quality_score: 81
+quality_score: 90
 review:
   strengths:
-  - Excellent spec compliance with all required features including median rank, Weibull
-    linearization, beta/eta annotations, and 63.2% reference line
-  - Perfect code quality with clean structure, reproducibility, and appropriate complexity
-  - Realistic turbine blade fatigue-life context with plausible parameter values
-  - Good text legibility with all font sizes explicitly set
+  - Excellent spec compliance with all required features including median rank formula,
+    Weibull linearization, and censored/failure distinction
+  - Strong data storytelling with red crosshair emphasis at characteristic life intersection
+    and parameter annotations
+  - Colorblind-safe palette with shape redundancy provides excellent accessibility
+  - Clean, well-structured code with appropriate complexity
   weaknesses:
-  - No legend distinguishing failure points from censored points
-  - Design is competent but not visually distinctive with minimal color palette
-  - Generic ggplot2 patterns without leveraging lets-plot specific features
-  image_description: The plot displays a Weibull probability plot for turbine blade
-    fatigue-life data. The x-axis shows "Time to Failure (hours)" on a logarithmic
-    scale with tick marks at 500, 1000, 2000, 3000, 5000, and 8000. The y-axis shows
-    "Cumulative Failure Probability" on a linearized Weibull scale with probability
-    levels at 1%, 5%, 10%, 20%, 50%, 63.2%, 90%, and 99%. Blue filled circles represent
-    failure data points (25 points), while red hollow circles represent censored/suspended
-    observations (5 points). A blue fitted line passes through the data. A horizontal
-    dashed gray line marks the 63.2% characteristic life level, labeled "63.2% (Characteristic
-    Life)". In the lower right, parameter annotations display beta = 2.21, eta = 5428
-    hrs, R-squared = 0.9590. The title reads "probability-weibull · letsplot · pyplots.ai".
-    The background is white with subtle dashed gray grid lines. Overall layout is
-    clean with good use of canvas space.
+  - Minor text crowding near the characteristic life intersection where the red label
+    competes with dense data points
+  - Could push library mastery further by leveraging more lets-plot unique features
+  image_description: The plot displays a Weibull probability plot on a light background
+    with high-contrast styling. The x-axis shows "Time to Failure (hours)" with log-scaled
+    tick labels at 500, 1,000, 2,000, 3,000, 5,000, and 8,000. The y-axis shows "Cumulative
+    Failure Probability" with Weibull-linearized tick labels at 1%, 5%, 10%, 20%,
+    50%, 63.2%, 90%, and 99%. Blue filled circles represent 25 failure observations,
+    and amber/orange hollow circles represent 5 censored (suspended) observations
+    — with both color and shape redundancy for accessibility. A dark navy fitted regression
+    line passes through the data from lower-left to upper-right. A dashed gray horizontal
+    reference line marks the 63.2% characteristic life level, and a dotted gray vertical
+    reference line marks η ≈ 5428 hours. Red crosshair segments and a red diamond
+    marker emphasize the intersection point. A red bold label reads "η = 5428 hrs
+    / 63.2% Characteristic Life" near the intersection. In the lower-right area, bold
+    annotation text displays "β = 2.21, η = 5428 hrs, R² = 0.9590". The title reads
+    "probability-weibull · letsplot · pyplots.ai". A legend in the upper-left identifies
+    "Failure" (blue filled) and "Censored" (amber hollow) under the heading "Observation".
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -44,65 +48,68 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title=24, axis_title=20, axis_text=16'
+        comment: 'All font sizes explicitly set: title=24, axis_title=20, axis_text=16,
+          legend_title=16, legend_text=14'
       - id: VQ-02
         name: No Overlap
-        score: 6
-        max: 6
-        passed: true
-        comment: No overlapping text elements
-      - id: VQ-03
-        name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Markers visible at size=5; slightly larger would be optimal for 30
-          points
+        comment: Minor crowding where red characteristic life label overlaps with
+          dense data points near intersection
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Points well-sized with clear filled vs hollow distinction for failures
+          and censored
       - id: VQ-04
         name: Color Accessibility
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Blue vs red distinguishable with shape distinction; could use more
-          colorblind-safe alternative
+        comment: Colorblind-safe blue/amber pair with shape redundancy
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills canvas well with balanced margins
+        comment: Good proportions at 1600x900 scale=3, balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Time to Failure (hours) includes units; Cumulative Failure Probability
-          is descriptive
+        comment: 'Descriptive labels with units: Time to Failure (hours), Cumulative
+          Failure Probability'
     design_excellence:
-      score: 10
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: Well-configured default with Python Blue; not exceptional
+        passed: true
+        comment: Custom colorblind-safe palette, flavor_high_contrast_light theme,
+          red accent for emphasis, intentional hierarchy
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: theme_minimal removes spines, dashed grid subtle, but not fully polished
+        passed: true
+        comment: Dashed subtle grid, minor grid removed, clean theme treatment, generous
+          whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: 63.2% reference line and parameter annotations add context but no
-          strong focal point
+        passed: true
+        comment: Red crosshair and diamond at characteristic life creates clear focal
+          point, parameter annotations provide engineering insight
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -117,41 +124,45 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: All spec features present
+        comment: 'All features: log x-axis, Weibull y-axis, fitted line, median rank,
+          censored distinction, 63.2% reference'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X maps time-to-failure, Y maps cumulative probability correctly
+        comment: X=time (log-transformed), Y=Weibull-linearized cumulative probability
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Title format correct but no legend for failure vs censored markers
+        passed: true
+        comment: Correct title format and legend with Failure/Censored labels
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows failures and censored data across good range
+        comment: Shows failures, censored observations, fitted line, parameter estimation,
+          characteristic life
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Turbine blade fatigue-life is classic reliability engineering scenario
+        comment: Turbine blade fatigue-life data in hours - real reliability engineering
+          scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 1000-8000 hours with beta=2.2, eta=5400 realistic for turbine blades
+        comment: 500-8000 hour range with shape=2.5, scale=5000 realistic for turbine
+          blades
     code_quality:
       score: 10
       max: 10
@@ -161,33 +172,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean Imports-Data-Plot-Save structure
+        comment: 'Linear flow: imports, data, Weibull linearization, fit, plot, save'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: 'All imports used: numpy, pandas, lets_plot, scipy.stats'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-structured, appropriate complexity
+        comment: Appropriate complexity, clean data preparation, well-organized layers
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with scale=3
+        comment: Saves as plot.png via export_ggsave with scale=3
     library_mastery:
-      score: 5
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -195,14 +206,16 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good ggplot grammar usage with layered geoms and custom scales
+        comment: 'Good ggplot grammar: aes mappings, layered geoms, scale_color_manual,
+          scale_shape_manual, theme customization'
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 3
         max: 5
-        passed: false
-        comment: Generic ggplot2 usage replicable in plotnine
-  verdict: REJECTED
+        passed: true
+        comment: Uses flavor_high_contrast_light(), HTML export, coordinate-based
+          legend positioning
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - scipy
@@ -210,10 +223,11 @@ impl_tags:
   - annotations
   - manual-ticks
   - layer-composition
+  - custom-legend
   patterns:
   - data-generation
   dataprep:
   - regression
   styling:
-  - grid-styling
   - alpha-blending
+  - grid-styling
