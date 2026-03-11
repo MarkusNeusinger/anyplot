@@ -1,7 +1,7 @@
 library: bokeh
 specification_id: probability-weibull
 created: '2026-03-11T21:54:22Z'
-updated: '2026-03-11T21:58:26Z'
+updated: '2026-03-11T22:18:54Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 22976096528
 issue: 4668
@@ -10,38 +10,35 @@ library_version: 3.9.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/probability-weibull/bokeh/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/probability-weibull/bokeh/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/probability-weibull/bokeh/plot.html
-quality_score: 87
+quality_score: 91
 review:
   strengths:
-  - Perfect spec compliance with all required Weibull probability plot features implemented
-    correctly
-  - Excellent data quality with realistic turbine blade fatigue scenario
-  - Clean well-structured code with proper statistical methodology (median rank, linearized
-    Weibull space, linregress)
-  - Good use of Bokeh-specific features (HoverTool with separate tooltips for failures/censored,
-    HTML export)
-  - Custom y-axis and x-axis tick overrides to show probability percentages and actual
-    hour values
+  - Excellent spec compliance with all required features including median rank, censored
+    data distinction, and 63.2% reference line
+  - Strong Bokeh idiom usage with ColumnDataSource, HoverTool, Band glyph, and HTML
+    export
+  - Professional visual design with cohesive color palette and good annotation placement
+  - Realistic turbine blade fatigue data with appropriate Weibull parameters
+  - Confidence band around the fitted line adds statistical rigor
   weaknesses:
-  - Design not yet publication-grade — grid could be subtler or removed, background
-    could be white for cleaner look
-  - Bokeh toolbar icons visible in exported PNG detract from presentation
-  - Censored points use hardcoded approximate plotting positions rather than computed
-    positions
-  - Could leverage more advanced Bokeh patterns for higher library mastery
-  image_description: 'The plot displays a Weibull probability plot for turbine blade
-    fatigue life data. The x-axis shows "Time to Failure (hours)" with logarithmic
-    tick values at 1000, 2000, 3000, 5000, 7000, and 10000. The y-axis shows "Cumulative
-    Failure Probability" with Weibull-linearized probability levels at 1.0%, 5.0%,
-    10.0%, 20.0%, 50.0%, 63.2%, 90.0%, and 99.0%. Filled dark blue circles represent
-    25 failure data points, while hollow blue circles represent 5 censored (suspended)
-    observations. A dark blue fitted line passes through the data from lower-left
-    to upper-right. A dashed orange horizontal reference line marks the 63.2% characteristic
-    life level, labeled in orange italic text. The upper-left corner displays parameter
-    annotations: β = 2.21 (shape), η = 5428 h (scale), R² = 0.9590 in bold dark blue
-    text. A legend in the bottom-right shows "Weibull Fit", "Failures", and "Censored".
-    The background is a light blue-gray, with subtle dashed grid lines. The title
-    reads "Turbine Blade Fatigue Life · probability-weibull · bokeh · pyplots.ai".'
+  - Minor clustering of data points in upper probability range reduces individual
+    point readability
+  - DE-02 could be higher with further spine refinement
+  image_description: The plot displays a Weibull probability plot for turbine blade
+    fatigue life data. The x-axis shows "Time to Failure (hours)" on a logarithmic
+    scale with tick marks at 1000, 2000, 3000, 5000, 7000, and 10000 hours. The y-axis
+    shows "Cumulative Failure Probability" with Weibull-linearized tick marks at 1.0%,
+    5.0%, 10.0%, 20.0%, 50.0%, 63.2%, 90.0%, and 99.0%. Twenty-five dark blue filled
+    circles represent failure observations, and five hollow blue circles represent
+    censored (suspended) observations. A dark blue fitted line runs through the data
+    with a light blue/gray confidence band. An orange dashed horizontal reference
+    line marks the 63.2% characteristic life level, labeled "63.2% (Characteristic
+    Life)" on the right. Parameter annotations in the upper left show β = 2.21 (shape),
+    η = 5428 h (scale), R² = 0.9590 in bold dark blue text. A B10 = 1957 h annotation
+    with a diamond marker indicates the 10% failure probability life. The legend in
+    the bottom right identifies "Weibull Fit", "Failures", and "Censored". The background
+    is clean white with no x-grid and subtle y-gridlines. The title reads "Turbine
+    Blade Fatigue Life · probability-weibull · bokeh · pyplots.ai".
   criteria_checklist:
     visual_quality:
       score: 28
@@ -49,68 +46,67 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 40pt, axis labels 28pt, tick
-          labels 22pt, legend 26pt, annotations 34pt and 24pt'
+        comment: All font sizes explicitly set (title 40pt, axis labels 28pt, ticks
+          22pt, legend 26pt). B10 label slightly small.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements, all well-separated
+        comment: No overlapping text elements
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Markers size 30 clearly visible for ~30 points, slight clustering
-          in upper-right
+        comment: Markers size=30 appropriate for 30 data points, some clustering in
+          upper range
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Blue/dark blue/orange palette, colorblind-safe with good contrast
+        comment: Colorblind-safe blue with orange accent, shape-based censored distinction
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good layout, but Bokeh toolbar icons visible at top-right edge
+        comment: Good canvas utilization with balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: Time to Failure (hours), Cumulative
-          Failure Probability'
+        comment: Descriptive labels with units
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Custom palette, styled background, refined legend. Above defaults
-          but not publication-grade
+        comment: Strong design with cohesive blue palette and orange accent, professional
+          typography
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Subtle dashed grid at alpha 0.3, outline removed, minor ticks removed,
-          axis lines thinned
+        comment: 'Good refinement: no x-grid, subtle y-grid, outline removed, light
+          axis lines'
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Parameter annotations give insight, 63.2% reference adds context,
-          fit line guides the eye
+        comment: Good hierarchy with parameter annotation, B10 life, and 63.2% reference
+          line
     spec_compliance:
       score: 15
       max: 15
@@ -120,51 +116,49 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Weibull probability plot with log x-axis and linearized Weibull
-          CDF y-axis
+        comment: Correct Weibull probability plot with log x and linearized Weibull
+          y
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: log x, linearized y, fit line, params, median
-          rank, censored distinction, 63.2% line'
+        comment: All spec features present including median rank, censored distinction,
+          63.2% line
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Correct mapping with proper axis label overrides showing original
-          units
+        comment: Correct X=log(time), Y=Weibull-linearized CDF
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format and legend labels match data
+        comment: Correct title format and accurate legend labels
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows failures and censored observations, good spread across probability
-          range
+        comment: Shows failures and censored data with good spread across time range
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Turbine blade fatigue-life data, real neutral engineering scenario
+        comment: Turbine blade fatigue life is a classic reliability engineering scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Realistic values: beta=2.21, eta=5428h, range 500-8000h'
+        comment: Realistic failure times and shape parameter for turbine components
     code_quality:
       score: 10
       max: 10
@@ -174,7 +168,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean linear flow, no functions or classes
+        comment: Linear flow with no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -192,39 +186,38 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized, appropriate complexity
+        comment: Clean and appropriately complex, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png via export_png, also HTML export
+        comment: Saves plot.png and plot.html with current API
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert Bokeh patterns: ColumnDataSource, HoverTool, Band, Span,
+          Label, ticker overrides'
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Good use of ColumnDataSource, HoverTool, Label, Span. Proper Bokeh
-          patterns
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: HoverTool with renderer-specific tooltips, HTML export, Span for
-          reference lines
-  verdict: REJECTED
+        comment: HoverTool with per-renderer tooltips, Band glyph, HTML export
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - scipy
   techniques:
   - annotations
-  - hover-tooltips
   - manual-ticks
+  - hover-tooltips
   - html-export
   - custom-legend
   patterns:
@@ -233,6 +226,6 @@ impl_tags:
   dataprep:
   - regression
   styling:
-  - grid-styling
   - alpha-blending
   - edge-highlighting
+  - grid-styling
