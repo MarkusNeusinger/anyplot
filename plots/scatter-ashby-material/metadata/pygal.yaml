@@ -1,7 +1,7 @@
 library: pygal
 specification_id: scatter-ashby-material
 created: '2026-03-11T14:58:15Z'
-updated: '2026-03-11T15:02:00Z'
+updated: '2026-03-11T15:13:01Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 22958872731
 issue: 4677
@@ -10,82 +10,89 @@ library_version: 3.1.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/scatter-ashby-material/pygal/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/scatter-ashby-material/pygal/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/scatter-ashby-material/pygal/plot.html
-quality_score: 78
+quality_score: 81
 review:
   strengths:
-  - Excellent real-world data with 7 material families and realistic property values
-  - Clean well-structured code with proper seed and KISS pattern
-  - Good use of pygal-specific features (tooltip configuration, dict-based data points
-    with labels)
-  - All font sizes explicitly set for the 4800x2700 canvas
-  - Custom color palette with reasonable accessibility
+  - Excellent data quality with 7 real material families and accurate engineering
+    property values spanning 5 orders of magnitude
+  - Large semi-transparent dots effectively create the Ashby-style bubble region appearance
+  - SVG post-processing to add family centroid labels is a creative solution to pygal
+    lack of annotation API
+  - Custom color palette with white-stroke text labels ensures readability over data
+    points
+  - Rich tooltip configuration with per-material detail (name, family, properties)
   weaknesses:
-  - Missing bubble regions / convex-hull envelopes - the defining visual feature of
-    an Ashby chart
-  - Missing text labels on family clusters (only legend at bottom)
-  - Polymers and Foams colors are too similar (both green-toned)
-  - Design could be more refined with better grid styling and visual hierarchy
-  image_description: 'The plot is a log-log scatter chart rendered at 4800x2700 px
-    with a white background and light gray (#fafafa) plot area. The title reads "Density
-    vs Young''s Modulus · scatter-ashby-material · pygal · pyplots.ai" in a large
-    font at the top. The x-axis is labeled "Density (kg/m³)" and the y-axis "Young''s
-    Modulus (GPa)", both on logarithmic scales. Seven material families are shown
-    as individual colored dots: Metals (steel blue), Ceramics (red), Polymers (teal/green),
-    Composites (amber/orange), Elastomers (purple), Foams (green), and Natural Materials
-    (brown). The legend is placed at the bottom with all 7 families in a single row.
-    Data spans from ~25 kg/m³ / 0.001 GPa (foams/elastomers at bottom-left) to ~19,000
-    kg/m³ / 680 GPa (ceramics/metals at top-right). Points are scattered without bubble
-    regions or convex hull envelopes — each material is just a single dot. There are
-    no text labels on the family clusters.'
+  - Family centroid labels (font-size=20 in SVG) are relatively small — increasing
+    to 24-26 would improve visibility
+  - Composites label positioning between composites and ceramics regions could confuse
+    viewers — needs offset adjustment
+  - Red (Ceramics) and burnt orange (Natural Materials) colors are somewhat close
+    in hue
+  - Grid lines could be more subtle for a cleaner look
+  - No guide lines for constant performance indices which would add engineering context
+  image_description: The plot displays a log-log scatter chart of Density (kg/m³)
+    on the x-axis versus Young's Modulus (GPa) on the y-axis, covering 7 material
+    families. Each family is represented by large semi-transparent dots (opacity ~0.35)
+    creating a bubble-region effect. Ceramics (red) occupy the upper region with high
+    modulus values (65–680 GPa), Metals (steel blue) cluster at high density and high
+    modulus in the upper-right, Composites (amber) span the mid-upper range, Natural
+    Materials (burnt orange) sit in the middle, Polymers (emerald green) form a tight
+    cluster at moderate density and low modulus (~0.5–3.6 GPa), Elastomers (purple)
+    appear at the bottom with very low modulus values (0.001–0.025 GPa), and Foams
+    (silver gray) are in the lower-left corner at low density and low modulus. Each
+    family has a text label near its centroid with a white stroke outline for readability.
+    The background is white with a light gray (#f8f9fa) plot area and subtle grid
+    lines. A legend at the bottom shows all 7 families in a single row. The title
+    reads "Density vs Young's Modulus · scatter-ashby-material · pygal · pyplots.ai".
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 24
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title=36, label=22, major_label=20,
-          legend=20, value=14, tooltip=18'
+        comment: Font sizes explicitly set (title=38, labels=22, major_labels=20,
+          legend=20). Family centroid labels at SVG font-size=20 are slightly small
+          but readable.
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 4
         max: 6
-        passed: true
-        comment: Minor crowding in upper-right metals/ceramics cluster; x-axis ticks
-          at 900-1000 close together
+        passed: false
+        comment: Some family labels positioned close to neighboring family dots. Composites
+          label ambiguously positioned between composites and ceramics.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: dots_size=16 with opacity=0.72 reasonable for ~68 points; some overlap
-          in dense regions
+        comment: Large dots (dots_size=26) with opacity=0.35 create nice bubble-region
+          effect for ~68 data points.
       - id: VQ-04
         name: Color Accessibility
         score: 3
         max: 4
-        passed: true
-        comment: Mostly distinct but Polymers (#2ECC71) and Foams (#1ABC9C) are both
-          green-toned
+        passed: false
+        comment: Good palette overall but red (Ceramics) and burnt orange (Natural
+          Materials) could be confused.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good canvas utilization with legend at bottom; slight wasted space
-          in lower-left
+        comment: Chart fills canvas well. Legend at bottom with 7 columns. Some wasted
+          margin space.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Both axes descriptive with units: Density (kg/m³), Young''s Modulus
-          (GPa)'
+        comment: Density (kg/m³) and Young's Modulus (GPa) with proper units.
     design_excellence:
-      score: 10
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -93,78 +100,76 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom palette, font family, light gray background, tuned opacity.
-          Above defaults but not publication-ready
+        comment: Custom 7-color palette, refined plot background, consistent font
+          family, styled tooltips. Above defaults but not publication-level.
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
-        passed: true
-        comment: Plot background differentiated, subtle grid, custom margins. Grid
-          still prominent, no chrome removal
+        passed: false
+        comment: Subtle grid, custom background, white-stroke labels. Still recognizably
+          a standard pygal chart.
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Data grouped by color but no visual hierarchy, focal point, or emphasis.
-          Viewer must find own story
+        passed: true
+        comment: Ashby chart naturally creates visual hierarchy with material families
+          clustering in distinct property regions. Family labels guide the viewer.
     spec_compliance:
-      score: 11
+      score: 14
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 3
+        score: 5
         max: 5
-        passed: false
-        comment: Correct base type (log-log scatter) but missing bubble regions/convex-hull
-          envelopes that define an Ashby chart
+        passed: true
+        comment: Correct log-log scatter plot for material property comparison.
       - id: SC-02
         name: Required Features
-        score: 2
+        score: 3
         max: 4
-        passed: false
-        comment: Has log axes, colors, legend. Missing bubble regions and text labels
-          on family clusters
+        passed: true
+        comment: Log scales, colored bubble regions, family labels, axis labels with
+          units, distinct colors. No optional guide lines.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=density, Y=modulus correctly mapped. Axes span full data range
+        comment: X=density, Y=modulus, all 68 data points visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend labels match 7 material families
+        comment: Title follows correct format. Legend labels match family names.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 7 families with 8-14 materials each spanning 5 orders of magnitude
-          in both properties
+        comment: 7 material families spanning 5 orders of magnitude in both dimensions.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real engineering materials with accurate property values
+        comment: Real engineering materials with accurate property values. Classic
+          Ashby chart.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values accurate for domain (steel 7850 kg/m³/200 GPa, PE 960/1.1,
-          foam 30/0.025)
+        comment: All values realistic for the materials represented.
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -172,32 +177,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports, data, style, chart config, add series,
-          save'
+        comment: Imports, data, chart, SVG manipulation, save. No functions/classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set before jitter generation
+        comment: np.random.seed(42) set for jitter.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: numpy, pygal, Style all used
+        comment: 'All imports used: re, cairosvg, numpy, pygal, Style.'
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Clean dict-based data, loop for series, appropriate jitter. No over-engineering
+        passed: false
+        comment: SVG regex manipulation for centroid labels is fragile but necessary.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html. Current pygal API
+        comment: Saves plot.png via cairosvg and plot.html. Current API.
     library_mastery:
       score: 7
       max: 10
@@ -207,20 +211,21 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good pygal.XY usage with Style, logarithmic, value_formatter, tooltip_fancy_mode,
-          dict-based data
+        comment: Good use of pygal.XY with logarithmic mode, Style customization,
+          dict data points with labels, formatter lambdas.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: 'Uses pygal-specific: tooltip_fancy_mode, tooltip_border_radius,
-          dict data with labels, legend_at_bottom_columns'
+        comment: Leverages tooltip_fancy_mode, tooltip_border_radius, legend_at_bottom_columns,
+          dict data format, SVG-native output.
   verdict: REJECTED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - cairosvg
   techniques:
-  - hover-tooltips
+  - annotations
   - html-export
   patterns:
   - data-generation

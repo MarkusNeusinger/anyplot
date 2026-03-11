@@ -1,6 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 scatter-ashby-material: Ashby Material Selection Chart
 Library: pygal 3.1.0 | Python 3.14.3
+Quality: 81/100 | Created: 2026-03-11
 """
 
 import re
