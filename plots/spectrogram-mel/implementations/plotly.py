@@ -1,7 +1,7 @@
-""" pyplots.ai
+"""pyplots.ai
 spectrogram-mel: Mel-Spectrogram for Audio Analysis
 Library: plotly 6.6.0 | Python 3.14.3
-Quality: 88/100 | Created: 2026-03-11
+Created: 2026-03-11
 """
 
 import numpy as np
@@ -100,19 +100,71 @@ fig = go.Figure(
 # Style
 fig.update_layout(
     title={"text": "spectrogram-mel · plotly · pyplots.ai", "font": {"size": 28}, "x": 0.5, "xanchor": "center"},
-    xaxis={"title": {"text": "Time (s)", "font": {"size": 22}}, "tickfont": {"size": 18}},
+    xaxis={"title": {"text": "Time (s)", "font": {"size": 22}}, "tickfont": {"size": 18}, "showgrid": False},
     yaxis={
         "title": {"text": "Frequency (Hz)", "font": {"size": 22}},
         "tickfont": {"size": 16},
         "type": "log",
         "tickvals": [50, 100, 200, 500, 1000, 2000, 4000, 8000],
         "ticktext": ["50", "100", "200", "500", "1k", "2k", "4k", "8k"],
+        "showgrid": False,
+        "range": [np.log10(mel_freqs[1]), np.log10(mel_freqs[-1])],
     },
     template="plotly_white",
     plot_bgcolor="rgba(0,0,0,0)",
     width=1600,
     height=900,
     margin={"l": 80, "r": 30, "t": 70, "b": 60},
+)
+
+# Reference lines at key frequency bands for visual refinement
+for freq, _label in [(440, "A4"), (1000, "1 kHz"), (4000, "4 kHz")]:
+    fig.add_shape(
+        type="line",
+        x0=time_axis[0],
+        x1=time_axis[-1],
+        y0=freq,
+        y1=freq,
+        line={"color": "rgba(255,255,255,0.25)", "width": 1, "dash": "dot"},
+    )
+
+# Annotations for data storytelling — guide viewer to key spectral features
+annotations = [
+    {"x": 0.5, "y": np.log10(440), "text": "Harmonics (A4)", "ax": -80, "ay": -45},
+    {"x": 2.2, "y": np.log10(400), "text": "Chirp sweep", "ax": 70, "ay": 40},
+    {"x": 0.6, "y": np.log10(3000), "text": "Decaying tone", "ax": 70, "ay": -30},
+    {"x": 0.3, "y": np.log10(100), "text": "Noise floor", "ax": -65, "ay": -30},
+]
+for ann in annotations:
+    fig.add_annotation(
+        x=ann["x"],
+        y=ann["y"],
+        yref="y",
+        text=ann["text"],
+        showarrow=True,
+        arrowhead=2,
+        arrowsize=1.2,
+        arrowwidth=2,
+        arrowcolor="#FFFFFF",
+        ax=ann["ax"],
+        ay=ann["ay"],
+        font={"size": 14, "color": "#FFFFFF", "family": "Arial"},
+        bordercolor="#FFFFFF",
+        borderwidth=1,
+        borderpad=4,
+        bgcolor="#1a1a1a",
+        opacity=0.9,
+    )
+
+# Custom hover label styling for Plotly-specific polish
+fig.update_layout(
+    hoverlabel={
+        "bgcolor": "rgba(30,30,30,0.9)",
+        "font_size": 14,
+        "font_family": "monospace",
+        "font_color": "white",
+        "bordercolor": "rgba(255,255,255,0.3)",
+    }
 )
 
 # Save
