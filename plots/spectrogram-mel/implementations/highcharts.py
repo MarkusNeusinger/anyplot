@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 spectrogram-mel: Mel-Spectrogram for Audio Analysis
 Library: highcharts unknown | Python 3.14.3
 Quality: 88/100 | Created: 2026-03-11
@@ -94,11 +94,22 @@ ref_db = mel_spec_db.max()
 mel_spec_db = mel_spec_db - ref_db
 mel_spec_db = np.clip(mel_spec_db, -80, 0)
 
+# Trim upper mel bins that are mostly empty (above ~5000 Hz)
+# Find the mel bin closest to 5000 Hz
+max_display_hz = 5000
+max_mel_bin = n_mels
+for i in range(n_mels):
+    if hz_points[i + 1] > max_display_hz:
+        max_mel_bin = i
+        break
+# Keep a few bins above to show transient tails
+max_mel_bin = min(max_mel_bin + 8, n_mels)
+
 # Prepare heatmap data for Highcharts: [time_idx, mel_idx, dB_value]
-time_step = max(1, len(times) // 200)
-mel_step = max(1, n_mels // 128)
+time_step = max(1, len(times) // 300)
+mel_step = 1
 time_indices = list(range(0, len(times), time_step))
-mel_indices = list(range(0, n_mels, mel_step))
+mel_indices = list(range(0, max_mel_bin, mel_step))
 
 heatmap_data = []
 for mi, mel_idx in enumerate(mel_indices):
@@ -110,7 +121,7 @@ time_labels = [f"{times[i]:.2f}" for i in time_indices]
 freq_labels = [f"{int(hz_points[i + 1])}" for i in mel_indices]
 
 time_tick_interval = max(1, len(time_labels) // 10)
-freq_tick_interval = max(1, len(freq_labels) // 12)
+freq_tick_interval = max(1, len(freq_labels) // 14)
 
 # Build chart using highcharts-core API
 chart = Chart(container="container")
@@ -143,6 +154,17 @@ chart.options.subtitle = {
     "y": 100,
 }
 
+# Section boundary positions (in category indices)
+section_boundaries = [len(time_labels) * 0.25 - 0.5, len(time_labels) * 0.5 - 0.5, len(time_labels) * 0.75 - 0.5]
+
+# Section label positions (centered in each section)
+section_labels = [
+    {"text": "G3 phrase", "x": len(time_labels) * 0.125},
+    {"text": "C4 transition", "x": len(time_labels) * 0.375},
+    {"text": "E4 peak", "x": len(time_labels) * 0.625},
+    {"text": "C4 fadeout", "x": len(time_labels) * 0.875},
+]
+
 chart.options.x_axis = {
     "categories": time_labels,
     "title": {"text": "Time (s)", "style": {"fontSize": "34px", "fontWeight": "600", "color": "#b0b0b0"}, "margin": 20},
@@ -150,30 +172,6 @@ chart.options.x_axis = {
     "lineWidth": 0,
     "tickLength": 0,
     "gridLineWidth": 0,
-    "plotBands": [
-        {
-            "from": -0.5,
-            "to": len(time_labels) * 0.25 - 0.5,
-            "color": "rgba(255,255,255,0.02)",
-            "label": {
-                "text": "G3 phrase",
-                "style": {"color": "#888", "fontSize": "22px"},
-                "verticalAlign": "bottom",
-                "y": -20,
-            },
-        },
-        {
-            "from": len(time_labels) * 0.5 - 0.5,
-            "to": len(time_labels) * 0.75 - 0.5,
-            "color": "rgba(255,255,255,0.02)",
-            "label": {
-                "text": "E4 peak",
-                "style": {"color": "#888", "fontSize": "22px"},
-                "verticalAlign": "bottom",
-                "y": -20,
-            },
-        },
-    ],
 }
 
 chart.options.y_axis = {
@@ -244,6 +242,7 @@ chart.add_series(series)
 # Download Highcharts JS and heatmap module
 highcharts_url = "https://cdn.jsdelivr.net/npm/highcharts/highcharts.js"
 heatmap_url = "https://cdn.jsdelivr.net/npm/highcharts/modules/heatmap.js"
+annotations_url = "https://cdn.jsdelivr.net/npm/highcharts/modules/annotations.js"
 
 headers = {"User-Agent": "Mozilla/5.0"}
 
@@ -255,6 +254,46 @@ req = urllib.request.Request(heatmap_url, headers=headers)
 with urllib.request.urlopen(req, timeout=30) as response:
     heatmap_js = response.read().decode("utf-8")
 
+req = urllib.request.Request(annotations_url, headers=headers)
+with urllib.request.urlopen(req, timeout=30) as response:
+    annotations_js = response.read().decode("utf-8")
+
+# Build renderer overlay script for section labels and dividers
+# Uses Highcharts renderer API to draw on top of the heatmap
+overlay_labels = []
+for lbl in section_labels:
+    overlay_labels.append(f'{{text:"{lbl["text"]}",x:{lbl["x"]:.1f}}}')
+overlay_bounds = ",".join(f"{b:.1f}" for b in section_boundaries)
+
+renderer_script = f"""
+setTimeout(function() {{
+  var chart = Highcharts.charts[0];
+  if (!chart) return;
+  var xAxis = chart.xAxis[0];
+  var labels = [{",".join(overlay_labels)}];
+  var bounds = [{overlay_bounds}];
+  var plotTop = chart.plotTop;
+  var plotHeight = chart.plotHeight;
+
+  // Draw dashed vertical divider lines
+  bounds.forEach(function(val) {{
+    var px = xAxis.toPixels(val);
+    chart.renderer.path(['M', px, plotTop, 'L', px, plotTop + plotHeight])
+      .attr({{stroke: 'rgba(255,255,255,0.35)', 'stroke-width': 3, dashstyle: 'Dash', zIndex: 10}})
+      .add();
+  }});
+
+  // Draw section labels at top of plot area
+  labels.forEach(function(lbl) {{
+    var px = xAxis.toPixels(lbl.x);
+    chart.renderer.text(lbl.text, px, plotTop + 45)
+      .css({{color: '#ddd', fontSize: '34px', fontWeight: '600'}})
+      .attr({{align: 'center', zIndex: 11}})
+      .add();
+  }});
+}}, 500);
+"""
+
 # Generate HTML with inline scripts
 js_literal = chart.to_js_literal()
 
@@ -264,10 +303,12 @@ html_content = f"""<!DOCTYPE html>
     <meta charset="utf-8">
     <script>{highcharts_js}</script>
     <script>{heatmap_js}</script>
+    <script>{annotations_js}</script>
 </head>
 <body style="margin:0; padding:0; overflow:hidden; background:#1a1a2e;">
     <div id="container" style="width:4800px; height:2700px;"></div>
     <script>{js_literal}</script>
+    <script>{renderer_script}</script>
 </body>
 </html>"""
 
@@ -292,7 +333,7 @@ chrome_options.add_argument("--hide-scrollbars")
 driver = webdriver.Chrome(options=chrome_options)
 driver.set_window_size(4800, 2840)
 driver.get(f"file://{temp_path}")
-time.sleep(5)
+time.sleep(7)
 driver.save_screenshot("plot.png")
 driver.quit()
 
