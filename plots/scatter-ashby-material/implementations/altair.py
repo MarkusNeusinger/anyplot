@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 scatter-ashby-material: Ashby Material Selection Chart
 Library: altair 6.0.0 | Python 3.14.3
-Quality: 85/100 | Created: 2026-03-11
+Quality: 88/100 | Created: 2026-03-11
 """
 
 import altair as alt
