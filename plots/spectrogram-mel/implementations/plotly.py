@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 spectrogram-mel: Mel-Spectrogram for Audio Analysis
-Library: plotly | Python 3.13
-Quality: pending | Created: 2026-03-11
+Library: plotly 6.6.0 | Python 3.14.3
+Quality: 88/100 | Created: 2026-03-11
 """
 
 import numpy as np
