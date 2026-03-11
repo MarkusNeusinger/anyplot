@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 scatter-ashby-material: Ashby Material Selection Chart
-Library: matplotlib | Python 3.13
-Quality: pending | Created: 2026-03-11
+Library: matplotlib 3.10.8 | Python 3.14.3
+Quality: 87/100 | Created: 2026-03-11
 """
 
 import matplotlib.pyplot as plt
