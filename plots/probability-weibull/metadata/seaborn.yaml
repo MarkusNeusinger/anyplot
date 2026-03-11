@@ -1,0 +1,226 @@
+library: seaborn
+specification_id: probability-weibull
+created: '2026-03-11T21:52:04Z'
+updated: '2026-03-11T22:15:08Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 22976096464
+issue: 4668
+python_version: 3.14.3
+library_version: 0.13.2
+preview_url: https://storage.googleapis.com/pyplots-images/plots/probability-weibull/seaborn/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/probability-weibull/seaborn/plot_thumb.png
+preview_html: null
+quality_score: 93
+review:
+  strengths:
+  - Excellent spec compliance with all required features plus B10 life bonus annotation
+  - Professional color palette and annotation styling with cohesive visual hierarchy
+  - Strong data storytelling through B10 life focal point and engineering parameter
+    display
+  - Proper Weibull probability paper implementation with correct median rank positions
+  - Effective use of seaborn rugplot as a distinctive density indicator
+  weaknesses:
+  - Heavy reliance on matplotlib for custom axis formatting reduces seaborn mastery
+    score
+  - Could potentially use seaborn objects interface for more idiomatic usage though
+    plot type inherently requires low-level control
+  image_description: The plot displays a Weibull probability plot for turbine blade
+    fatigue life. The x-axis shows "Time to Failure (hours)" on a logarithmic scale
+    from 1,000 to 18,000, and the y-axis shows "Cumulative Failure Probability" on
+    a linearized Weibull scale from 1.0% to 99.0%. Blue filled circles represent failure
+    data points (~25), and orange hollow diamond markers represent censored (suspended)
+    observations (~7). A red dashed line shows the Weibull fit passing through the
+    data. A horizontal gray dotted reference line marks the 63.2% characteristic life
+    level. A B10 life annotation with an arrow points to a red square marker at approximately
+    3,223 hours (10% failure probability). A parameter box in the lower right displays
+    β = 2.16 (shape), η = 9133 h (scale), and R² = 0.9548 in monospace font with a
+    rounded border. A subtle blue rug plot along the x-axis shows failure time density.
+    The legend in the upper left lists Failure, Censored (suspended), and Weibull
+    fit. Top and right spines are removed, and a subtle y-axis grid is visible. The
+    title reads "Turbine Blade Fatigue Life · probability-weibull · seaborn · pyplots.ai".
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt,
+          annotations 14-15pt'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or data elements
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Marker size s=180 appropriate for ~32 data points, fit line clearly
+          visible
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue/orange/red palette is colorblind-safe with strong contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 16:9 layout fills canvas well with balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive labels with units: Time to Failure (hours), Cumulative
+          Failure Probability'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom cohesive palette, styled parameter box, intentional color
+          hierarchy
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines removed, subtle grid alpha=0.15, rug plot adds refinement
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: B10 life focal point, 63.2% reference line, parameter display guides
+          viewer
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Weibull probability plot with log x-axis and linearized Weibull
+          y-axis
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: All spec features present plus B10 life bonus
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=time, Y=cumulative probability correctly mapped with custom ticks
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct title format with descriptive prefix, clear legend labels
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows failures, censored data, fit, parameters, B10 life, 63.2% reference
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Turbine blade fatigue life is a classic neutral reliability engineering
+          scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: beta=2.16 and eta=9133h are realistic for turbine blade reliability
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Follows imports, data, plot, save pattern with no functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) ensures reproducible data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean well-organized code with appropriate complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with dpi=300, no deprecated APIs
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses seaborn axes-level API correctly but relies on matplotlib for
+          custom formatting
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: rugplot for density, despine, set_style are distinctive seaborn features
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - scipy
+  techniques:
+  - manual-ticks
+  - annotations
+  patterns:
+  - data-generation
+  dataprep:
+  - regression
+  styling:
+  - grid-styling
+  - edge-highlighting
+  - alpha-blending
