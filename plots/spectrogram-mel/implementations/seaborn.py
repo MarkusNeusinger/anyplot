@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 spectrogram-mel: Mel-Spectrogram for Audio Analysis
 Library: seaborn 0.13.2 | Python 3.14.3
 Quality: 88/100 | Created: 2026-03-11
@@ -55,7 +55,6 @@ for i, freq in enumerate(freqs_melody):
     end = start + segment_len if i < len(freqs_melody) - 1 else len(t)
     seg_t = t[start:end]
     envelope = np.exp(-2.0 * (seg_t - seg_t[0]) / (seg_t[-1] - seg_t[0] + 1e-9))
-    # Add click transient at note onset
     onset_env = np.exp(-80.0 * (seg_t - seg_t[0]))
     audio[start:end] = (
         0.6 * np.sin(2 * np.pi * freq * seg_t)
@@ -97,18 +96,63 @@ mel_spec_flipped = mel_spec_db[::-1]
 
 df_spec = pd.DataFrame(mel_spec_flipped, index=np.arange(n_mels), columns=np.arange(mel_spec_flipped.shape[1]))
 
-# Use seaborn color palette to build custom colormap
-cmap_colors = sns.color_palette("magma", as_cmap=True)
+# Waveform DataFrame for seaborn lineplot (downsample for display)
+step = 80
+wave_df = pd.DataFrame({"Time (s)": t[::step], "Amplitude": audio[::step]})
 
-# Plot
-fig, ax = plt.subplots(figsize=(16, 9))
-hm = sns.heatmap(
+# Use seaborn-specific 'mako' palette (not available in plain matplotlib)
+cmap_colors = sns.color_palette("mako", as_cmap=True)
+
+# Plot: two-panel layout — waveform + mel-spectrogram
+fig, (ax_wave, ax_spec) = plt.subplots(2, 1, figsize=(16, 9), height_ratios=[1, 5], gridspec_kw={"hspace": 0.06})
+
+# Top panel: waveform using seaborn lineplot
+sns.lineplot(data=wave_df, x="Time (s)", y="Amplitude", ax=ax_wave, color="#ffcc66", linewidth=0.6, alpha=0.85)
+ax_wave.fill_between(wave_df["Time (s)"], wave_df["Amplitude"], alpha=0.15, color="#ffcc66")
+ax_wave.set_xlim(0, duration)
+ax_wave.set_ylabel("Amp.", fontsize=16, labelpad=8)
+ax_wave.set_xlabel("")
+ax_wave.set_xticklabels([])
+ax_wave.tick_params(axis="y", labelsize=13, length=3)
+ax_wave.tick_params(axis="x", length=0)
+ax_wave.set_title(
+    "spectrogram-mel \u00b7 seaborn \u00b7 pyplots.ai", fontsize=24, fontweight="bold", pad=14, color="#ffffff"
+)
+sns.despine(ax=ax_wave, bottom=True, left=False)
+ax_wave.spines["top"].set_edgecolor("#444466")
+ax_wave.spines["left"].set_edgecolor("#444466")
+ax_wave.spines["right"].set_edgecolor("#444466")
+for sp in ax_wave.spines.values():
+    sp.set_linewidth(0.8)
+
+# Note boundary lines on waveform
+for i in range(1, len(freqs_melody)):
+    boundary_time = i * segment_len / sample_rate
+    ax_wave.axvline(x=boundary_time, color="#ffffff", alpha=0.12, linewidth=0.8, linestyle="--")
+
+# Note labels on waveform panel
+for i, name in enumerate(note_names):
+    mid_time = (i + 0.5) * segment_len / sample_rate
+    ax_wave.text(
+        mid_time,
+        ax_wave.get_ylim()[1] * 0.85,
+        name,
+        ha="center",
+        va="top",
+        fontsize=15,
+        color="#ffcc66",
+        fontweight="bold",
+        alpha=0.9,
+    )
+
+# Bottom panel: mel-spectrogram heatmap
+sns.heatmap(
     df_spec,
-    ax=ax,
+    ax=ax_spec,
     cmap=cmap_colors,
     vmin=-80,
     vmax=0,
-    cbar_kws={"label": "Power (dB)", "pad": 0.015, "aspect": 30, "shrink": 0.85},
+    cbar_kws={"label": "Power (dB)", "pad": 0.015, "aspect": 30, "shrink": 0.92},
     xticklabels=False,
     yticklabels=False,
     rasterized=True,
@@ -117,8 +161,8 @@ hm = sns.heatmap(
 # X-axis: time ticks
 x_tick_seconds = np.arange(0, 4.5, 0.5)
 x_tick_positions = [np.argmin(np.abs(times_stft - s)) for s in x_tick_seconds]
-ax.set_xticks(x_tick_positions)
-ax.set_xticklabels([f"{s:.1f}" for s in x_tick_seconds])
+ax_spec.set_xticks(x_tick_positions)
+ax_spec.set_xticklabels([f"{s:.1f}" for s in x_tick_seconds])
 
 # Y-axis: Hz labels at key mel band positions (flipped coordinates)
 tick_freqs = [100, 200, 500, 1000, 2000, 4000, 8000]
@@ -129,62 +173,54 @@ for freq in tick_freqs:
     tick_positions_y.append(n_mels - 1 - idx)
     tick_labels_y.append(f"{freq // 1000}k Hz" if freq >= 1000 else f"{freq} Hz")
 
-ax.set_yticks(tick_positions_y)
-ax.set_yticklabels(tick_labels_y)
+ax_spec.set_yticks(tick_positions_y)
+ax_spec.set_yticklabels(tick_labels_y)
 
 # Colorbar refinement
-cbar = ax.collections[0].colorbar
+cbar = ax_spec.collections[0].colorbar
 cbar.ax.tick_params(labelsize=14, colors="#c0c0c0")
 cbar.set_label("Power (dB)", fontsize=18, color="#e0e0e0")
 cbar.outline.set_edgecolor("#444466")
 cbar.outline.set_linewidth(0.8)
 
-# Note boundary lines and labels for storytelling
+# Note boundary lines on spectrogram
 for i in range(1, len(freqs_melody)):
     boundary_time = i * segment_len / sample_rate
     x_pos = np.argmin(np.abs(times_stft - boundary_time))
-    ax.axvline(x=x_pos, color="#ffffff", alpha=0.12, linewidth=0.8, linestyle="--")
+    ax_spec.axvline(x=x_pos, color="#ffffff", alpha=0.12, linewidth=0.8, linestyle="--")
 
-# Label notes at top of plot
-for i, name in enumerate(note_names):
-    mid_time = (i + 0.5) * segment_len / sample_rate
-    x_pos = np.argmin(np.abs(times_stft - mid_time))
-    ax.text(x_pos, -1.5, name, ha="center", va="bottom", fontsize=12, color="#ffcc66", fontweight="bold", alpha=0.85)
-
-# Harmonic bracket annotations on the last note (C4) to show overtone series
+# Harmonic annotations on the last note (C4) to show overtone series
 last_note_mid = (len(freqs_melody) - 0.5) * segment_len / sample_rate
 x_anno = np.argmin(np.abs(times_stft - last_note_mid))
 for h, label in [(1, "f\u2080"), (2, "2f\u2080"), (3, "3f\u2080")]:
     freq_h = freqs_melody[0] * h
     mel_idx = np.argmin(np.abs(mel_center_freqs - freq_h))
     y_pos = n_mels - 1 - mel_idx
-    ax.plot(x_anno, y_pos, marker="<", color="#ffcc66", markersize=6, alpha=0.85)
-    ax.text(
+    ax_spec.plot(x_anno, y_pos, marker="<", color="#ffcc66", markersize=7, alpha=0.9)
+    ax_spec.text(
         x_anno + 3,
         y_pos,
         label,
-        fontsize=11,
+        fontsize=14,
         color="#ffcc66",
         fontweight="bold",
-        alpha=0.9,
+        alpha=0.95,
         va="center",
         ha="left",
         bbox={"boxstyle": "round,pad=0.15", "facecolor": "#1a1a2e", "edgecolor": "none", "alpha": 0.7},
     )
 
 # Style refinement
-ax.set_xlabel("Time (s)", fontsize=20, labelpad=10)
-ax.set_ylabel("Frequency (mel scale)", fontsize=20, labelpad=10)
-ax.set_title(
-    "spectrogram-mel \u00b7 seaborn \u00b7 pyplots.ai", fontsize=24, fontweight="bold", pad=20, color="#ffffff"
-)
-ax.tick_params(axis="both", labelsize=16, length=4, width=0.8)
+ax_spec.set_xlabel("Time (s)", fontsize=20, labelpad=10)
+ax_spec.set_ylabel("Frequency (mel scale)", fontsize=20, labelpad=10)
+ax_spec.tick_params(axis="both", labelsize=16, length=4, width=0.8)
 
-# Remove heavy spines, add subtle border
-for spine in ax.spines.values():
-    spine.set_edgecolor("#444466")
-    spine.set_linewidth(0.8)
+# Use seaborn despine on spectrogram and style remaining spines
+sns.despine(ax=ax_spec, top=True, right=True)
+ax_spec.spines["bottom"].set_edgecolor("#444466")
+ax_spec.spines["bottom"].set_linewidth(0.8)
+ax_spec.spines["left"].set_edgecolor("#444466")
+ax_spec.spines["left"].set_linewidth(0.8)
 
 # Save
-plt.tight_layout()
 plt.savefig("plot.png", dpi=300, bbox_inches="tight", facecolor=fig.get_facecolor())
