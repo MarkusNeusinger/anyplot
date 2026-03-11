@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 spectrogram-mel: Mel-Spectrogram for Audio Analysis
 Library: matplotlib 3.10.8 | Python 3.14.3
 Quality: 88/100 | Created: 2026-03-11
@@ -7,6 +7,7 @@ Quality: 88/100 | Created: 2026-03-11
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.colors import Normalize
+from matplotlib.ticker import FuncFormatter
 
 
 # Data - synthesize a rich audio signal with melody-like frequency components
@@ -54,7 +55,7 @@ for i in range(n_frames):
     spectrum = np.fft.rfft(frame)
     stft_matrix[:, i] = np.abs(spectrum) ** 2
 
-# Mel filter bank
+# Mel filter bank (vectorized)
 f_min = 0.0
 f_max = sample_rate / 2.0
 mel_min = 2595.0 * np.log10(1.0 + f_min / 700.0)
@@ -63,16 +64,20 @@ mel_points = np.linspace(mel_min, mel_max, n_mels + 2)
 hz_points = 700.0 * (10.0 ** (mel_points / 2595.0) - 1.0)
 fft_freqs = np.fft.rfftfreq(n_fft, 1.0 / sample_rate)
 
-mel_filterbank = np.zeros((n_mels, n_fft // 2 + 1))
+mel_filterbank = np.zeros((n_mels, len(fft_freqs)))
 for m in range(n_mels):
-    f_left = hz_points[m]
-    f_center = hz_points[m + 1]
-    f_right = hz_points[m + 2]
-    for k in range(len(fft_freqs)):
-        if f_left <= fft_freqs[k] <= f_center and f_center > f_left:
-            mel_filterbank[m, k] = (fft_freqs[k] - f_left) / (f_center - f_left)
-        elif f_center < fft_freqs[k] <= f_right and f_right > f_center:
-            mel_filterbank[m, k] = (f_right - fft_freqs[k]) / (f_right - f_center)
+    f_left, f_center, f_right = hz_points[m], hz_points[m + 1], hz_points[m + 2]
+    up_slope = np.where(
+        (fft_freqs >= f_left) & (fft_freqs <= f_center) & (f_center > f_left),
+        (fft_freqs - f_left) / (f_center - f_left),
+        0.0,
+    )
+    down_slope = np.where(
+        (fft_freqs > f_center) & (fft_freqs <= f_right) & (f_right > f_center),
+        (f_right - fft_freqs) / (f_right - f_center),
+        0.0,
+    )
+    mel_filterbank[m] = up_slope + down_slope
 
 # Apply mel filter bank and convert to dB
 mel_spectrogram = mel_filterbank @ stft_matrix
@@ -86,10 +91,17 @@ time_axis = np.arange(n_frames) * hop_length / sample_rate
 mel_freqs = hz_points[1:-1]
 
 # Plot
-fig, ax = plt.subplots(figsize=(16, 9))
+fig, ax = plt.subplots(figsize=(16, 9), facecolor="#0a0a0f")
+ax.set_facecolor("#0a0a0f")
 
 img = ax.pcolormesh(
-    time_axis, np.arange(n_mels), mel_spectrogram_db, cmap="magma", shading="gouraud", norm=Normalize(vmin=-80, vmax=0)
+    time_axis,
+    np.arange(n_mels),
+    mel_spectrogram_db,
+    cmap="magma",
+    shading="gouraud",
+    norm=Normalize(vmin=-80, vmax=0),
+    rasterized=True,
 )
 
 # Y-axis: show Hz labels at mel band edges
@@ -107,18 +119,36 @@ for hz in tick_hz_values:
 ax.set_yticks(tick_mel_indices)
 ax.set_yticklabels(tick_labels)
 
-# Colorbar
-cbar = fig.colorbar(img, ax=ax, pad=0.02)
-cbar.set_label("Power (dB)", fontsize=20)
-cbar.ax.tick_params(labelsize=16)
+# X-axis formatting with FuncFormatter
+ax.xaxis.set_major_formatter(FuncFormatter(lambda x, _: f"{x:.1f}"))
+
+# Colorbar with musically meaningful dB levels
+cbar = fig.colorbar(img, ax=ax, pad=0.02, aspect=30)
+cbar.set_label("Power (dB)", fontsize=20, color="#cccccc")
+cbar.set_ticks([0, -10, -20, -40, -60, -80])
+cbar.set_ticklabels(["0", "−10", "−20", "−40", "−60", "−80"])
+cbar.ax.tick_params(labelsize=14, colors="#cccccc")
+cbar.outline.set_edgecolor("#333333")
+cbar.outline.set_linewidth(0.5)
+
+# Subtle horizontal reference lines at key frequency bands
+speech_band_idx = np.argmin(np.abs(mel_freqs - 300))
+ax.axhline(y=speech_band_idx, color="#ffffff", alpha=0.08, linewidth=0.6, linestyle="--")
+harmonic_band_idx = np.argmin(np.abs(mel_freqs - 1000))
+ax.axhline(y=harmonic_band_idx, color="#ffffff", alpha=0.08, linewidth=0.6, linestyle="--")
 
 # Style
-ax.set_xlabel("Time (s)", fontsize=20)
-ax.set_ylabel("Frequency (Hz)", fontsize=20)
-ax.set_title("spectrogram-mel \u00b7 matplotlib \u00b7 pyplots.ai", fontsize=24, fontweight="medium")
-ax.tick_params(axis="both", labelsize=16)
-ax.spines["top"].set_visible(False)
-ax.spines["right"].set_visible(False)
+text_color = "#cccccc"
+ax.set_xlabel("Time (s)", fontsize=20, color=text_color, labelpad=10)
+ax.set_ylabel("Frequency (Hz)", fontsize=20, color=text_color, labelpad=10)
+ax.set_title("spectrogram-mel · matplotlib · pyplots.ai", fontsize=24, fontweight="medium", color="#e8e8e8", pad=16)
+ax.tick_params(axis="both", labelsize=16, colors=text_color)
+ax.tick_params(axis="x", which="both", length=4, width=0.8, color="#555555")
+ax.tick_params(axis="y", which="both", length=4, width=0.8, color="#555555")
+
+# Remove all spines for cleaner look
+for spine in ax.spines.values():
+    spine.set_visible(False)
 
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+plt.savefig("plot.png", dpi=300, bbox_inches="tight", facecolor=fig.get_facecolor())
