@@ -1,7 +1,7 @@
 library: altair
 specification_id: scatter-ashby-material
 created: '2026-03-11T14:58:25Z'
-updated: '2026-03-11T15:13:49Z'
+updated: '2026-03-11T15:23:36Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 22958873170
 issue: 4677
@@ -10,38 +10,37 @@ library_version: 6.0.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/scatter-ashby-material/altair/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/scatter-ashby-material/altair/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/scatter-ashby-material/altair/plot.html
-quality_score: 83
+quality_score: 85
 review:
   strengths:
-  - Perfect spec compliance with all required features including convex hull envelopes
-    and performance index guide lines
-  - Excellent realistic data using actual material names and physically accurate property
-    ranges
-  - Professional color palette with good accessibility and visual harmony
-  - Effective use of Altair layer composition for complex multi-element chart
-  - Guide lines add genuine analytical value beyond the specification minimum requirements
+  - Full spec compliance with all required features including optional guide lines
+    for performance indices
+  - Excellent realistic data using real material names and scientifically accurate
+    property ranges
+  - Smooth attractive envelope regions using basis-closed interpolation for polished
+    professional look
+  - Color-matched family labels with manual nudge offsets for clear positioning
+  - Thoughtful color palette with good accessibility
   weaknesses:
-  - Guide line labels (fontSize=11, opacity=0.45) are too small and faint to read
-    easily
-  - Ceramics and Metals envelope regions overlap significantly creating visual confusion
-  - Manual Graham scan implementation is verbose when convex hull could be simplified
-  - Envelope shapes appear somewhat angular despite smoothing
-  - Family label positioning could be improved to avoid region boundaries
-  image_description: 'The plot displays a log-log scatter chart titled "scatter-ashby-material
-    · altair · pyplots.ai". The x-axis shows "Density (kg/m³)" from 10 to 20,000 and
-    the y-axis shows "Young''s Modulus (GPa)" from 0.001 to 1,000, both on logarithmic
-    scales. Six material families are represented by colored scatter points with semi-transparent
-    convex hull envelopes: Metals (blue, upper-right, high density/modulus), Ceramics
-    (teal, upper-center, high modulus), Composites (coral/salmon, mid-upper), Polymers
-    (orange, center), Elastomers (purple, lower-center, low modulus), and Foams (light
-    green, lower-left, low density/modulus). Each family region has a bold colored
-    text label. Two dashed diagonal guide lines labeled "E/ρ = 0.01" and "E/ρ = 0.1"
-    run across the chart. A legend titled "Material Family" appears on the right with
-    colored circles for each family. The background is clean white with very subtle
-    grid lines. Points have white edge strokes for separation.'
+  - Manual convex hull computation is verbose and cross function is redefined each
+    loop iteration
+  - Some envelope overlap between Ceramics and Metals regions in the upper area
+  - Could benefit from more visual hierarchy e.g. varying envelope opacity or stroke
+    weight by family size
+  image_description: 'The plot displays a log-log Ashby material selection chart with
+    Density (kg/m³) on the x-axis and Young''s Modulus (GPa) on the y-axis. Six material
+    families are shown as colored scatter points enclosed in smooth, semi-transparent
+    convex hull envelopes: Metals (steel blue, upper right), Polymers (orange, center),
+    Ceramics (teal, upper center), Composites (coral, upper center-left), Elastomers
+    (purple, lower center), and Foams (light green, lower left spanning wide density
+    range). Each family has a color-matched bold text label positioned near its cluster.
+    Two dashed diagonal guide lines labeled "E/ρ = 0.01" and "E/ρ = 0.1" traverse
+    the chart showing constant performance indices. The legend titled "Material Family"
+    sits in the upper right. The title reads "scatter-ashby-material · altair · pyplots.ai"
+    in the top center. The background is clean white with very subtle gridlines.'
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 26
       max: 30
       items:
       - id: VQ-01
@@ -49,67 +48,67 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set throughout (title 28, axes 22, ticks 18).
-          Guide line labels at fontSize=11 are too small.
+        comment: All font sizes explicitly set (title 28pt, axis 22pt, ticks 18pt,
+          legend 16-18pt, labels 16pt). All text clearly readable.
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Ceramics/Metals envelope regions overlap significantly. Text labels
-          mostly readable but regional overlap causes visual confusion.
+        comment: Ceramics and Metals envelopes overlap slightly in upper region. Minor
+          label proximity issues but generally readable.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Points at size=160 with opacity=0.8 well-sized for ~61 points. Envelopes
-          at 0.15 fill opacity appropriately subtle.
+        comment: ~61 points with size=160 and opacity=0.8. Well-adapted to data density.
+          White stroke adds definition.
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Custom palette with distinct hues across color wheel. No red-green
-          as sole differentiator. Good contrast.
+        comment: Blue, orange, teal, coral, purple, green palette. All distinguishable,
+          no red-green confusion.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Chart at 1400x900 fills canvas well. Some wasted space in corners
-          but overall good proportions.
+        comment: Good log-scale coverage with right padding for legend. Some empty
+          space in lower-left inherent to data distribution.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Density (kg/m³) and Young's Modulus (GPa) both include units.
+        comment: Density (kg/m³) and Young's Modulus (GPa) — descriptive with units.
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Custom harmonious palette, white edge strokes, semi-transparent envelopes.
-          Professional but not publication-quality.
+        comment: Custom palette, smooth envelope regions, subtle guide lines, white
+          stroke on markers, color-matched labels. Above defaults.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: View stroke removed, grid opacity 0.15, light gray domain colors,
-          generous whitespace. Intentional refinement.
+        comment: Grid opacity 0.15, view stroke removed, custom padding, light gray
+          domain/tick colors.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Envelopes group families effectively. Guide lines add analytical
-          context. Clear material trade-off narrative.
+        comment: Families clearly separated with envelopes, guide lines show performance
+          trade-offs, labels direct viewer through material hierarchy.
     spec_compliance:
       score: 15
       max: 15
@@ -119,26 +118,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct log-log scatter plot.
+        comment: Log-log scatter with bubble/envelope regions — correct Ashby chart
+          type.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: log scales, envelopes, labels, units, distinct
-          colors, guide lines.'
+        comment: Log scales, envelope regions, family labels, axis labels with units,
+          distinct colors, guide lines — all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=density, Y=modulus. Both axes cover full data range.
+        comment: X=density, Y=modulus — correct mapping, axes span full data range.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Legend titled Material Family with all 6 families.
+        comment: Title matches format. Legend titled Material Family with correct
+          labels.
     data_quality:
       score: 15
       max: 15
@@ -148,22 +149,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 6 families spanning wide ranges. Different cluster characteristics.
-          Guide lines add analytical dimension.
+        comment: Six material families spanning full property space from foams to
+          ceramics. Excellent diversity.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real material names and established families. Physically accurate
-          property ranges.
+        comment: Real material names in classic engineering materials science context.
+          Neutral and educational.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Density ~20-10000 kg/m³, modulus ~0.001-450 GPa. All values physically
-          realistic.
+        comment: Density ~20-8900 kg/m³, modulus 0.001-450 GPa — realistic values
+          consistent with published data.
     code_quality:
       score: 8
       max: 10
@@ -173,8 +174,8 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Follows imports-data-plot-save but includes complex manual Graham
-          scan convex hull algorithm.
+        comment: Follows imports-data-plot-save but defines cross function inside
+          loop for convex hull.
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -186,20 +187,20 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Only altair, numpy, pandas imported — all used.
+        comment: Only altair, numpy, pandas — all used.
       - id: CQ-04
         name: Code Elegance
         score: 1
         max: 2
         passed: true
-        comment: Manual Graham scan (~40 lines) is verbose. Label nudge dictionary
-          is nice but overall could be more concise.
+        comment: Manual convex hull is verbose but avoids scipy dependency. Cross
+          function redefined each iteration.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with scale_factor=3.0 and plot.html. Current Altair
+        comment: Saves plot.png with scale_factor=3.0 and plot.html. Current Altair
           API.
     library_mastery:
       score: 7
@@ -210,15 +211,15 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Good declarative grammar usage: alt.layer, encoding channels, alt.Scale
-          for log, resolve_scale, configure methods.'
+        comment: Uses alt.layer, proper encoding types, scale configuration, resolve_scale.
+          Idiomatic declarative Altair.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses basis-closed interpolation, resolve_scale for independent scales,
-          interactive tooltips, dual export.
+        comment: Basis-closed interpolation, declarative layer composition, tooltips,
+          resolve_scale, HTML export — distinctively Altair.
   verdict: REJECTED
 impl_tags:
   dependencies: []
