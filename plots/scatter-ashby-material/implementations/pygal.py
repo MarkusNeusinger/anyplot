@@ -1,9 +1,11 @@
-""" pyplots.ai
+"""pyplots.ai
 scatter-ashby-material: Ashby Material Selection Chart
 Library: pygal 3.1.0 | Python 3.14.3
-Quality: 78/100 | Created: 2026-03-11
 """
 
+import re
+
+import cairosvg
 import numpy as np
 import pygal
 from pygal.style import Style
@@ -112,28 +114,28 @@ jitter_density = np.random.normal(1.0, 0.04, 200)
 jitter_modulus = np.random.normal(1.0, 0.04, 200)
 idx = 0
 
-# Colorblind-safe palette for 7 families
+# Colorblind-safe palette — Foams changed from teal to silver gray for distinction
 family_colors = (
     "#306998",  # Metals — steel blue
     "#E74C3C",  # Ceramics — red
-    "#2ECC71",  # Polymers — green
+    "#27AE60",  # Polymers — emerald green
     "#F39C12",  # Composites — amber
     "#9B59B6",  # Elastomers — purple
-    "#1ABC9C",  # Foams — teal
-    "#8B4513",  # Natural Materials — brown
+    "#95A5A6",  # Foams — silver gray
+    "#D35400",  # Natural Materials — burnt orange
 )
 
-# Style
+# Style — refined grid, clean background
 custom_style = Style(
     background="white",
-    plot_background="#fafafa",
-    foreground="#1a1a2e",
-    foreground_strong="#1a1a2e",
-    foreground_subtle="#e0e0e0",
+    plot_background="#f8f9fa",
+    foreground="#2c3e50",
+    foreground_strong="#2c3e50",
+    foreground_subtle="#e8e8e8",
     colors=family_colors,
-    opacity=0.72,
-    opacity_hover=0.95,
-    title_font_size=36,
+    opacity=0.35,
+    opacity_hover=0.92,
+    title_font_size=38,
     label_font_size=22,
     major_label_font_size=20,
     legend_font_size=20,
@@ -146,7 +148,7 @@ custom_style = Style(
     value_font_family="Trebuchet MS, Helvetica, sans-serif",
 )
 
-# Plot
+# Chart — large dots for Ashby-style bubble region effect
 chart = pygal.XY(
     width=4800,
     height=2700,
@@ -159,7 +161,7 @@ chart = pygal.XY(
     legend_at_bottom_columns=7,
     legend_box_size=22,
     stroke=False,
-    dots_size=16,
+    dots_size=26,
     show_x_guides=True,
     show_y_guides=True,
     logarithmic=True,
@@ -176,13 +178,18 @@ chart = pygal.XY(
     spacing=15,
 )
 
+# Track jittered data for centroid computation
+family_points = {}
+
 # Add each material family as a series
 for family_name, family_data in families.items():
     points = []
+    coords = []
     for i, mat in enumerate(family_data["materials"]):
         d = family_data["density"][i] * jitter_density[idx % 200]
         m = family_data["modulus"][i] * jitter_modulus[idx % 200]
         idx += 1
+        coords.append((d, m))
         points.append(
             {
                 "value": (round(d, 1), round(m, 4)),
@@ -190,7 +197,65 @@ for family_name, family_data in families.items():
             }
         )
     chart.add(family_name, points)
+    family_points[family_name] = coords
 
-# Save
-chart.render_to_file("plot.html")
-chart.render_to_png("plot.png")
+# Render SVG and add text labels at family centroids
+svg_string = chart.render().decode("utf-8")
+
+# Extract SVG coordinate info by finding circle positions per series
+# pygal groups series as: <g class="series serie-N color-N">
+series_circles = {}
+series_pattern = re.compile(r'<g class="series serie-(\d+) color-\d+"[^>]*>(.*?)</g>', re.DOTALL)
+circle_pattern = re.compile(r'<circle\s+cx="([^"]+)"\s+cy="([^"]+)"')
+
+for match in series_pattern.finditer(svg_string):
+    serie_idx = int(match.group(1))
+    group_content = match.group(2)
+    circles = circle_pattern.findall(group_content)
+    if circles and serie_idx not in series_circles:
+        series_circles[serie_idx] = [(float(cx), float(cy)) for cx, cy in circles]
+
+# Compute SVG centroids and insert text labels
+family_names = list(families.keys())
+label_elements = []
+
+# Label offset adjustments to avoid overlap with dots
+label_offsets = {
+    "Metals": (0, -38),
+    "Ceramics": (0, -38),
+    "Polymers": (0, -32),
+    "Composites": (0, -38),
+    "Elastomers": (0, -32),
+    "Foams": (130, -32),
+    "Natural Materials": (0, -32),
+}
+
+for serie_idx, circles in series_circles.items():
+    if serie_idx < len(family_names):
+        name = family_names[serie_idx]
+        color = family_colors[serie_idx]
+        cx_avg = sum(c[0] for c in circles) / len(circles)
+        cy_avg = sum(c[1] for c in circles) / len(circles)
+        ox, oy = label_offsets.get(name, (0, -30))
+        label_x = cx_avg + ox
+        label_y = cy_avg + oy
+        anchor = "start" if name == "Foams" else "middle"
+        label_elements.append(
+            f'<text x="{label_x:.1f}" y="{label_y:.1f}" '
+            f'font-family="Trebuchet MS, Helvetica, sans-serif" '
+            f'font-size="20" font-weight="bold" fill="{color}" '
+            f'text-anchor="{anchor}" '
+            f'stroke="white" stroke-width="4" paint-order="stroke">'
+            f"{name}</text>"
+        )
+
+# Insert labels before closing </svg>
+if label_elements:
+    labels_group = '<g class="family-labels">' + "".join(label_elements) + "</g>"
+    svg_string = svg_string.replace("</svg>", labels_group + "</svg>")
+
+# Save outputs
+with open("plot.html", "w") as f:
+    f.write(svg_string)
+
+cairosvg.svg2png(bytestring=svg_string.encode("utf-8"), write_to="plot.png")
