@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 scatter-ashby-material: Ashby Material Selection Chart
 Library: plotly 6.6.0 | Python 3.14.3
 Quality: 85/100 | Created: 2026-03-11
@@ -13,10 +13,10 @@ from scipy.spatial import ConvexHull
 np.random.seed(42)
 
 families = {
-    "Metals": {"density": (2700, 11000), "modulus": (40, 400), "n": 30, "color": "#306998"},
-    "Ceramics": {"density": (2200, 6000), "modulus": (100, 500), "n": 25, "color": "#D4513D"},
+    "Metals": {"density": (4500, 11000), "modulus": (40, 250), "n": 30, "color": "#306998"},
+    "Ceramics": {"density": (2200, 4200), "modulus": (150, 500), "n": 25, "color": "#D4513D"},
     "Polymers": {"density": (900, 1500), "modulus": (0.2, 4), "n": 25, "color": "#2CA02C"},
-    "Composites": {"density": (1400, 2200), "modulus": (10, 200), "n": 22, "color": "#9467BD"},
+    "Composites": {"density": (1400, 2200), "modulus": (10, 200), "n": 22, "color": "#1B9E77"},
     "Elastomers": {"density": (900, 1300), "modulus": (0.001, 0.1), "n": 20, "color": "#E6932E"},
     "Foams": {"density": (20, 300), "modulus": (0.001, 1), "n": 20, "color": "#17BECF"},
     "Natural Materials": {"density": (150, 1300), "modulus": (0.5, 20), "n": 18, "color": "#8C564B"},
@@ -69,7 +69,7 @@ for family, props in families.items():
             y=m,
             mode="markers",
             name=family,
-            marker={"size": 10, "color": color, "line": {"width": 0.8, "color": "white"}, "opacity": 0.85},
+            marker={"size": 13, "color": color, "line": {"width": 1, "color": "white"}, "opacity": 0.85},
             hovertemplate=f"<b>{family}</b><br>Density: %{{x:.0f}} kg/m³<br>Modulus: %{{y:.3g}} GPa<extra></extra>",
         )
     )
@@ -115,7 +115,7 @@ fig.add_annotation(
     yref="y",
     text="E/ρ = const",
     showarrow=False,
-    font={"size": 13, "color": "rgba(0, 0, 0, 0.35)"},
+    font={"size": 14, "color": "rgba(0, 0, 0, 0.55)"},
     textangle=-38,
 )
 
@@ -137,6 +137,7 @@ fig.update_layout(
         "showline": True,
         "linecolor": "#333333",
         "linewidth": 1,
+        "mirror": False,
         "range": [np.log10(10), np.log10(20000)],
     },
     yaxis={
@@ -149,6 +150,7 @@ fig.update_layout(
         "showline": True,
         "linecolor": "#333333",
         "linewidth": 1,
+        "mirror": False,
         "range": [np.log10(0.0005), np.log10(1000)],
     },
     template="plotly_white",
