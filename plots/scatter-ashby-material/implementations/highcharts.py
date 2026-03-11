@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 scatter-ashby-material: Ashby Material Selection Chart
 Library: highcharts unknown | Python 3.14.3
 Quality: 84/100 | Created: 2026-03-11
@@ -87,53 +87,6 @@ families = {
     },
 }
 
-
-def convex_hull_indices(points):
-    """Graham scan convex hull returning indices of hull vertices in CCW order."""
-    n = len(points)
-    if n < 3:
-        return list(range(n))
-    idx = sorted(range(n), key=lambda i: (points[i][0], points[i][1]))
-    lower = []
-    for i in idx:
-        while len(lower) >= 2:
-            o, a, b = lower[-2], lower[-1], i
-            cross = (points[a][0] - points[o][0]) * (points[b][1] - points[o][1]) - (points[a][1] - points[o][1]) * (
-                points[b][0] - points[o][0]
-            )
-            if cross <= 0:
-                lower.pop()
-            else:
-                break
-        lower.append(i)
-    upper = []
-    for i in reversed(idx):
-        while len(upper) >= 2:
-            o, a, b = upper[-2], upper[-1], i
-            cross = (points[a][0] - points[o][0]) * (points[b][1] - points[o][1]) - (points[a][1] - points[o][1]) * (
-                points[b][0] - points[o][0]
-            )
-            if cross <= 0:
-                upper.pop()
-            else:
-                break
-        upper.append(i)
-    return lower[:-1] + upper[:-1]
-
-
-def compute_hull_polygon(log_x, log_y, padding=0.18):
-    """Compute convex hull in log space with padding, return coordinates in linear space."""
-    points = list(zip(log_x.tolist(), log_y.tolist(), strict=True))
-    if len(points) < 3:
-        return [[round(float(10**x), 4), round(float(10**y), 6)] for x, y in points]
-    hull_idx = convex_hull_indices(points)
-    hull_pts = np.array([points[i] for i in hull_idx])
-    centroid = hull_pts.mean(axis=0)
-    expanded = centroid + (1 + padding) * (hull_pts - centroid)
-    expanded = np.vstack([expanded, expanded[0]])
-    return [[round(float(10**x), 4), round(float(10**y), 6)] for x, y in expanded]
-
-
 # Generate realistic log-distributed data for each family
 all_series = []
 hull_data = []
@@ -164,8 +117,31 @@ for family_name, props in families.items():
     s.z_index = 3
     all_series.append(s)
 
-    # Compute convex hull polygon for this family
-    hull_polygon = compute_hull_polygon(log_density, log_modulus)
+    # Convex hull in log space (monotone chain, inlined) with slight expansion
+    log_pts = np.column_stack([log_density, log_modulus])
+    pts_sorted = log_pts[np.lexsort((log_pts[:, 1], log_pts[:, 0]))]
+    lower, upper = [], []
+    for p in pts_sorted:
+        while len(lower) >= 2:
+            o, a = lower[-2], lower[-1]
+            if (a[0] - o[0]) * (p[1] - o[1]) - (a[1] - o[1]) * (p[0] - o[0]) <= 0:
+                lower.pop()
+            else:
+                break
+        lower.append(p)
+    for p in reversed(pts_sorted):
+        while len(upper) >= 2:
+            o, a = upper[-2], upper[-1]
+            if (a[0] - o[0]) * (p[1] - o[1]) - (a[1] - o[1]) * (p[0] - o[0]) <= 0:
+                upper.pop()
+            else:
+                break
+        upper.append(p)
+    hull_verts = np.array(lower[:-1] + upper[:-1])
+    centroid = hull_verts.mean(axis=0)
+    expanded = centroid + 1.12 * (hull_verts - centroid)
+    expanded = np.vstack([expanded, expanded[0]])
+    hull_polygon = [[round(float(10**x), 4), round(float(10**y), 6)] for x, y in expanded]
     hull_data.append(
         {"name": family_name, "fill": props["fill"], "border_color": props["border"], "data": hull_polygon}
     )
@@ -277,7 +253,7 @@ for family_name, props in families.items():
         {
             "point": {"x": props["label_pos"]["x"], "y": props["label_pos"]["y"], "xAxis": 0, "yAxis": 0},
             "text": family_name,
-            "style": {"fontSize": "26px", "fontWeight": "bold", "color": props["border"]},
+            "style": {"fontSize": "30px", "fontWeight": "bold", "color": props["border"]},
             "backgroundColor": "rgba(255, 255, 255, 0.80)",
             "borderWidth": 0,
             "borderRadius": 4,
@@ -362,17 +338,18 @@ function drawOverlays(chart) {
         if (pathArr.length > 3) {
             chart.renderer.path(pathArr)
                 .attr({
-                    stroke: 'rgba(140, 150, 170, 0.35)',
-                    'stroke-width': 2.5,
+                    stroke: 'rgba(100, 110, 140, 0.5)',
+                    'stroke-width': 3,
                     'stroke-dasharray': '14,8',
                     zIndex: 0
                 })
                 .add();
-            chart.renderer.text(g.label, labelX + 10, labelY - 8)
+            chart.renderer.text(g.label, labelX + 10, labelY - 10)
                 .css({
-                    color: 'rgba(120, 130, 150, 0.6)',
-                    fontSize: '22px',
-                    fontStyle: 'italic'
+                    color: 'rgba(80, 90, 120, 0.75)',
+                    fontSize: '26px',
+                    fontStyle: 'italic',
+                    fontWeight: '500'
                 })
                 .attr({ zIndex: 0 })
                 .add();
