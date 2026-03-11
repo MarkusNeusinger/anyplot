@@ -1,11 +1,11 @@
-""" pyplots.ai
+"""pyplots.ai
 scatter-ashby-material: Ashby Material Selection Chart
 Library: pygal 3.1.0 | Python 3.14.3
 Quality: 81/100 | Created: 2026-03-11
 """
 
 import math
-import re
+import xml.etree.ElementTree as ET
 
 import cairosvg
 import numpy as np
@@ -116,26 +116,37 @@ jitter_density = np.random.normal(1.0, 0.04, 200)
 jitter_modulus = np.random.normal(1.0, 0.04, 200)
 idx = 0
 
-# Colorblind-safe palette — Foams changed from teal to silver gray for distinction
+# Colorblind-safe palette — avoid red-green confusion
 family_colors = (
     "#306998",  # Metals — steel blue
-    "#E74C3C",  # Ceramics — red
-    "#27AE60",  # Polymers — emerald green
-    "#F39C12",  # Composites — amber
-    "#9B59B6",  # Elastomers — purple
-    "#95A5A6",  # Foams — silver gray
-    "#8B4513",  # Natural Materials — saddle brown
+    "#D4513D",  # Ceramics — terracotta/brick red
+    "#2CA02C",  # Polymers — green (distinct lightness from ceramics)
+    "#E8A317",  # Composites — golden amber
+    "#9467BD",  # Elastomers — medium purple
+    "#8C8C8C",  # Foams — neutral gray
+    "#8C564B",  # Natural Materials — earth brown
+)
+
+# Replace green with teal for proper colorblind safety
+family_colors = (
+    "#306998",  # Metals — steel blue
+    "#D4513D",  # Ceramics — brick red
+    "#17BECF",  # Polymers — teal/cyan (colorblind-safe vs red)
+    "#E8A317",  # Composites — golden amber
+    "#9467BD",  # Elastomers — purple
+    "#8C8C8C",  # Foams — neutral gray
+    "#8C564B",  # Natural Materials — earth brown
 )
 
 # Style — refined grid, clean background
 custom_style = Style(
     background="white",
-    plot_background="#f8f9fa",
+    plot_background="#f5f6f8",
     foreground="#2c3e50",
     foreground_strong="#2c3e50",
-    foreground_subtle="#f0f0f0",
+    foreground_subtle="#e8e8e8",
     colors=family_colors,
-    opacity=0.35,
+    opacity=0.38,
     opacity_hover=0.92,
     title_font_size=38,
     label_font_size=22,
@@ -201,66 +212,81 @@ for family_name, family_data in families.items():
     chart.add(family_name, points)
     family_points[family_name] = coords
 
-# Render SVG and add text labels at family centroids
-svg_string = chart.render().decode("utf-8")
+# Render SVG and parse with ElementTree for robust manipulation
+svg_bytes = chart.render()
+svg_string = svg_bytes.decode("utf-8")
 
-# Extract SVG coordinate info by finding circle positions per series
-# pygal groups series as: <g class="series serie-N color-N">
+# Register SVG namespace to avoid ns0: prefixes in output
+ET.register_namespace("", "http://www.w3.org/2000/svg")
+ET.register_namespace("xlink", "http://www.w3.org/1999/xlink")
+root = ET.fromstring(svg_string)
+ns = {"svg": "http://www.w3.org/2000/svg"}
+
+# Extract circle positions per series using proper XML traversal
 series_circles = {}
-series_pattern = re.compile(r'<g class="series serie-(\d+) color-\d+"[^>]*>(.*?)</g>', re.DOTALL)
-circle_pattern = re.compile(r'<circle\s+cx="([^"]+)"\s+cy="([^"]+)"')
+for g in root.iter("{http://www.w3.org/2000/svg}g"):
+    cls = g.get("class", "")
+    if cls.startswith("series serie-"):
+        parts = cls.split()
+        serie_idx = int(parts[1].replace("serie-", ""))
+        circles = []
+        for circle in g.iter("{http://www.w3.org/2000/svg}circle"):
+            cx = circle.get("cx")
+            cy = circle.get("cy")
+            if cx and cy:
+                circles.append((float(cx), float(cy)))
+        if circles and serie_idx not in series_circles:
+            series_circles[serie_idx] = circles
 
-for match in series_pattern.finditer(svg_string):
-    serie_idx = int(match.group(1))
-    group_content = match.group(2)
-    circles = circle_pattern.findall(group_content)
-    if circles and serie_idx not in series_circles:
-        series_circles[serie_idx] = [(float(cx), float(cy)) for cx, cy in circles]
-
-# Compute SVG centroids and insert text labels
+# Compute SVG centroids using median for robustness against outliers
 family_names = list(families.keys())
-label_elements = []
 
-# Label offset adjustments to avoid overlap with dots
+# Label offset adjustments tuned per family
 label_offsets = {
-    "Metals": (0, -42),
-    "Ceramics": (0, -42),
-    "Polymers": (0, -36),
-    "Composites": (-80, -42),
-    "Elastomers": (0, -36),
-    "Foams": (130, -36),
-    "Natural Materials": (60, -36),
+    "Metals": (0, -45),
+    "Ceramics": (0, -45),
+    "Polymers": (0, -38),
+    "Composites": (0, 45),  # Place below median to stay near main cluster
+    "Elastomers": (0, -38),
+    "Foams": (130, -38),
+    "Natural Materials": (60, -38),
 }
+
+# Create overlay group for labels
+labels_group = ET.SubElement(root, "{http://www.w3.org/2000/svg}g")
+labels_group.set("class", "family-labels")
 
 for serie_idx, circles in series_circles.items():
     if serie_idx < len(family_names):
         name = family_names[serie_idx]
         color = family_colors[serie_idx]
-        cx_avg = sum(c[0] for c in circles) / len(circles)
-        cy_avg = sum(c[1] for c in circles) / len(circles)
-        ox, oy = label_offsets.get(name, (0, -30))
-        label_x = cx_avg + ox
-        label_y = cy_avg + oy
+        # Use median instead of mean for robust centroid (avoids outlier skew)
+        cx_med = float(np.median([c[0] for c in circles]))
+        cy_med = float(np.median([c[1] for c in circles]))
+        ox, oy = label_offsets.get(name, (0, -32))
+        label_x = cx_med + ox
+        label_y = cy_med + oy
         anchor = "start" if name == "Foams" else "middle"
-        label_elements.append(
-            f'<text x="{label_x:.1f}" y="{label_y:.1f}" '
-            f'font-family="Trebuchet MS, Helvetica, sans-serif" '
-            f'font-size="25" font-weight="bold" fill="{color}" '
-            f'text-anchor="{anchor}" '
-            f'stroke="white" stroke-width="5" paint-order="stroke">'
-            f"{name}</text>"
-        )
+        text_el = ET.SubElement(labels_group, "{http://www.w3.org/2000/svg}text")
+        text_el.set("x", f"{label_x:.1f}")
+        text_el.set("y", f"{label_y:.1f}")
+        text_el.set("font-family", "Trebuchet MS, Helvetica, sans-serif")
+        text_el.set("font-size", "25")
+        text_el.set("font-weight", "bold")
+        text_el.set("fill", color)
+        text_el.set("text-anchor", anchor)
+        text_el.set("stroke", "white")
+        text_el.set("stroke-width", "5")
+        text_el.set("paint-order", "stroke")
+        text_el.text = name
 
-# Add E/ρ constant performance index guide lines via SVG
-# Derive plot area bounds from circle positions across all series
-guide_elements = []
+# Add E/ρ constant performance index guide lines
 all_cx = [cx for circles in series_circles.values() for cx, cy in circles]
 all_cy = [cy for circles in series_circles.values() for cx, cy in circles]
 
 if all_cx and all_cy:
-    # Use min/max circle positions as proxy for plot area, with small padding
     svg_x_min, svg_x_max = min(all_cx), max(all_cx)
-    svg_y_min, svg_y_max = min(all_cy), max(all_cy)  # note: SVG y is inverted
+    svg_y_min, svg_y_max = min(all_cy), max(all_cy)  # SVG y is inverted
 
     # Known data ranges from the dataset
     log_x_min = math.log10(min(d for f in families.values() for d in f["density"]) * 0.9)
@@ -274,6 +300,9 @@ if all_cx and all_cy:
         sx = svg_x_min + frac_x * (svg_x_max - svg_x_min)
         sy = svg_y_max - frac_y * (svg_y_max - svg_y_min)  # SVG y inverted
         return sx, sy
+
+    guides_group = ET.SubElement(root, "{http://www.w3.org/2000/svg}g")
+    guides_group.set("class", "guide-lines")
 
     # E/ρ guide lines: E = C * ρ  →  log(E) = log(C) + log(ρ)  (slope=1 on log-log)
     for c_val, label_text in [(0.01, "E/ρ = 0.01"), (0.0001, "E/ρ = 10⁻⁴")]:
@@ -292,29 +321,31 @@ if all_cx and all_cy:
             continue
         sx1, sy1 = data_to_svg(lx1, ly1)
         sx2, sy2 = data_to_svg(lx2, ly2)
-        guide_elements.append(
-            f'<line x1="{sx1:.1f}" y1="{sy1:.1f}" x2="{sx2:.1f}" y2="{sy2:.1f}" '
-            f'stroke="#bbbbbb" stroke-width="1.5" stroke-dasharray="12,6" opacity="0.5"/>'
-        )
-        # Label at the upper-right end of the line
-        guide_elements.append(
-            f'<text x="{sx2 - 10:.1f}" y="{sy2 - 8:.1f}" '
-            f'font-family="Trebuchet MS, Helvetica, sans-serif" '
-            f'font-size="16" fill="#999999" text-anchor="end" font-style="italic">'
-            f"{label_text}</text>"
-        )
+        line_el = ET.SubElement(guides_group, "{http://www.w3.org/2000/svg}line")
+        line_el.set("x1", f"{sx1:.1f}")
+        line_el.set("y1", f"{sy1:.1f}")
+        line_el.set("x2", f"{sx2:.1f}")
+        line_el.set("y2", f"{sy2:.1f}")
+        line_el.set("stroke", "#aaaaaa")
+        line_el.set("stroke-width", "2")
+        line_el.set("stroke-dasharray", "12,6")
+        line_el.set("opacity", "0.6")
+        # Guide line label — larger and darker for visibility
+        text_el = ET.SubElement(guides_group, "{http://www.w3.org/2000/svg}text")
+        text_el.set("x", f"{sx2 - 10:.1f}")
+        text_el.set("y", f"{sy2 - 10:.1f}")
+        text_el.set("font-family", "Trebuchet MS, Helvetica, sans-serif")
+        text_el.set("font-size", "20")
+        text_el.set("fill", "#666666")
+        text_el.set("text-anchor", "end")
+        text_el.set("font-style", "italic")
+        text_el.text = label_text
 
-# Insert labels and guide lines before closing </svg>
-all_overlays = ""
-if guide_elements:
-    all_overlays += '<g class="guide-lines">' + "".join(guide_elements) + "</g>"
-if label_elements:
-    all_overlays += '<g class="family-labels">' + "".join(label_elements) + "</g>"
-if all_overlays:
-    svg_string = svg_string.replace("</svg>", all_overlays + "</svg>")
+# Serialize back to string
+final_svg = ET.tostring(root, encoding="unicode", xml_declaration=False)
 
 # Save outputs
 with open("plot.html", "w") as f:
-    f.write(svg_string)
+    f.write(final_svg)
 
-cairosvg.svg2png(bytestring=svg_string.encode("utf-8"), write_to="plot.png")
+cairosvg.svg2png(bytestring=final_svg.encode("utf-8"), write_to="plot.png")
