@@ -1,7 +1,7 @@
 library: highcharts
 specification_id: indicator-ichimoku
 created: '2026-03-12T14:20:18Z'
-updated: '2026-03-12T14:34:06Z'
+updated: '2026-03-12T14:47:02Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23006288223
 issue: 4669
@@ -10,38 +10,42 @@ library_version: unknown
 preview_url: https://storage.googleapis.com/pyplots-images/plots/indicator-ichimoku/highcharts/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/indicator-ichimoku/highcharts/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/indicator-ichimoku/highcharts/plot.html
-quality_score: 87
+quality_score: 88
 review:
   strengths:
-  - Excellent spec compliance with all 5 Ichimoku components correctly computed and
-    plotted with proper shifts
-  - Strong design with colorblind-safe palette, subtle grid styling, and clean visual
-    refinement
-  - Crossover flag signals add analytical value beyond basic requirements
+  - Excellent spec compliance with all 5 Ichimoku components correctly computed using
+    standard (9, 26, 52) parameters with proper temporal shifts
+  - Strong visual design with colorblind-safe teal/coral palette, subtle grid styling,
+    and clean typographic hierarchy
+  - Crossover flag signals add genuine analytical value beyond the basic spec requirements
   - Cloud fill with bullish/bearish color differentiation clearly communicates trend
-    direction
-  - Well-structured data generation with realistic OHLC behavior and weekend-skipping
+    direction at a glance
+  - Well-structured data generation producing realistic OHLC behavior with weekend-skipping
     dates
   weaknesses:
-  - Duplicate x-axis month labels reduce readability due to step:2 combined with Highstock
-    auto-labeling
-  - Unnecessary plot.html file output as side effect
-  - Raw JSON approach instead of highcharts-core Python API
+  - Unnecessary plot.html file written as side effect (lines 395-396) — should be
+    removed
+  - Raw JSON chart options approach instead of using highcharts-core Python API classes
+  - Legend slightly cramped with 7 series entries in horizontal layout
   image_description: 'The plot displays an Ichimoku Cloud Technical Indicator overlaid
-    on a candlestick chart of 200 simulated trading days (Jan 2024 – Nov 2024). Candlesticks
-    use teal (#2E8B87) for bullish and coral (#D94F6B) for bearish days, with prices
-    ranging from ~$173 to ~$205. Five Ichimoku lines are visible: Tenkan-sen (blue
-    solid line), Kijun-sen (orange solid line), Senkou Span A (teal dotted), Senkou
-    Span B (coral dotted), and Chikou Span (purple dashed, shifted back). The Kumo
-    cloud is filled between Senkou Span A and B — light teal for bullish regions and
-    light pink for bearish regions. Small square-pin flags mark Tenkan/Kijun crossover
-    signals. The background is light gray (#FAFBFC) with subtle dotted y-axis gridlines.
-    Title reads "indicator-ichimoku · highcharts · pyplots.ai" with a descriptive
-    subtitle. Legend is positioned at top-right with all series labeled. Y-axis shows
-    "Price (USD)" with dollar formatting, x-axis shows "Date" with month-year labels.'
+    on a candlestick chart spanning approximately 200 simulated trading days (Jan
+    2024 – Nov 2024). Candlesticks use teal (#2E8B87) for bullish days and coral (#D94F6B)
+    for bearish days, with prices ranging from approximately $173 to $205. Five Ichimoku
+    lines are clearly visible: Tenkan-sen (blue solid line), Kijun-sen (orange solid
+    line), Senkou Span A (teal short-dotted), Senkou Span B (coral short-dotted),
+    and Chikou Span (purple dashed, shifted 26 periods back). The Kumo cloud is filled
+    between Senkou Span A and B — light teal shading for bullish regions and light
+    pink shading for bearish regions, with visible transitions between the two. Small
+    square-pin flag markers indicate Tenkan/Kijun crossover signals at several points
+    along the price series. The background is a light gray (#FAFBFC) with subtle dotted
+    y-axis gridlines at 0.10 opacity. The title reads "indicator-ichimoku · highcharts
+    · pyplots.ai" in bold 60px text, with a descriptive subtitle below. The legend
+    is positioned at the top-right showing all series. The y-axis shows "Price (USD)"
+    with dollar-formatted labels, and the x-axis shows "Date" with month-year formatted
+    labels.'
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -50,39 +54,42 @@ review:
         max: 8
         passed: true
         comment: 'All font sizes explicitly set: title 60px, subtitle 36px, axis titles
-          42px, labels 32px, legend 28px'
+          42px, tick labels 32px, legend 28px'
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: X-axis date labels show duplicate months; legend items slightly cramped
+        passed: true
+        comment: Legend items slightly cramped with 7 series; x-axis labels use step:2
+          avoiding major overlap
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Candlesticks well-sized, lines distinct with different styles, cloud
-          appropriately transparent
+        comment: Candlesticks well-sized at pointWidth:18, lines distinct with different
+          colors and dash styles, cloud at 0.22 opacity
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Colorblind-safe teal/coral palette with blue/orange/purple lines
+        comment: Colorblind-safe teal/coral palette; line colors blue, orange, purple
+          well-differentiated
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: false
-        comment: Good layout but marginBottom 280 creates excessive whitespace below
-          chart
+        comment: Good overall utilization but marginBottom:280 creates slight excess
+          whitespace below chart
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis Price (USD) with $ formatting, X-axis Date
+        comment: Y-axis Price (USD) with $ formatting, X-axis Date with month-year
+          format
     design_excellence:
       score: 15
       max: 20
@@ -92,15 +99,15 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Strong design with custom palette, Segoe UI typography, light background,
-          professional crosshair and tooltip
+        comment: Custom colorblind-safe palette, Segoe UI typography, light background,
+          professional crosshair and tooltip styling
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: Subtle dotted grid at 0.10 opacity, no axis lines or ticks, clean
-          chrome
+        comment: Subtle dotted grid at 0.10 opacity, no axis lines or tick marks,
+          clean chrome, generous margins
       - id: DE-03
         name: Data Storytelling
         score: 4
@@ -117,7 +124,7 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct candlestick with Ichimoku overlay
+        comment: Correct candlestick with Ichimoku overlay using Highstock stockChart
       - id: SC-02
         name: Required Features
         score: 4
@@ -136,7 +143,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Correct format with descriptive legend labels
+        comment: Correct title format, descriptive legend labels with period annotations
     data_quality:
       score: 14
       max: 15
@@ -153,15 +160,15 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Realistic simulated stock data with weekday-only dates, plausible
-          prices, but generic context
+        comment: Realistic simulated stock data with weekday-only dates but generic
+          unnamed stock context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Realistic price range ~$173-$205, 200 trading days, standard Ichimoku
-          parameters
+        comment: Realistic price range $173-$205, 200 trading days, standard Ichimoku
+          parameters (9, 26, 52)
     code_quality:
       score: 9
       max: 10
@@ -184,20 +191,22 @@ review:
         score: 1
         max: 2
         passed: false
-        comment: 'Unnecessary side-effect: writes plot.html file not required by spec'
+        comment: Writes unnecessary plot.html file as side effect not required by
+          spec
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for Ichimoku calculations, clean variable
+        comment: Appropriate complexity for Ichimoku calculations with clear variable
           naming
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png via Selenium screenshot
+        comment: Saves as plot.png via Selenium screenshot, uses current Highcharts
+          v11
     library_mastery:
       score: 7
       max: 10
@@ -207,13 +216,15 @@ review:
         score: 3
         max: 5
         passed: false
-        comment: Uses raw JSON chart options instead of highcharts-core Python API
+        comment: Uses raw JSON dict for chart options instead of highcharts-core Python
+          API
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
         comment: Good use of stockChart, flags series, arearange for cloud, crosshair
+          with dash style
   verdict: REJECTED
 impl_tags:
   dependencies:
