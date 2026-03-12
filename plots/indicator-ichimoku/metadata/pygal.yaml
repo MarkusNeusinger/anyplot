@@ -1,7 +1,7 @@
 library: pygal
 specification_id: indicator-ichimoku
 created: '2026-03-12T14:19:08Z'
-updated: '2026-03-12T14:22:53Z'
+updated: '2026-03-12T14:31:37Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23006287740
 issue: 4669
@@ -13,33 +13,33 @@ preview_html: https://storage.googleapis.com/pyplots-images/plots/indicator-ichi
 quality_score: 74
 review:
   strengths:
-  - All five Ichimoku components correctly computed with proper period shifts (Senkou
-    forward 26, Chikou back 26)
-  - Creative SVG polygon injection to render Kumo cloud fill where pygal has no native
-    fill-between
-  - Good font sizing with explicitly set values for all text elements
-  - Thoughtful color palette with distinct hues for each series
-  - Clean data generation with proper weekday filtering and OHLC construction
+  - Creative SVG post-processing to inject Kumo cloud polygons directly into pygal
+    SVG output
+  - All five Ichimoku components correctly calculated with proper period shifts
+  - Colorblind-safe cloud fill colors (blue/amber)
+  - Thoughtful custom style with warm background tones and explicit font sizing
+  - Good use of allow_interruptions for candlestick segment rendering
   weaknesses:
-  - Candlestick colors use blue/orange instead of spec-required conventional green/red
-  - Extensive SVG regex post-processing is fragile and complex (~80 lines of string
-    manipulation)
-  - Cloud fill uses red/green which is problematic for colorblind accessibility
-  - Design could be more polished with refined grid styling and whitespace
-  image_description: 'The plot displays an Ichimoku Cloud Technical Indicator chart
-    rendered with pygal. The title reads "indicator-ichimoku · pygal · pyplots.ai"
-    at the top. The x-axis shows dates from Mar 26 through Aug 13, labeled "Date".
-    The y-axis shows "Price ($)" ranging from approximately $132 to $168. Candlesticks
-    are rendered as vertical bars — blue for bullish (close >= open) and orange for
-    bearish (close < open). Five Ichimoku lines are overlaid: Tenkan-sen (9) in orange-red,
-    Kijun-sen (26) in dark blue, Senkou A in green, Senkou B in red/pink, and Chikou
-    Span as a dashed purple line. The Kumo cloud is filled between Senkou A and B
-    — red/pink shading for bearish regions and green shading for bullish regions.
-    The cloud is prominent in the left portion (bearish, large red fill) and transitions
-    to a smaller green fill on the right. A legend at the bottom lists all seven series.'
+  - Candlestick elements are extremely thin and nearly invisible - primary price data
+    should be most prominent
+  - Cloud fill colors deviate from spec (blue/amber vs specified green/red bullish/bearish
+    tints)
+  - Visual clutter where multiple Ichimoku lines converge in the $140-$148 range
+  image_description: The plot displays an Ichimoku Cloud Technical Indicator chart
+    titled "indicator-ichimoku · pygal · pyplots.ai". The Y-axis shows "Price ($)"
+    ranging from ~$132 to $168, and the X-axis shows "Date" from Mar 26 to Aug 13.
+    Very thin green (bullish) and red (bearish) candlestick line segments represent
+    OHLC price data. The Tenkan-sen (9) is drawn as an orange line, Kijun-sen (26)
+    as a blue line, Senkou A as a green line, Senkou B as a red/pink line, and Chikou
+    Span as a purple dashed line. The Kumo cloud is filled between Senkou A and B
+    using amber/orange tinting for bearish regions and blue tinting for bullish regions.
+    A large amber cloud dominates the April area showing a sharp price decline from
+    ~$167 to the $140s. The background is light gray with subtle horizontal grid lines.
+    Legend at the bottom lists all seven series. Candlestick elements are very thin
+    and difficult to distinguish from the Ichimoku overlay lines.
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 23
       max: 30
       items:
       - id: VQ-01
@@ -47,41 +47,42 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title=72, label=40, legend=40). All text
-          readable.
+        comment: Font sizes explicitly set in Style (title=72, label=40, legend=40,
+          major_label=36). All text readable.
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: No significant text overlap. Minor visual crowding in dense candlestick
-          regions.
+        comment: No significant text overlap. Legend at bottom readable but spacing
+          between columns uneven.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 3
         max: 6
-        passed: true
-        comment: Candlesticks visible with appropriate widths. Ichimoku lines distinguishable.
+        passed: false
+        comment: Candlestick wicks and bodies are extremely thin and nearly invisible
+          against the Ichimoku overlay lines.
       - id: VQ-04
         name: Color Accessibility
         score: 3
         max: 4
         passed: true
-        comment: Blue/orange candles are colorblind-friendly. Kumo cloud uses red/green
-          fill which is problematic.
+        comment: Cloud uses colorblind-safe blue/amber. Candlesticks use green/red
+          but supplemented by position.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good proportions, chart fills most of canvas. Minor wasted space
-          in upper region.
+        comment: Good canvas utilization. Minor wasted space on right side where future
+          Senkou spans extend.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Date and Price ($) are descriptive with units.
+        comment: Price ($) with units and Date are descriptive.
     design_excellence:
       score: 11
       max: 20
@@ -91,52 +92,52 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom color palette, off-white plot background. Above defaults but
-          not publication-level.
+        comment: Custom palette, custom background tones, warm amber/cool blue cloud
+          fills. Above defaults but thin candlesticks diminish impact.
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Subtle plot background, y-guides shown with x-guides hidden, custom
-          stroke styles.
+        comment: No x-guides, subtle y-guides, custom background tones, legend at
+          bottom. Some refinement beyond defaults.
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: Clear downtrend with bearish cloud transitioning to consolidation
-          with bullish cloud.
+        comment: 'Cloud fills tell trend story: large bearish amber cloud in April
+          shows decline, transitioning to mixed regions.'
     spec_compliance:
       score: 13
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: 'Correct: Ichimoku Cloud overlay on candlestick chart.'
+        comment: Ichimoku cloud overlay on price data. Line segments simulate candlesticks
+          creatively for pygal.
       - id: SC-02
         name: Required Features
         score: 3
         max: 4
-        passed: false
-        comment: All Ichimoku components present but candlestick colors use blue/orange
-          instead of spec-required green/red.
+        passed: true
+        comment: All five Ichimoku lines present with proper shifts. Cloud colors
+          deviate from spec (blue/amber vs green/red).
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=Date, Y=Price correctly mapped with proper Ichimoku shifts.
+        comment: X=dates, Y=price. All data visible within view range.
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Title format correct. Legend labels descriptive but could be more
-          specific.
+        comment: Title follows exact format. Legend labels descriptive and complete.
     data_quality:
       score: 13
       max: 15
@@ -146,22 +147,24 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Shows bullish/bearish candles, cloud transitions, all five Ichimoku
-          lines.
+        comment: Shows bullish/bearish candles, all Ichimoku components, cloud with
+          both bullish and bearish regions.
       - id: DQ-02
         name: Realistic Context
         score: 4
         max: 5
         passed: true
-        comment: Realistic stock OHLC data. Neutral financial context.
+        comment: Stock price data in $130-$170 range. 180 trading days with weekday-only
+          dates.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Prices in $132-168 range are realistic. 180 trading days sufficient.
+        comment: Price values sensible for equities. Standard Ichimoku parameters
+          (9, 26, 52) applied.
     code_quality:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: CQ-01
@@ -169,33 +172,35 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Linear structure but extensive SVG post-processing adds complexity.
+        comment: Linear flow but extensive SVG post-processing with regex adds complexity.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42) set at start.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used.
+        comment: 'All imports used: re, datetime, timedelta, cairosvg, numpy, pygal,
+          Style.'
       - id: CQ-04
         name: Code Elegance
-        score: 0
+        score: 1
         max: 2
-        passed: false
-        comment: SVG regex post-processing (~80 lines) is fragile and overly complex.
+        passed: true
+        comment: Complex regex SVG manipulation necessary for pygal limitations but
+          fragile.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png via cairosvg and plot.html.
+        comment: Saves plot.png via cairosvg and plot.html with native SVG.
     library_mastery:
-      score: 5
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -203,21 +208,22 @@ review:
         score: 3
         max: 5
         passed: true
-        comment: Uses pygal.XY correctly but relies heavily on SVG post-processing.
+        comment: Uses pygal.XY, Style, add() with stroke_style, allow_interruptions.
+          Heavy SVG post-processing indicates fighting the library.
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Uses allow_interruptions, stroke_style, value_formatter. Core visualization
-          bypasses pygal.
+        passed: true
+        comment: Leverages pygal SVG-native output for direct DOM manipulation. Uses
+          allow_interruptions for candlestick gaps. HTML export as native feature.
   verdict: REJECTED
 impl_tags:
   dependencies:
   - cairosvg
   techniques:
+  - custom-legend
   - html-export
-  - layer-composition
   patterns:
   - data-generation
   - iteration-over-groups
