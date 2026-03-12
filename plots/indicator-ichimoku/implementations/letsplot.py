@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 indicator-ichimoku: Ichimoku Cloud Technical Indicator Chart
 Library: letsplot 4.9.0 | Python 3.14.3
 Quality: 84/100 | Created: 2026-03-12
@@ -74,29 +74,57 @@ df_tenkan = df_visible.dropna(subset=["tenkan_sen"]).copy()
 df_kijun = df_visible.dropna(subset=["kijun_sen"]).copy()
 df_chikou = df_visible.dropna(subset=["chikou_span"]).copy()
 
-# Colors
-bull_color = "#2271B5"
-bear_color = "#D55E00"
+# Colors - conventional green/red for candlesticks per spec
+bull_color = "#26A69A"
+bear_color = "#EF5350"
 tenkan_color = "#306998"
 kijun_color = "#B5446E"
 chikou_color = "#7B8794"
-cloud_bull_color = "#2271B5"
-cloud_bear_color = "#D55E00"
+cloud_bull_color = "#26A69A"
+cloud_bear_color = "#EF5350"
 
 # X-axis tick positions (every 20 trading days from visible start)
 tick_pos = list(range(visible_start, len(df), 20))
 tick_labels = [dates[i].strftime("%b %d") for i in tick_pos if i < len(dates)]
 tick_pos = tick_pos[: len(tick_labels)]
 
-# Tooltip for candlesticks
+# Tooltip for candlesticks with rich formatting
 df_visible["date_str"] = df_visible["date"].dt.strftime("%b %d, %Y")
+
+# Identify key Ichimoku signals for visual emphasis
+# Find Tenkan/Kijun crossover points
+df_visible["tk_cross"] = (df_visible["tenkan_sen"] > df_visible["kijun_sen"]) != (
+    df_visible["tenkan_sen"].shift(1) > df_visible["kijun_sen"].shift(1)
+)
+df_crossovers = df_visible[df_visible["tk_cross"] & df_visible["tenkan_sen"].notna()].copy()
+df_visible["change"] = df_visible["close"] - df_visible["open"]
+df_visible["change_pct"] = ((df_visible["close"] - df_visible["open"]) / df_visible["open"] * 100).round(2)
 tip_fmt = (
     layer_tooltips()  # noqa: F405
-    .line("@date_str")
+    .title("@date_str")
     .line("Open|$@{open}")
     .line("High|$@{high}")
     .line("Low|$@{low}")
     .line("Close|$@{close}")
+    .line("Change|@{change_pct}%")
+    .format("open", ".2f")
+    .format("high", ".2f")
+    .format("low", ".2f")
+    .format("close", ".2f")
+)
+
+# Tooltip for indicator lines
+tenkan_tip = (
+    layer_tooltips()  # noqa: F405
+    .title("Tenkan-sen")
+    .line("Value|$@{tenkan_sen}")
+    .format("tenkan_sen", ".2f")
+)
+kijun_tip = (
+    layer_tooltips()  # noqa: F405
+    .title("Kijun-sen")
+    .line("Value|$@{kijun_sen}")
+    .format("kijun_sen", ".2f")
 )
 
 # Plot
@@ -107,7 +135,7 @@ plot = (
         aes(x="x", ymin="senkou_span_b", ymax="senkou_span_a"),  # noqa: F405
         data=df_cloud_bull,
         fill=cloud_bull_color,
-        alpha=0.15,
+        alpha=0.2,
         tooltips="none",
     )
     # Kumo cloud - bearish (red/orange fill)
@@ -115,7 +143,7 @@ plot = (
         aes(x="x", ymin="senkou_span_a", ymax="senkou_span_b"),  # noqa: F405
         data=df_cloud_bear,
         fill=cloud_bear_color,
-        alpha=0.15,
+        alpha=0.2,
         tooltips="none",
     )
     # Senkou Span A line
@@ -158,7 +186,7 @@ plot = (
         data=df_tenkan,
         color=tenkan_color,
         size=1.2,
-        tooltips="none",
+        tooltips=tenkan_tip,
     )
     # Kijun-sen (base line)
     + geom_line(  # noqa: F405
@@ -166,7 +194,18 @@ plot = (
         data=df_kijun,
         color=kijun_color,
         size=1.2,
-        tooltips="none",
+        tooltips=kijun_tip,
+    )
+    # Crossover signal markers (Tenkan/Kijun crosses)
+    + geom_point(  # noqa: F405
+        aes(x="x", y="tenkan_sen"),  # noqa: F405
+        data=df_crossovers,
+        color="#FFD700",
+        fill="#FFD700",
+        size=5,
+        shape=23,
+        stroke=1.5,
+        tooltips=layer_tooltips().title("TK Crossover").line("@date_str"),  # noqa: F405
     )
     # Chikou Span (lagging line)
     + geom_line(  # noqa: F405
@@ -193,7 +232,8 @@ plot = (
         subtitle=(
             "Ichimoku Kinko Hyo \u2014 "
             "Tenkan-sen (blue) \u00b7 Kijun-sen (rose) \u00b7 "
-            "Chikou Span (gray dashed) \u00b7 Kumo cloud"
+            "Chikou Span (gray dashed) \u00b7 Kumo cloud \u00b7 "
+            "\u25c7 TK crossover signals"
         ),
     )
     + theme_minimal()  # noqa: F405
@@ -202,7 +242,7 @@ plot = (
         axis_text=element_text(size=16, color="#555555"),  # noqa: F405
         plot_title=element_text(size=24, color="#1a1a1a", face="bold"),  # noqa: F405
         plot_subtitle=element_text(size=16, color="#666666"),  # noqa: F405
-        panel_grid_major_x=element_line(color="#ececec", size=0.3),  # noqa: F405
+        panel_grid_major_x=element_blank(),  # noqa: F405
         panel_grid_major_y=element_line(color="#e0e0e0", size=0.4),  # noqa: F405
         panel_grid_minor=element_blank(),  # noqa: F405
         axis_ticks=element_blank(),  # noqa: F405
