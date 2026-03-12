@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 indicator-ichimoku: Ichimoku Cloud Technical Indicator Chart
-Library: altair | Python 3.13
-Quality: pending | Created: 2026-03-12
+Library: altair 6.0.0 | Python 3.14.3
+Quality: 82/100 | Created: 2026-03-12
 """
 
 import altair as alt
