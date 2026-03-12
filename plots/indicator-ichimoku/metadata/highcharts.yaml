@@ -1,7 +1,7 @@
 library: highcharts
 specification_id: indicator-ichimoku
 created: '2026-03-12T14:20:18Z'
-updated: '2026-03-12T14:25:04Z'
+updated: '2026-03-12T14:34:06Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23006288223
 issue: 4669
@@ -10,81 +10,81 @@ library_version: unknown
 preview_url: https://storage.googleapis.com/pyplots-images/plots/indicator-ichimoku/highcharts/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/indicator-ichimoku/highcharts/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/indicator-ichimoku/highcharts/plot.html
-quality_score: 80
+quality_score: 87
 review:
   strengths:
-  - All five Ichimoku components correctly computed and displaced (Senkou spans forward
-    26 periods, Chikou span back 26 periods)
-  - Cloud fill with bullish/bearish color transitions works well using arearange series
-  - Professional visual design with custom background, subtle dotted grid, and intentional
-    typography
-  - Data generates a compelling price trend showing both bullish and bearish cloud
-    regions
+  - Excellent spec compliance with all 5 Ichimoku components correctly computed and
+    plotted with proper shifts
+  - Strong design with colorblind-safe palette, subtle grid styling, and clean visual
+    refinement
+  - Crossover flag signals add analytical value beyond basic requirements
+  - Cloud fill with bullish/bearish color differentiation clearly communicates trend
+    direction
+  - Well-structured data generation with realistic OHLC behavior and weekend-skipping
+    dates
   weaknesses:
-  - Red/green color scheme for candlesticks and cloud is not colorblind-accessible
-  - Title includes extra prefix before required spec-id format
-  - Cloud fill opacity at 0.15 is quite subtle and could be more visible
-  - No visual emphasis on key Ichimoku signals (e.g., Tenkan/Kijun crossovers)
-  image_description: 'The plot displays an Ichimoku Cloud chart overlaid on a candlestick
-    price chart spanning January 2024 to November 2024. The background is a light
-    gray (#FAFBFC). Candlesticks use green (bullish) and red (bearish) coloring. Five
-    Ichimoku lines are shown: a blue Tenkan-sen (9), an orange Kijun-sen (26), a green
-    dashed Senkou Span A, a red/pink dashed Senkou Span B, and a purple dashed Chikou
-    Span. The Kumo (cloud) is filled between Senkou Span A and B — green-tinted when
-    bullish and pink-tinted when bearish. The cloud extends into the future past the
-    last candlestick, and the Chikou Span is shifted into the past, both correct per
-    Ichimoku convention. The y-axis shows "Price (USD)" ranging from ~$173 to $205,
-    and the x-axis shows "Date" with monthly labels. A legend in the top-right lists
-    all six series. The title reads "Ichimoku Cloud · indicator-ichimoku · highcharts
-    · pyplots.ai" with a descriptive subtitle below.'
+  - Duplicate x-axis month labels reduce readability due to step:2 combined with Highstock
+    auto-labeling
+  - Unnecessary plot.html file output as side effect
+  - Raw JSON approach instead of highcharts-core Python API
+  image_description: 'The plot displays an Ichimoku Cloud Technical Indicator overlaid
+    on a candlestick chart of 200 simulated trading days (Jan 2024 – Nov 2024). Candlesticks
+    use teal (#2E8B87) for bullish and coral (#D94F6B) for bearish days, with prices
+    ranging from ~$173 to ~$205. Five Ichimoku lines are visible: Tenkan-sen (blue
+    solid line), Kijun-sen (orange solid line), Senkou Span A (teal dotted), Senkou
+    Span B (coral dotted), and Chikou Span (purple dashed, shifted back). The Kumo
+    cloud is filled between Senkou Span A and B — light teal for bullish regions and
+    light pink for bearish regions. Small square-pin flags mark Tenkan/Kijun crossover
+    signals. The background is light gray (#FAFBFC) with subtle dotted y-axis gridlines.
+    Title reads "indicator-ichimoku · highcharts · pyplots.ai" with a descriptive
+    subtitle. Legend is positioned at top-right with all series labeled. Y-axis shows
+    "Price (USD)" with dollar formatting, x-axis shows "Date" with month-year labels.'
   criteria_checklist:
     visual_quality:
-      score: 24
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 60px, axes 42px, ticks 32px,
-          legend 28px); all text clearly readable
+        comment: 'All font sizes explicitly set: title 60px, subtitle 36px, axis titles
+          42px, labels 32px, legend 28px'
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 4
         max: 6
-        passed: true
-        comment: X-axis date labels somewhat dense with repeated month names despite
-          step:2; minor crowding
+        passed: false
+        comment: X-axis date labels show duplicate months; legend items slightly cramped
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Candlesticks, lines, and cloud fills visible; cloud fill opacity
-          0.15 is quite subtle
+        comment: Candlesticks well-sized, lines distinct with different styles, cloud
+          appropriately transparent
       - id: VQ-04
         name: Color Accessibility
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: Red/green used as primary distinction for candlesticks and cloud
-          fill; problematic for colorblind users
+        passed: true
+        comment: Colorblind-safe teal/coral palette with blue/orange/purple lines
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
-        passed: true
-        comment: Chart fills canvas well with explicit margins; some wasted space
-          on left margin
+        passed: false
+        comment: Good layout but marginBottom 280 creates excessive whitespace below
+          chart
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis 'Price (USD)' with units, X-axis 'Date'
+        comment: Y-axis Price (USD) with $ formatting, X-axis Date
     design_excellence:
-      score: 13
+      score: 15
       max: 20
       items:
       - id: DE-01
@@ -92,24 +92,24 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom background, intentional color palette, font family, zIndex
-          layering, dash styles, crosshair styling
+        comment: Strong design with custom palette, Segoe UI typography, light background,
+          professional crosshair and tooltip
       - id: DE-02
         name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle dotted grid at 0.10 opacity, no axis lines or ticks, clean
+          chrome
+      - id: DE-03
+        name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Dotted grid at 10% opacity, no axis lines or tick marks, generous
-          margins
-      - id: DE-03
-        name: Data Storytelling
-        score: 3
-        max: 6
-        passed: false
-        comment: Clear uptrend with cloud transitions but no explicit visual emphasis
-          on key signals
+        comment: Cloud transitions communicate trend, crossover flags highlight key
+          moments, z-index layering creates depth
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -117,27 +117,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct candlestick chart with Ichimoku overlay
+        comment: Correct candlestick with Ichimoku overlay
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All five Ichimoku lines, cloud fill with bullish/bearish colors,
-          proper 26-period displacement
+        comment: All 5 Ichimoku components present with Kumo cloud and crossover signals
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Datetime x-axis, price y-axis, all data correctly mapped
+        comment: Datetime x-axis, price y-axis, correct shifts for Senkou and Chikou
+          spans
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Title has extra 'Ichimoku Cloud' prefix before required format; legend
-          labels correct
+        comment: Correct format with descriptive legend labels
     data_quality:
       score: 14
       max: 15
@@ -147,31 +146,33 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows bullish/bearish candles, green/red cloud regions, Tenkan/Kijun
-          crossovers, Chikou span interaction
+        comment: Shows bullish/bearish candles, cloud transitions, crossover signals,
+          all 5 components
       - id: DQ-02
         name: Realistic Context
         score: 4
         max: 5
         passed: true
-        comment: Simulated equity data with plausible stock price context
+        comment: Realistic simulated stock data with weekday-only dates, plausible
+          prices, but generic context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Prices in $173-$205 range, realistic for equities
+        comment: Realistic price range ~$173-$205, 200 trading days, standard Ichimoku
+          parameters
     code_quality:
       score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Defines helper function period_midpoint which slightly breaks flat
-          KISS structure
+        comment: 'Linear flow: imports, data generation, Ichimoku computation, chart
+          config, render'
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -180,16 +181,17 @@ review:
         comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: All imports used
+        passed: false
+        comment: 'Unnecessary side-effect: writes plot.html file not required by spec'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-structured, appropriate complexity for Ichimoku calculation
+        comment: Appropriate complexity for Ichimoku calculations, clean variable
+          naming
       - id: CQ-05
         name: Output & API
         score: 1
@@ -197,7 +199,7 @@ review:
         passed: true
         comment: Saves as plot.png via Selenium screenshot
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -205,15 +207,13 @@ review:
         score: 3
         max: 5
         passed: false
-        comment: Uses Highstock stockChart with correct types but builds raw JSON
-          instead of highcharts-core Python API
+        comment: Uses raw JSON chart options instead of highcharts-core Python API
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
-        passed: false
-        comment: Leverages Highstock, arearange, crosshair, datetime axis — some distinctive
-          features but could use more
+        passed: true
+        comment: Good use of stockChart, flags series, arearange for cloud, crosshair
   verdict: REJECTED
 impl_tags:
   dependencies:
@@ -222,6 +222,7 @@ impl_tags:
   - html-export
   - hover-tooltips
   - layer-composition
+  - custom-legend
   patterns:
   - data-generation
   - iteration-over-groups

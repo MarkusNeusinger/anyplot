@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 indicator-ichimoku: Ichimoku Cloud Technical Indicator Chart
 Library: highcharts unknown | Python 3.14.3
-Quality: 80/100 | Created: 2026-03-12
+Quality: 87/100 | Created: 2026-03-12
 """
 
 import json
