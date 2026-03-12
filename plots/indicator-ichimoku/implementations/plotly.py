@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 indicator-ichimoku: Ichimoku Cloud Technical Indicator Chart
 Library: plotly 6.6.0 | Python 3.14.3
-Quality: 84/100 | Created: 2026-03-12
+Quality: 90/100 | Created: 2026-03-12
 """
 
 import numpy as np

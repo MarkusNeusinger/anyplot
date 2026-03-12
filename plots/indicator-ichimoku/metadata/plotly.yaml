@@ -1,7 +1,7 @@
 library: plotly
 specification_id: indicator-ichimoku
 created: '2026-03-12T14:16:26Z'
-updated: '2026-03-12T14:20:13Z'
+updated: '2026-03-12T14:29:36Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23006287314
 issue: 4669
@@ -10,33 +10,36 @@ library_version: 6.6.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/indicator-ichimoku/plotly/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/indicator-ichimoku/plotly/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/indicator-ichimoku/plotly/plot.html
-quality_score: 84
+quality_score: 90
 review:
   strengths:
-  - All five Ichimoku components correctly computed and displayed with proper shifts
-  - Cloud segmentation with bullish/bearish fill coloring is well-implemented
-  - Excellent use of Plotly-specific features (hover templates, rangebreaks, HTML
-    export)
-  - Perfect code quality — clean, reproducible, well-structured
-  - Good visual refinement with plotly_white template, subtle grid, and custom styling
+  - Complete and correct Ichimoku implementation with all five indicator lines and
+    properly colored cloud segments
+  - Excellent data storytelling with Bullish TK Cross annotation creating a clear
+    focal point
+  - 'Strong visual hierarchy: bold Tenkan/Kijun lines, thin dotted Span lines, dashed
+    Chikou with intentional visual weight'
+  - Realistic stock price data with multiple trend phases showcasing all cloud features
+  - Clean well-structured code with appropriate complexity
   weaknesses:
-  - Candlestick colors are blue/red instead of spec-required green/red convention
-  - Cloud fill opacity (0.15) is quite subtle — could be slightly more visible
-  - Legend overlaps some data in the upper-left area
-  - No visual emphasis on key Ichimoku signals (TK cross, cloud breakout)
-  image_description: 'The plot displays an Ichimoku Cloud overlay on a candlestick
-    price chart spanning Oct 2023 to Mar 2024. The y-axis shows Price (USD) from ~$150
-    to ~$190. Candlesticks use blue (bullish) and red (bearish) coloring. Five Ichimoku
-    lines are visible: Tenkan-sen in orange (solid), Kijun-sen in purple (solid),
-    Chikou Span in green (dashed), Senkou Span A in blue (dotted), and Senkou Span
-    B in red (dotted). The Kumo cloud is filled between Span A and B — light blue
-    when bullish and light pink/red when bearish. A legend sits in the upper-left
-    corner. The subtitle reads "indicator-ichimoku · plotly · pyplots.ai". The data
-    shows an uptrend from ~$152 to ~$190 with a pullback around Jan 2024, with cloud
-    transitions from bullish to bearish visible on the right side.'
+  - Teal/red bull-bear color scheme could be improved for colorblind accessibility
+  - Senkou Span boundary lines are slightly thin at width 1
+  image_description: The plot displays an Ichimoku Cloud overlay on a candlestick
+    chart spanning from September 2023 to March 2024. Prices range from ~$150 to ~$192
+    on the y-axis labeled "Price (USD)" with dollar-sign tick prefixes. Green/teal
+    candlesticks represent up days, red candlesticks represent down days. The orange
+    Tenkan-sen (9) line and purple Kijun-sen (26) line are clearly visible overlaying
+    the price action. A blue dashed Chikou Span line appears shifted into the past.
+    The Kumo (cloud) is filled between Senkou Span A (teal dotted) and Senkou Span
+    B (red dotted), with light teal fill for bullish segments and light pink fill
+    for bearish segments. A "Bullish TK Cross" annotation with an arrow highlights
+    a signal where the Tenkan-sen crosses above the Kijun-sen. The title reads "Ichimoku
+    Cloud Overlay" in bold with subtitle "indicator-ichimoku · plotly · pyplots.ai"
+    in gray. A horizontal legend at the bottom-left lists all six trace types. The
+    background is clean white with subtle y-axis gridlines only.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -44,65 +47,68 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title=28, axis labels=22, ticks=18,
-          legend=16'
+        comment: 'All font sizes explicitly set: title 28pt, axis labels 22pt, ticks
+          18pt, legend 16pt, annotation 14pt'
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Legend slightly overlaps early data in upper-left
+        comment: No text collisions, horizontal legend fits well at bottom-left
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Candlesticks clear, lines distinct, cloud fill very subtle at 0.15
-          alpha
+        comment: Candlesticks well-sized, indicator lines distinguishable. Senkou
+          Span dotted lines slightly thin at width 1
       - id: VQ-04
         name: Color Accessibility
         score: 3
         max: 4
         passed: true
-        comment: Blue/red distinguishable but green Chikou could be problematic for
-          colorblind users
+        comment: Teal vs red for bull/bear has better contrast than pure green/red
+          but still relies on red-green distinction
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions, margins set, data fills canvas well
+        comment: Chart fills ~65% of canvas with balanced margins, no content cut
+          off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Date and Price (USD) with $ tick prefix
+        comment: Price (USD) with $ tick prefix, Date axis label
     design_excellence:
-      score: 12
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Custom palette with intentional hierarchy, different line styles,
-          above defaults
+        comment: Custom palette with intentional hierarchy, styled subtitle, custom
+          hoverlabels, clearly above defaults
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: plotly_white template, custom background, subtle grid, x-grid removed
+        comment: plotly_white removes chrome, x-grid off, subtle y-grid, range slider
+          hidden, clean margins
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Some narrative in data but no focal point or emphasis on key signals
+        passed: true
+        comment: Bullish TK Cross annotation creates focal point, cloud color transitions
+          communicate trend shifts
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -110,48 +116,50 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct candlestick chart with Ichimoku cloud overlay
+        comment: Correct Ichimoku Cloud overlay on candlestick chart
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: All 5 lines present but candlesticks use blue/red instead of spec-required
-          green/red
+        comment: All five lines, cloud fill with color change, standard parameters
+          (9, 26, 52)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=date, Y=price, correct mapping
+        comment: Date on x-axis, Price on y-axis, weekend gaps removed via rangebreaks
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct subtitle format, descriptive legend labels
+        comment: Correct subtitle format, descriptive legend labels for all traces
     data_quality:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows bullish/bearish candles, trend phases, cloud transitions
+        comment: Bullish/bearish candles, cloud color transitions, TK cross, varied
+          price action with multiple trend phases
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Realistic stock price range $150-190 with plausible daily returns
+        comment: Simulated stock OHLC data with realistic daily movements and plausible
+          price range
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sensible mid-cap stock price range with reasonable volatility
+        comment: 200 trading days, prices $150-$192, appropriate daily moves
     code_quality:
       score: 10
       max: 10
@@ -161,31 +169,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear flow, no functions or classes
+        comment: 'Linear flow: imports, data, compute, plot, layout, annotation, save'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set at start
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: numpy, pandas, plotly.graph_objects all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean code with necessary complexity for cloud segmentation
+        comment: Cloud segmentation loop necessary and well-implemented, appropriate
+          complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png with correct dimensions, also exports HTML
+        comment: Saves plot.png at 1600x900 scale=3 and plot.html
     library_mastery:
       score: 8
       max: 10
@@ -195,21 +204,22 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of go.Candlestick, go.Scatter with fill=toself, proper layout
-          config
+        comment: Good use of go.Candlestick, go.Scatter with fill=toself, update_layout,
+          hovertemplate
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Hover templates, rangebreaks, rangeslider control, HTML export
-  verdict: REJECTED
+        comment: Native go.Candlestick, rangebreaks for weekends, custom hovertemplate,
+          HTML export
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
   - hover-tooltips
   - html-export
-  - layer-composition
   patterns:
   - data-generation
   - iteration-over-groups
@@ -217,5 +227,5 @@ impl_tags:
   - rolling-window
   - time-series
   styling:
-  - grid-styling
   - alpha-blending
+  - grid-styling
