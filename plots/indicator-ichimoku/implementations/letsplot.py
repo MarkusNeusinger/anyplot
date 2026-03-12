@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 indicator-ichimoku: Ichimoku Cloud Technical Indicator Chart
 Library: letsplot 4.9.0 | Python 3.14.3
 Quality: 89/100 | Created: 2026-03-12
@@ -74,14 +74,15 @@ df_tenkan = df_visible.dropna(subset=["tenkan_sen"]).copy()
 df_kijun = df_visible.dropna(subset=["kijun_sen"]).copy()
 df_chikou = df_visible.dropna(subset=["chikou_span"]).copy()
 
-# Colors - conventional green/red for candlesticks per spec
-bull_color = "#26A69A"
-bear_color = "#EF5350"
+
+# Colors - colorblind-safe palette (teal/amber instead of pure red/green)
+bull_color = "#0077BB"  # Blue for bullish candles (colorblind-safe)
+bear_color = "#CC6633"  # Orange for bearish candles (colorblind-safe)
 tenkan_color = "#306998"
 kijun_color = "#B5446E"
 chikou_color = "#7B8794"
-cloud_bull_color = "#26A69A"
-cloud_bear_color = "#EF5350"
+cloud_bull_color = "#0077BB"
+cloud_bear_color = "#CC6633"
 
 # X-axis tick positions (every 20 trading days from visible start)
 tick_pos = list(range(visible_start, len(df), 20))
@@ -180,23 +181,36 @@ plot = (
         size=0.4,
         tooltips=tip_fmt,
     )
-    # Tenkan-sen (conversion line)
+    # Tenkan-sen (conversion line) with legend key
     + geom_line(  # noqa: F405
         aes(x="x", y="tenkan_sen"),  # noqa: F405
         data=df_tenkan,
         color=tenkan_color,
         size=1.2,
         tooltips=tenkan_tip,
+        manual_key=layer_key("Tenkan-sen"),  # noqa: F405
     )
-    # Kijun-sen (base line)
+    # Kijun-sen (base line) with legend key
     + geom_line(  # noqa: F405
         aes(x="x", y="kijun_sen"),  # noqa: F405
         data=df_kijun,
         color=kijun_color,
         size=1.2,
         tooltips=kijun_tip,
+        manual_key=layer_key("Kijun-sen"),  # noqa: F405
     )
-    # Crossover signal markers (Tenkan/Kijun crosses)
+    # Chikou Span (lagging line) with legend key
+    + geom_line(  # noqa: F405
+        aes(x="x", y="chikou_span"),  # noqa: F405
+        data=df_chikou,
+        color=chikou_color,
+        size=0.9,
+        alpha=0.6,
+        linetype="dashed",
+        tooltips="none",
+        manual_key=layer_key("Chikou Span"),  # noqa: F405
+    )
+    # Crossover signal markers
     + geom_point(  # noqa: F405
         aes(x="x", y="tenkan_sen"),  # noqa: F405
         data=df_crossovers,
@@ -206,16 +220,7 @@ plot = (
         shape=23,
         stroke=1.5,
         tooltips=layer_tooltips().title("TK Crossover").line("@date_str"),  # noqa: F405
-    )
-    # Chikou Span (lagging line)
-    + geom_line(  # noqa: F405
-        aes(x="x", y="chikou_span"),  # noqa: F405
-        data=df_chikou,
-        color=chikou_color,
-        size=0.9,
-        alpha=0.6,
-        linetype="dashed",
-        tooltips="none",
+        manual_key=layer_key("TK Crossover"),  # noqa: F405
     )
     # Scales
     + scale_fill_manual(  # noqa: F405
@@ -230,24 +235,26 @@ plot = (
         y="Price ($)",
         title="indicator-ichimoku \u00b7 letsplot \u00b7 pyplots.ai",
         subtitle=(
-            "Ichimoku Kinko Hyo \u2014 "
-            "Tenkan-sen (blue) \u00b7 Kijun-sen (rose) \u00b7 "
-            "Chikou Span (gray dashed) \u00b7 Kumo cloud \u00b7 "
-            "\u25c7 TK crossover signals"
+            "Ichimoku Kinko Hyo \u2014 Cloud shifts from bullish (blue) to bearish (orange) as trend reverses mid-year"
         ),
     )
+    + guides(fill="none", color="none")  # noqa: F405
     + theme_minimal()  # noqa: F405
     + theme(  # noqa: F405
         axis_title=element_text(size=20, color="#333333"),  # noqa: F405
         axis_text=element_text(size=16, color="#555555"),  # noqa: F405
         plot_title=element_text(size=24, color="#1a1a1a", face="bold"),  # noqa: F405
-        plot_subtitle=element_text(size=16, color="#666666"),  # noqa: F405
+        plot_subtitle=element_text(size=16, color="#666666", face="italic"),  # noqa: F405
         panel_grid_major_x=element_blank(),  # noqa: F405
         panel_grid_major_y=element_line(color="#e0e0e0", size=0.4),  # noqa: F405
         panel_grid_minor=element_blank(),  # noqa: F405
         axis_ticks=element_blank(),  # noqa: F405
         plot_background=element_rect(fill="white", color="white"),  # noqa: F405
-        legend_position="none",
+        legend_position=[0.88, 0.95],
+        legend_justification=[0.5, 1.0],
+        legend_title=element_text(size=15, face="bold", color="#333333"),  # noqa: F405
+        legend_text=element_text(size=13, color="#555555"),  # noqa: F405
+        legend_background=element_rect(fill="white", color="#cccccc", size=0.5),  # noqa: F405
     )
     + ggsize(1600, 900)  # noqa: F405
 )
