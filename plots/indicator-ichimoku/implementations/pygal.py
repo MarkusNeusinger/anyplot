@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 indicator-ichimoku: Ichimoku Cloud Technical Indicator Chart
 Library: pygal 3.1.0 | Python 3.14.3
-Quality: 71/100 | Created: 2026-03-12
+Quality: 76/100 | Created: 2026-03-12
 """
 
 import re
