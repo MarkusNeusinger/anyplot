@@ -1,7 +1,6 @@
-""" pyplots.ai
+"""pyplots.ai
 indicator-ichimoku: Ichimoku Cloud Technical Indicator Chart
 Library: altair 6.0.0 | Python 3.14.3
-Quality: 86/100 | Created: 2026-03-12
 """
 
 import altair as alt
@@ -96,14 +95,14 @@ y_scale = alt.Scale(domain=[y_min, y_max])
 # X-axis range (include future for senkou spans)
 x_scale = alt.Scale(domain=[display_df["date"].min(), senkou_df["date"].max()])
 
-# Shared x encoding with reduced tick count to avoid duplicate labels
+# Shared x encoding
 x_enc = alt.X("date:T", title="Date", scale=x_scale, axis=alt.Axis(format="%b '%y", labelAngle=-45, tickCount="month"))
 
 # Cloud fill - bullish (green tint)
 bullish_cloud = senkou_df[senkou_df["cloud_type"] == "Bullish Cloud"]
 cloud_bullish = (
     alt.Chart(bullish_cloud)
-    .mark_area(opacity=0.2)
+    .mark_area(opacity=0.18, interpolate="monotone")
     .encode(
         x=x_enc,
         y=alt.Y("senkou_span_a:Q", title="Price ($)", scale=y_scale),
@@ -112,15 +111,15 @@ cloud_bullish = (
     )
 )
 
-# Cloud fill - bearish (red tint)
+# Cloud fill - bearish (red/pink tint)
 bearish_cloud = senkou_df[senkou_df["cloud_type"] == "Bearish Cloud"]
 cloud_bearish = (
     alt.Chart(bearish_cloud)
-    .mark_area(opacity=0.2)
-    .encode(x=x_enc, y=alt.Y("senkou_span_a:Q", scale=y_scale), y2="senkou_span_b:Q", color=alt.value("#EF5350"))
+    .mark_area(opacity=0.18, interpolate="monotone")
+    .encode(x=x_enc, y=alt.Y("senkou_span_a:Q", scale=y_scale), y2="senkou_span_b:Q", color=alt.value("#E57373"))
 )
 
-# Candlestick wicks - bearish now uses #E65100 (darker amber, distinct from Kijun-sen)
+# Candlestick wicks
 candle_color = alt.Scale(domain=["Bullish", "Bearish"], range=["#26A69A", "#E65100"])
 wicks = (
     alt.Chart(display_df)
@@ -133,10 +132,10 @@ wicks = (
     )
 )
 
-# Candlestick bodies
+# Candlestick bodies - increased size for better visibility
 bodies = (
     alt.Chart(display_df)
-    .mark_bar(size=8)
+    .mark_bar(size=10)
     .encode(
         x=x_enc,
         y=alt.Y("open:Q", scale=y_scale),
@@ -168,18 +167,22 @@ lines_span_b["component"] = "Senkou Span B"
 
 indicator_df = pd.concat([lines_tenkan, lines_kijun, lines_chikou, lines_span_a, lines_span_b], ignore_index=True)
 
+# Distinct color palette: Kijun-sen now deep orange (#E65100), Senkou Span B warm brown (#8D6E63)
 indicator_color = alt.Scale(
     domain=["Tenkan-sen (9)", "Kijun-sen (26)", "Chikou Span", "Senkou Span A", "Senkou Span B"],
-    range=["#306998", "#B71C1C", "#AB47BC", "#26A69A", "#EF5350"],
+    range=["#306998", "#E65100", "#AB47BC", "#26A69A", "#8D6E63"],
 )
 indicator_dash = alt.Scale(
     domain=["Tenkan-sen (9)", "Kijun-sen (26)", "Chikou Span", "Senkou Span A", "Senkou Span B"],
     range=[[1, 0], [8, 4], [4, 3], [1, 0], [1, 0]],
 )
 
+# Nearest-point selection for interactive highlight on indicator lines
+nearest = alt.selection_point(nearest=True, on="pointerover", fields=["date"], empty=False)
+
 indicator_lines = (
     alt.Chart(indicator_df)
-    .mark_line(strokeWidth=2)
+    .mark_line(strokeWidth=2.2, interpolate="monotone")
     .encode(
         x=x_enc,
         y=alt.Y("value:Q", scale=y_scale),
@@ -189,19 +192,47 @@ indicator_lines = (
             legend=alt.Legend(
                 title="Ichimoku Components",
                 titleFontSize=16,
-                labelFontSize=14,
+                titleFontWeight="bold",
+                labelFontSize=16,
                 orient="none",
-                legendX=1250,
-                legendY=10,
-                fillColor="rgba(255,255,255,0.9)",
-                strokeColor="#ccc",
-                padding=10,
-                cornerRadius=4,
+                legendX=1230,
+                legendY=8,
+                fillColor="rgba(255,255,255,0.92)",
+                strokeColor="#bbb",
+                padding=12,
+                cornerRadius=6,
                 symbolStrokeWidth=3,
-                symbolSize=200,
+                symbolSize=220,
+                titlePadding=6,
             ),
         ),
         strokeDash=alt.StrokeDash("component:N", scale=indicator_dash, legend=None),
+        opacity=alt.value(0.9),
+    )
+)
+
+# Vertical rule following the cursor for interactive crosshair
+crosshair_rule = (
+    alt.Chart(indicator_df)
+    .mark_rule(color="#999", strokeWidth=0.8, strokeDash=[3, 3])
+    .encode(x="date:T", opacity=alt.condition(nearest, alt.value(0.7), alt.value(0)))
+    .add_params(nearest)
+)
+
+# Crosshair dots on each indicator line
+crosshair_dots = (
+    alt.Chart(indicator_df)
+    .mark_point(size=60, filled=True)
+    .encode(
+        x="date:T",
+        y=alt.Y("value:Q", scale=y_scale),
+        color=alt.Color("component:N", scale=indicator_color, legend=None),
+        opacity=alt.condition(nearest, alt.value(1), alt.value(0)),
+        tooltip=[
+            alt.Tooltip("date:T", title="Date", format="%b %d, %Y"),
+            alt.Tooltip("component:N", title="Line"),
+            alt.Tooltip("value:Q", title="Price", format="$.2f"),
+        ],
     )
 )
 
@@ -214,29 +245,62 @@ for i in range(1, len(tk_diff)):
     if tk_diff.loc[idx_prev] < 0 and tk_diff.loc[idx] >= 0:
         cross_indices.append(idx)
 
-# Use the first bullish TK cross for an annotation
+# Find bearish TK cross too (Tenkan crosses below Kijun)
+bearish_cross_indices = []
+for i in range(1, len(tk_diff)):
+    idx = tk_diff.index[i]
+    idx_prev = tk_diff.index[i - 1]
+    if tk_diff.loc[idx_prev] >= 0 and tk_diff.loc[idx] < 0:
+        bearish_cross_indices.append(idx)
+
+# Annotate bullish and bearish TK crosses for storytelling
+annotation_layers = []
 if cross_indices:
     cx = cross_indices[0]
-    cross_point = pd.DataFrame(
-        {"date": [display_df.loc[cx, "date"]], "price": [display_df.loc[cx, "tenkan_sen"]], "label": ["TK Cross"]}
+    bull_cross = pd.DataFrame(
+        {
+            "date": [display_df.loc[cx, "date"]],
+            "price": [display_df.loc[cx, "tenkan_sen"]],
+            "label": ["Bullish TK Cross"],
+        }
     )
-    cross_marker = (
-        alt.Chart(cross_point)
-        .mark_point(shape="diamond", size=250, strokeWidth=2.5, filled=False)
-        .encode(x=x_enc, y=alt.Y("price:Q", scale=y_scale), color=alt.value("#FF6F00"))
+    annotation_layers.append(
+        alt.Chart(bull_cross)
+        .mark_point(shape="diamond", size=280, strokeWidth=2.5, filled=False)
+        .encode(x=x_enc, y=alt.Y("price:Q", scale=y_scale), color=alt.value("#2E7D32"))
     )
-    cross_label = (
-        alt.Chart(cross_point)
-        .mark_text(align="left", dx=12, dy=-12, fontSize=15, fontWeight="bold")
-        .encode(x=x_enc, y=alt.Y("price:Q", scale=y_scale), text="label:N", color=alt.value("#FF6F00"))
+    annotation_layers.append(
+        alt.Chart(bull_cross)
+        .mark_text(align="left", dx=14, dy=-14, fontSize=15, fontWeight="bold", font="sans-serif")
+        .encode(x=x_enc, y=alt.Y("price:Q", scale=y_scale), text="label:N", color=alt.value("#2E7D32"))
     )
-else:
-    cross_marker = alt.Chart(pd.DataFrame()).mark_point()
-    cross_label = alt.Chart(pd.DataFrame()).mark_point()
+
+if bearish_cross_indices:
+    bx = bearish_cross_indices[0]
+    bear_cross = pd.DataFrame(
+        {
+            "date": [display_df.loc[bx, "date"]],
+            "price": [display_df.loc[bx, "tenkan_sen"]],
+            "label": ["Bearish TK Cross"],
+        }
+    )
+    annotation_layers.append(
+        alt.Chart(bear_cross)
+        .mark_point(shape="diamond", size=280, strokeWidth=2.5, filled=False)
+        .encode(x=x_enc, y=alt.Y("price:Q", scale=y_scale), color=alt.value("#C62828"))
+    )
+    annotation_layers.append(
+        alt.Chart(bear_cross)
+        .mark_text(align="left", dx=14, dy=-14, fontSize=15, fontWeight="bold", font="sans-serif")
+        .encode(x=x_enc, y=alt.Y("price:Q", scale=y_scale), text="label:N", color=alt.value("#C62828"))
+    )
 
 # Layer all components
+all_layers = [cloud_bullish, cloud_bearish, wicks, bodies, indicator_lines, crosshair_rule, crosshair_dots]
+all_layers.extend(annotation_layers)
+
 chart = (
-    alt.layer(cloud_bullish, cloud_bearish, wicks, bodies, indicator_lines, cross_marker, cross_label)
+    alt.layer(*all_layers)
     .properties(
         width=1600,
         height=900,
@@ -244,15 +308,23 @@ chart = (
             "indicator-ichimoku · altair · pyplots.ai",
             fontSize=28,
             anchor="middle",
-            subtitle="Ichimoku Kinko Hyo (9, 26, 52) — Tenkan/Kijun/Kumo/Chikou",
+            font="sans-serif",
+            subtitle="Ichimoku Kinko Hyo (9, 26, 52) — Tenkan / Kijun / Kumo / Chikou",
             subtitleFontSize=18,
             subtitleColor="#78909C",
+            subtitlePadding=6,
         ),
     )
     .resolve_scale(color="independent", strokeDash="independent")
-    .configure_axis(labelFontSize=18, titleFontSize=22, gridOpacity=0.15)
+    .configure_axis(
+        labelFontSize=18,
+        titleFontSize=22,
+        gridOpacity=0.12,
+        gridColor="#E0E0E0",
+        domainColor="#BDBDBD",
+        tickColor="#BDBDBD",
+    )
     .configure_view(strokeWidth=0)
-    .interactive()
 )
 
 # Save
