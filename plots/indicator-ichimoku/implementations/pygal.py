@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 indicator-ichimoku: Ichimoku Cloud Technical Indicator Chart
 Library: pygal 3.1.0 | Python 3.14.3
 Quality: 74/100 | Created: 2026-03-12
@@ -73,9 +73,9 @@ BULL_CLR, BEAR_CLR = "#26A269", "#E03131"
 TENKAN_CLR, KIJUN_CLR = "#E6550D", "#306998"
 SPAN_A_CLR, SPAN_B_CLR = "#2CA02C", "#D62728"
 CHIKOU_CLR = "#9467BD"
-# Colorblind-safe cloud fills: blue tint (bullish) / amber tint (bearish)
-CLOUD_BULL = "#4A90D9"
-CLOUD_BEAR = "#D4881C"
+# Cloud fills: green tint (bullish) / red tint (bearish) per spec
+CLOUD_BULL = "#26A269"
+CLOUD_BEAR = "#E03131"
 
 # Build candlestick segments (bullish/bearish)
 bull_wicks, bear_wicks = [], []
@@ -169,7 +169,7 @@ label_positions = list(range(1, VIEW_END - VIEW_START + SHIFT + 1, 20))
 chart.x_labels = label_positions
 chart.x_value_formatter = lambda x: date_map[int(round(x))].strftime("%b %d") if int(round(x)) in date_map else ""
 
-WICK_W, BODY_W = 10, 28
+WICK_W, BODY_W = 18, 48
 LINE_W = 5
 
 # Wicks (hidden from legend)
@@ -248,7 +248,7 @@ if len(bg_rects) >= 2:
             f"{(x - x_min_data) / x_range * inner_w:.1f},{inner_h - (y - y_min_data) / y_range * inner_h:.1f}"
             for x, y in pts
         )
-        polys.append(f'<polygon points="{coords}" fill="{color}" fill-opacity="0.25" stroke="none" />')
+        polys.append(f'<polygon points="{coords}" fill="{color}" fill-opacity="0.30" stroke="none" />')
 
     if polys:
         svg = svg.replace('<g class="series serie-0', "\n".join(polys) + '\n<g class="series serie-0')
