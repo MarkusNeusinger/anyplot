@@ -1,7 +1,7 @@
 library: seaborn
 specification_id: indicator-ichimoku
 created: '2026-03-12T14:16:26Z'
-updated: '2026-03-12T14:29:09Z'
+updated: '2026-03-12T14:38:35Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23006287247
 issue: 4669
@@ -10,37 +10,44 @@ library_version: 0.13.2
 preview_url: https://storage.googleapis.com/pyplots-images/plots/indicator-ichimoku/seaborn/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/indicator-ichimoku/seaborn/plot_thumb.png
 preview_html: null
-quality_score: 87
+quality_score: 89
 review:
   strengths:
-  - Excellent colorblind accessibility with blue/amber palette and filled/hollow candle
-    differentiation
-  - Full spec compliance with all 5 Ichimoku components correctly calculated and rendered
-  - Good data storytelling with TK crossover annotation creating a clear focal point
-  - Clean well-structured code with efficient PatchCollection usage
-  - Thoughtful visual refinement with despine subtle grid and custom background
+  - Excellent use of seaborn palette tools (dark_palette, light_palette, blend_palette)
+    for cohesive, colorblind-safe color scheme
+  - Thoughtful colorblind accessibility with filled vs hollow candlestick differentiation
+    beyond just color
+  - TK crossover annotation adds data storytelling dimension
+  - 'Clean visual refinement: despined, subtle grid, custom background, tick marks
+    removed'
+  - Strong seaborn identity through rugplot, hue-based lineplot, and palette generation
+    tools
+  - Well-structured linear code with appropriate complexity
   weaknesses:
-  - Cloud opacity 0.22 could be slightly higher 0.28-0.30 for better Kumo visibility
-  - Unused cb_palette variable on line 85
-  - Library mastery limited — seaborn lacks candlestick support but more seaborn features
-    could be leveraged for color and palette management
-  image_description: The plot displays an Ichimoku Cloud Technical Indicator Chart
-    overlaid on candlestick price data spanning from late April through mid-September
-    2024. The x-axis shows dates (Apr 23 through Sep 17) with rotated labels, and
-    the y-axis shows Price ($) ranging from ~140 to ~190. Dark blue filled candlesticks
-    represent bullish days and amber/orange hollow candlesticks represent bearish
-    days — a colorblind-safe differentiation. A blue Tenkan-sen (9-period) line and
-    an amber Kijun-sen (26-period) line overlay the price action. A purple Chikou
-    Span line is plotted shifted behind the price. The Kumo (cloud) is filled between
-    Senkou Span A and B — light blue tint for bullish regions (Span A > Span B) and
-    salmon/orange tint for bearish regions (Span B > Span A). A circled "Bullish TK
-    Cross" annotation with arrow highlights a crossover signal around early June.
-    The background is light gray (#f8f9fa), top and right spines are removed, and
-    a subtle y-axis grid is visible. A 7-item legend in the upper-left corner identifies
-    all components in 2 columns.
+  - Legend overlaps some price data in the upper left corner
+  - Cloud and candlestick colors deviate from spec's conventional green/red requirement
+    (blue/orange used for colorblind safety)
+  - Some candlestick bodies in the Aug-Sep period are very thin
+  image_description: The plot displays an Ichimoku Cloud chart overlaid on candlestick
+    price data spanning approximately Apr 23 to Sep 17. The title reads "indicator-ichimoku
+    · seaborn · pyplots.ai" in a clean sans-serif font. The y-axis shows "Price ($)"
+    from ~140 to ~190, and the x-axis shows "Date" with rotated date labels. Bullish
+    candlesticks are rendered as filled dark blue (#306998) rectangles, and bearish
+    candlesticks are hollow with orange (#d4820e) edges — providing both color and
+    shape differentiation for colorblind safety. The Tenkan-sen (blue) and Kijun-sen
+    (orange) indicator lines are drawn over the price action. The Chikou Span appears
+    as a pink/light purple line lagging behind price. The Kumo (cloud) is filled between
+    Senkou Span A and B, with a soft blue tint for bullish regions and a soft peach/orange
+    tint for bearish regions. The cloud transitions from bullish to bearish as the
+    price trends down. Green circle markers indicate bullish TK crossovers and red
+    X markers indicate bearish crossovers, with one annotation "Bullish TK Cross"
+    pointing to an early crossover. A subtle rug plot on the y-axis shows price density.
+    The legend in the upper left uses a 2-column layout with all seven entries. The
+    background is a light gray (#f8f9fa) with subtle y-axis grid lines. Top and right
+    spines are removed.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -48,43 +55,41 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt,
-          legend 12pt, annotation 13pt'
+        comment: 'All font sizes explicitly set: title=24, labels=20, ticks=16, plus
+          sns.set_context(''talk'', font_scale=1.2)'
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Date labels rotated 30 degrees and well-spaced; legend does not obscure
-          critical data; annotation positioned clearly
+        comment: Legend in upper left slightly overlaps some price data
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Candlesticks and indicator lines visible; cloud alpha 0.22 improved
-          but still subtle; hollow bearish candles slightly thin in dense areas
+        comment: All elements visible; some candle bodies in Aug-Sep are thin but
+          identifiable
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: 'Excellent: blue/amber palette replaces red/green; filled vs hollow
-          adds shape-based differentiation for colorblind users'
+        comment: Colorblind-safe palette with filled vs hollow shape differentiation
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good 16:9 proportions, plot fills canvas well with tight_layout
+        comment: Chart fills canvas well with balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Date and Price ($) with units
+        comment: Date on x-axis, Price ($) with unit on y-axis
     design_excellence:
-      score: 14
+      score: 15
       max: 20
       items:
       - id: DE-01
@@ -92,25 +97,23 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom colorblind-safe palette, custom rc params, dark_palette for
-          edges, filled/hollow candle differentiation is professional. Above defaults
-          but not publication-level.
+        comment: Strong design with custom palette tools, custom background, cohesive
+          blue/orange scheme
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Spines removed via despine, y-grid only at alpha 0.15, x-grid off,
-          custom background, tick length 0
+        comment: Spines removed, subtle y-only grid, tick marks removed, clean background
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: TK crossover annotation creates a clear focal point; trending data
-          shows distinct market phases
+        comment: TK crossover annotations, cloud color transitions, visual hierarchy
+          guides viewer
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -121,48 +124,46 @@ review:
         comment: Correct Ichimoku Cloud overlay on candlestick chart
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: All 5 lines present, cloud fill with bullish/bearish color change,
-          candlesticks with up/down coloring
+        comment: All five lines present, cloud fill with transitions. Uses blue/orange
+          instead of spec's green/red for colorblind safety
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Date on x-axis, price on y-axis, Senkou spans shifted forward, Chikou
-          shifted backward
+        comment: X=date, Y=price, all data correctly mapped
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct format, legend labels match all 7 components
+        comment: Title format correct, legend labels descriptive and match data
     data_quality:
-      score: 14
+      score: 13
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Shows bullish/bearish candles, both cloud types, trend transitions,
-          TK crossover, multiple market phases
+        comment: Shows bullish/bearish candles, cloud transitions, TK crossovers,
+          multiple trend phases
       - id: DQ-02
         name: Realistic Context
         score: 4
         max: 5
         passed: true
-        comment: Synthetic stock data with realistic drift patterns; plausible but
-          not real-world data
+        comment: Synthetic stock data with plausible trending behavior around $140-190
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Stock prices in $140-$190 range with realistic daily volatility
+        comment: Realistic price values and volatility for equities
     code_quality:
       score: 10
       max: 10
@@ -172,7 +173,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, theme, data, Ichimoku calc, plotting, save'
+        comment: 'Linear flow: imports, theme, data, calculations, plot, save'
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -190,41 +191,39 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Clean implementation with PatchCollection; minor unused cb_palette
-          variable
+        comment: Appropriate complexity for Ichimoku chart with candlesticks
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png at 300 DPI with bbox_inches tight
+        comment: Saves as plot.png, dpi=300, current API
     library_mastery:
-      score: 5
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 5
         max: 5
-        passed: false
-        comment: Uses sns.lineplot with hue, set_theme, set_context, despine — good
-          seaborn patterns, but candlestick rendering is entirely matplotlib
+        passed: true
+        comment: 'Expert seaborn usage: set_theme, set_context, lineplot with hue,
+          scatterplot with hue/style, despine, palette tools'
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 4
         max: 5
-        passed: false
-        comment: sns.dark_palette for edge colors and sns.lineplot hue-based rendering
-          are seaborn-specific, but bulk of visualization uses matplotlib directly
+        passed: true
+        comment: Uses rugplot, dark_palette/light_palette/blend_palette, hue-based
+          line rendering — distinctly seaborn features
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
-  - manual-ticks
   - custom-legend
-  - patches
-  - layer-composition
   - annotations
+  - manual-ticks
+  - layer-composition
   patterns:
   - data-generation
   - iteration-over-groups
