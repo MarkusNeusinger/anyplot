@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 indicator-ichimoku: Ichimoku Cloud Technical Indicator Chart
 Library: plotnine 0.15.3 | Python 3.14.3
-Quality: 88/100 | Created: 2026-03-12
+Quality: 87/100 | Created: 2026-03-12
 """
 
 import numpy as np

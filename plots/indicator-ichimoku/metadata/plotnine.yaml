@@ -1,7 +1,7 @@
 library: plotnine
 specification_id: indicator-ichimoku
 created: '2026-03-12T14:16:38Z'
-updated: '2026-03-12T14:38:54Z'
+updated: '2026-03-12T14:46:27Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23006287426
 issue: 4669
@@ -10,47 +10,34 @@ library_version: 0.15.3
 preview_url: https://storage.googleapis.com/pyplots-images/plots/indicator-ichimoku/plotnine/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/indicator-ichimoku/plotnine/plot_thumb.png
 preview_html: null
-quality_score: 88
+quality_score: 87
 review:
   strengths:
-  - All 5 Ichimoku components correctly computed with standard 9/26/52 parameters
-    and proper shifts (Senkou +26, Chikou -26)
-  - 'Significant improvement over previous attempts: cloud alpha increased to 0.25
-    for visibility, pd.concat replaces iterrows(), TK crossover markers add storytelling'
-  - Well-designed colorblind-friendly palette with intentional contrast hierarchy
-    (darker wicks, bordered legend)
-  - Perfect code quality with clean KISS structure, reproducible seed, and elegant
-    long-format data construction
-  - 'Good visual refinement with subtle grid, removed x-gridlines, #FAFAFA panel background,
-    and generous whitespace'
+  - Full spec compliance with all five Ichimoku components correctly computed and
+    displayed
+  - Excellent data storytelling with TK crossover markers and cloud color transitions
+  - Clean well-organized code with idiomatic plotnine grammar-of-graphics approach
+  - Professional visual refinement with subtle grid, styled backgrounds, and bordered
+    legend
+  - Good font sizing and text legibility throughout
   weaknesses:
-  - Senkou Span B yellow (#F9A825) is somewhat light against the white/#FAFAFA background,
-    reducing visibility
-  - Candlestick colors deviate from spec's conventional green/red (uses blue/orange-brown
-    for accessibility)
-  - Dense convergence zones where multiple indicator lines and candles overlap make
-    individual elements hard to trace
-  image_description: 'The plot displays an Ichimoku Cloud Technical Indicator chart
-    overlaid on candlestick price data spanning from Aug ''23 through Feb ''24. The
-    title reads "indicator-ichimoku · plotnine · pyplots.ai" in bold at the top. The
-    y-axis shows "Price ($)" with dollar-formatted tick labels ranging from $110 to
-    $150. The x-axis displays month/year labels (Aug ''23 through Feb ''24) with no
-    x-grid lines. Candlesticks use blue (#0077BB) for bullish and orange-brown (#CC6633)
-    for bearish candles. Five indicator lines are plotted: Tenkan-sen (blue), Kijun-sen
-    (dark red-orange), Chikou Span (purple), Senkou Span A (green), and Senkou Span
-    B (yellow-orange). The Kumo (cloud) is filled between Span A and Span B with a
-    light blue tint when bullish and light peach/orange tint when bearish (alpha=0.25).
-    The cloud extends beyond the price data to the right (correct 26-period forward
-    shift). The Chikou Span extends back into earlier periods. Small yellow diamond
-    markers highlight TK crossover points, creating focal points for data storytelling.
-    A legend labeled "Ichimoku Indicators" with a bordered white box appears on the
-    right side listing all 5 components with color-matched thick line swatches. The
-    background is white with a very subtle #FAFAFA panel and faint horizontal grid
-    lines only. Price trends downward from ~$150 to ~$110 with a clear bullish-to-bearish
-    cloud transition.'
+  - Green color reuse between Senkou Span A and bullish candlesticks could cause visual
+    confusion
+  - Cloud alpha could be slightly higher for better Kumo visibility
+  image_description: 'The plot displays an Ichimoku Cloud technical indicator chart
+    titled "indicator-ichimoku · plotnine · pyplots.ai". The x-axis shows dates from
+    Aug ''23 to Feb ''24, and the y-axis shows Price ($) ranging from ~$110 to ~$150.
+    Green and red candlesticks represent OHLC price data. Five Ichimoku indicator
+    lines are plotted: Tenkan-sen (blue), Kijun-sen (red-orange), Chikou Span (purple),
+    Senkou Span A (green), and Senkou Span B (orange). The Kumo cloud is filled between
+    Senkou Span A and B with green tint when bullish and red/pink tint when bearish.
+    Small yellow diamond markers indicate TK crossover points. The chart shows an
+    initial sideways/up period followed by a sharp downtrend starting around Jan ''24.
+    A legend box on the right identifies all five indicators. The background is light
+    gray (#FAFAFA) with subtle horizontal grid lines.'
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -58,45 +45,43 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 24pt bold, axis title 20pt,
-          axis text 16pt, legend title 16pt bold, legend text 14pt'
+        comment: 'All font sizes explicitly set: title 24pt, axis title 20pt, tick
+          labels 16pt, legend 14-16pt'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text; date labels well-spaced every ~20 trading days;
-          legend positioned cleanly on right
+        comment: All text well-spaced, no overlapping labels or legend collisions
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Indicator lines visible at size=1.2, cloud alpha improved to 0.25,
-          but dense convergence zones make individual lines hard to distinguish
+        comment: Candlesticks and lines visible, cloud alpha=0.25 could be slightly
+          more prominent
       - id: VQ-04
         name: Color Accessibility
         score: 3
         max: 4
-        passed: false
-        comment: Colorblind-friendly blue/orange-brown candles; Senkou Span B yellow
-          somewhat light against white background
+        passed: true
+        comment: Distinct indicator colors but green reused for Senkou Span A and
+          bullish candles
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Excellent 16:9 canvas with balanced margins, plot fills canvas well
-          with legend on right
+        comment: Good 16:9 layout, legend well-positioned, slight wasted space at
+          margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Price ($) with dollar formatting on y-axis; descriptive date labels
-          on x-axis
+        comment: Y-axis 'Price ($)' with units, formatted date labels on x-axis
     design_excellence:
-      score: 15
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -104,25 +89,24 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom colorblind-friendly palette, intentional hierarchy with darker
-          wicks for contrast, bordered legend, diamond crossover markers — clearly
-          above defaults
+        comment: Custom palette, themed backgrounds, bordered legend, clearly above
+          defaults
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: 'theme_minimal with x-grid removed, subtle y-grid (alpha=0.5, size=0.3),
-          #FAFAFA panel background, bordered legend, generous whitespace'
+        comment: Removed x-grid, subtle y-grid with alpha, FAFAFA panel, styled legend
+          box
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Diamond markers on TK crossovers create focal points; cloud color
-          transition tells a trend story; downtrend narrative visible
+        comment: TK crossover markers as focal points, cloud color transitions tell
+          trend story
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -133,25 +117,22 @@ review:
         comment: Correct Ichimoku Cloud overlay on candlestick chart
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: All 5 Ichimoku components with proper shifts and standard 9/26/52
-          parameters; candlestick colors deviate from spec green/red convention
+        passed: true
+        comment: All five lines, cloud fill, proper shifts, green/red candlesticks
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=trading days mapped to dates, Y=price; correct shifts for Senkou
-          (+26) and Chikou (-26)
+        comment: X=trading day with date labels, Y=price, all correctly mapped
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend with all 5 indicator names and matching
-          colors
+        comment: Title format correct, legend shows all 5 indicators with proper labels
     data_quality:
       score: 14
       max: 15
@@ -161,22 +142,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows bullish/bearish candles, cloud transitions, TK crossovers highlighted,
-          trending and ranging periods
+        comment: Shows bullish/bearish candles, both cloud colors, TK crossovers,
+          downtrend and consolidation
       - id: DQ-02
         name: Realistic Context
         score: 4
         max: 5
-        passed: false
-        comment: Simulated ACME Corp stock data with plausible price range but generic
-          scenario
+        passed: true
+        comment: Simulated ACME Corp stock data, plausible but fictional
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 200 trading days, $110-$155 range with realistic daily volatility,
-          standard Ichimoku parameters
+        comment: Prices $110-$155, realistic daily volatility, standard Ichimoku parameters
     code_quality:
       score: 10
       max: 10
@@ -186,27 +165,25 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports, data generation, Ichimoku computation,
-          plot, save'
+        comment: Clean imports -> data -> plot -> save, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set at top
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; no unused imports
+        comment: All imports used, no unused imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean pd.concat with rename/assign for long-format data; appropriate
-          complexity
+        comment: Well-organized, idiomatic pd.concat for long-format data
       - id: CQ-05
         name: Output & API
         score: 1
@@ -222,21 +199,20 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Grammar of graphics layering with mapped aesthetics, scale_color_manual,
-          guide_legend, long-format data approach
+        comment: Good grammar-of-graphics layering, proper aes mappings, scale_fill_identity,
+          guide_legend
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: 'Uses plotnine-distinctive features: mapped aes for auto-legend,
-          geom_ribbon, scale_fill_identity, guide_legend(override_aes=...)'
+        comment: Multi-data-frame layer composition, scale_fill_identity, guide_legend
+          override_aes
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
-  - manual-ticks
   - custom-legend
   patterns:
   - data-generation
