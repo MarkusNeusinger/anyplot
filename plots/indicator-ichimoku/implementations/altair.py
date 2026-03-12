@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 indicator-ichimoku: Ichimoku Cloud Technical Indicator Chart
 Library: altair 6.0.0 | Python 3.14.3
 Quality: 82/100 | Created: 2026-03-12
@@ -96,8 +96,8 @@ y_scale = alt.Scale(domain=[y_min, y_max])
 # X-axis range (include future for senkou spans)
 x_scale = alt.Scale(domain=[display_df["date"].min(), senkou_df["date"].max()])
 
-# Shared x encoding
-x_enc = alt.X("date:T", title="Date", scale=x_scale, axis=alt.Axis(format="%b '%y", labelAngle=-45))
+# Shared x encoding with reduced tick count to avoid duplicate labels
+x_enc = alt.X("date:T", title="Date", scale=x_scale, axis=alt.Axis(format="%b '%y", labelAngle=-45, tickCount="month"))
 
 # Cloud fill - bullish (green tint)
 bullish_cloud = senkou_df[senkou_df["cloud_type"] == "Bullish Cloud"]
@@ -120,22 +120,8 @@ cloud_bearish = (
     .encode(x=x_enc, y=alt.Y("senkou_span_a:Q", scale=y_scale), y2="senkou_span_b:Q", color=alt.value("#EF5350"))
 )
 
-# Senkou Span A line
-span_a_line = (
-    alt.Chart(senkou_df)
-    .mark_line(strokeWidth=1.5, opacity=0.6)
-    .encode(x=x_enc, y=alt.Y("senkou_span_a:Q", scale=y_scale), color=alt.value("#26A69A"))
-)
-
-# Senkou Span B line
-span_b_line = (
-    alt.Chart(senkou_df)
-    .mark_line(strokeWidth=1.5, opacity=0.6)
-    .encode(x=x_enc, y=alt.Y("senkou_span_b:Q", scale=y_scale), color=alt.value("#EF5350"))
-)
-
-# Candlestick wicks
-candle_color = alt.Scale(domain=["Bullish", "Bearish"], range=["#26A69A", "#FF8F00"])
+# Candlestick wicks - bearish now uses #E65100 (darker amber, distinct from Kijun-sen)
+candle_color = alt.Scale(domain=["Bullish", "Bearish"], range=["#26A69A", "#E65100"])
 wicks = (
     alt.Chart(display_df)
     .mark_rule(strokeWidth=1.2)
@@ -166,33 +152,91 @@ bodies = (
     )
 )
 
-# Tenkan-sen (Conversion Line - 9 period)
-tenkan_line = (
-    alt.Chart(display_df)
+# Build long-format dataframe for indicator lines (enables auto-legend)
+chikou_display = chikou_df[chikou_df["date"] >= display_df["date"].min()].copy()
+
+lines_tenkan = display_df[["date", "tenkan_sen"]].rename(columns={"tenkan_sen": "value"})
+lines_tenkan["component"] = "Tenkan-sen (9)"
+lines_kijun = display_df[["date", "kijun_sen"]].rename(columns={"kijun_sen": "value"})
+lines_kijun["component"] = "Kijun-sen (26)"
+lines_chikou = chikou_display[["date", "chikou_span"]].rename(columns={"chikou_span": "value"})
+lines_chikou["component"] = "Chikou Span"
+lines_span_a = senkou_df[["date", "senkou_span_a"]].rename(columns={"senkou_span_a": "value"})
+lines_span_a["component"] = "Senkou Span A"
+lines_span_b = senkou_df[["date", "senkou_span_b"]].rename(columns={"senkou_span_b": "value"})
+lines_span_b["component"] = "Senkou Span B"
+
+indicator_df = pd.concat([lines_tenkan, lines_kijun, lines_chikou, lines_span_a, lines_span_b], ignore_index=True)
+
+indicator_color = alt.Scale(
+    domain=["Tenkan-sen (9)", "Kijun-sen (26)", "Chikou Span", "Senkou Span A", "Senkou Span B"],
+    range=["#306998", "#B71C1C", "#AB47BC", "#26A69A", "#EF5350"],
+)
+indicator_dash = alt.Scale(
+    domain=["Tenkan-sen (9)", "Kijun-sen (26)", "Chikou Span", "Senkou Span A", "Senkou Span B"],
+    range=[[1, 0], [8, 4], [4, 3], [1, 0], [1, 0]],
+)
+
+indicator_lines = (
+    alt.Chart(indicator_df)
     .mark_line(strokeWidth=2)
-    .encode(x=x_enc, y=alt.Y("tenkan_sen:Q", scale=y_scale), color=alt.value("#306998"))
+    .encode(
+        x=x_enc,
+        y=alt.Y("value:Q", scale=y_scale),
+        color=alt.Color(
+            "component:N",
+            scale=indicator_color,
+            legend=alt.Legend(
+                title="Ichimoku Components",
+                titleFontSize=16,
+                labelFontSize=14,
+                orient="none",
+                legendX=1250,
+                legendY=10,
+                fillColor="rgba(255,255,255,0.9)",
+                strokeColor="#ccc",
+                padding=10,
+                cornerRadius=4,
+                symbolStrokeWidth=3,
+                symbolSize=200,
+            ),
+        ),
+        strokeDash=alt.StrokeDash("component:N", scale=indicator_dash, legend=None),
+    )
 )
 
-# Kijun-sen (Base Line - 26 period)
-kijun_line = (
-    alt.Chart(display_df)
-    .mark_line(strokeWidth=2, strokeDash=[8, 4])
-    .encode(x=x_enc, y=alt.Y("kijun_sen:Q", scale=y_scale), color=alt.value("#FF6F00"))
-)
+# Find a bullish TK cross for annotation (Tenkan crosses above Kijun)
+tk_diff = display_df["tenkan_sen"] - display_df["kijun_sen"]
+cross_indices = []
+for i in range(1, len(tk_diff)):
+    idx = tk_diff.index[i]
+    idx_prev = tk_diff.index[i - 1]
+    if tk_diff.loc[idx_prev] < 0 and tk_diff.loc[idx] >= 0:
+        cross_indices.append(idx)
 
-# Chikou Span (Lagging Span - close shifted 26 periods back)
-chikou_display = chikou_df[chikou_df["date"] >= display_df["date"].min()]
-chikou_line = (
-    alt.Chart(chikou_display)
-    .mark_line(strokeWidth=1.5, opacity=0.5, strokeDash=[4, 3])
-    .encode(x=x_enc, y=alt.Y("chikou_span:Q", scale=y_scale), color=alt.value("#AB47BC"))
-)
+# Use the first bullish TK cross for an annotation
+if cross_indices:
+    cx = cross_indices[0]
+    cross_point = pd.DataFrame(
+        {"date": [display_df.loc[cx, "date"]], "price": [display_df.loc[cx, "tenkan_sen"]], "label": ["TK Cross"]}
+    )
+    cross_marker = (
+        alt.Chart(cross_point)
+        .mark_point(shape="diamond", size=250, strokeWidth=2.5, filled=False)
+        .encode(x=x_enc, y=alt.Y("price:Q", scale=y_scale), color=alt.value("#FF6F00"))
+    )
+    cross_label = (
+        alt.Chart(cross_point)
+        .mark_text(align="left", dx=12, dy=-12, fontSize=15, fontWeight="bold")
+        .encode(x=x_enc, y=alt.Y("price:Q", scale=y_scale), text="label:N", color=alt.value("#FF6F00"))
+    )
+else:
+    cross_marker = alt.Chart(pd.DataFrame()).mark_point()
+    cross_label = alt.Chart(pd.DataFrame()).mark_point()
 
 # Layer all components
 chart = (
-    alt.layer(
-        cloud_bullish, cloud_bearish, span_a_line, span_b_line, wicks, bodies, tenkan_line, kijun_line, chikou_line
-    )
+    alt.layer(cloud_bullish, cloud_bearish, wicks, bodies, indicator_lines, cross_marker, cross_label)
     .properties(
         width=1600,
         height=900,
@@ -201,10 +245,11 @@ chart = (
             fontSize=28,
             anchor="middle",
             subtitle="Ichimoku Kinko Hyo (9, 26, 52) — Tenkan/Kijun/Kumo/Chikou",
-            subtitleFontSize=16,
+            subtitleFontSize=18,
             subtitleColor="#78909C",
         ),
     )
+    .resolve_scale(color="independent", strokeDash="independent")
     .configure_axis(labelFontSize=18, titleFontSize=22, gridOpacity=0.15)
     .configure_view(strokeWidth=0)
     .interactive()
