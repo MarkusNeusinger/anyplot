@@ -1,0 +1,224 @@
+library: plotnine
+specification_id: indicator-ichimoku
+created: '2026-03-12T14:16:38Z'
+updated: '2026-03-12T14:46:27Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23006287426
+issue: 4669
+python_version: 3.14.3
+library_version: 0.15.3
+preview_url: https://storage.googleapis.com/pyplots-images/plots/indicator-ichimoku/plotnine/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/indicator-ichimoku/plotnine/plot_thumb.png
+preview_html: null
+quality_score: 87
+review:
+  strengths:
+  - Full spec compliance with all five Ichimoku components correctly computed and
+    displayed
+  - Excellent data storytelling with TK crossover markers and cloud color transitions
+  - Clean well-organized code with idiomatic plotnine grammar-of-graphics approach
+  - Professional visual refinement with subtle grid, styled backgrounds, and bordered
+    legend
+  - Good font sizing and text legibility throughout
+  weaknesses:
+  - Green color reuse between Senkou Span A and bullish candlesticks could cause visual
+    confusion
+  - Cloud alpha could be slightly higher for better Kumo visibility
+  image_description: 'The plot displays an Ichimoku Cloud technical indicator chart
+    titled "indicator-ichimoku · plotnine · pyplots.ai". The x-axis shows dates from
+    Aug ''23 to Feb ''24, and the y-axis shows Price ($) ranging from ~$110 to ~$150.
+    Green and red candlesticks represent OHLC price data. Five Ichimoku indicator
+    lines are plotted: Tenkan-sen (blue), Kijun-sen (red-orange), Chikou Span (purple),
+    Senkou Span A (green), and Senkou Span B (orange). The Kumo cloud is filled between
+    Senkou Span A and B with green tint when bullish and red/pink tint when bearish.
+    Small yellow diamond markers indicate TK crossover points. The chart shows an
+    initial sideways/up period followed by a sharp downtrend starting around Jan ''24.
+    A legend box on the right identifies all five indicators. The background is light
+    gray (#FAFAFA) with subtle horizontal grid lines.'
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 24pt, axis title 20pt, tick
+          labels 16pt, legend 14-16pt'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: All text well-spaced, no overlapping labels or legend collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Candlesticks and lines visible, cloud alpha=0.25 could be slightly
+          more prominent
+      - id: VQ-04
+        name: Color Accessibility
+        score: 3
+        max: 4
+        passed: true
+        comment: Distinct indicator colors but green reused for Senkou Span A and
+          bullish candles
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good 16:9 layout, legend well-positioned, slight wasted space at
+          margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Y-axis 'Price ($)' with units, formatted date labels on x-axis
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom palette, themed backgrounds, bordered legend, clearly above
+          defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Removed x-grid, subtle y-grid with alpha, FAFAFA panel, styled legend
+          box
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: TK crossover markers as focal points, cloud color transitions tell
+          trend story
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Ichimoku Cloud overlay on candlestick chart
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: All five lines, cloud fill, proper shifts, green/red candlesticks
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=trading day with date labels, Y=price, all correctly mapped
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct, legend shows all 5 indicators with proper labels
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows bullish/bearish candles, both cloud colors, TK crossovers,
+          downtrend and consolidation
+      - id: DQ-02
+        name: Realistic Context
+        score: 4
+        max: 5
+        passed: true
+        comment: Simulated ACME Corp stock data, plausible but fictional
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Prices $110-$155, realistic daily volatility, standard Ichimoku parameters
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean imports -> data -> plot -> save, no functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used, no unused imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-organized, idiomatic pd.concat for long-format data
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with dpi=300, current plotnine API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good grammar-of-graphics layering, proper aes mappings, scale_fill_identity,
+          guide_legend
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Multi-data-frame layer composition, scale_fill_identity, guide_legend
+          override_aes
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - custom-legend
+  patterns:
+  - data-generation
+  dataprep:
+  - rolling-window
+  - time-series
+  styling:
+  - alpha-blending
+  - grid-styling
