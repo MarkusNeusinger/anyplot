@@ -1,10 +1,11 @@
-""" pyplots.ai
+"""pyplots.ai
 scatter-connected-temporal: Connected Scatter Plot with Temporal Path
 Library: plotly 6.6.0 | Python 3.14.3
 Quality: 82/100 | Created: 2026-03-13
 """
 
 import numpy as np
+import plotly.colors as pc
 import plotly.graph_objects as go
 
 
@@ -96,39 +97,28 @@ inflation = np.array(
 # Temporal normalization for color mapping
 t_norm = np.linspace(0, 1, n)
 
-# Viridis-inspired multi-hue colorscale for stronger temporal contrast
-colorscale = [
-    [0.0, "#440154"],
-    [0.15, "#482878"],
-    [0.3, "#3e4989"],
-    [0.45, "#31688e"],
-    [0.6, "#26828e"],
-    [0.75, "#1f9e89"],
-    [0.85, "#6ece58"],
-    [1.0, "#fde725"],
-]
+# Use Plotly's built-in viridis colorscale for consistent color sampling
+viridis = pc.get_colorscale("viridis")
 
 fig = go.Figure()
 
-# Segment-by-segment colored connecting lines for temporal gradient on path
+# Segment-by-segment colored lines using Plotly's sample_colorscale for consistency
+seg_colors = pc.sample_colorscale("viridis", [t_norm[i] for i in range(n - 1)])
+
 for i in range(n - 1):
-    seg_color_t = t_norm[i]
-    # Sample the viridis scale for this segment
-    r = int(68 + (253 - 68) * seg_color_t)
-    g = int(1 + (231 - 1) * seg_color_t)
-    b = int(84 + (37 - 84) * seg_color_t)
+    r, g, b = pc.unlabel_rgb(seg_colors[i])
     fig.add_trace(
         go.Scatter(
             x=unemployment[i : i + 2],
             y=inflation[i : i + 2],
             mode="lines",
-            line={"color": f"rgba({r}, {g}, {b}, 0.55)", "width": 3},
+            line={"color": f"rgba({r}, {g}, {b}, 0.6)", "width": 3.5},
             hoverinfo="skip",
             showlegend=False,
         )
     )
 
-# Data points with multi-hue color gradient
+# Data points with viridis color gradient
 fig.add_trace(
     go.Scatter(
         x=unemployment,
@@ -137,15 +127,15 @@ fig.add_trace(
         marker={
             "size": 18,
             "color": t_norm,
-            "colorscale": colorscale,
+            "colorscale": "viridis",
             "line": {"color": "white", "width": 2},
             "colorbar": {
                 "title": {"text": "Year", "font": {"size": 18}},
-                "tickvals": [0, 0.25, 0.5, 0.75, 1],
-                "ticktext": ["1990", "1998", "2006", "2015", "2023"],
+                "tickvals": [0, 0.2, 0.4, 0.6, 0.8, 1],
+                "ticktext": ["1990", "1997", "2003", "2010", "2017", "2023"],
                 "tickfont": {"size": 16},
-                "len": 0.55,
-                "thickness": 18,
+                "len": 0.75,
+                "thickness": 22,
                 "outlinewidth": 0,
                 "x": 1.02,
             },
@@ -184,27 +174,48 @@ for idx, (label, ax_off, ay_off) in key_points.items():
         ax=ax_off,
         ay=ay_off,
         font={"size": 16, "color": "#2d2d2d"},
-        bgcolor="rgba(255, 255, 255, 0.75)",
-        borderpad=3,
+        bgcolor="rgba(255, 255, 255, 0.8)",
+        borderpad=4,
     )
 
-# Directional arrow at midpoint showing temporal flow
-mid = n // 2
-fig.add_annotation(
-    x=unemployment[mid],
-    y=inflation[mid],
-    ax=unemployment[mid - 2],
-    ay=inflation[mid - 2],
-    xref="x",
-    yref="y",
-    axref="x",
-    ayref="y",
-    showarrow=True,
-    arrowhead=3,
-    arrowsize=2.5,
-    arrowwidth=2.5,
-    arrowcolor="#31688e",
-)
+# Directional arrows showing temporal flow at two path points
+for start_idx, end_idx, color in [
+    (10, 13, "#3e4989"),  # Early 2000s path direction
+    (27, 30, "#6ece58"),  # Late 2010s into pandemic
+]:
+    fig.add_annotation(
+        x=unemployment[end_idx],
+        y=inflation[end_idx],
+        ax=unemployment[start_idx],
+        ay=inflation[start_idx],
+        xref="x",
+        yref="y",
+        axref="x",
+        ayref="y",
+        showarrow=True,
+        arrowhead=3,
+        arrowsize=2,
+        arrowwidth=2.5,
+        arrowcolor=color,
+        opacity=0.5,
+    )
+
+# Decade shading to help distinguish dense regions
+decade_labels = [
+    {"x": 6.8, "y": 5.0, "text": "1990s", "color": "rgba(68,1,84,0.12)"},
+    {"x": 7.8, "y": -0.1, "text": "2000s", "color": "rgba(49,104,142,0.10)"},
+    {"x": 4.0, "y": 0.3, "text": "2010s", "color": "rgba(53,183,121,0.10)"},
+    {"x": 5.8, "y": 7.5, "text": "2020s", "color": "rgba(253,231,37,0.12)"},
+]
+
+for dl in decade_labels:
+    fig.add_annotation(
+        x=dl["x"],
+        y=dl["y"],
+        text=f"<i>{dl['text']}</i>",
+        showarrow=False,
+        font={"size": 20, "color": "rgba(100,100,100,0.5)"},
+    )
 
 # Layout with refined styling
 fig.update_layout(
@@ -239,7 +250,7 @@ fig.update_layout(
     paper_bgcolor="white",
     width=1600,
     height=900,
-    margin={"l": 90, "r": 120, "t": 90, "b": 90},
+    margin={"l": 90, "r": 100, "t": 90, "b": 80},
 )
 
 # Save
