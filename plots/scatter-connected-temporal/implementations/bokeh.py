@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 scatter-connected-temporal: Connected Scatter Plot with Temporal Path
 Library: bokeh 3.9.0 | Python 3.14.3
 Quality: 87/100 | Created: 2026-03-13
@@ -96,8 +96,10 @@ inflation = np.array(
     ]
 )
 
-# Single shared palette for both lines and scatter points
-palette = list(reversed(linear_palette(Blues256, n)))
+# Single shared palette — truncate lightest blues for contrast against #FAFAFA background
+# Use only the darker 60% of Blues256 (indices 0-153) so even the earliest years are visible
+dark_blues = Blues256[:154]
+palette = list(reversed(linear_palette(dark_blues, n)))
 
 source = ColumnDataSource(data={"unemployment": unemployment, "inflation": inflation, "year_val": years.astype(float)})
 
@@ -120,7 +122,7 @@ p = figure(
 xs = [[unemployment[i], unemployment[i + 1]] for i in range(n - 1)]
 ys = [[inflation[i], inflation[i + 1]] for i in range(n - 1)]
 line_colors = [palette[i] for i in range(n - 1)]
-line_alphas = [0.5 + 0.5 * (i / (n - 2)) for i in range(n - 1)]
+line_alphas = [0.65 + 0.35 * (i / (n - 2)) for i in range(n - 1)]
 
 line_source = ColumnDataSource(data={"xs": xs, "ys": ys, "colors": line_colors, "alphas": line_alphas})
 p.multi_line(xs="xs", ys="ys", source=line_source, line_width=5, line_color="colors", line_alpha="alphas")
