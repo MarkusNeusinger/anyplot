@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 scatter-connected-temporal: Connected Scatter Plot with Temporal Path
 Library: pygal 3.1.0 | Python 3.14.3
-Quality: 77/100 | Created: 2026-03-13
+Quality: 86/100 | Created: 2026-03-13
 """
 
 import numpy as np

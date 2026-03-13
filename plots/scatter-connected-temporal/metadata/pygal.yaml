@@ -1,7 +1,7 @@
 library: pygal
 specification_id: scatter-connected-temporal
 created: '2026-03-13T15:25:29Z'
-updated: '2026-03-13T15:29:36Z'
+updated: '2026-03-13T15:38:03Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23057666006
 issue: 4675
@@ -10,34 +10,38 @@ library_version: 3.1.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/scatter-connected-temporal/pygal/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/scatter-connected-temporal/pygal/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/scatter-connected-temporal/pygal/plot.html
-quality_score: 77
+quality_score: 86
 review:
   strengths:
-  - Excellent data choice with real-world economics context (life expectancy vs GDP)
-  - Clean code structure with proper seed and explicit font sizing
-  - Good use of start/end markers and key year highlights for narrative structure
-  - Renders both PNG and interactive HTML (SVG) output
+  - Excellent temporal color gradient storytelling with light-to-dark blue progression
+    communicating direction of time
+  - Well-chosen real-world scenario (life expectancy vs GDP) with realistic crisis
+    dips visible in the path
+  - Clean well-structured code with elegant era segmentation and overlap-by-1 for
+    visual continuity
+  - Strong visual design with custom palette, subtle dashed grid, prominent start/end
+    markers, and cohesive color story
+  - 'Perfect code quality: reproducible with seed, clean imports, KISS linear structure'
   weaknesses:
-  - Color gradient computed but never applied (dead code) - temporal direction is
-    not visually encoded
-  - Connecting lines are too faint to clearly follow the temporal path
-  - Temporal path dots are too small for the data density
-  - Series color distinction between Temporal path and Key years is subtle
-  image_description: 'The plot displays a connected scatter plot titled "Life Expectancy
-    vs GDP · scatter-connected-temporal · pygal · pyplots.ai". The x-axis shows "GDP
-    per Capita (USD)" ranging from $8,000 to $22,000, and the y-axis shows "Life Expectancy
-    (years)" from ~68.0 to ~78.0 yrs. Data points are rendered as small dark blue
-    dots connected by very faint light gray lines, tracing a temporal path from bottom-left
-    (1990, low GDP/LE) to upper-right (2023, high GDP/LE). Key years are marked with
-    slightly larger light cyan/blue dots. A large dark navy dot marks "Start (1990)"
-    and a large black dot marks "End (2023)". The legend at the bottom lists four
-    series: "Temporal path (1990-2023)", "Key years", "Start (1990)", and "End (2023)".
-    The background is white with a very faint gray plot area (#fafafa) and subtle
-    dotted grid lines. The path shows some horizontal/backward movements corresponding
-    to recession dips.'
+  - Key year text annotations are missing from the static PNG output — only available
+    as tooltips in HTML, violating spec requirement for visible text labels
+  - Lightest blue era dots are subtle against the light plot background
+  image_description: 'The plot displays a connected scatter plot of Life Expectancy
+    (years) vs GDP per Capita (USD) for a fictional country from 1990 to 2023. The
+    temporal path moves generally from lower-left (~$8,500, 68 yrs) to upper-right
+    (~$22,000, 76 yrs). The path is segmented into 6 temporal eras using a light-to-dark
+    blue gradient: lightest blue for 1990-1998, progressively darker through 2020-2023.
+    Key years are marked with amber/orange dots (though without visible text labels).
+    A large red dot marks Start (1990) and a large dark navy dot marks End (2023).
+    The plot background is a subtle off-white (#f7f9fb) with light gray dashed grid
+    lines. The title reads "Life Expectancy vs GDP · scatter-connected-temporal ·
+    pygal · pyplots.ai". Axis labels include units (USD and years). A 2-row legend
+    at the bottom identifies all 9 series (6 era segments, key years, start, end).
+    The path shows visible loops/dips at the 1998 recession, 2008 financial crisis,
+    and 2020 pandemic periods.'
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -45,64 +49,67 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=52, labels=40, major_labels=36,
-          legend=32). Legend text slightly small.
+        comment: Font sizes explicitly set (title=52, label=40, major_label=36, legend=34).
+          All text readable. Legend entries slightly small.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements anywhere.
+        comment: No overlapping text. Legend well laid out, tick labels clear.
       - id: VQ-03
         name: Element Visibility
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Temporal path dots too small (dots_size=6), connecting lines too
-          faint (stroke_opacity=0.6).
+        passed: true
+        comment: Dots well-sized (10/16/22). Lightest blue era dots somewhat subtle
+          against light plot background.
       - id: VQ-04
         name: Color Accessibility
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: All-blue palette is colorblind-safe but Key years vs Temporal path
-          distinction is subtle.
+        comment: Blue luminance gradient is colorblind-safe. Amber and red accents
+          provide distinct separation.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good proportions, legend well-positioned at bottom.
+        comment: Good proportions. Some empty space in upper-left quadrant. Plot fills
+          ~55-60% of canvas.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units on both axes.
+        comment: GDP per Capita (USD) and Life Expectancy (years) — descriptive with
+          units.
     design_excellence:
-      score: 11
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Custom Style with blue palette, off-white background, custom typography.
-          Above defaults but faint lines limit appeal.
+        comment: Thoughtful blue gradient palette, amber/red/navy accents. Custom
+          font, tailored backgrounds. Above defaults.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Subtle grid lines and customized margins but spines still present.
+        passed: true
+        comment: Subtle dashed grid, off-white plot background, customized foreground.
+          pygal limits spine removal.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Start/end markers and key years create hierarchy. Color gradient
-          computed but never applied hurts storytelling.
+        passed: true
+        comment: Color gradient encodes time, crisis dips visible as loops, start/end
+          prominently marked. Missing visible year annotations.
     spec_compliance:
       score: 13
       max: 15
@@ -112,26 +119,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct connected scatter plot using pygal.XY with stroke and dots.
+        comment: Connected scatter plot with temporal path. XY chart with stroke and
+          visible dots.
       - id: SC-02
         name: Required Features
         score: 2
         max: 4
         passed: false
-        comment: Color gradient computed but never applied. Temporal direction indicator
-          missing from visual output.
+        comment: Key year text labels missing from static PNG. Only tooltip-based
+          labels exist.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=GDP, Y=Life expectancy, connected in temporal order.
+        comment: X=GDP, Y=life expectancy, temporal ordering correct.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows required format. Legend labels descriptive.
+        comment: Title format correct. Legend labels identify era ranges and special
+          markers.
     data_quality:
       score: 14
       max: 15
@@ -141,22 +150,23 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Shows temporal co-evolution with trend, recession dips, and pandemic
-          effects.
+        comment: Shows upward trend, recession dips, pandemic drop, recovery. Good
+          variety.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Life expectancy vs GDP is a classic Gapminder-style economics visualization.
+        comment: Life expectancy vs GDP over decades — real-world plausible and neutral.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: GDP $8K-$22K and LE 68-76 years are realistic for a developing economy.
+        comment: GDP $8K-$22K and LE 68-76 yrs realistic for emerging economy over
+          34 years.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -164,7 +174,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean linear structure with no functions or classes.
+        comment: 'Linear flow: imports, data, style, chart, series, save. No functions/classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -176,37 +186,37 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports used.
+        comment: numpy, pygal, Style — all used.
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'Dead code: colors_hex gradient computed but never applied.'
+        passed: true
+        comment: Clean, well-structured. Elegant era segmentation with overlap-by-1.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png, uses current pygal API.
+        comment: Saves as plot.png and plot.html. Current pygal API.
     library_mastery:
-      score: 5
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
-        passed: false
-        comment: Correct pygal.XY usage with dict data points but doesn't leverage
-          per-point styling.
+        passed: true
+        comment: Good use of pygal.XY(), Style, per-point dicts, stroke_style. js=[]
+          for static export.
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Uses dict data format and dual PNG/HTML output. Doesn't use more
-          distinctive pygal features.
+        passed: true
+        comment: Per-point color dicts, stroke_style options, dual PNG+HTML output,
+          tooltip customization.
   verdict: REJECTED
 impl_tags:
   dependencies: []
@@ -214,7 +224,9 @@ impl_tags:
   - html-export
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep:
   - cumulative-sum
   styling:
   - grid-styling
+  - gradient-fill
