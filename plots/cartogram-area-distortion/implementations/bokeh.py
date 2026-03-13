@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 cartogram-area-distortion: Cartogram with Area Distortion by Data Value
 Library: bokeh 3.9.0 | Python 3.14.3
 Quality: 81/100 | Created: 2026-03-13
@@ -102,11 +102,11 @@ color_mapper = LinearColorMapper(palette=Viridis256, low=min_pop, high=max_pop)
 p = figure(
     width=4800,
     height=2700,
-    title="US States by Population · cartogram-area-distortion · bokeh · pyplots.ai",
+    title="cartogram-area-distortion · bokeh · pyplots.ai",
     x_axis_label="Longitude (°W)",
     y_axis_label="Latitude (°N)",
     x_range=Range1d(-128, -66),
-    y_range=Range1d(25, 50),
+    y_range=Range1d(25, 50.5),
     tools="hover,pan,wheel_zoom,reset",
     tooltips=[("State", "@name"), ("Population", "@pop_label")],
 )
@@ -137,17 +137,20 @@ p.scatter(
     line_width=1.5,
 )
 
-# Label major states (pop > 7M), with offsets for crowded northeast
+# Label major states with careful offsets to avoid crowding in the Northeast
+# Skip NJ and MA in labels to reduce Northeast crowding; they are visible via hover
 label_offsets = {
-    "NY": (1.5, 1.2),
-    "PA": (0, -1.8),
-    "NJ": (2.0, -0.8),
-    "VA": (0, -1.5),
-    "MA": (2.5, 0.5),
-    "OH": (0, -1.5),
+    "NY": (2.5, 1.5),
+    "PA": (-2.0, -2.0),
+    "VA": (2.0, -1.5),
+    "OH": (-2.5, -1.0),
+    "MI": (0, 1.0),
+    "NC": (2.0, -1.0),
+    "GA": (0, -1.5),
 }
+skip_labels = {"NJ", "MA"}  # Too crowded in Northeast; visible via tooltips
 for i, name in enumerate(names):
-    if populations[i] > 7.0:
+    if populations[i] > 7.0 and name not in skip_labels:
         dx, dy = label_offsets.get(name, (0, 0))
         label = Label(
             x=lons[i] + dx,
@@ -183,10 +186,10 @@ for j, lp in enumerate(legend_pops):
         y="y",
         size="s",
         source=legend_src,
-        fill_color="#306998",
-        fill_alpha=0.5,
+        fill_color=Viridis256[int(255 * np.sqrt((lp - min_pop) / (max_pop - min_pop)))],
+        fill_alpha=0.88,
         line_color="#2c2c2c",
-        line_width=1,
+        line_width=1.5,
     )
     legend_label = Label(
         x=size_legend_x + 2.5,
@@ -223,12 +226,23 @@ color_bar = ColorBar(
     label_standoff=16,
     major_label_text_font_size="16pt",
     title="Population (millions)",
-    title_text_font_size="18pt",
-    width=35,
-    padding=50,
-    margin=20,
+    title_text_font_size="17pt",
+    width=55,
+    padding=60,
+    margin=30,
 )
 p.add_layout(color_bar, "right")
+
+# Subtitle for context and storytelling
+subtitle = Label(
+    x=-127,
+    y=49.5,
+    text="Circle area proportional to population — California (39M) dwarfs Wyoming (0.6M) by 65\u00d7",
+    text_font_size="16pt",
+    text_color="#666666",
+    text_font_style="italic",
+)
+p.add_layout(subtitle)
 
 # Typography and style
 p.title.text_font_size = "28pt"
