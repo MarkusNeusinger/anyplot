@@ -1,7 +1,7 @@
 library: highcharts
 specification_id: cartogram-area-distortion
 created: '2026-03-13T21:24:40Z'
-updated: '2026-03-13T21:43:32Z'
+updated: '2026-03-13T21:57:45Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23070855388
 issue: 4671
@@ -10,37 +10,38 @@ library_version: unknown
 preview_url: https://storage.googleapis.com/pyplots-images/plots/cartogram-area-distortion/highcharts/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/cartogram-area-distortion/highcharts/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/cartogram-area-distortion/highcharts/plot.html
-quality_score: 82
+quality_score: 85
 review:
   strengths:
-  - Excellent data quality with real 2020 Census data for all 50 states and accurate
-    population figures
-  - Good geographic positioning with proper Alaska/Hawaii inset
-  - Clean regional color-coding with colorblind-friendly palette and white bubble
-    borders
-  - Annotation box effectively explains the area encoding
-  - Both static PNG and interactive HTML outputs produced
-  - Well-organized deterministic code with KISS structure
+  - Excellent Dorling cartogram approach with geographic positioning and proportional
+    circle areas
+  - Strong design with custom regional color palette, white bubble borders, and faint
+    US outline reference
+  - Adaptive data label sizing based on population creates visual hierarchy
+  - Real US Census 2020 data with accurate population values
+  - Clean well-structured code with both PNG and interactive HTML output
+  - Annotation box clearly explains the area encoding with min/max reference
   weaknesses:
-  - Missing reference map inset or original region outlines as spec suggests for comparison
-  - NE states area (NJ/DE/MD/CT/RI) is somewhat crowded with allowOverlap enabled
-  - Uses raw JSON config instead of highcharts-core Python API (the recommended idiomatic
-    approach)
-  - Could improve design polish to reach publication quality
-  image_description: 'The plot displays a Dorling cartogram of all 50 US states, where
-    each state is represented by a circle positioned roughly at its geographic location.
-    Circle area is proportional to state population based on 2020 US Census data (in
-    thousands). States are color-coded by region: Northeast (blue), South (peach/orange),
-    Midwest (green), and West (purple/lavender). California is the largest circle
-    in the west, followed by Texas and Florida. Alaska and Hawaii are inset to the
-    lower-left. Each circle is labeled with a two-letter state abbreviation in white
-    bold text with dark outline. An annotation box in the lower-right reads "Circle
-    area = Population" with the largest and smallest states. A horizontal legend at
-    the bottom identifies the four regions. The title reads "cartogram-area-distortion
-    · highcharts · pyplots.ai" with a subtitle explaining the Dorling cartogram approach.'
+  - Smallest state bubbles (WY, VT, ND) are very tiny and hard to distinguish
+  - Northeast cluster has some label crowding despite geographic spreading
+  - Spec mentions contiguous cartograms but implementation uses non-contiguous circles
+  - No secondary variable encoded via color intensity (only categorical region coloring)
+  image_description: 'The plot displays a Dorling cartogram of US states where circle
+    area is proportional to 2020 Census population (in thousands). States are positioned
+    roughly according to their geographic coordinates. Four US Census regions are
+    color-coded: Northeast (muted blue #3A6DB5), South (warm orange #D97941), Midwest
+    (sage green #49873A), and West (muted purple #7B57A0). The title reads "cartogram-area-distortion
+    · highcharts · pyplots.ai" with a descriptive subtitle. A faint dotted line traces
+    the continental US outline as geographic reference. California is the largest
+    circle (southwest), followed by Texas, Florida, and New York. The smallest circles
+    (Wyoming, Vermont) are barely visible. State abbreviations are displayed as white
+    bold data labels with dark text outline. An annotation box in the lower right
+    explains "Circle area = Population" with min/max values. A horizontal legend at
+    the bottom identifies the four regions. The background is a light gray (#fafbfc)
+    with white bubble borders giving a clean, modern appearance.'
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 26
       max: 30
       items:
       - id: VQ-01
@@ -49,68 +50,68 @@ review:
         max: 8
         passed: true
         comment: Font sizes explicitly set throughout (title 52px, subtitle 34px,
-          data labels 24px, legend 32px). All readable, though tiny-bubble states
-          push label limits.
+          legend 32px, data labels adaptive 16-24px). Smallest state labels slightly
+          hard to read.
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: 'allowOverlap: True is set. NE states deliberately spread but NJ/DE/MD
-          area still somewhat crowded.'
+        passed: true
+        comment: Northeast cluster spread out but some small-bubble labels sit close
+          together. allowOverlap True permits minor overlaps.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Bubble sizing (minSize 30, maxSize 180) well-adapted. Smallest states
-          visible. Large-first z-ordering.
+        comment: Bubble sizes well-adapted to data range. Smallest states produce
+          very tiny circles hard to distinguish.
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Blue, orange, green, purple palette is colorblind-friendly with good
-          contrast.
+        comment: 'Four-color palette with good separation: blue, orange, green, purple.
+          Colorblind-friendly.'
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good geographic fill with Alaska/Hawaii inset. Some natural empty
-          space.
+        comment: Map fills most of canvas width. Some empty space at bottom. Minor
+          imbalance with more space on right.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Axes appropriately hidden for cartogram. Subtitle provides descriptive
-          context with units.
+        comment: Axes hidden (appropriate for cartogram). Title correct format. Subtitle
+          provides context with units.
     design_excellence:
-      score: 13
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Custom regional palette, white bubble borders, text outline, Segoe
-          UI typography, semi-transparent bubbles.
+        comment: Custom four-color palette, light gray background, white bubble borders,
+          text outlines, dotted reference outline. Clearly above defaults.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Axes hidden, no grid, clean white background, white bubble border
-          adds polish.
+        comment: Axes hidden, faint dotted US outline, generous whitespace, clean
+          legend, adaptive label sizing.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Cartogram inherently tells population story. Regional color adds
-          dimension. Annotation explains encoding.
+        comment: Size encoding creates visual hierarchy. Regional coloring reveals
+          geographic patterns. Annotation explains encoding.
     spec_compliance:
       score: 13
       max: 15
@@ -120,50 +121,52 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Dorling cartogram is a valid cartogram variant. Circle-based approach
-          is accepted standard.
+        comment: Dorling cartogram is a recognized variant. Not the contiguous type
+          described in spec but valid interpretation.
       - id: SC-02
         name: Required Features
         score: 3
         max: 4
-        passed: false
-        comment: Missing reference map inset or original region outlines for comparison
-          as spec suggests.
+        passed: true
+        comment: Area proportional to value, color by region, labels, reference outline,
+          legend. Missing polygon outlines and inset comparison.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Geographic positions reasonable. Population correctly drives bubble
-          area.
+        comment: Geographic positions correct, population mapped to bubble area, all
+          states included.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows exact format. Legend labels match region data.
+        comment: Title format correct. Legend clearly shows four regions with matching
+          colors.
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: All 50 states represented. Wide population range. Four distinct regions.
+        comment: Wide population range across all states. Regional grouping adds dimension.
+          Could show secondary variable via color intensity.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Actual 2020 US Census population data. Neutral, factual context.
+        comment: Real 2020 US Census population data. Neutral, factual, verifiable.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Accurate Census values in thousands. Sensible scale range.
+        comment: Population figures match real census data exactly.
     code_quality:
       score: 10
       max: 10
@@ -173,62 +176,65 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, config, render, screenshot. No functions
-          or classes.'
+        comment: 'Linear flow: imports, data, chart config, series, HTML, screenshot.
+          No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data hardcoded and deterministic.
+        comment: Fully deterministic with hardcoded census data.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports actively used.
+        comment: All imports used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-organized with clear sections and good dict comprehension usage.
+        comment: Well-organized with clear data structures. Documented workaround
+          for custom property serialization.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png via Selenium and plot.html for interactive version.
+        comment: Saves as plot.png via Selenium. Also generates plot.html. Current
+          API.
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
-        passed: false
-        comment: Uses raw JSON config dict via Selenium rather than highcharts-core
-          Python API recommended in library guide.
+        passed: true
+        comment: Uses highcharts-core for validation then serializes to JSON. Proper
+          bubble chart config with sizeBy area.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Leverages Highcharts bubble chart with sizeBy area, annotations module,
-          rich tooltips, and interactive HTML export.
+        comment: Highcharts annotations module, bubble chart sizing, styled tooltips,
+          interactive HTML export.
   verdict: REJECTED
 impl_tags:
   dependencies:
   - selenium
   techniques:
   - annotations
-  - hover-tooltips
   - html-export
+  - hover-tooltips
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
-  - edge-highlighting
+  - minimal-chrome
   - alpha-blending
+  - edge-highlighting

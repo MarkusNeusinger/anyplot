@@ -1,6 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 cartogram-area-distortion: Cartogram with Area Distortion by Data Value
-Library: highcharts | Python 3.14
+Library: highcharts unknown | Python 3.14.3
+Quality: 85/100 | Created: 2026-03-13
 """
 
 import json
