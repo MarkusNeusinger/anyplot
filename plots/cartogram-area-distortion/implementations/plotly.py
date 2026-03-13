@@ -1,7 +1,7 @@
 """ pyplots.ai
 cartogram-area-distortion: Cartogram with Area Distortion by Data Value
 Library: plotly 6.6.0 | Python 3.14.3
-Quality: 79/100 | Created: 2026-03-13
+Quality: 80/100 | Created: 2026-03-13
 """
 
 import numpy as np
