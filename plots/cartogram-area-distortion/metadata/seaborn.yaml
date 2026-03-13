@@ -1,7 +1,7 @@
 library: seaborn
 specification_id: cartogram-area-distortion
 created: '2026-03-13T21:20:20Z'
-updated: '2026-03-13T21:25:07Z'
+updated: '2026-03-13T21:35:02Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23070855374
 issue: 4671
@@ -10,85 +10,79 @@ library_version: 0.13.2
 preview_url: https://storage.googleapis.com/pyplots-images/plots/cartogram-area-distortion/seaborn/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/cartogram-area-distortion/seaborn/plot_thumb.png
 preview_html: null
-quality_score: 78
+quality_score: 85
 review:
   strengths:
-  - Visually appealing tile cartogram with strong design choices (rounded corners,
-    cohesive color palette, alpha blending)
-  - Correct sqrt scaling for area proportionality - mathematically sound approach
-  - Clean, well-organized code with realistic US state population data
-  - Good data storytelling through natural size hierarchy (CA/TX immediately stand
-    out)
-  - Appropriate use of population labels on larger tiles to reinforce the quantitative
-    message
+  - Creative tile cartogram approach that works well within seaborn capabilities
+  - Equal-area reference map provides meaningful comparison context
+  - Excellent data storytelling through size variation and population labels
+  - Clean well-organized code with good data structure
+  - Colorblind-safe palette with strong visual separation between regions
   weaknesses:
-  - Essentially zero seaborn library usage - only sns.set_theme() is called, all plotting
-    is pure matplotlib
-  - Missing reference map inset for comparison (spec requirement)
-  - Some smallest tiles (WY, VT) have very small text that may be hard to read
-  - Green/orange color pair may be difficult for some colorblind viewers
-  image_description: 'The plot shows a tile grid cartogram of US states where each
-    tile''s area is proportional to state population. Tiles are arranged in a rough
-    geographic layout across 6 rows and 13 columns on a light gray (#f5f5f5) background.
-    Four distinct colors encode US Census regions: steel blue (#306998) for West,
-    green (#5AAE61) for Midwest, salmon/orange (#E07B53) for South, and purple (#9D6AB8)
-    for Northeast. California (39M) and Texas (30M) have the largest tiles, while
-    Wyoming, Vermont, and Alaska have the smallest. State abbreviations appear in
-    white bold text centered on each tile, with population values (e.g., "39M", "30M")
-    shown below the abbreviation for states with 3M+ population. Tiles have rounded
-    corners with white edges and slight transparency (alpha=0.85). A region legend
-    sits in the lower-left corner, and an italic annotation "Tile area ∝ state population"
-    appears in the lower-right. The title reads "US States by Population · cartogram-area-distortion
-    · seaborn · pyplots.ai" in bold at the top.'
+  - Title font size 22pt should be >=24pt for optimal legibility
+  - Very small states produce tiny tiles that are hard to read
+  - Heavy reliance on matplotlib for annotations and custom legend reduces seaborn
+    mastery score
+  - Some vertical whitespace could be better utilized
+  image_description: 'The plot displays a tile-based cartogram of US states where
+    each state is represented by a square marker positioned in a grid approximating
+    US geography. Tile size is proportional to state population, creating a striking
+    visual contrast between large states (CA as a very large blue square labeled "39M",
+    TX as a large green square labeled "30M", FL at "22M", NY at "20M" in orange)
+    and small states (WY, VT, ND as tiny squares). States are colored by region: blue
+    for West, orange/gold for Midwest, teal/green for South, and orange-red for Northeast
+    using seaborn''s colorblind palette. The title reads "US States by Population
+    / cartogram-area-distortion · seaborn · pyplots.ai" in bold black text. A region
+    legend sits in the lower left. An equal-area reference tile map is shown on the
+    right side for comparison, with all tiles the same small size. State abbreviations
+    are displayed in white bold text on each tile, with population values shown for
+    states >=5M. An italic annotation reads "Tile area proportional to state population"
+    in the bottom right. The background is a subtle light gray.'
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 25
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title 24pt, labels 10-20pt dynamic, legend
-          15pt). Smallest tiles have tight but readable 10pt text.
+        comment: Font sizes explicitly set. Title 22pt slightly under ideal 24pt.
+          Small state labels cramped.
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No overlapping elements. All tiles properly spaced, text contained
-          within tiles.
+        comment: Grid layout prevents most overlap. Minor crowding near small states
+          adjacent to large ones.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Good size variation from smallest (WY) to largest (CA). Smallest
-          tiles are quite small but visible.
+        comment: Good size variation. Very small states (WY, VT) produce tiny tiles.
       - id: VQ-04
         name: Color Accessibility
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Blue/green/orange/purple is reasonable but green and orange could
-          be difficult for deuteranopia.
+        comment: Seaborn colorblind palette with 4 well-separated hues.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good canvas utilization on 16:9. Some gaps in grid layout inherent
-          to geographic arrangement.
+        comment: Good dual-panel layout. Some vertical space underutilized.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title present with correct format. Axes appropriately hidden. Annotation
-          serves as subtitle.
+        comment: Descriptive title. No axis labels needed for map visualization.
     design_excellence:
-      score: 14
+      score: 16
       max: 20
       items:
       - id: DE-01
@@ -96,23 +90,23 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: 'Strong design: custom 4-color palette, rounded corners, white edges,
-          alpha transparency, light gray background.'
+        comment: Strong design with colorblind palette, white edge highlighting, custom
+          background. Above defaults.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Spines removed, no grid, clean background, rounded corners add polish.
+        comment: Spines removed, clean background, no gridlines, generous whitespace.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: 'Natural visual hierarchy through size: CA and TX dominate. Regional
-          color patterns visible.'
+        comment: Size variation creates focal points on CA, TX, FL, NY. Reference
+          map enables comparison.
     spec_compliance:
-      score: 12
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -120,29 +114,27 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Valid tile cartogram with area proportional to data. Tile grid rather
-          than distorted polygons.
+        comment: Tile cartogram is a legitimate cartogram variant with area distortion.
       - id: SC-02
         name: Required Features
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: Missing reference map inset for comparison. No true contiguity between
-          regions.
+        passed: true
+        comment: 'All spec features present: area encoding, color, labels, reference
+          map, legend.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Population correctly mapped to tile area via sqrt scaling. Region
-          mapped to color.
+        comment: Grid positions approximate US geography. Population mapped to size,
+          region to color.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Region legend with all 4 categories and clear
-          labels.
+        comment: Correct title format and legend labels.
     data_quality:
       score: 14
       max: 15
@@ -152,21 +144,19 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: ~47 states with wide population range (0.6M to 39M). Four regions
-          shown.
+        comment: Wide population range (0.6M-39M), all 4 US regions, 46 states.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: US state population data is real-world, neutral, and comprehensible.
+        comment: US state populations are real, neutral data.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Population values are realistic and approximately correct for recent
-          Census estimates.
+        comment: Population values approximately correct and current.
     code_quality:
       score: 10
       max: 10
@@ -176,63 +166,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean flat structure: imports, data, scaling, plotting loop, styling,
-          save.'
+        comment: Linear flow with no functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set. All data is hardcoded and deterministic.
+        comment: Seed set, data is hardcoded and deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: matplotlib.patches, plt, np, pd, sns.'
+        comment: All imports used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized. Sqrt scaling for area proportionality is correct.
+        comment: Clean dictionary-based data, dynamic font sizing.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300, bbox_inches='tight'. Current API.
+        comment: Saves as plot.png with dpi=300 and bbox_inches tight.
     library_mastery:
-      score: 2
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 1
+        score: 4
         max: 5
-        passed: false
-        comment: Only seaborn call is sns.set_theme(). All plotting is pure matplotlib
-          patches and text.
+        passed: true
+        comment: Good use of sns.scatterplot size parameter, set_theme, despine, colorblind
+          palette.
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 2
         max: 5
         passed: false
-        comment: No distinctive seaborn features used. Implementation could work identically
-          without seaborn.
+        comment: Core visualization relies heavily on matplotlib. Could use more seaborn-specific
+          features.
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - patches
   - custom-legend
+  - subplots
   patterns:
   - data-generation
   - iteration-over-groups
-  - explicit-figure
-  dataprep:
-  - normalization
+  dataprep: []
   styling:
   - minimal-chrome
   - alpha-blending
