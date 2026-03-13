@@ -1,7 +1,7 @@
 library: bokeh
 specification_id: scatter-connected-temporal
 created: '2026-03-13T15:25:59Z'
-updated: '2026-03-13T15:39:11Z'
+updated: '2026-03-13T15:46:54Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23057665601
 issue: 4675
@@ -10,36 +10,38 @@ library_version: 3.9.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/scatter-connected-temporal/bokeh/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/scatter-connected-temporal/bokeh/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/scatter-connected-temporal/bokeh/plot.html
-quality_score: 87
+quality_score: 89
 review:
   strengths:
-  - 'Excellent data choice: real-world US Phillips Curve with plausible values across
-    multiple economic eras'
-  - Strong storytelling with directional arrows and key year annotations marking economic
-    events
-  - Clean visual styling with removed axis/tick lines, subtle grid, and white marker
-    borders
-  - Full spec compliance with all required features implemented
-  - Clean, well-structured code following KISS principles
+  - Excellent Phillips curve narrative with well-chosen real-world data covering multiple
+    economic regimes
+  - 'Strong visual refinement: removed axis lines/ticks, subtle grid, custom palette
+    truncation for visibility'
+  - Effective use of arrow symbols to mark temporal start/end points
+  - Idiomatic Bokeh usage with ColumnDataSource, transform(), and multi_line
   weaknesses:
-  - Early-year (1990s) points and connecting lines are nearly invisible against the
-    light background — lightest blues have very poor contrast
-  - The middle region where many 1990s-2000s points cluster creates a visual tangle
-    of crossing paths
-  image_description: 'The plot displays a connected scatter plot of US Phillips Curve
-    Dynamics from 1990-2023. Points representing unemployment rate (x-axis) vs. inflation
-    rate (y-axis) are connected by lines in temporal order. A blue sequential color
-    gradient runs from very light blue (1990) to dark navy blue (2023), applied to
-    both scatter points and connecting lines. A vertical color bar on the right maps
-    colors to years. Key years are annotated: "1990" (with right arrow), 1999, 2009,
-    2015, 2020, 2022, and "2023" (with left arrow). Points have white borders. The
-    background is light gray with subtle gridlines. Axis lines and ticks are removed
-    for a clean look. The early-year (1990s) points and lines are very faint light
-    blue, nearly blending into the background. The middle region (unemployment 4-6%,
-    inflation 1.5-3.5%) shows a tangle of crossing paths.'
+  - Path tangles in the dense middle area making it hard to follow individual transitions
+  - Color bar label Year is positioned at the edge and slightly small relative to
+    the overall plot
+  - Earlier light-blue data points could have slightly more contrast against the FAFAFA
+    background
+  image_description: 'The plot displays a connected scatter plot titled "US Phillips
+    Curve Dynamics (1990-2023) · scatter-connected-temporal · bokeh · pyplots.ai".
+    The X-axis shows "Unemployment Rate (%)" ranging from ~3 to ~10, and the Y-axis
+    shows "Inflation Rate (%)" ranging from about -0.5 to 8. Data points are connected
+    by line segments in chronological order, forming a temporal path through 2D space.
+    A sequential blue color gradient encodes time: light blue for early years (1990s)
+    darkening to deep navy for recent years (2020s). Each data point has a circular
+    marker with a white edge outline. Key years are annotated: "1990 ▸" (start), "1999",
+    "2009" (lower right, GFC), "2015" (low inflation), "2020" (COVID), "2022" (high
+    inflation spike at ~8%), and "◂ 2023" (end). A vertical color bar on the right
+    maps colors to years from 1990 to 2020+. The background is light gray (#FAFAFA)
+    with subtle grid lines. Axis lines and tick marks are removed for a clean look.
+    The path clearly shows the economy''s journey through unemployment-inflation space
+    over three decades.'
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -47,43 +49,45 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 56pt, axis labels 48pt, ticks
-          36pt, annotations 32pt)
+        comment: 'All font sizes explicitly set: title 56pt, axis labels 48pt, ticks
+          36pt, annotations 32pt, color bar labels 24pt'
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Annotations well-positioned, but path lines create visual tangle
-          in clustered middle region
+        comment: Text annotations well-positioned; line segments cross in dense middle
+          area creating some visual clutter
       - id: VQ-03
         name: Element Visibility
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: 'Early-year points (1990s) are very light blue and nearly invisible
-          against #FAFAFA background'
+        passed: true
+        comment: Markers clearly visible with white edges and size=30; earlier lighter-blue
+          points slightly less prominent
       - id: VQ-04
         name: Color Accessibility
-        score: 3
-        max: 4
-        passed: false
-        comment: Blues palette is colorblind-safe, but lightest values have poor contrast
-          against light gray background
-      - id: VQ-05
-        name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good canvas utilization, balanced margins, color bar well-positioned
+        comment: Sequential blue palette is colorblind-safe with good contrast against
+          light background
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good canvas utilization; color bar label small and positioned at
+          edge; slight right-side imbalance
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive with units: Unemployment Rate (%), Inflation Rate (%)'
+        comment: 'Descriptive labels with units: Unemployment Rate (%) and Inflation
+          Rate (%)'
     design_excellence:
-      score: 14
+      score: 16
       max: 20
       items:
       - id: DE-01
@@ -91,21 +95,22 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Strong design with Blues gradient, clean axis styling, white marker
-          borders, custom color bar
+        comment: Custom truncated blue palette, white marker edges, intentional color
+          hierarchy, clean typography with gray tones
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: 'Good refinement: axis/tick lines removed, subtle grid, clean background'
+        comment: Axis lines removed, tick marks removed, subtle grid alpha=0.15, FAFAFA
+          background with white border
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Good storytelling with directional arrows, key year annotations,
-          temporal gradient
+        comment: Temporal color gradient tells clear story; arrow symbols mark start/end;
+          key economic events annotated
     spec_compliance:
       score: 15
       max: 15
@@ -115,52 +120,52 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct connected scatter plot with temporal path
+        comment: Connected scatter plot with temporal path — correct
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: chronological connections, annotations, color
-          gradient, visible markers, direction indicators'
+        comment: Chronological connections, key time point annotations, color gradient,
+          visible markers all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=unemployment, Y=inflation, temporal ordering correct
+        comment: X=unemployment, Y=inflation, time=years — correctly mapped
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title includes descriptive text + required format, color bar serves
-          as effective legend
+        comment: Correct title format with spec-id, library, pyplots.ai; color bar
+          serves as legend
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: 'Shows multiple economic cycles: 1990s recovery, dot-com, GFC, 2010s
-          recovery, COVID, 2022 inflation surge'
+        comment: Shows cyclical patterns, regime changes (GFC), directional trends,
+          COVID disruption; middle area dense
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: US Phillips Curve is a real, well-known economic concept with neutral
-          subject matter
+        comment: US unemployment vs inflation Phillips curve — real, comprehensible,
+          neutral economic topic
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Unemployment 3.6-9.6%, Inflation -0.4% to 8.0% — realistic for the
-          US
+        comment: Unemployment 3.6-9.6%, inflation -0.4 to 8.0% — realistic ranges
+          for US data
     code_quality:
       score: 10
       max: 10
@@ -170,31 +175,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports -> data -> plot -> save structure
+        comment: Clean imports, data, plot, save flow with no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set, data is hardcoded deterministic arrays
+        comment: np.random.seed(42) set; data is fully hardcoded for deterministic
+          output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: 'All imports used: numpy, bokeh.io, bokeh.models, bokeh.palettes,
+          bokeh.plotting, bokeh.transform'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized; multi_line for colored segments is elegant
+        comment: Clean multi_line approach for colored segments, appropriate ColumnDataSource
+          and transform usage
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with export_png, current Bokeh API
+        comment: Saves as plot.png via export_png; current Bokeh API
     library_mastery:
       score: 7
       max: 10
@@ -204,22 +212,21 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of ColumnDataSource, transform() with LinearColorMapper,
-          ColorBar, Label model
+        comment: Good use of ColumnDataSource, figure(), multi_line, scatter with
+          transform(), Label, ColorBar
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses Bokeh-specific LinearColorMapper + transform(), ColorBar with
-          NumeralTickFormatter, multi_line
+        comment: Bokeh-specific transform() with LinearColorMapper, multi_line for
+          colored segments, ColorBar with NumeralTickFormatter
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
   - annotations
-  - layer-composition
   patterns:
   - data-generation
   - columndatasource
