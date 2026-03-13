@@ -1,0 +1,239 @@
+library: highcharts
+specification_id: swimmer-clinical-timeline
+created: '2026-03-13T22:08:12Z'
+updated: '2026-03-13T22:43:01Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23072198048
+issue: 4670
+python_version: 3.14.3
+library_version: unknown
+preview_url: https://storage.googleapis.com/pyplots-images/plots/swimmer-clinical-timeline/highcharts/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/swimmer-clinical-timeline/highcharts/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/swimmer-clinical-timeline/highcharts/plot.html
+quality_score: 90
+review:
+  strengths:
+  - Excellent data storytelling through muted/saturated color distinction for responders
+    and clinical milestone lines
+  - Comprehensive feature coverage with all event types, two treatment arms, and ongoing
+    patient markers
+  - Professional visual refinement with subtle grid, removed axis lines, and polished
+    legend styling
+  - Informative subtitle summarizing key trial statistics at a glance
+  - Clean, well-structured code with appropriate complexity
+  weaknesses:
+  - Plot line labels (median, 24-week milestone) at top of chart are slightly small
+    and close together
+  - Right side of chart has some unused space beyond the data range
+  image_description: 'The plot displays a horizontal swimmer plot for a Phase II oncology
+    clinical trial with 25 patients. Patient IDs (PT-001 through PT-025) appear along
+    the y-axis, sorted from shortest duration at top (PT-018) to longest at bottom
+    (PT-010). Horizontal bars represent time on study in weeks, color-coded by treatment
+    arm: deep blue for Arm A (Combo) and salmon/coral for Arm B (Mono). Responders
+    have saturated bar colors while non-responders show muted versions. Event markers
+    overlay the bars: blue circles for Partial Response, yellow diamonds for Complete
+    Response, pink/red down-triangles for Progressive Disease, and purple squares
+    for Adverse Events. Dark triangles mark ongoing patients at bar endpoints. A dashed
+    vertical line at 24 weeks marks the "24-Week Milestone" and a dotted green line
+    marks the median duration (~16 weeks). The floating legend in the upper-right
+    explains all symbols with a white background and subtle shadow. The subtitle summarizes
+    key stats: 15/25 responded (5 CR), 8 ongoing, median 16 weeks. Background is light
+    gray (#fafbfc). The title reads "swimmer-clinical-timeline · highcharts · pyplots.ai"
+    in bold, professional typography.'
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 52px, subtitle 32px, axis labels
+          22-26px, legend 24px). Plot line labels slightly smaller but legible.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Minor potential overlap between median line label and 24-week milestone
+          label near top of chart.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Bar widths well-sized for 25 patients. Event markers at radius 14
+          with white outlines clearly visible and distinguishable.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Okabe-Ito inspired colorblind-safe palette. Blue/salmon distinction
+          avoids red-green confusion.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Chart fills canvas well. Some wasted space on right beyond data range.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Y-axis title 'Time on Study (Weeks)' includes units. Patient IDs
+          clearly labeled.
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom Okabe-Ito palette, muted/saturated responder distinction,
+          refined typography, informative subtitle. Clearly above defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Dotted grid at 6% opacity, axis lines removed, rounded legend with
+          shadow, bar border-radius. Well-refined.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Muted/saturated color distinction for responders, 24-week milestone
+          line, median line, informative subtitle with trial stats.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct swimmer plot with horizontal bars for patient timelines.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: sorted bars, distinct event markers,
+          ongoing markers, arm color-coding, patient IDs, legend.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Patients on categorical axis, time on value axis, all 25 patients
+          visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct. Legend labels match data (arm names, event
+          types, ongoing).
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows all event types, two treatment arms, ongoing patients, varied
+          durations, responders vs non-responders.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Phase II oncology trial is a real-world plausible and neutral clinical
+          research context.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Durations 3-52 weeks realistic for oncology trials. Event timing
+          clinically plausible.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean Imports-Data-Chart-Series-Export structure. No functions or
+          classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set for reproducibility.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-organized. Per-point coloring with responder distinction
+          is elegant.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png via container screenshot. Also generates interactive
+          plot.html.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses highcharts-core typed API (BarSeries, ScatterSeries), chart.add_series()
+          pattern, plot lines, proper options.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Plot lines with styled labels, per-point coloring, floating legend
+          with shadow, interactive HTML export, tooltip configuration.
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - custom-legend
+  - layer-composition
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - grid-styling
+  - edge-highlighting
