@@ -1,0 +1,228 @@
+library: bokeh
+specification_id: scatter-connected-temporal
+created: '2026-03-13T15:25:59Z'
+updated: '2026-03-13T15:54:57Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23057665601
+issue: 4675
+python_version: 3.14.3
+library_version: 3.9.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/scatter-connected-temporal/bokeh/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/scatter-connected-temporal/bokeh/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/scatter-connected-temporal/bokeh/plot.html
+quality_score: 92
+review:
+  strengths:
+  - Excellent use of Bokeh transform/ColorBar system for declarative temporal color
+    encoding
+  - 'Professional visual refinement: removed chrome, subtle grid, white marker edges,
+    truncated palette for contrast'
+  - Well-chosen data with clear economic narrative and realistic values
+  - Thoughtful annotations with directional arrows marking start/end points
+  - Clean idiomatic Bokeh code structure
+  weaknesses:
+  - Central path region (unemployment 4-6%, inflation 1.5-3.5%) is congested with
+    crossing line segments
+  - np.random.seed(42) is set but never used since data is hardcoded
+  image_description: 'The plot displays a connected scatter plot showing US Phillips
+    Curve Dynamics from 1990 to 2023. The x-axis shows "Unemployment Rate (%)" ranging
+    from ~3 to 11, and the y-axis shows "Inflation Rate (%)" ranging from about -1
+    to 9. Data points are connected by line segments in chronological order, with
+    a sequential blue color gradient from light blue (1990) to dark navy (2023) encoding
+    temporal progression. A vertical color bar on the right maps the blue gradient
+    to years. Key time points are annotated: "1990 ▸" (start), "1999", "2009" (GFC
+    trough at high unemployment/negative inflation), "2015" (low inflation), "2020"
+    (COVID spike), "2022" (inflation peak at 8%), and "◂ 2023" (end). The background
+    is light gray (#FAFAFA), grid lines are very subtle, axis lines and ticks are
+    removed, and scatter markers have white edge highlighting. The path traces economic
+    cycles clearly at the extremes but becomes somewhat tangled in the central region.'
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 56pt, axis labels 48pt, ticks
+          36pt, annotations 32pt, colorbar 28pt/24pt'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Annotations well-positioned with custom offsets, no text collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 4
+        max: 6
+        passed: true
+        comment: Points visible with size=30 and white edges, but central region has
+          congested line segments
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Single-hue sequential blue palette is colorblind-safe with good contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 4800x2700 canvas well-utilized with balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive labels with units: Unemployment Rate (%), Inflation
+          Rate (%)'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom truncated Blues256 palette, white marker edges, cohesive monochromatic
+          scheme
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Axis/tick lines removed, subtle grid alpha=0.15, #FAFAFA background,
+          outline removed'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Directional arrows on annotations, color gradient reinforces temporal
+          narrative, key economic events highlighted
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct connected scatter plot with temporal path
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: chronological connections, annotations,
+          color gradient, visible markers'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=unemployment, Y=inflation, connected by temporal order
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title follows required format, ColorBar serves as year legend
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows diverse economic dynamics: recoveries, recessions, COVID shock,
+          inflation spike'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: US unemployment vs inflation is classic neutral economic scenario
+          with realistic values
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Unemployment 3.6-9.6%, inflation -0.4 to 8.0% — realistic US ranges
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean Imports-Data-Plot-Save structure, no functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Data is hardcoded arrays, fully deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports are used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean and well-organized, multi_line for per-segment coloring is
+          appropriate
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png via export_png, uses current Bokeh API
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert use of ColumnDataSource, figure, multi_line, scatter, transform,
+          ColorBar, Label
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: transform() for declarative color mapping, multi_line for per-segment
+          styling, ColorBar with custom formatter
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - annotations
+  patterns:
+  - data-generation
+  - columndatasource
+  dataprep: []
+  styling:
+  - custom-colormap
+  - alpha-blending
+  - edge-highlighting
+  - grid-styling
