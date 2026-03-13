@@ -1,7 +1,7 @@
 library: letsplot
 specification_id: swimmer-clinical-timeline
 created: '2026-03-13T22:04:24Z'
-updated: '2026-03-13T22:08:09Z'
+updated: '2026-03-13T22:19:22Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23072197749
 issue: 4670
@@ -10,32 +10,33 @@ library_version: 4.9.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/swimmer-clinical-timeline/letsplot/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/swimmer-clinical-timeline/letsplot/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/swimmer-clinical-timeline/letsplot/plot.html
-quality_score: 77
+quality_score: 80
 review:
   strengths:
-  - Clean, well-structured code following KISS principles with proper seed for reproducibility
-  - Good realistic clinical trial data with appropriate event distributions and two
-    treatment arms
-  - Correct swimmer plot layout with bars sorted by duration and distinct event markers
-  - Explicit font sizing throughout ensures legibility
+  - Clean KISS code structure with proper seed and realistic clinical data
+  - 'Good visual refinement: theme_minimal with appropriate grid removal, alpha blending
+    on bars'
+  - Correct swimmer plot layout with all required event types and sorting by duration
+  - Custom color palette with semantic meaning (clinical event colors)
   weaknesses:
-  - 'Dual legend system is confusing: color legend mixes arm colors and event colors
-    in one combined scale'
-  - Event markers (size=5) are too small relative to the thick bars (size=8)
-  - Ongoing patients lack arrows or open-ended bar treatment as spec requires
-  - No visual storytelling or emphasis — all patients treated equally with no focal
-    point
-  image_description: 'The plot displays a swimmer plot with 25 patients (PT-001 through
-    PT-025) as horizontal bars sorted by treatment duration (shortest at bottom, longest
-    at top). Bars are colored by treatment arm: steel blue for "Arm A (Combo)" and
-    lilac/purple for "Arm B (Mono)". Clinical events are overlaid as markers: orange
-    triangles for Partial Response, green asterisks for Complete Response, red/dark
-    diamonds for Progressive Disease, and dark X marks for Ongoing. The x-axis shows
-    "Time on Study (Weeks)" ranging from 0 to approximately 50, and the y-axis shows
-    "Patient" with individual IDs. The title reads "swimmer-clinical-timeline · letsplot
-    · pyplots.ai". Two separate legends appear on the right: a "Legend" section combining
-    arm colors and event colors (all shown as circles), and a "Clinical Event" section
-    showing the shape mappings.'
+  - Combined color aesthetic for both treatment arms and events creates a messy legend
+    structure
+  - Event markers (size=5) are somewhat small relative to bar thickness (size=8)
+  - Ongoing arrows in dark color blend with bar edges and are not visually prominent
+  - Orange and red markers for Partial Response and Progressive Disease are close
+    in hue
+  - Generic ggplot usage without distinctive lets-plot features
+  image_description: 'The plot displays a horizontal swimmer plot with 25 patients
+    (PT-001 through PT-025) sorted by treatment duration from shortest (bottom) to
+    longest (top). Bars are colored by treatment arm: blue (#306998) for "Arm A (Combo)"
+    and purple (#8E44AD) for "Arm B (Mono)". Clinical event markers overlay the bars:
+    orange triangles for Partial Response, green asterisks for Complete Response,
+    red diamonds for Progressive Disease, and dark arrow shapes for Ongoing patients.
+    The x-axis shows "Time on Study (Weeks)" ranging from 0 to 48, and the y-axis
+    shows "Patient" with individual patient IDs. The title reads "swimmer-clinical-timeline
+    · letsplot · pyplots.ai" in bold. A right-side legend shows both treatment arm
+    colors and clinical event shapes. The background is clean with subtle vertical
+    grid lines and no horizontal grid.'
   criteria_checklist:
     visual_quality:
       score: 25
@@ -46,65 +47,63 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title=26, axes=20, ticks=16/13). Y-axis
-          tick text at 13pt slightly small for 25 patient labels but readable.
+        comment: Font sizes explicitly set. Y-axis text at 13pt slightly small for
+          25 patients but readable.
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No overlapping text; patient labels well-spaced.
+        comment: No significant overlap. Patient labels tightly packed with 25 entries.
       - id: VQ-03
         name: Element Visibility
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Bars visible at size=8 with alpha=0.75, but event markers at size=5
-          are relatively small against thick bars.
+        comment: Bars clearly visible at size=8. Event markers at size=5 somewhat
+          small against thick bars.
       - id: VQ-04
         name: Color Accessibility
         score: 3
         max: 4
         passed: true
-        comment: Generally distinct hues. Orange and red for Partial Response vs Progressive
-          Disease may be difficult for some colorblind viewers.
+        comment: Blue/purple arms distinguishable. Orange and red markers somewhat
+          close in hue.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good canvas utilization at 1600x900. Dual legends consume some space.
+        comment: Good canvas use with ggsize(1600, 900). Legend takes moderate space.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: X-axis with units, y-axis descriptive, title in correct format.
+        comment: Time on Study (Weeks) with units, Patient y-label.
     design_excellence:
-      score: 9
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Custom hex palette is reasonable but overall look is a well-configured
-          default, not publication-quality.
+        passed: true
+        comment: Custom color palette with clinical color semantics. Above defaults.
       - id: DE-02
         name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: theme_minimal, y-grid removed, subtle x-grid, alpha blending on bars.
+      - id: DE-03
+        name: Data Storytelling
         score: 3
         max: 6
         passed: false
-        comment: theme_minimal with removed y-grid and minor grid. Some refinement
-          but legend integration needs work.
-      - id: DE-03
-        name: Data Storytelling
-        score: 2
-        max: 6
-        passed: false
-        comment: Sorted by duration creates natural pattern but no emphasis or focal
-          point.
+        comment: Sorted by duration creates narrative. No strong focal point or emphasis
+          on insights.
     spec_compliance:
       score: 13
       max: 15
@@ -114,27 +113,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct swimmer plot with horizontal bars and event markers.
+        comment: Correct swimmer plot with horizontal bars per patient.
       - id: SC-02
         name: Required Features
         score: 3
         max: 4
         passed: true
-        comment: Most features present. Missing arrows/open-ended bars for ongoing
-          patients.
+        comment: All event types present. Combined color scale for arms and events
+          is messy.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=time, Y=patients correctly mapped.
+        comment: X=time in weeks, Y=patient IDs, correct mapping.
       - id: SC-04
         name: Title & Legend
         score: 2
         max: 3
         passed: true
-        comment: Title correct. Legend split into two confusing sections with generic
-          'Legend' title.
+        comment: Title format correct. Color scale named 'Legend' is generic.
     data_quality:
       score: 14
       max: 15
@@ -144,21 +142,20 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Shows all event types across two treatment arms with varying durations.
+        comment: Shows partial response, complete response, progressive disease, ongoing
+          events across two arms.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Simulated Phase II oncology trial with realistic patient IDs and
-          clinical events.
+        comment: Phase II oncology trial with proper clinical terminology.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Durations 3-48 weeks via gamma distribution with plausible event
-          timings.
+        comment: Durations 3-48 weeks realistic for clinical trials.
     code_quality:
       score: 10
       max: 10
@@ -168,7 +165,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports-data-plot-save structure with no functions/classes.
+        comment: Clean imports-data-plot-save structure.
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -180,19 +177,19 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports used appropriately.
+        comment: All imports used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriate complexity for the visualization.
+        comment: Clean, appropriate complexity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png via ggsave with scale=3.
+        comment: Saves as plot.png with scale=3.
     library_mastery:
       score: 6
       max: 10
@@ -202,21 +199,18 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good ggplot grammar usage with geom_segment, geom_point, manual scales,
-          and theme customization.
+        comment: Good ggplot grammar. Combined color scale not ideal.
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: HTML export is lets-plot-specific but otherwise standard ggplot grammar
-          replicable in plotnine.
+        comment: Uses ggsize and HTML export. Otherwise generic ggplot grammar.
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
-  - custom-legend
   - html-export
   patterns:
   - data-generation
