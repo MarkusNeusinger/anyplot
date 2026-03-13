@@ -1,7 +1,7 @@
 library: altair
 specification_id: scatter-connected-temporal
 created: '2026-03-13T15:26:15Z'
-updated: '2026-03-13T15:30:53Z'
+updated: '2026-03-13T15:38:43Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23057665486
 issue: 4675
@@ -10,34 +10,33 @@ library_version: 6.0.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/scatter-connected-temporal/altair/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/scatter-connected-temporal/altair/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/scatter-connected-temporal/altair/plot.html
-quality_score: 84
+quality_score: 85
 review:
   strengths:
-  - 'Excellent data context: Phillips curve dynamics with recession modeling is compelling
-    and real-world'
-  - Clean code structure with perfect reproducibility and KISS pattern
-  - 'Good visual refinement: subtle grid, removed domains/borders, custom text colors'
-  - Effective year annotations at economically meaningful time points
-  - Proper use of Altair interactive features (tooltips, zoom/pan) and HTML export
+  - Excellent viridis color gradient encoding showing temporal progression clearly
+  - Well-chosen annotations at key historical moments (1994, 2000, 2008, 2010, 2015,
+    2023)
+  - Strong data storytelling with recession spike creating natural focal point
+  - 'Clean visual refinement: no domain lines, subtle dashed grid, white-stroked points'
+  - Realistic Phillips curve data with plausible economic values
   weaknesses:
-  - Connecting line uses single static color instead of temporal gradient, creating
-    visual disconnect with viridis-colored points
-  - Lower-left region crowded with recent years clustering together
-  - Y-axis extends to 7.0 but data peaks around 5.5, wasting vertical space
-  - Line opacity too low (0.5) making path hard to follow in dense areas
+  - Year color legend not visible in rendered PNG output — viewers cannot decode color
+    mapping
+  - Axis scale definitions duplicated between lines and points layers
+  - Minor annotation crowding in lower-left cluster (2015-2023 area)
   image_description: 'The plot displays a connected scatter plot titled "scatter-connected-temporal
     · altair · pyplots.ai" with subtitle "Unemployment vs. Inflation — tracing the
-    Phillips curve path (1994–2023)". The x-axis shows "Unemployment Rate (%)" ranging
-    from ~2.5 to 8.5, and the y-axis shows "Inflation Rate (%)" from -1.5 to 7.0.
-    Data points are connected by a semi-transparent blue line (#306998) in temporal
-    order. Points are colored using a viridis gradient from dark purple (1994) to
-    yellow (~2023), with a vertical color legend labeled "Year" on the right. Key
-    years are annotated in bold text: 1994, 2000, 2008, 2010, 2015, and 2023. The
-    path traces from higher unemployment/inflation in the 1990s through a recession
-    excursion (2008-2010 cluster at high unemployment/low inflation) toward lower
-    unemployment/inflation in recent years. The lower-left area is crowded with recent-year
-    data points. Grid is subtle dashed lines, axis domains are removed, and the view
-    border is removed.'
+    Phillips curve path (1994–2023)". The X-axis shows "Unemployment Rate (%)" ranging
+    from ~2.6 to 8.4, and the Y-axis shows "Inflation Rate (%)" ranging from ~-1.5
+    to 5.5. Data points are connected by line segments in temporal order, colored
+    with a viridis gradient (dark purple for early 1990s, teal/cyan for mid-2000s,
+    yellow-green for recent years). Six key years are annotated in bold text: 1994,
+    2000, 2008, 2010, 2015, and 2023. The 2008-2010 recession is visible as a dramatic
+    rightward swing to high unemployment (~7-8%) with low inflation. The path then
+    curves back left toward lower unemployment in recent years. Grid lines are subtle
+    dashed lines at 0.15 opacity. The domain/frame is removed for a clean look. However,
+    the Year color legend defined in the code does not appear in the rendered PNG
+    output.'
   criteria_checklist:
     visual_quality:
       score: 26
@@ -48,70 +47,69 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set throughout (title=28, subtitle=16, axis=22,
-          ticks=18, annotations=16). Legend tick labels at 14pt slightly small.
+        comment: 'Font sizes explicitly set: title 28pt, subtitle 16pt, axis titles
+          22pt, tick labels 18pt, annotations 16pt. Subtitle slightly small.'
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Minor crowding in lower-left cluster where recent years bunch together.
-          Labels remain readable.
+        comment: Minor crowding in lower-left cluster (2015-2023 region) but still
+          readable.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Point size=180 appropriate for 30 points. Connecting line at 0.5
-          opacity is quite subtle and visually disconnected from viridis points.
+        comment: Points at size=180 with white stroke well-adapted for 30 data points.
+          Lines at strokeWidth=2.5 clearly visible.
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Viridis colormap is colorblind-safe and perceptually uniform.
+        comment: Viridis colormap is perceptually uniform and colorblind-safe.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 2
         max: 4
-        passed: true
-        comment: Good layout overall. Y-axis extends to 7.0 but data peaks around
-          5.5, leaving unused vertical space.
+        passed: false
+        comment: Plot fills canvas well but Year color legend missing from rendered
+          PNG.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: Unemployment Rate (%) and Inflation
+        comment: 'Descriptive labels with units: Unemployment Rate (%), Inflation
           Rate (%).'
     design_excellence:
-      score: 13
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Above defaults with viridis gradient, custom axis colors, dashed
-          grid, removed domains, white-stroked markers. Single-color line clashes
-          with multi-color points.
+        comment: Viridis gradient, white-stroked points, custom axis colors, dashed
+          grid, domain removed. Above defaults.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Removed domain lines, subtle dashed grid at 0.15 opacity, removed
-          view border, custom text colors. Some excess vertical space.
+        comment: Domain/spines removed, grid at 0.15 opacity with dashes, strokeWidth=0
+          on view, generous whitespace.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Year annotations at key economic moments, viridis gradient conveys
-          progression, subtitle adds context. Recession excursion visible.
+        comment: Recession spike creates focal point. Key year annotations guide narrative.
+          Subtitle provides Phillips curve context.
     spec_compliance:
-      score: 14
+      score: 13
       max: 15
       items:
       - id: SC-01
@@ -119,26 +117,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct connected scatter plot with temporal path ordering.
+        comment: Connected scatter plot with temporal path — correct chart type.
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Points connected chronologically, key years annotated, point markers
-          visible. Connecting line lacks temporal color gradient.
+        comment: Chronological connections, key annotations, color gradient for time,
+          visible point markers.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=unemployment, Y=inflation, axes show appropriate ranges.
+        comment: X=unemployment, Y=inflation correctly mapped with appropriate domains.
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 1
         max: 3
-        passed: true
-        comment: Title follows exact format. Year legend with gradient bar is appropriate.
+        passed: false
+        comment: Title format correct but Year color legend not visible in rendered
+          PNG.
     data_quality:
       score: 14
       max: 15
@@ -148,25 +147,23 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Shows Phillips curve dynamics with recession spike, different regimes,
-          cyclical movement. Synthetic random walks rather than distinct economic
-          phases.
+        comment: 'Shows multiple regimes: stable 1990s, recession spike 2008-2010,
+          recovery, recent low-unemployment era.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: US unemployment vs inflation 1994-2023 is classic, neutral, real-world
-          economic scenario.
+        comment: US unemployment vs inflation (Phillips curve) — classic neutral economic
+          dataset.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Unemployment 3-10.5% and inflation -0.5-6% are realistic ranges for
-          the US economy.
+        comment: Unemployment 3-10.5%, inflation -0.5 to 6% — realistic for US economy.
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -174,34 +171,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports, data generation, label filtering, layer
-          construction, composition, save.'
+        comment: 'Linear flow: imports, data, segments, layers, composition, save.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set at the beginning.
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All three imports (altair, numpy, pandas) are used.
+        comment: 'All imports used: altair, numpy, pandas.'
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Clean, well-organized layer composition. Appropriate complexity.
+        passed: false
+        comment: Duplicated axis scale domains between lines and points layers.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with scale_factor=3.0 and plot.html. Current API.
+        comment: Saves plot.png with scale_factor=3.0 and plot.html. Current Altair
+          6.0 API.
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -209,15 +206,15 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Good declarative grammar: layered composition, proper encoding types,
-          Scale/Axis config, configure chains, alt.Order for path.'
+        comment: 'Good declarative grammar usage: layer composition, encoding types,
+          alt.Title, configure_* methods, .interactive().'
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Uses .interactive() for zoom/pan, rich tooltips, HTML export, alt.Order
-          for path control. Altair-distinctive features.
+        comment: Interactive pan/zoom, tooltips, HTML export, declarative layers,
+          mark_rule for segments.
   verdict: REJECTED
 impl_tags:
   dependencies: []
@@ -228,6 +225,7 @@ impl_tags:
   - html-export
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep: []
   styling:
   - custom-colormap
