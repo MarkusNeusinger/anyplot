@@ -1,0 +1,226 @@
+library: pygal
+specification_id: cartogram-area-distortion
+created: '2026-03-13T21:20:30Z'
+updated: '2026-03-13T21:51:35Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23070855393
+issue: 4671
+python_version: 3.14.3
+library_version: 3.1.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/cartogram-area-distortion/pygal/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/cartogram-area-distortion/pygal/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/cartogram-area-distortion/pygal/plot.html
+quality_score: 79
+review:
+  strengths:
+  - Excellent data storytelling through distortion ratios showing population density
+    vs geographic area
+  - Clean well-commented code explaining the cartogram-to-treemap approximation rationale
+  - Custom continent color palette with strong visual identity
+  - Per-node formatter is a sophisticated use of pygal distinctive features
+  - Perfect code quality with deterministic data and clean structure
+  weaknesses:
+  - Text truncation on right-edge rectangles (Australia, Colombia, France) reduces
+    readability
+  - Not a true contiguous cartogram - treemap approximation loses geographic context
+    and adjacency
+  - Blue and green color adjacency could be slightly challenging for deuteranopia
+  image_description: 'The plot displays a treemap visualization where rectangle areas
+    are proportional to country population. Countries are grouped by continent using
+    five distinct colors: deep ocean blue (Asia), rich golden amber (Africa), forest
+    green (Europe), bold vermilion (Americas), and deep violet (Oceania). Each rectangle
+    shows the country name, population in millions, and a distortion ratio (e.g.,
+    "India 1,441M x5.4"). India and China dominate the left half as the largest blue
+    rectangles. The title reads "World Population Cartogram - Area Proportional to
+    Population (millions) - cartogram-area-distortion - pygal - pyplots.ai" spanning
+    two lines at the top. A legend at the bottom shows all five continent color assignments
+    in a single row. Smaller countries at the right edge (Australia, Colombia, France)
+    have text that is partially truncated. The background is white with a very subtle
+    off-white plot area, and rectangles have rounded corners with spacing between
+    them.'
+  criteria_checklist:
+    visual_quality:
+      score: 23
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: Font sizes explicitly set (title=68, labels=44, legend=52). Most
+          text readable but right-edge labels truncated
+      - id: VQ-02
+        name: No Overlap
+        score: 4
+        max: 6
+        passed: true
+        comment: Text truncation at right edge for Australia, Colombia, France. Main
+          content fully readable
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: All treemap rectangles clearly visible with good proportional sizing
+          and spacing
+      - id: VQ-04
+        name: Color Accessibility
+        score: 3
+        max: 4
+        passed: true
+        comment: Custom 5-hue palette avoids red-green. Blue/green adjacency slightly
+          challenging for some
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Treemap fills canvas well. Right-edge clipping reduces score slightly
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive title with units. No traditional axes needed for treemap
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom continent palette, typographic hierarchy, rounded corners,
+          white/off-white layering
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Rounded corners, spacing between cells, subtle background differentiation,
+          generous margins
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Distortion ratios create compelling narrative. Continent grouping
+          adds geographic hierarchy
+    spec_compliance:
+      score: 11
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 3
+        max: 5
+        passed: true
+        comment: Treemap is pygal best cartogram approximation. Not a true contiguous
+          cartogram
+      - id: SC-02
+        name: Required Features
+        score: 2
+        max: 4
+        passed: true
+        comment: Area proportional to data, color by continent, labels, legend present.
+          Missing geographic adjacency and reference inset
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Population correctly maps to area. Distortion ratios accurately computed
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title includes correct spec-id, library, pyplots.ai format. Legend
+          shows all continents
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: 25 countries across 5 continents. Distortion ratios span 0.1 to 14.4
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real-world 2024 population estimates for actual countries. Neutral
+          educational topic
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Population and land area values are accurate and realistic
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean imports, data, config, plot, save structure
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic with hardcoded data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only pygal and pygal.style.Style, both used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean Pythonic code with elegant lambda closures for per-node formatting
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png via render_to_png. Current API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of pygal.Treemap with Style, series data as dicts, comprehensive
+          config options
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Per-node formatter overriding chart-level value_formatter is distinctive.
+          Pygal-specific config patterns
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques: []
+  patterns:
+  - iteration-over-groups
+  dataprep:
+  - normalization
+  styling:
+  - edge-highlighting
