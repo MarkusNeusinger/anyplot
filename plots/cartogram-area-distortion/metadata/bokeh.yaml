@@ -1,7 +1,7 @@
 library: bokeh
 specification_id: cartogram-area-distortion
 created: '2026-03-13T21:19:32Z'
-updated: '2026-03-13T21:42:02Z'
+updated: '2026-03-13T21:51:12Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23070855617
 issue: 4671
@@ -10,33 +10,34 @@ library_version: 3.9.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/cartogram-area-distortion/bokeh/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/cartogram-area-distortion/bokeh/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/cartogram-area-distortion/bokeh/plot.html
-quality_score: 81
+quality_score: 83
 review:
   strengths:
-  - Excellent data quality with all 50 US states and realistic population values
-  - Clean well-structured code following KISS principles perfectly (10/10 code quality)
-  - 'Good use of Bokeh idioms: ColumnDataSource, transform(), ColorBar, hover tooltips'
-  - Dual encoding (size + color) effectively communicates population differences
-  - Reference outlines provide useful comparison baseline per spec requirements
-  - Subtle grid and cream background show visual refinement
+  - Excellent data storytelling with subtitle highlighting the 65x population ratio
+    between CA and WY
+  - All 50 states represented with accurate real-world population data
+  - Clean code structure with thoughtful label management to avoid Northeast crowding
+  - Good use of Bokeh interactive features (hover tooltips) alongside static export
+  - Reference outlines provide comparison baseline as spec requested
   weaknesses:
-  - Size legend circles use Python Blue instead of matching the Viridis color scheme
-  - Northeast region is crowded with overlapping or near-overlapping state labels
-  - Color bar is somewhat narrow making the title text cramped
-  image_description: The plot displays a Dorling-style cartogram of US states positioned
-    by approximate geographic coordinates (longitude/latitude). Circle sizes are proportional
-    to state population, ranging from tiny circles (Wyoming ~0.6M) to large circles
-    (California ~39M, Texas ~30.5M). Colors follow the Viridis perceptually-uniform
-    palette, mapping dark purple (low population) through teal to yellow (high population).
-    The title reads "US States by Population · cartogram-area-distortion · bokeh ·
-    pyplots.ai" in dark text at top-left. Axis labels show "Longitude (°W)" and "Latitude
-    (°N)". A vertical color bar on the right is labeled "Population (millions)". A
-    custom size legend in the upper-left corner shows three reference circles (5M,
-    15M, 30M) in Python Blue. Dashed gray reference outlines of uniform size appear
-    behind each state circle for comparison. Major states (CA, TX, FL, NY, PA, OH,
-    IL, MI, GA, NC, VA, NJ, TN, WA) are labeled with abbreviations. AK and HI are
-    positioned in inset locations at the lower-left. The background is a light cream
-    color with very subtle gridlines.
+  - Reference dashed outlines too faint (alpha 0.45) to effectively serve comparison
+    purpose
+  - Small-population states appear as very tiny dots hard to distinguish
+  - Color bar title rotated and relatively small on right edge
+  - Not a true contiguous cartogram - circles do not share borders
+  image_description: 'The plot displays a Dorling cartogram of all 50 US states, with
+    circles positioned at approximate geographic coordinates. Circle area is proportional
+    to state population, ranging from tiny dots (Wyoming ~0.6M) to large circles (California
+    ~39M, Texas ~30.5M, Florida ~22.6M). The Viridis color palette maps population
+    from dark purple (low) through teal/green to yellow (high). A size legend in the
+    upper-left shows reference circles for 5M, 15M, and 30M. A vertical color bar
+    on the right displays "Population (millions)". Dashed gray reference outlines
+    (uniform size) are faintly visible behind the main circles. Major states are labeled
+    with abbreviations (CA, TX, FL, NY, IL, OH, PA, GA, MI, NC, VA, AZ, TN, WA). Alaska
+    and Hawaii appear in inset positions in the lower-left. An italic subtitle reads
+    "Circle area proportional to population — California (39M) dwarfs Wyoming (0.6M)
+    by 65×". The background is a warm off-white (#f8f8f4) with very subtle gridlines.
+    Title follows the correct format: "cartogram-area-distortion · bokeh · pyplots.ai".'
   criteria_checklist:
     visual_quality:
       score: 25
@@ -48,42 +49,42 @@ review:
         max: 8
         passed: true
         comment: All font sizes explicitly set (title 28pt, axes 22pt, ticks 18pt,
-          labels 12-15pt). Color bar title text slightly cramped.
+          labels 15pt). Color bar title and reference note text (12pt) somewhat small.
       - id: VQ-02
         name: No Overlap
-        score: 4
-        max: 6
-        passed: true
-        comment: Northeast region crowded despite label offsets. OH label disconnected.
-          PA/NJ close together.
-      - id: VQ-03
-        name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Good size range from tiny to large. Small states visible. Reference
-          outlines add context.
+        comment: Good label management with offsets for Northeast, NJ/MA skipped.
+          Minor circle overlap in mid-Atlantic.
+      - id: VQ-03
+        name: Element Visibility
+        score: 4
+        max: 6
+        passed: true
+        comment: Main circles well-sized. Reference dashed outlines too faint (alpha
+          0.45). Small states appear as tiny dots.
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Viridis palette is perceptually uniform and colorblind-safe.
+        comment: Viridis256 palette is perceptually uniform and colorblind-safe.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Plot fills canvas well. Size legend circles use Python Blue which
-          clashes with Viridis scheme.
+        comment: Good overall utilization. Some wasted space in lower-left below inset
+          states.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: Longitude (°W) and Latitude (°N).'
+        comment: Longitude (°W) and Latitude (°N) — descriptive with units.
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -91,24 +92,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Viridis palette, cream background, custom sizing. Size legend color
-          mismatch is a flaw.
+        comment: Above defaults with warm off-white background, Viridis palette, intentional
+          typography hierarchy. Not quite publication-level.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Subtle grid, outline removed, minor ticks removed, cream background,
-          good whitespace.
+        comment: Subtle grid (alpha 0.12), outline removed, minor ticks removed, custom
+          tick colors, off-white background.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Size variation creates clear hierarchy. Dual encoding reinforces
-          population. Reference outlines provide comparison.
+        comment: Strong storytelling via subtitle highlighting 65x CA-WY ratio, size
+          legend, reference outlines, natural visual hierarchy.
     spec_compliance:
-      score: 12
+      score: 13
       max: 15
       items:
       - id: SC-01
@@ -116,29 +117,28 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Valid Dorling cartogram with circles sized by population. Not contiguous
-          but recognized variant.
+        comment: Valid Dorling cartogram with proportional circles. Not contiguous
+          but reasonable for Bokeh.
       - id: SC-02
         name: Required Features
         score: 3
         max: 4
         passed: true
-        comment: Reference outlines, color scale, labels, legends all present. Non-contiguous
-          is minor departure.
+        comment: Color scale, labels, legends, reference outlines present. Missing
+          contiguous adjacency.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Geographic coordinates correctly mapped, population drives circle
-          size.
+        comment: Geographic positions approximate real state centroids. Population
+          maps to size and color.
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Title adds descriptive prefix before required format. Both size legend
-          and color bar present.
+        comment: Correct title format. Size legend and color bar clearly labeled.
     data_quality:
       score: 14
       max: 15
@@ -148,19 +148,21 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: All 50 states with realistic population variation from 0.6M to 39M.
+        comment: All 50 states with wide population range. Reference outlines and
+          AK/HI inset.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: US state populations are real-world, neutral, and comprehensible.
+        comment: US state populations — real-world, neutral, comprehensible data matching
+          census figures.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Population values realistic and approximately correct for US states.
+        comment: Population figures realistic and current.
     code_quality:
       score: 10
       max: 10
@@ -170,32 +172,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports, data, plot, styling, save. No functions
+        comment: 'Clean linear flow: imports, data, plot, style, save. No functions
           or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set and data is deterministic.
+        comment: np.random.seed(42) set at top.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used.
+        comment: All imports used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-organized clean code. Legend construction appropriate for complexity.
+        comment: Well-organized with clear sections. Pragmatic label offset handling.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png via export_png and HTML.
+        comment: Saves as plot.png via export_png. Current API.
     library_mastery:
       score: 7
       max: 10
@@ -205,15 +207,15 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of ColumnDataSource, transform(), LinearColorMapper, ColorBar,
-          Label, tooltips.
+        comment: Proper ColumnDataSource, figure, scatter, transform(), Label, ColorBar
+          usage.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Leverages ColumnDataSource with transform(), hover tooltips, interactive
-          tools, HTML export.
+        comment: Interactive hover tooltips, transform() for color mapping, dual HTML+PNG
+          export.
   verdict: REJECTED
 impl_tags:
   dependencies: []
@@ -226,10 +228,10 @@ impl_tags:
   patterns:
   - data-generation
   - columndatasource
+  - iteration-over-groups
   dataprep:
   - normalization
   styling:
   - custom-colormap
   - alpha-blending
   - grid-styling
-  - edge-highlighting
