@@ -1,7 +1,7 @@
 """ pyplots.ai
 swimmer-clinical-timeline: Swimmer Plot for Clinical Trial Timelines
 Library: letsplot 4.9.0 | Python 3.14.3
-Quality: 80/100 | Created: 2026-03-13
+Quality: 78/100 | Created: 2026-03-13
 """
 
 import os
