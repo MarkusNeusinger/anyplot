@@ -1,7 +1,7 @@
 library: plotnine
 specification_id: scatter-connected-temporal
 created: '2026-03-13T15:26:01Z'
-updated: '2026-03-13T15:40:20Z'
+updated: '2026-03-13T15:48:30Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23057665538
 issue: 4675
@@ -10,106 +10,107 @@ library_version: 0.15.3
 preview_url: https://storage.googleapis.com/pyplots-images/plots/scatter-connected-temporal/plotnine/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/scatter-connected-temporal/plotnine/plot_thumb.png
 preview_html: null
-quality_score: 86
+quality_score: 84
 review:
   strengths:
-  - Excellent spec compliance - all required features present including temporal color
-    gradient and key year annotations
-  - Strong data storytelling with the 2009 recession focal point and chronological
-    year labels
-  - Clean idiomatic plotnine code using geom_path correctly for temporal ordering
-  - Realistic Phillips Curve data with appropriate economic ranges
+  - Excellent use of geom_path for correct temporal ordering shows deep plotnine understanding
+  - Well-crafted recession highlight with red accent creates clear focal point and
+    narrative
+  - Custom per-label offsets prevent annotation crowding with thoughtful attention
+    to detail
+  - Realistic Phillips curve data with plausible economic values
+  - Perfect code structure with clean KISS pattern and full font size customization
   weaknesses:
-  - Year labels and annotation text at size=11 are slightly small for the 4800x2700
-    canvas
-  - Early light blue points and path segments lack contrast against the white background
-  - Some unused canvas space on the right side due to the outlier recession point
-  image_description: The plot displays a connected scatter plot of the Phillips Curve
-    relationship between Unemployment Rate (%) on the x-axis and Inflation Rate (%)
-    on the y-axis for 1990-2020. Data points are connected by line segments in temporal
-    order using geom_path. A light-to-dark blue color gradient encodes temporal progression
-    from 1990 (light blue) to 2020 (dark navy). Each data point has a circular marker
-    with a white stroke border. Key years (1990, 1995, 2000, 2005, 2015, 2020) are
-    annotated with bold gray text labels positioned with custom offsets. The 2009
-    recession point (highest unemployment ~9.6%, lowest inflation ~-0.4%) is highlighted
-    with a larger red circle outline and a bold red "2009 Recession" annotation. A
-    "Year" color gradient legend appears on the right. The title reads "Phillips Curve
-    (1990-2020) · scatter-connected-temporal · plotnine · pyplots.ai" in bold. The
-    background uses theme_minimal with very subtle grid lines.
+  - Color gradient range is too subtle to clearly convey temporal progression in mid-range
+    years
+  - Layout has wasted space in upper-right quadrant creating imbalanced canvas
+  - Year legend uses indirect numeric mapping (0-30 to 1990-2020)
+  image_description: The plot shows a connected scatter plot depicting the Phillips
+    Curve relationship between Unemployment Rate (%) on the x-axis and Inflation Rate
+    (%) on the y-axis for 1990-2020. Data points are connected by path lines in temporal
+    order, with a blue color gradient from light blue (1990) to dark navy (2020) encoding
+    temporal progression. Each data point has a circular marker with a white stroke
+    border. Key years (1990, 1995, 2000, 2005, 2015, 2020) are annotated with bold
+    gray text labels positioned with custom offsets. The 2009 recession point is highlighted
+    with a larger red circle outline and bold red "2009 Recession" label. A continuous
+    color bar legend on the right shows the Year mapping. The title reads "Phillips
+    Curve (1990-2020) · scatter-connected-temporal · plotnine · pyplots.ai" in bold.
+    The background is minimal with subtle gray gridlines. The layout is 16:9 landscape
+    format.
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 25
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All major font sizes explicitly set. Year labels at size=11 slightly
-          small for canvas resolution.
+        comment: 'All font sizes explicitly set: title 24pt bold, axis titles 20pt,
+          axis text 16pt, legend 14-16pt'
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Year labels use custom offsets. Minor visual density in 4-6% unemployment
-          region.
+        comment: Year labels use custom offsets but 1995/2005 labels are close together
+          in crowded mid-range
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Points well-sized with white stroke. Earlier lighter points slightly
-          less prominent against white background.
+        comment: Points visible with white stroke; color gradient range is subtle
+          making mid-range distinction difficult
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
-        passed: true
-        comment: Single-hue blue gradient is colorblind-safe. Red accent provides
-          strong contrast.
-      - id: VQ-05
-        name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good 16:9 proportions. Some unused space on right due to outlier
-          recession point.
+        comment: Blue gradient is colorblind-safe but lighter end blends somewhat
+          with white background
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 2
+        max: 4
+        passed: false
+        comment: Good 16:9 format but noticeable empty space in upper-right; plot
+          area not perfectly balanced
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: Unemployment Rate (%) and Inflation
-          Rate (%).'
+        comment: 'Both axes include units: Unemployment Rate (%) and Inflation Rate
+          (%)'
     design_excellence:
-      score: 14
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Cohesive blue gradient palette with red accent. White-stroked points
-          add polish.
+        comment: Custom blue gradient palette, white-stroked points, recession highlight
+          with red accent, cohesive color scheme
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: theme_minimal removes spines. Subtle grid with alpha=0.2. Minor grid
-          removed.
+        comment: theme_minimal removes chrome, minor grid removed, major grid subtle
+          with alpha=0.2
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 3
         max: 6
-        passed: true
-        comment: Clear focal point with 2009 recession highlight. Year labels guide
-          viewer through temporal path.
+        passed: false
+        comment: Recession highlight creates focal point but color gradient doesn't
+          strongly convey temporal flow
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -117,26 +118,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct connected scatter plot using geom_path for temporal ordering.
+        comment: Correct connected scatter plot using geom_path for temporal ordering
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: chronological connection, annotations, color
-          gradient, visible markers.'
+        comment: Chronological connections, year annotations, color gradient for time
+          direction, visible markers
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=Unemployment, Y=Inflation correctly mapped. Full data range shown.
+        comment: X=Unemployment, Y=Inflation correctly mapped with full data range
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: Correct title format. Year gradient legend properly labeled.
+        comment: Title includes spec-id/library/pyplots.ai format; legend functional
+          but indirect mapping
     data_quality:
       score: 14
       max: 15
@@ -146,21 +148,20 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Shows cyclical patterns, recession spike, varying relationships.
-          Good trajectory variety.
+        comment: Shows pre-recession stability, 2008-2009 spike, recovery, deflation
+          period
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: US Phillips Curve 1990-2020 is a classic neutral economics example.
+        comment: Classic Phillips curve with US unemployment vs inflation data
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Unemployment 3.7-9.6%, Inflation -0.4-5.4% are realistic US economic
-          ranges.
+        comment: 'Realistic values: unemployment 3.7-9.6%, inflation -0.4 to 5.4%'
     code_quality:
       score: 10
       max: 10
@@ -170,54 +171,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports, data, labels, plot, save.'
+        comment: Clean imports, data, labels, plot, save structure
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set and data is hardcoded deterministic.
+        comment: np.random.seed(42) set, data is hardcoded and deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used.
+        comment: All imports used including annotate for recession label
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-structured with dictionary-based label offset configuration.
+        comment: Well-organized code, label offsets nicely structured, no over-engineering
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300, current plotnine API.
+        comment: Saves as plot.png with dpi=300
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Proper grammar of graphics layering. Correct use of geom_path for
-          temporal ordering.
+        comment: Expert ggplot grammar with layered geoms, aes mappings, geom_path
+          awareness, inherit_aes=False
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses geom_path, inherit_aes=False, layered fill/color gradient scales.
-  verdict: REJECTED
+        comment: Grammar of graphics layering, scale_color_gradient with custom breaks/labels
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - layer-composition
+  - custom-legend
   patterns:
   - data-generation
   dataprep: []

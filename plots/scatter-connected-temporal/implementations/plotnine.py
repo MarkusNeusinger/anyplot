@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 scatter-connected-temporal: Connected Scatter Plot with Temporal Path
 Library: plotnine 0.15.3 | Python 3.14.3
-Quality: 86/100 | Created: 2026-03-13
+Quality: 84/100 | Created: 2026-03-13
 """
 
 import numpy as np
