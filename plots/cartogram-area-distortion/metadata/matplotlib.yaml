@@ -1,0 +1,251 @@
+library: matplotlib
+specification_id: cartogram-area-distortion
+created: '2026-03-13T21:20:26Z'
+updated: '2026-03-13T21:52:18Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23070855407
+issue: 4671
+python_version: 3.14.3
+library_version: 3.10.8
+preview_url: https://storage.googleapis.com/pyplots-images/plots/cartogram-area-distortion/matplotlib/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/cartogram-area-distortion/matplotlib/plot_thumb.png
+preview_html: null
+quality_score: 89
+review:
+  strengths:
+  - Excellent visual design with custom colormap, shadow effects, and path effects
+    creating a polished near-publication-ready appearance
+  - Effective data storytelling through three well-placed annotations highlighting
+    key insights (largest population, highest/lowest GDP per capita)
+  - Strong matplotlib mastery with PatchCollection, path effects, and manual layout
+    control
+  - Comprehensive implementation with size legend, colorbar, inset reference map,
+    and explanatory caption
+  - Clean well-structured code with appropriate collision avoidance algorithm
+  weaknesses:
+  - Dorling cartogram (circles) rather than contiguous cartogram with distorted region
+    shapes - loses geographic shape recognition
+  - Minor crowding in NE corridor despite dedicated spacing logic - CT and small NE
+    states are tight
+  - Custom colormap is distinctive but not perceptually uniform - could use viridis-based
+    palette for better accessibility
+  - Some very small states (WY, VT, DE, RI) are unlabeled and hard to identify
+  image_description: 'The plot displays a Dorling cartogram of US states where circle
+    area is proportional to state population. Circles are positioned roughly according
+    to geographic centroids with collision avoidance. Color encodes GDP per capita
+    using a custom sequential colormap ranging from warm tan/gold (low ~$38K) through
+    green to deep navy blue (high ~$82K). The title "US States by Population" appears
+    at top in bold 28pt with subtitle "cartogram-area-distortion · matplotlib · pyplots.ai"
+    below. Three annotations with arrow connectors highlight: California (39.5M people,
+    largest circle, left side), New York ($82K GDP/cap, dark blue, upper right), and
+    Mississippi ($38K GDP/cap lowest, tan/olive, center). A population size legend
+    on the right shows 1M, 10M, and 30M reference circles. A vertical colorbar on
+    the far right displays "GDP per Capita (USD)" with $38K-$82K range. A small inset
+    map in the bottom-left corner labeled "Actual Geography" shows a simplified US
+    outline for reference. State abbreviations are labeled on circles with population
+    > 2,500K. The background is a consistent light gray (#f4f5f7). An italic caption
+    at bottom reads "Circle area proportional to state population | Color encodes
+    GDP per capita."'
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title=28pt, subtitle=18pt, labels=14-16pt,
+          colorbar=20pt/16pt, legend=16-18pt, caption=16pt'
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Collision avoidance works well overall; minor crowding in NE corridor
+          with CT and small states tight together
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: All circles visible with min_radius enforced; some very small unlabeled
+          states hard to distinguish
+      - id: VQ-04
+        name: Color Accessibility
+        score: 3
+        max: 4
+        passed: true
+        comment: Custom sequential colormap reasonably colorblind-safe but not perceptually
+          uniform like viridis
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Excellent canvas utilization: cartogram center-left, colorbar right,
+          legend right, inset bottom-left'
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive title, colorbar with units, caption explains encoding,
+          axes appropriately hidden
+    design_excellence:
+      score: 17
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: Custom colormap, shadow effects, path effects, refined annotation
+          styling, intentional typography hierarchy, white circle edges
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines removed, no grid, refined colorbar, muted inset styling, generous
+          whitespace, consistent background
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Three targeted annotations highlight key insights; size+color dual
+          encoding creates clear hierarchy
+    spec_compliance:
+      score: 13
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 4
+        max: 5
+        passed: true
+        comment: Dorling cartogram variant with circles; valid but not contiguous
+          cartogram with distorted shapes
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: Size by population, color by GDP, labels, legends, inset reference
+          map; missing contiguous borders
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Area proportional to population via sqrt, color mapped to GDP per
+          capita, geographic positioning correct
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct subtitle format, population size legend with 3 reference
+          circles, colorbar with formatted labels
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Wide population range (577K-39.5M), wide GDP range ($38K-$82K), good
+          geographic spread
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: US state population and GDP data with approximately correct real-world
+          values; neutral topic
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Population matches recent census, GDP per capita in realistic $38K-$82K
+          range
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean imports-data-plot-save structure, no functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set at top
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: mpatches, patheffects, pyplot, numpy, ScalarMappable,
+          PatchCollection, colormap utilities'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-organized collision avoidance, clean data structure, appropriate
+          complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with dpi=300 and bbox_inches=tight, no deprecated
+          API
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: PatchCollection for batch rendering, fig.add_axes for layout, ScalarMappable,
+          FuncFormatter, path_effects
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: PatchCollection, path_effects withStroke, manual axes positioning
+          - distinctly matplotlib features
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - colorbar
+  - patches
+  - custom-legend
+  - inset-axes
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - normalization
+  styling:
+  - custom-colormap
+  - alpha-blending
+  - edge-highlighting
+  - minimal-chrome
