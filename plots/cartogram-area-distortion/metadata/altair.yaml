@@ -1,7 +1,7 @@
 library: altair
 specification_id: cartogram-area-distortion
 created: '2026-03-13T21:22:48Z'
-updated: '2026-03-13T21:27:16Z'
+updated: '2026-03-13T21:34:54Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23070855356
 issue: 4671
@@ -10,83 +10,76 @@ library_version: 6.0.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/cartogram-area-distortion/altair/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/cartogram-area-distortion/altair/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/cartogram-area-distortion/altair/plot.html
-quality_score: 81
+quality_score: 84
 review:
   strengths:
-  - 'Excellent Altair idioms: declarative layering, topo_feature, geographic projection,
-    tooltips, and HTML export demonstrate strong library mastery'
-  - Clean, deterministic data with realistic 2023 US population estimates for all
-    50 states
-  - Effective visual hierarchy through circle size and selective labeling of the 15
-    largest states
-  - Subtle reference map background provides geographic context without overwhelming
-    the data
+  - Effective Dorling cartogram using Altair geographic projection and topo_feature
+    for reference map background
+  - Expert idiomatic Altair code with clean layer composition and declarative encoding
+  - Realistic US population data with colorblind-safe 4-color region palette
+  - Good data storytelling through natural size variation highlighting population
+    centers
   weaknesses:
-  - Northeast cluster has overlapping circles making small states hard to distinguish
-  - State abbreviation labels at fontSize=12 are too small, especially on medium-sized
-    circles
-  - Smallest state circles (WY, VT, ND at less than 1M) are very tiny and nearly invisible
-  - Rose/green color pair may challenge colorblind viewers
-  image_description: 'The plot displays a Dorling cartogram of US states overlaid
-    on a faint gray reference map using the Albers USA projection. Circles are sized
-    proportionally to state population (2023 estimates), with the largest circles
-    representing California (green, ~38.9M), Texas (rose, ~30.5M), Florida (rose,
-    ~22.6M), and New York (blue, ~19.6M). Circles are colored by US Census region:
-    blue (#306998) for Northeast, gold (#E5A835) for Midwest, rose (#C44E52) for South,
-    and green (#55A868) for West. White strokes separate overlapping circles. State
-    abbreviation labels appear on the 15 largest states (pop >= 7M). The title reads
-    "US States by Population · cartogram-area-distortion · altair · pyplots.ai" with
-    a gray subtitle "Circle area proportional to state population (2023 estimates)".
-    Two legends are present: a size legend (bottom-right) showing population in millions
-    with graduated circle sizes, and a color legend (bottom-left) listing the four
-    regions with colored circle symbols.'
+  - Northeast region shows circle overlap making some states hard to distinguish
+  - Design could push further toward publication quality with more visual refinement
+  - Spec mentions reference comparison (inset or original outlines) which is not provided
+  image_description: 'The plot displays a Dorling cartogram of the United States where
+    each state is represented by a circle positioned at its approximate geographic
+    centroid, overlaid on a faint light-gray reference map of US state boundaries.
+    Circle area is proportional to state population (2023 estimates). States are colored
+    by region: blue (Northeast), gold/yellow (Midwest), orange (South), and green
+    (West). White bold state abbreviations label circles for states with population
+    >= 4M. California is the largest green circle on the west coast; Texas is a large
+    orange circle in the south-center; Florida is a large blue-gray circle in the
+    southeast. A size legend in the bottom-right shows population scale (10M, 20M,
+    30M, 40M). A color legend in the bottom-left identifies the four regions. The
+    title reads "US States by Population · cartogram-area-distortion · altair · pyplots.ai"
+    with subtitle "Circle area proportional to state population (2023 estimates)."
+    The Northeast corridor is noticeably crowded with overlapping circles.'
   criteria_checklist:
     visual_quality:
-      score: 22
+      score: 25
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Title (28pt), subtitle (18pt), legend titles (18pt), legend labels
-          (15pt) explicitly set. State labels at fontSize=12 are too small on medium
-          circles.
+        comment: Title 28pt, subtitle 18pt, legend titles 18pt, labels 15pt all explicitly
+          set and readable
       - id: VQ-02
         name: No Overlap
         score: 4
         max: 6
         passed: false
-        comment: Northeast cluster (NY, PA, NJ, MA, CT) has visible circle overlap.
-          Small northeastern states crowd together.
+        comment: Northeast corridor shows overlapping circles (NY/NJ/CT/MA/PA cluster)
       - id: VQ-03
         name: Element Visibility
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Large and medium states visible. Smallest states (WY, VT, AK at 0.6-0.7M)
-          produce very tiny circles hard to see against map.
+        passed: true
+        comment: Good size scale range with 0.85 opacity and white strokes. Smallest
+          states tiny but visible
       - id: VQ-04
         name: Color Accessibility
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Four-color palette generally distinguishable. South (rose) and West
-          (green) could challenge deuteranopia viewers.
+        comment: Four-color palette avoids red-green confusion
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Map fills canvas well. Both legends positioned in bottom corners.
-          Minor clutter with two legend boxes.
+        comment: Map fills canvas well. Some wasted space at top/bottom margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No traditional axes needed for map. Title and subtitle are descriptive.
+        comment: Legend includes Population (millions) with units, subtitle clarifies
+          visualization
     design_excellence:
       score: 13
       max: 20
@@ -96,22 +89,21 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom 4-color palette, white circle strokes, subtle gray reference
-          map, opacity=0.85. Above defaults with intentional choices.
+        comment: Custom region palette, subtle reference map, white circle strokes.
+          Above defaults but not exceptional
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: View strokeWidth=0, subtle map strokes, white circle outlines. No
-          heavy grid or distracting chrome.
+        comment: View frame removed, subtle gray background map, clean title hierarchy
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Circle size communicates population hierarchy. Selective labeling
-          draws attention to most populous states. Color adds regional narrative.
+        comment: Size variation highlights population differences. Region coloring
+          adds second dimension. Labels guide attention
     spec_compliance:
       score: 13
       max: 15
@@ -121,28 +113,29 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Dorling cartogram is a legitimate variant but spec describes contiguous
-          cartogram preserving shape.
+        comment: Dorling cartogram is a valid cartogram variant with area proportional
+          to data
       - id: SC-02
         name: Required Features
         score: 3
         max: 4
         passed: true
-        comment: Has reference map, color encoding, labels, legends. Missing contiguous
-          border preservation.
+        comment: Color encoding, labels, legends, reference map present. Missing inset
+          comparison
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Population mapped to circle area, coordinates projected via albersUsa,
-          all 50 states present.
+        comment: Geographic positions correctly mapped via lon/lat with Albers USA
+          projection
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Both legends clear with matching labels.
+        comment: Title follows correct format. Both size and color legends present
+          with descriptive titles
     data_quality:
       score: 14
       max: 15
@@ -152,20 +145,20 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: All 50 states with wide population range. Four regions represented.
-          Good size diversity.
+        comment: All 50 states with wide population range. Four regions represented
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real US state population data with 2023 estimates. Neutral and factual.
+        comment: Real US state populations with 2023 estimates. Neutral geographic
+          topic
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Population values realistic. Geographic centroids accurate.
+        comment: Population values are realistic 2023 estimates
     code_quality:
       score: 10
       max: 10
@@ -175,32 +168,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean flow: imports, data, chart layers, combine, save. No functions
-          or classes.'
+        comment: Clean linear flow with no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data hardcoded and deterministic.
+        comment: Fully deterministic with hardcoded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only altair and pandas imported, both used.
+        comment: Only altair and pandas, both actively used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-structured with appropriate complexity.
+        comment: Clean declarative code with appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with scale_factor=3.0 and plot.html. Current API.
+        comment: Saves as plot.png with scale_factor=3.0 and plot.html
     library_mastery:
       score: 9
       max: 10
@@ -210,21 +202,19 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Excellent declarative grammar: encoding types, Size/Color with scales,
-          layer composition, Title, projection.'
+        comment: Expert declarative Altair grammar with encoding types, layer composition,
+          geographic projections
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Uses topo_feature, albersUsa projection, declarative layering, tooltips,
-          HTML export.
+        comment: Uses topo_feature, Albers USA projection, native tooltips, HTML export
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
-  - annotations
   - hover-tooltips
   - html-export
   patterns:
@@ -233,4 +223,3 @@ impl_tags:
   styling:
   - alpha-blending
   - edge-highlighting
-  - minimal-chrome
