@@ -1,6 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 cartogram-area-distortion: Cartogram with Area Distortion by Data Value
 Library: letsplot 4.9.0 | Python 3.14.3
+Quality: 81/100 | Created: 2026-03-13
 """
 
 import pandas as pd
