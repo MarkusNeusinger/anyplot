@@ -1,6 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 cartogram-area-distortion: Cartogram with Area Distortion by Data Value
 Library: pygal 3.1.0 | Python 3.14.3
+Quality: 80/100 | Created: 2026-03-13
 """
 
 import pygal
