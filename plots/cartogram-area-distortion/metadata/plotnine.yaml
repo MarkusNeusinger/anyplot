@@ -1,0 +1,239 @@
+library: plotnine
+specification_id: cartogram-area-distortion
+created: '2026-03-13T21:21:03Z'
+updated: '2026-03-13T21:49:18Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23070855519
+issue: 4671
+python_version: 3.14.3
+library_version: 0.15.3
+preview_url: https://storage.googleapis.com/pyplots-images/plots/cartogram-area-distortion/plotnine/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/cartogram-area-distortion/plotnine/plot_thumb.png
+preview_html: null
+quality_score: 86
+review:
+  strengths:
+  - Excellent layered grammar of graphics approach with multi-layer cartogram (reference
+    outlines + scaled polygons + labels + annotations)
+  - Custom colorblind-safe gradient palette that is visually appealing
+  - Thoughtful data storytelling with top-3 highlighting, explanatory subtitle, and
+    guiding annotations
+  - Clean fully deterministic code with no unnecessary complexity
+  - Reference outlines (dashed) provide geographic context alongside distorted polygons
+  weaknesses:
+  - Minor label crowding in central Europe (BE/NL/CH/AT) despite nudge adjustments
+  - Bottom annotation text (size 9-10) slightly small for canvas size
+  - Some wasted space between map area and right-side legend
+  image_description: The plot displays a non-contiguous cartogram of 16 European countries
+    where polygon area is proportional to population. Countries are rendered as scaled
+    hexagonal-like polygons against a light blue-gray background, with dashed gray
+    outlines showing original borders for comparison. The color gradient runs from
+    deep indigo/purple (low GDP per capita, e.g., Romania ~16K, Poland ~18K) through
+    teal/green (mid-range, e.g., France ~44K, Germany ~51K) to bright yellow (high
+    GDP, e.g., Norway ~83K, Switzerland ~93K). Germany (DE), France (FR), UK, Italy
+    (IT), and Spain (ES) are the largest polygons, reflecting their larger populations.
+    Each country is labeled with a 2-letter abbreviation in white rounded boxes. The
+    title reads "cartogram-area-distortion · plotnine · pyplots.ai" with a subtitle
+    "Area ∝ Population — 469M total across 16 countries | Dashed outlines = original
+    borders". A colorbar legend on the right shows "GDP per Capita (thousand USD)".
+    Bottom annotations explain the size encoding and highlight the top-3 countries
+    by population.
+  criteria_checklist:
+    visual_quality:
+      score: 26
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 24pt, subtitle 16pt, legend
+          14/12pt). Country labels 10-14pt readable. Bottom annotations at size 9-10
+          slightly small.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Minor crowding in central Europe (BE/NL/CH/AT) despite label nudging.
+          Mostly readable.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Polygons well-scaled with clear size differentiation. Small countries
+          visible but compact.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Custom gradient from deep indigo through teal to gold is perceptually
+          ordered and colorblind-safe.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Plot fills good portion of canvas. Some wasted space on right side
+          between map and legend.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Axes appropriately hidden for cartogram. Colorbar legend includes
+          units. Title and subtitle descriptive.
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom 7-color gradient, ocean-feel background, dashed reference
+          outlines, geom_label with rounded boxes. Above defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Axes/grid/ticks removed. Subtle panel background. Refined legend
+          border. Generous whitespace.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Top-3 countries highlighted with bolder outlines. Subtitle explains
+          encoding. Color communicates GDP differences effectively.
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 4
+        max: 5
+        passed: true
+        comment: Non-contiguous cartogram variant. Valid approach for plotnine without
+          geographic projection support.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: area proportional to population, color
+          for GDP, reference outlines, labels, legend.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Population correctly drives polygon size, GDP per capita correctly
+          drives fill color.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct. Colorbar legend with proper label and units.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: 16 countries with wide population range (5.5M-84.5M) and GDP range
+          (15.8K-93.3K). Good variety.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real European countries with plausible 2024 population and GDP per
+          capita estimates. Neutral topic.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Population and GDP values realistic and consistent with known data.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports, data dictionaries, transformation, plot, save.
+          No functions or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic data with no random elements.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used in the implementation.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-organized. Dictionary-based data is clear. Label nudging
+          is a nice touch.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with dpi=300 using current plotnine API.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Excellent layered grammar approach with geom_path, geom_polygon,
+          geom_label, annotate. Proper aes mappings and scale functions.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses geom_label with boxstyle, scale_fill_gradientn with guide_colorbar,
+          scale_size_identity, scale_alpha_identity, coord_fixed.
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  - colorbar
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - normalization
+  styling:
+  - minimal-chrome
+  - custom-colormap
+  - alpha-blending
+  - edge-highlighting
