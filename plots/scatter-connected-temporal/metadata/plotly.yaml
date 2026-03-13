@@ -1,7 +1,7 @@
 library: plotly
 specification_id: scatter-connected-temporal
 created: '2026-03-13T15:25:46Z'
-updated: '2026-03-13T15:29:52Z'
+updated: '2026-03-13T15:38:51Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23057665580
 issue: 4675
@@ -10,37 +10,40 @@ library_version: 6.6.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/scatter-connected-temporal/plotly/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/scatter-connected-temporal/plotly/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/scatter-connected-temporal/plotly/plot.html
-quality_score: 87
+quality_score: 82
 review:
   strengths:
-  - 'Perfect spec compliance: all 5 required features (connecting lines, annotations,
-    directional arrow, visible markers, color gradient) are implemented'
-  - 'Excellent data choice: US Phillips Curve with recognizable economic events creates
-    genuine narrative value'
-  - Clean, well-structured code with good Plotly idioms and proper font sizing throughout
-  - HTML export with rich hover tooltips is a strong Plotly-specific addition
+  - Excellent real-world Phillips Curve data with accurate economic values spanning
+    multiple cycles
+  - Strong annotation system highlighting key historical moments (1990, 1999, 2009,
+    2020, 2022, 2023)
+  - 'Good use of Plotly-specific features: hovertemplate, customdata, HTML interactive
+    export'
+  - Viridis-based color gradient effectively communicates temporal progression
+  - Professional font sizing across all text elements
   weaknesses:
-  - Marker size could be larger (18-20) for better visibility at full 4800x2700 resolution
-  - Connecting line is uniformly light; gradient line matching marker colors would
-    strengthen temporal encoding
-  - Annotation placement uses simplistic offset logic that does not adapt well to
-    point density
-  image_description: 'The plot displays a connected scatter plot of US unemployment
-    rate (%) on the x-axis vs. inflation rate (%) on the y-axis, spanning 1990-2023.
-    Data points are connected by light semi-transparent blue lines in temporal order.
-    Each marker is a filled circle with a white edge, colored on a light-to-dark blue
-    gradient (light blue = 1990, dark navy = 2023). A vertical colorbar on the right
-    maps the gradient to years (1990, 2006, 2023). Six key years are annotated with
-    bold labels and arrow connectors: 1990, 1999, 2009, 2020, 2022, and 2023. A directional
-    arrow near the midpoint indicates temporal flow. The title reads "scatter-connected-temporal
-    · plotly · pyplots.ai" centered at the top. The background is white with subtle
-    light gray gridlines. The plot shows the classic Phillips curve path with notable
-    events visible — the 2008-2009 recession (high unemployment, deflation in lower
-    right), the 2020-2022 pandemic disruption (spike to 8% inflation at low unemployment
-    in upper left).'
+  - Line segment colors use manual RGB interpolation that does not match the viridis
+    colorscale on markers, creating visual inconsistency
+  - Dense clustering in the 4-5% unemployment region makes the temporal path hard
+    to follow
+  - Layout has wasted space on the right side; colorbar is small relative to the plot
+    area
+  image_description: 'The plot displays a connected scatter plot showing the Phillips
+    Curve relationship between Unemployment Rate (%) on the x-axis and Inflation Rate
+    (%) on the y-axis for 1990-2023. Data points are circular markers with white borders,
+    colored along a viridis gradient from dark purple (1990) to yellow (2023). A vertical
+    colorbar on the right maps colors to years. Connecting line segments between consecutive
+    points also follow a color gradient, transitioning from darker tones to golden/yellow.
+    Key years are annotated: 1990 (upper center, high inflation ~5.4%), 1999 (left
+    cluster, low unemployment ~4.2%), 2009 (lower right, high unemployment ~9.3%),
+    2020 (right area, pandemic spike), 2022 (upper left, high inflation ~8%), and
+    2023 (left, recovery). A directional arrow near the center indicates temporal
+    flow. The background is a very light gray-blue with subtle dotted gridlines. The
+    title reads "scatter-connected-temporal · plotly · pyplots.ai" centered at the
+    top.'
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 25
       max: 30
       items:
       - id: VQ-01
@@ -48,40 +51,42 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title=28, axis labels=22, ticks=18,
-          annotations=16'
+        comment: 'All font sizes explicitly set: title 28pt, axis labels 22pt, ticks
+          18pt, annotations 16pt, colorbar 16-18pt'
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Annotations generally clear but simplistic offset logic; lower-left
-          cluster is dense
+        comment: Annotations well-positioned; some marker crowding in the dense 4-5%
+          unemployment cluster
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Markers size=14 with white edges visible for 34 points; slightly
-          small for 4800x2700 canvas
+        comment: Markers at size 18 with white borders visible for 34 points; some
+          overlap in dense center-left region
       - id: VQ-04
         name: Color Accessibility
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Single blue gradient is fully colorblind-safe
+        comment: Viridis colorscale is colorblind-safe but manual RGB interpolation
+          for lines doesn't match marker colorscale
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 2
         max: 4
         passed: true
-        comment: Good canvas utilization with balanced margins
+        comment: Reasonable layout but colorbar is small and pushed right; some wasted
+          space
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: Unemployment Rate (%), Inflation
+        comment: 'Descriptive labels with units: Unemployment Rate (%) and Inflation
           Rate (%)'
     design_excellence:
       score: 13
@@ -89,27 +94,27 @@ review:
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Custom blue gradient, white marker edges, plotly_white template;
-          above defaults but not publication-level
+        comment: Custom viridis colorscale, white marker borders, semi-transparent
+          annotation backgrounds, subtle dotted grid
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: plotly_white removes chrome, subtle gridlines, axis lines present;
-          good refinement
+        comment: Dotted grid, no axis lines, zeroline removed, custom background color,
+          generous margins
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Key year annotations guide viewer; color gradient aids temporal reading;
-          Phillips curve dynamics visible
+        comment: Key year annotations and directional arrow help tell temporal story;
+          dense middle section makes path hard to follow
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -117,26 +122,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct connected scatter plot with temporal path
+        comment: Connected scatter plot with temporal path, correct chart type
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: chronological connections, annotations, directional
-          arrow, visible markers, color gradient'
+        comment: Points connected chronologically, key time points annotated, color
+          gradient, directional arrow, markers at each point
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=unemployment, Y=inflation correctly mapped
+        comment: X=unemployment, Y=inflation, axes show full data range
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: Title format correct; colorbar as temporal legend appropriate
+        comment: Title format correct; colorbar tick labels could be more precise
     data_quality:
       score: 14
       max: 15
@@ -146,22 +151,23 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Shows recession spikes, pandemic disruption, cyclical patterns; good
-          variety
+        comment: 'Shows Phillips Curve dynamics across decades: recovery, recessions,
+          pandemic spike, cyclical patterns'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: US Phillips Curve is classic, neutral economics example
+        comment: US Phillips Curve (unemployment vs inflation 1990-2023) is a real,
+          neutral, classic economics dataset
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Realistic values: unemployment 3.6-9.6%, inflation -0.4% to 8.0%'
+        comment: 'Realistic values: unemployment 3.6-9.6%, inflation -0.4 to 8.0%'
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -169,31 +175,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean Imports -> Data -> Plot -> Save flow
+        comment: 'Flat structure: imports, data, plot, save'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set, data is deterministic arrays
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy and plotly.graph_objects, both used
+        comment: Only numpy and plotly.graph_objects imported, both used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Clean, Pythonic, appropriate complexity
+        passed: false
+        comment: Manual RGB interpolation is verbose and doesn't match the defined
+          colorscale
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png at 1600x900 scale=3, also exports HTML
+        comment: Saves as plot.png with correct dimensions, plus HTML export
     library_mastery:
       score: 7
       max: 10
@@ -203,27 +210,30 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of go.Scatter, add_trace, add_annotation, update_layout
+        comment: Good use of go.Scatter with customdata, hovertemplate, colorbar,
+          annotations
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Leverages hovertemplate, colorbar, HTML export; could use more advanced
-          features
+        comment: Uses hovertemplate, customdata formatting, HTML export, annotation
+          arrows with axref/ayref
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
   - colorbar
+  - annotations
   - hover-tooltips
   - html-export
   patterns:
   - data-generation
-  dataprep: []
+  - iteration-over-groups
+  dataprep:
+  - normalization
   styling:
   - custom-colormap
-  - edge-highlighting
-  - grid-styling
   - alpha-blending
+  - grid-styling
+  - edge-highlighting

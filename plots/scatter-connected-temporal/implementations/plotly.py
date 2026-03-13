@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 scatter-connected-temporal: Connected Scatter Plot with Temporal Path
 Library: plotly 6.6.0 | Python 3.14.3
-Quality: 87/100 | Created: 2026-03-13
+Quality: 82/100 | Created: 2026-03-13
 """
 
 import numpy as np
