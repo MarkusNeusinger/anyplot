@@ -1,7 +1,6 @@
-""" pyplots.ai
+"""pyplots.ai
 cartogram-area-distortion: Cartogram with Area Distortion by Data Value
 Library: letsplot 4.9.0 | Python 3.14.3
-Quality: 76/100 | Created: 2026-03-13
 """
 
 import pandas as pd
@@ -175,8 +174,8 @@ plot = (
         aes(x="lon", y="lat", size="population", fill="gdp_per_capita"),  # noqa: F405
         data=df,
         shape=21,
-        color="white",
-        stroke=1.0,
+        color="#555555",
+        stroke=0.8,
         alpha=0.88,
         tooltips=layer_tooltips()  # noqa: F405
         .title("@country")
@@ -184,10 +183,10 @@ plot = (
         .line("GDP/capita|$@gdp_per_capita K"),
     )
     + scale_size(  # noqa: F405
-        range=[5, 26], name="Population\n(millions)", breaks=[5, 20, 40, 80]
+        range=[12, 30], name="Population\n(millions)", breaks=[5, 20, 40, 80]
     )
-    + scale_fill_gradient(  # noqa: F405
-        low="#FFD43B", high="#306998", name="GDP per Capita\n(thousands USD)"
+    + scale_fill_viridis(  # noqa: F405
+        option="viridis", name="GDP per Capita\n(thousands USD)"
     )
     # Labels for large countries (population > 30M)
     + geom_text(  # noqa: F405
@@ -202,6 +201,13 @@ plot = (
         aes(x="lon", y="lat", label="abbr"),  # noqa: F405
         data=df[(df["population"] > 10) & (df["population"] <= 30)],
         size=9,
+        color="#222222",
+    )
+    # Labels for small countries (<=10M)
+    + geom_text(  # noqa: F405
+        aes(x="lon", y="lat", label="abbr"),  # noqa: F405
+        data=df[df["population"] <= 10],
+        size=7,
         color="#333333",
     )
     + labs(  # noqa: F405
