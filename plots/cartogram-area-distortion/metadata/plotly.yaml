@@ -1,7 +1,7 @@
 library: plotly
 specification_id: cartogram-area-distortion
 created: '2026-03-13T21:20:40Z'
-updated: '2026-03-13T21:43:15Z'
+updated: '2026-03-13T21:52:40Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23070855345
 issue: 4671
@@ -10,36 +10,39 @@ library_version: 6.6.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/cartogram-area-distortion/plotly/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/cartogram-area-distortion/plotly/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/cartogram-area-distortion/plotly/plot.html
-quality_score: 84
+quality_score: 86
 review:
   strengths:
-  - Excellent dual encoding (size=population, color=density) creates a compelling
-    visual narrative
-  - Smart NE state offset logic to reduce overlap in the densest region
-  - Clean professional styling with Viridis colorscale and subtle geographic reference
-  - 'Perfect code quality: deterministic, clean, well-structured'
-  - Strong use of Plotly geo features including Choropleth for background state outlines
-  - HTML export alongside PNG leverages Plotly interactive strengths
+  - Excellent dual encoding (bubble size for population, color for density) creates
+    meaningful comparison
+  - Custom colorscale is perceptually uniform and visually striking
+  - Storytelling annotation highlights key insight about population vs density disconnect
+  - Clean polished visual design with white bubble outlines and subtle background
+    boundaries
+  - Deterministic realistic data using actual US Census estimates
+  - Good use of Plotly-specific geo features (Albers USA, Scattergeo, Choropleth layers)
+  - HTML export provides interactive hover tooltips with detailed state information
   weaknesses:
-  - NE state region still shows some crowding despite offsets - CT label is cramped
-  - Smallest state bubbles (WY, VT, ND) are nearly invisible as tiny dots
-  - Not a true contiguous cartogram as described in the spec (bubble cartogram variant
-    instead)
-  - Design could be more polished to reach publication-quality level
-  image_description: The plot shows a bubble cartogram of all 50 US states on an Albers
-    USA projection with a clean white background and faint gray state outlines for
-    geographic reference. Bubble size is proportional to population (California, Texas,
-    and Florida are the largest circles). Color encodes population density using the
-    Viridis colorscale ranging from dark purple (sparse, ~10/sq mi) through teal to
-    yellow (dense, ~5k/sq mi). New Jersey appears bright yellow-green indicating highest
-    density. State abbreviation labels in white Arial Black font appear on larger
-    bubbles (those with population >=3M). A colorbar on the right shows "Pop. Density
-    (per sq mi)" with tick marks at 10, 50, 100, 500, 1k, and 5k. The title reads
-    "US States by Population" in bold 28pt font with subtitle "cartogram-area-distortion
-    · plotly · pyplots.ai" in smaller gray text. A footer annotation reads "Circle
-    area proportional to population | Color proportional to density". NE states have
-    been manually offset to reduce crowding. Small states (WY, VT, ND, SD) appear
-    as tiny dots.
+  - NE state offsets push bubbles outside map boundaries creating visual awkwardness
+  - Bubble cartogram does not preserve region contiguity as spec mentions
+  - Some small state bubbles are barely visible without labels
+  - Storytelling annotation text at 13px is slightly small
+  image_description: The plot displays a bubble cartogram of U.S. states on an Albers
+    USA projection map. Each state is represented by a circle (bubble) whose area
+    is proportional to population, and whose color encodes population density using
+    a custom colorscale ranging from deep navy/dark purple (low density, ~10 per sq
+    mi) through magenta/pink (medium) to bright yellow (high density, ~5k per sq mi).
+    State abbreviation labels in white bold text appear inside bubbles for states
+    with population >= 2M. Faint grey state boundaries are visible in the background
+    providing geographic reference. The colorbar on the right is titled "Population
+    Density (per sq mi)" with logarithmic tick marks at 10, 50, 100, 500, 1k, 5k.
+    The title reads "U.S. States Sized by Population" with subtitle "cartogram-area-distortion
+    · plotly · pyplots.ai". A footer annotation explains "Area proportional to population
+    · Color proportional to density". A storytelling annotation in the bottom-left
+    reads "California (39M) has 6x more people than median state, yet New Jersey is
+    4x denser". Northeast states have been offset to reduce overlap. California and
+    Texas have the largest bubbles; New Jersey appears bright pink/warm indicating
+    high density despite a smaller bubble.
   criteria_checklist:
     visual_quality:
       score: 26
@@ -50,66 +53,68 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 28pt, subtitle 16px, colorbar
-          18pt/15pt, labels 11pt). State labels small but intentionally hidden below
-          threshold.
+        comment: Font sizes explicitly set throughout (title 30pt, colorbar 18pt/15pt,
+          footer 16px). State labels 9-14pt. Storytelling annotation at 13px slightly
+          small.
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: NE state offsets help but CT/NJ/MA area still shows minor crowding.
+        comment: NE state offsets reduce crowding but push bubbles outside map boundary.
+          No severe text overlap.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Good size variation. White outlines help. Smallest state bubbles
-          are very tiny dots.
+        comment: Good size range (min 10, max 65). Large states clearly visible. Small
+          states are tiny dots without labels.
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Viridis is excellent colorblind-safe choice with good perceptual
-          uniformity.
+        comment: Custom plasma-like colorscale is perceptually uniform and colorblind-safe.
+          Excellent contrast.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Map fills good portion of 16:9 canvas. Some dead space on left side.
+        comment: Map fills canvas well. AK/HI via Albers USA. Storytelling annotation
+          slightly cramped near AK.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Colorbar has units, footer explains both encodings clearly.
+        comment: Descriptive title, colorbar with units, footer explaining dual encoding.
     design_excellence:
-      score: 13
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Above library defaults: Viridis colorscale, subtle gray outlines,
-          white bubble borders, custom subtitle styling. Cohesive but not FiveThirtyEight-level.'
+        comment: Custom colorscale, white bubble outlines, styled HTML title hierarchy,
+          intentional typography. Clearly above defaults.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: No frame, subtle coastlines, plotly_white template, clean background,
-          generous margins.
+        comment: No frame, subtle coastlines, clean background, polished colorbar.
+          NE offsets create visual awkwardness.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Dual encoding (size=population, color=density) creates interesting
-          visual story. Footer annotation helps decode.
+        comment: Dual encoding reveals population-density disconnect. Storytelling
+          annotation highlights key insight. Clear focal points.
     spec_compliance:
       score: 13
       max: 15
@@ -119,29 +124,29 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Dorling/bubble cartogram is a valid cartogram variant but not the
-          contiguous type described in spec.
+        comment: Bubble cartogram is a legitimate variant. Spec mentions contiguous
+          cartograms but bubble approach is recognized alternative.
       - id: SC-02
         name: Required Features
         score: 3
         max: 4
         passed: true
-        comment: Regions sized by value, color scale, labels on major regions, background
-          outlines for reference. No reference map inset.
+        comment: Color scale, labels, reference outlines, legend all present. Contiguity
+          not preserved.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Geographic positions use centroids. Sqrt scaling for area. Color
-          maps to log density.
+        comment: Geographic positions correct. Bubble area proportional to population.
+          Color mapped to density on log scale.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct format in subtitle. Colorbar with units. Footer annotation
-          explains dual encoding.
+        comment: Correct subtitle format. Colorbar clearly labeled. Footer explains
+          encodings.
     data_quality:
       score: 14
       max: 15
@@ -151,20 +156,22 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: All 50 states with wide range of populations and densities. Good
-          variation in both dimensions.
+        comment: All 50 states with wide population range. Dual encoding shows population
+          and density variation.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real US state population estimates (2023). Neutral topic.
+        comment: US state population 2023 estimates. Real, neutral, comprehensible
+          data.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Population and area values are accurate. Density calculations sensible.
+        comment: Population values match Census estimates. State areas accurate. Density
+          calculations correct.
     code_quality:
       score: 10
       max: 10
@@ -174,13 +181,14 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: data → offsets → plot → layout → save. No functions/classes.'
+        comment: 'Linear flow: imports, data, processing, plot, save. No functions
+          or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic with hardcoded data.
+        comment: Fully deterministic hardcoded data. No random elements.
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -192,14 +200,13 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Well-organized with clear comments. NE offset dict is practical.
-          Log scale and label threshold are smart.
+        comment: Clean list comprehensions, good variable naming, appropriate complexity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png at 4800x2700. Also saves HTML. Current API.
+        comment: Saves plot.png at 4800x2700. Also saves plot.html. Current API.
     library_mastery:
       score: 8
       max: 10
@@ -209,15 +216,15 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of go.Figure with multiple traces (Choropleth + Scattergeo).
-          Proper colorbar config.
+        comment: Good use of go.Figure with layered traces (Choropleth + Scattergeo
+          + text). Proper geo configuration.
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: 'Leverages Plotly''s built-in geo: Scattergeo, Choropleth, USA-states
-          locationmode, albers usa projection, hover tooltips, HTML export.'
+        comment: 'Plotly-specific: Albers USA projection, Choropleth for boundaries,
+          Scattergeo, interactive hover tooltips, HTML export.'
   verdict: REJECTED
 impl_tags:
   dependencies: []
@@ -226,11 +233,12 @@ impl_tags:
   - annotations
   - hover-tooltips
   - html-export
+  - layer-composition
   patterns:
   - data-generation
   dataprep:
   - normalization
   styling:
   - custom-colormap
-  - edge-highlighting
   - alpha-blending
+  - edge-highlighting
