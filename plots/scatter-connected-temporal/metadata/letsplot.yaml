@@ -1,7 +1,7 @@
 library: letsplot
 specification_id: scatter-connected-temporal
 created: '2026-03-13T15:24:50Z'
-updated: '2026-03-13T15:29:11Z'
+updated: '2026-03-13T15:37:56Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23057666052
 issue: 4675
@@ -10,108 +10,115 @@ library_version: 4.9.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/scatter-connected-temporal/letsplot/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/scatter-connected-temporal/letsplot/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/scatter-connected-temporal/letsplot/plot.html
-quality_score: 83
+quality_score: 89
 review:
   strengths:
-  - 'Excellent data context: Phillips Curve is a perfect real-world use case for connected
-    temporal scatter'
-  - Clean temporal color gradient from light to dark blue is intuitive and colorblind-safe
-  - Good use of letsplot-specific features (layer_tooltips, HTML export)
-  - Code is clean, reproducible, and well-structured
-  - Subtitle adds meaningful economic context
+  - Excellent data storytelling through the Phillips Curve narrative with well-chosen
+    key year annotations marking economic regime shifts
+  - Custom blue gradient palette with white-stroked markers creates a polished, professional
+    appearance
+  - Per-label nudge offsets demonstrate careful attention to label placement
+  - Full spec compliance with all required features (temporal path, annotations, color
+    gradient, directional arrow, visible markers)
+  - Perfect data quality with realistic economic data and appropriate scales
+  - Clean, well-structured code with good use of letsplot-specific features (layer_tooltips,
+    HTML export)
   weaknesses:
-  - 2023 year label is clipped at the top-left boundary of the plot
-  - Annotation crowding in the 1990s-2000s region where points are densely packed
-  - No directional arrow on the path to explicitly indicate time flow
-  - Annotation font size (11) is small relative to other text elements
-  image_description: The plot displays a connected scatter plot showing the Phillips
-    Curve dynamics — US-style unemployment rate (x-axis, 3-10%) vs. inflation rate
-    (y-axis, -1% to 7%) from 1990 to 2023. Points are connected by lines in temporal
-    order using geom_path. A single-hue color gradient transitions from light blue
-    (1990) to dark navy (2023), encoding temporal progression through both the path
-    lines and filled circle markers. White-stroked circular markers (shape 21) are
-    visible at each of the 34 data points. Key years (1990, 1995, 2000, 2003, 2007,
-    2009, 2015, 2020) are annotated in monospace font with a slight upward nudge.
-    The title reads "scatter-connected-temporal · letsplot · pyplots.ai" with subtitle
-    "Phillips Curve Dynamics — US-style unemployment vs inflation, 1990-2023". A vertical
-    color bar legend on the right maps the Year from 1990 (light) to 2023 (dark) with
-    a midpoint at 2006. The "2023" label at the top-left corner is clipped by the
-    plot boundary. The background uses theme_minimal with subtle light gray major
-    grid lines and no minor grid. The overall path traces recognizable economic regime
-    shifts visible as directional movements through the 2D space.
+  - Mid-range area (4-6% unemployment, 2-4% inflation) has visual congestion where
+    the path crosses itself multiple times
+  - Point markers could be slightly larger given the 34-point density to improve visual
+    prominence
+  - Could push design further with bolder typographic hierarchy or background color
+    treatment to reach publication-quality level
+  image_description: The plot displays a connected scatter plot tracing US-style unemployment
+    rate (%) on the x-axis against inflation rate (%) on the y-axis from 1990 to 2023.
+    Points are connected by line segments in chronological order, with a light-to-dark
+    blue color gradient encoding temporal progression (light blue = 1990, dark blue
+    = 2023). Each data point is shown as a circle with a white stroke. Key years (1990,
+    1995, 2000, 2007, 2009, 2020, 2023) are annotated in bold monospace text with
+    per-label nudge offsets to avoid overlap. A dark arrow at the final segment indicates
+    the direction of time. The title reads "scatter-connected-temporal · letsplot
+    · pyplots.ai" with a subtitle "Phillips Curve Dynamics — US-style unemployment
+    vs inflation, 1990-2023". The background is white with a subtle light gray major
+    grid, no minor grid, and no spines (minimal theme). A vertical color bar legend
+    labeled "Year" appears on the right with labels 1990, 2006, 2023. The path traces
+    a generally inverse relationship between unemployment and inflation with visible
+    regime shifts — the 2008 crisis pushing unemployment to ~10%, and post-COVID 2023
+    showing low unemployment with high inflation in the upper-left.
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 24, axis title 20, axis text
-          16, legend 14-16). Annotation text size=11 slightly small.
+        comment: 'All font sizes explicitly set: title 24, axis titles 20, axis text
+          16, legend 14/16, annotations 13'
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: 2023 label clipped at top-left. Some crowding in 1990s-2000s annotation
-          area.
+        passed: true
+        comment: Per-label nudge offsets prevent most overlap; slight visual congestion
+          in mid-range area where path crosses itself
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Points well-sized (size=5) with white stroke for 34 data points.
-          Lines at 1.8 clear.
+        comment: Points size 5 with white stroke and alpha 0.85, well visible for
+          34 points. Could benefit from slightly larger markers
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Single-hue blue gradient is inherently colorblind-safe.
+        comment: Single-hue sequential blue gradient is inherently colorblind-safe
+          with good contrast
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: Good layout overall but clipped 2023 label indicates insufficient
-          top margin.
+        passed: true
+        comment: 1600x900 base scaled to 4800x2700, data fills plot area well, balanced
+          margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
         comment: 'Descriptive labels with units: Unemployment Rate (%), Inflation
-          Rate (%).'
+          Rate (%)'
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Custom blue gradient, white-stroked circles, monospace annotations.
-          Above defaults but not publication-ready.
+        comment: Custom blue gradient palette, white-stroked circle markers, monospace
+          bold annotations, directional arrow, informative subtitle
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: theme_minimal, subtle grid styling, minor grid removed, generous
-          margins.
+        comment: theme_minimal removes spines, minor grid disabled, major grid subtle,
+          muted text colors, generous margins
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Temporal gradient guides viewer, key year annotations create narrative
-          anchors, subtitle provides context.
+        comment: Temporal gradient shows progression, key year annotations mark regime
+          shifts, arrow indicates direction, subtitle provides context
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -119,49 +126,53 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct connected scatter plot with temporal path.
+        comment: Correct connected scatter plot using geom_path + geom_point with
+          temporal ordering
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: All features present except directional arrow. Color gradient partially
-          covers direction.
+        passed: true
+        comment: 'All spec requirements met: chronological connections, annotations,
+          color gradient, arrow, visible markers'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=unemployment, Y=inflation, correct mapping with full range.
+        comment: X=unemployment, Y=inflation, connected by temporal order, axes show
+          full range
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format, Year legend with labeled breaks.
+        comment: Correct title format and Year legend with appropriate breaks
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 'Multiple economic regime shifts shown: recessions, recoveries, crises.
-          Good variety.'
+        comment: Shows cyclical patterns, regime shifts, directional trends, path
+          self-crossings
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Phillips Curve is a classic, real-world, neutral economics scenario.
+        comment: Phillips Curve dynamics is a classic, neutral, educational economic
+          relationship
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Unemployment 3-10%, inflation -1% to 7% — realistic US ranges.
+        comment: Unemployment 3-10%, inflation -1 to 7.5% are realistic US values
+          for 1990-2023
     code_quality:
       score: 10
       max: 10
@@ -171,31 +182,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports, data, plot, save structure.
+        comment: 'Linear flow: imports, data generation, label setup, arrow data,
+          plot construction, save'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-structured, appropriate complexity.
+        comment: Clean and well-organized with elegant nudge_map dictionary
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with scale=3, current API.
+        comment: Saves as plot.png via export_ggsave with scale=3, also exports HTML
     library_mastery:
       score: 7
       max: 10
@@ -205,15 +217,15 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good ggplot grammar usage with aes, geom layers, scales, themes.
-          Guide='none' to suppress duplicate legend.
+        comment: Proper ggplot grammar with aes mapping, geom layers, scales, theme
+          customization, geom_segment with arrow()
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: layer_tooltips() with formatted lines is letsplot-specific. HTML
-          export alongside PNG.
+        comment: Uses letsplot-specific layer_tooltips(), export_ggsave with scale,
+          tooltips=none on path layer
   verdict: REJECTED
 impl_tags:
   dependencies: []
