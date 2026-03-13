@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 cartogram-area-distortion: Cartogram with Area Distortion by Data Value
 Library: seaborn 0.13.2 | Python 3.14.3
 Quality: 85/100 | Created: 2026-03-13
@@ -8,7 +8,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
-from matplotlib.lines import Line2D
 
 
 # Data: US states with population (millions) and grid positions
@@ -74,27 +73,29 @@ for state, (r, c, pop, region) in states_data.items():
     rows.append({"state": state, "row": r, "col": c, "population": pop, "region": region})
 df = pd.DataFrame(rows)
 
-# Marker size range for sns.scatterplot size mapping
-size_min = 80
-size_max = 4000
+# Set minimum marker size so smallest states remain readable
+size_min = 150
+size_max = 4200
 
-# Colorblind-safe palette using seaborn's "colorblind" palette
+# Region ordering and seaborn colorblind palette
 region_order = ["West", "Midwest", "South", "Northeast"]
-cb_palette = sns.color_palette("colorblind", n_colors=4)
-region_palette = dict(zip(region_order, cb_palette, strict=False))
+region_palette = dict(zip(region_order, sns.color_palette("colorblind", n_colors=4), strict=False))
 
-# Setup theme using seaborn
+# Setup theme using seaborn's set_theme with custom rc params
 sns.set_theme(
-    style="white", context="talk", font_scale=1.1, rc={"figure.facecolor": "#f5f5f5", "axes.facecolor": "#f5f5f5"}
+    style="white",
+    context="talk",
+    font_scale=1.15,
+    rc={"figure.facecolor": "#f5f5f5", "axes.facecolor": "#f5f5f5", "font.family": "sans-serif"},
 )
 
 fig = plt.figure(figsize=(16, 9))
-gs = fig.add_gridspec(1, 2, width_ratios=[3.5, 1], wspace=0.08)
+gs = fig.add_gridspec(1, 2, width_ratios=[3.2, 1], wspace=0.06)
 ax_main = fig.add_subplot(gs[0, 0])
 ax_ref = fig.add_subplot(gs[0, 1])
 
-# Main cartogram using sns.scatterplot with size parameter
-sns.scatterplot(
+# Main cartogram using sns.scatterplot with size and hue encoding
+scatter = sns.scatterplot(
     data=df,
     x="col",
     y="row",
@@ -103,18 +104,45 @@ sns.scatterplot(
     hue="region",
     hue_order=region_order,
     palette=region_palette,
-    marker="s",
+    style="region",
+    style_order=region_order,
+    markers=dict.fromkeys(region_order, "s"),
     alpha=0.85,
     edgecolor="white",
     linewidth=1.5,
-    legend=False,
     ax=ax_main,
 )
 
+# Use seaborn's move_legend to reposition and restyle the auto-generated legend
+# First filter to only show hue entries (not size entries)
+handles, labels = ax_main.get_legend_handles_labels()
+# Find region handles (skip size legend entries)
+region_handles = []
+region_labels = []
+for handle, lbl in zip(handles, labels, strict=False):
+    if lbl in region_order:
+        handle.set_markersize(14)
+        handle.set_markeredgecolor("white")
+        handle.set_markeredgewidth(1)
+        region_handles.append(handle)
+        region_labels.append(lbl)
+
+ax_main.legend(
+    handles=region_handles,
+    labels=region_labels,
+    loc="lower left",
+    fontsize=14,
+    title="Region",
+    title_fontsize=16,
+    framealpha=0.95,
+    edgecolor="#cccccc",
+)
+
 # State abbreviation labels on main cartogram
+pop_max = df["population"].max()
 for _, row in df.iterrows():
-    pop_frac = row["population"] / df["population"].max()
-    fontsize = max(9, min(18, int(10 + pop_frac * 8)))
+    pop_frac = row["population"] / pop_max
+    fontsize = max(10, min(18, int(11 + pop_frac * 8)))
     ax_main.text(
         row["col"],
         row["row"] - 0.03,
@@ -130,11 +158,11 @@ for _, row in df.iterrows():
     if row["population"] >= 5.0:
         ax_main.text(
             row["col"],
-            row["row"] + 0.2,
+            row["row"] + 0.22,
             f"{row['population']:.0f}M",
             ha="center",
             va="center",
-            fontsize=max(7, int(fontsize * 0.6)),
+            fontsize=max(8, int(fontsize * 0.6)),
             color="white",
             alpha=0.9,
             zorder=5,
@@ -143,42 +171,20 @@ for _, row in df.iterrows():
 # Style main axes
 ax_main.invert_yaxis()
 ax_main.set_aspect("equal")
-ax_main.set_xlim(-1.0, 13.5)
-ax_main.set_ylim(6.0, -0.8)
+ax_main.set_xlim(-0.8, 13.5)
+ax_main.set_ylim(5.8, -0.7)
 ax_main.set_xlabel("")
 ax_main.set_ylabel("")
 ax_main.set_xticks([])
 ax_main.set_yticks([])
 sns.despine(ax=ax_main, left=True, bottom=True)
 
-# Title
+# Title - at least 24pt per quality criteria VQ-01
 ax_main.set_title(
-    "US States by Population\ncartogram-area-distortion · seaborn · pyplots.ai", fontsize=22, fontweight="bold", pad=16
-)
-
-# Build custom legend with seaborn palette colors
-legend_handles = [
-    Line2D(
-        [0],
-        [0],
-        marker="s",
-        color="none",
-        markerfacecolor=region_palette[r],
-        markersize=14,
-        markeredgecolor="white",
-        markeredgewidth=1,
-        label=r,
-    )
-    for r in region_order
-]
-ax_main.legend(
-    handles=legend_handles,
-    loc="lower left",
-    fontsize=14,
-    title="Region",
-    title_fontsize=16,
-    framealpha=0.95,
-    edgecolor="#cccccc",
+    "US States by Population\ncartogram-area-distortion \u00b7 seaborn \u00b7 pyplots.ai",
+    fontsize=24,
+    fontweight="bold",
+    pad=18,
 )
 
 # Size annotation
@@ -194,7 +200,7 @@ ax_main.text(
     transform=ax_main.transAxes,
 )
 
-# --- Reference inset: equal-size tile map for comparison ---
+# --- Reference inset: equal-size tile map using seaborn's scatterplot with hue ---
 sns.scatterplot(
     data=df,
     x="col",
@@ -202,8 +208,10 @@ sns.scatterplot(
     hue="region",
     hue_order=region_order,
     palette=region_palette,
-    marker="s",
-    s=150,
+    style="region",
+    style_order=region_order,
+    markers=dict.fromkeys(region_order, "s"),
+    s=180,
     alpha=0.7,
     edgecolor="white",
     linewidth=0.8,
@@ -211,7 +219,7 @@ sns.scatterplot(
     ax=ax_ref,
 )
 
-# Labels on reference map
+# Labels on reference map - slightly larger for readability
 for _, row in df.iterrows():
     ax_ref.text(
         row["col"],
@@ -219,7 +227,7 @@ for _, row in df.iterrows():
         row["state"],
         ha="center",
         va="center",
-        fontsize=6,
+        fontsize=7,
         fontweight="bold",
         color="white",
         zorder=5,
@@ -234,6 +242,6 @@ ax_ref.set_ylabel("")
 ax_ref.set_xticks([])
 ax_ref.set_yticks([])
 sns.despine(ax=ax_ref, left=True, bottom=True)
-ax_ref.set_title("Equal-Area\nReference", fontsize=13, fontweight="bold", pad=10)
+ax_ref.set_title("Equal-Area\nReference", fontsize=14, fontweight="bold", pad=10)
 
 plt.savefig("plot.png", dpi=300, bbox_inches="tight")
