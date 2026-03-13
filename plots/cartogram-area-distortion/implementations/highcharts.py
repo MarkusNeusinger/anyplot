@@ -1,7 +1,6 @@
-""" pyplots.ai
+"""pyplots.ai
 cartogram-area-distortion: Cartogram with Area Distortion by Data Value
-Library: highcharts unknown | Python 3.14.3
-Quality: 82/100 | Created: 2026-03-13
+Library: highcharts | Python 3.14
 """
 
 import json
@@ -10,6 +9,8 @@ import time
 import urllib.request
 from pathlib import Path
 
+from highcharts_core.chart import Chart
+from highcharts_core.options import HighchartsOptions
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
@@ -70,8 +71,7 @@ states_data = [
 ]
 
 # Dorling cartogram: circles positioned geographically, area proportional to value
-# Inset positions for Alaska and Hawaii (standard cartographic convention)
-# NE states spread slightly to reduce overlap
+# NE states spread out more to reduce crowding (adjusted from geographic centers)
 geo_positions = {
     "AK": (-114, 30),
     "HI": (-109, 27),
@@ -112,120 +112,209 @@ geo_positions = {
     "NC": (-79, 35.5),
     "VA": (-78, 37.5),
     "WV": (-80.5, 39),
-    "PA": (-76.5, 41),
-    "NY": (-73.5, 43.5),
-    "NJ": (-72.5, 40),
-    "DE": (-74.5, 38.5),
-    "MD": (-75.5, 39.5),
-    "CT": (-71, 41.5),
-    "RI": (-69.5, 41.5),
-    "MA": (-70, 43),
-    "VT": (-72, 45),
-    "NH": (-70.5, 44),
-    "ME": (-68, 46),
+    "PA": (-77, 41.5),
+    "NY": (-74, 44),
+    "NJ": (-70.5, 39.5),
+    "DE": (-73, 37),
+    "MD": (-76, 38),
+    "CT": (-68.5, 42.5),
+    "RI": (-66.5, 41),
+    "MA": (-68, 44),
+    "VT": (-71.5, 46),
+    "NH": (-69.5, 45),
+    "ME": (-67, 47),
 }
 
 # Distinct region colors - colorblind-friendly palette
-region_colors = {"Northeast": "#4472C4", "South": "#E07B39", "Midwest": "#548235", "West": "#7B57A0"}
+region_colors = {"Northeast": "#3A6DB5", "South": "#D97941", "Midwest": "#49873A", "West": "#7B57A0"}
 
-# Build data: one point per state, z = population for area-proportional sizing
+# Simplified US continental outline for geographic reference
+us_outline = [
+    [-124.7, 48.4],
+    [-124.2, 42.0],
+    [-122.4, 37.8],
+    [-120.5, 34.5],
+    [-117.1, 32.5],
+    [-114.7, 32.7],
+    [-111.0, 31.3],
+    [-108.2, 31.8],
+    [-106.6, 31.8],
+    [-104.0, 29.5],
+    [-100.0, 26.5],
+    [-97.0, 26.0],
+    [-94.5, 29.5],
+    [-91.0, 29.0],
+    [-88.5, 30.2],
+    [-85.5, 30.0],
+    [-84.0, 30.5],
+    [-82.0, 25.0],
+    [-80.0, 25.5],
+    [-80.5, 31.5],
+    [-78.5, 33.5],
+    [-75.5, 35.0],
+    [-75.0, 37.5],
+    [-74.0, 39.5],
+    [-73.5, 40.5],
+    [-71.5, 41.0],
+    [-70.0, 41.5],
+    [-69.5, 43.0],
+    [-67.0, 44.5],
+    [-67.0, 47.5],
+    [-69.5, 47.5],
+    [-75.0, 45.0],
+    [-79.5, 43.5],
+    [-83.0, 46.0],
+    [-84.5, 46.5],
+    [-88.5, 48.0],
+    [-92.0, 48.5],
+    [-95.0, 49.0],
+    [-104.0, 49.0],
+    [-117.0, 49.0],
+    [-124.7, 48.4],
+]
+
+# Build data per region, with adaptive label sizing based on population
 data_by_region = {r: [] for r in region_colors}
 for abbr, name, pop, region in states_data:
     lon, lat = geo_positions[abbr]
-    data_by_region[region].append({"name": name, "code": abbr, "x": lon, "y": lat, "z": pop, "region": region})
-
-chart_config = {
-    "chart": {
-        "type": "bubble",
-        "width": 4800,
-        "height": 2700,
-        "backgroundColor": "#ffffff",
-        "plotBackgroundColor": "transparent",
-        "spacing": [80, 40, 80, 40],
-        "style": {"fontFamily": "'Segoe UI', 'Helvetica Neue', Arial, sans-serif"},
-    },
-    "title": {
-        "text": "cartogram-area-distortion \u00b7 highcharts \u00b7 pyplots.ai",
-        "style": {"fontSize": "52px", "fontWeight": "600", "color": "#1a1a2e"},
-        "y": 44,
-    },
-    "subtitle": {
-        "text": "Dorling Cartogram \u2014 Circle area proportional to state population (2020 U.S. Census, thousands)",
-        "style": {"fontSize": "34px", "color": "#555555", "fontWeight": "300"},
-        "y": 92,
-    },
-    "xAxis": {"visible": False, "min": -127, "max": -63},
-    "yAxis": {"visible": False, "min": 25, "max": 49},
-    "legend": {
-        "enabled": True,
-        "layout": "horizontal",
-        "align": "center",
-        "verticalAlign": "bottom",
-        "floating": False,
-        "itemStyle": {"fontSize": "32px", "fontWeight": "normal", "color": "#333333"},
-        "symbolRadius": 14,
-        "symbolHeight": 26,
-        "symbolWidth": 26,
-        "itemDistance": 80,
-        "y": -20,
-        "title": {"text": "Region:  ", "style": {"fontSize": "32px", "fontWeight": "bold", "color": "#333333"}},
-    },
-    "credits": {"enabled": False},
-    "tooltip": {
-        "style": {"fontSize": "30px"},
-        "headerFormat": "",
-        "pointFormat": "<b>{point.name}</b> ({point.code})<br/>Population: {point.z:,.0f}k<br/>Region: {point.region}",
-        "backgroundColor": "rgba(255,255,255,0.96)",
-        "borderColor": "#aaaaaa",
-        "borderRadius": 8,
-        "shadow": True,
-    },
-    "plotOptions": {
-        "bubble": {
-            "minSize": 30,
-            "maxSize": 180,
-            "sizeBy": "area",
-            "zMin": 0,
-            "zMax": 42000,
-            "clip": False,
-            "dataLabels": {
-                "enabled": True,
-                "format": "{point.code}",
-                "style": {
-                    "fontSize": "24px",
-                    "fontWeight": "700",
-                    "color": "#ffffff",
-                    "textOutline": "2.5px rgba(0,0,0,0.5)",
-                },
-                "allowOverlap": True,
-            },
-            "opacity": 0.92,
-            "borderWidth": 2.5,
-            "borderColor": "rgba(255,255,255,0.8)",
+    label_size = "24px" if pop > 5000 else "20px" if pop > 2000 else "16px"
+    data_by_region[region].append(
+        {
+            "name": name,
+            "code": abbr,
+            "x": lon,
+            "y": lat,
+            "z": pop,
+            "region": region,
+            "dataLabels": {"style": {"fontSize": label_size}},
         }
-    },
-    "series": [],
+    )
+
+# Use highcharts-core to validate and build chart options
+chart = Chart(container="container")
+chart.options = HighchartsOptions()
+
+chart.options.chart = {
+    "type": "bubble",
+    "width": 4800,
+    "height": 2700,
+    "backgroundColor": "#fafbfc",
+    "plotBackgroundColor": "transparent",
+    "spacing": [90, 50, 90, 50],
+    "style": {"fontFamily": "'Segoe UI', 'Helvetica Neue', Arial, sans-serif"},
 }
 
-# One series per region for legend grouping
+chart.options.title = {
+    "text": "cartogram-area-distortion \u00b7 highcharts \u00b7 pyplots.ai",
+    "style": {"fontSize": "52px", "fontWeight": "600", "color": "#1a1a2e"},
+    "y": 50,
+}
+
+chart.options.subtitle = {
+    "text": ("Dorling Cartogram \u2014 Circle area proportional to state population (2020 U.S. Census, thousands)"),
+    "style": {"fontSize": "34px", "color": "#5a5a6e", "fontWeight": "300"},
+    "y": 98,
+}
+
+chart.options.x_axis = {"visible": False, "min": -128, "max": -62}
+chart.options.y_axis = {"visible": False, "min": 24, "max": 50}
+
+chart.options.legend = {
+    "enabled": True,
+    "layout": "horizontal",
+    "align": "center",
+    "verticalAlign": "bottom",
+    "floating": False,
+    "itemStyle": {"fontSize": "32px", "fontWeight": "normal", "color": "#333333"},
+    "symbolRadius": 14,
+    "symbolHeight": 26,
+    "symbolWidth": 26,
+    "itemDistance": 80,
+    "y": -20,
+    "title": {"text": "Region:  ", "style": {"fontSize": "32px", "fontWeight": "bold", "color": "#333333"}},
+}
+
+chart.options.credits = {"enabled": False}
+
+chart.options.tooltip = {
+    "style": {"fontSize": "30px"},
+    "headerFormat": "",
+    "pointFormat": ("<b>{point.name}</b> ({point.code})<br/>Population: {point.z:,.0f}k<br/>Region: {point.region}"),
+    "backgroundColor": "rgba(255,255,255,0.96)",
+    "borderColor": "#aaaaaa",
+    "borderRadius": 8,
+    "shadow": {"color": "rgba(0,0,0,0.15)", "offsetX": 2, "offsetY": 2, "width": 4},
+}
+
+chart.options.plot_options = {
+    "bubble": {
+        "minSize": 28,
+        "maxSize": 175,
+        "sizeBy": "area",
+        "zMin": 0,
+        "zMax": 42000,
+        "clip": False,
+        "dataLabels": {
+            "enabled": True,
+            "format": "{point.code}",
+            "style": {
+                "fontSize": "24px",
+                "fontWeight": "700",
+                "color": "#ffffff",
+                "textOutline": "2.5px rgba(0,0,0,0.45)",
+            },
+            "allowOverlap": True,
+        },
+        "opacity": 0.88,
+        "borderWidth": 2,
+        "borderColor": "rgba(255,255,255,0.9)",
+    }
+}
+
+# Convert validated options to dict, then add series with custom data properties
+# (highcharts-core strips custom point properties during serialization,
+# so we merge them back as raw dicts for the final JSON output)
+options_dict = json.loads(chart.options.to_json())
+
+# Build series: reference outline + one bubble series per region
+series_list = []
+
+# Faint US continental outline as geographic reference
+series_list.append(
+    {
+        "type": "line",
+        "name": "U.S. Outline",
+        "data": [[lon, lat] for lon, lat in us_outline],
+        "color": "rgba(180,180,190,0.35)",
+        "lineWidth": 2,
+        "enableMouseTracking": False,
+        "showInLegend": False,
+        "marker": {"enabled": False},
+        "zIndex": 0,
+        "dashStyle": "Dot",
+    }
+)
+
+# One bubble series per region for legend grouping
 for region_name, color in region_colors.items():
     points = data_by_region[region_name]
-    # Sort large first so small bubbles render on top
     points.sort(key=lambda p: -p["z"])
-    chart_config["series"].append({"name": region_name, "color": color, "data": points, "zIndex": 1})
+    series_list.append({"type": "bubble", "name": region_name, "color": color, "data": points, "zIndex": 1})
+
+options_dict["series"] = series_list
 
 # Annotation explaining the area encoding
-chart_config["annotations"] = [
+options_dict["annotations"] = [
     {
         "draggable": "",
         "labels": [
             {
-                "point": {"x": -69, "y": 28, "xAxis": 0, "yAxis": 0},
+                "point": {"x": -68, "y": 28, "xAxis": 0, "yAxis": 0},
                 "text": ("<b>Circle area = Population</b><br/>Largest: California 39,538k<br/>Smallest: Wyoming 577k"),
-                "backgroundColor": "rgba(255,255,255,0.94)",
-                "borderColor": "#bbbbbb",
+                "backgroundColor": "rgba(255,255,255,0.95)",
+                "borderColor": "#c0c0c8",
                 "borderRadius": 10,
-                "borderWidth": 1,
+                "borderWidth": 1.5,
                 "style": {"fontSize": "26px", "color": "#333333", "lineHeight": "38px"},
                 "padding": 18,
                 "shape": "rect",
@@ -234,9 +323,9 @@ chart_config["annotations"] = [
     }
 ]
 
-chart_json = json.dumps(chart_config)
+chart_json = json.dumps(options_dict)
 
-# Download Highcharts JS libraries
+# Download Highcharts JS libraries for inline embedding
 highcharts_url = "https://code.highcharts.com/highcharts.js"
 more_url = "https://code.highcharts.com/highcharts-more.js"
 annotations_url = "https://code.highcharts.com/modules/annotations.js"
@@ -255,7 +344,7 @@ req = urllib.request.Request(annotations_url, headers=headers)
 with urllib.request.urlopen(req, timeout=60) as response:
     annotations_js = response.read().decode("utf-8")
 
-# Generate HTML with inline scripts for headless Chrome
+# Generate HTML with inline scripts for headless Chrome rendering
 html_content = f"""<!DOCTYPE html>
 <html>
 <head>
@@ -264,7 +353,7 @@ html_content = f"""<!DOCTYPE html>
     <script>{more_js}</script>
     <script>{annotations_js}</script>
 </head>
-<body style="margin:0; background:#ffffff;">
+<body style="margin:0; background:#fafbfc;">
     <div id="container" style="width: 4800px; height: 2700px;"></div>
     <script>
         var chartConfig = {chart_json};
@@ -282,7 +371,7 @@ standalone_html = f"""<!DOCTYPE html>
     <script src="https://code.highcharts.com/highcharts-more.js"></script>
     <script src="https://code.highcharts.com/modules/annotations.js"></script>
 </head>
-<body style="margin:0; background:#ffffff;">
+<body style="margin:0; background:#fafbfc;">
     <div id="container" style="width: 100%; height: 100vh;"></div>
     <script>
         var chartConfig = {chart_json};
