@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 cartogram-area-distortion: Cartogram with Area Distortion by Data Value
 Library: bokeh 3.9.0 | Python 3.14.3
 Quality: 74/100 | Created: 2026-03-13
@@ -6,15 +6,38 @@ Quality: 74/100 | Created: 2026-03-13
 
 import numpy as np
 from bokeh.io import export_png
-from bokeh.models import BasicTicker, ColorBar, ColumnDataSource, Label, LinearColorMapper
-from bokeh.palettes import Viridis256
+from bokeh.models import BasicTicker, ColorBar, ColumnDataSource, Label, LinearColorMapper, Range1d
 from bokeh.plotting import figure, save
 from bokeh.transform import transform
 
 
-# Data - US states: approximate centroid positions, population (2023 estimates in millions)
 np.random.seed(42)
 
+
+def _hex_to_rgb(h):
+    h = h.lstrip("#")
+    return [int(h[i : i + 2], 16) for i in (0, 2, 4)]
+
+
+def _interp_palette(colors, n):
+    """Interpolate a list of hex colors to n steps."""
+    rgbs = np.array([_hex_to_rgb(c) for c in colors], dtype=float)
+    x_old = np.linspace(0, 1, len(colors))
+    x_new = np.linspace(0, 1, n)
+    result = []
+    for i in range(n):
+        r = int(np.interp(x_new[i], x_old, rgbs[:, 0]))
+        g = int(np.interp(x_new[i], x_old, rgbs[:, 1]))
+        b = int(np.interp(x_new[i], x_old, rgbs[:, 2]))
+        result.append(f"#{r:02x}{g:02x}{b:02x}")
+    return result
+
+
+# Custom warm-to-cool diverging palette (light cream -> warm amber -> deep brown -> dark slate -> ocean teal)
+palette = _interp_palette(["#faf3e0", "#f0c75e", "#c97b2a", "#7b3a1e", "#3b2e3b", "#1c4f6e", "#0a97b5"], 256)
+
+# Data - US states: (lon, lat, population in millions)
+# Includes all 50 states with AK and HI in inset positions
 states = {
     "WA": (-122.0, 47.5, 7.7),
     "OR": (-120.5, 44.0, 4.2),
@@ -64,6 +87,9 @@ states = {
     "VT": (-72.6, 44.0, 0.6),
     "NH": (-71.5, 43.5, 1.4),
     "ME": (-69.0, 45.0, 1.4),
+    # Alaska and Hawaii in inset positions (lower-left)
+    "AK": (-124.0, 30.0, 0.7),
+    "HI": (-118.0, 28.0, 1.4),
 }
 
 names = list(states.keys())
@@ -72,14 +98,12 @@ lats = [states[s][1] for s in names]
 populations = [states[s][2] for s in names]
 
 # Scale circle sizes: area proportional to population
-# sqrt because circle area ~ r^2
 min_pop, max_pop = min(populations), max(populations)
-min_size, max_size = 18, 90
+min_size, max_size = 25, 95
 sizes = [min_size + (max_size - min_size) * np.sqrt((p - min_pop) / (max_pop - min_pop)) for p in populations]
 
-# Population density approximation (pop per rough state area estimate)
-# Using population directly for color to reinforce the size variable
-pop_array = np.array(populations)
+# Reference sizes: uniform small circles showing "equal area" baseline
+ref_size = 14
 
 source = ColumnDataSource(
     data={
@@ -87,44 +111,70 @@ source = ColumnDataSource(
         "lat": lats,
         "population": populations,
         "size": sizes,
+        "ref_size": [ref_size] * len(names),
         "name": names,
         "pop_label": [f"{p:.1f}M" for p in populations],
     }
 )
 
 # Color mapper
-color_mapper = LinearColorMapper(palette=Viridis256, low=min(populations), high=max(populations))
+color_mapper = LinearColorMapper(palette=palette, low=min_pop, high=max_pop)
 
-# Plot
+# Plot with expanded range to avoid clipping
 p = figure(
     width=4800,
     height=2700,
     title="US States by Population · cartogram-area-distortion · bokeh · pyplots.ai",
-    x_axis_label="Longitude",
-    y_axis_label="Latitude",
+    x_axis_label="Longitude (°W)",
+    y_axis_label="Latitude (°N)",
+    x_range=Range1d(-128, -66),
+    y_range=Range1d(25, 50),
     tools="hover,pan,wheel_zoom,reset",
     tooltips=[("State", "@name"), ("Population", "@pop_label")],
 )
 
+# Reference circles: thin outlines showing equal-area baseline for comparison
+p.scatter(
+    x="lon",
+    y="lat",
+    size="ref_size",
+    source=source,
+    fill_color=None,
+    line_color="#999999",
+    line_width=1,
+    line_dash="dotted",
+    line_alpha=0.5,
+)
+
+# Main cartogram circles: sized by population
 p.scatter(
     x="lon",
     y="lat",
     size="size",
     source=source,
     fill_color=transform("population", color_mapper),
-    fill_alpha=0.85,
-    line_color="white",
-    line_width=1.5,
+    fill_alpha=0.88,
+    line_color="#2c2c2c",
+    line_width=1.2,
 )
 
-# Add state labels for major states (pop > 8M)
+# Label major states (pop > 7M), with offsets for crowded northeast
+label_offsets = {
+    "NY": (1.5, 1.2),
+    "PA": (0, -1.8),
+    "NJ": (2.0, -0.8),
+    "VA": (0, -1.5),
+    "MA": (2.5, 0.5),
+    "OH": (0, -1.5),
+}
 for i, name in enumerate(names):
-    if populations[i] > 8.0:
+    if populations[i] > 7.0:
+        dx, dy = label_offsets.get(name, (0, 0))
         label = Label(
-            x=lons[i],
-            y=lats[i],
+            x=lons[i] + dx,
+            y=lats[i] + dy,
             text=name,
-            text_font_size="14pt",
+            text_font_size="15pt",
             text_align="center",
             text_baseline="middle",
             text_color="#1a1a1a",
@@ -132,34 +182,60 @@ for i, name in enumerate(names):
         )
         p.add_layout(label)
 
-# Color bar
+# Annotation: reference circle explanation
+ref_note = Label(
+    x=-127, y=49, text="○ = equal area reference", text_font_size="13pt", text_color="#777777", text_font_style="italic"
+)
+p.add_layout(ref_note)
+
+# Inset labels for AK and HI
+for abbr in ("AK", "HI"):
+    ix = states[abbr][0]
+    iy = states[abbr][1]
+    inset_label = Label(x=ix, y=iy - 1.5, text=abbr, text_font_size="12pt", text_align="center", text_color="#555555")
+    p.add_layout(inset_label)
+
+# Color bar with better spacing
 color_bar = ColorBar(
     color_mapper=color_mapper,
     ticker=BasicTicker(desired_num_ticks=6),
-    label_standoff=14,
+    label_standoff=16,
     major_label_text_font_size="16pt",
     title="Population (millions)",
     title_text_font_size="18pt",
-    width=30,
-    padding=30,
+    width=35,
+    padding=50,
+    margin=20,
 )
 p.add_layout(color_bar, "right")
 
-# Style
+# Typography and style
 p.title.text_font_size = "28pt"
+p.title.text_color = "#222222"
 p.xaxis.axis_label_text_font_size = "22pt"
 p.yaxis.axis_label_text_font_size = "22pt"
 p.xaxis.major_label_text_font_size = "18pt"
 p.yaxis.major_label_text_font_size = "18pt"
+p.xaxis.axis_label_text_color = "#444444"
+p.yaxis.axis_label_text_color = "#444444"
 
-p.xgrid.grid_line_alpha = 0.15
-p.ygrid.grid_line_alpha = 0.15
+# Refined grid and background
+p.xgrid.grid_line_alpha = 0.12
+p.ygrid.grid_line_alpha = 0.12
 p.xgrid.grid_line_width = 1
 p.ygrid.grid_line_width = 1
+p.xgrid.grid_line_color = "#bbbbbb"
+p.ygrid.grid_line_color = "#bbbbbb"
 
-p.background_fill_color = "#fafafa"
-p.border_fill_color = "white"
+p.background_fill_color = "#f5f3ef"
+p.border_fill_color = "#ffffff"
 p.outline_line_color = None
+
+# Remove minor ticks for cleaner look
+p.xaxis.minor_tick_line_color = None
+p.yaxis.minor_tick_line_color = None
+p.xaxis.major_tick_line_color = "#aaaaaa"
+p.yaxis.major_tick_line_color = "#aaaaaa"
 
 # Save
 export_png(p, filename="plot.png")
