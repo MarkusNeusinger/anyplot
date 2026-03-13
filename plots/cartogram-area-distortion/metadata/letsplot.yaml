@@ -1,0 +1,242 @@
+library: letsplot
+specification_id: cartogram-area-distortion
+created: '2026-03-13T21:22:00Z'
+updated: '2026-03-13T21:50:22Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23070855401
+issue: 4671
+python_version: 3.14.3
+library_version: 4.9.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/cartogram-area-distortion/letsplot/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/cartogram-area-distortion/letsplot/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/cartogram-area-distortion/letsplot/plot.html
+quality_score: 83
+review:
+  strengths:
+  - Excellent data storytelling with small nations vs wealth narrative and visual
+    highlighting (bold borders, star markers, annotation)
+  - 'Clean visual refinement: removed grid, hidden axes, subtle coastline reference,
+    white background'
+  - Strong viridis color choice providing both aesthetic appeal and accessibility
+  - Three-tier label hierarchy effectively communicates population importance
+  - Deterministic realistic data with good feature coverage across 20 countries
+  - Perfect code quality with clean KISS structure
+  weaknesses:
+  - Population size legend (scale_size) does not appear in rendered output
+  - Central Europe region (NL/BE/CH/AT/CZ) has overlapping hexagons
+  - Dorling bubble approach rather than contiguous shape-distortion cartogram as described
+    in spec
+  - Some small country labels (size=7) at readability threshold
+  image_description: 'The plot displays a European population cartogram using hexagonal
+    bubbles positioned at approximate geographic coordinates of 20 European countries.
+    Bubble sizes are proportional to population — Germany is the largest, while small
+    nations like Ireland and Denmark are the smallest. Colors use the viridis colormap
+    to encode GDP per capita: yellow/green for wealthy nations (Ireland ~$100K, Switzerland
+    ~$92K) and dark purple for lower GDP (Romania ~$15K). A faint gray European coastline
+    outline provides geographic reference behind the bubbles. Country abbreviations
+    are displayed on each bubble with a three-tier size hierarchy: large bold text
+    for populous nations (DE, FR, UK, IT, ES, PL), medium text for mid-size nations
+    (RO, NL, CZ), and small text for the rest. An italic annotation in the upper-left
+    reads "Small nations, highest GDP/capita" listing IE, CH, NO, SE, DK, AT, NL,
+    BE, FI. Highlighted small-but-wealthy nations have bold black borders and star
+    markers. The GDP per Capita color legend is on the right side. The population
+    size legend is not visible in the rendered output. The title reads "European Population
+    Cartogram · cartogram-area-distortion · letsplot · pyplots.ai" with a descriptive
+    subtitle explaining the visual encodings.'
+  criteria_checklist:
+    visual_quality:
+      score: 25
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title=24, subtitle=16, legend=16/14,
+          labels=12/9/7). Small country labels at size=7 borderline but readable.
+      - id: VQ-02
+        name: No Overlap
+        score: 4
+        max: 6
+        passed: true
+        comment: Central Europe area (NL/BE/CH/AT/CZ) shows overlapping hexagons.
+          Labels remain readable but hexagons collide visually.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Good size differentiation with range=[12,30]. Large nations prominent,
+          small nations compact but distinguishable.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Viridis colormap is colorblind-safe with good contrast from yellow
+          to dark purple.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Plot fills canvas well with European outline. Some unused space in
+          corners but generally balanced.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Axes appropriately hidden for cartogram. Title and subtitle descriptive
+          with encoding explanations.
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Strong design with viridis palette, hexagonal shapes, three-tier
+          label hierarchy, bold borders for highlights, and star markers.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Grid removed, axes hidden, white background, subtle coastline outline.
+          Clean and polished presentation.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear narrative with annotation, bold borders on highlighted countries,
+          subtitle guiding interpretation.
+    spec_compliance:
+      score: 11
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 3
+        max: 5
+        passed: true
+        comment: Dorling-style bubble cartogram rather than contiguous shape-distortion.
+          Valid variant but doesn't match spec description.
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: Reference outline, color scale, labels present. Population size legend
+          missing from render.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Geographic positioning correct. Size maps to population, color to
+          GDP per capita.
+      - id: SC-04
+        name: Title & Legend
+        score: 2
+        max: 3
+        passed: true
+        comment: Title format correct. GDP color legend present. Population size legend
+          missing from render.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: 20 European countries with wide population range (5.1M-83.2M) and
+          GDP range ($15.1K-$100.2K).
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real European countries with plausible 2023-era data. Neutral economic/demographic
+          topic.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Population and GDP values realistic and in correct ranges for countries
+          represented.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean imports-data-plot-save structure with no functions or classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic with hardcoded data.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used in the implementation.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-organized with clear data filtering and appropriate complexity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot.png with scale=3 and HTML export. Current API.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Proper ggplot grammar with layered geoms, aes() mappings, theme customization,
+          and scale functions.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses layer_tooltips() for interactive hover, HTML export, and shape=21
+          with stroke for highlighted borders.
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - custom-colormap
+  - alpha-blending
+  - edge-highlighting
