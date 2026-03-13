@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 cartogram-area-distortion: Cartogram with Area Distortion by Data Value
 Library: seaborn 0.13.2 | Python 3.14.3
-Quality: 85/100 | Created: 2026-03-13
+Quality: 86/100 | Created: 2026-03-13
 """
 
 import matplotlib.pyplot as plt
