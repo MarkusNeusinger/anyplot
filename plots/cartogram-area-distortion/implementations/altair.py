@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 cartogram-area-distortion: Cartogram with Area Distortion by Data Value
 Library: altair 6.0.0 | Python 3.14.3
-Quality: 83/100 | Created: 2026-03-13
+Quality: 87/100 | Created: 2026-03-13
 """
 
 import altair as alt
