@@ -1,7 +1,7 @@
 library: altair
 specification_id: swimmer-clinical-timeline
 created: '2026-03-13T22:03:39Z'
-updated: '2026-03-13T22:07:37Z'
+updated: '2026-03-13T22:17:33Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23072197795
 issue: 4670
@@ -10,31 +10,38 @@ library_version: 6.0.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/swimmer-clinical-timeline/altair/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/swimmer-clinical-timeline/altair/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/swimmer-clinical-timeline/altair/plot.html
-quality_score: 82
+quality_score: 90
 review:
   strengths:
-  - Perfect spec compliance with all required features implemented correctly
-  - Clean idiomatic Altair code with proper declarative layer composition
-  - Realistic clinical trial data with appropriate event types and timescales
-  - 'Good visual refinement: no grid, no spines, rounded bars, clean chrome'
+  - Excellent data quality with realistic clinical trial context and comprehensive
+    feature coverage
+  - Strong idiomatic Altair usage with declarative encoding, layer composition, and
+    interactive legend selection
+  - 'Well-refined visual design: removed spines, subtle grid, rounded bar ends, white-stroked
+    markers, custom legend styling'
+  - Median reference line adds population-level context for data storytelling
+  - Clean reproducible code with KISS structure
   weaknesses:
-  - Legends overlap each other and obscure bottom patient bars at orient=bottom-right
-  - Event marker colors include red-green combination not fully colorblind-safe
-  - No strong visual hierarchy or storytelling emphasis in the data presentation
-  image_description: 'The plot displays a swimmer plot with 25 horizontal bars representing
-    patients PT-001 through PT-025, sorted by treatment duration (shortest at top,
-    longest at bottom). Bars are colored by treatment arm: steel blue (#306998) for
-    "Arm A (Combo)" and warm orange (#E8863A) for "Arm B (Mono)". Event markers are
-    overlaid on bars: upward triangles (green) for Partial Response, crosses (gold)
-    for Complete Response, diamonds (red) for Progressive Disease, and right-pointing
-    triangles (gray) for Ongoing. The x-axis reads "Time on Study (Weeks)" ranging
-    from 0 to 50. Patient IDs appear on the y-axis. The title "swimmer-clinical-timeline
-    · altair · pyplots.ai" is at top-left. Two legends at the bottom-right show Treatment
-    Arm colors and Clinical Event shapes, but they overlap each other and overlap
-    the bottom patient bars.'
+  - Legend text Arm B (Mono) is truncated in the rendered output due to horizontal
+    space constraints
+  - Y-axis patient labels and legend labels at 14pt are slightly below the recommended
+    16pt minimum
+  image_description: 'The plot displays a swimmer-style clinical timeline with 25
+    horizontal bars representing patients (PT-001 through PT-025), sorted by treatment
+    duration (shortest at top, longest at bottom). Bars are color-coded by treatment
+    arm: steel blue (#306998) for "Arm A (Combo)" and warm orange (#E8863A) for "Arm
+    B (Mono)". The bars have rounded right ends. Event markers are overlaid on the
+    bars using distinct shapes and colors: green triangles (Partial Response), orange-gold
+    crosses (Complete Response), purple diamonds (Progressive Disease), and gray right-pointing
+    triangles (Ongoing). A dashed gray vertical line at ~26 weeks marks the median
+    duration with an italic label "Median: 26 wk" at the top. The x-axis is labeled
+    "Time on Study (Weeks)" ranging from 0 to ~50. Two legends at the bottom explain
+    treatment arms and clinical events. The title reads "swimmer-clinical-timeline
+    · altair · pyplots.ai" in the upper left. The background is clean white with no
+    grid lines and no axis spines/frame.'
   criteria_checklist:
     visual_quality:
-      score: 24
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -42,68 +49,68 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set throughout. Y-axis patient labels at 13pt
-          slightly small but readable.
+        comment: All font sizes explicitly set. Title 26pt, x-axis title 22pt, x-axis
+          ticks 16pt meet guidelines. Y-axis labels at 14pt slightly below 16pt guideline.
       - id: VQ-02
         name: No Overlap
-        score: 4
-        max: 6
-        passed: false
-        comment: Both legends at bottom-right overlap each other and overlap bottom
-          patient bars.
-      - id: VQ-03
-        name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Bars at height=16 well-sized, markers at size=250 with white stroke
-          clearly visible.
+        comment: Main chart area clean. Legend text Arm B (Mono) appears truncated
+          to Arm B (Monc in rendered output.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Bars at height=16 clearly visible. Event markers at size=250 with
+          white stroke stand out well.
       - id: VQ-04
         name: Color Accessibility
         score: 3
         max: 4
-        passed: false
-        comment: Blue/orange arms colorblind-safe but event markers use red-green
-          combination.
+        passed: true
+        comment: Blue/orange arm palette is colorblind-safe. Event colors avoid red-green
+          pairs. Minor concern with orange cross on orange bars.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Plot fills canvas well. Minor issue with legend placement in data
-          area.
+        comment: 25 patients fill vertical space well. Good overall canvas utilization.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: X-axis Time on Study (Weeks) with units. Patient IDs on y-axis.
+        comment: Time on Study (Weeks) is descriptive with units.
     design_excellence:
-      score: 12
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Custom blue/orange palette, rounded bar corners, white stroke on
-          markers. Above defaults but not publication-quality.
+        comment: Custom palette, rounded bar ends, white-stroked markers, styled legends.
+          Clearly above defaults.
       - id: DE-02
         name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Grid disabled, view stroke removed, tick marks removed, subtle x-axis
+          grid. Well-polished.
+      - id: DE-03
+        name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Grid disabled, view stroke removed, clean minimal chrome.
-      - id: DE-03
-        name: Data Storytelling
-        score: 3
-        max: 6
-        passed: false
-        comment: Sorting by duration creates natural flow but no strong focal point
-          or emphasis on key insights.
+        comment: Median reference line provides context. Sorting by duration creates
+          hierarchy. Two arms enable comparison.
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -111,49 +118,51 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct swimmer plot with horizontal bars.
+        comment: Correct swimmer plot with horizontal bars for patient timelines.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: sorted bars, event markers, ongoing markers,
-          legends, time axis, patient IDs, treatment arm colors.'
+        comment: 'All required features present: sorted bars, distinct markers, ongoing
+          indicators, legend, color-coded arms.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=time, Y=patients correctly mapped.
+        comment: X=time (weeks), Y=patient IDs. Events correctly positioned.
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: Title format correct. Legend labels match data.
+        comment: Title format correct. Legend text partially truncated.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Multiple event types, two treatment arms, varying durations. Good
-          variety.
+        comment: Both arms, four event types, varying durations, mix of ongoing/completed
+          patients.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Phase II oncology trial with realistic arm names and event types.
+        comment: Simulated Phase II oncology trial with realistic arm names and patient
+          IDs.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Durations 4-48 weeks realistic for clinical trials.
+        comment: Duration 4-48 weeks realistic for oncology. Event timing clinically
+          plausible.
     code_quality:
       score: 10
       max: 10
@@ -163,25 +172,26 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports, data, plot, save.'
+        comment: 'Linear flow: imports, data, chart layers, combine, save.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42) set at top.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports actively used.
+        comment: altair, numpy, pandas all used. No unused imports.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean dictionaries for mappings, well-structured data generation.
+        comment: Clean, well-organized. Interactive selection is legitimate Altair
+          feature.
       - id: CQ-05
         name: Output & API
         score: 1
@@ -189,30 +199,31 @@ review:
         passed: true
         comment: Saves as plot.png with scale_factor=3.0 and plot.html.
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert declarative encoding, layer composition, configure methods.
+          Very idiomatic Altair.
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Good declarative Altair patterns with layer composition and proper
-          encoding types.
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: false
-        comment: Uses layer composition, tooltips, HTML export. Could leverage selections
-          or conditional encoding.
-  verdict: REJECTED
+        comment: Interactive legend selection, tooltip encoding, HTML export leverage
+          Altair's Vega-Lite foundation.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
-  - hover-tooltips
   - custom-legend
+  - annotations
+  - hover-tooltips
   - html-export
   patterns:
   - data-generation
