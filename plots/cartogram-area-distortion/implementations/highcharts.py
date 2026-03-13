@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 cartogram-area-distortion: Cartogram with Area Distortion by Data Value
 Library: highcharts unknown | Python 3.14.3
 Quality: 85/100 | Created: 2026-03-13
@@ -72,7 +72,7 @@ states_data = [
 ]
 
 # Dorling cartogram: circles positioned geographically, area proportional to value
-# NE states spread out more to reduce crowding (adjusted from geographic centers)
+# Northeast states spread further to reduce label crowding
 geo_positions = {
     "AK": (-114, 30),
     "HI": (-109, 27),
@@ -111,23 +111,34 @@ geo_positions = {
     "FL": (-82, 28.5),
     "SC": (-80.5, 34),
     "NC": (-79, 35.5),
-    "VA": (-78, 37.5),
+    "VA": (-77.5, 37.5),
     "WV": (-80.5, 39),
-    "PA": (-77, 41.5),
-    "NY": (-74, 44),
-    "NJ": (-70.5, 39.5),
-    "DE": (-73, 37),
-    "MD": (-76, 38),
-    "CT": (-68.5, 42.5),
-    "RI": (-66.5, 41),
-    "MA": (-68, 44),
-    "VT": (-71.5, 46),
-    "NH": (-69.5, 45),
-    "ME": (-67, 47),
+    "PA": (-76, 41.5),
+    "NY": (-73, 44.5),
+    "NJ": (-69, 39),
+    "DE": (-72, 36.5),
+    "MD": (-75.5, 38),
+    "CT": (-66.5, 43),
+    "RI": (-64.5, 41),
+    "MA": (-66, 45),
+    "VT": (-70, 47),
+    "NH": (-68, 46),
+    "ME": (-65, 48),
 }
 
-# Distinct region colors - colorblind-friendly palette
-region_colors = {"Northeast": "#3A6DB5", "South": "#D97941", "Midwest": "#49873A", "West": "#7B57A0"}
+# Base region colors - colorblind-friendly palette
+region_base_colors = {
+    "Northeast": {"r": 58, "g": 109, "b": 181},
+    "South": {"r": 217, "g": 121, "b": 65},
+    "Midwest": {"r": 73, "g": 135, "b": 58},
+    "West": {"r": 123, "g": 87, "b": 160},
+}
+
+region_hex = {"Northeast": "#3A6DB5", "South": "#D97941", "Midwest": "#49873A", "West": "#7B57A0"}
+
+# Population range for color intensity mapping
+pop_values = [s[2] for s in states_data]
+pop_min, pop_max = min(pop_values), max(pop_values)
 
 # Simplified US continental outline for geographic reference
 us_outline = [
@@ -174,22 +185,41 @@ us_outline = [
     [-124.7, 48.4],
 ]
 
-# Build data per region, with adaptive label sizing based on population
-data_by_region = {r: [] for r in region_colors}
+# Top 5 most populous states get highlighted borders
+top5_states = {"CA", "TX", "FL", "NY", "PA"}
+
+
+def intensity_color(base_rgb, population):
+    """Shade region color by population: higher pop = more saturated/darker."""
+    t = (population - pop_min) / (pop_max - pop_min)
+    factor = 0.55 + 0.45 * t
+    r = int(base_rgb["r"] * factor)
+    g = int(base_rgb["g"] * factor)
+    b = int(base_rgb["b"] * factor)
+    return f"rgb({min(r, 255)},{min(g, 255)},{min(b, 255)})"
+
+
+# Build data per region with color intensity and highlight styling
+data_by_region = {r: [] for r in region_hex}
 for abbr, name, pop, region in states_data:
     lon, lat = geo_positions[abbr]
-    label_size = "24px" if pop > 5000 else "20px" if pop > 2000 else "16px"
-    data_by_region[region].append(
-        {
-            "name": name,
-            "code": abbr,
-            "x": lon,
-            "y": lat,
-            "z": pop,
-            "region": region,
-            "dataLabels": {"style": {"fontSize": label_size}},
-        }
-    )
+    label_size = "24px" if pop > 5000 else "20px" if pop > 2000 else "17px"
+    base_rgb = region_base_colors[region]
+    point_color = intensity_color(base_rgb, pop)
+    is_top5 = abbr in top5_states
+    point = {
+        "name": name,
+        "code": abbr,
+        "x": lon,
+        "y": lat,
+        "z": pop,
+        "region": region,
+        "color": point_color,
+        "dataLabels": {"style": {"fontSize": label_size}},
+    }
+    if is_top5:
+        point["marker"] = {"lineWidth": 4, "lineColor": "#1a1a2e"}
+    data_by_region[region].append(point)
 
 # Use highcharts-core to validate and build chart options
 chart = Chart(container="container")
@@ -201,23 +231,26 @@ chart.options.chart = {
     "height": 2700,
     "backgroundColor": "#fafbfc",
     "plotBackgroundColor": "transparent",
-    "spacing": [90, 50, 90, 50],
+    "spacing": [80, 40, 80, 40],
     "style": {"fontFamily": "'Segoe UI', 'Helvetica Neue', Arial, sans-serif"},
 }
 
 chart.options.title = {
     "text": "cartogram-area-distortion \u00b7 highcharts \u00b7 pyplots.ai",
     "style": {"fontSize": "52px", "fontWeight": "600", "color": "#1a1a2e"},
-    "y": 50,
+    "y": 45,
 }
 
 chart.options.subtitle = {
-    "text": ("Dorling Cartogram \u2014 Circle area proportional to state population (2020 U.S. Census, thousands)"),
-    "style": {"fontSize": "34px", "color": "#5a5a6e", "fontWeight": "300"},
-    "y": 98,
+    "text": (
+        "Dorling Cartogram \u2014 Circle area proportional to state population "
+        "(2020 U.S. Census, thousands) \u2022 Color intensity encodes population magnitude"
+    ),
+    "style": {"fontSize": "32px", "color": "#5a5a6e", "fontWeight": "300"},
+    "y": 92,
 }
 
-chart.options.x_axis = {"visible": False, "min": -128, "max": -62}
+chart.options.x_axis = {"visible": False, "min": -128, "max": -60}
 chart.options.y_axis = {"visible": False, "min": 24, "max": 50}
 
 chart.options.legend = {
@@ -226,19 +259,19 @@ chart.options.legend = {
     "align": "center",
     "verticalAlign": "bottom",
     "floating": False,
-    "itemStyle": {"fontSize": "32px", "fontWeight": "normal", "color": "#333333"},
+    "itemStyle": {"fontSize": "30px", "fontWeight": "normal", "color": "#333333"},
     "symbolRadius": 14,
-    "symbolHeight": 26,
-    "symbolWidth": 26,
-    "itemDistance": 80,
-    "y": -20,
-    "title": {"text": "Region:  ", "style": {"fontSize": "32px", "fontWeight": "bold", "color": "#333333"}},
+    "symbolHeight": 24,
+    "symbolWidth": 24,
+    "itemDistance": 70,
+    "y": -15,
+    "title": {"text": "Region:  ", "style": {"fontSize": "30px", "fontWeight": "bold", "color": "#333333"}},
 }
 
 chart.options.credits = {"enabled": False}
 
 chart.options.tooltip = {
-    "style": {"fontSize": "30px"},
+    "style": {"fontSize": "28px"},
     "headerFormat": "",
     "pointFormat": ("<b>{point.name}</b> ({point.code})<br/>Population: {point.z:,.0f}k<br/>Region: {point.region}"),
     "backgroundColor": "rgba(255,255,255,0.96)",
@@ -249,8 +282,8 @@ chart.options.tooltip = {
 
 chart.options.plot_options = {
     "bubble": {
-        "minSize": 28,
-        "maxSize": 175,
+        "minSize": 40,
+        "maxSize": 185,
         "sizeBy": "area",
         "zMin": 0,
         "zMax": 42000,
@@ -259,22 +292,20 @@ chart.options.plot_options = {
             "enabled": True,
             "format": "{point.code}",
             "style": {
-                "fontSize": "24px",
+                "fontSize": "22px",
                 "fontWeight": "700",
                 "color": "#ffffff",
-                "textOutline": "2.5px rgba(0,0,0,0.45)",
+                "textOutline": "2.5px rgba(0,0,0,0.5)",
             },
             "allowOverlap": True,
         },
-        "opacity": 0.88,
+        "opacity": 0.92,
         "borderWidth": 2,
-        "borderColor": "rgba(255,255,255,0.9)",
+        "borderColor": "rgba(255,255,255,0.85)",
     }
 }
 
 # Convert validated options to dict, then add series with custom data properties
-# (highcharts-core strips custom point properties during serialization,
-# so we merge them back as raw dicts for the final JSON output)
 options_dict = json.loads(chart.options.to_json())
 
 # Build series: reference outline + one bubble series per region
@@ -286,7 +317,7 @@ series_list.append(
         "type": "line",
         "name": "U.S. Outline",
         "data": [[lon, lat] for lon, lat in us_outline],
-        "color": "rgba(180,180,190,0.35)",
+        "color": "rgba(180,180,190,0.3)",
         "lineWidth": 2,
         "enableMouseTracking": False,
         "showInLegend": False,
@@ -297,27 +328,36 @@ series_list.append(
 )
 
 # One bubble series per region for legend grouping
-for region_name, color in region_colors.items():
+for region_name, hex_color in region_hex.items():
     points = data_by_region[region_name]
     points.sort(key=lambda p: -p["z"])
-    series_list.append({"type": "bubble", "name": region_name, "color": color, "data": points, "zIndex": 1})
+    series_list.append({"type": "bubble", "name": region_name, "color": hex_color, "data": points, "zIndex": 1})
 
 options_dict["series"] = series_list
 
-# Annotation explaining the area encoding
+# Annotations: explanation box + top-5 callout
 options_dict["annotations"] = [
     {
         "draggable": "",
         "labels": [
             {
-                "point": {"x": -68, "y": 28, "xAxis": 0, "yAxis": 0},
-                "text": ("<b>Circle area = Population</b><br/>Largest: California 39,538k<br/>Smallest: Wyoming 577k"),
-                "backgroundColor": "rgba(255,255,255,0.95)",
-                "borderColor": "#c0c0c8",
-                "borderRadius": 10,
+                "point": {"x": -66, "y": 28, "xAxis": 0, "yAxis": 0},
+                "text": (
+                    '<b style="font-size:28px">Circle area = Population</b><br/>'
+                    '<span style="color:#666;font-size:24px">'
+                    "Largest: California 39,538k<br/>"
+                    "Smallest: Wyoming 577k<br/><br/>"
+                    "</span>"
+                    '<span style="font-size:24px">'
+                    "\u25cf Dark border = Top 5 states"
+                    "</span>"
+                ),
+                "backgroundColor": "rgba(255,255,255,0.96)",
+                "borderColor": "#b0b0b8",
+                "borderRadius": 12,
                 "borderWidth": 1.5,
-                "style": {"fontSize": "26px", "color": "#333333", "lineHeight": "38px"},
-                "padding": 18,
+                "style": {"fontSize": "26px", "color": "#333333", "lineHeight": "36px"},
+                "padding": 20,
                 "shape": "rect",
             }
         ],
