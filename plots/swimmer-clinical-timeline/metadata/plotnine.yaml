@@ -1,0 +1,233 @@
+library: plotnine
+specification_id: swimmer-clinical-timeline
+created: '2026-03-13T22:04:14Z'
+updated: '2026-03-13T22:33:32Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23072198405
+issue: 4670
+python_version: 3.14.3
+library_version: 0.15.3
+preview_url: https://storage.googleapis.com/pyplots-images/plots/swimmer-clinical-timeline/plotnine/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/swimmer-clinical-timeline/plotnine/plot_thumb.png
+preview_html: null
+quality_score: 90
+review:
+  strengths:
+  - Excellent data storytelling with median reference lines and ORR annotation creating
+    a genuine clinical narrative
+  - Professional colorblind-safe palette with teal/amber arm distinction and blue/orange/purple
+    event markers
+  - 'Well-refined visual design: removed horizontal gridlines, subtle vertical grid,
+    clean white background, styled legend'
+  - Complete spec compliance with all required features present and properly implemented
+  - White-stroke event markers provide clean contrast against colored bars
+  weaknesses:
+  - Minor marker crowding on shortest patient bars where multiple events overlap
+  - Y-axis text at 14pt could be slightly larger for optimal readability at full resolution
+  image_description: 'The plot displays a swimmer-style clinical trial timeline with
+    25 horizontal bars representing individual patients (PT-001 through PT-025), sorted
+    by treatment duration from longest at top to shortest at bottom. Bars are color-coded
+    by treatment arm: teal/steel blue for "Arm A (Combo)" and amber/gold for "Arm
+    B (Mono)". Clinical events are marked with distinct shaped markers with white
+    strokes: upward triangles (amber) for Partial Response, diamonds (blue) for Complete
+    Response, squares (purple) for Progressive Disease, and right-pointing arrows
+    (dark) for Ongoing patients. Two vertical reference lines indicate median durations
+    — a dashed teal line at ~17 weeks (Median A) and a dotted amber line at ~29 weeks
+    (Median B). Labeled annotations with colored backgrounds identify these medians.
+    An ORR annotation in the upper right shows "ORR: 68% (17/25)" on a light blue
+    background. The x-axis reads "Time on Study (weeks)" with breaks every 6 weeks
+    from 0 to 48. The y-axis shows "Patient ID" in monospace font. A well-styled legend
+    on the right separates Treatment Arm and Clinical Event categories. The overall
+    design is clean with a white background, subtle vertical gridlines, and no horizontal
+    gridlines.'
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 24pt, axis titles 20pt, ticks
+          16pt, y-axis 14pt monospace). Y-axis at 14pt slightly small for 25 patients
+          but still readable.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Generally clean layout; minor marker crowding on shortest bars (PT-024,
+          PT-025).
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Thick bars (size=6) and large markers (size=5.5) with white stroke
+          provide excellent visibility.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Teal vs amber avoids red-green confusion. Event markers use blue-orange-purple
+          palette.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good 16:9 layout. Legend on right takes moderate space.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Time on Study (weeks) with units, Patient ID descriptive.
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom teal/amber palette with intentional hierarchy. White-stroke
+          markers and annotation labels with colored backgrounds show deliberate design.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Horizontal gridlines removed, subtle vertical grid, panel border
+          removed, styled legend, generous margins.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Median reference lines with annotations and ORR summary create a
+          clear clinical narrative.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct swimmer plot with horizontal bars.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: sorted bars, distinct markers, ongoing
+          arrows, legend, time axis, patient IDs, arm coloring.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = time, Y = patient ID, correctly mapped.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches format. Legend correctly separates Treatment Arm and
+          Clinical Event.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows all event types, two arms, varying durations, patients with
+          multiple and no events.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Phase II oncology trial with plausible clinical terminology.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Durations 4-48 weeks realistic for clinical trial.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean imports-data-plot-save structure, no functions or classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports are used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, clean computed statistics for annotations.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with dpi=300, current API.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Proper grammar of graphics with layered geoms, aes mappings, scales,
+          guides, pd.Categorical, coord_cartesian.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses guide_legend with override_aes, annotate('label') with label_padding,
+          scale_shape_manual with ggplot2-style codes.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  - custom-legend
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - grid-styling
+  - edge-highlighting
+  - alpha-blending
