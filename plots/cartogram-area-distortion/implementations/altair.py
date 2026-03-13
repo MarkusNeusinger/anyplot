@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 cartogram-area-distortion: Cartogram with Area Distortion by Data Value
 Library: altair 6.0.0 | Python 3.14.3
 Quality: 81/100 | Created: 2026-03-13
@@ -68,9 +68,9 @@ states = pd.DataFrame(
 us_topo_url = "https://cdn.jsdelivr.net/npm/vega-datasets@2/data/us-10m.json"
 us_states = alt.topo_feature(us_topo_url, "states")
 
-# Region color palette (colorblind-safe)
+# Region color palette (colorblind-safe, avoids red-green confusion)
 region_order = ["Northeast", "Midwest", "South", "West"]
-region_colors = ["#306998", "#E5A835", "#C44E52", "#55A868"]
+region_colors = ["#306998", "#E5A835", "#D4621A", "#55A868"]
 
 # Background reference map
 background = (
@@ -89,7 +89,7 @@ circles = (
         latitude="lat:Q",
         size=alt.Size(
             "pop:Q",
-            scale=alt.Scale(domain=[0.5, 40], range=[80, 6000]),
+            scale=alt.Scale(domain=[0.5, 40], range=[250, 6000]),
             legend=alt.Legend(
                 title="Population (millions)",
                 titleFontSize=18,
@@ -117,11 +117,11 @@ circles = (
     .project(type="albersUsa")
 )
 
-# State abbreviation labels for the largest states
-large_states = states[states["pop"] >= 7.0].copy()
+# State abbreviation labels for states with population >= 4M
+labeled_states = states[states["pop"] >= 4.0].copy()
 labels = (
-    alt.Chart(large_states)
-    .mark_text(fontSize=12, fontWeight="bold", color="#FFFFFF")
+    alt.Chart(labeled_states)
+    .mark_text(fontSize=15, fontWeight="bold", color="#FFFFFF")
     .encode(longitude="lon:Q", latitude="lat:Q", text="state:N")
     .project(type="albersUsa")
 )
