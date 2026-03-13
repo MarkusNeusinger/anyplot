@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 swimmer-clinical-timeline: Swimmer Plot for Clinical Trial Timelines
 Library: bokeh 3.9.0 | Python 3.14.3
-Quality: 82/100 | Created: 2026-03-13
+Quality: 89/100 | Created: 2026-03-13
 """
 
 import numpy as np

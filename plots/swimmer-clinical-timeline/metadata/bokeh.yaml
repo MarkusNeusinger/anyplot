@@ -1,7 +1,7 @@
 library: bokeh
 specification_id: swimmer-clinical-timeline
 created: '2026-03-13T22:04:33Z'
-updated: '2026-03-13T22:09:05Z'
+updated: '2026-03-13T22:19:00Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23072197859
 issue: 4670
@@ -10,37 +10,41 @@ library_version: 3.9.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/swimmer-clinical-timeline/bokeh/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/swimmer-clinical-timeline/bokeh/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/swimmer-clinical-timeline/bokeh/plot.html
-quality_score: 82
+quality_score: 89
 review:
   strengths:
-  - 'Full spec compliance with all required features: distinct markers, ongoing indicators,
-    treatment arm color-coding, correct sorting'
-  - Perfect code quality with clean KISS structure and reproducible seed
-  - Realistic and neutral clinical trial data with good variety in durations and events
-  - 'Good visual refinement: subtle grid, removed outline, off-white background'
+  - Full spec compliance with all required features (sorted bars, distinct event markers,
+    ongoing indicators, legend, treatment arm colors)
+  - Strong colorblind-safe palette design for both treatment arms and event markers
+  - Excellent data generation with realistic clinical trial context and comprehensive
+    feature coverage
+  - Good use of Bokeh-distinctive features (HoverTool with tooltips, HTML export,
+    ColumnDataSource pattern)
+  - Clean visual refinement with subtle grid, removed outlines, and styled axes
   weaknesses:
-  - Bright yellow (#FFD43B) for Arm B is garish and lacks aesthetic sophistication
-    — needs a more muted, cohesive palette
-  - Green/red event markers not fully colorblind-safe — replace with colorblind-friendly
-    alternatives
-  - No Bokeh-specific interactive features leveraged (HoverTool would add significant
-    value)
-  - No visual hierarchy or focal point guiding the viewer to key clinical insights
-  image_description: 'The plot displays a swimmer plot for a simulated Phase II oncology
-    clinical trial with 25 patients. Horizontal bars represent individual patient
-    timelines, sorted by treatment duration (shortest at top, longest at bottom).
-    Bars are color-coded by treatment arm: steel blue (#306998) for Arm A (Combo)
-    and bright yellow (#FFD43B) for Arm B (Mono). The x-axis shows "Time on Study
-    (Weeks)" from 0 to ~55, and the y-axis lists patient IDs (PT-001 through PT-025).
-    Clinical event markers are overlaid on bars: green triangles for partial response,
-    pink/magenta stars for complete response, red diamonds for progressive disease,
-    and orange squares for adverse events. Ongoing patients (PT-001, PT-011, PT-019,
-    PT-009, PT-010) have right-pointing black triangles beyond their bar ends. The
-    background is light gray (#fafafa), y-grid is subtle dashed lines, and x-grid
-    is removed. A vertical legend in the bottom-right lists all arms and event types.'
+  - Some event markers partially blend with their bar colors (yellow squares on terracotta,
+    blue triangles on blue bars) reducing instant readability
+  - Y-axis patient ID font size (16pt) is at the minimum threshold — slightly larger
+    would improve readability
+  - Median reference line is unlabeled, reducing its storytelling value
+  - Significant empty canvas space on the right side where most bars do not extend
+  image_description: 'The plot displays a swimmer plot for a simulated Phase II clinical
+    trial with 25 patients arranged vertically, sorted by treatment duration (shortest
+    at top, longest at bottom). Horizontal bars represent each patient''s time on
+    study, colored by treatment arm: deep teal/blue for Arm A (Combo) and warm terracotta/salmon
+    for Arm B (Mono). Event markers appear on the bars: blue triangles for Partial
+    Response, pink/magenta stars for Complete Response, orange diamonds for Progressive
+    Disease, and yellow squares for Adverse Events — all outlined in dark grey. Right-pointing
+    dark grey triangles mark ongoing patients (PT-001, PT-011, PT-019). A faint dotted
+    vertical line indicates the median duration. The x-axis reads "Time on Study (Weeks)"
+    ranging from 0 to ~55. The y-axis label is "Patient" with individual IDs (PT-001
+    through PT-025). The title reads "swimmer-clinical-timeline · bokeh · pyplots.ai".
+    A vertical legend in the bottom-right lists all categories with matching symbols.
+    Background is light grey (#f7f7f7) with subtle dashed horizontal gridlines and
+    no vertical grid.'
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -48,68 +52,67 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 36pt, labels 28pt, ticks 16-20pt).
-          Y-axis patient labels at 16pt slightly small for 25 entries but still readable.
+        comment: All font sizes explicitly set. Y-axis patient IDs at 16pt are readable
+          but at minimum threshold for 25 rows.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or elements. Patient IDs well-spaced, legend
-          placed in empty space.
+        comment: No overlapping text or elements. Patient rows well-spaced.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Bars and markers visible with dark outlines. Some event markers slightly
-          hard to distinguish on yellow bars.
+        comment: Bars and most markers visible. Dark outlines help but yellow squares
+          on terracotta bars and blue triangles on blue bars blend slightly.
       - id: VQ-04
         name: Color Accessibility
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Blue/yellow arms colorblind-safe. Green/red event markers could be
-          problematic for red-green colorblind users, mitigated by different shapes.
+        comment: Colorblind-safe palette throughout. Teal vs terracotta bars, distinct
+          marker colors.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good vertical utilization. Some empty space on right for shorter
-          bars, inherent to data. Legend positioned well.
+        comment: Good vertical use. X-range extends to ~56 weeks while most patients
+          under 20 weeks leaving empty right space. Legend somewhat isolated.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Time on Study (Weeks) with units, Patient on y-axis, correct title
-          format.
+        comment: Time on Study (Weeks) with units. Patient descriptive. Title format
+          correct.
     design_excellence:
-      score: 11
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: Blue/yellow palette functional but bright yellow is garish. Background
-          customized but overall looks like a well-configured default.
+        passed: true
+        comment: 'Strong design: custom teal/terracotta palette, styled legend, light
+          grey background, white border fill.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: X-grid removed, y-grid subtle (dashed, alpha 0.15), outline removed,
-          background customized to off-white.
+        comment: X grid removed, Y grid subtle (dashed, alpha 0.12), outline removed,
+          styled axis lines, minor ticks removed.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Sorting by duration creates natural progression. No focal point or
-          emphasis guiding viewer to key clinical insights.
+        passed: true
+        comment: Patients sorted by duration, median reference line, ongoing arrows,
+          distinct markers. Median line unlabeled.
     spec_compliance:
       score: 15
       max: 15
@@ -125,45 +128,44 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: 'All required features present: distinct markers, ongoing arrows,
-          color-coded arms, sorted by duration.'
+        comment: 'All features present: sorted bars, distinct markers, ongoing indicators,
+          legend, treatment arm colors.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=time, Y=patients correctly mapped, all data visible.
+        comment: X=time in weeks, Y=patients. Correct mapping.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend includes all event types and treatment
-          arms.
+        comment: Title format correct. Legend labels match all data categories.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Good variety in durations, multiple event types, both arms, ongoing
-          patients. Could show more complete responses.
+        comment: 'Shows all aspects: multiple event types, varying durations, two
+          arms, ongoing patients, comprehensive.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic Phase II oncology trial context with plausible clinical
-          events. Neutral medical topic.
+        comment: Simulated Phase II oncology trial with realistic arm names and clinical
+          event types.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Realistic duration ranges and event timing for a clinical trial.
+        comment: Durations 4-52 weeks, exponential distribution, realistic event timing.
     code_quality:
       score: 10
       max: 10
@@ -173,7 +175,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, plot, styling, save.'
+        comment: 'Linear flow: imports, data, plot, style, legend, save. No functions
+          or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -185,21 +188,21 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports used including save/CDN for HTML export.
+        comment: All imports used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized code with clear event generation logic.
+        comment: Clean, Pythonic, appropriate complexity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png, uses current Bokeh API.
+        comment: Saves as plot.png via export_png. Current Bokeh API.
     library_mastery:
-      score: 6
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -207,19 +210,20 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Good idiomatic Bokeh: ColumnDataSource, FactorRange, hbar(), scatter()
-          with marker param, LegendItem construction.'
+        comment: Good use of ColumnDataSource, FactorRange, HoverTool, Span, Legend/LegendItem.
+          Solid idiomatic Bokeh.
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 4
         max: 5
-        passed: false
-        comment: HTML export alongside PNG is Bokeh-distinctive. Does not leverage
-          interactive features like HoverTool.
+        passed: true
+        comment: HoverTool with tooltips for bars and markers, HTML export alongside
+          PNG, ColumnDataSource-driven data binding.
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
+  - hover-tooltips
   - custom-legend
   - html-export
   patterns:
