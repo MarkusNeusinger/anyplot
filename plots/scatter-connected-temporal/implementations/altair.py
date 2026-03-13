@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 scatter-connected-temporal: Connected Scatter Plot with Temporal Path
-Library: altair | Python 3.13
-Quality: pending | Created: 2026-03-13
+Library: altair 6.0.0 | Python 3.14.3
+Quality: 84/100 | Created: 2026-03-13
 """
 
 import altair as alt
