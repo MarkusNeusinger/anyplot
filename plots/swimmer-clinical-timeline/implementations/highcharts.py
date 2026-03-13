@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 swimmer-clinical-timeline: Swimmer Plot for Clinical Trial Timelines
 Library: highcharts unknown | Python 3.14.3
 Quality: 87/100 | Created: 2026-03-13
@@ -52,9 +52,20 @@ for i in range(n_patients):
         patient_events.append({"time": ae_time, "type": "adverse_event"})
     events.append(patient_events)
 
-# Colorblind-safe palette
+# Compute storytelling stats
+n_responders = sum(1 for evts in events if any(e["type"] in ("partial_response", "complete_response") for e in evts))
+n_cr = sum(1 for evts in events if any(e["type"] == "complete_response" for e in evts))
+n_ongoing = int(ongoing_mask.sum())
+median_dur = float(np.median(durations))
+responder_patients = {
+    i for i, evts in enumerate(events) if any(e["type"] in ("partial_response", "complete_response") for e in evts)
+}
+
+# Colorblind-safe palette (Okabe-Ito inspired)
 arm_a_color = "#306998"
 arm_b_color = "#E8855E"
+arm_a_muted = "#5a8db8"
+arm_b_muted = "#e8a98e"
 event_colors = {
     "partial_response": "#0072B2",
     "complete_response": "#F0E442",
@@ -62,7 +73,7 @@ event_colors = {
     "adverse_event": "#9467BD",
 }
 event_markers = {
-    "partial_response": "triangle",
+    "partial_response": "circle",
     "complete_response": "diamond",
     "progressive_disease": "triangle-down",
     "adverse_event": "square",
@@ -85,20 +96,23 @@ chart.options.chart = {
     "backgroundColor": "#fafbfc",
     "style": {"fontFamily": "'Segoe UI', Helvetica, Arial, sans-serif"},
     "marginLeft": 200,
-    "marginRight": 340,
+    "marginRight": 280,
     "marginBottom": 160,
-    "marginTop": 120,
+    "marginTop": 140,
 }
 
 chart.options.title = {
     "text": "swimmer-clinical-timeline \u00b7 highcharts \u00b7 pyplots.ai",
     "style": {"fontSize": "52px", "fontWeight": "600", "color": "#2c3e50", "letterSpacing": "1px"},
-    "margin": 30,
+    "margin": 10,
 }
 
 chart.options.subtitle = {
-    "text": "Phase II Oncology Trial \u2014 Treatment duration and clinical events by patient",
-    "style": {"fontSize": "34px", "color": "#7f8c8d", "fontWeight": "400"},
+    "text": (
+        f"Phase II Oncology Trial \u2014 {n_responders}/{n_patients} patients responded "
+        f"({n_cr} CR), {n_ongoing} ongoing at data cutoff, median duration {median_dur:.0f} wks"
+    ),
+    "style": {"fontSize": "32px", "color": "#5a6c7d", "fontWeight": "400"},
 }
 
 chart.options.x_axis = {
@@ -121,25 +135,36 @@ chart.options.y_axis = {
     "gridLineColor": "rgba(0, 0, 0, 0.06)",
     "gridLineDashStyle": "Dot",
     "min": 0,
-    "lineWidth": 2,
-    "lineColor": "#bdc3c7",
-    "tickColor": "#bdc3c7",
-    "tickLength": 8,
+    "lineWidth": 0,
     "plotLines": [
         {
             "value": 24,
-            "color": "rgba(44, 62, 80, 0.3)",
+            "color": "rgba(44, 62, 80, 0.35)",
             "width": 3,
             "dashStyle": "LongDash",
             "label": {
                 "text": "24-Week Milestone",
-                "style": {"fontSize": "26px", "color": "rgba(44, 62, 80, 0.6)", "fontWeight": "500"},
+                "style": {"fontSize": "24px", "color": "rgba(44, 62, 80, 0.6)", "fontWeight": "500"},
                 "align": "right",
                 "x": -12,
                 "y": -8,
             },
             "zIndex": 3,
-        }
+        },
+        {
+            "value": median_dur,
+            "color": "rgba(39, 174, 96, 0.4)",
+            "width": 2,
+            "dashStyle": "ShortDot",
+            "label": {
+                "text": f"Median {median_dur:.0f} wks",
+                "style": {"fontSize": "22px", "color": "rgba(39, 174, 96, 0.7)", "fontWeight": "500"},
+                "align": "left",
+                "x": 8,
+                "y": -6,
+            },
+            "zIndex": 3,
+        },
     ],
 }
 
@@ -148,17 +173,18 @@ chart.options.legend = {
     "align": "right",
     "verticalAlign": "top",
     "layout": "vertical",
-    "x": -20,
-    "y": 80,
+    "x": -16,
+    "y": 60,
     "floating": True,
-    "backgroundColor": "rgba(255, 255, 255, 0.92)",
+    "backgroundColor": "rgba(255, 255, 255, 0.94)",
     "borderWidth": 1,
-    "borderColor": "#e0e0e0",
-    "borderRadius": 8,
-    "itemStyle": {"fontSize": "26px", "fontWeight": "400", "color": "#34495e"},
+    "borderColor": "#dce1e6",
+    "borderRadius": 10,
+    "itemStyle": {"fontSize": "24px", "fontWeight": "400", "color": "#34495e"},
     "padding": 18,
     "symbolRadius": 4,
-    "itemMarginBottom": 6,
+    "itemMarginBottom": 5,
+    "shadow": {"color": "rgba(0,0,0,0.04)", "offsetX": 1, "offsetY": 2, "width": 6},
 }
 
 chart.options.plot_options = {
@@ -178,17 +204,20 @@ chart.options.tooltip = {
 
 chart.options.credits = {"enabled": False}
 
-# Duration bars — single BarSeries with per-point color by treatment arm
+# Duration bars — per-point color by treatment arm, muted for non-responders
 bar_data = []
 for i in range(n_patients):
-    color = arm_a_color if arms[i] == "Arm A (Combo)" else arm_b_color
-    bar_data.append({"y": float(durations[i]), "color": color})
+    is_responder = i in responder_patients
+    if arms[i] == "Arm A (Combo)":
+        color = arm_a_color if is_responder else arm_a_muted
+    else:
+        color = arm_b_color if is_responder else arm_b_muted
+    bar_data.append({"y": float(durations[i]), "color": color, "borderRadius": 3})
 
 bar_series = BarSeries()
 bar_series.data = bar_data
 bar_series.name = "Duration"
 bar_series.show_in_legend = False
-bar_series.border_radius = 2
 chart.add_series(bar_series)
 
 # Invisible scatter series for arm legend entries
@@ -201,7 +230,7 @@ for arm_name, arm_color in [("Arm A (Combo)", arm_a_color), ("Arm B (Mono)", arm
     arm_legend.show_in_legend = True
     chart.add_series(arm_legend)
 
-# Ongoing markers at bar endpoints
+# Ongoing markers at bar endpoints — use right-pointing arrow (url marker)
 ongoing_data = []
 for i in range(n_patients):
     if ongoing_mask[i]:
@@ -214,16 +243,17 @@ if ongoing_data:
     ongoing_series.color = "#2c3e50"
     ongoing_series.marker = {
         "symbol": "triangle",
-        "radius": 16,
+        "radius": 14,
         "fillColor": "#2c3e50",
         "lineColor": "#ffffff",
         "lineWidth": 2,
+        "enabled": True,
     }
     ongoing_series.z_index = 5
     ongoing_series.show_in_legend = True
     chart.add_series(ongoing_series)
 
-# Event scatter series
+# Event scatter series — each event type gets its own distinct marker shape
 for etype in event_colors:
     etype_data = []
     for i in range(n_patients):
@@ -237,7 +267,7 @@ for etype in event_colors:
         ev_series.color = event_colors[etype]
         ev_series.marker = {
             "symbol": event_markers[etype],
-            "radius": 16,
+            "radius": 14,
             "fillColor": event_colors[etype],
             "lineColor": "#ffffff",
             "lineWidth": 3,
