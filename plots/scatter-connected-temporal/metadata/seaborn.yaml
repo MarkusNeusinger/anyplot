@@ -1,0 +1,230 @@
+library: seaborn
+specification_id: scatter-connected-temporal
+created: '2026-03-13T15:25:33Z'
+updated: '2026-03-13T15:56:43Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23057665455
+issue: 4675
+python_version: 3.14.3
+library_version: 0.13.2
+preview_url: https://storage.googleapis.com/pyplots-images/plots/scatter-connected-temporal/seaborn/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/scatter-connected-temporal/seaborn/plot_thumb.png
+preview_html: null
+quality_score: 90
+review:
+  strengths:
+  - 'Excellent data choice: Phillips curve dynamics tell a compelling economic story
+    with real-world relevance'
+  - Strong annotation system with curved arrows at key economic turning points guides
+    the reader through the narrative
+  - 'Professional aesthetic: custom blue gradient, white marker edges, italic subtitle,
+    and refined grid create publication-quality feel'
+  - Clean, well-organized code with hardcoded realistic data for full reproducibility
+  weaknesses:
+  - Library mastery limited by reliance on matplotlib LineCollection for core connected-path
+    technique rather than seaborn-native approach
+  image_description: 'The plot displays a connected scatter plot tracing U.S. Phillips
+    Curve dynamics from 1990 to 2023 on a light gray background. The x-axis shows
+    "Unemployment Rate (%)" ranging from ~3 to 10, and the y-axis shows "Inflation
+    Rate (%)" ranging from about -0.5 to 8.5. Data points are connected by line segments
+    in chronological order, with both markers and lines colored using a blue gradient
+    from light steel blue (1990) to very dark navy (2023). Each point has a white
+    edge for contrast. Six key economic turning points are annotated with curved arrows:
+    1990 (high inflation start), 2000 (dot-com boom), 2009 (Great Recession peak unemployment),
+    2012 (recovery midpoint), 2019 (pre-pandemic low), and 2023 (post-pandemic normalization).
+    A colorbar on the right maps the blue gradient to years. The title follows the
+    required format, and an italic subtitle reads "U.S. Phillips Curve Dynamics: Tracing
+    Unemployment vs. Inflation (1990-2023)". Top and right spines are removed, with
+    a subtle y-axis grid.'
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt,
+          annotations 14pt, colorbar 16pt/14pt'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: All annotations well-separated with offset positions and curved arrows;
+          no text collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: 34 points at s=180 with white edges clearly visible; some clustering
+          in 4-6% unemployment range
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Monochromatic blue gradient is colorblind-safe, relying on lightness
+          variation
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good proportions; colorbar creates slight asymmetry but plot fills
+          canvas well
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive labels with units on both axes
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom blue blend palette, white marker edges, italic subtitle, curved
+          arrows — clearly above defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines removed, subtle y-axis-only grid at alpha=0.2, generous whitespace,
+          marker edge styling
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Annotations guide viewer through economic cycles; subtitle contextualizes
+          Phillips curve story
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct connected scatter plot with temporal path
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: connected points, annotations, color
+          gradient, visible markers'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=unemployment, Y=inflation, connected temporally with full range
+          padding
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; colorbar serves as temporal legend
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows Phillips curve loops, regime changes, cyclical patterns, and
+          directional trends
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: U.S. unemployment vs inflation is classic economics; values align
+          with real-world data
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Unemployment 3.6-9.6%, inflation -0.4-8.0% realistic for U.S. 1990-2023
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean imports-data-plot-save flow, no functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set; data is hardcoded for full determinism
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: matplotlib.pyplot, numpy, pandas, seaborn, LineCollection'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity; LineCollection for gradient path is the right
+          approach
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with dpi=300, bbox_inches=tight
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses sns.scatterplot, set_theme, despine, color_palette correctly
+          but core path uses matplotlib LineCollection
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: sns.color_palette blend, sns.set_theme with custom rc, sns.despine
+          — seaborn-specific but main technique is matplotlib
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - colorbar
+  patterns:
+  - data-generation
+  - explicit-figure
+  dataprep: []
+  styling:
+  - custom-colormap
+  - edge-highlighting
+  - grid-styling

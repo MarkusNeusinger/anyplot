@@ -1,0 +1,234 @@
+library: altair
+specification_id: scatter-connected-temporal
+created: '2026-03-13T15:26:15Z'
+updated: '2026-03-13T15:56:32Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23057665486
+issue: 4675
+python_version: 3.14.3
+library_version: 6.0.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/scatter-connected-temporal/altair/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/scatter-connected-temporal/altair/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/scatter-connected-temporal/altair/plot.html
+quality_score: 87
+review:
+  strengths:
+  - 'Excellent spec compliance with all required features: temporal ordering, annotations,
+    color gradient, and point markers'
+  - Strong design with viridis color encoding, white point strokes, subtle gray path,
+    and removed spines
+  - Realistic and neutral Phillips curve data with convincing recession dynamics
+  - Clean well-organized code following KISS principles with proper reproducibility
+  - 'Good use of Altair-specific features: interactive tooltips, HTML export, declarative
+    layer composition'
+  weaknesses:
+  - Connecting path opacity (0.35) is too subtle making temporal trajectory hard to
+    follow visually
+  - Lower-left cluster of recent years is dense making individual year progression
+    difficult to trace
+  - Y-axis domain extends well below the data range wasting vertical space
+  image_description: 'The plot displays a connected scatter plot tracing the path
+    of unemployment rate (%) vs. inflation rate (%) from 1994 to 2023. Points are
+    colored using a viridis gradient from dark purple (1994) to yellow (2023), connected
+    by a subtle gray line (opacity ~0.35) following temporal order. Six key years
+    are annotated in bold text: 1994, 2000, 2008, 2010, 2015, and 2023. The x-axis
+    spans approximately 2.6–8.4% unemployment and the y-axis from -1.5% to 5.5% inflation.
+    A vertical viridis color legend labeled "Year" appears on the right. The title
+    reads "scatter-connected-temporal · altair · pyplots.ai" with a subtitle "Unemployment
+    vs. Inflation — tracing the Phillips curve path (1994–2023)". The view has no
+    spines, a subtle dashed grid, and a clean white background. The 2008–2010 recession
+    spike creates a dramatic rightward excursion, while later years cluster in the
+    lower-left with low unemployment and low inflation.'
+  criteria_checklist:
+    visual_quality:
+      score: 26
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 28, axis titles 22, ticks 18,
+          annotations 16). Legend labels slightly smaller than ideal at 15.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Lower-left cluster is dense with labels and points close together.
+          Nudging helps but area is still somewhat crowded.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Points well-sized (180) for 30 data points with white stroke. Path
+          line at 0.35 opacity is quite subtle and hard to follow in places.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Viridis colormap is perceptually uniform and colorblind-safe.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: 4800x2700 output. Y-axis extends to -1.5 but data only reaches -0.5,
+          wasting some vertical space.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive labels with units: Unemployment Rate (%) and Inflation
+          Rate (%).'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Strong design with viridis palette, white stroke on points, gray
+          connecting path, intentional title hierarchy. Above defaults but not FiveThirtyEight-level.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines removed, grid subtle (opacity 0.15, dashed), tick colors customized,
+          generous whitespace.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Key years annotated for narrative, recession spike is visually dramatic,
+          subtitle provides analytical context. Dense lower-left weakens the ending.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct connected scatter plot with temporal path.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: temporal ordering, annotations, color gradient,
+          point markers.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=unemployment, Y=inflation, temporal ordering correct.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct. Year legend with viridis gradient properly
+          formatted.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows cyclical patterns, regime changes (2008 recession), directional
+          trends. Dense lower-left makes individual paths harder to trace.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: US-style unemployment vs inflation (Phillips curve) is well-known
+          and neutral.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Realistic ranges for unemployment (3-10.5%) and inflation (-0.5-6%).
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean Imports-Data-Plot-Save flow, no functions or classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: altair, numpy, pandas all used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-organized with shared axis config and nudge dictionary.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot.png and plot.html with current Altair 6.0 API.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Declarative encoding, layer composition with + operator, order encoding
+          for temporal path, configure_axis/configure_view.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Interactive tooltips, .interactive() zoom/pan, HTML export, declarative
+          grammar of graphics.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - custom-colormap
+  - alpha-blending
+  - grid-styling
+  - edge-highlighting
