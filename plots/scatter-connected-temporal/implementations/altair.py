@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 scatter-connected-temporal: Connected Scatter Plot with Temporal Path
 Library: altair 6.0.0 | Python 3.14.3
 Quality: 85/100 | Created: 2026-03-13
@@ -35,83 +35,45 @@ df = pd.DataFrame(
     {"year": years, "unemployment": np.round(unemployment, 1), "inflation": np.round(inflation, 1), "order": range(n)}
 )
 
-# Create line segments with midpoint year for color encoding
-segments = []
-for i in range(n - 1):
-    segments.append(
-        {
-            "x": df["unemployment"].iloc[i],
-            "y": df["inflation"].iloc[i],
-            "x2": df["unemployment"].iloc[i + 1],
-            "y2": df["inflation"].iloc[i + 1],
-            "year": (df["year"].iloc[i] + df["year"].iloc[i + 1]) / 2,
-        }
-    )
-df_segments = pd.DataFrame(segments)
-
-# Label key time points
+# Label key time points with nudged positions to avoid crowding
 label_years = [1994, 2000, 2008, 2010, 2015, 2023]
 df_labels = df[df["year"].isin(label_years)].copy()
+nudge = {2015: (-0.25, 0.35), 2023: (0.25, -0.35)}
+df_labels["label_x"] = df_labels.apply(lambda r: r["unemployment"] + nudge.get(r["year"], (0, 0))[0], axis=1)
+df_labels["label_y"] = df_labels.apply(lambda r: r["inflation"] + nudge.get(r["year"], (0, 0))[1], axis=1)
 
-# Axis configuration shared between layers
-x_enc = alt.X(
-    "unemployment:Q",
-    title="Unemployment Rate (%)",
-    scale=alt.Scale(domain=[2.5, 8.5], nice=False),
-    axis=alt.Axis(
-        labelFontWeight="normal",
-        titleColor="#333333",
-        labelColor="#555555",
-        tickColor="#cccccc",
-        gridDash=[3, 3],
-        domain=False,
-    ),
-)
+# Shared axis encodings
+x_scale = alt.Scale(domain=[2.5, 8.5], nice=False)
+y_scale = alt.Scale(domain=[-1.5, 5.8], nice=False)
+axis_config = {
+    "labelFontWeight": "normal",
+    "titleColor": "#333333",
+    "labelColor": "#555555",
+    "tickColor": "#cccccc",
+    "gridDash": [3, 3],
+    "domain": False,
+}
 
-y_enc = alt.Y(
-    "inflation:Q",
-    title="Inflation Rate (%)",
-    scale=alt.Scale(domain=[-1.5, 5.8], nice=False),
-    axis=alt.Axis(
-        labelFontWeight="normal",
-        titleColor="#333333",
-        labelColor="#555555",
-        tickColor="#cccccc",
-        gridDash=[3, 3],
-        domain=False,
-    ),
-)
+x_enc = alt.X("unemployment:Q", title="Unemployment Rate (%)", scale=x_scale, axis=alt.Axis(**axis_config))
+y_enc = alt.Y("inflation:Q", title="Inflation Rate (%)", scale=y_scale, axis=alt.Axis(**axis_config))
 
 # Shared viridis color scale
-viridis_color = alt.Color(
-    "year:Q",
-    scale=alt.Scale(scheme="viridis", domain=[1994, 2023]),
-    legend=alt.Legend(
-        title="Year", titleFontSize=16, labelFontSize=15, format="d", gradientLength=300, gradientThickness=12
-    ),
+viridis_scale = alt.Scale(scheme="viridis", domain=[1994, 2023])
+viridis_legend = alt.Legend(
+    title="Year", titleFontSize=16, labelFontSize=15, format="d", gradientLength=300, gradientThickness=12
 )
 
-# Temporal-gradient connecting line segments using mark_rule
-lines = (
-    alt.Chart(df_segments)
-    .mark_rule(strokeWidth=2.5, opacity=0.75)
-    .encode(
-        x=alt.X("x:Q", scale=alt.Scale(domain=[2.5, 8.5], nice=False)),
-        y=alt.Y("y:Q", scale=alt.Scale(domain=[-1.5, 5.8], nice=False)),
-        x2="x2:Q",
-        y2="y2:Q",
-        color=alt.Color("year:Q", scale=alt.Scale(scheme="viridis", domain=[1994, 2023]), legend=None),
-    )
-)
+# Connecting path in temporal order — neutral gray to avoid color conflicts
+path = alt.Chart(df).mark_line(strokeWidth=2.5, opacity=0.35, color="#666666").encode(x=x_enc, y=y_enc, order="order:Q")
 
-# Points colored by temporal progression
+# Points colored by temporal progression — carries the viridis legend
 points = (
     alt.Chart(df)
     .mark_point(filled=True, size=180, stroke="white", strokeWidth=1.2)
     .encode(
         x=x_enc,
         y=y_enc,
-        color=viridis_color,
+        color=alt.Color("year:Q", scale=viridis_scale, legend=viridis_legend),
         tooltip=[
             alt.Tooltip("year:Q", title="Year", format="d"),
             alt.Tooltip("unemployment:Q", title="Unemployment (%)", format=".1f"),
@@ -120,16 +82,16 @@ points = (
     )
 )
 
-# Year annotations for key points
+# Year annotations for key points with nudged positions
 annotations = (
     alt.Chart(df_labels)
     .mark_text(fontSize=16, fontWeight="bold", color="#333333", dy=-16)
-    .encode(x=alt.X("unemployment:Q"), y=alt.Y("inflation:Q"), text=alt.Text("year:Q", format="d"))
+    .encode(x=alt.X("label_x:Q"), y=alt.Y("label_y:Q"), text=alt.Text("year:Q", format="d"))
 )
 
 # Compose layers
 chart = (
-    (lines + points + annotations)
+    (path + points + annotations)
     .properties(
         width=1600,
         height=900,
@@ -147,6 +109,7 @@ chart = (
         labelFontSize=18, titleFontSize=22, titlePadding=12, grid=True, gridOpacity=0.15, gridColor="#cccccc"
     )
     .configure_view(strokeWidth=0)
+    .configure_legend(orient="right", padding=10)
     .interactive()
 )
 
