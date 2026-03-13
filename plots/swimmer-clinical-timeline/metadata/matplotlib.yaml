@@ -1,0 +1,232 @@
+library: matplotlib
+specification_id: swimmer-clinical-timeline
+created: '2026-03-13T22:04:29Z'
+updated: '2026-03-13T22:17:50Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23072197471
+issue: 4670
+python_version: 3.14.3
+library_version: 3.10.8
+preview_url: https://storage.googleapis.com/pyplots-images/plots/swimmer-clinical-timeline/matplotlib/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/swimmer-clinical-timeline/matplotlib/plot_thumb.png
+preview_html: null
+quality_score: 90
+review:
+  strengths:
+  - 'Significant improvement in data storytelling: complete responders highlighted
+    with visual emphasis and CR at week 13 annotation creates focal point'
+  - Colorblind accessibility improved by replacing green with blue for Complete Response
+    markers
+  - FancyBboxPatch with rounded corners gives bars a modern polished appearance
+  - All four event types from spec now implemented including adverse events
+  - Professional-quality legend with neutral gray for ongoing marker
+  - Realistic clinical trial data with logical event timing relationships
+  weaknesses:
+  - Arm B purple and Adverse Event X purple share similar hue potentially causing
+    confusion
+  - Data cutoff annotation text at 11pt is noticeably smaller than other text elements
+  - Legend positioned over shorter patient bars area
+  image_description: 'The plot shows a swimmer plot for a clinical trial timeline
+    with 25 patients displayed as horizontal bars sorted by treatment duration (shortest
+    at bottom, longest at top). Bars use rounded corners (FancyBboxPatch) and are
+    color-coded by treatment arm: steel blue (#306998) for Arm A and muted purple
+    (#7B68AE) for Arm B. Complete responders are visually highlighted with higher
+    opacity and dark edge outlines. Event markers appear along bars: orange triangles
+    (Partial Response), blue outlined stars (Complete Response), red diamonds (Progressive
+    Disease), and purple X marks (Adverse Event). Several patients have right-pointing
+    arrows indicating ongoing treatment. A "CR at week 13" annotation with an arrow
+    highlights the longest complete responder (PT-002). A dashed vertical "Data cutoff"
+    line appears at the right edge. The background is a subtle off-white (#FAFAFA),
+    top/right spines are removed, and a very subtle x-axis grid (alpha=0.15) provides
+    reference. The legend in the lower right lists all symbols including a neutral
+    gray arrow for "Ongoing". Title reads "swimmer-clinical-timeline · matplotlib
+    · pyplots.ai".'
+  criteria_checklist:
+    visual_quality:
+      score: 26
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All major font sizes explicitly set; Data cutoff annotation at 11pt
+          is smaller than other text
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Mostly clean; legend slightly overlaps shorter patient bar area,
+          annotation close to bars
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All bars clearly visible with good contrast; event markers well-sized
+          with white edge effects and path_effects stroke
+      - id: VQ-04
+        name: Color Accessibility
+        score: 3
+        max: 4
+        passed: true
+        comment: Red-green issue fixed; Arm B purple and Adverse Event purple share
+          similar hue
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good 16:9 layout; legend takes notable space but doesn't obscure
+          critical data
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Time on Study (weeks) with units, Patient descriptive
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom palette, rounded bars, path effects, off-white background,
+          professional polish above defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines removed and thinned, subtle grid, rounded bars, custom background,
+          generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Complete responders highlighted, CR annotation creates focal point,
+          duration sorting and data cutoff add context
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct swimmer plot with horizontal bars sorted by duration
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features: sorted bars, distinct markers, ongoing arrows,
+          arm colors, legend, patient IDs'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=time in weeks, Y=patient IDs, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct, legend labels match data with neutral gray
+          ongoing
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Both arms, all four event types, ongoing patients, varied durations
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Phase II oncology trial with realistic clinical scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 25 patients, 4-48 weeks, logical event timing
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean linear flow: imports, data, plot, style, save'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-structured with event_markers dict, appropriate complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with dpi=300
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of ax methods, proper figure/axes pattern, legend handles
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: FancyBboxPatch with rounded corners, patheffects for marker stroke,
+          annotate with arc3 connectionstyle
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  - patches
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
+  - grid-styling
