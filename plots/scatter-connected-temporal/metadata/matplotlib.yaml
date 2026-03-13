@@ -1,0 +1,228 @@
+library: matplotlib
+specification_id: scatter-connected-temporal
+created: '2026-03-13T15:25:06Z'
+updated: '2026-03-13T15:37:16Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23057665411
+issue: 4675
+python_version: 3.14.3
+library_version: 3.10.8
+preview_url: https://storage.googleapis.com/pyplots-images/plots/scatter-connected-temporal/matplotlib/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/scatter-connected-temporal/matplotlib/plot_thumb.png
+preview_html: null
+quality_score: 90
+review:
+  strengths:
+  - Excellent custom colormap (indigo to teal to amber) that is both distinctive and
+    colorblind-friendly
+  - Directional arrows at regular intervals clearly communicate temporal flow
+  - Key year annotations (1994, 2003, 2013, 2023) provide temporal context without
+    cluttering
+  - 'Professional visual refinement: thinned grey spines, subtle grid, off-white background,
+    white edge highlighting'
+  - Phillips curve data is an ideal real-world example matching the spec suggestions
+  weaknesses:
+  - Year annotations 2013 and 2023 are spatially close together in the lower-left
+    region causing minor crowding
+  image_description: 'The plot displays a connected scatter plot on a light grey (#FAFAFA)
+    background showing Unemployment Rate (%) on the x-axis (range ~5.0-8.5%) vs Inflation
+    Rate (%) on the y-axis (range ~1.4-2.9%). Data points are connected by line segments
+    in temporal order, forming a wandering path. A custom colormap transitions from
+    deep indigo (1994) through teal and green to amber/yellow (2023), encoding temporal
+    progression. Each data point is rendered as a filled circle with white edge highlighting.
+    Directional arrows appear at intervals along the path. Four key years are annotated:
+    "1994" (top-center, dark indigo), "2003" (top-left, teal), "2013" (lower-center,
+    olive), and "2023" (lower-left, yellow). A vertical colorbar on the right maps
+    color to year (1995-2020). Top and right spines are removed; remaining spines
+    are thin and grey. Subtle grid lines appear on both axes. Title reads "scatter-connected-temporal
+    · matplotlib · pyplots.ai" in the correct format.'
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 24pt, axis labels 20pt, ticks
+          16pt, annotations 16pt, colorbar label 18pt'
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: 2013 and 2023 annotations slightly close together but readable
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 30 points with s=200, linewidth=2.5, white edge highlighting; well-adapted
+          to density
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Custom sequential colormap is perceptually uniform and colorblind-friendly
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 16:9 figure with tight_layout, colorbar properly positioned, good
+          canvas utilization
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive labels with units: Unemployment Rate (%), Inflation
+          Rate (%)'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom 6-stop colormap, refined spine colors, white edge highlighting,
+          off-white background
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines removed/thinned, subtle grid alpha=0.15, colorbar outline
+          hidden, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Key year annotations, directional arrows, and color gradient create
+          temporal narrative
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct connected scatter plot with temporal path
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: connected points, annotations, arrows,
+          markers, color gradient'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=unemployment, Y=inflation, connected by temporal order
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct, colorbar serves as temporal legend
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows cyclical patterns, crossing paths, temporal progression; could
+          show more dramatic regime changes
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Phillips curve is a classic neutral economics example
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Unemployment 5-8.5%, inflation 1.4-2.9% are realistic ranges
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports, data, colormap, plot, style, save'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean and Pythonic, segment-by-segment drawing appropriate for color
+          gradient
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png, dpi=300, bbox_inches=tight, no deprecated API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good axes methods, ScalarMappable for colorbar; could use LineCollection
+          for efficiency
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: FancyArrowPatch, LinearSegmentedColormap.from_list, ScalarMappable
+          are distinctly matplotlib
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - annotations
+  - patches
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - custom-colormap
+  - edge-highlighting
+  - grid-styling
