@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 swimmer-clinical-timeline: Swimmer Plot for Clinical Trial Timelines
 Library: highcharts unknown | Python 3.14.3
-Quality: 87/100 | Created: 2026-03-13
+Quality: 90/100 | Created: 2026-03-13
 """
 
 import subprocess
