@@ -1,0 +1,231 @@
+library: plotnine
+specification_id: scatter-connected-temporal
+created: '2026-03-13T15:26:01Z'
+updated: '2026-03-13T15:57:36Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23057665538
+issue: 4675
+python_version: 3.14.3
+library_version: 0.15.3
+preview_url: https://storage.googleapis.com/pyplots-images/plots/scatter-connected-temporal/plotnine/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/scatter-connected-temporal/plotnine/plot_thumb.png
+preview_html: null
+quality_score: 89
+review:
+  strengths:
+  - 'Excellent data choice: Phillips curve with recession event creates compelling
+    narrative'
+  - Correct use of geom_path (not geom_line) for temporal ordering shows library understanding
+  - Per-label custom offsets prevent text collisions elegantly
+  - Cohesive blue gradient with contrasting red recession accent
+  - Clean well-structured code with all font sizes explicitly set
+  weaknesses:
+  - Color gradient in intermediate years (2000-2010) is subtle making temporal progression
+    hard to distinguish in the middle range
+  - Minor label crowding in the central area between 1995 and 2005 annotations
+  - 2009 recession ring annotation text could benefit from slightly more offset
+  image_description: The plot displays a connected scatter plot showing the Phillips
+    Curve relationship between Unemployment Rate (%) on the x-axis and Inflation Rate
+    (%) on the y-axis for 1990-2020. Data points are connected by line segments in
+    chronological order using geom_path. A blue color gradient (light blue for 1990
+    to dark navy for 2020) encodes temporal progression along both the path and the
+    filled point markers. White-stroked circular markers are visible at each of the
+    31 data positions. Six key years (1990, 1995, 2000, 2005, 2015, 2020) are annotated
+    with bold gray text labels, each with custom positioning offsets to avoid crowding.
+    The 2009 recession peak is highlighted with a larger red circle outline and bold
+    red "2009 Recession" annotation. A continuous color bar legend on the right maps
+    the gradient to years. The title follows the required format. The background uses
+    theme_minimal with very subtle gridlines (alpha=0.2) and no minor grid.
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title=24, axis_title=20, axis_text=16).
+          Annotation labels at size=13 slightly smaller but readable.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Custom per-label offsets prevent most collisions. Minor crowding
+          between 1995/2005 labels in the central area.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Points at size=4.5 with white stroke visible. Some points in dense
+          central area harder to distinguish individually.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue sequential gradient is colorblind-safe. Red recession accent
+          provides strong contrast.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 16:9 canvas with good proportions. Plot fills canvas well with balanced
+          margins.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive labels with units: Unemployment Rate (%) and Inflation
+          Rate (%).'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Strong design with cohesive blue gradient, white-stroked points,
+          and contrasting red recession accent. Clearly above defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: theme_minimal removes spines, subtle grid at alpha=0.2, minor grid
+          removed. Good polish.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 2009 recession highlight creates focal point. Year labels guide chronological
+          reading. Temporal gradient somewhat subtle in middle range.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct connected scatter plot using geom_path for temporal ordering.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: chronological connection, year annotations,
+          color gradient, visible markers.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=Unemployment, Y=Inflation correctly mapped with appropriate axis
+          ranges.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title follows required format. Legend shows Year gradient with correct
+          labels.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows cyclical patterns, regime changes (recession), directional
+          trends, and classic Phillips curve relationship.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: US unemployment vs inflation (Phillips curve) is a classic, neutral
+          economics example.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Unemployment 3.5-9.6% and inflation -0.4-5.4% are realistic US ranges.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean Imports-Data-Labels-Plot-Save structure. No functions or classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set, data is hardcoded and fully deterministic.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports are used throughout the implementation.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean and well-structured. Per-label offset dictionary is elegant.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with dpi=300. Current plotnine API.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert use of grammar of graphics: aes mapping, layered geoms, scales,
+          themes. Correct geom_path vs geom_line choice.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: 'Uses plotnine-specific patterns: inherit_aes=False, show_legend=False,
+          geom_path distinction. Could be replicated in other GoG libraries.'
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  - custom-legend
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - custom-colormap
+  - edge-highlighting
+  - grid-styling
