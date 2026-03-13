@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 scatter-connected-temporal: Connected Scatter Plot with Temporal Path
 Library: bokeh 3.9.0 | Python 3.14.3
 Quality: 82/100 | Created: 2026-03-13
@@ -6,7 +6,8 @@ Quality: 82/100 | Created: 2026-03-13
 
 import numpy as np
 from bokeh.io import export_png
-from bokeh.models import ColumnDataSource, Label, LinearColorMapper
+from bokeh.models import BasicTicker, ColorBar, ColumnDataSource, Label, LinearColorMapper, NumeralTickFormatter
+from bokeh.palettes import Blues256, linear_palette
 from bokeh.plotting import figure
 from bokeh.transform import transform
 
@@ -95,17 +96,13 @@ inflation = np.array(
     ]
 )
 
-# Temporal index for color gradient
-time_index = np.arange(n, dtype=float)
+# Single shared palette for both lines and scatter points
+palette = list(reversed(linear_palette(Blues256, n)))
 
-source = ColumnDataSource(
-    data={"unemployment": unemployment, "inflation": inflation, "year": years.astype(str), "time_index": time_index}
-)
+source = ColumnDataSource(data={"unemployment": unemployment, "inflation": inflation, "year_val": years.astype(float)})
 
-# Color mapper for temporal gradient (light blue to deep navy)
-color_mapper = LinearColorMapper(
-    palette=["#a8c8e8", "#7bafd4", "#5296c0", "#306998", "#1d4f72", "#0e3555"], low=0, high=n - 1
-)
+# Color mapper using actual year values so ColorBar displays years
+color_mapper = LinearColorMapper(palette=palette, low=1990, high=2023)
 
 # Create figure
 p = figure(
@@ -119,16 +116,14 @@ p = figure(
     y_range=(-1.5, 9.5),
 )
 
-# Connecting lines between consecutive points (temporal path)
-for i in range(n - 1):
-    frac = i / (n - 1)
-    alpha = 0.3 + 0.5 * frac
-    line_source = ColumnDataSource(
-        data={"x": [unemployment[i], unemployment[i + 1]], "y": [inflation[i], inflation[i + 1]]}
-    )
-    color_idx = int(frac * 5)
-    colors = ["#a8c8e8", "#7bafd4", "#5296c0", "#306998", "#1d4f72", "#0e3555"]
-    p.line(x="x", y="y", source=line_source, line_width=4, line_color=colors[color_idx], line_alpha=alpha)
+# Connecting lines using multi_line (idiomatic Bokeh)
+xs = [[unemployment[i], unemployment[i + 1]] for i in range(n - 1)]
+ys = [[inflation[i], inflation[i + 1]] for i in range(n - 1)]
+line_colors = [palette[i] for i in range(n - 1)]
+line_alphas = [0.5 + 0.5 * (i / (n - 2)) for i in range(n - 1)]
+
+line_source = ColumnDataSource(data={"xs": xs, "ys": ys, "colors": line_colors, "alphas": line_alphas})
+p.multi_line(xs="xs", ys="ys", source=line_source, line_width=5, line_color="colors", line_alpha="alphas")
 
 # Scatter points with temporal color gradient
 p.scatter(
@@ -136,21 +131,40 @@ p.scatter(
     y="inflation",
     source=source,
     size=30,
-    color=transform("time_index", color_mapper),
+    color=transform("year_val", color_mapper),
     alpha=0.9,
     line_color="white",
-    line_width=2,
+    line_width=3,
 )
+
+# ColorBar showing year-to-color mapping
+color_bar = ColorBar(
+    color_mapper=color_mapper,
+    location=(0, 0),
+    title="Year",
+    title_text_font_size="28pt",
+    title_text_color="#444444",
+    major_label_text_font_size="24pt",
+    major_label_text_color="#555555",
+    label_standoff=16,
+    width=40,
+    padding=30,
+    formatter=NumeralTickFormatter(format="0"),
+    major_tick_line_color=None,
+    bar_line_color=None,
+    ticker=BasicTicker(desired_num_ticks=5),
+)
+p.add_layout(color_bar, "right")
 
 # Annotate key time points
 annotations = {
-    0: ("1990 ▸", -100, 15),
+    0: ("1990 \u25b8", -100, 15),
     9: ("1999", -20, 18),
     19: ("2009", 15, -25),
     25: ("2015", 15, 12),
     30: ("2020", 15, -18),
     32: ("2022", 15, 18),
-    33: ("◂ 2023", 30, -10),
+    33: ("\u25c2 2023", 30, -10),
 }
 
 for idx, (label_text, x_offset, y_offset) in annotations.items():
