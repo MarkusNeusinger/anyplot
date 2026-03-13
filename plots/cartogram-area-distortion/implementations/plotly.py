@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 cartogram-area-distortion: Cartogram with Area Distortion by Data Value
 Library: plotly 6.6.0 | Python 3.14.3
 Quality: 84/100 | Created: 2026-03-13
@@ -286,17 +286,17 @@ lons = np.array(
 
 density = population * 1e6 / area_sq_miles
 
-# Offset NE states to reduce overlap
+# Offset NE states more aggressively to eliminate crowding
 ne_offsets = {
-    "NJ": (0.8, 1.5),  # push south-east
-    "CT": (-0.5, 1.8),  # push east
-    "MA": (0.8, 2.0),  # push east
-    "RI": (-0.8, 2.5),  # push east more
-    "NH": (1.2, 1.0),  # push north-east
-    "VT": (1.5, -0.5),  # push north-west
-    "DE": (-0.8, 1.8),  # push south-east
-    "MD": (-1.2, 0.8),  # push south
-    "ME": (1.0, 1.5),  # push north-east
+    "NJ": (0.3, 2.5),
+    "CT": (-0.3, 3.2),
+    "MA": (1.2, 2.8),
+    "RI": (-1.2, 3.8),
+    "NH": (1.8, 1.8),
+    "VT": (2.2, 0.0),
+    "DE": (-1.2, 2.8),
+    "MD": (-1.8, 1.5),
+    "ME": (1.5, 2.2),
 }
 
 for i, s in enumerate(states):
@@ -306,20 +306,36 @@ for i, s in enumerate(states):
         lons[i] += dlon
 
 # Scale bubble sizes: area proportional to population
-max_marker_size = 60
-sizes = np.sqrt(population / population.max()) * max_marker_size
+# Enforce minimum size so small states remain visible
+max_marker_size = 65
+raw_sizes = np.sqrt(population / population.max()) * max_marker_size
+sizes = np.clip(raw_sizes, 10, max_marker_size)
 
 # Color values on log scale
 log_density = np.log10(density)
 
-# Only show labels on bubbles large enough to read
-label_threshold = 3.0  # millions
+# Show labels on states with population >= 2M for better coverage
+label_threshold = 2.0
 label_texts = [s if p >= label_threshold else "" for s, p in zip(states, population, strict=False)]
 
-# Plot
+# Custom colorscale: deep navy → teal → golden yellow (publication quality)
+custom_colorscale = [
+    [0.0, "#0d0887"],
+    [0.15, "#3a049a"],
+    [0.3, "#6a00a8"],
+    [0.45, "#900da4"],
+    [0.55, "#b73779"],
+    [0.65, "#d8576b"],
+    [0.75, "#ed7953"],
+    [0.85, "#f89540"],
+    [0.95, "#fdca26"],
+    [1.0, "#f0f921"],
+]
+
+# Create figure
 fig = go.Figure()
 
-# Background: faint state boundaries using Choropleth for geographic reference
+# Background: faint state boundaries for geographic reference
 fig.add_trace(
     go.Choropleth(
         locationmode="USA-states",
@@ -327,7 +343,7 @@ fig.add_trace(
         z=[0] * len(states),
         colorscale=[[0, "rgba(0,0,0,0)"], [1, "rgba(0,0,0,0)"]],
         showscale=False,
-        marker={"line": {"color": "#c0c0c0", "width": 0.8}},
+        marker={"line": {"color": "rgba(180,190,200,0.5)", "width": 0.6}},
         hoverinfo="skip",
     )
 )
@@ -339,34 +355,38 @@ fig.add_trace(
         lon=lons,
         lat=lats,
         text=[
-            f"<b>{s}</b><br>Pop: {p:.1f}M<br>Density: {d:.0f}/sq mi"
-            for s, p, d in zip(states, population, density, strict=False)
+            f"<b>{s}</b><br>Population: {p:.1f}M<br>Density: {d:,.0f} per sq mi<br>Area: {a:,} sq mi"
+            for s, p, d, a in zip(states, population, density, area_sq_miles, strict=False)
         ],
         hoverinfo="text",
         marker={
             "size": sizes,
             "color": log_density,
-            "colorscale": "Viridis",
+            "colorscale": custom_colorscale,
             "cmin": np.log10(5),
             "cmax": np.log10(6000),
             "colorbar": {
-                "title": {"text": "Pop. Density<br>(per sq mi)", "font": {"size": 18}},
-                "tickfont": {"size": 15},
-                "tickvals": np.log10([10, 50, 100, 500, 1000, 5000]),
+                "title": {
+                    "text": "Population Density<br>(per sq mi)",
+                    "font": {"size": 18, "family": "Arial", "color": "#333"},
+                },
+                "tickfont": {"size": 15, "color": "#555"},
+                "tickvals": np.log10([10, 50, 100, 500, 1000, 5000]).tolist(),
                 "ticktext": ["10", "50", "100", "500", "1k", "5k"],
                 "len": 0.55,
-                "thickness": 20,
-                "x": 0.93,
+                "thickness": 22,
+                "x": 0.94,
                 "outlinewidth": 0,
+                "bgcolor": "rgba(255,255,255,0.8)",
             },
-            "line": {"width": 1.5, "color": "white"},
-            "opacity": 0.9,
+            "line": {"width": 1.8, "color": "rgba(255,255,255,0.9)"},
+            "opacity": 0.92,
             "sizemode": "diameter",
         },
     )
 )
 
-# State abbreviation labels (only for larger states)
+# State abbreviation labels
 fig.add_trace(
     go.Scattergeo(
         locationmode="USA-states",
@@ -374,21 +394,25 @@ fig.add_trace(
         lat=lats,
         text=label_texts,
         mode="text",
-        textfont={"size": 11, "color": "white", "family": "Arial Black"},
+        textfont={
+            "size": [max(9, min(14, int(s / 5))) if t else 1 for s, t in zip(sizes, label_texts, strict=False)],
+            "color": "white",
+            "family": "Arial Black",
+        },
         hoverinfo="skip",
         showlegend=False,
     )
 )
 
-# Layout
+# Layout with refined styling
 fig.update_layout(
     title={
         "text": (
-            "<b>US States by Population</b>"
-            "<br><span style='font-size:16px;color:#888'>"
+            "<b style='color:#1a1a2e'>U.S. States Sized by Population</b>"
+            "<br><span style='font-size:16px;color:#888;font-weight:normal'>"
             "cartogram-area-distortion · plotly · pyplots.ai</span>"
         ),
-        "font": {"size": 28},
+        "font": {"size": 30, "family": "Arial"},
         "x": 0.5,
         "xanchor": "center",
         "y": 0.96,
@@ -397,29 +421,44 @@ fig.update_layout(
         "scope": "usa",
         "showframe": False,
         "showcoastlines": True,
-        "coastlinecolor": "#d0d0d0",
-        "coastlinewidth": 0.6,
+        "coastlinecolor": "rgba(180,190,200,0.4)",
+        "coastlinewidth": 0.5,
         "showland": True,
-        "landcolor": "#f5f5f5",
+        "landcolor": "#fafbfc",
         "showlakes": True,
-        "lakecolor": "white",
+        "lakecolor": "#f0f4f8",
         "bgcolor": "white",
         "projection_type": "albers usa",
     },
     template="plotly_white",
     paper_bgcolor="white",
-    margin={"l": 10, "r": 90, "t": 85, "b": 40},
+    plot_bgcolor="white",
+    margin={"l": 20, "r": 100, "t": 90, "b": 60},
     showlegend=False,
     annotations=[
+        # Footer with encoding explanation
         {
-            "text": "Circle area ∝ population  |  Color ∝ density",
+            "text": ("<b>Area</b> proportional to population  ·  <b>Color</b> proportional to density"),
             "xref": "paper",
             "yref": "paper",
             "x": 0.5,
-            "y": -0.03,
+            "y": -0.04,
             "showarrow": False,
-            "font": {"size": 16, "color": "#777777"},
-        }
+            "font": {"size": 16, "color": "#666", "family": "Arial"},
+        },
+        # Highlight annotation for storytelling
+        {
+            "text": ("California (39M) has 6× more people than<br>median state, yet New Jersey is 4× denser"),
+            "xref": "paper",
+            "yref": "paper",
+            "x": 0.02,
+            "y": 0.15,
+            "showarrow": False,
+            "font": {"size": 13, "color": "#777", "family": "Arial"},
+            "align": "left",
+            "bgcolor": "rgba(255,255,255,0.85)",
+            "borderpad": 6,
+        },
     ],
 )
 
