@@ -1,0 +1,243 @@
+library: seaborn
+specification_id: cartogram-area-distortion
+created: '2026-03-13T21:20:20Z'
+updated: '2026-03-13T21:53:27Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23070855374
+issue: 4671
+python_version: 3.14.3
+library_version: 0.13.2
+preview_url: https://storage.googleapis.com/pyplots-images/plots/cartogram-area-distortion/seaborn/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/cartogram-area-distortion/seaborn/plot_thumb.png
+preview_html: null
+quality_score: 89
+review:
+  strengths:
+  - 'Excellent three-panel layout: main cartogram + reference map + regional totals
+    bar chart creates a comprehensive visualization dashboard'
+  - Strong data storytelling through size variation, reference comparison, and aggregate
+    bar chart
+  - Clean colorblind-safe palette with professional polish (warm background, white
+    edges, subtle divider)
+  - Well-chosen data with realistic US state populations providing clear visual contrast
+  - Dynamic font sizing based on population fraction is an elegant touch
+  weaknesses:
+  - Bar chart and reference map text sizes are below recommended thresholds (12pt/10pt
+    vs 20pt/16pt guidelines)
+  - Some smaller states (VT, WY, SD) have tight marker spacing in the main cartogram
+  - Reference map labels at 8pt are very small, reducing its utility as a comparison
+    reference
+  image_description: 'The plot displays a tile grid cartogram of US states where each
+    state is represented by a colored square marker whose area is proportional to
+    its population. The main panel (left ~70% of canvas) shows states arranged in
+    an approximate geographic layout with a warm gray (#f5f5f5) background. States
+    are colored by region: blue (West), golden/yellow (Midwest), teal/green (South),
+    and orange/brown (Northeast) using seaborn''s colorblind palette. White bold abbreviations
+    label each state, and states with population >=5M also show population figures
+    (e.g., "39M" for CA, "30M" for TX). California and Texas are the largest squares,
+    visually dominating. A horizontal legend at the top shows all four regions. The
+    subtitle reads "cartogram-area-distortion · seaborn · pyplots.ai". The top-right
+    panel shows an equal-area reference tile map (all states same size) for comparison.
+    The bottom-right panel shows a horizontal bar chart of regional population totals
+    with value labels (South 126M, West 78M, Midwest 69M, Northeast 58M). A subtle
+    dashed divider separates the main and side panels. An italic annotation "Tile
+    area ∝ state population" appears at the bottom of the main cartogram.'
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title 24pt bold, state labels 10-18pt dynamic, but bar chart xlabel
+          12pt and ticks 10-11pt are below 20pt/16pt thresholds
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Most elements well-spaced; some tight spacing around smaller states
+          (WY, VT, SD) and dense reference map
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Square markers well-adapted with 150-4200 size range; smallest states
+          visible but small
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Seaborn colorblind palette provides excellent distinguishability
+          across all four regions
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Excellent three-panel layout with main cartogram taking ~70% of canvas,
+          balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive title, bar chart has units (Total Population M), cartogram
+          appropriately omits axes
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Strong design with colorblind palette, warm background, white edge
+          highlighting, professional multi-panel layout
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: All spines removed, subtle x-grid on bar chart only, warm background,
+          white marker edges, clean panels
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Size variation creates clear hierarchy, reference map comparison
+          reinforces concept, regional bar chart adds context
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 4
+        max: 5
+        passed: true
+        comment: Tile grid cartogram with area proportional to population; valid variant
+          but not contiguous polygon distortion
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: area encoding, reference map, color by
+          region, labels, legend'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Population drives size, region drives color, grid positions approximate
+          geography
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct title format with spec-id · library · pyplots.ai, region
+          legend matches data
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Wide population range 0.6M-39M spanning 65x variation across four
+          regions
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: US state population is real-world, neutral, and comprehensible with
+          realistic values
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: All population values realistic for current US states
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports, data, theme, figure, plots, save. No functions
+          or classes'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set, data is hardcoded and deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All four imports (matplotlib, numpy, pandas, seaborn) are used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean code with elegant data dictionary approach and dynamic font
+          sizing
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with dpi=300, uses current seaborn API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Good use of seaborn axes-level API: scatterplot with hue/size/style,
+          barplot, set_theme, despine, color_palette'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses seaborn-specific features (set_theme, colorblind palette, despine,
+          multi-encoding scatterplot) but significant matplotlib for layout
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - subplots
+  - custom-legend
+  patterns:
+  - data-generation
+  - groupby-aggregation
+  - iteration-over-groups
+  - explicit-figure
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
+  - grid-styling
