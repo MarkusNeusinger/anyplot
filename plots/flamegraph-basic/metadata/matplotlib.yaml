@@ -1,0 +1,225 @@
+library: matplotlib
+specification_id: flamegraph-basic
+created: '2026-03-14T20:28:17Z'
+updated: '2026-03-14T20:51:32Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23095681411
+issue: 4665
+python_version: 3.14.3
+library_version: 3.10.8
+preview_url: https://storage.googleapis.com/pyplots-images/plots/flamegraph-basic/matplotlib/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/flamegraph-basic/matplotlib/plot_thumb.png
+preview_html: null
+quality_score: 92
+review:
+  strengths:
+  - Excellent data storytelling with hot path annotation and percentage labels creating
+    immediate insight
+  - Professional warm color palette with custom 7-stop LinearSegmentedColormap following
+    flame graph conventions
+  - Clean rectangle layout algorithm with proper parent offset tracking
+  - Smart text visibility with path effects and width-based label filtering
+  - Rounded corners via FancyBboxPatch add visual polish
+  weaknesses:
+  - 'Minor: warm palette could be slightly refined for colorblind accessibility, though
+    width is the primary data channel'
+  image_description: The plot displays a flame graph visualization of CPU profiling
+    data. Horizontal bars are stacked bottom-to-top representing call stack depth
+    (0-4). The bottom bar "main (100%)" spans the full width in deep red. Above it,
+    "process_request (84%)" dominates in dark red, with smaller "initialize" and "gc_collect"
+    bars to the right in yellow/gold tones. At depth 2, "compute (47%)" is the widest
+    bar in deep red, flanked by "parse_input (19%)" and "send_response (13%)" in orange.
+    Deeper levels show functions like "matrix_multiply (29%)", "dot_product (21%)",
+    "tokenize (13%)", "transform (14%)", etc. A warm color palette (yellow to orange
+    to red) is used, with deeper reds for hotter (wider) bars. A styled annotation
+    with an arrow reads "Hot path (CPU bottleneck)" pointing to the dot_product bar.
+    Top/right spines are removed. Background is light gray (#FAFAFA). Title reads
+    "flamegraph-basic · matplotlib · pyplots.ai".
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt,
+          bar labels 14-15pt with path effects'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Labels only shown when bar_fraction > 0.05, annotation positioned
+          cleanly
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Bars clearly visible with good height, white edges separate adjacent
+          bars
+      - id: VQ-04
+        name: Color Accessibility
+        score: 3
+        max: 4
+        passed: true
+        comment: Warm palette is conventional for flame graphs; width is primary data
+          channel but gradient may challenge some colorblind users
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills canvas well horizontally and vertically with tight_layout
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: CPU Samples and Stack Depth are descriptive and domain-appropriate
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom 7-stop colormap, FancyBboxPatch with rounded corners, path
+          effects, styled annotation. Above defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines removed, subtle colors, custom background, white edge lines
+          between bars
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Hot path annotation with arrow, percentage labels, color intensity
+          hierarchy guides viewer to bottleneck
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct flame graph with horizontal bars stacked bottom-to-top
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec requirements met: root at bottom, width proportional, warm
+          colors, adjacent bars, labels when wide enough'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X-axis shows CPU samples, Y-axis shows stack depth, correct parent-child
+          positioning
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title follows exact format, no legend needed for this plot type
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 5 depth levels, branching trees, varying widths, clear hot path vs
+          cold paths
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: CPU profiling with realistic function names, neutral technical domain
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 950 total samples with hierarchical values correctly summing within
+          parents
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports, data, processing, plotting, styling, save'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic with hardcoded data dictionary
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: mcolors, mpatches, pe, plt, np'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-structured, appropriate algorithm for flame graph layout
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with dpi=300, bbox_inches=tight
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses ax methods, FancyBboxPatch, annotate with arrowprops and bbox
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: FancyBboxPatch with BoxStyle.Round, PathEffects, LinearSegmentedColormap
+          are matplotlib-specific
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - patches
+  - manual-ticks
+  patterns:
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - custom-colormap
+  - edge-highlighting
