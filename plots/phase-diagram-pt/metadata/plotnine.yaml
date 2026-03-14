@@ -1,7 +1,7 @@
 library: plotnine
 specification_id: phase-diagram-pt
 created: '2026-03-14T14:51:07Z'
-updated: '2026-03-14T14:54:33Z'
+updated: '2026-03-14T15:02:26Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23090166897
 issue: 4666
@@ -10,82 +10,81 @@ library_version: 0.15.3
 preview_url: https://storage.googleapis.com/pyplots-images/plots/phase-diagram-pt/plotnine/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/phase-diagram-pt/plotnine/plot_thumb.png
 preview_html: null
-quality_score: 83
+quality_score: 90
 review:
   strengths:
-  - Excellent physics-based data generation using Clausius-Clapeyron equation with
-    real water constants
-  - Complete spec coverage including all boundary curves, special points, phase labels,
-    and supercritical region
-  - Well-organized clean code with good use of plotnine grammar of graphics
-  - Effective data storytelling through color-coded phase region labels matching boundary
-    colors
-  - Custom pressure axis formatter showing appropriate unit prefixes (Pa, kPa, MPa,
-    GPa)
+  - Scientifically accurate water phase diagram using Clausius-Clapeyron equations
+    with real physical constants
+  - Excellent use of plotnine layer composition for phase region fills with separate
+    data sources and inherit_aes=False
+  - Colorblind-safe palette with good visual hierarchy through color-coded regions
+    and annotated special points
+  - Custom pressure axis formatter providing readable units across many orders of
+    magnitude
+  - Water anomalous negative-slope solid-liquid boundary correctly depicted
   weaknesses:
-  - Red-green color combination for Liquid-Gas and Solid-Liquid boundaries is not
-    colorblind-safe
-  - Title format includes extra prefix instead of exact spec-id · library · pyplots.ai
-    format
-  - Title font size 22pt is slightly below the 24pt guideline
-  - Generic library usage without distinctive plotnine features
-  image_description: 'The plot shows a water pressure-temperature phase diagram on
-    a 16:9 canvas. The x-axis displays Temperature (K) ranging from ~180 to ~750,
-    and the y-axis shows Pressure on a logarithmic scale from ~10 Pa to ~1 GPa. Three
-    phase boundary curves are drawn: Solid-Gas (blue, #306998) curving from lower-left
-    to the triple point, Liquid-Gas (red, #e74c3c) curving from the triple point up
-    to the critical point, and Solid-Liquid (green, #27ae60) running nearly vertically
-    from the triple point upward. The triple point is marked with a yellow-filled
-    circle at (273.16 K, 612 Pa) and the critical point at (647.1 K, 22.1 MPa). Phase
-    regions are labeled in large semi-transparent bold text: SOLID (blue, upper-left),
-    LIQUID (red, center-upper), GAS (green, lower-right), and SUPERCRITICAL FLUID
-    (purple, upper-right). The background is white with a light gray panel, subtle
-    major gridlines, and no minor gridlines. A legend on the right identifies the
-    three boundary types.'
+  - Phase region fills very subtle at alpha=0.10 — slightly higher alpha could improve
+    visibility
+  - SUPERCRITICAL FLUID label cramped in small upper-right region
+  - Design polish good but not quite Nature/Science publication level
+  image_description: 'The plot displays a pressure-temperature phase diagram for water
+    on a 16:9 canvas. The y-axis shows "Pressure" on a logarithmic scale with custom-formatted
+    tick labels (kPa, MPa, GPa), ranging from ~10 Pa to ~1 GPa. The x-axis shows "Temperature
+    (K)" from ~200 to ~750. Three phase boundary curves are drawn in distinct colors:
+    Solid-Gas (blue), Liquid-Gas (orange), and Solid-Liquid (purple). The phase regions
+    are filled with very subtle semi-transparent colors matching their boundaries
+    — blue for Solid (upper-left), purple for Liquid (center-top), orange for Gas
+    (lower area), and green for Supercritical Fluid (upper-right beyond critical point).
+    The triple point (273.16 K, 612 Pa) and critical point (647.1 K, 22.1 MPa) are
+    marked with prominent yellow-filled circular markers with dark strokes and annotated
+    with text labels showing coordinates. A dashed vertical gray line marks the critical
+    temperature. Bold semi-transparent phase region labels (SOLID, LIQUID, GAS, SUPERCRITICAL
+    FLUID) are placed within their respective regions. The title reads "phase-diagram-pt
+    · plotnine · pyplots.ai" in bold. A legend on the right shows "Phase Boundary"
+    with three entries.'
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title=22, axis_title=20, axis_text=16).
-          Title slightly below 24pt guideline.
+        comment: 'All font sizes explicitly set: title 24pt, axis titles 20pt, axis
+          text 16pt, base 14pt'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All text clearly readable with no collisions
+        comment: No overlapping text anywhere
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Lines and points clearly visible. Solid-liquid boundary is short
-          horizontally due to near-vertical nature.
+        comment: Lines and points clearly visible; phase fills very subtle at alpha=0.10
       - id: VQ-04
         name: Color Accessibility
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: Red-green color pair for Liquid-Gas and Solid-Liquid is problematic
-          for colorblind users
+        passed: true
+        comment: Colorblind-safe blue/orange/purple palette
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good 16:9 proportions, some wasted space in upper-right quadrant
+        comment: Good layout; supercritical label cramped, some unused lower-right
+          space
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Temperature (K) has units, pressure ticks show unit prefixes
+        comment: Temperature (K) with units; pressure units on tick labels
     design_excellence:
       score: 13
       max: 20
@@ -95,23 +94,23 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom palette, styled panel, yellow markers. Above defaults but
-          not publication-level.
+        comment: Custom palette, yellow markers, custom pressure formatter; above
+          defaults but not publication-level
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Minor grid removed, subtle major grid, axis lines, custom panel background
+        comment: theme_minimal, subtle grid, thin axis lines, light panel background
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Color-coded phase labels, annotated special points, clear visual
-          hierarchy
+        comment: Clear hierarchy with labeled regions, annotated special points, dashed
+          critical line
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -125,20 +124,20 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: triple point, critical point, phase labels,
-          log axis, all boundaries'
+        comment: 'All features present: boundaries, triple point, critical point,
+          log pressure, supercritical region'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Temperature on x, pressure on y (log scale), correct mapping
+        comment: Temperature on X, Pressure on Y (log scale), all data visible
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Title adds Water Phase Diagram prefix instead of exact required format
+        passed: true
+        comment: Correct title format and legend labels
     data_quality:
       score: 15
       max: 15
@@ -148,20 +147,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All boundaries, special points, supercritical region, water's anomalous
-          negative slope
+        comment: All aspects shown including water's negative-slope solid-liquid boundary
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real water phase diagram with actual physical constants
+        comment: Real water data with Clausius-Clapeyron equations and accurate physical
+          constants
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Physically accurate triple and critical point values
+        comment: Physically accurate values for all constants and derived curves
     code_quality:
       score: 10
       max: 10
@@ -171,13 +170,14 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean linear flow, no functions or classes
+        comment: Clean imports-data-plot-save structure with one justified helper
+          function
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic physics-based data
+        comment: Fully deterministic physics equations
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -189,32 +189,32 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized with elegant physics-based data generation
+        comment: Well-organized, appropriate complexity, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300
+        comment: Saves as plot.png with dpi=300, current API
     library_mastery:
-      score: 6
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert grammar of graphics usage with layered geoms, aes mappings,
+          scale transformations
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: 'Proper grammar of graphics: aes mapping, geom layers, scales, theme
-          composition'
-      - id: LM-02
-        name: Distinctive Features
-        score: 2
-        max: 5
-        passed: false
-        comment: Uses plotnine grammar but nothing that couldn't be done in other
-          ggplot-like libraries
-  verdict: REJECTED
+        comment: Layer composition with multiple data sources, inherit_aes=False,
+          custom scale labels
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -224,5 +224,5 @@ impl_tags:
   - data-generation
   dataprep: []
   styling:
-  - grid-styling
   - alpha-blending
+  - grid-styling
