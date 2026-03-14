@@ -1,14 +1,21 @@
-""" pyplots.ai
+"""pyplots.ai
 acf-pacf: Autocorrelation and Partial Autocorrelation (ACF/PACF) Plot
 Library: seaborn 0.13.2 | Python 3.14.3
-Quality: 79/100 | Created: 2026-03-14
 """
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
+import seaborn as sns
 
 
-# Data
+# Seaborn theme and context
+sns.set_theme(style="white", context="talk", font_scale=1.1)
+palette = sns.color_palette("muted")
+stem_color = "#306998"
+ci_color = palette[1]
+
+# Data: ARMA(1,1) process simulating monthly airline passenger residuals
 np.random.seed(42)
 n_obs = 200
 ar1_coeff = 0.7
@@ -43,44 +50,97 @@ lags_acf = np.arange(0, n_lags + 1)
 lags_pacf = np.arange(1, n_lags + 1)
 conf_bound = 1.96 / np.sqrt(n_obs)
 
+# Build DataFrames for seaborn
+acf_df = pd.DataFrame({"Lag": lags_acf, "Correlation": acf_values})
+pacf_df = pd.DataFrame({"Lag": lags_pacf, "Correlation": pacf_values[1:]})
+
+# Identify significant lags (exceed confidence bounds)
+sig_acf = acf_df[(acf_df["Lag"] > 0) & (acf_df["Correlation"].abs() > conf_bound)]
+sig_pacf = pacf_df[pacf_df["Correlation"].abs() > conf_bound]
+
 # Plot
 fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(16, 9), sharex=True)
 
-color = "#306998"
 stem_width = 2.5
-marker_size = 5
+marker_size = 60
 
-markerline1, stemlines1, baseline1 = ax1.stem(lags_acf, acf_values)
-plt.setp(stemlines1, linewidth=stem_width, color=color)
-plt.setp(markerline1, markersize=marker_size, color=color, zorder=5)
-plt.setp(baseline1, linewidth=0.8, color="#333333")
+# ACF subplot - stems via vlines, markers via seaborn scatterplot
+ax1.vlines(acf_df["Lag"], 0, acf_df["Correlation"], colors=stem_color, linewidth=stem_width)
+sns.scatterplot(
+    data=acf_df,
+    x="Lag",
+    y="Correlation",
+    color=stem_color,
+    s=marker_size,
+    zorder=5,
+    edgecolor="white",
+    linewidth=0.5,
+    ax=ax1,
+    legend=False,
+)
+ax1.axhline(y=0, color="#333333", linewidth=0.8)
+ax1.axhline(y=conf_bound, color=ci_color, linestyle="--", linewidth=1.5, alpha=0.8)
+ax1.axhline(y=-conf_bound, color=ci_color, linestyle="--", linewidth=1.5, alpha=0.8)
+ax1.fill_between([-0.5, n_lags + 0.5], -conf_bound, conf_bound, color=ci_color, alpha=0.08)
 
-ax1.axhline(y=conf_bound, color="#D95319", linestyle="--", linewidth=1.5, alpha=0.8)
-ax1.axhline(y=-conf_bound, color="#D95319", linestyle="--", linewidth=1.5, alpha=0.8)
-ax1.fill_between([-0.5, n_lags + 0.5], -conf_bound, conf_bound, color="#D95319", alpha=0.08)
+# Highlight the first significant ACF lag with annotation
+if len(sig_acf) > 0:
+    first_sig = sig_acf.iloc[0]
+    ax1.annotate(
+        f"lag {int(first_sig['Lag'])}: {first_sig['Correlation']:.2f}",
+        xy=(first_sig["Lag"], first_sig["Correlation"]),
+        xytext=(first_sig["Lag"] + 4, first_sig["Correlation"] + 0.12),
+        fontsize=13,
+        color=stem_color,
+        fontweight="bold",
+        arrowprops={"arrowstyle": "->", "color": stem_color, "lw": 1.5},
+    )
 
-markerline2, stemlines2, baseline2 = ax2.stem(lags_pacf, pacf_values[1:])
-plt.setp(stemlines2, linewidth=stem_width, color=color)
-plt.setp(markerline2, markersize=marker_size, color=color, zorder=5)
-plt.setp(baseline2, linewidth=0.8, color="#333333")
+# PACF subplot
+ax2.vlines(pacf_df["Lag"], 0, pacf_df["Correlation"], colors=stem_color, linewidth=stem_width)
+sns.scatterplot(
+    data=pacf_df,
+    x="Lag",
+    y="Correlation",
+    color=stem_color,
+    s=marker_size,
+    zorder=5,
+    edgecolor="white",
+    linewidth=0.5,
+    ax=ax2,
+    legend=False,
+)
+ax2.axhline(y=0, color="#333333", linewidth=0.8)
+ax2.axhline(y=conf_bound, color=ci_color, linestyle="--", linewidth=1.5, alpha=0.8)
+ax2.axhline(y=-conf_bound, color=ci_color, linestyle="--", linewidth=1.5, alpha=0.8)
+ax2.fill_between([-0.5, n_lags + 0.5], -conf_bound, conf_bound, color=ci_color, alpha=0.08)
 
-ax2.axhline(y=conf_bound, color="#D95319", linestyle="--", linewidth=1.5, alpha=0.8)
-ax2.axhline(y=-conf_bound, color="#D95319", linestyle="--", linewidth=1.5, alpha=0.8)
-ax2.fill_between([-0.5, n_lags + 0.5], -conf_bound, conf_bound, color="#D95319", alpha=0.08)
+# Highlight dominant PACF spike
+if len(sig_pacf) > 0:
+    first_sig_p = sig_pacf.iloc[0]
+    ax2.annotate(
+        f"lag {int(first_sig_p['Lag'])}: {first_sig_p['Correlation']:.2f}",
+        xy=(first_sig_p["Lag"], first_sig_p["Correlation"]),
+        xytext=(first_sig_p["Lag"] + 4, first_sig_p["Correlation"] + 0.12),
+        fontsize=13,
+        color=stem_color,
+        fontweight="bold",
+        arrowprops={"arrowstyle": "->", "color": stem_color, "lw": 1.5},
+    )
 
 # Style
 fig.suptitle("acf-pacf · seaborn · pyplots.ai", fontsize=24, fontweight="medium", y=0.97)
 
-ax1.set_ylabel("ACF", fontsize=20)
-ax2.set_ylabel("PACF", fontsize=20)
-ax2.set_xlabel("Lag", fontsize=20)
+ax1.set_ylabel("Autocorrelation (ACF)", fontsize=20)
+ax2.set_ylabel("Partial Autocorrelation (PACF)", fontsize=20)
+ax2.set_xlabel("Lag (months)", fontsize=20)
 
 for ax in (ax1, ax2):
     ax.tick_params(axis="both", labelsize=16)
-    ax.spines["top"].set_visible(False)
-    ax.spines["right"].set_visible(False)
     ax.yaxis.grid(True, alpha=0.2, linewidth=0.8)
     ax.set_xlim(-0.5, n_lags + 0.5)
+
+sns.despine(fig=fig)
 
 plt.tight_layout()
 plt.subplots_adjust(top=0.92)
