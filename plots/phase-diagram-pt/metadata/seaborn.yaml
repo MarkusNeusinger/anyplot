@@ -1,7 +1,7 @@
 library: seaborn
 specification_id: phase-diagram-pt
 created: '2026-03-14T14:51:41Z'
-updated: '2026-03-14T14:56:33Z'
+updated: '2026-03-14T15:02:44Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23090166831
 issue: 4666
@@ -10,38 +10,40 @@ library_version: 0.13.2
 preview_url: https://storage.googleapis.com/pyplots-images/plots/phase-diagram-pt/seaborn/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/phase-diagram-pt/seaborn/plot_thumb.png
 preview_html: null
-quality_score: 85
+quality_score: 88
 review:
   strengths:
-  - Scientifically accurate water phase diagram using real Clausius-Clapeyron thermodynamic
-    equations
-  - Excellent data quality with correct triple point and critical point values plus
-    water anomalous negative-slope melting curve
-  - Clean intentional color scheme matching curve colors to phase region labels
-  - Well-annotated special points with distinct marker shapes and colored arrows
+  - Excellent use of real water phase diagram data with Clausius-Clapeyron equations
+    (scientifically accurate)
+  - Strong visual design with cohesive color-coding between boundary curves and region
+    labels
+  - Clean annotation of triple point and critical point with distinct marker shapes
+  - Water anomalous negative-slope melting curve correctly implemented
+  - Supercritical fluid region included as specified
   weaknesses:
-  - Library mastery is low - seaborn used superficially with raw arrays instead of
-    DataFrame with hue mapping
-  - Design storytelling could be stronger - no emphasis on key insights like water
-    anomalous behavior
-  - Color accessibility could improve by avoiding green which is problematic for deuteranopia
+  - Title format includes extra prefix before required {spec-id} · {library} · pyplots.ai
+    format
+  - Seaborn usage is superficial — implementation is essentially a matplotlib plot
+    using sns.lineplot as thin wrapper
+  - No distinctive seaborn features utilized
   image_description: 'The plot displays a water pressure-temperature phase diagram
-    on a 16:9 canvas. The y-axis shows Pressure (Pa) on a logarithmic scale from 10^1
-    to 10^9, and the x-axis shows Temperature (K) from 200 to ~720. Three phase boundary
-    curves are plotted: a blue sublimation curve (lower left, from ~200K to the triple
-    point), an orange vaporization curve (sweeping from the triple point up to the
-    critical point), and a green melting curve (nearly vertical, extending upward
-    from the triple point). The triple point is marked with a red circle at 273.16
-    K / 611.7 Pa and annotated in red bold text with an arrow. The critical point
-    is marked with a purple diamond at 647.1 K / 22.1 MPa and annotated in purple
-    bold text with an arrow. Phase regions are labeled in large semi-transparent text:
-    SOLID (blue, left), GAS (orange, lower center), LIQUID (green, center), and SUPERCRITICAL
-    FLUID (purple, upper right). Top and right spines are removed. Subtle grid lines
-    appear on both axes. A legend in the lower right identifies the three curves.
-    The title reads Water Phase Diagram phase-diagram-pt seaborn pyplots.ai.'
+    on a 16:9 canvas. The x-axis shows Temperature (K) from 200 to ~750, and the y-axis
+    shows Pressure (Pa) on a logarithmic scale from 10^1 to 10^9. Three phase boundary
+    curves are drawn: a blue sublimation curve (solid-gas) curving from the lower-left
+    up to the triple point, an orange vaporization curve (liquid-gas) sweeping from
+    the triple point up to the critical point, and a green melting curve (solid-liquid)
+    running nearly vertically from the triple point upward. The triple point is marked
+    with a red circle at ~273 K with a red annotation arrow and label reading "Triple
+    Point (273.16 K, 611.7 Pa)". The critical point is marked with a purple diamond
+    at ~647 K with a purple annotation arrow and label reading "Critical Point (647.1
+    K, 22.1 MPa)". Large semi-transparent phase region labels (SOLID in blue, GAS
+    in orange, LIQUID in green, SUPERCRITICAL FLUID in purple) are placed within their
+    respective regions. Top and right spines are removed. A subtle grid is present
+    on both axes at alpha=0.15. A legend in the bottom-right identifies the three
+    curves. Title reads "Water Phase Diagram · phase-diagram-pt · seaborn · pyplots.ai".'
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -49,33 +51,32 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title=24, labels=20, ticks=16, annotations=15,
-          phase labels=28/18'
+        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt,
+          annotations 15pt, phase labels 28/18pt'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All text fully readable, no collisions
+        comment: All text well-positioned with no collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Lines at linewidth=3, markers at s=250, well adapted to data
+        comment: Lines at linewidth=3, markers at s=250, all clearly visible
       - id: VQ-04
         name: Color Accessibility
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Mostly colorblind-safe but green (#2CA02C) can be problematic for
-          deuteranopia
+        comment: Blue/orange/green/purple palette with good contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good 16:9 proportions, plot fills canvas well
+        comment: Plot fills canvas well with tight_layout
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -83,31 +84,32 @@ review:
         passed: true
         comment: Temperature (K) and Pressure (Pa) with units
     design_excellence:
-      score: 12
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Intentional color-matching between curves and phase labels, distinct
-          markers, above defaults but not publication-exceptional
+        comment: Cohesive color scheme matching curves to region labels, different
+          marker shapes, professional appearance
       - id: DE-02
         name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines removed, subtle grid, semi-transparent phase labels, white
+          edge highlighting
+      - id: DE-03
+        name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Spines removed, subtle grid at alpha=0.15, tight_layout applied
-      - id: DE-03
-        name: Data Storytelling
-        score: 3
-        max: 6
-        passed: true
-        comment: Phase regions labeled and special points annotated but mostly displaying
-          all info equally without guiding to specific insight
+        comment: Good visual hierarchy with color-coded regions and annotated special
+          points
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -121,21 +123,19 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: three boundaries, triple point, critical point,
-          phase labels, log scale, supercritical region'
+        comment: All required features present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Temperature on x, pressure on y (log scale), all data visible
+        comment: Correct axes with log scale on pressure
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Title contains required format with descriptive prefix, legend labels
-          accurate
+        passed: false
+        comment: Title has extra Water Phase Diagram prefix before required format
     data_quality:
       score: 15
       max: 15
@@ -145,21 +145,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All phase boundaries, both special points, supercritical region,
-          and water anomalous negative-slope melting curve
+        comment: All phase boundaries, special points, and supercritical region shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real water phase diagram with scientifically accurate values
+        comment: Real water data with Clausius-Clapeyron equations
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Correct triple point and critical point values, realistic Clausius-Clapeyron
-          approximation
+        comment: Physical constants match accepted values for water
     code_quality:
       score: 10
       max: 10
@@ -169,31 +167,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, plot, style, save'
+        comment: Clean imports-data-plot-save flow
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic with Clausius-Clapeyron equations
+        comment: Fully deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All three imports used
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriate complexity
+        comment: Appropriate complexity, well-organized
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300, bbox_inches=tight
+        comment: Saves as plot.png with dpi=300
     library_mastery:
       score: 4
       max: 10
@@ -203,15 +201,13 @@ review:
         score: 3
         max: 5
         passed: false
-        comment: Uses sns.lineplot and sns.set_context but passes raw arrays instead
-          of DataFrames with hue mapping
+        comment: Uses sns.lineplot and sns.set_context but most work done via matplotlib
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
         passed: false
-        comment: Generic usage; sns.lineplot adds little over plt.plot, no seaborn-specific
-          features leveraged
+        comment: Generic seaborn usage, sns.lineplot trivially replaceable with plt.plot
   verdict: REJECTED
 impl_tags:
   dependencies: []
@@ -219,9 +215,8 @@ impl_tags:
   - annotations
   patterns:
   - data-generation
-  - explicit-figure
   dataprep: []
   styling:
+  - edge-highlighting
   - grid-styling
   - alpha-blending
-  - edge-highlighting
