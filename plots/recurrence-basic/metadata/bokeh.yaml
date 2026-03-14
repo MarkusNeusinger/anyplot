@@ -1,0 +1,228 @@
+library: bokeh
+specification_id: recurrence-basic
+created: '2026-03-14T22:46:47Z'
+updated: '2026-03-14T23:08:33Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23097948287
+issue: 4592
+python_version: 3.14.3
+library_version: 3.9.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/recurrence-basic/bokeh/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/recurrence-basic/bokeh/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/recurrence-basic/bokeh/plot.html
+quality_score: 90
+review:
+  strengths:
+  - Excellent use of time-delay embedding (Takens theorem) with proper parameters
+  - Reversed Cividis palette creates intuitive dark=recurrent visual encoding
+  - Annotations highlighting laminar regime and deterministic diagonals add genuine
+    storytelling value
+  - HoverTool with invisible scatter overlay is idiomatic Bokeh for image-based plots
+  - Perfect data choice - Lorenz attractor is the canonical recurrence plot example
+  weaknesses:
+  - Title format adds Lorenz Attractor prefix before the standard spec-id format
+  image_description: 'The plot displays a square recurrence plot (distance-based matrix)
+    of the Lorenz attractor x-component. Both axes are labeled "Time Index (Lorenz
+    x-component, dt=0.01)" ranging from 0 to ~490. The title reads "Lorenz Attractor
+    · recurrence-basic · bokeh · pyplots.ai". The color scheme uses reversed Cividis
+    — dark blue/purple for close (recurrent) states and yellow for distant states.
+    The main diagonal is clearly visible as a dark line. Block structures indicating
+    regime changes and diagonal lines showing determinism are prominent throughout
+    the matrix. Two annotations are overlaid: "Laminar regime" (with blue background,
+    center-right area) and "Deterministic diagonals" (angled ~45°, lower-left area).
+    A threshold annotation in the top-left reads "Recurrence threshold ε = 7.4 (10th
+    percentile)". A colorbar on the right shows "Normalized Distance" from 0 to 1.
+    The background is off-white with no grid lines.'
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 28pt, labels 22pt, ticks 18pt).
+          Annotation text slightly hard to read against busy background.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text elements. Annotations well-separated.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Recurrence matrix clearly rendered with strong color contrast. Patterns
+          well-defined.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Cividis is perceptually uniform and colorblind-safe.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square 3600x3600 format correct for recurrence matrix. Good canvas
+          utilization.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive labels with context including variable and sampling rate.
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Strong design with reversed Cividis, styled annotation backgrounds,
+          custom axis colors. Above defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Grid removed, outline removed, minor ticks removed, subtle axis colors,
+          off-white background.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Annotations highlight key recurrence features. Reversed colormap
+          reinforces narrative. Clear focal points.
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct recurrence plot with distance-based matrix visualization.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec requirements met: diagonal, Euclidean distance, time-delay
+          embedding, color-mapped variant, square plot.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Both axes correctly represent time indices. Distance matrix properly
+          computed.
+      - id: SC-04
+        name: Title & Legend
+        score: 2
+        max: 3
+        passed: true
+        comment: Title adds Lorenz Attractor prefix before standard format. Colorbar
+          well-labeled.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Lorenz attractor produces all key recurrence features: diagonals,
+          blocks, symmetric pattern.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Lorenz attractor with standard parameters is the canonical nonlinear
+          dynamics example.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 500 points, embedding dim 3, delay 5, 10th percentile threshold —
+          all sensible.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean linear flow: imports, data, embedding, distance, plot, save.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set. Deterministic integration.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean code. Invisible scatter for hover is legitimate Bokeh pattern.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot.png and plot.html. No deprecated API.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Good use of Bokeh idioms: figure, p.image, ColumnDataSource, ColorBar,
+          LinearColorMapper, Label.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: HoverTool with invisible scatter for image hover, dual PNG+HTML output,
+          interactive tooltips.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - annotations
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  - matrix-construction
+  - columndatasource
+  dataprep:
+  - normalization
+  styling:
+  - custom-colormap
