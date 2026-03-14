@@ -1,0 +1,244 @@
+library: altair
+specification_id: recurrence-basic
+created: '2026-03-14T22:45:50Z'
+updated: '2026-03-14T23:18:16Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23097948238
+issue: 4592
+python_version: 3.14.3
+library_version: 6.0.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/recurrence-basic/altair/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/recurrence-basic/altair/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/recurrence-basic/altair/plot.html
+quality_score: 91
+review:
+  strengths:
+  - Perfect spec compliance with all required features including time-delay embedding
+    and distance-based color variant
+  - Excellent scientific data choice — logistic map at type-I intermittency boundary
+    produces meaningful recurrence structure
+  - Strong design with custom color scale, background tint, annotation system with
+    text shadows, and refined typography
+  - 'Expert library mastery with idiomatic Altair patterns: selections, tooltips,
+    layer composition, dual export'
+  - Informative subtitles and three well-placed annotations guide the viewer through
+    interpretation
+  - 'Significant improvements across all three attempts: binary to distance coloring,
+    mark_square to mark_rect, added annotations and text shadows'
+  weaknesses:
+  - Individual cells remain small at 150 ordinal categories, though recurrence structure
+    is clearly visible
+  - Vertical/horizontal line structures mentioned in spec are less prominent than
+    diagonal structures
+  image_description: 'The plot displays a square recurrence plot rendered using Altair''s
+    mark_rect on a light gray (#e8e8ec) background. Both axes are labeled "Time Index
+    (step)" with tick marks at intervals of 25, ranging from 0 to ~150. The title
+    reads "recurrence-basic · altair · pyplots.ai" in large bold text (~28pt), with
+    two subtitle lines explaining the logistic map parameters and pattern interpretation.
+    The color scheme uses a custom 4-stop scale: bright yellow cells represent near-zero
+    distance (near-identical states), transitioning through green and teal to dark
+    navy for distances approaching the 0.15 threshold. The main diagonal is a continuous
+    bright yellow line (self-recurrence at distance 0). Clear diagonal line structures
+    parallel to the main diagonal indicate deterministic dynamics. The plot shows
+    distinct block structure — dense yellow recurrence blocks in the upper-left (~0-15)
+    and lower-right (~100-150) regions reveal laminar phases, while intervening regions
+    show sparser, more chaotic recurrence patterns. Three red dot annotations with
+    bold red text and white text shadows label key features: "Main diagonal (self-recurrence)",
+    "Diagonal lines (determinism)", and "Laminar phase". A vertical gradient color
+    legend labeled "Distance" appears on the right side, ranging from 0.00 (yellow)
+    to 0.14 (dark). No grid lines are visible.'
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 28pt, axis 20pt, ticks 16pt,
+          legend 16/14pt, annotations 15pt bold with shadow). Slight deduction for
+          annotations at 15pt.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text. Ticks at every 25 steps well-spaced. Annotations
+          in distinct quadrants.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: 150 ordinal categories produce small cells but overall recurrence
+          structure is clearly discernible. Improvement from 300/200 in previous attempts.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Custom sequential scale (yellow to green to teal to dark navy) is
+          perceptually uniform and colorblind-safe.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: 1150x1150 at scale 3.1 produces ~3565px square, close to 3600 target.
+          Plot fills canvas well.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Time Index (step) is descriptive with units on both axes.
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom 4-stop color scale, custom background (#e8e8ec), annotation
+          system with text shadows, custom axis colors. Clearly above defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Grid removed, view stroke removed, custom background, custom axis
+          colors at multiple levels, generous padding, custom gradient legend sizing.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Three annotations guide viewer to key features. Subtitle explains
+          patterns. Data choice creates both chaotic and laminar regimes.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct recurrence plot as distance-based matrix visualization using
+          mark_rect.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: main diagonal, Euclidean distance, time-delay
+          embedding, color-mapped variant, square plot.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Both axes represent time indices, distance correctly color-mapped.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct, legend shows Distance.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows diagonal lines, main diagonal, block structures, laminar phases.
+          Vertical/horizontal structures less prominent.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Logistic map at type-I intermittency boundary is a classic dynamical
+          system.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: r=3.8284, 152 steps, epsilon=0.15, dim=3, delay=1 — all sensible
+          parameters.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean linear flow: imports, logistic map, embedding, distance matrix,
+          sparse encoding, layered plot, save.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used (altair, numpy, pandas).
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic. Vectorized distance matrix. Sparse encoding. Legitimate
+          interactive features.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot.png and plot.html, current Altair 6.0 API.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert declarative grammar: mark_rect, ordinal encoding, paddingInner=0,
+          alt.condition, alt.layer, properties/configure chain.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: selection_point with pointerover, formatted tooltips, multi-layer
+          composition, HTML export. Native to Altair's grammar.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - hover-tooltips
+  - layer-composition
+  - html-export
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep: []
+  styling:
+  - custom-colormap

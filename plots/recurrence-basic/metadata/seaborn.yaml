@@ -1,0 +1,230 @@
+library: seaborn
+specification_id: recurrence-basic
+created: '2026-03-14T22:46:57Z'
+updated: '2026-03-14T23:07:41Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23097948166
+issue: 4592
+python_version: 3.14.3
+library_version: 0.13.2
+preview_url: https://storage.googleapis.com/pyplots-images/plots/recurrence-basic/seaborn/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/recurrence-basic/seaborn/plot_thumb.png
+preview_html: null
+quality_score: 90
+review:
+  strengths:
+  - Sophisticated layered visualization combining distance-based heatmap background
+    with binary recurrence overlay
+  - Excellent data storytelling with annotations explaining structural patterns and
+    inset showing recurrence rate
+  - Perfect spec compliance including both binary and color-mapped variants
+  - Lorenz attractor is an ideal realistic data source for recurrence plots
+  - Clean well-structured code with deterministic data generation
+  weaknesses:
+  - Inset chart partially occludes some recurrence data
+  - Binary overlay uses matplotlib pcolormesh rather than a seaborn function
+  image_description: 'The plot displays a square recurrence plot of the Lorenz attractor
+    x-component using 3D time-delay embedding. Both axes are labeled "Time Index (embedding
+    steps)" ranging from 0 to 489. Dark blue (#306998) recurrence points are plotted
+    on a subtle cubehelix-palette distance-based background layer, creating a layered
+    visualization. The main diagonal is clearly filled. Prominent diagonal line patterns
+    are visible throughout the matrix, indicating deterministic dynamics. Block cluster
+    structures appear in the upper-left region and sporadically elsewhere, showing
+    recurring regimes. Two annotations with arrows highlight these key features: "Block
+    clusters = recurring regimes" (brown) and "Diagonal lines = determinism" (blue).
+    An inset line plot in the upper-left shows recurrence rate over time with a filled
+    area. The title reads "Lorenz Attractor · recurrence-basic · seaborn · pyplots.ai".
+    A footnote at the bottom describes the embedding parameters: "3D time-delay embedding
+    (τ=5) · Euclidean distance · ε = 15% of max distance".'
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 24pt, labels 20pt, ticks 16pt).
+          Inset text small but appropriate.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Inset overlays some data but strategically positioned in lower-density
+          region with semi-transparent background.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Recurrence points clearly visible as blue marks. Dense matrix well-adapted
+          to ~490x490 grid.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Monochromatic blue scheme with brown accent. Fully colorblind-safe.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square format perfect for recurrence matrices. Plot fills canvas
+          well.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Time Index (embedding steps) is descriptive with context.
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Layered design with cubehelix background and binary overlay. Custom
+          color scheme. Above defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines removed, white background, custom ticks, styled inset background.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Annotations explain structural patterns. Inset provides recurrence
+          rate context. Footnote explains methodology.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct recurrence plot with binary matrix visualization.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: All spec features present including time-delay embedding, binary
+          threshold, and distance-based background.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Both axes correctly show time indices. Symmetric matrix correct.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title contains spec-id, library, and pyplots.ai with descriptive
+          prefix.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows diagonal lines, block clusters, main diagonal, varying recurrence
+          density.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Lorenz attractor is a classic dynamical systems example.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 500 time steps, 15% threshold, reasonable embedding parameters.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean linear flow: imports, styling, data, embedding, matrix, plot,
+          save.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Lorenz attractor with fixed initial conditions is fully deterministic.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, appropriate complexity. No fake UI.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png at 300 dpi. Current API.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of sns.heatmap, sns.lineplot, sns.set_theme, sns.despine.
+          Falls back to matplotlib pcolormesh for binary overlay.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: 'Uses seaborn-distinctive features: cubehelix_palette, light_palette,
+          heatmap with square parameter, set_theme with context.'
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - scipy
+  techniques:
+  - annotations
+  - inset-axes
+  - manual-ticks
+  - layer-composition
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep:
+  - normalization
+  styling:
+  - custom-colormap
+  - alpha-blending

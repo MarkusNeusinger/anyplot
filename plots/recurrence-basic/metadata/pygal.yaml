@@ -1,0 +1,235 @@
+library: pygal
+specification_id: recurrence-basic
+created: '2026-03-14T22:46:54Z'
+updated: '2026-03-14T23:18:19Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23097948367
+issue: 4592
+python_version: 3.14.3
+library_version: 3.1.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/recurrence-basic/pygal/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/recurrence-basic/pygal/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/recurrence-basic/pygal/plot.html
+quality_score: 86
+review:
+  strengths:
+  - 'Excellent data choice: Lorenz attractor with time-delay embedding produces rich
+    recurrence structure showing determinism, regime changes, and varying dynamics'
+  - Professional visual design with custom blue sequential colormap, clean typography,
+    and well-placed annotations that guide interpretation
+  - Full spec compliance including color-mapped distance variant and all required
+    features
+  - Creative use of pygal extensibility through custom Graph subclass for a non-standard
+    chart type
+  weaknesses:
+  - 'Code complexity: custom Graph subclass and sys.path hack reduce code quality
+    scores'
+  - Near-threshold cells are very faint and barely distinguishable from background
+  - Some wasted canvas space between main plot and colorbar
+  image_description: 'The plot displays a square recurrence plot for a Lorenz attractor
+    time series with both axes labeled "Time Index (steps)" ranging from 0 to ~290.
+    The main diagonal runs clearly from top-left to bottom-right in dark blue. Recurrent
+    state pairs are shown as blue cells on a light blue-gray background, with color
+    intensity varying by Euclidean distance — darker blue for closer states, lighter
+    for states near the threshold. A vertical colorbar on the right maps "Euclidean
+    Distance" from 0.0 (dark blue) to ~9.8 (white). Three red italic annotations with
+    dashed leader lines highlight key features: "Diagonal lines (determinism)" near
+    the top-left, "Main diagonal" at center, and "Block cluster (regime change)" in
+    the lower-right quadrant. The title reads "recurrence-basic · pygal · pyplots.ai"
+    at the top. Tick marks appear at intervals of 50 along both axes. The overall
+    layout is clean and professional with a white background.'
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title=58, axis titles=46, ticks=34,
+          annotations=32, colorbar=30). Annotation labels slightly small relative
+          to axis titles.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text elements. Annotations well-positioned with leader
+          lines.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Recurrence cells visible with good color contrast. Near-threshold
+          cells are very faint.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue sequential colormap is colorblind-safe. Red annotations provide
+          strong contrast.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Square layout appropriate. Some wasted space between colorbar and
+          main plot.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Both axes labeled 'Time Index (steps)' with units. Colorbar labeled
+          'Euclidean Distance'.
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom blue sequential colormap, thoughtful dark color scheme, red
+          annotation accents. Professional appearance above defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Default pygal chrome removed, custom tick marks, clean border, graduated
+          colorbar. Good refinement.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Annotations guide viewer to understand determinism, self-recurrence,
+          and regime changes. Color gradient adds analytical depth.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct recurrence plot with distance matrix and threshold.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: distance matrix, threshold, time-delay embedding,
+          color-mapped variant, square plot.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Both axes correctly represent time indices.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct. No legend needed for single-visualization plot.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Lorenz attractor exhibits all key recurrence features: diagonal
+          lines, block structures, varying density.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Lorenz attractor is a classic dynamical system. Neutral scientific
+          context.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 300 time steps, 15% recurrence rate, standard embedding parameters.
+    code_quality:
+      score: 6
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 1
+        max: 3
+        passed: false
+        comment: Uses RecurrencePlotChart class extending Graph. Violates flat-script
+          KISS pattern, though justified by pygal architecture.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set. solve_ivp with RK45 is deterministic.
+      - id: CQ-03
+        name: Clean Imports
+        score: 1
+        max: 2
+        passed: false
+        comment: sys import used solely for path manipulation hack.
+      - id: CQ-04
+        name: Code Elegance
+        score: 1
+        max: 2
+        passed: false
+        comment: sys.path manipulation is a code smell. Class well-organized but overall
+          complexity high.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png via render_to_png. Also generates SVG and HTML.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Properly extends Graph with _plot() and _compute(). Uses internal
+          APIs: svg.node(), self.view, self.nodes.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Custom Graph subclass leveraging pygal SVG engine. HTML embed with
+          render(is_unicode=True) is pygal-specific.
+  verdict: REJECTED
+impl_tags:
+  dependencies:
+  - scipy
+  techniques:
+  - annotations
+  - colorbar
+  - manual-ticks
+  - html-export
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep: []
+  styling:
+  - custom-colormap

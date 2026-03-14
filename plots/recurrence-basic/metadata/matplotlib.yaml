@@ -1,0 +1,223 @@
+library: matplotlib
+specification_id: recurrence-basic
+created: '2026-03-14T22:47:20Z'
+updated: '2026-03-14T23:00:24Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23097948176
+issue: 4592
+python_version: 3.14.3
+library_version: 3.10.8
+preview_url: https://storage.googleapis.com/pyplots-images/plots/recurrence-basic/matplotlib/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/recurrence-basic/matplotlib/plot_thumb.png
+preview_html: null
+quality_score: 90
+review:
+  strengths:
+  - 'Excellent data choice: Lorenz attractor is the canonical recurrence plot example
+    showing periodic transients transitioning to chaos'
+  - Strong data storytelling with annotations identifying dynamical regimes and quantitative
+    RR statistic
+  - Crisp binary rendering using BoundaryNorm + ListedColormap with interpolation=none
+  - 'Complete spec compliance: time-delay embedding, Euclidean distance, binary threshold,
+    square matrix, labeled axes'
+  - Fully deterministic and reproducible via ODE solver with fixed parameters
+  weaknesses:
+  - Annotation text for chaotic regime is partially obscured by underlying recurrence
+    points (minor readability issue)
+  image_description: The plot displays a binary recurrence plot for the Lorenz attractor
+    x-component on a square canvas. Both axes are labeled "Time Index" (0–~490). Recurrent
+    state pairs are shown as deep blue (#306998) dots on a light cream (#F5F5F0) background.
+    The main diagonal is prominently filled. A dense blue block in the lower-left
+    corner (~indices 0–120) reveals a periodic transient regime, called out by an
+    orange annotation arrow. Scattered diagonal line segments throughout the middle
+    and upper regions indicate deterministic structure within the chaotic regime,
+    also annotated. A rounded box in the lower-right corner displays "RR = 15.0%".
+    The title "recurrence-basic · matplotlib · pyplots.ai" appears at the top, with
+    an italic subtitle showing embedding parameters (dim=3, τ=5, ε=percentile(15%)).
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: suptitle 24pt, subtitle 13pt, axis
+          labels 20pt, ticks 16pt'
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Annotation text for chaotic regime sits over recurrence points; no
+          text-on-text overlap
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Binary recurrence points rendered with interpolation=none for crisp
+          pixel display
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Two-color scheme (cream + Python Blue) is colorblind-safe with strong
+          contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square 12x12 figsize fills canvas well, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 1
+        max: 2
+        passed: true
+        comment: Time Index is descriptive and correct for recurrence plots but unitless
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom colors, BoundaryNorm for crisp binary rendering, muted spines,
+          orange annotations
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Thin muted spines, no grid, minor/major ticks configured, custom
+          background
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Annotations identify periodic transient and chaotic regime, RR statistic
+          adds quantitative context
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct binary recurrence plot from distance matrix with threshold
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Time-delay embedding, Euclidean distance, binary threshold, square
+          plot, labeled axes
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Both axes correctly represent time indices with origin=lower
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct title format, no legend needed for binary visualization
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows block patterns, diagonal lines, and scattered points revealing
+          multiple recurrence structures
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Lorenz attractor is the canonical dynamical systems example for recurrence
+          analysis
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 500 points, 15th percentile threshold, embedding dim=3 delay=5 all
+          appropriate
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean Imports-Data-Plot-Save flow, no functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic ODE solver with fixed initial conditions
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean and concise with appropriate complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with dpi=300 and bbox_inches=tight
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Proper axes methods, BoundaryNorm+ListedColormap, ticker formatters
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: BoundaryNorm with ListedColormap for binary thresholding, imshow
+          with interpolation=none
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - scipy
+  techniques:
+  - annotations
+  - manual-ticks
+  patterns:
+  - matrix-construction
+  dataprep: []
+  styling:
+  - custom-colormap
