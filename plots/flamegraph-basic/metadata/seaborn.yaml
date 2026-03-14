@@ -1,7 +1,7 @@
 library: seaborn
 specification_id: flamegraph-basic
 created: '2026-03-14T20:27:34Z'
-updated: '2026-03-14T20:42:22Z'
+updated: '2026-03-14T20:56:52Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23095681413
 issue: 4665
@@ -10,36 +10,35 @@ library_version: 0.13.2
 preview_url: https://storage.googleapis.com/pyplots-images/plots/flamegraph-basic/seaborn/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/flamegraph-basic/seaborn/plot_thumb.png
 preview_html: null
-quality_score: 80
+quality_score: 82
 review:
   strengths:
-  - Excellent data quality with realistic CPU profiling scenario (~65 stack traces,
-    7 depth levels)
-  - Smart text contrast calculation based on luminance (white on dark, dark on light)
-  - Clean visual hierarchy with percentage labels and font size/weight variation on
-    wider bars
-  - Custom warm palette using sns.blend_palette follows flame graph conventions
-  - Rounded corners on bars (FancyBboxPatch) add visual polish
+  - 'Excellent data quality: realistic CPU profiling scenario with ~65 stack traces
+    across 7 depth levels'
+  - 'Smart text handling: luminance-based contrast, truncation with ellipsis, bold
+    for large bars, percentage labels'
+  - Custom warm flame palette using sns.blend_palette follows domain conventions
+  - 'Full spec compliance: all flame graph requirements implemented correctly'
+  - Clean deterministic code with linear structure
   weaknesses:
-  - 'Text clipping at canvas edges: close_connections truncated, parse_headers and
-    serialize_response cut off at right edge'
-  - 'Library mastery is low: seaborn used only for styling, not for any plotting functions'
-  - X-axis padding insufficient to contain all label text
-  image_description: 'The plot displays a flame graph with horizontal bars stacked
-    from Depth 0 (bottom) to Depth 6 (top). The root "main (100%)" bar spans the entire
-    width at Depth 0 in a deep red-orange color. At Depth 1, five children are visible:
-    "cleanup (8%)", "init_config", "log_metrics (19%)", and "process_request (63%)".
-    The hierarchy continues upward with bars like "handle_route (37%)", "query_database
-    (21%)", "execute (13%)", and deeper functions like "send_query", "tcp_write",
-    and "await_ack" at Depth 6. Colors use a warm palette ranging from yellow through
-    orange to red. White edges separate adjacent bars. Function labels with percentages
-    appear inside wider bars, with text color adapting to bar luminance. Title reads
-    "flamegraph-basic · seaborn · pyplots.ai". Y-axis shows "Stack Depth" with labels
-    "Depth 0" through "Depth 6", X-axis shows "Samples". Top and right spines are
-    removed. Some text is clipped at canvas edges.'
+  - 'Library mastery is limited: seaborn heatmap used as rendering layer but most
+    logic is manual matplotlib'
+  - Minor text clipping at right edge for some labels
+  - Upper depth levels have sparse content creating visual imbalance
+  image_description: 'The plot displays a flame graph visualization for CPU performance
+    profiling. The bottom layer (Depth 0) shows a full-width red "main (100%)" bar
+    spanning all 950 samples. Depth 1 shows four main branches: cleanup (8%), init_config,
+    log_metrics (19%), and process_request (63%) in warm orange/red tones. Higher
+    depths progressively break down into sub-functions like handle_route (37%), query_database
+    (21%), authenticate (13%), serialize_response, execute (13%), etc. The color palette
+    uses warm flame colors (yellows, oranges, reds) via a custom blend palette. Function
+    names with percentage labels appear inside bars when wide enough, with bold text
+    for the largest bars. The x-axis shows "Samples" (0-800+), y-axis shows "Stack
+    Depth" (Depth 0-6). Title reads "flamegraph-basic · seaborn · pyplots.ai". Top
+    and right spines are removed, with subtle vertical grid lines.'
   criteria_checklist:
     visual_quality:
-      score: 24
+      score: 25
       max: 30
       items:
       - id: VQ-01
@@ -47,63 +46,66 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title 24, labels 20, ticks 16, bar labels
-          11/9). A few labels clipped at canvas edges.
+        comment: All font sizes explicitly set (title 24pt, labels 20pt, ticks 16pt).
+          In-bar labels 9-11pt appropriate for flame graph.
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: No overlap between elements, but text clipping at edges reduces readability.
+        comment: Text truncation with ellipsis well-handled. Minor clipping at right
+          edge.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: All bars clearly visible. Smaller bars at higher depths appropriately
-          sized.
+        comment: Bars clearly visible with distinct warm colors. Thin bars at higher
+          depths still discernible.
       - id: VQ-04
         name: Color Accessibility
         score: 3
         max: 4
         passed: true
-        comment: Warm palette follows flame graph convention. Not specifically colorblind-optimized.
+        comment: Warm palette follows flame graph convention. Hash-based color variety.
+          Not colorblind-optimized.
       - id: VQ-05
         name: Layout & Canvas
-        score: 2
+        score: 3
         max: 4
         passed: true
-        comment: Good proportions but text clipped at left and right edges due to
-          insufficient x-axis padding.
+        comment: Good 16:9 proportions. Slight text clipping at right edge. Upper
+          depths sparse.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels: Samples and Stack Depth.'
+        comment: Samples and Stack Depth are descriptive and domain-appropriate.
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Custom warm blend_palette, rounded corners, dynamic text contrast.
-          Above defaults but not publication-level.
+        comment: Custom blend_palette, luminance-based text contrast, bold weights,
+          percentage labels. Above defaults.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Spines removed, subtle x-axis grid, white edge colors, clean layout.
+        comment: Spines removed, subtle grid at alpha=0.15, clean white background.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Good hierarchy with percentage labels guiding eye to hot code paths.
+        comment: Hierarchy naturally shows bottleneck chain. Percentage labels and
+          bold text emphasize hot paths.
     spec_compliance:
       score: 15
       max: 15
@@ -113,26 +115,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct flame graph with hierarchical call stack.
+        comment: Correct flame graph with stacked horizontal bars at depth levels.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: warm colors, adjacent bars, labels, bottom-to-top
-          stacking, alphabetical sorting.'
+        comment: 'All spec requirements met: hierarchy, proportional widths, warm
+          colors, labels, adjacent bars.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=samples, Y=depth, width proportional to sample count.
+        comment: X=samples, Y=depth. Children correctly within parent spans.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format. No legend needed for flame graphs.
+        comment: Title format correct. No legend needed.
     data_quality:
       score: 15
       max: 15
@@ -142,23 +144,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: ~65 stack traces, 7 depth levels, varied function types showing both
-          wide hot paths and narrow leaves.
+        comment: ~65 stack traces across 7 depth levels with varying widths and multiple
+          branches.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Web server CPU profiling with plausible function names. Neutral technology
-          domain.
+        comment: CPU profiling of web request handler with realistic function names.
+          Neutral technical domain.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 950 total samples with realistic distribution.
+        comment: 950 samples with realistic proportions for CPU profiling.
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -166,33 +168,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script with no functions or classes.
+        comment: 'Linear flow: imports, data, processing, plot, save. No functions/classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: 'Fully deterministic: hardcoded data, hash-based color mapping.'
+        comment: Fully deterministic with hardcoded data and hash-based colors.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used.
+        comment: All three imports actively used.
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: Clean implementation with appropriate complexity. No fake UI.
+        comment: Grid construction somewhat verbose but necessary for heatmap approach.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300.
+        comment: Saves as plot.png with dpi=300, bbox_inches=tight. Current API.
     library_mastery:
-      score: 3
+      score: 4
       max: 10
       items:
       - id: LM-01
@@ -200,26 +202,26 @@ review:
         score: 2
         max: 5
         passed: false
-        comment: Uses seaborn styling API only. All plotting is matplotlib patches.
+        comment: Uses sns.heatmap, set_theme, despine, blend_palette but bulk of work
+          is manual matplotlib.
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 2
         max: 5
         passed: false
-        comment: blend_palette is somewhat seaborn-specific but easily replicated
-          in matplotlib.
-  verdict: REJECTED
+        comment: blend_palette and heatmap with mask are seaborn-specific. Creative
+          but mostly matplotlib underneath.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - patches
   - annotations
   - manual-ticks
   patterns:
   - data-generation
+  - matrix-construction
   - iteration-over-groups
   dataprep: []
   styling:
   - custom-colormap
-  - edge-highlighting
   - grid-styling
