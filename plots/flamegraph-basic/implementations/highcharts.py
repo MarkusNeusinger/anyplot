@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 flamegraph-basic: Flame Graph for Performance Profiling
 Library: highcharts unknown | Python 3.14.3
 Quality: 85/100 | Created: 2026-03-14
@@ -85,26 +85,29 @@ while traverse:
 
 # Warm color palette (yellows, oranges, reds) - conventional flame graph aesthetic
 flame_colors = [
-    "#E25822",
-    "#E8751A",
-    "#F0A30A",
-    "#F4C430",
-    "#E8963A",
-    "#D4602E",
-    "#F0BE50",
-    "#E07828",
-    "#CC5500",
-    "#F5D060",
-    "#DA7028",
-    "#E8A020",
-    "#C04820",
-    "#F0C844",
-    "#D85818",
+    "#E25822",  # deep orange-red
+    "#F4C430",  # golden yellow
+    "#CC3300",  # dark red
+    "#F0A30A",  # amber
+    "#D4602E",  # burnt orange
+    "#FFD700",  # bright gold
+    "#B8301C",  # crimson
+    "#E8963A",  # tangerine
+    "#F5D060",  # light yellow
+    "#C04820",  # brick red
+    "#F0BE50",  # warm yellow
+    "#DA4500",  # vermillion
+    "#E8751A",  # orange
+    "#F7E070",  # pale yellow
+    "#A83210",  # deep red
 ]
 for i, rect in enumerate(rectangles):
     rect["color"] = flame_colors[(i * 3 + rect["x"] * 7) % len(flame_colors)]
 
+# Flip depth so root (depth 0) is at the bottom — flame graph orientation
 max_depth = max(r["x"] for r in rectangles)
+for r in rectangles:
+    r["x"] = max_depth - r["x"]
 
 # Build chart using highcharts-core Python API with columnrange series
 chart = Chart(container="container")
@@ -137,7 +140,6 @@ chart.options.x_axis = {
     "categories": [str(i) for i in range(max_depth + 1)],
     "title": {"text": "Stack Depth", "style": {"fontSize": "32px", "color": "#555555"}},
     "labels": {"enabled": False},
-    "reversed": True,  # Root (depth 0) at bottom
 }
 
 chart.options.legend = {"enabled": False}
