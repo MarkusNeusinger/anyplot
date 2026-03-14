@@ -1,0 +1,236 @@
+library: bokeh
+specification_id: phase-diagram-pt
+created: '2026-03-14T14:51:35Z'
+updated: '2026-03-14T15:20:07Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23090166817
+issue: 4666
+python_version: 3.14.3
+library_version: 3.9.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/phase-diagram-pt/bokeh/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/phase-diagram-pt/bokeh/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/phase-diagram-pt/bokeh/plot.html
+quality_score: 91
+review:
+  strengths:
+  - Scientifically accurate water phase diagram using Clausius-Clapeyron physics rather
+    than arbitrary curves
+  - 'Excellent use of Bokeh-specific features: HoverTool for interactive exploration,
+    Span reference lines, HTML dual-export'
+  - Professional visual design with custom pastel palette, glow effects on markers,
+    and arrow annotations
+  - Clear data storytelling with visual hierarchy guiding the viewer through phase
+    regions and special points
+  - Water unique negative-slope melting curve correctly represented
+  weaknesses:
+  - Melting boundary label at steep angle is functional but slightly cramped
+  - Supercritical fluid label positioned near right edge of canvas
+  - Triple point marker could be slightly larger for better visibility on the large
+    canvas
+  image_description: 'The plot displays a water pressure-temperature phase diagram
+    on a 4800x2700 canvas. The y-axis (Pressure in Pa) uses a logarithmic scale spanning
+    ~50 Pa to 5e8 Pa, and the x-axis (Temperature in K) ranges from 180 to 800. Four
+    phase regions are filled with distinct pastel colors: light blue for SOLID (left),
+    light green for LIQUID (upper center), light peach/orange for GAS (bottom right),
+    and light purple for SUPERCRITICAL FLUID (upper right beyond the critical point).
+    Three dark blue boundary curves separate the regions: a sublimation curve (bottom
+    left, labeled "Sublimation" at an angle), a vaporization curve (center, labeled
+    "Vaporization" at an angle), and a nearly vertical melting curve (left, labeled
+    "Melting" at a steep angle). The triple point is marked with a red circle with
+    a glow ring at 273.16 K, with an arrow annotation below reading "Triple Point
+    (273.16 K, 611.73 Pa)". The critical point is marked with a dark blue diamond
+    with glow at 647.1 K, with an arrow annotation above reading "Critical Point (647.1
+    K, 22.06 MPa)". Dotted reference lines extend from the critical point horizontally
+    and vertically. A dashed line extends upward from the critical point. The title
+    reads "phase-diagram-pt · bokeh · pyplots.ai". The background is a subtle off-white
+    (#FAFBFC) with very faint dashed grid lines. Bold phase region labels (SOLID,
+    LIQUID, GAS, SUPERCRITICAL FLUID) are placed within their respective regions.'
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 30pt, axis labels 22pt, tick
+          labels 18pt, phase labels 32pt, boundary labels 24pt, annotations 18pt'
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Melting label at steep angle slightly cramped but readable with white
+          background fill
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Phase boundaries visible at line_width=4, special points have glow
+          rings, triple point marker slightly small
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Colorblind-safe pastel palette, no red-green distinction issues
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good canvas use, supercritical label pushed to far right edge
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Temperature (K) and Pressure (Pa) with units
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom pastel palette, glow effects, arrow annotations, refined typography
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle grid alpha 0.15, outline removed, custom background, generous
+          margins
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy with bold region labels, italic boundary labels,
+          annotated special points
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct P-T phase diagram with three boundary curves and filled regions
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: three boundaries, triple/critical points,
+          phase labels, log axis, supercritical region'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Temperature on x, pressure on y (log), correct ranges
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct title format, no legend needed with direct region labels
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'All aspects shown: three boundaries, triple/critical points, supercritical
+          region, negative-slope melting curve'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real water phase diagram with accurate constants
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values match known water properties, physically reasonable enthalpies
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean imports-data-plot-save structure, no functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic physics-based equations
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-organized, appropriate complexity, physics-based data generation
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png via export_png, also HTML export
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Good Bokeh patterns: ColumnDataSource, figure, patch/line/scatter,
+          Label/Arrow layouts'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: HoverTool with tooltips, Span reference lines, HTML export with CDN,
+          Arrow with NormalHead
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - hover-tooltips
+  - html-export
+  - patches
+  - layer-composition
+  patterns:
+  - data-generation
+  - columndatasource
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling
+  - edge-highlighting

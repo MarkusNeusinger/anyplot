@@ -1,0 +1,228 @@
+library: pygal
+specification_id: phase-diagram-pt
+created: '2026-03-14T14:51:24Z'
+updated: '2026-03-14T15:22:32Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23090166905
+issue: 4666
+python_version: 3.14.3
+library_version: 3.1.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/phase-diagram-pt/pygal/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/phase-diagram-pt/pygal/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/phase-diagram-pt/pygal/plot.html
+quality_score: 87
+review:
+  strengths:
+  - Excellent use of real water phase diagram data with physically accurate Clausius-Clapeyron
+    curves
+  - Color-matched phase region labels create strong visual storytelling and cohesion
+  - Good leverage of pygal-specific features (cubic interpolation, metadata dicts,
+    HTML tooltips)
+  - Clean SVG post-processing approach for adding phase region labels
+  - Professional typography with explicitly set font sizes throughout
+  weaknesses:
+  - Title format includes extra descriptive prefix beyond standard spec-id format
+  - Critical point positioned very close to the right edge of the plot area
+  - Helper function format_pressure slightly breaks KISS principle
+  image_description: 'The plot displays a water pressure-temperature phase diagram
+    rendered by pygal at 4800x2700 px. The title reads "Water Phase Diagram · phase-diagram-pt
+    · pygal · pyplots.ai" in dark text at the top. The x-axis shows "Temperature (K)"
+    from 200 K to 600 K, and the y-axis shows "Pressure (Pa)" on a logarithmic scale
+    from ~1 Pa to above 1 MPa. Three phase boundary curves are plotted: a deep blue
+    sublimation curve (Solid-Gas) descending steeply from ~273 K, a burnt orange vaporization
+    curve (Liquid-Gas) rising from the triple point to the critical point, and a deep
+    teal melting curve (Solid-Liquid) running nearly vertically with water''s characteristic
+    negative slope. The triple point is marked with a deep rose dot at ~273 K / 612
+    Pa, and the critical point with a deep violet dot at ~647 K / 22 MPa near the
+    right edge. Phase region labels (SOLID, LIQUID, GAS, SUPERCRITICAL FLUID) are
+    rendered in large bold text with matching colors and reduced opacity. The plot
+    background is a subtle off-white (#f8f9fb) with light dashed grid lines. A legend
+    at the bottom identifies all five series.'
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set (title=58, labels=36, major_labels=32,
+          legend=30). All text readable. Minor: y-axis title could be slightly larger.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text elements anywhere.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Phase boundary curves clearly visible with stroke width 8. Critical
+          point sits very close to right edge.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue, orange, teal palette is colorblind-safe with strong contrast.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good canvas utilization. Critical point near right boundary could
+          use more space.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Temperature (K) and Pressure (Pa) — descriptive with units.
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom color palette with intentional color assignments. Publication-quality
+          typography. Subtle off-white background. Clearly above defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle dashed grid lines, light guide colors, generous margins, custom
+          spacing.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Color-matched phase region labels create effective visual narrative.
+          Triple and critical points highlighted.
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct XY line plot for P-T phase diagram.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: All three phase boundaries, triple point, critical point, phase labels,
+          log scale, supercritical region.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Temperature on X, pressure on Y with logarithmic scale.
+      - id: SC-04
+        name: Title & Legend
+        score: 2
+        max: 3
+        passed: true
+        comment: Title has descriptive prefix beyond required format. Legend labels
+          are descriptive and accurate.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All phase boundaries, triple point, critical point, supercritical
+          region. Water's negative-slope melting curve correctly modeled.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Actual water phase diagram data with physically accurate constants
+          and Clausius-Clapeyron equations.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: All values physically accurate for water.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Overall KISS structure but contains helper function format_pressure.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic data generation using Clausius-Clapeyron equations.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: xml.etree, cairosvg, numpy, pygal, Style.'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-structured, appropriate complexity. SVG post-processing is reasonable
+          for pygal.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png via cairosvg. Also generates plot.svg and plot.html.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of pygal.XY with Style class, logarithmic scale, interpolation,
+          value_formatter, metadata dicts.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Uses pygal-specific features: cubic interpolation, tooltip_fancy_mode,
+          metadata dicts, HTML tooltips, stroke_style per series, human_readable mode.'
+  verdict: REJECTED
+impl_tags:
+  dependencies:
+  - cairosvg
+  techniques:
+  - annotations
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - grid-styling

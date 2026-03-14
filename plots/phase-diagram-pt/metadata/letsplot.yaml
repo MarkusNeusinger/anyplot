@@ -1,0 +1,225 @@
+library: letsplot
+specification_id: phase-diagram-pt
+created: '2026-03-14T14:52:09Z'
+updated: '2026-03-14T15:03:46Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23090166939
+issue: 4666
+python_version: 3.14.3
+library_version: 4.9.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/phase-diagram-pt/letsplot/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/phase-diagram-pt/letsplot/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/phase-diagram-pt/letsplot/plot.html
+quality_score: 90
+review:
+  strengths:
+  - Physically accurate water phase diagram using Clausius-Clapeyron equations
+  - Subtle phase region fills with appropriate alpha create excellent visual separation
+  - Colorblind-safe palette with good color harmony
+  - Uses lets-plot distinctive features (layer_tooltips, flavor_high_contrast_light)
+  - All spec requirements fully met including water anomalous negative-slope melting
+    curve
+  weaknesses:
+  - Annotation label font size (11) could be slightly larger for better readability
+  - Phase fill areas use geom_area which may not perfectly align with boundary curves
+    in all regions
+  image_description: 'The plot displays a water pressure-temperature phase diagram
+    with a logarithmic y-axis (Pressure in Pa, from ~1 to 10^9) and linear x-axis
+    (Temperature in K, from 200 to 700). Three phase boundary curves are drawn: a
+    blue Solid-Gas (Sublimation) curve from lower-left to the triple point, an orange/amber
+    Liquid-Gas (Vaporization) curve from the triple point up to the critical point
+    at upper-right, and a purple Solid-Liquid (Melting) curve going nearly vertically
+    upward from the triple point with a negative slope (correct for water). The three
+    phase regions are labeled in large gray bold text: SOLID (upper-left), LIQUID
+    (upper-right), GAS (lower-right). Subtle background fills distinguish regions:
+    pale indigo for solid, pale teal for liquid, pale yellow for gas. The triple point
+    (273.16 K, 611.73 Pa) and critical point (647.1 K, 22.06 MPa) are marked with
+    dark diamond markers and annotated with text labels. The legend at the bottom
+    identifies the three boundary curves. The title reads "phase-diagram-pt · letsplot
+    · pyplots.ai".'
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All major text sizes explicitly set. Annotation labels at size=11
+          slightly small but readable.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text. Annotations well-positioned with nudge offsets.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Boundary lines at size=2.8, diamond markers at size=8, subtle phase
+          fills all clearly visible.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Colorblind-safe palette: blue, orange, purple. No red-green reliance.'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good canvas utilization at 1600x900, balanced margins, bottom legend.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Temperature (K) and Pressure (Pa) - descriptive with units.
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom palette, phase region fills, flavor_high_contrast_light. Above
+          defaults with intentional color harmony.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: theme_minimal removes spines, subtle grid, minor grid removed, white
+          background.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Phase region labels and shading create clear visual hierarchy. Annotated
+          special points guide viewer.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct P-T phase diagram with boundary curves.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: three boundaries, triple/critical points,
+          phase labels, log axis, negative slope.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=Temperature, Y=Pressure (log scale). Correct mapping.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct title format. Descriptive legend labels.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows all phase boundaries, special points, labeled regions, and
+          water's anomalous melting curve.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real water phase diagram with Clausius-Clapeyron equations. Physically
+          accurate values.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Realistic temperature and pressure ranges for water phase diagram.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports, data, plot, save. No functions/classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic data from physics equations.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-organized with physics-based data generation.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png via ggsave with scale=3.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good ggplot grammar with multiple geom layers, scales, theme composition,
+          inherit_aes.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses layer_tooltips() and flavor_high_contrast_light() - both lets-plot
+          distinctive features.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  - hover-tooltips
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling
