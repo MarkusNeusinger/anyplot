@@ -1,7 +1,7 @@
 library: altair
 specification_id: recurrence-basic
 created: '2026-03-14T22:45:50Z'
-updated: '2026-03-14T22:50:25Z'
+updated: '2026-03-14T22:59:31Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23097948238
 issue: 4592
@@ -10,95 +10,101 @@ library_version: 6.0.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/recurrence-basic/altair/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/recurrence-basic/altair/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/recurrence-basic/altair/plot.html
-quality_score: 80
+quality_score: 86
 review:
   strengths:
   - Perfect spec compliance with all required features including time-delay embedding
-  - Excellent data choice with logistic map near chaos onset creating meaningful recurrence
+    and distance-based color variant
+  - Excellent data choice with logistic map creating meaningful scientific recurrence
     structure
-  - Clean well-structured code with sparse encoding for performance
-  - Good visual refinement with grid removed and informative subtitles
+  - 'Significant improvements from attempt 1: mark_rect, distance coloring, proper
+    canvas size, axis labels with units'
+  - Clean code with smart sparse encoding and well-structured flow
+  - Informative subtitles that guide viewer interpretation
   weaknesses:
-  - Canvas undersized at ~2808x2808px vs 3600x3600 target
-  - Markers at size=4 too small for clear visibility at full resolution
-  - Generic scatter-style approach instead of idiomatic mark_rect matrix visualization
-  - Design is clean but not exceptional — could use distance-based color mapping
-  image_description: The plot displays a binary recurrence plot rendered as small
-    blue (#306998) square markers on a white background. Both axes are labeled "Time
-    Index" ranging from 0 to approximately 290. The title reads "recurrence-basic
+  - Individual cells too small with ~298 ordinal categories reducing visual crispness
+  - Design is solid but not yet at publication-ready level
+  - Vertical/horizontal line structures for laminar states not prominently visible
+  image_description: 'The plot displays a distance-based recurrence plot rendered
+    using Altair''s mark_rect on a light background. Both axes are labeled "Time Index
+    (step)" ranging from 0 to approximately 298. The title reads "recurrence-basic
     · altair · pyplots.ai" with two subtitle lines describing the logistic map parameters
-    (r=3.82, ε=0.15) and noting that diagonal lines reveal deterministic structure.
-    The main diagonal is clearly filled. Prominent diagonal line structures run parallel
-    to the main diagonal, indicating deterministic dynamics. Some block-like clustering
-    is visible around time indices 120-130 and 210-230, suggesting laminar phases.
-    The plot is square with no grid lines and a clean white background. Markers are
-    quite small but the overall recurrence structure is discernible.
+    (r=3.82, Euclidean distance with ε=0.15) and interpretation guidance. The color
+    scale uses reversed viridis: yellow cells indicate near-zero distance (near-identical
+    states), transitioning through teal to dark purple for distances approaching the
+    0.15 threshold. The main diagonal is a prominent yellow line (distance=0). Diagonal
+    line structures parallel to the main diagonal indicate deterministic dynamics.
+    Block-like clustering is visible around time indices 200-230, suggesting laminar
+    phases. A vertical color gradient legend labeled "Distance" appears on the right
+    side. The plot is square with no grid lines and a clean appearance.'
   criteria_checklist:
     visual_quality:
-      score: 24
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title 26pt, labels 20pt, ticks 16pt).
-          Subtitle slightly small at 16pt.
+        comment: 'All font sizes explicitly set: title 26pt, subtitle 17pt, axis titles
+          20pt, tick labels 16pt'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text anywhere
+        comment: Tick values spaced at intervals of 50, no overlap
       - id: VQ-03
         name: Element Visibility
         score: 4
         max: 6
         passed: false
-        comment: Square markers at size=4 are too small for clear visibility at full
-          resolution
+        comment: ~298 ordinal categories make individual cells very small; overall
+          structure visible but cells hard to distinguish
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Single Python Blue on white, excellent contrast, colorblind safe
+        comment: Viridis is perceptually-uniform and colorblind-safe
       - id: VQ-05
         name: Layout & Canvas
-        score: 2
+        score: 3
         max: 4
         passed: false
-        comment: Canvas ~2808x2808px undersized vs 3600x3600 target
+        comment: 3600x3600px target met, legend consumes some space on right
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Time Index is descriptive but lacks units
+        passed: true
+        comment: Time Index (step) is descriptive with units
     design_excellence:
-      score: 11
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: false
-        comment: Clean single-color scheme, well-configured default look but not exceptional
+        comment: Reversed viridis with custom domain, informative subtitles, above
+          default but not publication-level
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Grid removed, view stroke removed, clean background. Good refinement.
+        comment: Grid removed, view stroke removed, custom padding, gradient legend
+          customized
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: false
-        comment: Subtitle explains diagonal lines, meaningful data choice, but no
-          additional emphasis techniques
+        comment: Subtitle guides interpretation, distance coloring adds dimension,
+          good but could further emphasize structures
     spec_compliance:
       score: 15
       max: 15
@@ -108,26 +114,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct binary recurrence plot as matrix visualization
+        comment: Correct recurrence plot as matrix/heatmap visualization
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: main diagonal, Euclidean distance, binary
-          threshold, time-delay embedding, square plot'
+        comment: All features present including time-delay embedding and distance-based
+          color variant
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Both axes correctly represent time indices
+        comment: Both axes time indices, distance color-mapped correctly
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, no legend needed for single-series binary plot
+        comment: Title format correct, Distance legend present
     data_quality:
       score: 14
       max: 15
@@ -136,21 +142,21 @@ review:
         name: Feature Coverage
         score: 5
         max: 6
-        passed: true
-        comment: Shows diagonal lines, block structures, main diagonal. Vertical/horizontal
-          structures not prominently visible.
+        passed: false
+        comment: Shows diagonals, main diagonal, blocks; vertical/horizontal structures
+          not prominent
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Logistic map near chaos onset is a classic dynamical system
+        comment: Logistic map near chaos onset is a classic scientific context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: r=3.82, 300 steps, epsilon=0.15 all sensible parameters
+        comment: r=3.82, 300 steps, ε=0.15, dim=3 all sensible
     code_quality:
       score: 10
       max: 10
@@ -160,7 +166,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports, data, embedding, distance, plot, save'
+        comment: Clean linear flow
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -178,15 +184,15 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, sparse encoding is elegant
+        comment: Clean, Pythonic with smart sparse encoding
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html, current API
+        comment: Saves plot.png and plot.html, current API
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -194,15 +200,14 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good declarative grammar usage with encode, properties, configure.
-          Sparse encoding is smart.
+        comment: Good use of mark_rect, ordinal encoding, paddingInner=0, declarative
+          grammar
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
         passed: false
-        comment: Tooltips and HTML export leverage interactivity, but mark_rect would
-          be more idiomatic for matrix visualization
+        comment: Tooltips with formatted distance, HTML export, gradient legend customization
   verdict: REJECTED
 impl_tags:
   dependencies: []
@@ -213,4 +218,5 @@ impl_tags:
   - data-generation
   - matrix-construction
   dataprep: []
-  styling: []
+  styling:
+  - custom-colormap
