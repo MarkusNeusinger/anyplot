@@ -1,7 +1,7 @@
 library: highcharts
 specification_id: acf-pacf
 created: '2026-03-14T22:22:13Z'
-updated: '2026-03-14T22:50:56Z'
+updated: '2026-03-14T23:02:11Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23097477722
 issue: 4663
@@ -13,30 +13,31 @@ preview_html: https://storage.googleapis.com/pyplots-images/plots/acf-pacf/highc
 quality_score: 87
 review:
   strengths:
-  - Excellent data storytelling through significance color-coding (orange vs blue)
-    with data labels on significant bars
-  - Informative subtitle explaining the AR(2) pattern creates clear analytical context
-  - Robust CDN fallback chain for Highcharts JS with local npm fallback
-  - Clean dual-panel layout using Highcharts percentage-based y-axis positioning
-  - Interactive plot.html alongside static PNG leverages Highcharts dual-output capability
+  - 'Excellent data choice: AR(2) process perfectly demonstrates ACF exponential decay
+    and PACF cutoff'
+  - Strong visual hierarchy with orange significant bars and data labels
+  - Informative subtitle explains the statistical story
+  - 'Professional use of Highcharts features: HTML tooltips, hover states, interactive
+    HTML export'
+  - Clean well-organized code with proper CDN fallback
   weaknesses:
-  - Text overlap near lag 0 in ACF panel where r=1.0 data label crowds the 95% CI
-    plotLine label
-  - Could use slightly tighter y-axis range in ACF panel since lag 0 (1.0) dominates
-    and compresses the view of other correlations
+  - Column bars instead of stem lines (spec explicitly requests stems)
+  - Data labels slightly small (18px) relative to 4800px canvas
+  - Minor crowding of data labels at early ACF lags
   image_description: The plot displays two vertically stacked panels on a white background.
-    The title reads "acf-pacf · highcharts · pyplots.ai" with subtitle "AR(2) Process
-    — Exponential ACF Decay with PACF Cutoff at Lag 2". The top panel shows ACF values
-    from lag 0 to 35 as narrow vertical column bars. Lag 0 is dark blue reaching 1.0
-    with a "r=1.0" data label. Significant bars are colored orange (lags 1 at 0.42,
-    3 at -0.24, 4 at -0.15, 5 at 0.16) with value data labels, while non-significant
-    bars are blue (#306998). Orange dashed horizontal lines mark the 95% confidence
-    interval with a "95% CI" label. The bottom panel shows PACF from lag 1 to 35 with
-    the same color scheme — significant orange bars at lags 1 (0.42), 2 (-0.33), and
-    5 (0.16), with matching confidence bounds. Y-axes are labeled "ACF" and "PACF",
-    x-axis is labeled "Lag". A legend in the top right distinguishes "Significant
-    (|r| > 95% CI)" (orange) from "Non-significant" (blue). The layout is clean with
-    subtle grey gridlines.
+    The top panel shows ACF (autocorrelation) values from lag 0 to 35, and the bottom
+    panel shows PACF (partial autocorrelation) values from lag 1 to 35. The title
+    reads "acf-pacf · highcharts · pyplots.ai" in bold dark text, with a subtitle
+    "AR(2) Process — Exponential ACF Decay with PACF Cutoff at Lag 2" in gray. Bars
+    are colored in dark blue (#306998) for non-significant lags and orange (#e67e22)
+    for significant lags exceeding the 95% confidence interval. Orange dashed horizontal
+    lines mark the ±95% CI bounds, with a "95% CI" label on the right side of the
+    top panel. Data labels appear on significant bars showing their correlation values.
+    The ACF panel shows lag 0 at 1.0 with "r=1.0" label, lag 1 strongly positive (~0.42),
+    lag 2 negative (~-0.24), with exponential decay thereafter. The PACF panel shows
+    a sharp cutoff after lag 2, consistent with an AR(2) process. A legend in the
+    top-right distinguishes "Significant (|r| > 95% CI)" (orange) and "Non-significant"
+    (blue). The x-axis is labeled "Lag" and y-axes are labeled "ACF" and "PACF" respectively.
   criteria_checklist:
     visual_quality:
       score: 26
@@ -48,90 +49,97 @@ review:
         max: 8
         passed: true
         comment: All font sizes explicitly set (title 52px, subtitle 32px, axis titles
-          34-36px, ticks 24-28px, data labels 18px). Minor visual clutter at lag 0.
+          34px, tick labels 24-28px, data labels 18px). Data labels slightly small
+          but legible.
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Data label at lag 0 overlaps with 95% CI plotLine label in ACF panel.
+        comment: Minor crowding of data labels near early ACF lags (lags 2-3) but
+          all readable.
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: All bars visible with appropriate pointWidth=22 for 36 lags.
+        comment: Column bars clearly visible at pointWidth 22. Confidence bounds shown
+          as dashed lines.
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Blue/orange colorblind-safe pair with excellent contrast.
+        comment: Blue/orange palette is colorblind-friendly with good contrast.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good dual-panel layout, slightly generous margins.
+        comment: Plot fills ~65% of canvas. Good two-panel stacking. Slight excess
+          right margin.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Standard statistical notation (Lag, ACF, PACF), units not applicable.
+        comment: Lag x-axis, ACF/PACF y-axes appropriate. Correlation values are unitless.
     design_excellence:
-      score: 14
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Custom blue/orange palette, intentional font hierarchy, rounded bar
-          corners, shadow on tooltips. Above defaults.
+        comment: Custom blue/orange palette, explicit typography hierarchy, professional
+          Highcharts styling. Above defaults.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Subtle grid, credits disabled, clean zero baseline, good whitespace.
+        comment: Subtle grid, zero baseline marked, CI bounds well-styled with dashed
+          lines and label.
       - id: DE-03
         name: Data Storytelling
         score: 5
         max: 6
         passed: true
-        comment: Significance color-coding creates immediate visual hierarchy. Data
-          labels on key values. Subtitle names the pattern.
+        comment: AR(2) process demonstrates canonical pattern. Orange highlights and
+          subtitle explain the statistical story.
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Correct ACF/PACF dual-panel plot with vertical bars.
+        comment: Column bars instead of stem lines. Highcharts lacks native stem chart;
+          narrow columns are the practical approach.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: dual panels, CI bounds, lag 0 in ACF,
+        comment: 'All features present: ACF/PACF panels, 95% CI bounds, lag 0 in ACF,
           PACF from lag 1, 35 lags.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=lag, Y=correlation values correctly mapped.
+        comment: X = lag number, Y = correlation value. Correctly mapped.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches format. Legend explains significance colors.
+        comment: Title format correct. Legend distinguishes significant vs non-significant
+          bars.
     data_quality:
       score: 14
       max: 15
@@ -148,14 +156,15 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Classic textbook AR(2) model, neutral and appropriate. Synthetic
-          but well-parameterized.
+        comment: Synthetic AR(2) data is the standard pedagogical example. Neutral
+          and appropriate for statistics domain.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 200 observations, 35 lags, sensible AR coefficients (0.6, -0.3).
+        comment: AR coefficients (0.6, -0.3) sensible, 200 observations in range,
+          35 lags appropriate.
     code_quality:
       score: 10
       max: 10
@@ -165,7 +174,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean flat script with no functions or classes.
+        comment: 'Clean linear flow: imports, data, computation, chart config, series,
+          export.'
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -183,13 +193,14 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Well-organized, clean significance logic, robust CDN fallback.
+        comment: Well-organized, appropriate complexity. Practical workarounds for
+          format strings and CDN.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png via Selenium screenshot.
+        comment: Saves as plot.png. Current highcharts-core API.
     library_mastery:
       score: 8
       max: 10
@@ -199,15 +210,15 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Proper HighchartsOptions, ColumnSeries.from_dict, percentage-based
-          y-axis layout, plotLines.
+        comment: 'Good use of highcharts-core API: Chart, HighchartsOptions, ColumnSeries.from_dict(),
+          plotLines, multi-axis config.'
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: HTML tooltips, hover states, animation, plotLine labels, shadow styling,
-          interactive HTML output.
+        comment: HTML tooltips, hover states, animation, plotLines, interactive HTML
+          export, custom legend via dummy series.
   verdict: REJECTED
 impl_tags:
   dependencies:
@@ -223,6 +234,6 @@ impl_tags:
   - data-generation
   - iteration-over-groups
   dataprep:
-  - autocorrelation
+  - time-series
   styling:
   - grid-styling
