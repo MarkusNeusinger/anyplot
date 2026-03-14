@@ -1,7 +1,7 @@
 library: highcharts
 specification_id: recurrence-basic
 created: '2026-03-14T22:47:36Z'
-updated: '2026-03-14T22:51:40Z'
+updated: '2026-03-14T23:03:03Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23097948358
 issue: 4592
@@ -10,44 +10,45 @@ library_version: unknown
 preview_url: https://storage.googleapis.com/pyplots-images/plots/recurrence-basic/highcharts/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/recurrence-basic/highcharts/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/recurrence-basic/highcharts/plot.html
-quality_score: 76
+quality_score: 86
 review:
   strengths:
-  - 'Excellent spec compliance: implements all required features including time-delay
-    embedding, binary thresholding, and square layout'
-  - 'Strong data choice: logistic map at r=3.82 produces rich, scientifically meaningful
-    recurrence structure'
-  - Clean visual presentation with appropriate color choice and no clutter
-  - Proper CDN fallback mechanism for reliable rendering
+  - Perfect spec compliance with all required features including continuous color
+    enhancement
+  - Excellent data choice — logistic map at r=3.82 is canonical and reveals rich dynamics
+  - Clean well-organized code with proper vectorized computation
+  - Tasteful indigo color palette and clean visual design
+  - Informative subtitle with all relevant parameters
   weaknesses:
-  - Does not use highcharts_core Python library — builds raw JSON instead of using
-    the recommended Python API
-  - Design is functional but not publication-quality — needs more visual refinement
-  - X-axis title barely visible in rendered output
-  - No visual hierarchy or storytelling emphasis to guide the viewer to key patterns
-  image_description: 'The plot displays a square 3600x3600 recurrence plot of a logistic
-    map at r=3.82. Blue dots (Python Blue #306998) on a white background mark recurrent
-    state pairs where the distance between embedded states falls below the threshold.
-    The main diagonal is fully filled (self-recurrence). Prominent diagonal line structures
-    indicate deterministic behavior, with block-like clusters appearing at certain
-    time indices (~130, ~215, ~240) suggesting periodic windows. The title reads "Logistic
-    Map (r=3.82) · recurrence-basic · highcharts · pyplots.ai" at the top. The y-axis
-    is labeled "Time Index (j)" and is reversed (0 at top, ~298 at bottom). The x-axis
-    shows numeric tick labels from 0 to ~290. No grid lines are present, and no legend
-    is shown. The overall visual impression is of a clean binary recurrence matrix
-    with visible structural patterns characteristic of near-chaotic dynamics.'
+  - Library mastery could be improved by using chart.to_js_literal() instead of manual
+    JSON serialization
+  - Faint recurrence points at low strength values hard to see against background
+  - No visual storytelling emphasis — periodic windows not highlighted
+  - Colorbar area on right side could use more breathing room
+  image_description: The plot displays a recurrence plot rendered as a square heatmap
+    (3600x3600px) on a light gray background. The title "recurrence-basic · highcharts
+    · pyplots.ai" appears at the top in dark navy text, with a subtitle "Logistic
+    Map (r=3.82) — Takens Embedding (d=3, τ=1) — ε=0.152 — 298 time steps". Both axes
+    are labeled "Time Index (i)" and "Time Index (j)" running from 0 to approximately
+    298. The main diagonal is clearly visible as a continuous dark blue line. Off-diagonal
+    structures show parallel diagonal lines indicating deterministic dynamics, with
+    scattered lighter blue points for weaker recurrences. Notable dark blue block
+    structures appear around time indices ~125 and ~220, revealing laminar/periodic
+    windows. A vertical color bar on the right maps "Recurrence Strength" from 0.0
+    (very light lavender) to 1.0 (deep navy blue). The indigo-to-navy color palette
+    is cohesive. Grid lines are removed, leaving clean dark axis lines.
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 8
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title 44px, axis 32px, ticks 22px), readable
-          but axis titles appear small on 3600px canvas
+        comment: 'All font sizes explicitly set: title 48px, subtitle 32px, axis titles
+          36px, tick labels 24px, colorbar labels 22px'
       - id: VQ-02
         name: No Overlap
         score: 6
@@ -59,54 +60,52 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Recurrence points form clear patterns; individual cells small but
-          matrix structure reads well
+        comment: Points visible but some lighter recurrence points are faint against
+          light gray background
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Single blue on white, perfectly accessible
+        comment: Blue monochromatic gradient is colorblind-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Square format appropriate; some margin imbalance (left 250 vs right
-          100)
+        comment: Square format appropriate, colorbar area slightly cramped
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: Axis titles present but x-axis title barely visible in rendered output
+        comment: Time Index (i) and Time Index (j) are descriptive
     design_excellence:
-      score: 10
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Clean look with Python Blue, styled axes — well-configured default
-          but not exceptional
+        passed: true
+        comment: Custom indigo gradient palette, clean typography, light gray background.
+          Above defaults but not publication-exceptional
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Grid removed, tick marks removed, axis line color customized — some
-          refinement
+        passed: true
+        comment: Grid removed, clean axis lines, generous margins, good refinement
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: false
-        comment: Good data choice with parameter in title; patterns tell a story but
-          no emphasis guides the viewer
+        comment: Good data choice but no visual emphasis on periodic windows or structural
+          transitions
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -114,53 +113,51 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct binary recurrence plot using heatmap
+        comment: Correct recurrence plot as heatmap
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: time-delay embedding, Euclidean distance,
-          binary threshold, square plot'
+        comment: Main diagonal, Takens embedding, threshold, continuous color, square
+          plot
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Both axes correctly represent time indices
+        comment: Both axes correctly show time indices
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Title contains required format with extra context prepended; legend
-          appropriately disabled
+        comment: Title format correct, colorbar serves as legend
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows diagonal lines, block structures, and off-diagonal recurrence
-          — rich structure
+        comment: Shows diagonal lines, block structures, scattered points - excellent
+          feature demonstration
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Logistic map is a classic nonlinear dynamics example with real scientific
-          significance
+        comment: Logistic map at r=3.82 is canonical in nonlinear dynamics
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 300 time steps, 15% threshold, embedding dim=3 — well-chosen parameters
+        comment: 300 steps, d=3, tau=1, 15% threshold all appropriate
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -168,7 +165,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, embedding, distance, chart, render'
+        comment: Clean linear flow
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -183,33 +180,34 @@ review:
         comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Nested loop could use np.argwhere; CDN fallback adds bulk
+        passed: true
+        comment: Vectorized computation, practical CDN fallback
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png correctly
+        comment: Saves plot.png and plot.html
     library_mastery:
-      score: 4
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Does not use highcharts_core Python library; builds raw JSON dict
-          instead of recommended Chart API
+        passed: true
+        comment: Uses highcharts_core API but bypasses chart.to_js_literal() for manual
+          JSON serialization
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Uses heatmap module and colorAxis but applied minimally
+        passed: true
+        comment: Uses colorAxis, heatmap module, tooltip config - distinctive but
+          not deeply unique
   verdict: REJECTED
 impl_tags:
   dependencies:
@@ -221,8 +219,7 @@ impl_tags:
   patterns:
   - data-generation
   - matrix-construction
-  - iteration-over-groups
   dataprep:
-  - time-delay-embedding
+  - normalization
   styling:
   - custom-colormap
