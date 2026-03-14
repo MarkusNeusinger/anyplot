@@ -1,0 +1,227 @@
+library: altair
+specification_id: acf-pacf
+created: '2026-03-14T22:22:53Z'
+updated: '2026-03-14T22:47:58Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23097477548
+issue: 4663
+python_version: 3.14.3
+library_version: 6.0.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/acf-pacf/altair/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/acf-pacf/altair/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/acf-pacf/altair/plot.html
+quality_score: 92
+review:
+  strengths:
+  - Excellent data storytelling through semantic color coding (gold seasonal lags,
+    blue significant, muted non-significant)
+  - Clean visual design with removed spines, subtle gridlines, and well-proportioned
+    CI bands
+  - Perfect spec compliance with all required features present and correctly implemented
+  - Realistic airline-style data demonstrating clear seasonal ACF/PACF patterns
+  - Dual output (PNG + HTML) leverages Altair interactive capabilities
+  weaknesses:
+  - Legend text font size not explicitly configured
+  - Could leverage more Altair-specific features like selections or conditional encoding
+  image_description: 'The plot displays two vertically stacked panels — ACF (top)
+    and PACF (bottom) — rendered as stem plots with circular markers at the tips.
+    Three color categories are used: gold/amber for seasonal 12-month lags, dark blue
+    (#306998) for significant correlations, and muted light blue (#A0B4C8) for non-significant
+    ones. Horizontal red dashed lines mark the 95% confidence interval bounds (±1.96/√N),
+    with a light red shaded band between them. The ACF panel shows a clear sinusoidal
+    seasonal pattern with peaks at lags 0, 12, and 24 (gold stems), and troughs at
+    lags 6, 18, 30. The PACF panel shows strong significant values at early lags (1-4)
+    that quickly decay, with occasional significant spikes at seasonal harmonics.
+    Title reads "acf-pacf · altair · pyplots.ai" with a descriptive subtitle. X-axis
+    is labeled "Lag (months)" and Y-axes are "ACF" and "PACF" respectively. Layout
+    is clean with no x-axis grid and subtle dashed y-axis gridlines at very low opacity.'
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'Font sizes explicitly set: title 28pt, axis titles 22pt, tick labels
+          18pt. Legend text relies on defaults.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or elements anywhere
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Stems at strokeWidth=3 and circles at size=120 perfectly adapted
+          for 36 lags
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Gold, dark blue, muted blue are colorblind-safe. No red-green reliance.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Two panels fill canvas well with appropriate spacing
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Lag (months) includes units. ACF and PACF are standard descriptive
+          labels.
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom palette with semantic color coding. CI band with shaded region.
+          Clearly above defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: View stroke removed, x-grid disabled, y-grid subtle dashed at 0.15
+          opacity. Clean whitespace.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Gold seasonal lags create immediate visual focus on 12-month periodicity.
+          Subtitle guides interpretation.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct: ACF top, PACF bottom, vertical stem plots'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: stems, CI lines, lag 0 in ACF, PACF from
+          lag 1, 35 lags'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=lag, Y=correlation. Full data range shown.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct. Legend labels match color encoding.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows seasonal periodicity, trend effects, significant PACF early
+          lags, positive and negative correlations
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Airline-style monthly passenger data. Classic time series example,
+          neutral.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 200 observations, correlations in [-1,1], CI bounds ~±0.14 sensible
+          for N=200
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports, data, compute, charts, save. No functions/classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: altair, numpy, pandas, statsmodels'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-organized, appropriate complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot.png and plot.html. Current API.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Good declarative grammar: layer composition, vconcat, proper encoding
+          types, configure_*'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Tooltips, HTML export, mark_rule with y2 for stems, mark_rect for
+          CI bands
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - statsmodels
+  techniques:
+  - layer-composition
+  - subplots
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  dataprep:
+  - time-series
+  styling:
+  - grid-styling
