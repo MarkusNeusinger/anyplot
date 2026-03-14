@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 phase-diagram-pt: Thermodynamic Phase Diagram (Pressure-Temperature)
 Library: letsplot 4.9.0 | Python 3.14.3
-Quality: 81/100 | Created: 2026-03-14
+Quality: 90/100 | Created: 2026-03-14
 """
 
 import numpy as np
