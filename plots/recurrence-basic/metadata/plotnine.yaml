@@ -1,0 +1,227 @@
+library: plotnine
+specification_id: recurrence-basic
+created: '2026-03-14T22:46:06Z'
+updated: '2026-03-14T23:05:52Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23097948302
+issue: 4592
+python_version: 3.14.3
+library_version: 0.15.3
+preview_url: https://storage.googleapis.com/pyplots-images/plots/recurrence-basic/plotnine/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/recurrence-basic/plotnine/plot_thumb.png
+preview_html: null
+quality_score: 90
+review:
+  strengths:
+  - Excellent data storytelling with subtitle explaining recurrence patterns and red
+    dashed rectangle highlighting the laminar regime
+  - Custom blue gradient palette with professional, cohesive design language
+  - Strong spec compliance — all specification requirements met including time-delay
+    embedding, Euclidean distance, color-mapped variant, and logistic map data
+  - Clean, well-structured code with appropriate use of scipy for distance computation
+  - 'Thorough visual refinement: removed grids, subtle panel border, off-white background,
+    styled tick marks'
+  weaknesses:
+  - Weakest recurrence points are quite faint, slightly reducing visibility at the
+    low end of the color scale
+  - Canvas utilization could be tighter — some whitespace due to 14x12 figure with
+    square coord_equal plot
+  image_description: The plot displays a recurrence plot for a logistic map time series
+    (r=3.82) with time indices on both axes (0 to ~196). Recurrent points are rendered
+    as tiles colored on a blue gradient from very light blue (weak recurrence) to
+    dark navy (#053061, strong recurrence) against a white panel background. The main
+    diagonal is prominently visible as a continuous dark blue line. Numerous off-diagonal
+    lines run parallel to the main diagonal, indicating deterministic dynamics. A
+    dashed red rectangle highlights the "Laminar regime" region around time indices
+    118-152, with an italic red annotation label. The title reads "recurrence-basic
+    · plotnine · pyplots.ai" in bold, with a subtitle explaining "Diagonal lines →
+    determinism · Dense blocks → regime changes". A colorbar on the right shows "Recurrence
+    Strength" from Weak to Strong. The overall background is off-white (#fafaf7) with
+    clean, minimal styling — no grid lines, subtle panel border.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title=24, axis titles=20, tick labels=16,
+          legend title=16, legend text=14'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text elements anywhere
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Tiles well-sized, weakest recurrence points slightly faint
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue sequential palette is colorblind-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good proportions with coord_equal, some whitespace around legend
+          area
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis labels with scientific context
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom blue gradient palette, off-white background, red accent annotation,
+          cohesive design
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Grid removed, subtle panel border, off-white background, styled ticks,
+          generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtitle explains patterns, red dashed rectangle highlights laminar
+          regime
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct recurrence plot as color-mapped matrix visualization
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Time-delay embedding, Euclidean distance, threshold, color-mapped
+          variant, square plot, main diagonal
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Time indices correctly mapped to both axes
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct title format, legend labeled Recurrence Strength with Weak/Medium/Strong
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows diagonal lines, main diagonal, block structure, and laminar
+          regime
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Logistic map near onset of chaos is a classic nonlinear dynamics
+          example
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 200 time steps, r=3.82, threshold=0.12, embedding dim=3 delay=2 —
+          all sensible
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean linear flow: imports, data, embedding, distance, plot, save'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set, logistic map is deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used, scipy.spatial.distance.cdist appropriate
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-structured, appropriate complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with dpi=300, current API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good grammar-of-graphics composition with proper layer-based approach
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses scale_fill_gradientn, guide_colorbar(nbin=200), coord_equal,
+          annotate overlays
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - scipy
+  techniques:
+  - annotations
+  - colorbar
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep: []
+  styling:
+  - custom-colormap
+  - minimal-chrome

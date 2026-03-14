@@ -1,0 +1,238 @@
+library: seaborn
+specification_id: acf-pacf
+created: '2026-03-14T22:17:47Z'
+updated: '2026-03-14T22:50:54Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23097477569
+issue: 4663
+python_version: 3.14.3
+library_version: 0.13.2
+preview_url: https://storage.googleapis.com/pyplots-images/plots/acf-pacf/seaborn/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/acf-pacf/seaborn/plot_thumb.png
+preview_html: null
+quality_score: 90
+review:
+  strengths:
+  - Significance-based color coding with Python Blue palette creates immediate visual
+    hierarchy between important and noise lags
+  - Manual ACF/PACF computation via Durbin-Levinson recursion avoids external dependencies
+    while being mathematically correct
+  - FacetGrid with custom stem_plot mapping function is a well-executed seaborn-native
+    approach for multi-panel layouts
+  - Interpretive annotations tell a clear ARIMA identification story guiding viewer
+    attention
+  - Confidence band with subtle fill and dashed lines provides refined statistical
+    context
+  weaknesses:
+  - Annotation font sizes (13pt, 11pt) slightly undersized for the large canvas target
+  - Stem plot simulation via narrow barplot (width=0.15) is creative but not a native
+    seaborn stem plot capability
+  image_description: 'The plot displays two vertically stacked panels on a clean white
+    background. The top panel shows the Autocorrelation Function (ACF) from lag 0
+    to 35 with narrow stem-like bars and circular markers. Dark blue (#306998) stems
+    mark statistically significant lags, while light blue (#A8C4D8) marks values within
+    the 95% confidence interval. The ACF shows clear exponential decay from 1.0 at
+    lag 0, with the first ~8 lags significant. An annotation "lag 1: 0.79" with an
+    arrow highlights the first significant lag. Italic interpretive text reads "Gradual
+    decay → MA component." Orange dashed horizontal lines mark the confidence bounds
+    at ±1.96/√200, with a subtle orange-shaded fill between them. The bottom panel
+    shows the Partial Autocorrelation Function (PACF) starting from lag 1, with a
+    sharp spike at lag 1 (~0.79, annotated) and a negative spike at lag 2, then values
+    mostly within the CI bounds. Interpretive text reads "Sharp cutoff after lag 1
+    → AR(1) signature." A subtitle reads "Monthly Airline Passenger Residuals · ARMA(1,1)
+    with Seasonal Component · N = 200". Y-axes labeled "Autocorrelation (ACF)" and
+    "Partial Autocorrelation (PACF)", x-axis "Lag (months)". Legend in upper right
+    shows Significant, Within CI, and 95% CI entries. Title: "acf-pacf · seaborn ·
+    pyplots.ai". Spines removed, subtle y-axis grid.'
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'Font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt.
+          Annotation fonts (13pt, 11pt) slightly undersized for large canvas.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text. X-axis ticks thinned to every 5th label.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Stems and markers visible with s=90 and white edge. Light blue markers
+          could be slightly larger.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Dark blue vs light blue is colorblind-safe intensity distinction.
+          Orange CI lines provide good contrast.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Two panels with aspect=3.55 and height=4.5 fill canvas well. Balanced
+          margins.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Lag (months) with units. Descriptive y-axis labels.
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom significance palette, white-edged markers, CI band fill, clean
+          typography. Above defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines removed, subtle y-grid alpha=0.2, thinned x-ticks, generous
+          whitespace.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Significance coloring creates visual hierarchy. Annotations guide
+          attention. Interpretive text tells ARIMA story.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct ACF/PACF stem plots in two vertically stacked subplots.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: shared x-axis, stems, CI lines, lag 0
+          in ACF, PACF from lag 1, 35 lags.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=Lag, Y=correlation. Correct mapping.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct. Legend labels clear and well-placed.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: ARMA(1,1) with seasonal component shows exponential ACF decay, sharp
+          PACF cutoff, significant and non-significant lags.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Airline passenger residuals with monthly data. Real-world econometric
+          scenario communicated via subtitle.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Correlations bounded [-1,1]. CI correctly computed at ±0.139. 200
+          observations is sound.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: stem_plot function necessary for FacetGrid but adds structural complexity.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Manual Durbin-Levinson PACF avoids external deps. Clean structure,
+          no fake functionality.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png at 300 DPI. Current seaborn API.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: FacetGrid with map_dataframe is idiomatic. barplot width=0.15 as
+          stem proxy is creative but not standard.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: FacetGrid for faceting and hue-based significance coloring are seaborn-distinctive.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - faceting
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep:
+  - autocorrelation
+  styling:
+  - edge-highlighting
+  - grid-styling
+  - alpha-blending
