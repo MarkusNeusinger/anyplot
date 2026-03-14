@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 flamegraph-basic: Flame Graph for Performance Profiling
 Library: matplotlib 3.10.8 | Python 3.14.3
 Quality: 87/100 | Created: 2026-03-14
@@ -6,6 +6,7 @@ Quality: 87/100 | Created: 2026-03-14
 
 import matplotlib.colors as mcolors
 import matplotlib.patches as mpatches
+import matplotlib.patheffects as pe
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -35,18 +36,32 @@ stacks = {
 
 total_samples = stacks["main"]
 
+# Identify the hot path (widest child at each depth)
+hot_path_stacks = {"main"}
+current = "main"
+while True:
+    children = {
+        k: v for k, v in stacks.items() if k.startswith(current + ";") and k.count(";") == current.count(";") + 1
+    }
+    if not children:
+        break
+    hottest = max(children, key=children.get)
+    hot_path_stacks.add(hottest)
+    current = hottest
+
 # Build flame graph rectangles with parent offset tracking
 positions = {"main": (0.0, total_samples)}
 rects = []
-parent_offsets = {}  # tracks current x offset for children of each parent
+parent_offsets = {}
 
 for stack_path, samples in stacks.items():
     parts = stack_path.split(";")
     depth = len(parts) - 1
     func_name = parts[-1]
+    is_hot = stack_path in hot_path_stacks
 
     if depth == 0:
-        rects.append((depth, func_name, 0.0, samples))
+        rects.append((depth, func_name, 0.0, samples, is_hot))
         continue
 
     parent = ";".join(parts[:-1])
@@ -57,13 +72,13 @@ for stack_path, samples in stacks.items():
     x_start = parent_offsets.get(parent, parent_x)
     positions[stack_path] = (x_start, samples)
     parent_offsets[parent] = x_start + samples
-    rects.append((depth, func_name, x_start, samples))
+    rects.append((depth, func_name, x_start, samples, is_hot))
 
-# Warm color palette - color by proportion of total samples (hot path = hotter colors)
-warm_colors = ["#FFF3B0", "#FFDD57", "#FFB627", "#FF9505", "#FF6700", "#E8430A", "#D62828"]
+# Warm color palette with more dramatic range for hot vs cold distinction
+warm_colors = ["#FEF9E7", "#FDE68A", "#FBBF24", "#F59E0B", "#EF6C00", "#D32F2F", "#B71C1C"]
 cmap = mcolors.LinearSegmentedColormap.from_list("flame", warm_colors, N=256)
 
-# Plot using matplotlib Rectangle patches
+# Plot
 fig, ax = plt.subplots(figsize=(16, 9))
 fig.set_facecolor("#FAFAFA")
 ax.set_facecolor("#FAFAFA")
@@ -71,13 +86,12 @@ ax.set_facecolor("#FAFAFA")
 bar_height = 0.88
 max_depth = max(r[0] for r in rects)
 
-for depth, func_name, x_start, width in rects:
-    # Color mapped to proportion of total samples - wider bars get hotter colors
+for depth, func_name, x_start, width, _is_hot in rects:
     proportion = width / total_samples
-    color_val = np.clip(proportion * 2.5, 0.05, 1.0)
+    # More dramatic color mapping: cubic curve for stronger hot/cold contrast
+    color_val = np.clip(proportion**0.6 * 1.8, 0.03, 1.0)
     color = cmap(color_val)
 
-    # Use matplotlib FancyBboxPatch for rounded corners on wide bars
     rect = mpatches.FancyBboxPatch(
         (x_start, depth - bar_height / 2),
         width,
@@ -86,6 +100,7 @@ for depth, func_name, x_start, width in rects:
         facecolor=color,
         edgecolor="white",
         linewidth=0.8,
+        zorder=2,
     )
     ax.add_patch(rect)
 
@@ -93,16 +108,17 @@ for depth, func_name, x_start, width in rects:
     bar_fraction = width / total_samples
     if bar_fraction > 0.05:
         label = func_name
-        # Add percentage on major bars for data storytelling
         if bar_fraction > 0.12:
             label = f"{func_name} ({bar_fraction:.0%})"
-            fontsize = 14
-            fontweight = "semibold"
+            fontsize = 15
+            fontweight = "bold"
         else:
-            fontsize = 12
+            fontsize = 14
             fontweight = "medium"
 
-        text_color = "#1a1a1a" if color_val < 0.7 else "#FFFFFF"
+        text_color = "#1a1a1a" if color_val < 0.55 else "#FFFFFF"
+        # Path effects for text readability on colored backgrounds
+        path_effects = [pe.withStroke(linewidth=2.5, foreground="white" if color_val < 0.55 else "#00000044")]
         ax.text(
             x_start + width / 2,
             depth,
@@ -113,15 +129,33 @@ for depth, func_name, x_start, width in rects:
             fontweight=fontweight,
             color=text_color,
             clip_on=True,
+            path_effects=path_effects,
+            zorder=5,
         )
 
+# Hot path annotation pointing to the deepest hot path bar
+hot_leaf = max((r for r in rects if r[4]), key=lambda r: r[0])
+leaf_cx = hot_leaf[2] + hot_leaf[3] / 2
+ax.annotate(
+    "  Hot path (CPU bottleneck)  ",
+    xy=(leaf_cx, hot_leaf[0] + bar_height / 2 + 0.02),
+    xytext=(leaf_cx + 250, hot_leaf[0] + 1.15),
+    fontsize=13,
+    fontweight="semibold",
+    color="#B71C1C",
+    ha="center",
+    arrowprops={"arrowstyle": "-|>", "color": "#C62828", "lw": 1.5, "connectionstyle": "arc3,rad=0.25"},
+    bbox={"boxstyle": "round,pad=0.35", "facecolor": "#FFF3E0", "edgecolor": "#E65100", "alpha": 0.92, "linewidth": 1.0},
+    zorder=10,
+)
+
 # Style
-ax.set_xlim(-5, total_samples + 5)
-ax.set_ylim(-0.6, max_depth + 0.7)
+ax.set_xlim(-10, total_samples + 15)
+ax.set_ylim(-0.6, max_depth + 1.6)
 ax.set_xlabel("CPU Samples", fontsize=20, labelpad=10)
 ax.set_ylabel("Stack Depth", fontsize=20, labelpad=10)
-ax.set_title("flamegraph-basic · matplotlib · pyplots.ai", fontsize=24, fontweight="medium", pad=16)
-ax.tick_params(axis="both", labelsize=16)
+ax.set_title("flamegraph-basic · matplotlib · pyplots.ai", fontsize=24, fontweight="medium", pad=16, color="#333333")
+ax.tick_params(axis="both", labelsize=16, colors="#555555")
 ax.set_yticks(range(max_depth + 1))
 ax.spines["top"].set_visible(False)
 ax.spines["right"].set_visible(False)
