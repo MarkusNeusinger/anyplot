@@ -1,0 +1,224 @@
+library: letsplot
+specification_id: acf-pacf
+created: '2026-03-14T22:20:10Z'
+updated: '2026-03-14T22:32:18Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23097477745
+issue: 4663
+python_version: 3.14.3
+library_version: 4.9.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/acf-pacf/letsplot/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/acf-pacf/letsplot/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/acf-pacf/letsplot/plot.html
+quality_score: 90
+review:
+  strengths:
+  - Excellent significance coloring (red/blue) with proper legend creates immediate
+    visual hierarchy and data storytelling
+  - Clean two-panel layout using ggbunch with well-proportioned panels
+  - Classic airline-style seasonal data produces compelling and realistic ACF/PACF
+    pattern showing clear AR and seasonal components
+  - All spec requirements met with correct computation via statsmodels
+  - All font sizes explicitly set for consistent readability at target resolution
+  - 'Good visual refinement: subtle y-grid only, removed unnecessary chrome'
+  weaknesses:
+  - Vertical spacing between panels is slightly tight due to ggbunch overlapping region
+    approach
+  - Library mastery could be deeper with more lets-plot distinctive features
+  image_description: The plot displays two vertically stacked panels on a light background.
+    The top panel shows ACF values and the bottom shows PACF values, both sharing
+    an x-axis labeled "Lag" with breaks at 0, 6, 12, 18, 24, 30, 36. Vertical stem
+    lines (size 2.5) extend from a zero baseline to correlation values, capped with
+    circular markers (size 4.5). Stems are colored blue (#306998) for non-significant
+    lags and red (#C0392B) for significant lags exceeding the 95% confidence bounds
+    shown as horizontal gray dashed lines. A legend in the upper-right of the ACF
+    panel explains "Non-significant" (blue) and "Significant" (red). The bold centered
+    title reads "acf-pacf · letsplot · pyplots.ai". The ACF panel shows a clear sinusoidal
+    seasonal pattern with strong positive spikes at lags 12, 24, 36 and negative dips
+    at lags 6, 18, 30. Lag 0 is blue at 1.0. The PACF panel shows a sharp spike at
+    lag 1, then seasonal spikes with most values falling within the confidence bounds
+    after the initial lags. Subtle gray y-axis grid lines provide reference without
+    clutter.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title=24, axis_title=20, axis_text=16,
+          legend_text=16'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping elements anywhere
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Stems and points well-adapted to 37 lags after size increase
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue/red scheme is colorblind-safe with strong contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good layout but vertical spacing between panels slightly tight
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: ACF, PACF, and Lag are appropriate descriptive labels
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Strong design with flavor_high_contrast_light, intentional significance
+          coloring, clean legend
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Removed x-grid and minor grid, subtle y-grid, styled legend background
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Red/blue significance coloring creates immediate visual hierarchy
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct ACF/PACF stem plots in two vertically stacked subplots
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: All spec features present including CI bounds, lag 0 in ACF, PACF
+          from lag 1
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=lag, Y=correlation values correctly mapped
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct, legend with clear significance labels
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows seasonal pattern, both positive/negative correlations, significant
+          and non-significant lags
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Classic airline-style passenger data with trend and seasonality
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 200 observations, correlations in [-1,1], realistic 12-month seasonality
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports, data, compute, plot, save'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean color column mapping approach, appropriate complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png and plot.html with current API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good ggplot grammar usage with geom_segment, geom_point, geom_hline,
+          theme composition
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses flavor_high_contrast_light, ggbunch, and export_ggsave with
+          scale
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - statsmodels
+  techniques:
+  - subplots
+  - layer-composition
+  - custom-legend
+  patterns:
+  - data-generation
+  dataprep:
+  - time-series
+  styling:
+  - grid-styling

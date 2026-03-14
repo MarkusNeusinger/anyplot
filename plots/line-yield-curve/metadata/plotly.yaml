@@ -1,0 +1,226 @@
+library: plotly
+specification_id: line-yield-curve
+created: '2026-03-14T22:17:00Z'
+updated: '2026-03-14T22:30:18Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23097460437
+issue: 4664
+python_version: 3.14.3
+library_version: 6.6.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/line-yield-curve/plotly/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/line-yield-curve/plotly/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/line-yield-curve/plotly/plot.html
+quality_score: 91
+review:
+  strengths:
+  - Excellent data storytelling with inversion zone annotation and basis-point spread
+    callout
+  - Realistic U.S. Treasury data showing all three classic yield curve shapes
+  - Professional financial chart aesthetic with spline curves, differentiated markers,
+    and subtle grid
+  - Clean code structure with efficient loop pattern for multiple traces
+  weaknesses:
+  - Legend position slightly overlaps the start of the flat/inverted curves
+  - Olive color (#BCBD22) for the inverted curve is slightly less polished than the
+    blue tones
+  image_description: 'The plot displays three U.S. Treasury yield curves on a clean
+    off-white background. The x-axis shows "Maturity" from 1M to 30Y on a log scale
+    with proper tick labels. The y-axis shows "Yield (%)" from 0% to ~6.5% with percentage
+    suffixes and subtle dotted gridlines. Three curves are plotted: Jan 2022 (Normal)
+    in dark steel blue with circle markers showing a classic upward slope from ~0.08%
+    to ~2.27%; Jun 2023 (Flat) in teal/cyan with diamond markers ranging ~3.84-5.47%;
+    Oct 2023 (Inverted) in olive-green with square markers ranging ~4.62-5.56%. All
+    lines use spline interpolation and have white-bordered markers. A subtle yellow-green
+    shaded horizontal band highlights the inversion zone, with an annotated callout
+    "Inversion Zone - Short-term yields exceed long-term yields" with an arrow. A
+    "+264 bps at 10Y" annotation sits between the inverted and normal curves near
+    the 10Y mark. The legend is positioned top-left with a semi-transparent white
+    background. The title "U.S. Treasury Yield Curves" appears at top center with
+    subtitle "line-yield-curve · plotly · pyplots.ai" in gray.'
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 28pt, axis labels 22pt, ticks
+          18pt, legend 20pt, annotations 15-16pt'
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Legend slightly overlaps start of flat/inverted curves but text remains
+          readable
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Line width=4, marker size=12 with white borders, well adapted to
+          low density
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Steel blue, teal, olive palette avoids red-green confusion with good
+          contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 4800x2700 with well-tuned margins, plot fills >60% of canvas
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Yield (%) includes units, Maturity is descriptive with meaningful
+          tick labels
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom palette, spline interpolation, differentiated markers, professional
+          financial aesthetic
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle dotted grid, no x-grid, off-white background, light axis lines
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Inversion zone annotation, +264 bps spread callout, descriptive curve
+          labels guide interpretation
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct line chart with multiple yield curves
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: log x-axis, maturity labels, 3 curves,
+          inversion highlight, legend, professional style'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=maturity_years log-scaled, Y=yield_pct, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct title format with subtitle, descriptive legend labels with
+          dates and curve types
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows normal, flat, and inverted yield curve shapes
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: U.S. Treasury data with realistic values for cited periods
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Yields 0.08-5.56% consistent with actual rates, maturities 1M-30Y
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean Imports-Data-Plot-Save flow with efficient loop
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: All data hardcoded as deterministic arrays
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only numpy and plotly.graph_objects, both used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-structured loop over tuples, appropriate complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot.png at 4800x2700 and plot.html, current API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good go.Scatter with add_trace pattern, update_layout with template
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Spline interpolation, hovertemplate, hrect shading, spike lines,
+          x-unified hover, HTML export
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - hover-tooltips
+  - html-export
+  - manual-ticks
+  patterns:
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - grid-styling
+  - edge-highlighting
