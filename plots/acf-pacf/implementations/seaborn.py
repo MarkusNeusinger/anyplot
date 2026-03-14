@@ -1,7 +1,7 @@
 """ pyplots.ai
 acf-pacf: Autocorrelation and Partial Autocorrelation (ACF/PACF) Plot
 Library: seaborn 0.13.2 | Python 3.14.3
-Quality: 88/100 | Created: 2026-03-14
+Quality: 90/100 | Created: 2026-03-14
 """
 
 import matplotlib.pyplot as plt
