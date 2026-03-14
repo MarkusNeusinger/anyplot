@@ -1,7 +1,7 @@
 library: bokeh
 specification_id: recurrence-basic
 created: '2026-03-14T22:46:47Z'
-updated: '2026-03-14T22:50:20Z'
+updated: '2026-03-14T23:00:31Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23097948287
 issue: 4592
@@ -10,97 +10,107 @@ library_version: 3.9.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/recurrence-basic/bokeh/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/recurrence-basic/bokeh/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/recurrence-basic/bokeh/plot.html
-quality_score: 84
+quality_score: 87
 review:
   strengths:
-  - 'Excellent spec compliance: implements all required features including Takens
-    time-delay embedding, Euclidean distance, and binary thresholding'
-  - 'Outstanding data choice: Lorenz attractor naturally produces compelling, visually
-    rich recurrence structure with clear block patterns and diagonal lines'
-  - 'Clean visual refinement: removed grid, outline, and minor ticks; subtle background
-    styling'
-  - Perfect code quality with KISS structure and appropriate complexity
+  - Excellent spec compliance — implements all required features including time-delay
+    embedding and distance-based color mapping
+  - Cividis colormap (reversed) is both colorblind-safe and follows the convention
+    of dark = recurrent
+  - Storytelling annotations identify key recurrence features (laminar regime, deterministic
+    diagonals)
+  - Interactive HoverTool provides distance values at grid points — genuine Bokeh
+    interactivity
+  - Clean, linear code structure with good scientific data (Lorenz attractor)
   weaknesses:
-  - Design lacks sophistication for publication quality - consider distance-based
-    color mapping variant with perceptually uniform colormap
-  - No visual hierarchy or storytelling cues to help viewers interpret recurrence
-    patterns
-  - Library mastery is basic - not leveraging Bokeh distinctive features like HoverTool,
-    ColorBar, or ColumnDataSource
-  image_description: The plot shows a square binary recurrence plot of the Lorenz
-    attractor x-component. Dark blue (#306998) points on a light gray-blue (#f0f4f8)
-    background indicate recurrent state pairs. The main diagonal is clearly filled
-    (self-recurrence). Prominent square block structures appear along the diagonal,
-    indicating laminar/periodic behavior in the Lorenz system. Diagonal line segments
-    parallel to the main diagonal reveal deterministic dynamics. The pattern shows
-    characteristic quasi-periodic structure with varying density regions. Both axes
-    are labeled "Time Index" ranging from 0 to ~490. The title reads "Lorenz Attractor
-    · recurrence-basic · bokeh · pyplots.ai". The plot is square (3600x3600), grid
-    lines are removed, and the background is subtly styled.
+  - Annotation labels are positioned close together in lower-left and hard to read
+    against the busy matrix pattern
+  - Colorbar is narrow (width=40) and could be more prominent for better readability
+  - Design polish could be elevated — annotation styling uses a single blue color,
+    could use more contrast or hierarchy
+  image_description: 'The plot displays a square recurrence plot (distance matrix)
+    of the Lorenz attractor x-component. Both axes represent "Time Index (Lorenz x-component,
+    dt=0.01)" ranging from 0 to ~490. The matrix uses a reversed Cividis colormap
+    where dark blue/purple represents distant states and bright yellow represents
+    recurrent (close) states. The main diagonal is clearly visible as a dark line.
+    The plot shows prominent block structures (yellow squares) indicating recurring
+    regimes, and diagonal line patterns indicating deterministic dynamics. Two annotation
+    labels with blue semi-transparent backgrounds appear in the lower-left area: "Laminar
+    regime" (horizontal) and "Deterministic diagonals" (rotated ~45°). A threshold
+    annotation in the top-left reads "Recurrence threshold ε = [value] (10th percentile)".
+    A vertical colorbar on the right shows "Normalized Distance" from 0.0 to 1.0.
+    The title reads "Lorenz Attractor · recurrence-basic · bokeh · pyplots.ai". Grid
+    lines are removed, background is light gray (#fafafa), and the overall appearance
+    is clean and scientific.'
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 28pt, axis labels 22pt, tick
-          labels 18pt'
+        comment: Font sizes explicitly set (28pt title, 22pt labels, 18pt ticks).
+          Annotation labels slightly small against busy matrix background.
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: No significant overlap. Two annotations close together in lower-left;
+          rotated text slightly reduces clarity.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Binary recurrence matrix rendered clearly with strong contrast
+        comment: Matrix renders with clear, distinct recurrence patterns. Block structures
+          and diagonal lines easily visible.
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Two-color scheme fully colorblind-safe
+        comment: Cividis is perceptually uniform and colorblind-safe.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Square plot fills canvas well, minor right margin padding
+        comment: Square format correct. Colorbar area slightly compressed (width=40
+          on 3600px canvas).
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: Time Index is descriptive but generic, no units
+        comment: Descriptive labels with context including units.
     design_excellence:
-      score: 11
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Clean two-color palette but looks like well-configured default
+        passed: true
+        comment: Reversed Cividis palette, styled annotation backgrounds, clean axis
+          styling. Above defaults but not publication-quality.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Grid removed, outline removed, minor ticks removed, subtle background
+        comment: Grid removed, outline removed, custom backgrounds, axis styling customized.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Lorenz data naturally compelling but no visual emphasis guides viewer
+        passed: true
+        comment: Annotations identify key recurrence features. Threshold annotation
+          provides scientific context.
     spec_compliance:
       score: 15
       max: 15
@@ -110,50 +120,50 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct binary recurrence plot as matrix visualization
+        comment: Correct recurrence plot as distance-based matrix visualization.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features: time-delay embedding, Euclidean distance, binary threshold,
-          main diagonal, square plot'
+        comment: 'All features: distance matrix, time-delay embedding, Lorenz data,
+          colorbar, threshold, square plot.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Both axes correctly represent time indices
+        comment: Both axes correctly represent time indices. Main diagonal present.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format with descriptive prefix
+        comment: Title format correct with descriptive prefix. No legend needed.
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: 'Shows all key recurrence features: main diagonal, blocks, parallel
-          diagonals, varying density'
+        comment: Shows diagonal lines, block structures, main diagonal. Good coverage
+          of recurrence features.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Lorenz attractor is canonical dynamical system, neutral scientific
-          context
+        comment: Lorenz attractor is a classic dynamical system. Perfect scientific
+          context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 500 points, sensible embedding parameters, 10th percentile threshold
+        comment: Standard Lorenz parameters, 500 points in recommended range.
     code_quality:
       score: 10
       max: 10
@@ -163,56 +173,64 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean linear flow with no functions or classes
+        comment: 'Clean linear flow: imports, simulation, embedding, distance, plot,
+          styling, save.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: All imports used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for the visualization
+        comment: Clean, well-structured. HoverTool with invisible scatter is idiomatic
+          Bokeh.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png and plot.html, current API
+        comment: Saves plot.png and plot.html.
     library_mastery:
-      score: 5
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
-        passed: false
-        comment: Uses p.image() correctly but does not use ColumnDataSource
+        passed: true
+        comment: 'Uses Bokeh idiomatically: figure, image, ColorBar, HoverTool, Label,
+          ColumnDataSource.'
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 4
         max: 5
-        passed: false
-        comment: p.image() and HTML export are distinctive but no HoverTool or ColorBar
+        passed: true
+        comment: HoverTool with invisible scatter overlay, HTML export with CDN —
+          distinctively Bokeh features.
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
+  - colorbar
+  - annotations
+  - hover-tooltips
   - html-export
   patterns:
   - data-generation
   - matrix-construction
+  - columndatasource
   dataprep:
-  - time-delay-embedding
+  - normalization
   styling:
-  - minimal-chrome
+  - custom-colormap
