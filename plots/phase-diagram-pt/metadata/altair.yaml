@@ -1,7 +1,7 @@
 library: altair
 specification_id: phase-diagram-pt
 created: '2026-03-14T14:52:32Z'
-updated: '2026-03-14T14:56:07Z'
+updated: '2026-03-14T15:05:16Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23090166820
 issue: 4666
@@ -10,34 +10,37 @@ library_version: 6.0.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/phase-diagram-pt/altair/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/phase-diagram-pt/altair/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/phase-diagram-pt/altair/plot.html
-quality_score: 82
+quality_score: 87
 review:
   strengths:
-  - Excellent scientific accuracy with Clausius-Clapeyron approximation for realistic
-    phase boundaries
-  - Water anomalous negative-slope solid-liquid boundary correctly implemented
-  - Clean layered composition with watermark-style phase region labels
-  - Good data storytelling with prominent special points and clear phase structure
-  - Deterministic well-structured code with appropriate use of physics
+  - Perfect spec compliance with all required features including water anomalous negative
+    solid-liquid slope
+  - Excellent use of real thermodynamic data with Clausius-Clapeyron approximations
+  - Clean well-structured code with deterministic data generation
+  - Phase region labels at low opacity are an elegant design choice
+  - Good color accessibility with blue/orange/purple palette
   weaknesses:
-  - Red-green color scheme for Liquid-Gas and Solid-Liquid boundaries is not colorblind-safe
-  - Legend title truncated showing Boundary Key Poi instead of full text
-  - Title has extra prefix beyond required spec-id library pyplots.ai format
-  image_description: 'The plot shows a Water P-T Phase Diagram with Temperature (K)
-    on the x-axis (200-700) and Pressure (Pa) on the y-axis (1 to 1,000,000,000) using
-    a logarithmic scale. Three phase boundary curves are displayed: a blue Solid-Gas
-    curve from the lower left up to the triple point, a red Liquid-Gas curve from
-    the triple point rightward to the critical point, and a green Solid-Liquid curve
-    going nearly vertically upward from the triple point. The triple point is marked
-    with a blue-gray filled circle at ~273 K / ~612 Pa with an orange text label.
-    The critical point is marked with a red-orange filled circle at ~647 K / ~22 MPa
-    with a purple text label. Large faded watermark-style text labels SOLID, LIQUID,
-    and GAS are placed in their respective phase regions. The legend in the upper
-    right shows boundary types and key points but the title is truncated. The overall
-    title reads Water P-T Phase Diagram phase-diagram-pt altair pyplots.ai.'
+  - Annotation label fontSize (15) could be larger for better readability
+  - Legend split into two groups takes more vertical space than needed
+  - No background shading or color fills in phase regions to visually distinguish
+    them
+  - Could leverage more distinctive Altair features (selections, conditional encoding)
+  image_description: 'The plot displays a water pressure-temperature phase diagram
+    on a logarithmic pressure axis. Three phase boundary curves are drawn: Solid-Gas
+    (blue, #306998) curving from lower-left up to the triple point, Liquid-Gas (orange,
+    #e68a00) sweeping from the triple point rightward and upward to the critical point,
+    and Solid-Liquid (purple, #8b5cf6) rising nearly vertically from the triple point.
+    The Triple Point is marked with a blue filled circle at 273.16 K / 611.7 Pa with
+    a gold text label to its right. The Critical Point is marked with an orange filled
+    circle at 647.1 K / 22.06 MPa with a purple text label to its left. Large, faded
+    (18% opacity) phase region labels - SOLID, LIQUID, GAS - are placed in their respective
+    regions. The title reads "phase-diagram-pt · altair · pyplots.ai" with subtitle
+    "Water Pressure-Temperature Phase Diagram". Axes are labeled "Temperature (K)"
+    and "Pressure (Pa)". A legend in the upper-right shows both Phase Boundary colors
+    and Key Points markers.'
   criteria_checklist:
     visual_quality:
-      score: 24
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -45,43 +48,41 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set throughout (title 28, axes 18/22, legend
-          18/16, point labels 15, phase labels 32). Point label font slightly small
-          but readable.
+        comment: Font sizes explicitly set throughout. Annotation labels at fontSize=15
+          slightly small.
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 6
         max: 6
         passed: true
-        comment: Legend title truncated. Triple point label close to curve intersection.
-          Minor crowding near triple point.
+        comment: No overlapping text elements. Labels positioned with dx/dy offsets.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Lines at strokeWidth=3 clearly visible. Markers at size=300 prominent.
-          Phase watermark labels appropriately subtle at opacity=0.18.
+        comment: Lines at strokeWidth=3 visible. Points size=300 with white stroke
+          stand out well.
       - id: VQ-04
         name: Color Accessibility
-        score: 2
-        max: 4
-        passed: false
-        comment: Red and green boundary colors create colorblind accessibility issue.
-      - id: VQ-05
-        name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills canvas well with balanced margins.
+        comment: Blue/orange/purple palette is colorblind-safe with strong contrast.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good canvas utilization. Legend with two groups is slightly large.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Temperature (K) and Pressure (Pa) are descriptive with units.
+        comment: Temperature (K) and Pressure (Pa) descriptive with units.
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -89,24 +90,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom color palette, watermark-style phase labels, intentional hierarchy.
-          Above defaults but not publication-level.
+        comment: Custom palette, white-stroked points, faded phase labels. Above defaults
+          but not publication-ready.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Grid opacity 0.15, view stroke removed, configured legend. Some refinement
-          but truncated legend detracts.
+        comment: Grid opacity 0.15, view stroke removed, legend well-configured.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Good visual hierarchy with faded phase labels, prominent special
-          points, eye follows triple to critical point.
+        comment: Clear hierarchy with emphasized key points and faded region labels.
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -114,28 +113,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct P-T phase diagram with boundary curves and logarithmic pressure
-          axis.
+        comment: Correct P-T phase diagram with all three boundaries.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All three phase boundaries, triple and critical points annotated,
-          phase regions labeled, log axis, water data.
+        comment: All spec features present including negative slope for water.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Temperature on X, pressure on Y, all data visible.
+        comment: Temperature on X, Pressure on Y (log scale), all data visible.
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Title includes spec-id, library, pyplots.ai but has extra prefix.
-          Legend title truncated.
+        comment: Title follows spec-id format. Legend labels match data.
     data_quality:
       score: 15
       max: 15
@@ -145,21 +141,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All three boundaries, triple and critical points, all phases labeled.
-          Water negative-slope solid-liquid correctly captured.
+        comment: All phase boundaries, both key points, negative slope for water.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real water phase diagram data with Clausius-Clapeyron approximation.
-          Physically accurate constants.
+        comment: Real water phase diagram with Clausius-Clapeyron approximations.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: All values physically accurate for water.
+        comment: Values match known water thermodynamic data.
     code_quality:
       score: 10
       max: 10
@@ -169,13 +163,13 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports-data-plot-save structure, no functions or classes.
+        comment: Linear flow with no functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic data from physics equations.
+        comment: Fully deterministic from physical constants.
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -187,7 +181,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Well-organized, appropriate complexity.
+        comment: Clean Pythonic code with appropriate complexity.
       - id: CQ-05
         name: Output & API
         score: 1
@@ -203,15 +197,14 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good declarative API usage with layering, encoding, scales, configure
-          methods.
+        comment: Good declarative patterns with layered composition, typed encodings,
+          configure_*.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses layer composition, tooltips, interactive zoom/pan, HTML export,
-          declarative encoding.
+        comment: Uses tooltips, interactive(), HTML export, alt.layer().
   verdict: REJECTED
 impl_tags:
   dependencies: []
