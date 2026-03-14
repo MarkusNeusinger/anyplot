@@ -1,0 +1,227 @@
+library: seaborn
+specification_id: line-yield-curve
+created: '2026-03-14T22:16:37Z'
+updated: '2026-03-14T22:21:14Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23097460427
+issue: 4664
+python_version: 3.14.3
+library_version: 0.13.2
+preview_url: https://storage.googleapis.com/pyplots-images/plots/line-yield-curve/seaborn/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/line-yield-curve/seaborn/plot_thumb.png
+preview_html: null
+quality_score: 90
+review:
+  strengths:
+  - Excellent data storytelling with three distinct yield curve shapes and inversion
+    highlighting
+  - Professional financial-publication aesthetic with custom palette and clean styling
+  - Perfect spec compliance — all required features implemented
+  - Realistic Treasury yield data with appropriate values for each date
+  - Clean, well-structured code with deterministic data
+  weaknesses:
+  - Title font size (22pt) and x-tick label font size (14pt) slightly below recommended
+    minimums
+  - Red-green color pair could challenge colorblind users despite marker shape differentiation
+  - Limited seaborn-specific feature usage — most visual refinement relies on matplotlib
+  image_description: The plot displays three U.S. Treasury yield curves on a landscape
+    (16:9) canvas with a logarithmic x-axis. The blue curve with circle markers (2021-07-15,
+    Normal) shows a classic upward-sloping yield curve rising from near 0% at 1M to
+    ~2% at 30Y. The red curve with X markers (2023-07-15, Inverted) peaks around 5.5%
+    at 6M and slopes downward, clearly demonstrating yield curve inversion. The green
+    curve with square markers (2024-09-15, Flat) starts near 5% and descends to ~3.5-4%.
+    A light pink shaded region between 2Y and 10Y highlights the inversion zone on
+    the red curve, with a "2Y–10Y Inversion" text annotation in red. Top and right
+    spines are removed, a subtle y-axis grid is present, and the legend is positioned
+    center-left with a "Date" title. The title reads "U.S. Treasury Yield Curves ·
+    line-yield-curve · seaborn · pyplots.ai".
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set and readable. Title 22pt (guideline
+          ≥24pt) and x-tick labels 14pt (guideline ≥16pt) slightly below minimums.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text; log-scale spacing ensures tick labels are well-separated.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Lines at linewidth=3 and markers at size=10 are perfectly visible;
+          three distinct marker shapes aid differentiation.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 3
+        max: 4
+        passed: true
+        comment: Custom palette has red-green pair that could challenge colorblind
+          users, but different marker shapes provide secondary visual channel.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills canvas well with tight_layout and bbox_inches='tight'.
+          Balanced margins.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Maturity is descriptive, Yield (%) includes units.
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom color palette, distinct marker styles, professional financial-publication
+          aesthetic. Clearly above library defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Top/right spines removed, subtle y-axis grid, minor tick locators
+          cleaned up for log scale.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Three curve types convey economic narrative. Inversion shading draws
+          eye to key insight.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct line plot with multiple curves showing yield term structure.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: multiple curves, log-scale x-axis, inversion
+          highlighting, legend.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: maturity_years on x-axis, yield_pct on y-axis, hue by date. Correct
+          mapping.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title includes required format with descriptive prefix. Legend shows
+          date labels correctly.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all three classic yield curve shapes: normal, inverted, and
+          flat.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: U.S. Treasury yields from specific dates with realistic values. Neutral
+          financial domain.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Yields range 0-5.5%, maturities 1M to 30Y — realistic Treasury market
+          values.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean linear flow: imports → data → plot → style → save.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hardcoded data.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic, appropriate complexity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png, dpi=300, bbox_inches='tight'. Current API.
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good DataFrame-based API with hue and style mapping via sns.lineplot.
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Most visual refinement relies on matplotlib directly. Seaborn contribution
+          is limited to the lineplot call.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - manual-ticks
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - grid-styling
+  - alpha-blending
