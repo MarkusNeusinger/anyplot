@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 phase-diagram-pt: Thermodynamic Phase Diagram (Pressure-Temperature)
-Library: highcharts | Python 3.13
-Quality: pending | Created: 2026-03-14
+Library: highcharts unknown | Python 3.14.3
+Quality: 84/100 | Created: 2026-03-14
 """
 
 import glob as _glob
