@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 acf-pacf: Autocorrelation and Partial Autocorrelation (ACF/PACF) Plot
 Library: seaborn 0.13.2 | Python 3.14.3
 Quality: 86/100 | Created: 2026-03-14
@@ -12,20 +12,21 @@ import seaborn as sns
 
 # Seaborn theme and context
 sns.set_theme(style="white", context="talk", font_scale=1.1)
-palette = sns.color_palette("muted")
-stem_color = "#306998"
-ci_color = palette[1]
+python_blue = "#306998"
 
-# Data: ARMA(1,1) process simulating monthly airline passenger residuals
+# Data: ARMA(1,1) process with seasonal component (airline passenger residuals)
 np.random.seed(42)
 n_obs = 200
 ar1_coeff = 0.7
 ma1_coeff = 0.4
+seasonal_period = 12
+seasonal_strength = 0.3
 noise = np.random.randn(n_obs)
 series = np.zeros(n_obs)
 series[0] = noise[0]
 for t in range(1, n_obs):
-    series[t] = ar1_coeff * series[t - 1] + noise[t] + ma1_coeff * noise[t - 1]
+    seasonal = seasonal_strength * np.sin(2 * np.pi * t / seasonal_period)
+    series[t] = ar1_coeff * series[t - 1] + noise[t] + ma1_coeff * noise[t - 1] + seasonal
 
 # Compute ACF
 n_lags = 35
@@ -51,100 +52,132 @@ lags_acf = np.arange(0, n_lags + 1)
 lags_pacf = np.arange(1, n_lags + 1)
 conf_bound = 1.96 / np.sqrt(n_obs)
 
-# Build DataFrames for seaborn
-acf_df = pd.DataFrame({"Lag": lags_acf, "Correlation": acf_values})
-pacf_df = pd.DataFrame({"Lag": lags_pacf, "Correlation": pacf_values[1:]})
+# Build unified DataFrame for seaborn FacetGrid
+acf_df = pd.DataFrame({"Lag": lags_acf, "Correlation": acf_values, "Panel": "Autocorrelation (ACF)"})
+pacf_df = pd.DataFrame({"Lag": lags_pacf, "Correlation": pacf_values[1:], "Panel": "Partial Autocorrelation (PACF)"})
+df = pd.concat([acf_df, pacf_df], ignore_index=True)
 
-# Identify significant lags (exceed confidence bounds)
-sig_acf = acf_df[(acf_df["Lag"] > 0) & (acf_df["Correlation"].abs() > conf_bound)]
-sig_pacf = pacf_df[pacf_df["Correlation"].abs() > conf_bound]
-
-# Plot
-fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(16, 9), sharex=True)
-
-stem_width = 2.5
-marker_size = 60
-
-# ACF subplot - stems via vlines, markers via seaborn scatterplot
-ax1.vlines(acf_df["Lag"], 0, acf_df["Correlation"], colors=stem_color, linewidth=stem_width)
-sns.scatterplot(
-    data=acf_df,
-    x="Lag",
-    y="Correlation",
-    color=stem_color,
-    s=marker_size,
-    zorder=5,
-    edgecolor="white",
-    linewidth=0.5,
-    ax=ax1,
-    legend=False,
+# Classify each lag as significant or not (distinctive seaborn hue feature)
+df["Significance"] = np.where(
+    (df["Correlation"].abs() > conf_bound) | ((df["Panel"] == "Autocorrelation (ACF)") & (df["Lag"] == 0)),
+    "Significant",
+    "Within CI",
 )
-ax1.axhline(y=0, color="#333333", linewidth=0.8)
-ax1.axhline(y=conf_bound, color=ci_color, linestyle="--", linewidth=1.5, alpha=0.8)
-ax1.axhline(y=-conf_bound, color=ci_color, linestyle="--", linewidth=1.5, alpha=0.8)
-ax1.fill_between([-0.5, n_lags + 0.5], -conf_bound, conf_bound, color=ci_color, alpha=0.08)
 
-# Highlight the first significant ACF lag with annotation
-if len(sig_acf) > 0:
-    first_sig = sig_acf.iloc[0]
-    ax1.annotate(
-        f"lag {int(first_sig['Lag'])}: {first_sig['Correlation']:.2f}",
-        xy=(first_sig["Lag"], first_sig["Correlation"]),
-        xytext=(first_sig["Lag"] + 4, first_sig["Correlation"] + 0.12),
-        fontsize=13,
-        color=stem_color,
-        fontweight="bold",
-        arrowprops={"arrowstyle": "->", "color": stem_color, "lw": 1.5},
+# Color palette for significance categories
+sig_palette = {"Significant": python_blue, "Within CI": "#A8C4D8"}
+
+# Create FacetGrid - distinctive seaborn multi-panel approach
+g = sns.FacetGrid(df, row="Panel", height=4.5, aspect=3.55, sharex=True, sharey=False, margin_titles=False)
+
+
+# Custom stem plot function using seaborn barplot + scatterplot
+def stem_plot(data, **kwargs):
+    ax = plt.gca()
+    panel = data["Panel"].iloc[0]
+
+    # Use seaborn barplot with narrow width for stems (seaborn-native visualization)
+    sns.barplot(
+        data=data,
+        x="Lag",
+        y="Correlation",
+        hue="Significance",
+        palette=sig_palette,
+        width=0.15,
+        dodge=False,
+        legend=False,
+        ax=ax,
     )
 
-# PACF subplot
-ax2.vlines(pacf_df["Lag"], 0, pacf_df["Correlation"], colors=stem_color, linewidth=stem_width)
-sns.scatterplot(
-    data=pacf_df,
-    x="Lag",
-    y="Correlation",
-    color=stem_color,
-    s=marker_size,
-    zorder=5,
-    edgecolor="white",
-    linewidth=0.5,
-    ax=ax2,
-    legend=False,
-)
-ax2.axhline(y=0, color="#333333", linewidth=0.8)
-ax2.axhline(y=conf_bound, color=ci_color, linestyle="--", linewidth=1.5, alpha=0.8)
-ax2.axhline(y=-conf_bound, color=ci_color, linestyle="--", linewidth=1.5, alpha=0.8)
-ax2.fill_between([-0.5, n_lags + 0.5], -conf_bound, conf_bound, color=ci_color, alpha=0.08)
-
-# Highlight dominant PACF spike
-if len(sig_pacf) > 0:
-    first_sig_p = sig_pacf.iloc[0]
-    ax2.annotate(
-        f"lag {int(first_sig_p['Lag'])}: {first_sig_p['Correlation']:.2f}",
-        xy=(first_sig_p["Lag"], first_sig_p["Correlation"]),
-        xytext=(first_sig_p["Lag"] + 4, first_sig_p["Correlation"] + 0.12),
-        fontsize=13,
-        color=stem_color,
-        fontweight="bold",
-        arrowprops={"arrowstyle": "->", "color": stem_color, "lw": 1.5},
+    # Markers via seaborn scatterplot with hue-based coloring
+    sns.scatterplot(
+        data=data,
+        x="Lag",
+        y="Correlation",
+        hue="Significance",
+        palette=sig_palette,
+        s=90,
+        zorder=5,
+        edgecolor="white",
+        linewidth=0.8,
+        ax=ax,
+        legend=False,
     )
 
-# Style
-fig.suptitle("acf-pacf · seaborn · pyplots.ai", fontsize=24, fontweight="medium", y=0.97)
+    # Confidence interval band and lines
+    ci_color = sns.color_palette("muted")[1]
+    xlims = (-0.5, n_lags + 0.5)
+    ax.axhline(y=0, color="#333333", linewidth=0.8)
+    ax.axhline(y=conf_bound, color=ci_color, linestyle="--", linewidth=1.5, alpha=0.8)
+    ax.axhline(y=-conf_bound, color=ci_color, linestyle="--", linewidth=1.5, alpha=0.8)
+    ax.fill_between([xlims[0], xlims[1]], -conf_bound, conf_bound, color=ci_color, alpha=0.08)
 
-ax1.set_ylabel("Autocorrelation (ACF)", fontsize=20)
-ax2.set_ylabel("Partial Autocorrelation (PACF)", fontsize=20)
-ax2.set_xlabel("Lag (months)", fontsize=20)
+    # Annotate first significant lag (beyond lag 0 for ACF)
+    sig_data = data[data["Significance"] == "Significant"]
+    if panel == "Autocorrelation (ACF)":
+        sig_data = sig_data[sig_data["Lag"] > 0]
+    if len(sig_data) > 0:
+        first = sig_data.iloc[0]
+        ax.annotate(
+            f"lag {int(first['Lag'])}: {first['Correlation']:.2f}",
+            xy=(first["Lag"], first["Correlation"]),
+            xytext=(first["Lag"] + 5, first["Correlation"] + 0.12),
+            fontsize=13,
+            color=python_blue,
+            fontweight="bold",
+            arrowprops={"arrowstyle": "->", "color": python_blue, "lw": 1.5},
+        )
 
-for ax in (ax1, ax2):
+    # Mark seasonal peaks in ACF
+    if panel == "Autocorrelation (ACF)":
+        seasonal_lags = data[(data["Lag"] == 12) | (data["Lag"] == 24)]
+        for _, row in seasonal_lags.iterrows():
+            if abs(row["Correlation"]) > conf_bound:
+                ax.annotate(
+                    f"seasonal\nlag {int(row['Lag'])}",
+                    xy=(row["Lag"], row["Correlation"]),
+                    xytext=(row["Lag"] + 3, row["Correlation"] + 0.15),
+                    fontsize=11,
+                    color="#8B4513",
+                    fontstyle="italic",
+                    arrowprops={"arrowstyle": "->", "color": "#8B4513", "lw": 1.2},
+                )
+
+    ax.set_xlim(xlims)
+    ax.set_ylabel(panel, fontsize=20)
+
+
+g.map_dataframe(stem_plot)
+
+# Remove FacetGrid default row titles
+g.set_titles("")
+
+# Style each axis
+for ax in g.axes.flat:
     ax.tick_params(axis="both", labelsize=16)
     ax.yaxis.grid(True, alpha=0.2, linewidth=0.8)
-    ax.set_xlim(-0.5, n_lags + 0.5)
+    ax.set_xlabel("")
+    # Show every 5th tick label for cleaner x-axis
+    tick_labels = ax.get_xticklabels()
+    for i, label in enumerate(tick_labels):
+        if i % 5 != 0:
+            label.set_visible(False)
 
-sns.despine(fig=fig)
+# Bottom axis label
+g.axes[-1, 0].set_xlabel("Lag (months)", fontsize=20)
 
-plt.tight_layout()
-plt.subplots_adjust(top=0.92)
+# Add significance legend using seaborn's distinctive hue legend
+handles = [
+    plt.Line2D([0], [0], marker="o", color="w", markerfacecolor=python_blue, markersize=10, label="Significant"),
+    plt.Line2D([0], [0], marker="o", color="w", markerfacecolor="#A8C4D8", markersize=10, label="Within CI"),
+    plt.Line2D([0], [0], linestyle="--", color=sns.color_palette("muted")[1], linewidth=1.5, label="95% CI"),
+]
+g.axes[0, 0].legend(handles=handles, loc="upper right", fontsize=13, framealpha=0.9)
+
+sns.despine(fig=g.figure)
+
+g.figure.suptitle("acf-pacf · seaborn · pyplots.ai", fontsize=24, fontweight="medium", y=0.99)
+g.figure.subplots_adjust(top=0.93, hspace=0.25)
 
 # Save
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+g.savefig("plot.png", dpi=300, bbox_inches="tight")
