@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 flamegraph-basic: Flame Graph for Performance Profiling
 Library: bokeh 3.9.0 | Python 3.14.3
-Quality: 80/100 | Created: 2026-03-14
+Quality: 87/100 | Created: 2026-03-14
 """
 
 from bokeh.io import export_png, output_file, save

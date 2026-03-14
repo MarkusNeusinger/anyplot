@@ -1,7 +1,7 @@
 library: bokeh
 specification_id: flamegraph-basic
 created: '2026-03-14T20:27:08Z'
-updated: '2026-03-14T20:31:17Z'
+updated: '2026-03-14T20:38:30Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23095681554
 issue: 4665
@@ -10,32 +10,29 @@ library_version: 3.9.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/flamegraph-basic/bokeh/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/flamegraph-basic/bokeh/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/flamegraph-basic/bokeh/plot.html
-quality_score: 80
+quality_score: 87
 review:
   strengths:
-  - Excellent realistic CPU profiling data with plausible web server function hierarchy
-  - Clean warm color palette following flame graph conventions with depth-based color
-    mapping
-  - Smart adaptive label sizing with percentage annotations on wide bars and hidden
-    labels on tiny bars
-  - 'Good visual refinement: hidden axes, white borders, clean layout'
+  - Excellent spec compliance - all flame graph requirements met precisely
+  - Realistic CPU profiling data with believable function names and call hierarchy
+  - HoverTool with rich tooltips is a strong use of Bokeh interactive capabilities
+  - Clean iterative stack-based layout algorithm avoids recursion and maintains KISS
+  - Heat-based color encoding naturally highlights performance bottlenecks
   weaknesses:
-  - Missing Bokeh interactive features (HoverTool, TapTool) that would showcase the
-    library strengths
-  - Unnecessary numpy import used only for a pointless random seed
-  - Title format deviates from spec by adding CPU Profile prefix
-  - Color palette could better emphasize hottest code paths
-  image_description: 'The plot displays a flame graph for CPU profiling of a web server
-    application. The bottom-most bar spans the full width and is labeled "main (100.0%)"
-    in a deep orange-red color. Above it, three child bars show "gc_collect", "handle_request
-    (85.0%)", and "log_metrics" in a lighter orange. Successive depth levels show
-    progressively warmer/yellower bars: "authenticate (20.0%)", "parse_headers", "process_query
-    (40.0%)", "send_response" at depth 2; "verify_token (14.0%)", "load_user", "execute
-    (28.0%)", "format_result", "parse_sql", "serialize_json" at depth 3; and further
-    nested functions like "decode_jwt", "check_expiry", "apply_filter", "fetch_rows
-    (18.0%)" at deeper levels, with "deserialize" and "read_index" at the top. White
-    borders separate all bars. Axes are hidden. Title reads "CPU Profile · flamegraph-basic
-    · bokeh · pyplots.ai" centered at the top. Background is white.'
+  - 'DE-01: Computed RGB gradient could use a perceptually uniform warm palette for
+    more visual polish'
+  - 'VQ-05: Wasted vertical space above the top stack level'
+  - 'DQ-01: Only 23 stack traces vs spec suggested 50-500 minimum'
+  image_description: The plot displays a flame graph for CPU profiling of a web server
+    application. The bottom bar is "main (100.0%)" in deep red/orange spanning the
+    full width. Above it, "handle_request (85.0%)" dominates in orange, with smaller
+    "log_metrics" and "gc_collect" bars flanking it. Higher levels show "process_query
+    (40.0%)", "authenticate (20.0%)", "send_response", "parse_headers" etc. The deepest
+    level (depth 5) shows "read_index" and "deserialize" in pale yellow. Colors transition
+    from deep red (high sample count) to pale yellow (low sample count), following
+    flame graph conventions. White borders separate bars cleanly. Function names and
+    percentages are displayed inside bars when wide enough. White background, no axes,
+    title "flamegraph-basic · bokeh · pyplots.ai" centered at top.
   criteria_checklist:
     visual_quality:
       score: 27
@@ -46,43 +43,42 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title 36pt, in-bar labels adaptive 14-22pt. All readable, smallest
-          labels on the small side.
+        comment: Font sizes explicitly set (36pt title, 14-22pt labels). All text
+          readable, though labels on narrower bars are small.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlap; labels only appear when bars are wide enough.
+        comment: No overlapping text; labels fit cleanly within bars.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars clearly visible with 0.92 height, white borders provide excellent
-          separation.
+        comment: All bars clearly visible with 0.92 height and white borders providing
+          clean separation.
       - id: VQ-04
         name: Color Accessibility
         score: 3
         max: 4
         passed: true
-        comment: Warm palette follows convention but yellow-to-orange gradient may
-          be hard to distinguish for some viewers.
+        comment: Warm sequential palette appropriate for continuous heat data. Perceptually
+          uniform colormap would be stronger.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good horizontal fill, expected pyramid shape leaves some white space
-          at top.
+        comment: Good horizontal fill. Some empty vertical space above top stack level.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Axes appropriately hidden for flame graphs, title is descriptive.
+        comment: Title in correct format. Axes correctly hidden for flame graphs.
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -90,23 +86,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom warm palette mapped to depth, clean design, above defaults
-          but not publication-quality.
+        comment: Warm color palette follows flame graph conventions with intentional
+          heat-based mapping. Above defaults but not publication-level.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Axes/grid hidden, outline removed, clean white background, good refinement.
+        comment: Axes hidden, grid hidden, outline removed, clean white background.
+          White line borders are a nice touch.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Percentage labels help guide viewer but no strong focal-point emphasis
-          on hottest paths.
+        comment: Color encoding naturally draws attention to hot paths. Percentage
+          labels help identify bottlenecks.
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -114,28 +111,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct flame graph with bottom-to-top stacking, width proportional
-          to samples.
+        comment: Correct flame graph with horizontal bars stacked bottom-to-top.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: hierarchy, proportional width, warm colors,
-          labels, minimal gaps.'
+        comment: 'All spec features present: proportional widths, warm colors, adjacent
+          bars, function labels.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Depth on y-axis, width proportional to sample count, correct parent-child
-          relationships.
+        comment: Width correctly maps to sample proportion, depth represents call
+          stack level.
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Title adds extra CPU Profile prefix deviating from required format.
+        comment: Title format correct. No legend needed for flame graph.
     data_quality:
       score: 14
       max: 15
@@ -145,79 +141,78 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: 'Good variety: 6 depth levels, multiple branches of varying width.'
+        comment: Shows 6 depth levels, varying widths, multiple branches. Only 23
+          stack traces vs spec suggested 50-500.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Excellent real-world web server CPU profiling scenario with plausible
-          function names.
+        comment: Web server CPU profiling with realistic function names. Very believable
+          scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sample counts plausible for profiling data, child samples sum correctly
-          within parents.
+        comment: Sample counts realistic with plausible distribution across call paths.
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Recursive function justified for tree traversal but violates KISS
-          no-functions rule.
+        comment: Linear flow with iterative stack-based layout. No functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Data is fully deterministic (hardcoded stack data).
+        comment: Fully deterministic hardcoded data.
       - id: CQ-03
         name: Clean Imports
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: numpy imported only for unnecessary random seed; no random data is
-          generated.
+        passed: true
+        comment: All imports used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean recursive approach appropriate for hierarchical data.
+        comment: Clean iterative layout algorithm. Appropriate complexity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png via export_png, also generates plot.html.
+        comment: Saves plot.png and plot.html with current Bokeh API.
     library_mastery:
-      score: 5
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Uses ColumnDataSource, figure, rect, Label correctly. Standard patterns
-          but not advanced.
+        comment: Good use of ColumnDataSource, rect glyphs, Label annotations. Proper
+          Bokeh patterns.
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 4
         max: 5
-        passed: false
-        comment: HTML export is Bokeh-distinctive but misses HoverTool/TapTool interactive
-          features.
+        passed: true
+        comment: HoverTool with custom tooltips and HTML export are genuinely distinctive
+          Bokeh features.
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
+  - hover-tooltips
   - annotations
   - html-export
   patterns:
@@ -228,4 +223,3 @@ impl_tags:
   styling:
   - minimal-chrome
   - edge-highlighting
-  - alpha-blending
