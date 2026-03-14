@@ -1,7 +1,7 @@
 library: altair
 specification_id: acf-pacf
 created: '2026-03-14T22:22:53Z'
-updated: '2026-03-14T22:27:51Z'
+updated: '2026-03-14T22:38:41Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23097477548
 issue: 4663
@@ -10,98 +10,100 @@ library_version: 6.0.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/acf-pacf/altair/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/acf-pacf/altair/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/acf-pacf/altair/plot.html
-quality_score: 83
+quality_score: 88
 review:
   strengths:
-  - Perfect spec compliance — all required features present and correctly implemented
-  - Excellent data choice — classic airline-style seasonal data shows meaningful ACF/PACF
-    patterns
-  - Good visual refinement — subtle grid, removed view stroke, transparency on CI
-    band
-  - Proper use of Altair declarative layer composition and interactive tooltips
+  - Excellent data storytelling with gold seasonal stems creating immediate visual
+    hierarchy
+  - Perfect data quality with classic airline-style seasonal data demonstrating all
+    ACF/PACF features
+  - Clean code structure with appropriate statsmodels integration
+  - Confidence band shading adds visual refinement beyond just dashed lines
+  - Subtitle provides interpretive context
   weaknesses:
-  - Axis labels lack contextual units (Lag should be Lag months)
-  - Code duplication between ACF and PACF panel construction
-  - No visual emphasis on seasonal spikes every 12 lags
-  - Stem dot size could be larger for better visibility
-  image_description: The plot displays two vertically stacked panels showing ACF (top)
-    and PACF (bottom) for a simulated monthly airline-style passenger time series.
-    Blue stem lines (#306998) extend from a zero baseline to each correlation value,
-    capped with small blue circles. A light red/pink shaded band marks the 95% confidence
-    interval, with red dashed lines (#E74C3C) at the CI boundaries. The ACF panel
-    shows a clear sinusoidal decay pattern with period ~12 (seasonal autocorrelation),
-    with lag 0 at 1.0. The PACF panel starts from lag 1 and shows significant spikes
-    at the first few lags before largely falling within the CI band. Both panels share
-    the x-axis labeled "Lag" (0-35), with y-axes labeled "ACF" and "PACF". Subtle
-    dashed y-axis gridlines are visible. The title "acf-pacf · altair · pyplots.ai"
-    appears at the top left. Overall layout is clean and well-proportioned.
+  - No visible legend explaining the three color categories (Seasonal, Significant,
+    Non-significant) — subtitle only explains gold stems
+  - Layout could be tighter with less horizontal margin space
+  image_description: 'The plot displays two vertically stacked panels: ACF (top) and
+    PACF (bottom), both rendered as stem plots with circular markers at each lag.
+    The title reads "acf-pacf · altair · pyplots.ai" with subtitle "Seasonal period
+    ≈ 12 months · Gold stems mark seasonal lags." The ACF panel shows a clear sinusoidal
+    decay pattern with high positive correlations at lags 0, 12, 24 and strong negative
+    correlations around lags 6, 18, 30 — consistent with a 12-month seasonal series.
+    Gold/yellow stems highlight seasonal lags (12, 24). A light red confidence band
+    with red dashed boundary lines marks the 95% CI. Non-significant lags appear in
+    muted gray-blue. The PACF panel shows large spikes at early lags (1–4) and around
+    lags 11–12, with most higher lags falling within the confidence bounds. X-axes
+    labeled "Lag (months)", Y-axes labeled "ACF" and "PACF". View borders are removed,
+    Y-axis grid is subtle with dashed lines at low opacity.'
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Font sizes explicitly set (labelFontSize=18, titleFontSize=22, title
-          fontSize=28). All text clearly readable.
+        comment: 'All font sizes explicitly set: title 28pt, subtitle 18pt, axis titles
+          22pt, tick labels 18pt'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or elements anywhere.
+        comment: No overlapping text or elements
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Stems with strokeWidth=3 and dots size=80 are visible; dots could
-          be slightly larger.
+        comment: Stems and markers clearly visible; muted non-significant stems slightly
+          harder to distinguish
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Python Blue + red CI is colorblind-safe with good contrast.
+        comment: Gold/blue/muted-gray palette is colorblind-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Two panels fill canvas well but some unused space on the right.
+        comment: Two panels fill canvas well; minor wasted horizontal space
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: Descriptive labels but lack units (e.g., Lag months).
+        comment: Lag (months) with units, ACF and PACF standard terms
     design_excellence:
-      score: 12
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Thoughtful color choices above defaults but not publication-level.
+        comment: Custom 3-color palette, confidence band shading, thoughtful subtitle
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Subtle y-axis grid, view stroke removed, zero baseline added.
+        comment: View strokes removed, Y-axis grid with low opacity dashes; could
+          tighten axis ranges
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Seasonal pattern creates interest but no emphasis on key insights.
+        comment: Gold seasonal stems create visual hierarchy; subtitle guides interpretation
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -109,52 +111,52 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct ACF/PACF stem plots in two vertically stacked subplots.
+        comment: ACF/PACF stem plots in two vertically stacked subplots
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All required features present: stems, CI bounds, correct lag ranges,
-          35 lags.'
+        comment: 'All spec features present: stems, CI lines, lag 0 in ACF, PACF from
+          lag 1, 35 lags'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=Lag, Y=correlation values. Correct mapping.
+        comment: X=lag, Y=correlation values correctly mapped
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Title format correct. No legend needed for single-series.
+        passed: false
+        comment: Title format correct but legend suppressed while 3 color categories
+          used
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows seasonal autocorrelation clearly in ACF, significant early
-          PACF lags.
+        comment: Shows seasonal pattern, positive/negative correlations, significant/non-significant
+          lags
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Monthly airline-style passenger data — classic neutral time series
-          example.
+        comment: Monthly airline-style passenger data — classic time series example
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 200 observations, realistic passenger count range.
+        comment: 200 observations, sensible parameters, correlations in [-1, 1]
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -162,32 +164,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear structure: imports, data, compute, build, combine,
-          save.'
+        comment: 'Clean linear flow: imports, data, compute, plot, save'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Noticeable code duplication between ACF and PACF panel construction.
+        passed: true
+        comment: Well-organized, appropriate complexity for Altair declarative style
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html. Current API.
+        comment: Saves as plot.png and plot.html, current API
     library_mastery:
       score: 7
       max: 10
@@ -197,14 +198,14 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Good idiomatic Altair: mark_rule, mark_circle, mark_rect, layer
-          composition, vconcat, configure.'
+        comment: 'Good declarative grammar: mark_rule, mark_circle, layer composition,
+          vconcat, configure_*'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses interactive tooltips, HTML export, declarative layer composition.
+        comment: Interactive tooltips, HTML export, layer composition are Altair-distinctive
   verdict: REJECTED
 impl_tags:
   dependencies:
@@ -219,4 +220,3 @@ impl_tags:
   - time-series
   styling:
   - grid-styling
-  - alpha-blending
