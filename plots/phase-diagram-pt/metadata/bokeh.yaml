@@ -1,7 +1,7 @@
 library: bokeh
 specification_id: phase-diagram-pt
 created: '2026-03-14T14:51:35Z'
-updated: '2026-03-14T15:02:54Z'
+updated: '2026-03-14T15:12:04Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23090166817
 issue: 4666
@@ -10,80 +10,78 @@ library_version: 3.9.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/phase-diagram-pt/bokeh/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/phase-diagram-pt/bokeh/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/phase-diagram-pt/bokeh/plot.html
-quality_score: 84
+quality_score: 87
 review:
   strengths:
-  - Excellent use of real water phase diagram data with physics-based Clausius-Clapeyron
-    calculations
-  - Cohesive pastel color scheme for phase regions with good visual separation
-  - HoverTool on special points is an excellent use of Bokeh interactive capabilities
-  - Supercritical fluid region included beyond basic spec requirements
-  - Water anomalous negative-slope melting curve correctly modeled
-  - Clean well-structured code with deterministic data
+  - Excellent spec compliance with all required features including supercritical fluid
+    region
+  - Physically accurate water phase diagram data using Clausius-Clapeyron approximation
+  - Good use of Bokeh HoverTool for interactive tooltips on special points
+  - Clean visual hierarchy with color-coded regions, italic curve labels, and annotated
+    key points
+  - Subtle grid styling and refined visual appearance
   weaknesses:
-  - Boundary curve labels (Sublimation, Vaporization, Melting) completely invisible
-    in rendered PNG - likely z-order or log-scale coordinate issue
-  - Critical point and supercritical region cramped at far right edge of plot
-  - Title format includes extra Water Phase Diagram prefix beyond required spec-id
-    format
-  image_description: 'The plot shows a water P-T phase diagram with Temperature (K)
-    on the x-axis and Pressure (Pa) on a logarithmic y-axis. Four phase regions are
-    filled with distinct pastel colors: light blue for SOLID (left), light green for
-    LIQUID (center/upper), light peach/orange for GAS (bottom right), and light purple
-    for SUPERCRITICAL FLUID (upper right corner). Dark blue boundary lines separate
-    the regions. A red circle marks the Triple Point near 273 K at low pressure, with
-    a red text annotation. A small diamond marker indicates the Critical Point near
-    647 K at high pressure, with an annotation in dark blue text. A dashed line extends
-    upward from the critical point. Bold region labels (SOLID, LIQUID, GAS, SUPERCRITICAL
-    FLUID) are placed within each region. The title reads "Water Phase Diagram · phase-diagram-pt
-    · bokeh · pyplots.ai". The boundary curve labels (Sublimation, Vaporization, Melting)
-    that exist in the code are NOT visible in the rendered image. The critical point
-    and supercritical region are cramped at the far right edge of the plot. The grid
-    is subtle with dashed lines at low opacity, and the background is a light off-white.'
+  - Curve labels (Sublimation, Vaporization, Melting) could be slightly larger for
+    better readability
+  - Critical point diamond marker could be more visually prominent
+  - Minor congestion near the triple point annotation area
+  image_description: 'The plot displays a water pressure-temperature phase diagram
+    with Temperature (K) on the x-axis (180-800 K) and Pressure (Pa) on a logarithmic
+    y-axis (10^2 to 10^9 Pa). Four phase regions are shaded with distinct pastel colors:
+    SOLID (light blue, left), LIQUID (light green, center-upper), GAS (light peach/orange,
+    bottom-right), and SUPERCRITICAL FLUID (light purple, upper-right). Three dark
+    blue phase boundary lines separate the regions: a sublimation curve (lower-left),
+    a vaporization curve (center, from triple to critical point), and a nearly vertical
+    melting curve (left side, negative slope for water). The triple point is marked
+    with a red circle at 273.16 K / 611.73 Pa with a text annotation. The critical
+    point is marked with a dark blue diamond at 647.1 K / 22.06 MPa with a text annotation.
+    A dashed line extends upward from the critical point. Italic curve labels (Sublimation,
+    Vaporization, Melting) are placed along the boundary lines. Bold region labels
+    (SOLID, LIQUID, GAS, SUPERCRITICAL FLUID) are placed within each phase area. The
+    title reads "phase-diagram-pt · bokeh · pyplots.ai". The background is a subtle
+    off-white with faint dashed grid lines.'
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set but boundary curve labels (Sublimation,
-          Vaporization, Melting) invisible in rendered output
+        comment: Font sizes explicitly set. Curve labels at 20pt could be slightly
+          larger.
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: Minor congestion near triple point annotation but all text readable.
       - id: VQ-03
         name: Element Visibility
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Main elements visible but boundary curve labels entirely invisible
-          and critical point cramped at edge
+        comment: Lines and markers visible. Critical point diamond could be more prominent.
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Distinct pastel palette, colorblind-safe, good contrast
+        comment: Colorblind-safe pastel palette. Red vs dark blue markers distinguishable.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good fill overall but critical point and supercritical region cramped
-          at right edge
+        comment: Good layout with balanced margins and good canvas utilization.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Temperature (K) and Pressure (Pa) with proper units
+        comment: 'Descriptive labels with units: Temperature (K) and Pressure (Pa).'
     design_excellence:
       score: 13
       max: 20
@@ -93,23 +91,23 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Cohesive pastel color scheme, custom background, above defaults but
-          not publication-ready
+        comment: Custom pastel palette, italic curve labels, styled annotations above
+          defaults.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Subtle dashed grid at low alpha, outline removed, custom background
+        comment: Subtle grid (alpha 0.2, dashed), outline removed, custom background.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Color-coded regions guide viewer, annotated special points create
-          focal points
+        comment: Clear visual hierarchy with bold region labels, italic curve labels,
+          annotated special points.
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -117,25 +115,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct P-T phase diagram with boundary curves and filled regions
+        comment: Correct P-T phase diagram with boundary curves.
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Has all main features but boundary curve labels not visible in output
+        comment: 'All features present: three boundaries, triple point, critical point,
+          phase labels, supercritical region.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Temperature on x, Pressure on y (log scale), all data within range
+        comment: Correct mapping with log pressure axis.
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Title adds Water Phase Diagram prefix beyond required format
+        comment: Correct title format. Regions labeled directly.
     data_quality:
       score: 15
       max: 15
@@ -145,20 +144,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows all phases, boundaries, special points, supercritical region,
-          negative slope melting curve
+        comment: 'All aspects shown: three boundaries, both special points, supercritical
+          region, negative slope melting curve.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real water phase diagram data with accurate physical values
+        comment: Real water phase diagram with Clausius-Clapeyron approximation.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: All values physically realistic and consistent with known water properties
+        comment: Physically accurate values for water.
     code_quality:
       score: 10
       max: 10
@@ -168,33 +167,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, plot, styling, save'
+        comment: Clean imports-data-plot-save structure.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic physics-based calculations
+        comment: Fully deterministic data.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: All imports used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized, appropriate complexity
+        comment: Clean, well-organized code.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
+        comment: Saves as plot.png via export_png.
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -202,21 +201,20 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of ColumnDataSource, figure API, patches, Label
+        comment: 'Good idiomatic Bokeh: ColumnDataSource, figure, Label, patch, HoverTool.'
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: HoverTool with rich tooltips and HTML export with CDN are distinctive
-          Bokeh features
-  verdict: REJECTED
+        comment: HoverTool for special points and HTML export are distinctive Bokeh
+          features.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - hover-tooltips
-  - patches
   - html-export
   patterns:
   - data-generation
