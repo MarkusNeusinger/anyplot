@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 phase-diagram-pt: Thermodynamic Phase Diagram (Pressure-Temperature)
-Library: pygal | Python 3.13
-Quality: pending | Created: 2026-03-14
+Library: pygal 3.1.0 | Python 3.14.3
+Quality: 77/100 | Created: 2026-03-14
 """
 
 import numpy as np
