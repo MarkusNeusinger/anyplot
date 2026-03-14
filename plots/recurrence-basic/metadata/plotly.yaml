@@ -1,7 +1,7 @@
 library: plotly
 specification_id: recurrence-basic
 created: '2026-03-14T22:46:47Z'
-updated: '2026-03-14T23:11:04Z'
+updated: '2026-03-14T23:17:57Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23097948232
 issue: 4592
@@ -10,32 +10,32 @@ library_version: 6.6.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/recurrence-basic/plotly/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/recurrence-basic/plotly/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/recurrence-basic/plotly/plot.html
-quality_score: 88
+quality_score: 90
 review:
   strengths:
-  - 'Excellent data choice: Lorenz attractor is the canonical example for recurrence
-    plots'
-  - Marginal time series subplot provides valuable context and enables correlation
-    between signal dynamics and recurrence structure
-  - Custom blue palette and Palatino typography create a cohesive professional look
-  - Time-delay embedding properly implemented following Takens theorem
-  - Interactive hover tooltips and HTML export leverage Plotly strengths
+  - Scientifically rigorous Lorenz attractor with proper ODE integration and Takens
+    time-delay embedding
+  - Excellent layout with marginal time series panel providing crucial context
+  - Cohesive design with custom blue palette, serif typography, and clean backgrounds
+  - 'Good use of plotly-specific features: hover tooltips, HTML export, constrained
+    square axes'
+  - Clean well-structured code with appropriate complexity
   weaknesses:
-  - Output dimensions 3600x4200 do not match either standard format 4800x2700 or 3600x3600
-  - Title format prepends Lorenz Attractor before the required spec-id format
-  image_description: The plot displays a recurrence matrix for the Lorenz attractor
-    x-component using a two-panel layout. The top panel shows the source time series
-    as a blue line with light blue fill-to-zero, labeled "x(t)" on the y-axis. The
-    bottom panel is the main recurrence plot — a square heatmap where both axes represent
-    "Time Index (i)" and "Time Index (j)" ranging from 0 to ~490. Recurrent state
-    pairs appear as dark navy blue points (#1B4F72) on a near-white background (#F7F9FC),
-    with a mid-blue transition (#C8D8E8). The main diagonal is clearly filled. Characteristic
-    diagonal line segments indicate deterministic dynamics, and block/cross structures
-    reveal regime transitions in the chaotic Lorenz system. The title reads "Lorenz
-    Attractor · recurrence-basic · plotly · pyplots.ai" with a subtitle explaining
-    that diagonal lines reveal deterministic chaotic dynamics. The y-axis of the recurrence
-    matrix is reversed (0 at top), which is standard for matrix displays. Overall
-    the layout is clean with Palatino typography and a light paper background.
+  - 3-stop colorscale on binary data creates slight visual ambiguity at cell boundaries
+  - Initial Lorenz transient creates a dense block in upper-left that slightly dominates
+    the view
+  image_description: The plot displays a recurrence matrix for a Lorenz attractor
+    x-component as a heatmap in deep blue tones on a light background. The main panel
+    is square with axes labeled "Time Index (i)" (x-axis) and "Time Index (j)" (y-axis,
+    reversed), spanning 0-500. The main diagonal is clearly visible as a continuous
+    dark line. Diagonal line segments parallel to the main diagonal reveal deterministic
+    chaotic dynamics, while block-like structures (notably a dense region in the upper-left
+    for indices 0-100) indicate regime behavior during the initial transient. Above
+    the recurrence matrix, a smaller marginal panel shows the original Lorenz x(t)
+    time series as a blue line with a light blue fill-to-zero, oscillating between
+    roughly -15 and 20. The title reads "recurrence-basic · plotly · pyplots.ai" with
+    a subtitle explaining the diagonal lines. Typography uses Palatino/Georgia serif.
+    The overall palette is a cohesive blue monochrome scheme on an off-white background.
   criteria_checklist:
     visual_quality:
       score: 28
@@ -43,44 +43,44 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 28pt, axis labels 22pt, ticks
-          18pt'
+        comment: Font sizes explicitly set (title=28, labels=22, ticks=18). Subtitle
+          slightly small but readable.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: No overlapping elements anywhere.
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Heatmap contrast excellent, recurrent points clearly distinguishable
+        comment: Recurrence patterns clearly visible. 3-stop colorscale on binary
+          data creates slight ambiguity at boundaries.
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Monochrome blue palette is colorblind-safe
+        comment: Blue monochromatic scheme is fully colorblind-safe.
       - id: VQ-05
         name: Layout & Canvas
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: Non-standard dimensions 3600x4200 instead of 4800x2700 or 3600x3600
+        passed: true
+        comment: Square format correct. Marginal panel makes excellent use of space.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with context: Time Index (i), Time Index (j),
-          x(t)'
+        comment: Descriptive labels. Time indices are unitless by nature.
     design_excellence:
-      score: 14
+      score: 15
       max: 20
       items:
       - id: DE-01
@@ -88,23 +88,24 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom blue palette, Palatino typography, custom backgrounds, fill
-          effect, informative subtitle
+        comment: Custom Palatino font, cohesive blue palette, off-white background,
+          marginal panel layout.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: plotly_white template, grids disabled, custom background tones, good
-          margins
+        comment: Grid removed, plotly_white template, clean backgrounds, generous
+          margins.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Marginal time series creates visual hierarchy, subtitle guides interpretation
+        comment: Marginal time series provides crucial context. Subtitle explains
+          diagonal lines. Clear visual hierarchy.
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -112,49 +113,50 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct recurrence plot as binary matrix visualization
+        comment: Correct binary recurrence matrix as heatmap.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Binary threshold, time-delay embedding, Euclidean distance, filled
-          diagonal, square aspect
+        comment: Main diagonal, binary threshold, time-delay embedding, dark-on-light,
+          square aspect.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Both axes are time indices, matrix values represent binary recurrence
+        comment: Both axes correctly show time indices with 1:1 aspect ratio.
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Title has extra Lorenz Attractor prefix before spec-id format
+        passed: true
+        comment: Title format correct. No legend needed for single heatmap.
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Shows diagonal lines, block structures, regime transitions characteristic
-          of chaotic dynamics
+        comment: Shows diagonal lines, block structures, off-diagonal recurrence.
+          Dense upper-left block from transient slightly dominates.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Lorenz attractor is canonical example for recurrence analysis
+        comment: Lorenz attractor is the canonical example from the specification.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 500 time steps, embedding dim=3, delay=5, 15th percentile threshold
+        comment: 500 time points, embedding dim=3, delay=5, 15th percentile threshold
+          all appropriate.
     code_quality:
       score: 10
       max: 10
@@ -164,33 +166,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear flow with no functions or classes
+        comment: 'Clean linear flow: imports, data, embedding, plotting, save.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) and deterministic ODE integration.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: All imports used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Pythonic code with appropriate complexity
+        comment: Clean, Pythonic, appropriate complexity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png and plot.html, current API
+        comment: Saves plot.png (3600x3600) and plot.html. Current API.
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -198,14 +200,13 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of graph_objects, make_subplots, scaleanchor for square
-          aspect
+        comment: Good use of go.Heatmap, go.Scatter, make_subplots, update methods.
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: hovertemplate, write_html, shared_xaxes linking panels
+        comment: Hover templates, scaleanchor, make_subplots marginal, HTML export.
   verdict: APPROVED
 impl_tags:
   dependencies:
@@ -214,11 +215,9 @@ impl_tags:
   - subplots
   - hover-tooltips
   - html-export
-  - custom-legend
   patterns:
   - data-generation
   - matrix-construction
-  dataprep:
-  - time-series
+  dataprep: []
   styling:
   - custom-colormap
