@@ -1,14 +1,16 @@
-""" pyplots.ai
+"""pyplots.ai
 acf-pacf: Autocorrelation and Partial Autocorrelation (ACF/PACF) Plot
 Library: pygal 3.1.0 | Python 3.14.3
 Quality: 82/100 | Created: 2026-03-14
 """
 
 import io
+import xml.etree.ElementTree as ET
 
+import cairosvg
 import numpy as np
 import pygal
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image
 from pygal.style import Style
 from statsmodels.tsa.stattools import acf, pacf
 
@@ -31,15 +33,15 @@ conf_bound = 1.96 / np.sqrt(n_obs)
 # Style
 custom_style = Style(
     background="white",
-    plot_background="white",
+    plot_background="#FAFAFA",
     foreground="#2C3E50",
     foreground_strong="#2C3E50",
-    foreground_subtle="#E0E0E0",
+    foreground_subtle="#ECECEC",
     colors=("#306998",),
-    title_font_size=48,
+    title_font_size=52,
     label_font_size=28,
     major_label_font_size=28,
-    legend_font_size=28,
+    legend_font_size=24,
     value_font_size=20,
     font_family="sans-serif",
     title_font_family="sans-serif",
@@ -47,47 +49,104 @@ custom_style = Style(
     value_font_family="sans-serif",
 )
 
-# Highlight color for significant lags
 highlight_color = "#306998"
 muted_color = "#A8C4D8"
+conf_line_color = "#E74C3C"
+
+# Y-axis ranges tailored to actual data
+acf_min, acf_max = -0.45, 1.05
+pacf_min, pacf_max = -0.45, 0.95
 
 
-# ACF chart
+def inject_confidence_lines(svg_bytes, conf_val, y_min, y_max):
+    """Inject precise horizontal dashed confidence lines into pygal SVG.
+
+    Parses the SVG to find the plot group's transform and background rect,
+    then adds lines at exact data coordinates within the plot coordinate system.
+    """
+    ET.register_namespace("", "http://www.w3.org/2000/svg")
+    ET.register_namespace("xlink", "http://www.w3.org/1999/xlink")
+    root = ET.fromstring(svg_bytes)
+    ns = "http://www.w3.org/2000/svg"
+
+    # Find <g class="plot"> group (lines are added in its local coordinate system)
+    plot_group = None
+    for g in root.iter(f"{{{ns}}}g"):
+        if g.get("class", "") == "plot":
+            plot_group = g
+            break
+
+    if plot_group is None:
+        return svg_bytes
+
+    # Find background rect inside the plot group for plot dimensions
+    plot_w, plot_h = None, None
+    for rect in plot_group.iter(f"{{{ns}}}rect"):
+        if rect.get("class", "") == "background":
+            plot_w = float(rect.get("width"))
+            plot_h = float(rect.get("height"))
+            break
+
+    if plot_w is None:
+        return svg_bytes
+
+    # Calculate y pixel positions in the plot's local coordinate system
+    y_range = y_max - y_min
+    upper_y = (y_max - conf_val) / y_range * plot_h
+    lower_y = (y_max + conf_val) / y_range * plot_h
+
+    # Add lines inside the plot group for precise coordinate alignment
+    for line_y in [upper_y, lower_y]:
+        line_elem = ET.SubElement(plot_group, f"{{{ns}}}line")
+        line_elem.set("x1", "0")
+        line_elem.set("y1", f"{line_y:.1f}")
+        line_elem.set("x2", str(plot_w))
+        line_elem.set("y2", f"{line_y:.1f}")
+        line_elem.set("stroke", conf_line_color)
+        line_elem.set("stroke-width", "4")
+        line_elem.set("stroke-dasharray", "24,14")
+        line_elem.set("opacity", "0.9")
+
+    return ET.tostring(root)
+
+
+# ACF chart - with main title via pygal's native title parameter
 acf_chart = pygal.Bar(
     width=4800,
-    height=1200,
+    height=1350,
     style=custom_style,
     show_legend=False,
     show_y_guides=True,
     show_x_guides=False,
     x_title="",
     y_title="ACF",
-    title="",
+    title="acf-pacf \u00b7 pygal \u00b7 pyplots.ai",
     margin=20,
     margin_bottom=10,
-    margin_top=40,
-    margin_left=80,
-    margin_right=40,
-    spacing=2,
-    range=(-0.5, 1.1),
+    margin_top=20,
+    margin_left=100,
+    margin_right=50,
+    spacing=4,
+    range=(acf_min, acf_max),
     truncate_label=-1,
     print_values=False,
+    show_minor_x_labels=False,
+    x_labels_major_every=5,
 )
 
 acf_lags = list(range(n_lags + 1))
-acf_chart.x_labels = [str(i) if i % 5 == 0 else "" for i in acf_lags]
+acf_chart.x_labels = [str(i) for i in acf_lags]
 
 acf_bar_data = []
 for v in acf_values:
     color = highlight_color if abs(v) > conf_bound else muted_color
     acf_bar_data.append({"value": round(v, 4), "color": color})
-
 acf_chart.add("ACF", acf_bar_data)
 
 # PACF chart
 pacf_chart = pygal.Bar(
     width=4800,
-    height=1200,
+    height=1350,
     style=custom_style,
     show_legend=False,
     show_y_guides=True,
@@ -98,113 +157,58 @@ pacf_chart = pygal.Bar(
     margin=20,
     margin_bottom=60,
     margin_top=10,
-    margin_left=80,
-    margin_right=40,
-    spacing=2,
-    range=(-0.5, 1.1),
+    margin_left=100,
+    margin_right=50,
+    spacing=4,
+    range=(pacf_min, pacf_max),
     truncate_label=-1,
     print_values=False,
+    show_minor_x_labels=False,
+    x_labels_major_every=5,
 )
 
 pacf_lags = list(range(1, n_lags + 1))
-pacf_chart.x_labels = [str(i) if i % 5 == 0 else "" for i in pacf_lags]
+pacf_chart.x_labels = [str(i) for i in pacf_lags]
 
 pacf_bar_data = []
 for v in pacf_values[1:]:
     color = highlight_color if abs(v) > conf_bound else muted_color
     pacf_bar_data.append({"value": round(v, 4), "color": color})
-
 pacf_chart.add("PACF", pacf_bar_data)
 
-# Render both charts to PNG and combine
-acf_png = acf_chart.render_to_png()
-pacf_png = pacf_chart.render_to_png()
+# Render SVGs, inject confidence lines, convert to PNG
+acf_svg = acf_chart.render()
+acf_svg_with_ci = inject_confidence_lines(acf_svg, conf_bound, acf_min, acf_max)
+pacf_svg = pacf_chart.render()
+pacf_svg_with_ci = inject_confidence_lines(pacf_svg, conf_bound, pacf_min, pacf_max)
 
+# Convert modified SVGs to PNG via cairosvg (pygal's render engine)
+acf_png = cairosvg.svg2png(bytestring=acf_svg_with_ci, output_width=4800, output_height=1350)
+pacf_png = cairosvg.svg2png(bytestring=pacf_svg_with_ci, output_width=4800, output_height=1350)
+
+# Stack the two charts vertically (minimal PIL usage - composition only)
 acf_img = Image.open(io.BytesIO(acf_png))
 pacf_img = Image.open(io.BytesIO(pacf_png))
-
-# Combine into single 4800x2700 image
-total_width = 4800
-total_height = 2700
-title_height = 200
-
-combined = Image.new("RGB", (total_width, total_height), "white")
-
-# Resize charts to fit
-chart_height = (total_height - title_height) // 2
-acf_resized = acf_img.resize((total_width, chart_height), Image.LANCZOS)
-pacf_resized = pacf_img.resize((total_width, chart_height), Image.LANCZOS)
-
-combined.paste(acf_resized, (0, title_height))
-combined.paste(pacf_resized, (0, title_height + chart_height))
-
-# Add title and confidence bound annotations
-draw = ImageDraw.Draw(combined)
-
-try:
-    title_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 64)
-    subtitle_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 36)
-except OSError:
-    title_font = ImageFont.load_default()
-    subtitle_font = ImageFont.load_default()
-
-title_text = "acf-pacf \u00b7 pygal \u00b7 pyplots.ai"
-bbox = draw.textbbox((0, 0), title_text, font=title_font)
-title_w = bbox[2] - bbox[0]
-draw.text(((total_width - title_w) // 2, 40), title_text, fill="#2C3E50", font=title_font)
-
-subtitle_text = f"Monthly Passenger Data (n={n_obs}) \u00b7 95% confidence bounds at \u00b1{conf_bound:.3f}"
-bbox2 = draw.textbbox((0, 0), subtitle_text, font=subtitle_font)
-sub_w = bbox2[2] - bbox2[0]
-draw.text(((total_width - sub_w) // 2, 130), subtitle_text, fill="#666666", font=subtitle_font)
-
-# Draw confidence bound lines on both charts
-for chart_y_offset in [title_height, title_height + chart_height]:
-    # Calculate pixel positions for confidence bounds within chart area
-    # The chart plot area is roughly 80% of chart height, offset from top
-    plot_top = chart_y_offset + int(chart_height * 0.08)
-    plot_bottom = chart_y_offset + int(chart_height * 0.88)
-    plot_left = int(total_width * 0.04)
-    plot_right = int(total_width * 0.98)
-    plot_range_height = plot_bottom - plot_top
-    value_range = 1.1 - (-0.5)
-
-    # Convert correlation value to y pixel
-    upper_y = int(plot_top + (1.1 - conf_bound) / value_range * plot_range_height)
-    lower_y = int(plot_top + (1.1 + conf_bound) / value_range * plot_range_height)
-    zero_y = int(plot_top + 1.1 / value_range * plot_range_height)
-
-    # Dashed confidence lines
-    dash_length = 20
-    gap_length = 12
-    for line_y in [upper_y, lower_y]:
-        x = plot_left
-        while x < plot_right:
-            draw.line([(x, line_y), (min(x + dash_length, plot_right), line_y)], fill="#E74C3C", width=3)
-            x += dash_length + gap_length
-
-# Save
+combined = Image.new("RGB", (4800, 2700), "white")
+combined.paste(acf_img, (0, 0))
+combined.paste(pacf_img, (0, 1350))
 combined.save("plot.png", dpi=(300, 300))
 
 # HTML version with interactive SVGs
-acf_svg = acf_chart.render(is_unicode=True).replace('<?xml version="1.0" encoding="utf-8"?>', "")
-pacf_svg = pacf_chart.render(is_unicode=True).replace('<?xml version="1.0" encoding="utf-8"?>', "")
+acf_svg_str = acf_chart.render(is_unicode=True).replace('<?xml version="1.0" encoding="utf-8"?>', "")
+pacf_svg_str = pacf_chart.render(is_unicode=True).replace('<?xml version="1.0" encoding="utf-8"?>', "")
 
 html_content = (
     "<!DOCTYPE html>\n<html>\n<head>\n"
-    "    <title>acf-pacf \u00b7 pygal \u00b7 pyplots.ai</title>\n"
+    "    <title>acf-pacf · pygal · pyplots.ai</title>\n"
     "    <style>\n"
     "        body { font-family: sans-serif; background: white; margin: 0; padding: 20px; }\n"
-    "        h1 { text-align: center; color: #2C3E50; font-size: 28px; margin-bottom: 5px; }\n"
-    "        p.subtitle { text-align: center; color: #666; font-size: 16px; margin-top: 0; }\n"
     "        .container { max-width: 1200px; margin: 0 auto; }\n"
     "        .chart { width: 100%%; margin: 10px 0; }\n"
     "    </style>\n</head>\n<body>\n"
     "    <div class='container'>\n"
-    "        <h1>acf-pacf \u00b7 pygal \u00b7 pyplots.ai</h1>\n"
-    "        <p class='subtitle'>Monthly Passenger Data \u00b7 95% confidence bounds shown</p>\n"
-    "        <div class='chart'>" + acf_svg + "</div>\n"
-    "        <div class='chart'>" + pacf_svg + "</div>\n"
+    "        <div class='chart'>" + acf_svg_str + "</div>\n"
+    "        <div class='chart'>" + pacf_svg_str + "</div>\n"
     "    </div>\n</body>\n</html>"
 )
 
