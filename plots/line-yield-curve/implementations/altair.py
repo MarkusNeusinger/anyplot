@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 line-yield-curve: Yield Curve (Interest Rate Term Structure)
 Library: altair 6.0.0 | Python 3.14.3
-Quality: 85/100 | Created: 2026-03-14
+Quality: 90/100 | Created: 2026-03-14
 """
 
 import altair as alt

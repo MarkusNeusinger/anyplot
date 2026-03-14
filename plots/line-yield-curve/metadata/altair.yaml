@@ -1,7 +1,7 @@
 library: altair
 specification_id: line-yield-curve
 created: '2026-03-14T22:19:27Z'
-updated: '2026-03-14T22:24:24Z'
+updated: '2026-03-14T22:31:49Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23097460430
 issue: 4664
@@ -10,35 +10,33 @@ library_version: 6.0.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/line-yield-curve/altair/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/line-yield-curve/altair/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/line-yield-curve/altair/plot.html
-quality_score: 85
+quality_score: 90
 review:
   strengths:
-  - Excellent data quality with realistic U.S. Treasury yield data showing all three
-    canonical curve shapes
-  - Professional color palette and clean visual styling with subtle grid and removed
-    spines
-  - Smart use of log scale for x-axis with custom labelExpr for maturity labels
-  - Good use of Altair layer composition and interactive features (tooltips, HTML
-    export)
-  - Clean, well-structured code with appropriate complexity
+  - Excellent data storytelling with inversion region shading and peak annotation
+    creating a clear financial narrative
+  - Realistic U.S. Treasury data across three distinct monetary policy regimes
+  - Custom colorblind-safe palette with professional styling
+  - Good use of Altair declarative layer composition for combining shading, lines,
+    points, and text annotations
+  - Log-scaled x-axis with custom maturity labels properly reflects time spacing
   weaknesses:
-  - Missing inversion region highlighting (shading or annotation) as required by the
-    spec
-  - Color palette uses green and red which may be difficult for colorblind users
-  - Legend order is alphabetical rather than chronological
-  - No annotation or visual emphasis to guide the viewer to key insights
+  - Y-axis domain [0, 6] wastes vertical space; a tighter range would better utilize
+    the canvas
+  - Annotation font sizes (15-16pt) are slightly smaller than the ideal minimum
   image_description: 'The plot displays three U.S. Treasury yield curves on a white
-    background. The title reads "U.S. Treasury Yield Curves · line-yield-curve · altair
-    · pyplots.ai" in large font at the top. The x-axis is labeled "Maturity (Years)"
-    with custom tick labels (1M, 3M, 6M, 1Y, 2Y, 3Y, 5Y, 7Y, 10Y, 20Y, 30Y) on a logarithmic
-    scale. The y-axis is labeled "Yield (%)" ranging from 0 to 6.0 with 0.2 increments.
-    Three curves are plotted: a blue line "Jan 2022 (Normal)" rising from ~0.08% at
-    1M to ~2.1% at 30Y; a green line "Jul 2023 (Inverted)" starting high at ~5.4%
-    and declining to ~4.0% at 30Y; and a pink/salmon line "Jan 2025 (Normalizing)"
-    relatively flat around 4.2-4.9%. Each curve has filled circle markers at data
-    points. The legend is positioned in the top-right corner. Grid lines are subtle
-    dashed lines with low opacity. The view border/spines are removed. Overall the
-    chart is clean and professional.'
+    background with a log-scaled x-axis showing bond maturities from 1M to 30Y. Three
+    colored lines with circular markers represent different dates: a dark blue line
+    (Jan 2022, Normal) starting near 0.08% and gradually rising to ~2.1%; an orange
+    line (Jul 2023, Inverted) starting high at ~5.4%, peaking at 5.52% around 6M,
+    then declining to ~4.0%; and a teal line (Jan 2025, Normalizing) relatively flat
+    between 4.2-4.9%. A light pink/red shaded rectangle spans from 1M to 7Y marking
+    the Inversion Region where short-term yields exceed long-term yields, with bold
+    italic red text labeling it. A Peak: 5.52% annotation appears near the 6M point
+    of the inverted curve. The title reads U.S. Treasury Yield Curves · line-yield-curve
+    · altair · pyplots.ai at 28pt. Axis labels show Maturity (Years) and Yield (%)
+    at 22pt. Grid lines are subtle dashed lines at 0.2 opacity. The legend is positioned
+    in the top-right corner with colored circles and labels at 18pt.'
   criteria_checklist:
     visual_quality:
       score: 28
@@ -49,68 +47,67 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title=28, labels=18, titles=22). All text
-          clearly readable.
+        comment: 'All font sizes explicitly set: title 28pt, axis titles 22pt, tick/legend
+          labels 18pt. Annotation text at 15-16pt slightly smaller.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements. Legend cleanly positioned away from
-          data.
+        comment: No overlapping text elements
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Lines thick (strokeWidth=4), points large (size=150). All data points
-          clearly visible.
+        comment: Lines strokeWidth=4 and points size=150 perfectly visible for 33
+          data points
       - id: VQ-04
         name: Color Accessibility
-        score: 3
-        max: 4
-        passed: true
-        comment: Blue is distinct but green and red/pink may be challenging for deuteranopia
-          colorblind users.
-      - id: VQ-05
-        name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions (4800x2700). Balanced margins, plot fills canvas
-          well.
+        comment: Colorblind-safe blue/orange/teal palette with good contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good layout but y-axis domain [0,6] wastes vertical space in lower
+          portion
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: Maturity (Years) and Yield (%).'
+        comment: 'Descriptive labels with units: Maturity (Years) and Yield (%)'
     design_excellence:
-      score: 12
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Custom professional palette, good typography. Above defaults but
-          not publication-level.
+        comment: Custom palette, removed view stroke, subtle dashed grid, inversion
+          shading create polished financial-publication look
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: View strokes removed, grid subtle with dashed pattern and low opacity.
+        comment: Grid opacity 0.2 with dashes, view stroke removed. Y-axis range could
+          be tighter.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
         passed: true
-        comment: Descriptive curve labels tell a story but missing inversion highlight
-          annotation.
+        comment: Strong storytelling with inversion region shading, peak annotation,
+          and three curves showing monetary policy evolution
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -118,25 +115,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct multi-line chart with points.
+        comment: Correct line chart for yield curves
       - id: SC-02
         name: Required Features
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: Missing inversion region highlighting as required by spec.
+        passed: true
+        comment: 'All spec features present: multiple curves, log scale, maturity
+          labels, inversion shading, legend'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=maturity_years (log), Y=yield_pct, color=date. All correct.
+        comment: X=maturity_years with log scale, Y=yield_pct correctly mapped
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows required format. Legend shows descriptive date labels.
+        comment: Title includes required format, legend labels clearly identify curves
     data_quality:
       score: 15
       max: 15
@@ -146,21 +144,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all three canonical yield curve shapes: normal, inverted,
-          normalizing.'
+        comment: Shows normal, inverted, and normalizing curves covering all key yield
+          curve shapes
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Data closely matches actual U.S. Treasury yields. Neutral financial
-          domain.
+        comment: Realistic U.S. Treasury data from actual historical periods
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Yields 0-5.5%, maturities 1M-30Y. All values realistic.
+        comment: Yield values realistic for U.S. Treasuries in respective periods
     code_quality:
       score: 10
       max: 10
@@ -170,31 +167,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean procedural flow, no functions or classes.
+        comment: Clean imports-data-plot-save structure, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Hardcoded deterministic data.
+        comment: Fully deterministic with hardcoded yield data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only altair and pandas imported, both used.
+        comment: Only altair and pandas imported, both used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, clean layer composition.
+        comment: Clean, appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png with scale_factor=3.0. Current API.
+        comment: Saves as plot.png with scale_factor=3.0
     library_mastery:
       score: 7
       max: 10
@@ -204,23 +201,23 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good declarative API usage with encoding types, layer composition,
-          log scale, labelExpr.
+        comment: Good declarative grammar usage with layered composition, encoding
+          channels, mark types
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses labelExpr, layer composition, tooltips, interactive(), HTML
-          export.
-  verdict: REJECTED
+        comment: Uses layer composition, interactive(), tooltips, HTML export, mark_text
+          annotations, log scale with labelExpr
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
   - layer-composition
   - hover-tooltips
   - html-export
-  - manual-ticks
   patterns:
   - iteration-over-groups
   dataprep: []
