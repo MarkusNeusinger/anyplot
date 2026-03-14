@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 phase-diagram-pt: Thermodynamic Phase Diagram (Pressure-Temperature)
 Library: bokeh 3.9.0 | Python 3.14.3
 Quality: 84/100 | Created: 2026-03-14
@@ -6,7 +6,7 @@ Quality: 84/100 | Created: 2026-03-14
 
 import numpy as np
 from bokeh.io import export_png, save
-from bokeh.models import ColumnDataSource, Label
+from bokeh.models import ColumnDataSource, HoverTool, Label
 from bokeh.plotting import figure
 from bokeh.resources import CDN
 
@@ -33,15 +33,11 @@ L_vap = 40700  # J/mol vaporization enthalpy of water
 P_liquid_gas = triple_P * np.exp((L_vap / R) * (1 / triple_T - 1 / T_liquid_gas))
 
 # Solid-Liquid boundary (melting curve) - nearly vertical, negative slope for water
-# Water has a negative Clapeyron slope (dP/dT < 0 near triple point, then turns positive at high P)
-# Use a simplified model: steep negative slope from triple point upward
 P_solid_liquid_values = np.logspace(np.log10(triple_P), np.log10(critical_P * 5), 100)
-# Water melting curve: dT/dP is very small and negative near triple point
-# T = T_triple - (P - P_triple) * 7.4e-8 (simplified linear for small range, then curve)
 delta_P = np.maximum(P_solid_liquid_values - triple_P, 0)
 T_solid_liquid = triple_T - delta_P * 7.4e-8 + np.power(delta_P / 1e9, 1.5) * 5
 
-# Plot
+# Plot - extended x_range to 760 for supercritical region breathing room
 p = figure(
     width=4800,
     height=2700,
@@ -51,7 +47,7 @@ p = figure(
     y_axis_type="log",
     toolbar_location=None,
     tools="",
-    x_range=(180, 700),
+    x_range=(180, 760),
     y_range=(50, 5e8),
 )
 
@@ -62,17 +58,17 @@ solid_P = [5e8, 100] + P_solid_gas.tolist() + P_solid_liquid_values.tolist()[::-
 p.patch(solid_T, solid_P, fill_color="#A8D8EA", fill_alpha=0.35, line_color=None)
 
 # Gas region - bottom right
-gas_T = T_solid_gas.tolist() + [triple_T] + T_liquid_gas.tolist() + [700, 700, 180]
+gas_T = T_solid_gas.tolist() + [triple_T] + T_liquid_gas.tolist() + [760, 760, 180]
 gas_P = P_solid_gas.tolist() + [triple_P] + P_liquid_gas.tolist() + [critical_P, 100, 100]
 p.patch(gas_T, gas_P, fill_color="#FFE0B2", fill_alpha=0.3, line_color=None)
 
-# Liquid region - middle/upper right
-liquid_T = [triple_T] + T_liquid_gas.tolist() + [700, 700] + T_solid_liquid.tolist()[::-1]
-liquid_P = [triple_P] + P_liquid_gas.tolist() + [5e8, 5e8] + P_solid_liquid_values.tolist()[::-1]
+# Liquid region - middle/upper
+liquid_T = [triple_T] + T_liquid_gas.tolist() + [critical_T] + T_solid_liquid.tolist()[::-1]
+liquid_P = [triple_P] + P_liquid_gas.tolist() + [5e8] + P_solid_liquid_values.tolist()[::-1]
 p.patch(liquid_T, liquid_P, fill_color="#C5E1A5", fill_alpha=0.3, line_color=None)
 
 # Supercritical region - upper right beyond critical point
-sc_T = [critical_T, 700, 700, critical_T]
+sc_T = [critical_T, 760, 760, critical_T]
 sc_P = [critical_P, critical_P, 5e8, 5e8]
 p.patch(sc_T, sc_P, fill_color="#E1BEE7", fill_alpha=0.25, line_color=None)
 
@@ -86,13 +82,80 @@ p.line(T_liquid_gas, P_liquid_gas, line_width=4, line_color="#306998", line_alph
 # Solid-Liquid (melting)
 p.line(T_solid_liquid, P_solid_liquid_values, line_width=4, line_color="#306998", line_alpha=0.9)
 
-# Triple point
-tp_source = ColumnDataSource(data={"x": [triple_T], "y": [triple_P]})
-p.scatter(x="x", y="y", source=tp_source, size=22, color="#D32F2F", marker="circle", line_color="white", line_width=2)
+# Boundary curve labels
+sub_label = Label(
+    x=225,
+    y=200,
+    text="Sublimation",
+    text_font_size="16pt",
+    text_color="#306998",
+    text_alpha=0.8,
+    text_font_style="italic",
+    angle=0.85,
+)
+p.add_layout(sub_label)
 
-# Critical point
-cp_source = ColumnDataSource(data={"x": [critical_T], "y": [critical_P]})
-p.scatter(x="x", y="y", source=cp_source, size=22, color="#F57C00", marker="diamond", line_color="white", line_width=2)
+vap_label = Label(
+    x=420,
+    y=1.5e5,
+    text="Vaporization",
+    text_font_size="16pt",
+    text_color="#306998",
+    text_alpha=0.8,
+    text_font_style="italic",
+    angle=0.55,
+)
+p.add_layout(vap_label)
+
+melt_label = Label(
+    x=240,
+    y=1e8,
+    text="Melting",
+    text_font_size="16pt",
+    text_color="#306998",
+    text_alpha=0.8,
+    text_font_style="italic",
+    angle=1.50,
+)
+p.add_layout(melt_label)
+
+# Triple point - red marker with HoverTool
+tp_source = ColumnDataSource(
+    data={
+        "x": [triple_T],
+        "y": [triple_P],
+        "name": ["Triple Point"],
+        "temp": ["273.16 K"],
+        "pres": ["611.73 Pa"],
+        "desc": ["All three phases coexist"],
+    }
+)
+tp_glyph = p.scatter(
+    x="x", y="y", source=tp_source, size=24, color="#D32F2F", marker="circle", line_color="white", line_width=2
+)
+
+# Critical point - dark blue/purple marker (improved contrast vs red triple point)
+cp_source = ColumnDataSource(
+    data={
+        "x": [critical_T],
+        "y": [critical_P],
+        "name": ["Critical Point"],
+        "temp": ["647.1 K"],
+        "pres": ["22.064 MPa"],
+        "desc": ["Liquid-gas distinction vanishes"],
+    }
+)
+cp_glyph = p.scatter(
+    x="x", y="y", source=cp_source, size=24, color="#1A237E", marker="diamond", line_color="white", line_width=2
+)
+
+# HoverTool for special points - Bokeh distinctive feature
+hover = HoverTool(
+    renderers=[tp_glyph, cp_glyph],
+    tooltips=[("Point", "@name"), ("Temperature", "@temp"), ("Pressure", "@pres"), ("Significance", "@desc")],
+    point_policy="snap_to_data",
+)
+p.add_tools(hover)
 
 # Dashed line from critical point upward to indicate boundary ends
 p.line(
@@ -116,25 +179,25 @@ liquid_label = Label(
 p.add_layout(liquid_label)
 
 gas_label = Label(
-    x=480, y=500, text="GAS", text_font_size="32pt", text_color="#37474F", text_alpha=0.6, text_font_style="bold"
+    x=500, y=500, text="GAS", text_font_size="32pt", text_color="#37474F", text_alpha=0.6, text_font_style="bold"
 )
 p.add_layout(gas_label)
 
 sc_label = Label(
-    x=655,
-    y=2e8,
+    x=670,
+    y=1.5e8,
     text="SUPERCRITICAL\nFLUID",
-    text_font_size="20pt",
+    text_font_size="22pt",
     text_color="#6A1B9A",
-    text_alpha=0.5,
+    text_alpha=0.55,
     text_font_style="bold",
 )
 p.add_layout(sc_label)
 
 # Triple point annotation
 tp_label = Label(
-    x=triple_T + 12,
-    y=triple_P * 2.5,
+    x=triple_T + 15,
+    y=triple_P * 3,
     text="Triple Point\n(273.16 K, 611.73 Pa)",
     text_font_size="18pt",
     text_color="#D32F2F",
@@ -143,11 +206,11 @@ p.add_layout(tp_label)
 
 # Critical point annotation
 cp_label = Label(
-    x=critical_T - 160,
-    y=critical_P * 3.5,
+    x=critical_T - 170,
+    y=critical_P * 4,
     text="Critical Point\n(647.1 K, 22.06 MPa)",
     text_font_size="18pt",
-    text_color="#F57C00",
+    text_color="#1A237E",
 )
 p.add_layout(cp_label)
 
