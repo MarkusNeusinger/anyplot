@@ -1,14 +1,11 @@
-""" pyplots.ai
+"""pyplots.ai
 flamegraph-basic: Flame Graph for Performance Profiling
 Library: plotly 6.6.0 | Python 3.14.3
 Quality: 86/100 | Created: 2026-03-14
 """
 
-import numpy as np
 import plotly.graph_objects as go
 
-
-np.random.seed(42)
 
 # Data - Simulated CPU profiling data with hierarchical call stacks
 # Format: (stack_path, self_samples)
@@ -102,25 +99,25 @@ for _, _, depth, _, samples, stack in bars:
 for stack, _ in depth_bars.values():
     hot_path_stacks.add(stack)
 
-# Color palette: warm tones with varied saturation for differentiation
-# Hot path bars get deeper, more saturated reds; others get lighter warm tones
+# Color palette: warm tones with varied saturation/lightness for differentiation
+# Hot path: deep reds; others: distinct warm shades across the yellow-orange-peach spectrum
 hot_colors = ["#D32F2F", "#C62828", "#B71C1C", "#E53935", "#EF5350", "#F44336", "#D50000", "#FF1744"]
 warm_colors = [
-    "#FFCC80",
-    "#FFE0B2",
-    "#FFD180",
-    "#FFE57F",
-    "#FFF176",
-    "#FFD54F",
-    "#FFAB40",
-    "#FFB74D",
-    "#FFCC02",
-    "#FFE082",
-    "#F0E68C",
-    "#FAFAD2",
-    "#FFD700",
-    "#F5DEB3",
-    "#FFDAB9",
+    "#FFB74D",  # medium orange
+    "#FFF59D",  # pale yellow
+    "#FFAB91",  # salmon peach
+    "#FFD54F",  # amber gold
+    "#E6B566",  # dark gold
+    "#F5DEB3",  # wheat
+    "#FFCC80",  # light orange
+    "#FFE082",  # warm yellow
+    "#D4A76A",  # tan
+    "#FFDAB9",  # peach puff
+    "#F0C987",  # sand
+    "#FFE4B5",  # moccasin
+    "#E8B87E",  # caramel
+    "#FFC599",  # melon
+    "#FFF3E0",  # cream
 ]
 
 color_map = {}
@@ -137,38 +134,39 @@ for bar in bars:
 
 max_depth = max(b[2] for b in bars)
 
-# Group bars by depth to reduce trace count
-depth_groups = {}
+# Group bars by (depth, is_hot) for batched traces — idiomatic Plotly
+bar_height = 0.82
+depth_hot_groups = {}
 for x_start, width, depth, func_name, samples, stack in bars:
-    depth_groups.setdefault(depth, []).append((x_start, width, func_name, samples, stack))
+    is_hot = stack in hot_path_stacks
+    key = (depth, is_hot)
+    depth_hot_groups.setdefault(key, []).append((x_start, width, func_name, samples, stack))
 
-# Plot
+# Plot - one trace per (depth, is_hot) group using array parameters
 fig = go.Figure()
 
-bar_height = 0.82
+for (depth, is_hot), group in sorted(depth_hot_groups.items()):
+    widths = [g[1] for g in group]
+    bases = [g[0] for g in group]
+    colors = [color_map[g[2]] for g in group]
+    border_color = "#B71C1C" if is_hot else "rgba(255,255,255,0.8)"
+    border_width = 1.5 if is_hot else 0.5
+    hover_texts = [
+        f"<b>{g[2]}</b><br>Stack: {g[4]}<br>Samples: {g[3]} ({g[1] * 100:.1f}%)<extra></extra>" for g in group
+    ]
 
-for depth in sorted(depth_groups.keys()):
-    group = depth_groups[depth]
-    for x_start, width, func_name, samples, stack in group:
-        color = color_map[func_name]
-        is_hot = stack in hot_path_stacks
-        border_color = "#B71C1C" if is_hot else "rgba(255,255,255,0.8)"
-        border_width = 1.5 if is_hot else 0.5
-
-        fig.add_trace(
-            go.Bar(
-                x=[width],
-                y=[depth],
-                base=[x_start],
-                orientation="h",
-                marker={"color": color, "line": {"color": border_color, "width": border_width}},
-                width=bar_height,
-                showlegend=False,
-                hovertemplate=(
-                    f"<b>{func_name}</b><br>Stack: {stack}<br>Samples: {samples} ({width * 100:.1f}%)<extra></extra>"
-                ),
-            )
+    fig.add_trace(
+        go.Bar(
+            x=widths,
+            y=[depth] * len(group),
+            base=bases,
+            orientation="h",
+            marker={"color": colors, "line": {"color": border_color, "width": border_width}},
+            width=bar_height,
+            showlegend=False,
+            hovertemplate=hover_texts,
         )
+    )
 
 # Add function name labels
 for x_start, width, depth, func_name, _samples, stack in bars:
