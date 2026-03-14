@@ -1,0 +1,242 @@
+library: highcharts
+specification_id: phase-diagram-pt
+created: '2026-03-14T14:55:37Z'
+updated: '2026-03-14T15:31:13Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23090166823
+issue: 4666
+python_version: 3.14.3
+library_version: unknown
+preview_url: https://storage.googleapis.com/pyplots-images/plots/phase-diagram-pt/highcharts/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/phase-diagram-pt/highcharts/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/phase-diagram-pt/highcharts/plot.html
+quality_score: 89
+review:
+  strengths:
+  - Excellent scientific accuracy with real water phase diagram data using Clausius-Clapeyron
+    equations
+  - Colorblind-safe palette (blue/orange/purple) with distinct dash styles - improved
+    from previous attempt
+  - Rich visual design with styled annotation boxes, area fills, plot bands, and text
+    outlines
+  - All spec requirements fully met including supercritical fluid region
+  - Clean, deterministic code with appropriate complexity
+  weaknesses:
+  - X-axis title Temperature (K) is cut off at the bottom edge due to chart height
+    vs viewport mismatch
+  - Melting curve is very short and nearly vertical, making it slightly hard to spot
+    among other visual elements
+  image_description: 'The plot displays a water pressure-temperature phase diagram
+    on a light gray (#fafafa) background. The x-axis shows Temperature (K) from ~180
+    to 750 with tick labels at 50K intervals. The y-axis shows Pressure (Pa) on a
+    logarithmic scale from 10 to 1G with labeled tick marks. Three phase boundary
+    curves are plotted: a blue short-dashed sublimation curve (low-temperature, rising
+    from bottom-left to the triple point), an orange long-dashed vaporization curve
+    (sweeping from the triple point up to the critical point), and a purple dash-dot
+    melting curve (nearly vertical, rising from the triple point upward). Phase regions
+    are labeled in large bold text: "SOLID" (upper-left, blue), "LIQUID" (center,
+    blue), "GAS" (lower-right, green), and "SUPERCRITICAL FLUID" (far right, orange).
+    The triple point is marked with a purple circle at 273.16 K / 611.7 Pa with a
+    styled purple annotation box, and the critical point is marked with an orange
+    diamond at 647.1 K / 22.06 MPa with a styled orange annotation box. Subtle area
+    fills shade the gas region (light green) and liquid region (light blue). Plot
+    bands highlight the solid region (left blue tint) and supercritical region (right
+    orange tint). A custom HTML legend in the lower-right shows the three curve line
+    styles. The title reads "Water Phase Diagram · phase-diagram-pt · highcharts ·
+    pyplots.ai". The x-axis title "Temperature (K)" appears cut off at the bottom
+    edge of the rendered image.'
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 42px, axis titles 32px, tick
+          labels 24px, phase labels 44px, annotations 26px'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: All text fully readable with no collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Lines 6px wide, markers radius 20, all visible; melting curve nearly
+          vertical and short, slightly hard to spot
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Colorblind-safe palette: blue (#306998), amber/orange (#D4760A),
+          purple (#8B5CF6) — no red-green pairing'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 2
+        max: 4
+        passed: false
+        comment: Good canvas utilization overall but x-axis title cut off at bottom
+          (image 4800x2561 vs chart 4800x2700)
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Both axes labeled with units: Temperature (K) and Pressure (Pa)'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom off-white background, colorblind-safe palette, styled HTML
+          annotations with shadows, area fills, plot bands, text outlines, distinct
+          dash styles
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: X-axis grid removed, subtle dotted y-axis grid (6% opacity), tick
+          marks removed, generous spacing; polish diminished by x-axis title cutoff
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy with large phase labels, annotated special
+          points, region shading guides viewer through water's phase behavior
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct P-T phase diagram with boundary curves on logarithmic pressure
+          axis
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: three boundaries, triple/critical points,
+          phase labels, supercritical region, log pressure axis'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Temperature on x-axis, pressure on y-axis (log scale), all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title follows required format; custom HTML legend shows curve types
+          with matching colors and dash styles
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'All aspects shown: three boundaries, both special points, supercritical
+          region, water''s negative melting slope'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real water phase diagram with accurate triple/critical point values,
+          Clausius-Clapeyron approximation
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values match known water properties; pressure range spans full diagram
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports, data generation, chart config, series, export'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic with mathematical formulas, no random data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-organized; loop for phase labels reduces duplication
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png via Selenium screenshot
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Good use of Highcharts patterns: Chart with HighchartsOptions, add_series
+          with dict config, logarithmic axis, plotOptions'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Leverages plotBands, useHTML data labels, area series with threshold,
+          hover states, custom tooltip formatting
+  verdict: REJECTED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - annotations
+  - html-export
+  - hover-tooltips
+  - custom-legend
+  - layer-composition
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling
