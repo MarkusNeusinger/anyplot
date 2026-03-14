@@ -1,0 +1,231 @@
+library: plotnine
+specification_id: flamegraph-basic
+created: '2026-03-14T20:27:02Z'
+updated: '2026-03-14T20:40:50Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23095681639
+issue: 4665
+python_version: 3.14.3
+library_version: 0.15.3
+preview_url: https://storage.googleapis.com/pyplots-images/plots/flamegraph-basic/plotnine/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/flamegraph-basic/plotnine/plot_thumb.png
+preview_html: null
+quality_score: 90
+review:
+  strengths:
+  - Excellent dark-background flame graph aesthetic with conventional warm color palette
+  - Smart label filtering (width_frac > 0.06) prevents text overlap
+  - Realistic web server CPU profiling data with meaningful function names and proportional
+    sample counts
+  - Clean deterministic code with proper grammar-of-graphics layering
+  - Color-to-samples mapping creates effective visual hierarchy for identifying hotspots
+  weaknesses:
+  - Bar labels at size=7 could be slightly larger for better readability on medium-width
+    bars
+  - DE-03 could be elevated with strategic emphasis on the hottest code path
+  - LM-02 is generic — not leveraging plotnine-specific features beyond basic grammar
+  image_description: 'The plot displays a flame graph on a dark (#1a1a1a) panel background
+    with a white outer background. The title "flamegraph-basic · plotnine · pyplots.ai"
+    is centered at top in bold 24pt black text. The bottom bar "main" spans full width
+    in dark red (1000 samples). Above it at depth 1: "request_handler" (~80% width,
+    red-orange), "gc_collect" and "logging" (yellow, smaller). Depth 2: "parse_headers",
+    "parse_body" (yellow), "route_dispatch" (large, orange), plus smaller unlabeled
+    bars. Depth 3: "decode_json", "auth_middleware", "query_database" (orange-yellow),
+    "render_template". Depth 4: "verify_token", "execute_sql" (yellow-orange), and
+    smaller bars. Top level: "fetch_rows" (yellow) and a small unlabeled bar. Colors
+    follow a warm gradient: yellow (low samples) through orange to red (high samples)
+    via scale_fill_gradientn. White borders cleanly separate bars. A horizontal legend
+    at bottom shows "Samples" with gradient bar and breaks at 100, 500, 1000.'
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 24pt, legend 14pt/12pt, bar
+          labels size=7 (~20pt) bold. Readable but bar labels on the smaller end.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlap. Labels filtered by width_frac > 0.06.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All bars clearly visible with white borders. Small bars distinct
+          against dark background.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Warm sequential palette is colorblind-safe. Good contrast against
+          dark panel.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good canvas utilization. 16:9 aspect ratio. Legend well-placed at
+          bottom.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title in correct format. No axis labels needed (theme_void). Legend
+          label Samples is descriptive.
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Strong design: dark panel background, custom 5-color warm gradient,
+          white borders, bold labels. Professional polish.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: theme_void removes all chrome. Dark panel, white borders, well-proportioned
+          legend. Generous bar height.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Color-to-samples mapping creates visual hierarchy. Hot path immediately
+          identifiable through width and color.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct flame graph: horizontal bars stacked bottom-to-top, width
+          proportional to samples.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: depth levels, proportional width, warm
+          colors, adjacent bars, function labels.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=sample width, Y=stack depth. All data visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title in correct format. Samples legend with gradient bar and meaningful
+          breaks.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Multiple depth levels, varying widths, multiple siblings, labeled
+          and unlabeled bars.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Web server request handling with realistic function names. Neutral
+          technology domain.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 1000 total samples with proportional breakdown. Realistic CPU profiling
+          distribution.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean Imports-Data-Processing-Plot-Save structure. No functions or
+          classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hardcoded data. No random elements.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean stack position algorithm. Appropriate complexity. No fake UI.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with dpi=300. Current API.
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good grammar-of-graphics approach with geom_rect + geom_text layering
+          and aes mappings.
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: true
+        comment: Uses scale_fill_gradientn and theme_void. Somewhat distinctive but
+          core approach replicable in other libraries.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - custom-colormap
+  - dark-theme
+  - edge-highlighting

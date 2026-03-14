@@ -1,0 +1,232 @@
+library: plotly
+specification_id: flamegraph-basic
+created: '2026-03-14T20:27:37Z'
+updated: '2026-03-14T20:50:28Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23095681470
+issue: 4665
+python_version: 3.14.3
+library_version: 6.6.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/flamegraph-basic/plotly/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/flamegraph-basic/plotly/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/flamegraph-basic/plotly/plot.html
+quality_score: 90
+review:
+  strengths:
+  - Excellent data storytelling through hot path highlighting — viewer immediately
+    identifies the performance bottleneck
+  - Custom warm color palette with red/orange differentiation follows flame graph
+    conventions
+  - Comprehensive, realistic CPU profiling data with diverse function categories
+  - Smart label truncation prevents overlap while preserving readability
+  - Batched traces by (depth, is_hot) groups — idiomatic Plotly usage with array parameters
+  - Clean imports — unnecessary numpy dependency removed
+  weaknesses:
+  - Non-hot-path bars use many similar yellow/orange shades that are hard to distinguish
+    from each other
+  - Small bars at deepest stack levels are inherently tiny
+  image_description: The plot displays a flame graph with horizontal bars stacked
+    by call stack depth (0–6 on the y-axis) against "Proportion of Total Samples"
+    (0%–100% on the x-axis). The title "flamegraph-basic · plotly · pyplots.ai" is
+    rendered in monospace font at the top center. At depth 0, "main" spans the full
+    width in deep red. Depth 1 shows "process_request" (large, red) and a small "gc_coll…"
+    bar. Depth 2 contains "send_respo…", "route_handler" (large, red), "parse_headers",
+    "parse_body", and smaller bars in warm tones. Deeper levels show "query_db", "execute_sql",
+    "auth_check", "render_template", "fetch_rows", "verify_tok…", "optimi…", and "deserialize".
+    Hot path bars (widest at each depth) are rendered in deep red/crimson with white
+    bold monospace text and red borders, while non-hot-path bars use warm yellows,
+    oranges, wheat, and peach tones with dark text. A "Hot path (most samples)" legend
+    annotation appears in the top right corner. The background is light gray (#FAFAFA)
+    with no grid lines. Function names are displayed inside bars when wide enough,
+    with ellipsis truncation for narrow bars. Bars are directly adjacent with minimal
+    gaps.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 28pt, axis labels 22pt, ticks
+          16pt, annotations 16pt. All text clearly readable.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text; labels smartly truncated with ellipsis when
+          bars are narrow.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Bars well-sized with bar_height=0.82. Small bars at top depths are
+          inherent to data hierarchy.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 3
+        max: 4
+        passed: true
+        comment: Warm palette conventional for flame graphs. Hot vs non-hot distinction
+          clear, but many yellow/orange shades are similar.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good proportions, plot fills canvas well, balanced margins.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive labels with % format.
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom warm palette, hot path highlighting, monospace font, differentiated
+          borders. Clearly above defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Grid removed, plotly_white template, custom background, clean margins,
+          intentional border styling.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Hot path highlighting with bold white text on red creates immediate
+          visual story of performance bottleneck.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct flame graph with horizontal bars stacked bottom-to-top by
+          stack depth.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: proportional width, warm colors, minimal
+          gaps, function labels.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = proportion of total samples, Y = stack depth. Alphabetical ordering
+          within siblings.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title follows exact format. Hot path annotation serves as legend.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Multiple depth levels (0-6), varying widths, diverse function categories.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Realistic CPU profiling with plausible web request processing functions.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sample counts 15-150 realistic for profiling data.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports, data, processing, plot, save. No functions
+          or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hardcoded data.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only plotly.graph_objects imported and used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-structured iterative stack traversal, clean inclusive value
+          calculation, efficient grouping.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct output format and dimensions.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Bars batched into grouped traces by (depth, is_hot) with array parameters.
+          Overlay barmode with base positioning.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Custom hovertemplate, HTML export with CDN, overlay barmode with
+          explicit base positioning.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - edge-highlighting
