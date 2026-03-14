@@ -1,0 +1,226 @@
+library: bokeh
+specification_id: line-yield-curve
+created: '2026-03-14T22:16:54Z'
+updated: '2026-03-14T22:29:49Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23097460488
+issue: 4664
+python_version: 3.14.3
+library_version: 3.9.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/line-yield-curve/bokeh/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/line-yield-curve/bokeh/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/line-yield-curve/bokeh/plot.html
+quality_score: 90
+review:
+  strengths:
+  - Excellent data choice with three distinct yield curve shapes (normal, flat, inverted)
+    telling a compelling financial story
+  - Professional clean styling with subtle grid, removed tick marks, and minimal chrome
+  - Custom colorblind-safe palette with dashed line for additional differentiation
+  - Good use of Bokeh-specific features (ColumnDataSource, varea, custom Legend)
+  - Inversion zone shading and annotation add meaningful context
+  weaknesses:
+  - Inversion zone shading (alpha 0.08) is very subtle — could be slightly more visible
+  - Subtitle and annotation text appear small relative to the canvas despite being
+    19-20pt
+  image_description: 'The plot displays three U.S. Treasury yield curves on a white
+    background with a logarithmic x-axis. The title "line-yield-curve · bokeh · pyplots.ai"
+    appears in bold dark gray at the top left, with a smaller gray subtitle below.
+    Three curves are plotted: a solid blue line (Jan 2024 — Normal), a solid teal
+    line (Jun 2024 — Flat), and a dashed purple line (Jul 2023 — Inverted), each with
+    white-bordered circular markers. X-axis tick labels show maturity labels (1M through
+    30Y) with proper log spacing. Y-axis shows "Yield (%)" from ~3.75 to ~5.8. A very
+    light purple shaded area highlights the inversion zone where short-term yields
+    on the inverted curve exceed the 30Y yield. An italic purple annotation near the
+    bottom reads "Inversion zone: short-term yields exceed long-term." The legend
+    is in the lower right with a white background and subtle border. Y-grid is very
+    subtle, x-grid hidden, overall styling is clean and professional.'
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 36pt, labels 26pt, ticks 18pt,
+          legend 22pt). Subtitle and annotation slightly small relative to canvas.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping elements. Legend positioned away from data, tick labels
+          well-spaced on log axis.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Lines 4.5px wide, markers size 16 with white borders — clearly visible
+          and well-adapted.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue/teal/purple palette is colorblind-safe. Dashed line provides
+          additional differentiation.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Plot fills canvas well but slightly generous margins. Legend in far
+          bottom-right could be better integrated.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Yield (%) includes units, Maturity is descriptive for the domain.
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom cohesive palette, intentional typography hierarchy, dashed
+          line for anomalous curve, white-bordered markers.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: X-grid removed, y-grid subtle, outline removed, tick marks removed,
+          clean axis lines.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Good hierarchy with dash pattern and color for inverted curve. Inversion
+          shading very subtle (alpha 0.08).
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct line chart with multiple curves on same axes.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: multiple curves, log x-axis, maturity
+          labels, inversion highlighting, legend with dates.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=maturity_years on log scale, Y=yield_pct. Full data range shown.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct. Legend labels include date and curve type.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows normal, flat, and inverted yield curve shapes.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: U.S. Treasury yield data with realistic values for 2023-2024.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Yields 3.9-5.6% realistic for recent U.S. Treasuries.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat structure with no functions or classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic with hardcoded data arrays.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-organized, appropriate complexity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png via export_png. Current API.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Proper ColumnDataSource, figure, Legend/LegendItem, Label, NumeralTickFormatter
+          usage.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses Bokeh-specific ColumnDataSource, varea, custom Legend, Label,
+          dual HTML+PNG export.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  - manual-ticks
+  - html-export
+  patterns:
+  - columndatasource
+  dataprep: []
+  styling:
+  - grid-styling
+  - alpha-blending
+  - edge-highlighting

@@ -1,0 +1,232 @@
+library: plotnine
+specification_id: acf-pacf
+created: '2026-03-14T22:18:48Z'
+updated: '2026-03-14T22:36:36Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23097477539
+issue: 4663
+python_version: 3.14.3
+library_version: 0.15.3
+preview_url: https://storage.googleapis.com/pyplots-images/plots/acf-pacf/plotnine/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/acf-pacf/plotnine/plot_thumb.png
+preview_html: null
+quality_score: 90
+review:
+  strengths:
+  - Significance coloring (blue vs silver) creates meaningful visual hierarchy beyond
+    typical ACF/PACF plots
+  - Data choice with clear seasonality (period 12) perfectly demonstrates the primary
+    use case
+  - Idiomatic plotnine grammar of graphics with facet_wrap for panel layout
+  - Thorough theme customization with explicit font sizes, subtle grid, and styled
+    strip backgrounds
+  - Lag 0 correctly shown as non-significant despite being 1.0 by definition
+  weaknesses:
+  - Y-axis labeled Correlation instead of individual ACF/PACF labels as spec requests
+  - PACF panel has proportionally more empty space due to smaller correlation range
+    with free_y
+  image_description: The plot displays two vertically stacked panels — ACF (top) and
+    PACF (bottom) — on a clean minimal background. Stem lines extend from a gray zero
+    baseline to correlation values, capped with circular markers. Significant lags
+    (outside confidence bounds) are colored in Python Blue (#306998), while non-significant
+    lags appear in muted silver (#B0BEC5). Red dashed lines at approximately ±0.13
+    mark the 95% confidence bounds. The ACF panel shows a clear sinusoidal seasonal
+    pattern with period 12, with correlations oscillating between approximately -0.7
+    and +1.0. Lag 0 in ACF is shown as a gray (non-significant) dot at 1.0. The PACF
+    panel starts from lag 1, showing a strong spike at lag 1 (~0.7), a sharp negative
+    spike at lag 3 (~-0.7), and seasonal spikes around lags 5-6 and 9-12, with most
+    higher lags falling within the confidence bounds. The title "acf-pacf · plotnine
+    · pyplots.ai" appears at the top in dark indigo bold text. Strip labels "ACF"
+    and "PACF" sit in light gray backgrounds. X-axis labeled "Lag" with ticks at intervals
+    of 6, shared y-axis labeled "Correlation". Overall layout is 16:10 landscape with
+    generous whitespace and subtle horizontal grid lines.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title=24pt, axis_title=20pt, axis_text=16pt,
+          strip_text=20pt'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping elements; x-axis ticks spaced at intervals of 6
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Stem lines (size=1.3) and points (size=3.2) clearly visible; significance
+          coloring aids discrimination
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue vs silver is colorblind-safe; red confidence bounds have adequate
+          contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: false
+        comment: Good proportions but PACF panel has more empty vertical space due
+          to free_y scaling
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 1
+        max: 2
+        passed: false
+        comment: Descriptive labels but spec requests ACF/PACF as individual y-axis
+          labels
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom palette with significance coloring, intentional hierarchy,
+          good typography
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: X-grid removed, subtle y-grid, styled strip backgrounds, generous
+          whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Significance coloring creates visual hierarchy; seasonal pattern
+          is visually compelling
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct ACF/PACF stem plots in two vertically stacked subplots
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: false
+        comment: All major features present; y-axis labeled Correlation rather than
+          ACF/PACF per spec
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=lag number, Y=correlation value, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; legend appropriately hidden
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows seasonal pattern, AR(1) component, positive/negative correlations,
+          significant/non-significant lags
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Monthly temperature with seasonality — realistic, neutral, demonstrates
+          primary use case
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 240 observations, 36 lags, correlations in valid [-1,1] range
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports, data, compute, DataFrame, plot, save'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used, no extras
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, appropriate complexity; pd.Categorical for panel ordering
+          is elegant
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png at dpi=300, current API
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expertly uses grammar of graphics: ggplot + aes + geom layers +
+          facet_wrap + scale + theme'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: facet_wrap with free_y, pd.Categorical for ordered facets, significance
+          mapping via aes
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - statsmodels
+  techniques:
+  - faceting
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep:
+  - time-series
+  styling:
+  - grid-styling

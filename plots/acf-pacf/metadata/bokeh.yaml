@@ -1,0 +1,231 @@
+library: bokeh
+specification_id: acf-pacf
+created: '2026-03-14T22:19:13Z'
+updated: '2026-03-14T22:38:32Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23097477556
+issue: 4663
+python_version: 3.14.3
+library_version: 3.9.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/acf-pacf/bokeh/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/acf-pacf/bokeh/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/acf-pacf/bokeh/plot.html
+quality_score: 92
+review:
+  strengths:
+  - 'Excellent data storytelling: AR(2) gold highlights and annotation immediately
+    convey the statistical insight'
+  - Strong color differentiation between significant and non-significant lags aids
+    interpretation
+  - 'Bokeh-specific features well leveraged: HoverTool, BoxAnnotation, HTML export'
+  - Clean, well-structured code with proper reproducibility (seed set)
+  - Full spec compliance with all required features present
+  weaknesses:
+  - Minor vertical whitespace waste in ACF subplot above lag-0 peak
+  - 95% Confidence Interval label positioned in data area rather than margin
+  image_description: The plot displays two vertically stacked subplots for ACF (top)
+    and PACF (bottom) of a simulated AR(2) retail sales time series. The title "acf-pacf
+    · bokeh · pyplots.ai" appears at the top left. Both plots use vertical stem lines
+    from a zero baseline to correlation values, with circular markers at each tip.
+    Significant lags (outside the 95% confidence interval) are rendered in darker
+    Python Blue (#306998), while non-significant lags appear in a muted blue (#8FAEC4).
+    A semi-transparent pink/red shaded band marks the 95% confidence interval on both
+    subplots, bounded by dashed red lines. Red "95% Confidence Interval" labels appear
+    on each subplot. The ACF shows lag 0 = 1.0, lag 1 ≈ 0.42, with gradual exponential
+    decay characteristic of an AR process. The PACF shows a sharp cutoff after lag
+    2, with lags 1 (≈0.43) and 2 (≈-0.28) highlighted by gold-outlined markers and
+    a gold "AR(2) identified" annotation. The background is light gray (#FAFAFA) with
+    subtle dashed y-grid lines. X-axes share the same range (0-35) labeled "Lag";
+    y-axes are labeled "ACF" and "PACF" respectively.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 36pt, axis labels 28pt, tick
+          labels 22pt, annotations 20-22pt'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or elements. Stems well-spaced across 35 lags
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Stem lines line_width=5 and markers size=18 perfectly visible. Significant/non-significant
+          color differentiation
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue/muted-blue/gold/red palette is colorblind-safe with good contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Two subplots fill canvas well but some vertical whitespace wasted
+          in ACF above lag-0 peak
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Standard labels appropriate for dimensionless correlation coefficients
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom palette with Python Blue, muted variant, gold accent, red
+          CI. Custom background and typography. Clearly above defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: X-grid removed, y-grid subtle dashed, outline removed, minor ticks
+          hidden. CI label in data area slightly inelegant
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Gold AR(2) highlights with annotation create strong focal point.
+          Significant/non-significant color coding guides interpretation
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct ACF/PACF stem plots in two vertically stacked subplots
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: stems, CI bounds, lag 0 in ACF, PACF
+          from lag 1, shared x-axis, 35 lags'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = lag number, Y = correlation values. Correctly mapped
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct. No legend needed for single-series subplots
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: AR(2) generates exponential ACF decay and sharp PACF cutoff. Both
+          positive and negative correlations visible
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Monthly retail sales with inventory cycles is plausible and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 200 observations appropriate. Correlations in [-1,1]. 35 lags suitable
+          for sample size
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean linear flow: imports, data, plot, save. No functions or classes'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) ensures deterministic output
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-organized with styling loop to avoid duplication. No fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png via export_png. Also generates HTML
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of ColumnDataSource, segment+scatter for stems, Span/BoxAnnotation,
+          column layout
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: HoverTool with vline mode, BoxAnnotation for CI band, HTML export
+          — distinctively Bokeh features
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - statsmodels
+  techniques:
+  - subplots
+  - hover-tooltips
+  - annotations
+  - html-export
+  patterns:
+  - data-generation
+  - columndatasource
+  - iteration-over-groups
+  dataprep:
+  - time-series
+  styling:
+  - alpha-blending
+  - grid-styling
