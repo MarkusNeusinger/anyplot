@@ -1,0 +1,222 @@
+library: pygal
+specification_id: flamegraph-basic
+created: '2026-03-14T20:27:44Z'
+updated: '2026-03-14T21:06:23Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23095681595
+issue: 4665
+python_version: 3.14.3
+library_version: 3.1.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/flamegraph-basic/pygal/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/flamegraph-basic/pygal/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/flamegraph-basic/pygal/plot.html
+quality_score: 80
+review:
+  strengths:
+  - Depth-based warm color palette (yellow to orange to red) faithfully follows flame
+    graph conventions
+  - Realistic web server profiling data with plausible function names and sample counts
+  - Good use of pygal per-value styling for individual bar coloring
+  - Interactive HTML output leverages pygal SVG rendering capability
+  - Clean monospace typography appropriate for profiling context
+  weaknesses:
+  - Some labels truncated at right edge of chart (send_response, compress_gzip)
+  - Vertical gaps between depth rows break traditional flame graph appearance
+  - Only 25 stack traces vs spec suggested 50-500 range
+  - Importlib workaround for module name collision adds code complexity
+  image_description: 'The plot displays a horizontal stacked bar chart representing
+    a flame graph for CPU performance profiling. There are 5 depth levels (Depth 0
+    through Depth 4) on the y-axis labeled "Call Stack Depth", with "Samples" on the
+    x-axis ranging from 0 to 800. The title reads "flamegraph-basic · pygal · pyplots.ai"
+    in monospace font. Depth 0 (bottom) shows a single pale yellow bar "main (800)"
+    spanning the full width. Depth 1 has warm orange/yellow bars for gc_collect (80),
+    idle_wait (50), log_metrics (60), and a large process_request (600). Depth 2 shows
+    mid-orange bars including execute_handler (250), parse_headers (120), route_dispatch
+    (180), with some bars truncated at right edge. Depth 3 has salmon/red bars for
+    db_query (140), serialize_json (70), template_render, decode_base64 (55), validate_utf8
+    (45), lookup_handler (70), regex_match (90), and compress_gzip (truncated at edge).
+    Depth 4 has the darkest red bars: connect_pool, execute_sql (80), fetch_rows,
+    encode_utf8. Colors transition from pale yellow at root to dark red at deepest
+    level following flame graph conventions. White stroke borders separate adjacent
+    bars.'
+  criteria_checklist:
+    visual_quality:
+      score: 24
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Font sizes explicitly set (title=48, label=24, major_label=22), monospace
+          font appropriate for profiling context
+      - id: VQ-02
+        name: No Overlap
+        score: 4
+        max: 6
+        passed: true
+        comment: Labels on narrow bars squeezed, some labels at right edge truncated
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Bars well-sized and visible, transparent spacers create proper alignment
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Warm yellow-to-red palette is colorblind-safe with good contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Plot fills canvas well but some bars clipped at right edge, large
+          vertical gaps between rows
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 1
+        max: 2
+        passed: true
+        comment: Descriptive labels but lack units
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful depth-based warm color palette, monospace font, white
+          stroke borders
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Grid hidden, rounded bars, clean background, some excessive vertical
+          spacing
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Color gradient tells depth story, hot path clearly visible
+    spec_compliance:
+      score: 13
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 4
+        max: 5
+        passed: true
+        comment: HorizontalStackedBar correct for pygal flame graph, gaps between
+          rows deviate from convention
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: Most features present, only 25 stack traces vs 50-500 suggested
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X-axis shows samples, Y-axis shows depth, widths proportional
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct, legend appropriately hidden
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Multiple depth levels, varying widths, nested hierarchies shown
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Web server request processing with realistic function names
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 800 total samples with sensible distribution
+    code_quality:
+      score: 8
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: No functions/classes but tree-building BFS adds complexity
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hardcoded data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used, importlib workaround necessary
+      - id: CQ-04
+        name: Code Elegance
+        score: 1
+        max: 2
+        passed: true
+        comment: Importlib workaround is ugly but necessary, tree building verbose
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png via render_to_png
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of HorizontalStackedBar with per-value dicts for styling
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Pygal-specific per-value styling dicts, transparent spacers, interactive
+          SVG/HTML
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - edge-highlighting
+  - minimal-chrome
