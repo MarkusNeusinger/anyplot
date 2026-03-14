@@ -1,7 +1,7 @@
 library: pygal
 specification_id: line-yield-curve
 created: '2026-03-14T22:16:35Z'
-updated: '2026-03-14T22:35:34Z'
+updated: '2026-03-14T22:45:53Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23097460446
 issue: 4664
@@ -10,36 +10,29 @@ library_version: 3.1.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/line-yield-curve/pygal/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/line-yield-curve/pygal/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/line-yield-curve/pygal/plot.html
-quality_score: 85
+quality_score: 86
 review:
   strengths:
-  - Excellent data quality with realistic historical U.S. Treasury yield data across
-    three distinct market regimes
-  - Full spec compliance including inversion highlighting with quantified basis point
-    spread
-  - Clean KISS code structure with deterministic data
-  - Good use of pygal-specific features (XY chart, value formatters, stroke_dasharray,
-    HTML export)
-  - Professional color palette appropriate for financial data visualization
+  - Excellent spec compliance with all required features including inversion highlighting
+    with basis point annotation
+  - Strong data storytelling with three distinct yield curve shapes (normal, flat,
+    inverted) and explicit inversion callout
+  - Clean professional financial aesthetic with custom color palette and refined grid
+    styling
+  - 'Good use of pygal-specific features: cubic interpolation, stroke_dasharray, per-series
+    dot sizing, HTML export'
+  - Perfect code quality with flat KISS structure, deterministic data, and clean imports
   weaknesses:
-  - Pygal monospace font rendering limits typographic refinement
-  - Inversion highlight could use shading/fill rather than just a dashed connector
-    for stronger visual impact
-  - Gold/yellow color slightly less prominent against white background
-  image_description: 'The plot displays three U.S. Treasury yield curves on a white
-    background. The title reads "U.S. Treasury Yield Curves · line-yield-curve · pygal
-    · pyplots.ai" in a monospace font at the top. Three colored lines with dot markers
-    are plotted: Jan 2021 (Normal) in blue, rising gradually from near 0% at short
-    maturities to ~1.87% at 30Y; Dec 2018 (Flat) in yellow/gold, hovering relatively
-    flat around 2.4-3.0%; and Mar 2023 (Inverted) in red, peaking at ~5.09% at 3M-6M
-    and declining to ~3.70% at 30Y. A fourth series "2Y-10Y Inversion (-102 bps)"
-    is shown as a dashed red line connecting the 2Y (4.60%) and 10Y (3.58%) points
-    on the inverted curve, with enlarged markers at both endpoints. The x-axis is
-    labeled "Maturity (Years)" with major tick labels at 1M, 1Y, 2Y, 5Y, 10Y, 20Y,
-    30Y using proper numeric spacing. The y-axis is labeled "Yield (%)" ranging from
-    0 to 5.5. The legend is positioned at the bottom with all four series entries
-    clearly readable. Overall layout is clean and professional with good use of white
-    space.'
+  - Red and dark red colors for inverted curve and inversion highlight are somewhat
+    close in hue, reducing distinguishability
+  - Could benefit from more visual differentiation between the main inverted curve
+    and the inversion highlight series
+  image_description: |-
+    The plot displays three U.S. Treasury yield curves on a white background with a light gray (#FAFAFA) plot area. The title reads "U.S. Treasury Yield Curves · line-yield-curve · pygal · pyplots.ai" centered at the top. The x-axis is labeled "Maturity (Years)" with major tick labels at 1M, 1Y, 2Y, 5Y, 10Y, 20Y, and 30Y. The y-axis is labeled "Yield (%)" ranging from 0 to 5.5 with subtle dotted horizontal grid lines.
+
+    Three smoothly interpolated (cubic) curves are shown: (1) A blue line for Jan 2021 (Normal) starting near 0% and rising gradually to ~1.87% at 30Y. (2) A dark amber/gold line for Dec 2018 (Flat) relatively flat between ~2.4% and ~3.0%. (3) A red line for Mar 2023 (Inverted) starting high at ~4.7%, peaking near 5.1% at short maturities, then declining to ~3.6% at 10Y.
+
+    A fourth series highlights the 2Y-10Y inversion with a dashed dark red line connecting two larger dots at the 2Y (4.60%) and 10Y (3.58%) points, labeled "2Y-10Y Inversion (-102 bps)". The legend is positioned at the bottom with all four entries in a horizontal row. All data point dots are visible on the curves.
   criteria_checklist:
     visual_quality:
       score: 26
@@ -50,45 +43,42 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title=72, labels=44, legend=44). All text
-          readable. Minor deduction for pygal monospace rendering.
+        comment: Font sizes explicitly set (title=72, labels=44, major_labels=40,
+          legend=44). All text clearly readable.
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Minor x-labels hidden to prevent overlap. Legend entries well spaced.
-          Slight crowding in short-maturity region.
+        comment: No overlapping text elements. Legend entries well-spaced at bottom.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Lines with stroke_width=6 and dots_size=10 clearly visible. All three
-          curves distinguishable.
+        comment: Lines clearly visible with stroke_width=6. Dots visible (sizes 8-18).
+          Curves well-separated.
       - id: VQ-04
         name: Color Accessibility
         score: 3
         max: 4
         passed: true
-        comment: Blue, gold, red palette is reasonably colorblind-friendly. Gold on
-          white slightly less prominent.
+        comment: Blue and amber distinct. Red and dark red somewhat close in hue but
+          differentiated by dash pattern.
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Good proportions at 4800x2700. Margins well configured. Plot fills
-          canvas appropriately.
+        comment: Good proportions with explicit margins. Plot fills canvas well.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Yield (%) and Maturity (Years) are descriptive with units. Title
-          follows required format.
+        comment: Maturity (Years) and Yield (%) - descriptive with units.
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -96,22 +86,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom color palette appropriate for financial data. White background,
-          explicit font sizing, professional appearance.
+        comment: Custom financial color palette. Off-white plot background. Professional
+          appearance above configured defaults.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: X-guides disabled, y-guides subtle. White plot background. Pygal
-          default SVG rendering style still shows through.
+        comment: X guides hidden, Y guides as subtle dotted lines. Off-white background.
+          Clean refined look.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Inversion zone highlighted with dashed connector and basis point
-          spread. Three curve shapes tell story of different market regimes.
+        comment: Inversion highlighted with dashed line and bps label. Descriptive
+          curve labels. Larger dots on inversion endpoints.
     spec_compliance:
       score: 15
       max: 15
@@ -121,52 +111,53 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: XY line chart with proper maturity_years spacing. Correct chart type
-          for yield curves.
+        comment: XY line chart with proper maturity_years spacing - correct for yield
+          curves.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Multiple curves, inversion highlighted, clean professional style,
-          legend with dates.
+        comment: Multiple curves, maturity_years spacing, inversion highlighting,
+          professional style, legend with dates.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = maturity in years, Y = yield percentage. All data visible.
+        comment: X = maturity_years, Y = yield_pct. All data points visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows required format. Legend labels include dates and curve
-          descriptions.
+        comment: Title follows format with descriptive prefix. Legend labels are descriptive
+          with dates.
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Shows normal, flat, and inverted curves. Inversion spread quantified
-          at -102 bps.
+        comment: 'Shows all three key yield curve shapes: normal, flat, and inverted
+          with inversion spread highlight.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Data closely matches actual historical U.S. Treasury yields. Neutral
-          financial domain.
+        comment: U.S. Treasury yield data with realistic dates and plausible values.
+          Neutral financial domain.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Yields 0-5.5%, maturities 1M-30Y. All values realistic for U.S. Treasuries.
+        comment: Yields 0-5.5% appropriate for Treasury bonds. Maturities 1M-30Y cover
+          full spectrum.
     code_quality:
       score: 10
       max: 10
@@ -176,14 +167,13 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat script: imports, data, style, chart, save. No functions or
-          classes.'
+        comment: Flat script with no functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic with hardcoded yield data.
+        comment: Deterministic hardcoded data, no randomness.
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -195,7 +185,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized code. HTML export is natural pygal bonus.
+        comment: Clean, well-organized. No fake UI elements.
       - id: CQ-05
         name: Output & API
         score: 1
@@ -203,7 +193,7 @@ review:
         passed: true
         comment: Saves as plot.png via render_to_png. Current pygal API.
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -211,21 +201,21 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of pygal.XY, Style class, value formatters, legend configuration.
+        comment: Uses pygal.XY, Style class, chart.add() pattern, legend_at_bottom
+          with columns.
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Uses stroke_dasharray, value formatters, show_minor_x_labels, legend_at_bottom_columns,
-          HTML export.
+        comment: Cubic interpolation, stroke_dasharray, per-series dots_size, x_value_formatter,
+          HTML export with embedded SVG.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - html-export
-  patterns:
-  - data-generation
+  patterns: []
   dataprep: []
   styling:
   - grid-styling
