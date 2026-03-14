@@ -1,7 +1,7 @@
 library: plotly
 specification_id: phase-diagram-pt
 created: '2026-03-14T14:52:06Z'
-updated: '2026-03-14T15:12:51Z'
+updated: '2026-03-14T15:19:43Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23090166835
 issue: 4666
@@ -10,41 +10,35 @@ library_version: 6.6.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/phase-diagram-pt/plotly/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/phase-diagram-pt/plotly/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/phase-diagram-pt/plotly/plot.html
-quality_score: 89
+quality_score: 92
 review:
   strengths:
-  - Excellent scientific accuracy using real water phase diagram data with Clausius-Clapeyron
-    equations and correct physical constants
-  - Full spec compliance with all required features including water anomalous negative
-    melting curve slope
-  - 'Strong design improvement across attempts: distinct curve colors, visible phase
-    fills, interactive toggle buttons'
-  - Clean well-organized code with explicit font sizing throughout
-  - Good use of Plotly-specific interactive features (hovertemplate, updatemenus,
-    HTML export)
+  - Scientifically accurate water phase diagram with real Clausius-Clapeyron data
+    and correct physical constants
+  - Excellent visual storytelling with color-coded phase regions, annotated special
+    points, and supercritical boundary markers
+  - 'Strong use of Plotly features: interactive scale toggle, hover tooltips, HTML
+    export, polygon fills'
+  - Clean, well-structured code with explicit font sizing throughout
   weaknesses:
-  - Phase region fills use simple rectangles that do not precisely follow phase boundaries,
-    creating minor visible overlap artifacts at the low-pressure edge
-  - Triple point annotation arrow is still somewhat long, adding visual weight
-  image_description: 'The plot shows a Water P-T Phase Diagram on a clean white background
-    (plotly_white template). The x-axis displays Temperature (K) from 200 to 800,
-    and the y-axis shows Pressure (Pa) on a logarithmic scale from 1 to 10B. Three
-    distinctly colored phase boundary curves are drawn: a dark blue sublimation curve
-    from ~200 K rising to the triple point, a purple vaporization curve sweeping from
-    the triple point to the critical point, and a teal green melting curve rising
-    nearly vertically from the triple point with water''s characteristic negative
-    slope. The triple point is marked with a red diamond at (273.16 K, 611.73 Pa)
-    with an arrow annotation. The critical point is marked with an orange star at
-    (647.1 K, 2.206e7 Pa) with a shorter arrow annotation. Large semi-transparent
-    gray labels (SOLID, LIQUID, GAS) mark their respective phase regions, with a smaller
-    Supercritical Fluid label in the upper right. Subtle colored rectangular fills
-    shade each phase region. Dashed orange lines extend from the critical point upward
-    and rightward to delineate the supercritical boundary. A legend in the upper left
-    lists all five trace entries. Log Scale / Linear Scale toggle buttons appear at
-    the bottom right.'
+  - Minor crowding in the triple point area where annotation, sublimation curve, and
+    melting curve converge
+  image_description: 'The plot displays a Water P-T Phase Diagram with Temperature
+    (K) on the x-axis (200-800) and Pressure (Pa) on a logarithmic y-axis (1 to 10B).
+    Three phase boundary curves are shown: sublimation (dark blue), vaporization (purple),
+    and melting (teal green). Phase regions are filled with semi-transparent colors
+    - light blue for SOLID (upper left), light purple for LIQUID (center), light orange
+    for GAS (lower right), and light yellow for Supercritical Fluid (upper right).
+    The triple point is marked with a red diamond at (273.16 K, 611.73 Pa) with an
+    arrow annotation, and the critical point with an orange star at (647.1 K, 2.206x10^7
+    Pa) also annotated. Dashed orange lines extend from the critical point vertically
+    and horizontally to delineate the supercritical boundary. Phase region labels
+    (SOLID, LIQUID, GAS, Supercritical Fluid) are rendered in large, semi-transparent
+    Arial Black font. A legend in the upper left identifies all curves and points.
+    Log Scale / Linear Scale toggle buttons appear at bottom right.'
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -52,43 +46,44 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 28pt, axes 22pt, ticks 18pt,
-          annotations 16pt, phase labels 32pt'
+        comment: 'All font sizes explicitly set: title 28pt, axis labels 22pt, ticks
+          18pt, annotations 16pt, phase labels 32pt'
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: 'Minor overlap: triple point annotation near curve intersection,
-          phase fill rectangles overlap at low-pressure edge'
+        comment: Minor crowding around triple point area where annotation, sublimation
+          curve, and melting curve converge
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Lines at width 3.5, markers at size 16 with white edge borders are
-          prominent
+        comment: Lines at 3.5 width, markers at size 16, region fills at appropriate
+          transparency
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Blue, purple, teal green curves are colorblind-friendly and distinguishable
+        comment: Blue, purple, teal green palette is colorblind-safe. Special points
+          distinguished by both color and shape
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good utilization, toggle buttons consume some space, minor fill artifacts
-          at bottom
+        comment: Plot fills canvas well with explicit margins, good proportions at
+          1600x900 scale=3
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Temperature (K) and Pressure (Pa) with units
+        comment: Temperature (K) and Pressure (Pa) - descriptive with units
     design_excellence:
-      score: 14
+      score: 15
       max: 20
       items:
       - id: DE-01
@@ -96,22 +91,22 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom palette, phase fills, marker styling, dashed supercritical
-          boundaries, toggle buttons. Above defaults.
+        comment: Custom palette with coordinated region fills, distinct marker styles,
+          colored annotations, Arial Black phase labels
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: plotly_white template, subtle grid at 0.2 opacity, generous margins,
-          clean legend
+        comment: plotly_white template, grid at low opacity 0.2, generous margins,
+          subtle region fills
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Clear visual hierarchy with phase labels, annotated key points, distinct
-          curve colors, supercritical boundary
+        comment: Excellent visual hierarchy with color-coded regions, annotated special
+          points, supercritical boundary markers
     spec_compliance:
       score: 15
       max: 15
@@ -121,26 +116,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct P-T phase diagram with boundary curves on log pressure axis
+        comment: Correct P-T phase diagram with boundary curves and region fills
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: three boundaries, triple/critical points,
+        comment: 'All features present: three boundaries, triple point, critical point,
           phase labels, supercritical region, log axis'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Temperature on x, pressure on y (log), all data visible
+        comment: X=Temperature (K), Y=Pressure (Pa, log scale), all data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows format, legend labels descriptive and match data
+        comment: Title follows spec-id format, legend correctly labels all curves
+          and points
     data_quality:
       score: 15
       max: 15
@@ -150,20 +146,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All boundaries, triple/critical points, supercritical region, anomalous
-          negative melting slope
+        comment: All three boundaries, triple point, critical point, supercritical
+          region, anomalous negative melting slope
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real water phase diagram with correct physical constants
+        comment: Water phase diagram with real Clausius-Clapeyron data and correct
+          physical constants
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Physically accurate values for water triple and critical points
+        comment: Triple point 273.16 K / 611.73 Pa and critical point 647.096 K /
+          22.064 MPa are correct published values
     code_quality:
       score: 10
       max: 10
@@ -173,33 +171,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean linear flow, no functions or classes
+        comment: Clean imports-data-plot-save flow, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic with Clausius-Clapeyron equations
+        comment: Fully deterministic physics-based calculations
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy and plotly.graph_objects, both used
+        comment: Only numpy and plotly.graph_objects imported, both used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-organized, clear variable names, logical grouping
+        comment: Clean code, updatemenus is legitimate Plotly feature
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png at 4800x2700 and plot.html, current API
+        comment: Saves as plot.png with correct dimensions and plot.html
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -207,16 +205,16 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Good Graph Objects API usage: go.Figure, go.Scatter, add_annotation,
-          add_shape, update_layout'
+        comment: Good use of go.Figure, go.Scatter with fill=toself, add_annotation,
+          hovertemplate, update_layout
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: 'Plotly-specific: hovertemplate, updatemenus toggle, HTML export,
-          shape objects'
-  verdict: REJECTED
+        comment: 'Plotly-distinctive: updatemenus for scale toggle, hovertemplate,
+          write_html, fill=toself polygon fills'
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
