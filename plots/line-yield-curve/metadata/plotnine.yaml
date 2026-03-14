@@ -1,7 +1,7 @@
 library: plotnine
 specification_id: line-yield-curve
 created: '2026-03-14T22:16:35Z'
-updated: '2026-03-14T22:20:41Z'
+updated: '2026-03-14T22:29:30Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23097460432
 issue: 4664
@@ -10,37 +10,37 @@ library_version: 0.15.3
 preview_url: https://storage.googleapis.com/pyplots-images/plots/line-yield-curve/plotnine/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/line-yield-curve/plotnine/plot_thumb.png
 preview_html: null
-quality_score: 84
+quality_score: 91
 review:
   strengths:
-  - Excellent data quality with realistic U.S. Treasury yield data showing all three
-    curve shapes (normal, flat, inverted)
-  - Full spec compliance with all required features including inversion zone highlighting
-  - Professional color palette with Python Blue as primary and muted tones
-  - Clean well-structured code following KISS principle
-  - Good data storytelling with inversion zone annotation creating clear focal point
+  - Excellent data storytelling with three distinct yield curve shapes spanning realistic
+    monetary policy regimes
+  - Professional color palette (blue/amber/crimson) with strong colorblind accessibility
+  - Full spec compliance including inversion zone annotation and proper maturity_years
+    x-positioning
+  - Idiomatic plotnine usage demonstrating grammar-of-graphics patterns (pd.Categorical,
+    annotate, coord_cartesian, guide_legend)
+  - Perfect code quality with clean KISS structure
   weaknesses:
-  - Inversion zone shading spans full plot width making it visually heavy and imprecise
-  - Tick labels 1M and 1Y are cramped on the left due to compressed short-maturity
-    range
-  - Gray curve color is somewhat close to blue and could be harder to distinguish
-    for colorblind viewers
-  - Title font size is 22pt instead of recommended 24pt
+  - Inversion zone shading at alpha=0.06 is nearly invisible — could be slightly more
+    prominent
+  - Annotation text for inversion zone at size=10 is small relative to other text
+    elements
   image_description: 'The plot displays three U.S. Treasury yield curves on a clean
-    white background with a 16:9 aspect ratio. The bold title reads "U.S. Treasury
-    Yield Curves · line-yield-curve · plotnine · pyplots.ai" at the top. The x-axis
-    shows "Maturity" with labels (1M, 1Y, 2Y, 5Y, 7Y, 10Y, 20Y, 30Y) positioned according
-    to actual years-to-maturity, and the y-axis shows "Yield (%)". Three curves are
-    plotted: a blue curve (2021-06-15, Normal) starting low at ~1.55% and rising steeply
-    to ~3.8%; a muted gray curve (2023-01-10, Flat) hovering around 4-4.2%; and a
-    red curve (2024-07-01, Inverted) starting high at ~5.5% and declining. A light
-    red shaded rectangle spans the full plot width labeled "Inversion zone" in italic
-    red text at the top. The legend is positioned in the lower-left area of the plot.
-    Only subtle horizontal gridlines are shown, with no vertical gridlines and a clean
-    x-axis line.'
+    white/light gray canvas with a 16:9 landscape layout. The title "U.S. Treasury
+    Yield Curves · line-yield-curve · plotnine · pyplots.ai" appears in bold black
+    at the top. Three curves are shown: a blue upward-sloping "Normal" curve (2021-06-15)
+    rising from ~1.55% to ~3.80%, an amber "Flat" curve (2023-01-10) hovering around
+    4.0-4.2%, and a crimson "Inverted" curve (2024-07-01) starting high at ~5.5% and
+    declining to ~4.1% before slightly rising. A faint red italic annotation "Inversion
+    zone (short-term yields > long-term)" sits at the top with very subtle pink shading
+    behind the inversion region. X-axis shows maturity labels (1Y through 30Y), y-axis
+    shows yield percentages with dashed horizontal gridlines. The legend with a white
+    semi-transparent background is positioned in the lower-left quadrant. The overall
+    appearance is professional and consistent with financial publication standards.'
   criteria_checklist:
     visual_quality:
-      score: 24
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -48,67 +48,65 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set (14 base, 20 axis title, 16 axis text,
-          22 title). Title is 22pt instead of recommended 24pt.
+        comment: Font sizes explicitly set (title=24, axis_title=20, axis_text=16,
+          legend sizes). Annotation text at size=10 slightly small.
       - id: VQ-02
         name: No Overlap
-        score: 4
-        max: 6
-        passed: true
-        comment: 1M and 1Y tick labels are cramped on the left. Flat and inverted
-          curves converge around 7Y-10Y.
-      - id: VQ-03
-        name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Lines (1.8) and points (3.5) well-sized. Convergence around 10Y makes
-          some points harder to distinguish.
+        comment: Minor crowding at 1Y/2Y tick labels due to linear x-scale compression.
+          All text readable.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Lines size=2.0 and points size=3.5 perfectly adapted for 33 data
+          points across 3 curves.
       - id: VQ-04
         name: Color Accessibility
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Blue, gray, red distinguishable but gray-blue could be challenging
-          for some color vision deficiencies.
+        comment: Blue/amber/crimson colorblind-safe palette with strong contrast.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good 16:9 proportions. Inversion zone shading extends full plot width
-          which is visually heavy.
+        comment: 16:9 landscape with balanced margins, good canvas utilization.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Maturity and Yield (%) with units. Clear and descriptive.
+        comment: 'Descriptive labels with units: Maturity and Yield (%).'
     design_excellence:
       score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Custom palette with Python Blue, professional financial look. Above
-          defaults but not publication-ready.
+        comment: Custom palette, professional typography, approaches financial publication
+          quality.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: 'Good refinement: theme_minimal, removed x gridlines, subtle y gridlines,
-          x-axis line, legend background removed.'
+        comment: 'X-grid removed, subtle dashed y-grid, panel background #FAFAFA.
+          Inversion zone shading nearly invisible at alpha=0.06.'
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Inversion zone shading and annotation create focal point. Three descriptive
-          curve labels guide interpretation.
+        comment: Three curve shapes tell monetary policy story. Crimson draws attention
+          to inverted curve. Annotation labels inversion zone.
     spec_compliance:
       score: 15
       max: 15
@@ -118,27 +116,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct line chart showing yield curves.
+        comment: Correct line chart with continuous x-axis positioning.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Multiple curves, inversion highlighting, legend with dates, maturity_years
-          positioning, maturity tick labels.
+        comment: 'All spec features present: multiple curves, proper x-positioning,
+          inversion highlight, legend with dates.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = maturity_years, Y = yield_pct, color = date. All correctly mapped.
+        comment: X=maturity_years, Y=yield_pct correctly mapped.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows required format. Legend shows dates with descriptive
-          curve type labels.
+        comment: Title follows spec format. Legend labels show date and curve type.
     data_quality:
       score: 15
       max: 15
@@ -148,20 +145,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows normal, flat, and inverted yield curves. 11 maturities per
-          curve, 3 curves.
+        comment: 'Shows all three classic yield curve shapes: normal, flat, and inverted.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: U.S. Treasury yields with realistic values. Neutral financial domain.
+        comment: U.S. Treasury curves with plausible dates and realistic monetary
+          policy regimes.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Yield range 1.5-5.5% is realistic for recent U.S. Treasuries.
+        comment: Yields 1.55-5.50% realistic for U.S. Treasuries. Inverted curve uptick
+          at long end is especially realistic.
     code_quality:
       score: 10
       max: 10
@@ -171,59 +169,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat script: imports, data, plot, save. No functions or classes.'
+        comment: Clean imports → data → plot → save structure.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data hardcoded, fully deterministic.
+        comment: Fully deterministic hardcoded data.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used.
+        comment: All imports used, no extraneous.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, appropriate complexity. No fake UI.
+        comment: Well-organized, Pythonic, appropriate complexity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300. Current plotnine API.
+        comment: Saves plot.png with dpi=300, current API.
     library_mastery:
-      score: 6
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert grammar-of-graphics usage with pd.Categorical, scale_*, coord_cartesian,
+          theme composition.
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: 'Good ggplot grammar: aes mapping, geom layering, scale_x_continuous,
-          theme composition.'
-      - id: LM-02
-        name: Distinctive Features
-        score: 2
-        max: 5
-        passed: false
-        comment: Standard ggplot grammar patterns common across all ggplot implementations.
-          Nothing uniquely plotnine-specific.
-  verdict: REJECTED
+        comment: 'Uses plotnine-specific patterns: pd.Categorical+scale interaction,
+          annotate(), coord_cartesian, guide_legend with override_aes.'
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - layer-composition
+  - custom-legend
   - manual-ticks
   patterns:
   - data-generation
   dataprep: []
   styling:
-  - grid-styling
   - alpha-blending
+  - grid-styling
