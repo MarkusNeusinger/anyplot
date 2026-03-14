@@ -1,6 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 phase-diagram-pt: Thermodynamic Phase Diagram (Pressure-Temperature)
 Library: altair 6.0.0 | Python 3.14.3
+Quality: 91/100 | Created: 2026-03-14
 """
 
 import altair as alt
