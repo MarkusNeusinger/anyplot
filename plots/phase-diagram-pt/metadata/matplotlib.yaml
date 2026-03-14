@@ -1,7 +1,7 @@
 library: matplotlib
 specification_id: phase-diagram-pt
 created: '2026-03-14T14:51:21Z'
-updated: '2026-03-14T14:54:55Z'
+updated: '2026-03-14T15:02:19Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23090166841
 issue: 4666
@@ -10,104 +10,108 @@ library_version: 3.10.8
 preview_url: https://storage.googleapis.com/pyplots-images/plots/phase-diagram-pt/matplotlib/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/phase-diagram-pt/matplotlib/plot_thumb.png
 preview_html: null
-quality_score: 84
+quality_score: 89
 review:
   strengths:
-  - Excellent physics-based data using Clausius-Clapeyron and Simon equation approximations
-  - Water anomalous negative-slope melting curve correctly modeled
-  - Complete spec compliance with all required features
-  - Clean deterministic code with appropriate complexity
+  - Scientifically accurate water phase diagram using real Clausius-Clapeyron thermodynamic
+    equations
+  - Excellent color-coded phase regions with pastel fills and white text outlines
+    for readability
+  - Clean deterministic code with no random elements - fully reproducible from physical
+    constants
+  - All spec requirements fully met including waters anomalous negative-slope melting
+    curve and supercritical region
   weaknesses:
-  - Phase regions only labeled with text — no fill shading to visually distinguish
-    phases
-  - SUPERCRITICAL FLUID label positioned near right edge risking clipping
-  - Generic matplotlib usage — misses fill_between, patches, or PathEffects
-  - Both-axis grid on log scale adds visual noise
+  - Title format has extra Water Phase Diagram prefix - should be exactly phase-diagram-pt
+    · matplotlib · pyplots.ai
+  - Solid-liquid boundary is very short and somewhat hard to distinguish as a separate
+    curve
+  - Supercritical fluid region appears cramped in a thin strip at the far right
   image_description: 'The plot displays a water pressure-temperature phase diagram
-    on a 16:9 canvas. The x-axis shows Temperature (K) ranging from ~180 to ~750,
-    and the y-axis shows Pressure (Pa) on a logarithmic scale from 10^1 to ~5x10^8.
-    Three phase boundary curves are drawn in Python Blue (#306998) with linewidth
-    3: the sublimation curve (solid-gas) descending steeply from upper-left to the
-    triple point, the vaporization curve (liquid-gas) rising from the triple point
-    to the critical point, and the melting curve (solid-liquid) rising nearly vertically
-    with a negative slope (characteristic of water). The triple point (273.16 K, 611.73
-    Pa) and critical point (647.1 K, 22.06 MPa) are marked with red dots with white
-    edges and annotated with arrows. Phase regions are labeled in large semi-transparent
-    blue text: SOLID (upper-left), LIQUID (center), GAS (lower-right), and SUPERCRITICAL
-    FLUID (upper-right, near the edge). Top and right spines are removed, subtle grid
-    lines on both axes. Title reads "Water Phase Diagram · phase-diagram-pt · matplotlib
-    · pyplots.ai".'
+    on a 16:9 canvas. The x-axis shows Temperature (K) from ~180 to ~750, and the
+    y-axis shows Pressure (Pa) on a logarithmic scale from 10^1 to ~5x10^8. Four phase
+    regions are filled with distinct pastel colors: SOLID (lavender/purple, upper-left),
+    LIQUID (pale green, center-top), GAS (light blue, lower-right), and SUPERCRITICAL
+    FLUID (pale yellow/amber, far upper-right). Three dark blue phase boundary curves
+    (linewidth=3) separate the regions: a sublimation curve (solid-gas), a vaporization
+    curve (liquid-gas), and a short nearly-vertical melting curve (solid-liquid) with
+    water''s characteristic negative slope. The triple point (273.16 K, 611.73 Pa)
+    and critical point (647.1 K, 22.06 MPa) are marked with red dots (white edges)
+    and annotated with arrows. Phase region labels are bold text with white outline
+    path effects. Top and right spines are removed, with a subtle y-axis grid (alpha=0.15).
+    Title reads "Water Phase Diagram · phase-diagram-pt · matplotlib · pyplots.ai".'
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 24, labels 20, ticks 16, annotations
-          14, phase labels 22/16). Annotation text at 14pt slightly small but readable.
+        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt,
+          phase labels 22pt, annotations 14pt'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All text elements clearly separated, no collisions.
+        comment: No overlapping text anywhere, annotations well-positioned
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Phase boundary lines at linewidth=3 clearly visible, markers at s=250
-          prominent.
+        comment: Curves and markers visible; solid-liquid boundary is very short and
+          hard to distinguish
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Single blue for lines, red for key points. No colorblind issues.
+        comment: Purple, green, blue, yellow fills distinguishable under all color
+          vision types
       - id: VQ-05
         name: Layout & Canvas
-        score: 2
+        score: 3
         max: 4
         passed: true
-        comment: SUPERCRITICAL FLUID label near right edge may clip. Imbalanced composition
-          with weight in upper-left.
+        comment: Good canvas utilization overall; supercritical region cramped at
+          far right
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Temperature (K) and Pressure (Pa) — descriptive with units.
+        comment: Temperature (K) and Pressure (Pa) with proper units
     design_excellence:
-      score: 13
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Consistent blue palette with red accents, removed spines, clean typography.
-          Above defaults but not publication-level.
+        comment: Strong design with intentional color palette, path effects, red markers
+          with white edges
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Top/right spines removed, subtle grid alpha=0.15, generous whitespace.
-          Both-axis grid slightly clutters log scale.
+        comment: Spines removed, subtle grid, path effects for text readability, good
+          whitespace
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Clear visual hierarchy with boundary lines, red markers for key points,
-          annotations providing context.
+        comment: Color-coded regions create visual hierarchy, annotated special points
+          guide viewer
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -115,26 +119,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct P-T phase diagram with boundary curves.
+        comment: Correct P-T phase diagram with three boundary curves
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All required features present: three boundaries, triple point, critical
-          point, phase labels, log axis.'
+        comment: All spec features present including supercritical region and negative-slope
+          melting curve
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Temperature on x, pressure on y, correct orientation.
+        comment: Temperature on x, pressure on y, all data visible
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Title follows correct format. No legend needed.
+        passed: false
+        comment: Title prepends Water Phase Diagram before the required format
     data_quality:
       score: 15
       max: 15
@@ -144,21 +148,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All three phase boundaries, triple point, critical point, supercritical
-          region. Water's negative-slope melting curve correct.
+        comment: All phase boundaries, triple point, critical point, supercritical
+          region, anomalous melting curve
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real water phase diagram data — classic neutral example suggested
-          by spec.
+        comment: Real water phase diagram with actual physical values and Clausius-Clapeyron
+          equations
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Triple and critical point values match accepted physical constants.
+        comment: All values physically accurate for water, log scale handles 7-order
+          pressure range
     code_quality:
       score: 10
       max: 10
@@ -168,58 +173,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports, data, plot, style, save.'
+        comment: 'Clean linear flow: imports, data, plot, styling, save'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic physics-based calculations.
+        comment: Fully deterministic from physical equations, no random elements
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib.pyplot and numpy, both used.
+        comment: 'All three imports used: patheffects, pyplot, numpy'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity with physically motivated equations.
+        comment: Clean and well-structured, polygon construction handled clearly
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png, dpi=300, bbox_inches=tight, current API.
+        comment: Saves as plot.png at 300 DPI, no deprecated API
     library_mastery:
-      score: 4
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of axes methods, fill_between, annotate, zorder layering
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Correct Axes-based API but doesn't leverage advanced patterns like
-          fill_between.
-      - id: LM-02
-        name: Distinctive Features
-        score: 1
-        max: 5
-        passed: false
-        comment: Basic matplotlib features only. Missing fill_between, patches, or
-          PathEffects.
+        comment: Uses patheffects, fill/fill_between, zorder layering, annotate with
+          offset coords
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - manual-ticks
+  - log-scale
   patterns:
   - data-generation
   dataprep: []
   styling:
-  - grid-styling
+  - alpha-blending
   - edge-highlighting
+  - grid-styling
