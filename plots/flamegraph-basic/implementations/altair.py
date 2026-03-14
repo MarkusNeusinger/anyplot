@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 flamegraph-basic: Flame Graph for Performance Profiling
 Library: altair 6.0.0 | Python 3.14.3
 Quality: 83/100 | Created: 2026-03-14
@@ -116,11 +116,20 @@ df = pd.DataFrame(records)
 df["pct"] = (df["samples"] / total_samples * 100).round(1)
 df["label"] = df.apply(lambda r: r["function"] if r["width"] / total_samples > 0.06 else "", axis=1)
 
-# Warm flame color palette mapped to depth
+# Identify the hottest code path (widest bar at each depth following the dominant branch)
 max_depth = df["depth"].max()
-warm_colors = ["#FFE066", "#FFD033", "#FFAA00", "#FF8800", "#FF6600", "#E64A19", "#D32F2F"]
+hot_path_stacks = set()
+current_stack = "main"
+hot_path_stacks.add(current_stack)
+for d in range(1, max_depth + 1):
+    children = df[(df["depth"] == d) & (df["stack"].str.startswith(current_stack + ";"))]
+    if not children.empty:
+        hottest = children.loc[children["samples"].idxmax()]
+        current_stack = hottest["stack"]
+        hot_path_stacks.add(current_stack)
 
-df["color_val"] = df["depth"] + np.random.uniform(-0.3, 0.3, len(df))
+df["is_hot"] = df["stack"].isin(hot_path_stacks)
+df["opacity_val"] = df["is_hot"].map({True: 1.0, False: 0.6})
 
 # Plot
 alt.data_transformers.disable_max_rows()
@@ -129,9 +138,11 @@ bars = (
     alt.Chart(df)
     .mark_rect(stroke="#FFFFFF", strokeWidth=0.5, cornerRadius=2)
     .encode(
-        x=alt.X("x:Q", title="Samples", axis=alt.Axis(titleFontSize=22, labelFontSize=18)),
+        x=alt.X("x:Q", title="Samples (count)", axis=alt.Axis(titleFontSize=22, labelFontSize=18)),
         x2="x2:Q",
-        y=alt.Y("depth:O", title="Stack Depth", sort="descending", axis=alt.Axis(titleFontSize=22, labelFontSize=18)),
+        y=alt.Y(
+            "depth:O", title="Stack Depth (level)", sort="descending", axis=alt.Axis(titleFontSize=22, labelFontSize=18)
+        ),
         color=alt.Color(
             "depth:Q",
             scale=alt.Scale(
@@ -140,6 +151,7 @@ bars = (
             ),
             legend=None,
         ),
+        opacity=alt.Opacity("opacity_val:Q", legend=None, scale=alt.Scale(domain=[0.5, 1.0], range=[0.5, 1.0])),
         tooltip=[
             alt.Tooltip("function:N", title="Function"),
             alt.Tooltip("samples:Q", title="Samples"),
@@ -151,7 +163,7 @@ bars = (
 
 labels = (
     alt.Chart(df[df["label"] != ""])
-    .mark_text(fontSize=14, color="#1a1a1a", fontWeight="bold", align="center", baseline="middle")
+    .mark_text(fontSize=16, color="#1a1a1a", fontWeight="bold", align="center", baseline="middle")
     .encode(x=alt.X("mid:Q"), y=alt.Y("depth:O", sort="descending"), text="label:N")
     .transform_calculate(mid="(datum.x + datum.x2) / 2")
 )
@@ -164,7 +176,9 @@ chart = (
         height=900,
         title=alt.Title(
             "flamegraph-basic · altair · pyplots.ai",
-            subtitle=["CPU profiling: 500 samples across web request handling stack"],
+            subtitle=[
+                "CPU profiling: 500 samples | Hot path: main → request_handler → process_request → db_query → execute_sql"
+            ],
             fontSize=28,
             subtitleFontSize=18,
             subtitleColor="#888888",
