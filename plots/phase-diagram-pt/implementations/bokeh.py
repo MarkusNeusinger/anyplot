@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 phase-diagram-pt: Thermodynamic Phase Diagram (Pressure-Temperature)
 Library: bokeh 3.9.0 | Python 3.14.3
 Quality: 84/100 | Created: 2026-03-14
@@ -41,13 +41,13 @@ T_solid_liquid = triple_T - delta_P * 7.4e-8 + np.power(delta_P / 1e9, 1.5) * 5
 p = figure(
     width=4800,
     height=2700,
-    title="Water Phase Diagram · phase-diagram-pt · bokeh · pyplots.ai",
+    title="phase-diagram-pt · bokeh · pyplots.ai",
     x_axis_label="Temperature (K)",
     y_axis_label="Pressure (Pa)",
     y_axis_type="log",
     toolbar_location=None,
     tools="",
-    x_range=(180, 760),
+    x_range=(180, 800),
     y_range=(50, 5e8),
 )
 
@@ -58,7 +58,7 @@ solid_P = [5e8, 100] + P_solid_gas.tolist() + P_solid_liquid_values.tolist()[::-
 p.patch(solid_T, solid_P, fill_color="#A8D8EA", fill_alpha=0.35, line_color=None)
 
 # Gas region - bottom right
-gas_T = T_solid_gas.tolist() + [triple_T] + T_liquid_gas.tolist() + [760, 760, 180]
+gas_T = T_solid_gas.tolist() + [triple_T] + T_liquid_gas.tolist() + [800, 800, 180]
 gas_P = P_solid_gas.tolist() + [triple_P] + P_liquid_gas.tolist() + [critical_P, 100, 100]
 p.patch(gas_T, gas_P, fill_color="#FFE0B2", fill_alpha=0.3, line_color=None)
 
@@ -68,7 +68,7 @@ liquid_P = [triple_P] + P_liquid_gas.tolist() + [5e8] + P_solid_liquid_values.to
 p.patch(liquid_T, liquid_P, fill_color="#C5E1A5", fill_alpha=0.3, line_color=None)
 
 # Supercritical region - upper right beyond critical point
-sc_T = [critical_T, 760, 760, critical_T]
+sc_T = [critical_T, 800, 800, critical_T]
 sc_P = [critical_P, critical_P, 5e8, 5e8]
 p.patch(sc_T, sc_P, fill_color="#E1BEE7", fill_alpha=0.25, line_color=None)
 
@@ -82,40 +82,49 @@ p.line(T_liquid_gas, P_liquid_gas, line_width=4, line_color="#306998", line_alph
 # Solid-Liquid (melting)
 p.line(T_solid_liquid, P_solid_liquid_values, line_width=4, line_color="#306998", line_alpha=0.9)
 
-# Boundary curve labels
+# Boundary curve labels - placed after patches, with level="overlay" to ensure visibility
 sub_label = Label(
-    x=225,
-    y=200,
+    x=218,
+    y=120,
     text="Sublimation",
-    text_font_size="16pt",
-    text_color="#306998",
-    text_alpha=0.8,
+    text_font_size="20pt",
+    text_color="#1A5276",
+    text_alpha=0.9,
     text_font_style="italic",
-    angle=0.85,
+    angle=0.75,
+    level="overlay",
+    background_fill_color="white",
+    background_fill_alpha=0.5,
 )
 p.add_layout(sub_label)
 
 vap_label = Label(
-    x=420,
-    y=1.5e5,
+    x=380,
+    y=5e4,
     text="Vaporization",
-    text_font_size="16pt",
-    text_color="#306998",
-    text_alpha=0.8,
+    text_font_size="20pt",
+    text_color="#1A5276",
+    text_alpha=0.9,
     text_font_style="italic",
-    angle=0.55,
+    angle=0.50,
+    level="overlay",
+    background_fill_color="white",
+    background_fill_alpha=0.5,
 )
 p.add_layout(vap_label)
 
 melt_label = Label(
-    x=240,
-    y=1e8,
+    x=252,
+    y=2e7,
     text="Melting",
-    text_font_size="16pt",
-    text_color="#306998",
-    text_alpha=0.8,
+    text_font_size="20pt",
+    text_color="#1A5276",
+    text_alpha=0.9,
     text_font_style="italic",
-    angle=1.50,
+    angle=1.45,
+    level="overlay",
+    background_fill_color="white",
+    background_fill_alpha=0.5,
 )
 p.add_layout(melt_label)
 
@@ -184,7 +193,7 @@ gas_label = Label(
 p.add_layout(gas_label)
 
 sc_label = Label(
-    x=670,
+    x=680,
     y=1.5e8,
     text="SUPERCRITICAL\nFLUID",
     text_font_size="22pt",
