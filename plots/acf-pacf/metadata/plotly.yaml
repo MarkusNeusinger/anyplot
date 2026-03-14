@@ -1,7 +1,7 @@
 library: plotly
 specification_id: acf-pacf
 created: '2026-03-14T22:18:42Z'
-updated: '2026-03-14T22:22:30Z'
+updated: '2026-03-14T22:30:02Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23097477554
 issue: 4663
@@ -10,33 +10,43 @@ library_version: 6.6.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/acf-pacf/plotly/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/acf-pacf/plotly/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/acf-pacf/plotly/plot.html
-quality_score: 76
+quality_score: 87
 review:
   strengths:
-  - Perfect spec compliance — all required features implemented correctly
-  - Mathematically correct manual ACF/PACF computation without external dependencies
-  - Clean readable code structure with proper seed for reproducibility
-  - Good font sizing throughout with all sizes explicitly set
+  - Excellent spec compliance — all required features implemented correctly with no
+    omissions
+  - Significance-based color coding (orange/gray) creates meaningful visual hierarchy
+    that aids interpretation
+  - Clean typography hierarchy with 5 distinct size/color levels showing intentional
+    design
+  - Proper Durbin-Levinson recursion for PACF computation — statistically correct
+    implementation
+  - Good use of plotly-specific features (spike lines, hover templates, HTML export)
   weaknesses:
-  - Design is functional but generic — lacks visual emphasis on significant vs non-significant
-    lags
-  - No hover tooltips configured despite Plotly being an interactive library
-  - Confidence bound lines use plain red which could be more refined
-  - No storytelling — viewer must interpret the AR(2) pattern themselves
-  image_description: The plot displays two vertically stacked subplots on a white
-    background. The top subplot shows ACF values and the bottom shows PACF values,
-    both using dark blue (#306998) vertical stem lines with circular markers (white-edged)
-    extending from a zero baseline. Red dashed horizontal lines at approximately ±0.14
-    indicate the 95% confidence bounds. The title "acf-pacf · plotly · pyplots.ai"
-    is centered at the top in a large font. The x-axis (shared, labeled "Lag") runs
-    from 0 to 35, and y-axes are labeled "ACF" and "PACF" respectively. The ACF shows
-    a strong spike at lag 0 (1.0), decaying oscillation through early lags, then values
-    within the confidence band. The PACF shows significant spikes at lags 1 (~0.5)
-    and 2 (~-0.27), with subsequent values mostly within the confidence band — consistent
-    with the AR(2) generating process.
+  - Helper function add_stems() slightly breaks KISS convention — consider inlining
+    with a loop over subplot configs
+  - Axis labels lack additional context (e.g. Lag periods or a subtitle mentioning
+    the data source)
+  - Data context is only in code comments, not visible in the plot — could add a subtitle
+    or annotation mentioning the AR(2) retail sales context
+  - 'Could push design further: confidence band styling is good but overall look still
+    feels like a well-configured default rather than publication-quality'
+  image_description: The plot displays two vertically stacked subplots on a clean
+    white background. The top subplot is titled "Autocorrelation (ACF)" and the bottom
+    "Partial Autocorrelation (PACF)". The main title reads "acf-pacf · plotly · pyplots.ai"
+    centered at the top. Each subplot shows vertical stem lines from zero to correlation
+    values at each lag (0–35). Significant lags are highlighted with larger orange
+    markers (size ~13) and orange stem lines, while non-significant lags use smaller
+    gray markers (size ~10) with gray stems. A light gray shaded band with dashed
+    borders marks the 95% confidence interval (approximately ±0.14). A horizontal
+    legend at the top-right shows "Significant", "Non-significant", and "95% Confidence".
+    The ACF subplot shows strong significance at lags 0 (1.0), 1 (~0.5), 2 (~-0.2),
+    and 4 (~-0.15), with geometric decay pattern. The PACF shows sharp cutoff after
+    lag 2 (lag 1 ~0.48, lag 2 ~-0.33), consistent with an AR(2) process. X-axis labeled
+    "Lag", Y-axes labeled "ACF" and "PACF".
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -44,7 +54,8 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 28pt, labels 22pt, ticks 18pt'
+        comment: 'All font sizes explicitly set: title 28pt, axis labels 22pt, ticks
+          18pt, subplot titles 20pt, legend 16pt'
       - id: VQ-02
         name: No Overlap
         score: 6
@@ -53,50 +64,54 @@ review:
         comment: No overlapping text or elements
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Stems and markers visible, markers could be slightly larger
+        comment: Stem lines width 3, significant markers size 13, non-significant
+          size 10 with white edges
       - id: VQ-04
         name: Color Accessibility
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Blue and red distinguishable for colorblind, red not ideal
+        comment: Orange vs gray, high contrast, colorblind-safe
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good two-subplot layout, some wasted whitespace
+        comment: Both subplots fill space well with balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 1
         max: 2
-        passed: true
-        comment: Descriptive labels but no units or clarification
+        passed: false
+        comment: Descriptive labels but no units or additional context
     design_excellence:
-      score: 9
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: Well-configured default, not exceptional
+        passed: true
+        comment: Thoughtful significance-based color scheme, custom background, intentional
+          typography hierarchy
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: 'Some refinement: subtle grid, x-grid disabled, zeroline off'
+        comment: plotly_white template, subtle grid at 5% opacity, shaded confidence
+          bands, white-outlined markers
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: No visual hierarchy or emphasis on significant lags
+        passed: true
+        comment: Significance coloring creates visual hierarchy, AR(2) pattern tells
+          coherent story
     spec_compliance:
       score: 15
       max: 15
@@ -106,59 +121,61 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: vertically stacked ACF/PACF stem plots'
+        comment: Correct ACF/PACF stem plots in two stacked subplots
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: stems, CI bounds, shared x-axis, correct lag
-          ranges'
+        comment: 'All spec features present: shared x-axis, stems, confidence bands,
+          lag 0 in ACF, PACF from lag 1'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=lag, Y=correlation, all data visible
+        comment: X=lag, Y=correlation, correctly mapped
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, no legend needed
+        comment: Correct title format, clear legend labels
     data_quality:
-      score: 12
+      score: 13
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows ACF decay and PACF cutoff, significant and non-significant
-          lags
+        comment: Shows positive/negative correlations, significant/non-significant
+          lags, geometric ACF decay, PACF cutoff
       - id: DQ-02
         name: Realistic Context
         score: 3
         max: 5
         passed: false
-        comment: Generic AR(2) simulation, plausible but not real-world
+        comment: Synthetic data with context only in code comments, not visible in
+          the plot
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 200 obs, realistic AR coefficients, correlations in [-1,1]
+        comment: 200 observations, 35 lags, correlations in valid range
     code_quality:
       score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: 'Linear flow: imports, data, computation, plot, save'
+        passed: false
+        comment: Helper function add_stems() breaks strict KISS rule, though it reduces
+          duplication
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -170,48 +187,48 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: Only numpy and plotly imports, all used
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Verbose stem loop and manual Durbin-Levinson, acceptable but bulky
+        passed: true
+        comment: Well-organized, no over-engineering, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png with correct dimensions, also exports HTML
+        comment: Saves as plot.png with correct dimensions, also exports HTML
     library_mastery:
-      score: 5
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
-        passed: false
-        comment: Uses go.Scatter with make_subplots but individual stem traces are
-          low-level
+        passed: true
+        comment: Good use of make_subplots, go.Scatter, update methods, fill=toself
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: HTML export is Plotly-specific, but no hover tooltips or interactive
-          features configured
+        passed: true
+        comment: Uses showspikes, hovertemplate, hoverlabel styling, HTML export
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
   - subplots
+  - hover-tooltips
   - html-export
+  - custom-legend
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep:
   - autocorrelation
   styling:
-  - grid-styling
   - edge-highlighting
+  - grid-styling

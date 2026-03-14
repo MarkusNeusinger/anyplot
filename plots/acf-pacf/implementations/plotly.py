@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 acf-pacf: Autocorrelation and Partial Autocorrelation (ACF/PACF) Plot
 Library: plotly 6.6.0 | Python 3.14.3
-Quality: 76/100 | Created: 2026-03-14
+Quality: 87/100 | Created: 2026-03-14
 """
 
 import numpy as np
