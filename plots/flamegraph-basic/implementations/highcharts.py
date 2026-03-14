@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 flamegraph-basic: Flame Graph for Performance Profiling
 Library: highcharts unknown | Python 3.14.3
-Quality: 85/100 | Created: 2026-03-14
+Quality: 87/100 | Created: 2026-03-14
 """
 
 import tempfile
