@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 line-yield-curve: Yield Curve (Interest Rate Term Structure)
 Library: letsplot 4.9.0 | Python 3.14.3
 Quality: 77/100 | Created: 2026-03-14
@@ -53,29 +53,65 @@ for i in range(len(maturities)):
 
 df = pd.DataFrame(rows)
 
-# Plot
-colors = ["#306998", "#C44E52", "#55A868"]
+# Inversion region: shade between inverted curve and the 10Y yield baseline
+# Shows where short-term rates exceed the long-term benchmark
+ten_year_yield = yields_inverted[8]  # 10Y = 1.52%
+inv_mat = [maturity_years[i] for i in range(9)]  # 1M through 10Y
+inv_upper = [yields_inverted[i] for i in range(9)]
+inv_lower = [ten_year_yield] * 9
+inversion_df = pd.DataFrame({"maturity_years": inv_mat, "y_upper": inv_upper, "y_lower": inv_lower})
+
+# Reduce x-axis labels to avoid overlap at short maturities
+tick_positions = [0.25, 1, 2, 5, 10, 20, 30]
+tick_labels = ["3M", "1Y", "2Y", "5Y", "10Y", "20Y", "30Y"]
+
+# Colorblind-safe palette: blue, amber, teal-green
+colors = ["#306998", "#E69F00", "#009E73"]
 
 plot = (
-    ggplot(df, aes(x="maturity_years", y="yield_pct", color="date"))  # noqa: F405
-    + geom_line(size=2.5)  # noqa: F405
-    + geom_point(size=5, alpha=0.85)  # noqa: F405
-    + scale_color_manual(values=colors)  # noqa: F405
-    + scale_x_continuous(  # noqa: F405
-        breaks=maturity_years, labels=maturities
+    ggplot()  # noqa: F405
+    # Inversion region highlight — ribbon between inverted curve and 10Y baseline
+    + geom_ribbon(  # noqa: F405
+        data=inversion_df,
+        mapping=aes(x="maturity_years", ymin="y_lower", ymax="y_upper"),  # noqa: F405
+        fill="#C44E52",
+        alpha=0.2,
     )
+    # Yield curve lines with tooltips
+    + geom_line(  # noqa: F405
+        data=df,
+        mapping=aes(x="maturity_years", y="yield_pct", color="date"),  # noqa: F405
+        size=2.5,
+        tooltips=layer_tooltips()  # noqa: F405
+        .line("@date")
+        .line("Maturity: @maturity")
+        .line("Yield: @yield_pct%"),
+    )
+    + geom_point(  # noqa: F405
+        data=df,
+        mapping=aes(x="maturity_years", y="yield_pct", color="date"),  # noqa: F405
+        size=5,
+        alpha=0.85,
+    )
+    # Annotation for inversion region
+    + geom_text(  # noqa: F405
+        aes(x="x", y="y", label="label"),  # noqa: F405
+        data=pd.DataFrame({"x": [1.5], "y": [2.18], "label": ["Inversion Region"]}),
+        color="#C44E52",
+        size=12,
+        fontface="italic",
+    )
+    + scale_color_manual(values=colors)  # noqa: F405
+    + scale_x_continuous(breaks=tick_positions, labels=tick_labels)  # noqa: F405
     + labs(  # noqa: F405
-        x="Maturity",
-        y="Yield (%)",
-        title="U.S. Treasury Yield Curves · line-yield-curve · letsplot · pyplots.ai",
-        color="",
+        x="Maturity", y="Yield (%)", title="line-yield-curve · letsplot · pyplots.ai", color=""
     )
     + ggsize(1600, 900)  # noqa: F405
     + theme_minimal()  # noqa: F405
     + theme(  # noqa: F405
         axis_text=element_text(size=16),  # noqa: F405
         axis_title=element_text(size=20),  # noqa: F405
-        plot_title=element_text(size=22),  # noqa: F405
+        plot_title=element_text(size=24),  # noqa: F405
         legend_text=element_text(size=16),  # noqa: F405
         legend_position="top",
         panel_grid_major_x=element_blank(),  # noqa: F405
