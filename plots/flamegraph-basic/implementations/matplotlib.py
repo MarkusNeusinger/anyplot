@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 flamegraph-basic: Flame Graph for Performance Profiling
 Library: matplotlib 3.10.8 | Python 3.14.3
-Quality: 81/100 | Created: 2026-03-14
+Quality: 87/100 | Created: 2026-03-14
 """
 
 import matplotlib.colors as mcolors

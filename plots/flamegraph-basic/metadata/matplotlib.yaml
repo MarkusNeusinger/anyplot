@@ -1,7 +1,7 @@
 library: matplotlib
 specification_id: flamegraph-basic
 created: '2026-03-14T20:28:17Z'
-updated: '2026-03-14T20:32:24Z'
+updated: '2026-03-14T20:41:32Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23095681411
 issue: 4665
@@ -10,39 +10,39 @@ library_version: 3.10.8
 preview_url: https://storage.googleapis.com/pyplots-images/plots/flamegraph-basic/matplotlib/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/flamegraph-basic/matplotlib/plot_thumb.png
 preview_html: null
-quality_score: 81
+quality_score: 87
 review:
   strengths:
-  - Correct flame graph structure with proper parent-child positioning and proportional
-    widths
-  - Warm color palette following flame graph conventions with smooth gradient via
-    LinearSegmentedColormap
-  - Realistic CPU profiling data with believable function names and sample counts
-  - Clean bar separation using white edges and appropriate label sizing threshold
-  - Full spec compliance including correct title format and all required features
+  - Custom warm color palette via LinearSegmentedColormap matches flame graph convention
+    perfectly
+  - FancyBboxPatch with rounded corners adds professional polish beyond basic rectangles
+  - Percentage labels on major bars create effective data storytelling and immediate
+    insight
+  - Realistic CPU profiling data with plausible function hierarchy
+  - Perfect code quality with clean KISS structure and deterministic data
   weaknesses:
-  - No visual emphasis on the hot code path - all bars at same depth look similar
-    due to random color variation
-  - Library mastery is basic - manual rectangle computation with simple barh() calls
-    rather than idiomatic matplotlib patches
-  - Color randomness creates visual noise rather than meaningful data-driven mapping
-  - No percentage annotations on key bars to help quantify bottlenecks
-  image_description: The plot displays a flame graph with horizontal bars stacked
-    bottom-to-top across 5 depth levels (0-4). At the base (depth 0), a wide light-yellow
-    "main" bar spans the full width (~950 samples). Depth 1 shows "process_request"
-    (dominant, ~800 samples) and a smaller "initialize" bar on the right, both in
-    orange-yellow. Depth 2 contains "parse_input", "compute" (largest), "send_response",
-    and "load_config" in orange tones. Depth 3 shows "tokenize", "validate", "matrix_multiply"
-    (widest), "transform", and "serialize". Depth 4 has "dot_product", "allocate_buffer",
-    "normalize", and "scale" (unlabeled). Colors transition from yellow at depth 0
-    through oranges to deeper reds at higher depths with random variation. Function
-    names appear inside bars when wide enough (>5% of total). Title reads "flamegraph-basic
-    · matplotlib · pyplots.ai". X-axis labeled "CPU Samples" (0-~950), Y-axis labeled
-    "Stack Depth" (0-4). Top and right spines removed, white edges between bars provide
-    clean separation.
+  - In-bar text at 12pt minimum could be bumped to 14pt for better readability on
+    large canvas
+  - Color-to-proportion mapping could be more dramatic to better distinguish hot vs
+    cold paths
+  - Missing annotation or visual cue explicitly calling out the hot path
+  image_description: 'The plot displays a flame graph with horizontal bars stacked
+    by call depth (y-axis: Stack Depth 0-4, x-axis: CPU Samples 0-950). The title
+    reads "flamegraph-basic · matplotlib · pyplots.ai" in a medium-weight font. Colors
+    use a warm palette from pale yellow to deep red, with wider bars (higher sample
+    proportion) rendered in hotter/darker colors. The bottom bar "main (100%)" spans
+    the full width in deep red. Above it, "process_request (84%)" dominates depth
+    1. At depth 2, "compute (47%)", "parse_input (19%)", and "send_response (13%)"
+    are visible alongside smaller bars for "initialize" and others. Depth 3 shows
+    "matrix_multiply (29%)", "transform (14%)", "tokenize (13%)", with narrower bars
+    for "validate", "serialize". Depth 4 has "dot_product (21%)", "allocate_buffer",
+    "normalize", and other leaf functions. White edge separators distinguish adjacent
+    bars. Top and right spines are removed. Background is a light off-white (#FAFAFA).
+    Percentage labels appear on major bars with semibold white or dark text depending
+    on background brightness.'
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -51,65 +51,67 @@ review:
         max: 8
         passed: true
         comment: All font sizes explicitly set (title 24, labels 20, ticks 16, bar
-          labels 11-14). Bar labels slightly small but only on wide bars.
+          text 12-14). Minor bar labels at 12pt slightly small for canvas.
       - id: VQ-02
         name: No Overlap
-        score: 5
-        max: 6
-        passed: true
-        comment: No significant overlap. Some labels tight within narrow bars but
-          readable.
-      - id: VQ-03
-        name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All bars clearly visible with good proportions and white edge separation.
+        comment: No overlapping text. clip_on=True prevents overflow. Labels only
+          on bars >5% width.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: All bars clearly visible with white edge separators. Some narrow
+          bars at right edge are thin but distinguishable.
       - id: VQ-04
         name: Color Accessibility
         score: 3
         max: 4
         passed: true
-        comment: Warm palette is thematic. Some adjacent bars at same depth have similar
-          tones.
+        comment: Warm sequential palette is conventional for flame graphs. Primary
+          encoding is bar width, not color.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good canvas utilization. Minor vertical whitespace between depth
-          levels.
+        comment: Excellent canvas utilization with 16:9 aspect ratio and balanced
+          margins.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: CPU Samples and Stack Depth are descriptive and domain-appropriate.
+        comment: 'Descriptive labels: CPU Samples and Stack Depth. Title follows required
+          format.'
     design_excellence:
-      score: 12
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Custom warm palette with LinearSegmentedColormap. White edges and
-          dark text. Above defaults but not publication-level.
+        comment: Strong design with custom warm palette, FancyBboxPatch rounded corners,
+          custom background, and intentional color mapping.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Spines removed, white edgecolor, no grid (appropriate), generous
-          whitespace.
+        comment: Top/right spines removed, custom spine colors and linewidths, off-white
+          background, white edge separators.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Flame graph naturally reveals hot path but no explicit emphasis.
-          Random color variation instead of meaningful mapping.
+        comment: Percentage labels on major bars communicate hot path. Color intensity
+          reinforces hierarchy.
     spec_compliance:
       score: 15
       max: 15
@@ -119,28 +121,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct flame graph with horizontal bars, proportional widths, bottom-to-top
-          stacking.
+        comment: Correct flame graph with horizontal bars stacked by call depth.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Warm palette, adjacent bars, function labels on wide bars, caller-to-callee
-          layering.
+        comment: 'All spec requirements met: caller-to-callee stacking, warm palette,
+          labels in wide bars, adjacent bars.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis shows samples, Y-axis shows depth, widths proportional to
-          values.
+        comment: X-axis maps to CPU samples, Y-axis to stack depth. All data visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format. No legend needed.
+        comment: Title follows required format. No legend needed for this plot type.
     data_quality:
       score: 14
       max: 15
@@ -150,23 +150,23 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Multiple depth levels, varying widths, multiple children per parent.
-          Could show more variety in call patterns.
+        comment: Multiple stack depths, varying widths, multiple children per parent,
+          deep and shallow paths.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: CPU profiling of web request processing server with realistic function
-          names.
+        comment: CPU profiling data with realistic function names from a plausible
+          server application.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sample counts sensible, children sum correctly within parents.
+        comment: 950 total samples with realistic proportions across call hierarchy.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -174,55 +174,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, rectangle computation, plot, save.'
+        comment: 'Linear flow: data → build rectangles → plot patches → save.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: Fully deterministic with hardcoded data dictionary.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used.
+        comment: 'All imports used: matplotlib.colors, matplotlib.patches, matplotlib.pyplot,
+          numpy.'
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: Functional but verbose stack parsing and position tracking logic.
+        comment: Clean, well-structured code with appropriate complexity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300, bbox_inches tight.
+        comment: Saves as plot.png with dpi=300 and bbox_inches=tight.
     library_mastery:
-      score: 5
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of FancyBboxPatch, LinearSegmentedColormap, and ax methods
+          for patch-based visualization.
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses ax.barh() and ax.text() correctly. Manual rectangle-building
-          logic rather than higher-level features.
-      - id: LM-02
-        name: Distinctive Features
-        score: 2
-        max: 5
-        passed: false
-        comment: LinearSegmentedColormap.from_list is matplotlib-specific. Otherwise
-          generic bar chart usage.
+        comment: FancyBboxPatch with BoxStyle.Round and LinearSegmentedColormap.from_list
+          are distinctive matplotlib features.
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
+  - patches
   - annotations
   - manual-ticks
+  - custom-legend
   patterns:
   - data-generation
   - iteration-over-groups
