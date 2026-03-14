@@ -1,7 +1,7 @@
 library: letsplot
 specification_id: flamegraph-basic
 created: '2026-03-14T20:28:54Z'
-updated: '2026-03-14T20:43:07Z'
+updated: '2026-03-14T20:52:05Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23095681529
 issue: 4665
@@ -10,39 +10,44 @@ library_version: 4.9.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/flamegraph-basic/letsplot/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/flamegraph-basic/letsplot/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/flamegraph-basic/letsplot/plot.html
-quality_score: 86
+quality_score: 90
 review:
   strengths:
-  - Excellent hot path highlighting with dual color palette (saturated vs muted) and
-    dark red borders
-  - Vertical gaps between depth levels eliminated (ymax = depth + 1.0)
-  - 'Clean visual storytelling: viewer immediately identifies the CPU bottleneck path'
-  - Layered rendering with cool bars first and hot bars on top for visual emphasis
-  - Effective use of layer_tooltips for interactive HTML export
+  - Hot path highlighting with dual color palette (saturated vs muted) and differentiated
+    borders creates excellent visual storytelling
+  - Label overlap issue from attempt 2 fully resolved with min_label_width threshold
+    and per-depth collision detection
+  - Bars are directly adjacent vertically with no gaps, matching flame graph convention
+  - Clean layered rendering (cool bars first, hot bars on top) for proper visual emphasis
+  - Interactive tooltips via layer_tooltips show function details on hover in HTML
+    export
+  - Realistic CPU profiling data with plausible function names and sample distributions
   weaknesses:
-  - Label overlap between cleanup and init_config at depth 1 on the left side
-  - Very narrow bars (close_conn, parse_yaml, flush_cache) remain as barely-visible
-    thin slivers
-  - Some wasted whitespace at the bottom of the canvas below the root bar
+  - Very narrow bars (close_conn=12, parse_yaml=30) are thin slivers that are hard
+    to distinguish individually
+  - In-bar label font size (12) could be slightly larger for improved readability
+  - All-warm color palette may be less distinguishable for some color-vision-deficient
+    viewers
   image_description: The plot displays a flame graph on a warm off-white (#f5f5f0)
-    background. At the bottom, the widest bar "main" spans the full width in bright
-    yellow (#FFD54F) with a dark red (#BF360C) border. Above it at depth 1, narrow
-    muted bars for "cleanup" and "init_config" sit on the left in pale yellow, while
-    the wide "process_request" bar dominates in saturated amber (#FFB300) with a dark
-    red border. At depth 2, "compute" is the widest bar in saturated orange (#FB8C00)
-    with dark red border, flanked by muted "parse_input" and "serialize" bars. Depth
-    3 shows "matrix_mult" prominently in saturated red-orange (#F4511E) with dark
-    red border, alongside muted bars for "aggregate", "transform", "tokenize", "validate",
-    "compress", and "to_json". At the top (depth 4), "dot_product" appears in saturated
-    red (#E53935) with dark red border, and "normalize" in muted pink. Function names
-    are displayed in bold dark text inside bars wide enough to fit them. The hot path
-    (main → process_request → compute → matrix_mult → dot_product) is clearly distinguished
-    by saturated warm colors and thick dark red borders, while non-hot-path bars use
-    muted pastel versions. Title "flamegraph-basic · letsplot · pyplots.ai" is centered
-    at top in bold dark text (size 26).
+    background. The title "flamegraph-basic · letsplot · pyplots.ai" is centered at
+    the top in bold dark text. At the bottom (depth 0), the widest bar "main" spans
+    the full width in bright yellow with a dark red (#BF360C) border marking it as
+    part of the hot path. At depth 1, a narrow "init_config" bar sits on the left
+    in muted pale yellow, while the wide "process_request" bar dominates in saturated
+    amber with a dark red border. Small unlabeled bars for "cleanup" appear on the
+    far left. At depth 2, "compute" is the widest bar in saturated orange with dark
+    red border, flanked by muted "parse_input" and "serialize" bars. Depth 3 shows
+    "matrix_mult" prominently in saturated red-orange with dark red border, alongside
+    muted bars for "aggregate", "transform", "tokenize", "compress", and "to_json".
+    At the top (depth 4), "dot_product" appears in saturated red with dark red border,
+    and "normalize" in muted pink. The hot path (main → process_request → compute
+    → matrix_mult → dot_product) is clearly distinguished by saturated warm colors
+    and thick dark red borders, while non-hot-path bars use muted pastel versions.
+    Function names are displayed in bold dark text inside bars wide enough to fit
+    them. No label overlap is visible.
   criteria_checklist:
     visual_quality:
-      score: 24
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -50,43 +55,43 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title size=26 and geom_text size=11 explicitly set and bold. All
-          visible labels readable. Label font could be slightly larger.
+        comment: 'Title size=26 and geom_text size=12 bold explicitly set. All visible
+          labels readable. Minor: in-bar labels could be slightly larger.'
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 6
         max: 6
         passed: true
-        comment: cleanup and init_config labels overlap at depth 1 on the left side.
-          Other labels well-spaced.
+        comment: Label overlap from attempt 2 fully resolved. Min_label_width threshold
+          and per-depth collision detection prevent all collisions.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Most bars clearly visible. Hot path bars prominent. Very narrow bars
-          (close_conn, parse_yaml, flush_cache) are thin slivers.
+        comment: Most bars clearly visible. Hot path prominent. Very narrow bars (close_conn,
+          parse_yaml) are thin slivers inherent to small sample counts.
       - id: VQ-04
         name: Color Accessibility
         score: 3
         max: 4
         passed: true
-        comment: Warm palette is conventional for flame graphs. Hot/cool saturation
-          distinction helps. Yellow/orange shades may be difficult for color-vision-deficient
-          viewers.
+        comment: Warm palette conventional for flame graphs. Hot/cool saturation distinction
+          helps. All-warm palette may challenge some CVD viewers.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good horizontal fill. Some unused whitespace below main bar at bottom
-          of canvas.
+        comment: Flame graph fills canvas well. Balanced margins. coord_cartesian
+          properly frames content.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title follows required format. No axes needed for flame graphs.
+        comment: Title matches required format. No axes needed for flame graphs; theme_void
+          appropriate.
     design_excellence:
       score: 16
       max: 20
@@ -96,22 +101,22 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Strong design with intentional hot/cool color distinction. Custom
-          dual palette, off-white background, dark red borders on hot path.
+        comment: Strong design with dual color palette, custom borders, off-white
+          background. Clearly above defaults.
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: theme_void removes all chrome. Custom background. Layered rendering.
-          Good margins. Border styling differentiates paths.
+        comment: theme_void, custom background, subtle depth separators, layered rendering,
+          balanced margins.
       - id: DE-03
         name: Data Storytelling
         score: 5
         max: 6
         passed: true
-        comment: Hot path highlighting with saturated colors and thick borders immediately
-          draws attention to the CPU bottleneck path.
+        comment: Hot path highlighting with saturated colors and dark borders immediately
+          draws eye to performance bottleneck.
     spec_compliance:
       score: 15
       max: 15
@@ -121,53 +126,51 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct flame graph with horizontal bars stacked by call depth, width
-          proportional to samples.
+        comment: Correct flame graph with stacked bars by call depth, width proportional
+          to samples, bottom-to-top ordering.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Warm palette, adjacent bars vertically, labels inside wide bars,
-          width proportional to samples.
+        comment: Warm colors, adjacent bars, function labels in wide bars, proportional
+          widths, minimal gaps.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Bar widths correctly proportional to sample counts. Depth correctly
-          represents call stack hierarchy.
+        comment: Bar widths correctly proportional to samples. Depth maps call stack
+          hierarchy. Children within parent bounds.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. No legend needed for flame graphs.
+        comment: Title exactly matches required format. No legend needed.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows 5 depth levels, varying bar widths, multiple branching paths,
-          self-time gaps, and leaf nodes.
+        comment: 5 depth levels, varying widths, multiple branches, self-time, leaf
+          and interior nodes.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: CPU profiling of request processing pipeline with realistic function
-          names. Neutral technical context.
+        comment: CPU profiling with realistic function names. Neutral technical context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sample counts plausible (950 total). Child samples always sum to
-          less than parent.
+        comment: Plausible sample counts (950 total). Children sum to less than parent.
     code_quality:
       score: 10
       max: 10
@@ -177,14 +180,13 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, tree building, rectangle construction,
-          plot, save.'
+        comment: Linear flow with no functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set and data is deterministic.
+        comment: np.random.seed(42) set. Data is deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -196,14 +198,14 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Clean tree-building algorithm with hot path detection. Two-layer
-          rendering is elegant.
+        comment: Clean tree-building, hot path detection, per-depth overlap detection,
+          two-layer rendering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png via ggsave with scale=3. Also exports HTML.
+        comment: Saves plot.png via ggsave with scale=3. Also exports HTML.
     library_mastery:
       score: 7
       max: 10
@@ -213,22 +215,23 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Good ggplot grammar: geom_rect + geom_text + scale_fill_identity
-          + theme_void with proper aes mappings.'
+        comment: 'Good ggplot grammar: geom_rect + geom_text + geom_segment, scale_fill_identity,
+          coord_cartesian.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses layer_tooltips() for interactive hover info in HTML export.
-          Dual output (PNG + HTML).
-  verdict: REJECTED
+        comment: layer_tooltips for interactive hover info. Dual output (PNG + HTML)
+          leverages lets-plot interactivity.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
   - hover-tooltips
   - html-export
+  - annotations
   patterns:
   - data-generation
   - iteration-over-groups
