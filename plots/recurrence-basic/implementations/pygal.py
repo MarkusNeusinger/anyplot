@@ -1,7 +1,7 @@
 """ pyplots.ai
 recurrence-basic: Recurrence Plot for Nonlinear Time Series
 Library: pygal 3.1.0 | Python 3.14.3
-Quality: 84/100 | Created: 2026-03-14
+Quality: 85/100 | Created: 2026-03-14
 """
 
 import sys
