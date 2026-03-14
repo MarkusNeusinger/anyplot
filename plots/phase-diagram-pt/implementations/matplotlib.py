@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 phase-diagram-pt: Thermodynamic Phase Diagram (Pressure-Temperature)
 Library: matplotlib 3.10.8 | Python 3.14.3
 Quality: 89/100 | Created: 2026-03-14
@@ -29,7 +29,8 @@ P_liquid_gas = triple_P * np.exp((L_vap / R) * (1 / triple_T - 1 / T_liquid_gas)
 
 # Solid-liquid boundary (melting curve) — water has negative slope
 # Using Simon equation approximation for ice Ih
-T_solid_liquid = np.linspace(triple_T, 250, 80)
+# Extend to high pressures to make curve visually prominent
+T_solid_liquid = np.linspace(triple_T, 240, 100)
 P_solid_liquid = triple_P + (T_solid_liquid - triple_T) * (-1.4e7)
 
 # Plot
@@ -37,7 +38,7 @@ fig, ax = plt.subplots(figsize=(16, 9))
 
 # Axis limits and log scale (set early for fill operations)
 ax.set_yscale("log")
-x_min, x_max = 180, 750
+x_min, x_max = 180, 800
 y_min, y_max = 10, 5e8
 ax.set_xlim(x_min, x_max)
 ax.set_ylim(y_min, y_max)
@@ -61,6 +62,10 @@ ax.fill(solid_T, solid_P, color="#E8DCF0", alpha=0.5, zorder=1)
 
 # Supercritical region: right of critical point, above critical pressure
 ax.fill_between([critical_T, x_max], critical_P, y_max, color="#FFF3CD", alpha=0.5, zorder=1)
+
+# Reference lines at critical point (dashed) to emphasize phase boundaries
+ax.axhline(critical_P, color="#999999", linewidth=1, linestyle=(0, (5, 5)), alpha=0.4, zorder=2)
+ax.axvline(critical_T, color="#999999", linewidth=1, linestyle=(0, (5, 5)), alpha=0.4, zorder=2)
 
 # Phase boundary curves
 text_outline = [pe.withStroke(linewidth=4, foreground="white")]
@@ -139,10 +144,10 @@ ax.text(
     zorder=4,
 )
 ax.text(
-    700,
+    720,
     8e7,
     "SUPERCRITICAL\nFLUID",
-    fontsize=14,
+    fontsize=16,
     fontweight="bold",
     color="#8B6914",
     alpha=0.7,
@@ -154,7 +159,7 @@ ax.text(
 # Style
 ax.set_xlabel("Temperature (K)", fontsize=20)
 ax.set_ylabel("Pressure (Pa)", fontsize=20)
-ax.set_title("Water Phase Diagram · phase-diagram-pt · matplotlib · pyplots.ai", fontsize=24, fontweight="medium")
+ax.set_title("phase-diagram-pt · matplotlib · pyplots.ai", fontsize=24, fontweight="medium")
 ax.tick_params(axis="both", labelsize=16)
 ax.spines["top"].set_visible(False)
 ax.spines["right"].set_visible(False)
