@@ -1,7 +1,7 @@
 library: pygal
 specification_id: recurrence-basic
 created: '2026-03-14T22:46:54Z'
-updated: '2026-03-14T22:51:00Z'
+updated: '2026-03-14T23:00:58Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23097948367
 issue: 4592
@@ -10,32 +10,33 @@ library_version: 3.1.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/recurrence-basic/pygal/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/recurrence-basic/pygal/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/recurrence-basic/pygal/plot.html
-quality_score: 78
+quality_score: 84
 review:
   strengths:
-  - Perfect spec compliance with all required features including time-delay embedding,
-    Euclidean distance, and color-mapped variant
-  - Excellent data choice using Lorenz attractor with scientifically meaningful parameters
-  - Custom 9-stop blue sequential colormap with smooth interpolation
-  - Proper 15% recurrence rate calculation ensures visually balanced density
+  - 'Excellent data choice: Lorenz attractor with time-delay embedding produces authentic
+    recurrence structures'
+  - Thoughtful annotations that guide the viewer to understand recurrence plot features
+  - Custom blue sequential colormap with smooth interpolation
+  - Well-implemented colorbar with labeled ticks
+  - Full spec compliance with all required features
   weaknesses:
-  - sys.path manipulation hack for import resolution is fragile and inelegant
-  - Colorbar could be more tightly integrated with the plot
-  - No visual emphasis or annotations guiding viewer to key recurrence features
-  - Axis labels lack units
-  - Design could be elevated with tick marks, polished colorbar, and subtle refinements
-  image_description: 'The plot displays a recurrence plot (square matrix) for a Lorenz
-    attractor x-component time series. Both axes are labeled "Time Index" running
-    from 0 to ~290. The title reads "recurrence-basic · pygal · pyplots.ai" at the
-    top. The main diagonal is clearly visible as a dark blue line running from top-left
-    to bottom-right. Diagonal line structures appear throughout the matrix, indicating
-    deterministic behavior characteristic of the Lorenz system. Block-like clusters
-    of recurrence appear in the upper-left and lower portions of the plot, suggesting
-    regime changes. The color scheme uses a sequential blue colormap: dark navy blue
-    for distance 0 (closest recurrence) grading to light blue/white for the threshold
-    distance (~9.8). A colorbar on the right is labeled "Distance" with values from
-    0.0 (top, dark) to 9.8 (bottom, light). The background is white, and the plot
-    is square with a thin gray border.'
+  - Custom class violates KISS principle (though necessary for pygal)
+  - Annotation text could be slightly larger for better readability
+  - Lightest blue cells blend slightly with the gray background
+  - DE-01 could be elevated with more refined typography or distinctive color palette
+  image_description: 'The plot displays a recurrence plot for a Lorenz attractor x-component
+    on a square canvas (3600x3600px). Both axes are labeled "Time Index (steps)" ranging
+    from 0 to approximately 290. The matrix uses a sequential blue colormap (light
+    blue #f7fbff to dark navy #08306b) on a light gray (#f0f0f0) background for non-recurrent
+    regions. The main diagonal is prominently visible as a continuous dark blue line
+    running from top-left to bottom-right. Off-diagonal structures show clear diagonal
+    line patterns indicating deterministic dynamics, and block cluster structures
+    around indices 170-220 indicating regime changes. Three red italic annotations
+    with dashed leader lines point to key features: "Diagonal lines (determinism)"
+    near the upper-left, "Main diagonal" at center, and "Block cluster (regime change)"
+    in the lower-right area. A vertical colorbar on the right side shows "Euclidean
+    Distance" from 0.0 to 9.8 with tick marks at 0.0, 2.5, 4.9, 7.4, and 9.8. The
+    title "recurrence-basic · pygal · pyplots.ai" appears at the top of the chart.'
   criteria_checklist:
     visual_quality:
       score: 26
@@ -46,43 +47,43 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set throughout (title=64, axis titles=48, ticks=36,
-          colorbar labels=34). All text readable.
+        comment: All font sizes explicitly set (title=58px, axes=46px, ticks=34px,
+          colorbar=30px, annotations=28px). Annotation text small but readable.
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No overlapping text elements. Tick labels well-spaced at 50-step
-          intervals.
+        comment: Minor overlap of annotation leader lines with data points; all text
+          remains readable.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Recurrence cells visible, diagonal and block structures clear. Individual
-          cells small but appropriate for 290x290 matrix.
+        comment: Matrix cells well-sized, color gradient clear. Lightest blue cells
+          slightly hard to distinguish from background.
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Blue sequential colormap is colorblind-safe with good contrast.
+        comment: Sequential blue colormap is colorblind-safe with good contrast.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Square plot with reasonable canvas utilization. Some excess whitespace
-          around margins.
+        comment: Good square layout. Plot fills canvas well but slight imbalance with
+          colorbar margin.
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Time Index is descriptive but lacks units.
+        passed: true
+        comment: Time Index (steps) with units on both axes, correct title format.
     design_excellence:
-      score: 11
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -90,22 +91,21 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom 9-stop blue colormap with smooth interpolation, clean white
-          background, above defaults.
+        comment: Custom blue sequential colormap, red annotation accents, clean background.
+          Above defaults but not publication-level.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Clean border, no distracting grid. Some refinement but colorbar integration
-          and tick marks could improve.
+        passed: true
+        comment: Clean borders, no unnecessary grid, well-positioned colorbar. Good
+          whitespace management.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Lorenz data creates interesting patterns naturally. Color-mapped
-          distances add depth. No annotations guiding interpretation.
+        passed: true
+        comment: Annotations guide viewer to understand recurrence plot features effectively.
     spec_compliance:
       score: 15
       max: 15
@@ -115,52 +115,54 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct recurrence plot showing symmetric distance matrix with threshold.
+        comment: Correct recurrence plot with distance matrix and threshold.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: main diagonal, Euclidean distance, time-delay
-          embedding, color-mapped variant.'
+        comment: 'All spec features present: distance matrix, threshold, time-delay
+          embedding, Lorenz attractor, annotations.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Both axes correctly show time indices, distance matrix properly mapped.
+        comment: Both axes correctly represent time indices, distance matrix properly
+          computed.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. No legend needed for single-series.
+        comment: Title format correct. No legend needed, correctly hidden.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows diagonal lines (determinism), block structures (regime changes),
-          main diagonal. Good variety from Lorenz attractor.
+        comment: Shows main diagonal, off-diagonal recurrence lines, and block cluster
+          structures.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Lorenz attractor is a classic example explicitly mentioned in the
-          spec.
+        comment: Lorenz attractor is a classic dynamical system. Neutral scientific
+          context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 300 time points, 15% recurrence rate, sensible Lorenz parameters.
+        comment: 300 time steps, 15% recurrence rate, embedding dim=3, delay=5. Standard
+          parameters.
     code_quality:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: CQ-01
@@ -168,14 +170,14 @@ review:
         score: 1
         max: 3
         passed: false
-        comment: Custom RecurrencePlotChart class violates flat script structure.
-          Necessary for pygal but still a class.
+        comment: Uses custom class extending Graph. Necessary for pygal but violates
+          KISS no-classes principle.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42) set, deterministic ODE solver.
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -184,46 +186,47 @@ review:
         comment: All imports used.
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: sys.path manipulation hack is inelegant. Class adds complexity though
-          necessary.
+        passed: true
+        comment: Well-structured, clear separation between data and visualization.
+          No fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png, plot.svg, and plot.html.
+        comment: Saves as plot.png and plot.svg. Current pygal API.
     library_mastery:
-      score: 5
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
-        passed: false
-        comment: Extends pygal Graph class and uses SVG node system and Style. Correct
-          approach but relies heavily on low-level SVG manipulation.
+        passed: true
+        comment: Correctly extends Graph base class with _plot() and _compute() overrides.
+          Uses Style and svg.node API idiomatically.
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Uses pygal SVG generation pipeline and custom chart extension pattern.
-          Most rendering is manual SVG construction.
+        passed: true
+        comment: Custom Graph subclass, SVG node API, HTML embedding are pygal-specific.
+          Much rendering is manual SVG construction.
   verdict: REJECTED
 impl_tags:
   dependencies:
   - scipy
   techniques:
   - colorbar
-  - manual-ticks
+  - annotations
   - html-export
   patterns:
   - data-generation
   - matrix-construction
-  dataprep: []
+  dataprep:
+  - time-series
   styling:
   - custom-colormap
