@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 line-yield-curve: Yield Curve (Interest Rate Term Structure)
 Library: bokeh 3.9.0 | Python 3.14.3
 Quality: 86/100 | Created: 2026-03-14
@@ -6,7 +6,7 @@ Quality: 86/100 | Created: 2026-03-14
 
 import numpy as np
 from bokeh.io import export_png, output_file, save
-from bokeh.models import ColumnDataSource, Label, Legend, LegendItem
+from bokeh.models import ColumnDataSource, Label, Legend, LegendItem, NumeralTickFormatter
 from bokeh.plotting import figure
 
 
@@ -28,53 +28,89 @@ source_normal = ColumnDataSource(data={"maturity": maturity_years, "yield_pct": 
 source_flat = ColumnDataSource(data={"maturity": maturity_years, "yield_pct": yields_flat})
 source_inverted = ColumnDataSource(data={"maturity": maturity_years, "yield_pct": yields_inverted})
 
-# Create figure
+# Inversion zone: where inverted curve short-term yields exceed its own 30Y yield
+inv_30y = yields_inverted[-1]  # 4.03%
+
+# Create figure with log x-axis for better spacing of short-term maturities
 p = figure(
     width=4800,
     height=2700,
-    title="U.S. Treasury Yield Curves · line-yield-curve · bokeh · pyplots.ai",
-    x_axis_label="Maturity (Years)",
+    title="line-yield-curve · bokeh · pyplots.ai",
+    x_axis_label="Maturity",
     y_axis_label="Yield (%)",
+    x_axis_type="log",
+    x_range=(0.06, 42),
+    y_range=(3.75, 5.8),
 )
 
-# Plot curves
-line_normal = p.line(x="maturity", y="yield_pct", source=source_normal, line_width=5, line_color="#306998")
-scatter_normal = p.scatter(
-    x="maturity", y="yield_pct", source=source_normal, size=18, fill_color="#306998", line_color="white", line_width=3
-)
-
-line_flat = p.line(x="maturity", y="yield_pct", source=source_flat, line_width=5, line_color="#E8833A")
-scatter_flat = p.scatter(
-    x="maturity", y="yield_pct", source=source_flat, size=18, fill_color="#E8833A", line_color="white", line_width=3
-)
-
-line_inverted = p.line(
-    x="maturity", y="yield_pct", source=source_inverted, line_width=5, line_color="#D64045", line_dash="dashed"
-)
-scatter_inverted = p.scatter(
-    x="maturity", y="yield_pct", source=source_inverted, size=18, fill_color="#D64045", line_color="white", line_width=3
-)
-
-# Shading for inversion region (where short-term yields > 30Y yield)
-inv_30y = yields_inverted[-1]
+# Inversion shading - only the short-term maturities (1M to 7Y) where yields > 30Y
 inv_mask = yields_inverted > inv_30y
 inv_idx = np.where(inv_mask)[0]
 inv_x = maturity_years[inv_idx]
 inv_upper = yields_inverted[inv_idx]
-p.varea(x=inv_x, y1=np.full_like(inv_x, inv_30y), y2=inv_upper, fill_color="#D64045", fill_alpha=0.08)
+source_inv_shade = ColumnDataSource(data={"x": inv_x, "y1": np.full_like(inv_x, inv_30y), "y2": inv_upper})
+p.varea(x="x", y1="y1", y2="y2", source=source_inv_shade, fill_color="#7B2D8E", fill_alpha=0.08)
 
-# Inversion annotation
+# Colorblind-safe palette: Python Blue, teal, purple
+color_normal = "#306998"
+color_flat = "#2A9D8F"
+color_inverted = "#7B2D8E"
+
+# Normal curve - solid, primary emphasis
+line_normal = p.line(x="maturity", y="yield_pct", source=source_normal, line_width=4.5, line_color=color_normal)
+scatter_normal = p.scatter(
+    x="maturity",
+    y="yield_pct",
+    source=source_normal,
+    size=16,
+    fill_color=color_normal,
+    line_color="white",
+    line_width=2.5,
+)
+
+# Flat curve - solid, secondary
+line_flat = p.line(x="maturity", y="yield_pct", source=source_flat, line_width=4.5, line_color=color_flat)
+scatter_flat = p.scatter(
+    x="maturity", y="yield_pct", source=source_flat, size=16, fill_color=color_flat, line_color="white", line_width=2.5
+)
+
+# Inverted curve - dashed to emphasize anomaly
+line_inverted = p.line(
+    x="maturity", y="yield_pct", source=source_inverted, line_width=4.5, line_color=color_inverted, line_dash=[12, 6]
+)
+scatter_inverted = p.scatter(
+    x="maturity",
+    y="yield_pct",
+    source=source_inverted,
+    size=16,
+    fill_color=color_inverted,
+    line_color="white",
+    line_width=2.5,
+)
+
+# Inversion annotation - positioned in clear space above the shading
 inversion_label = Label(
-    x=3.5,
-    y=5.50,
+    x=0.55,
+    y=3.85,
     text="Inversion zone: short-term yields exceed long-term",
-    text_font_size="24pt",
-    text_color="#D64045",
+    text_font_size="20pt",
+    text_color=color_inverted,
     text_font_style="italic",
+    text_alpha=0.85,
 )
 p.add_layout(inversion_label)
 
-# Legend
+# Subtitle annotation
+subtitle = Label(
+    x=0.07,
+    y=5.70,
+    text="U.S. Treasury Yield Curves — normal, flat, and inverted term structures",
+    text_font_size="19pt",
+    text_color="#777777",
+)
+p.add_layout(subtitle)
+
+# Legend - positioned in lower right with proper sizing
 legend = Legend(
     items=[
         LegendItem(label="Jan 2024 — Normal", renderers=[line_normal, scatter_normal]),
@@ -84,44 +120,63 @@ legend = Legend(
     location="bottom_right",
 )
 legend.label_text_font_size = "22pt"
-legend.glyph_width = 50
-legend.glyph_height = 30
-legend.spacing = 15
-legend.padding = 20
-legend.background_fill_alpha = 0.7
-legend.border_line_alpha = 0.3
+legend.glyph_width = 55
+legend.glyph_height = 32
+legend.spacing = 14
+legend.padding = 24
+legend.margin = 30
+legend.background_fill_color = "white"
+legend.background_fill_alpha = 0.9
+legend.border_line_color = "#dddddd"
+legend.border_line_width = 1
+legend.border_line_alpha = 0.6
 p.add_layout(legend)
 
-# Custom x-axis tick labels using maturity names
-# Skip 3M to avoid overlap with 1M and 6M at left edge
-display_indices = [0, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-p.xaxis.ticker = [maturity_years[i] for i in display_indices]
-p.xaxis.major_label_overrides = {maturity_years[i]: maturity_labels[i] for i in display_indices}
+# Custom x-axis tick labels - log scale provides natural spacing
+p.xaxis.ticker = list(maturity_years)
+p.xaxis.major_label_overrides = {maturity_years[i]: maturity_labels[i] for i in range(len(maturity_labels))}
 
-# Style text sizes for 4800x2700 px
-p.title.text_font_size = "38pt"
-p.xaxis.axis_label_text_font_size = "28pt"
-p.yaxis.axis_label_text_font_size = "28pt"
-p.xaxis.major_label_text_font_size = "20pt"
-p.yaxis.major_label_text_font_size = "20pt"
+# Title styling
+p.title.text_font_size = "36pt"
+p.title.text_color = "#333333"
+p.title.text_font_style = "bold"
 
-# Grid styling - subtle y-axis only
+# Axis label and tick styling
+p.xaxis.axis_label_text_font_size = "26pt"
+p.yaxis.axis_label_text_font_size = "26pt"
+p.xaxis.axis_label_text_color = "#444444"
+p.yaxis.axis_label_text_color = "#444444"
+p.xaxis.major_label_text_font_size = "18pt"
+p.yaxis.major_label_text_font_size = "18pt"
+p.xaxis.major_label_text_color = "#555555"
+p.yaxis.major_label_text_color = "#555555"
+
+# Grid styling - subtle y-axis only, solid thin lines
 p.xgrid.grid_line_alpha = 0
-p.ygrid.grid_line_alpha = 0.2
-p.ygrid.grid_line_dash = "dashed"
+p.ygrid.grid_line_alpha = 0.15
+p.ygrid.grid_line_color = "#999999"
+p.ygrid.grid_line_width = 1
 
-# Background styling
-p.background_fill_color = "#fafafa"
+# Background
+p.background_fill_color = "#FFFFFF"
 p.border_fill_color = "white"
+p.outline_line_color = None
 
-# Axis styling
-p.axis.axis_line_width = 2
-p.axis.axis_line_color = "#333333"
-p.axis.major_tick_line_width = 2
-p.axis.minor_tick_line_color = None
+# Axis styling - clean, minimal
+p.xaxis.axis_line_width = 2
+p.xaxis.axis_line_color = "#444444"
+p.yaxis.axis_line_width = 2
+p.yaxis.axis_line_color = "#444444"
+p.xaxis.major_tick_line_width = 0
+p.yaxis.major_tick_line_width = 0
+p.xaxis.minor_tick_line_color = None
+p.yaxis.minor_tick_line_color = None
 
-# Remove toolbar for cleaner static image
+# Remove toolbar
 p.toolbar_location = None
+
+# Format y-axis
+p.yaxis.formatter = NumeralTickFormatter(format="0.0")
 
 # Save
 export_png(p, filename="plot.png")
