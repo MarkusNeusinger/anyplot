@@ -1,7 +1,6 @@
-""" pyplots.ai
+"""pyplots.ai
 recurrence-basic: Recurrence Plot for Nonlinear Time Series
 Library: pygal 3.1.0 | Python 3.14.3
-Quality: 85/100 | Created: 2026-03-14
 """
 
 import sys
@@ -51,10 +50,10 @@ class RecurrencePlotChart(Graph):
         plot_width = self.view.width
         plot_height = self.view.height
 
-        label_margin_left = 360
-        label_margin_bottom = 360
+        label_margin_left = 300
+        label_margin_bottom = 300
         label_margin_top = 40
-        label_margin_right = 320
+        label_margin_right = 280
 
         available_width = plot_width - label_margin_left - label_margin_right
         available_height = plot_height - label_margin_bottom - label_margin_top
@@ -72,7 +71,7 @@ class RecurrencePlotChart(Graph):
 
         # Background fill for non-recurrent region
         self.svg.node(rp_group, "rect", x=x_offset, y=y_offset, width=grid_size, height=grid_size).set(
-            "style", "fill:#f0f0f0;stroke:none"
+            "style", "fill:#eef2f7;stroke:none"
         )
 
         # Draw cells — only recurrent pairs (distance <= threshold)
@@ -89,9 +88,9 @@ class RecurrencePlotChart(Graph):
                     rect.set("fill", color)
                     rect.set("stroke", "none")
 
-        # Outer border
+        # Outer border with refined styling
         self.svg.node(rp_group, "rect", x=x_offset, y=y_offset, width=grid_size, height=grid_size).set(
-            "style", "fill:none;stroke:#444444;stroke-width:2.5"
+            "style", "fill:none;stroke:#2c3e50;stroke-width:3"
         )
 
         # Tick marks and labels
@@ -107,34 +106,34 @@ class RecurrencePlotChart(Graph):
             # X-axis tick marks (bottom)
             self.svg.node(
                 rp_group, "line", x1=tx, y1=y_offset + grid_size, x2=tx, y2=y_offset + grid_size + tick_length
-            ).set("style", "stroke:#444444;stroke-width:2")
+            ).set("style", "stroke:#2c3e50;stroke-width:2")
 
             # X-axis tick labels
             text_node = self.svg.node(rp_group, "text", x=tx, y=y_offset + grid_size + tick_length + 40)
             text_node.set("text-anchor", "middle")
-            text_node.set("fill", "#333333")
+            text_node.set("fill", "#2c3e50")
             text_node.set("style", f"font-size:{tick_font_size}px;font-family:sans-serif")
             text_node.text = str(t)
 
             # Y-axis tick marks (left)
             self.svg.node(rp_group, "line", x1=x_offset - tick_length, y1=ty, x2=x_offset, y2=ty).set(
-                "style", "stroke:#444444;stroke-width:2"
+                "style", "stroke:#2c3e50;stroke-width:2"
             )
 
             # Y-axis tick labels
             text_node = self.svg.node(rp_group, "text", x=x_offset - tick_length - 12, y=ty + tick_font_size * 0.35)
             text_node.set("text-anchor", "end")
-            text_node.set("fill", "#333333")
+            text_node.set("fill", "#2c3e50")
             text_node.set("style", f"font-size:{tick_font_size}px;font-family:sans-serif")
             text_node.text = str(t)
 
         # Y-axis title (rotated)
         y_title_size = 46
-        y_title_x = x_offset - 280
+        y_title_x = x_offset - 230
         y_title_y = y_offset + grid_size / 2
         text_node = self.svg.node(rp_group, "text", x=y_title_x, y=y_title_y)
         text_node.set("text-anchor", "middle")
-        text_node.set("fill", "#222222")
+        text_node.set("fill", "#1a252f")
         text_node.set("style", f"font-size:{y_title_size}px;font-weight:600;font-family:sans-serif")
         text_node.set("transform", f"rotate(-90, {y_title_x}, {y_title_y})")
         text_node.text = self.y_axis_title
@@ -142,10 +141,10 @@ class RecurrencePlotChart(Graph):
         # X-axis title (bottom)
         x_title_size = 46
         x_title_x = x_offset + grid_size / 2
-        x_title_y = y_offset + grid_size + 140
+        x_title_y = y_offset + grid_size + 120
         text_node = self.svg.node(rp_group, "text", x=x_title_x, y=x_title_y)
         text_node.set("text-anchor", "middle")
-        text_node.set("fill", "#222222")
+        text_node.set("fill", "#1a252f")
         text_node.set("style", f"font-size:{x_title_size}px;font-weight:600;font-family:sans-serif")
         text_node.text = self.x_axis_title
 
@@ -166,7 +165,7 @@ class RecurrencePlotChart(Graph):
 
         # Colorbar border
         self.svg.node(rp_group, "rect", x=cb_x, y=cb_y, width=cb_width, height=cb_height).set(
-            "style", "fill:none;stroke:#444444;stroke-width:1.5"
+            "style", "fill:none;stroke:#2c3e50;stroke-width:1.5"
         )
 
         # Colorbar tick marks and labels
@@ -176,28 +175,28 @@ class RecurrencePlotChart(Graph):
             tick_y = cb_y + (1.0 - tick_val / threshold) * cb_height
             # Tick mark
             self.svg.node(rp_group, "line", x1=cb_x + cb_width, y1=tick_y, x2=cb_x + cb_width + 8, y2=tick_y).set(
-                "style", "stroke:#444444;stroke-width:1.5"
+                "style", "stroke:#2c3e50;stroke-width:1.5"
             )
             # Label
             text_node = self.svg.node(rp_group, "text", x=cb_x + cb_width + 14, y=tick_y + cb_label_size * 0.35)
-            text_node.set("fill", "#333333")
+            text_node.set("fill", "#2c3e50")
             text_node.set("style", f"font-size:{cb_label_size}px;font-family:sans-serif")
             text_node.text = f"{tick_val:.1f}"
 
         # Colorbar title (rotated, right side)
         cb_title_size = 34
-        cb_title_x = cb_x + cb_width + 90
+        cb_title_x = cb_x + cb_width + 80
         cb_title_y = cb_y + cb_height / 2
         text_node = self.svg.node(rp_group, "text", x=cb_title_x, y=cb_title_y)
         text_node.set("text-anchor", "middle")
-        text_node.set("fill", "#222222")
+        text_node.set("fill", "#1a252f")
         text_node.set("style", f"font-size:{cb_title_size}px;font-weight:600;font-family:sans-serif")
         text_node.set("transform", f"rotate(90, {cb_title_x}, {cb_title_y})")
         text_node.text = "Euclidean Distance"
 
         # Annotations for key recurrence features
-        annotation_font = 28
-        annotation_color = "#cc3333"
+        annotation_font = 32
+        annotation_color = "#c0392b"
         for ann in self.annotations:
             ax = x_offset + ann["x"] * cell_size
             ay = y_offset + ann["y"] * cell_size
@@ -205,12 +204,16 @@ class RecurrencePlotChart(Graph):
             lx = ax + ann.get("dx", 80)
             ly = ay + ann.get("dy", -80)
             self.svg.node(rp_group, "line", x1=lx, y1=ly, x2=ax, y2=ay).set(
-                "style", f"stroke:{annotation_color};stroke-width:2;stroke-dasharray:6,3"
+                "style", f"stroke:{annotation_color};stroke-width:2.5;stroke-dasharray:8,4"
             )
+            # Small dot at arrow endpoint
+            self.svg.node(rp_group, "circle", cx=ax, cy=ay, r=5, fill=annotation_color)
             # Label text
             text_node = self.svg.node(rp_group, "text", x=lx + ann.get("tdx", 6), y=ly + ann.get("tdy", -10))
             text_node.set("fill", annotation_color)
-            text_node.set("style", f"font-size:{annotation_font}px;font-style:italic;font-family:sans-serif")
+            text_node.set(
+                "style", f"font-size:{annotation_font}px;font-style:italic;font-weight:500;font-family:sans-serif"
+            )
             text_node.text = ann["label"]
 
     def _compute(self):
@@ -250,18 +253,18 @@ epsilon = sorted_dists[int(0.15 * len(sorted_dists))]
 
 # Annotations pointing to key recurrence features
 annotations = [
-    {"x": 145, "y": 145, "dx": 120, "dy": -100, "tdx": 6, "tdy": -8, "label": "Main diagonal"},
-    {"x": 60, "y": 30, "dx": 120, "dy": -60, "tdx": 6, "tdy": -8, "label": "Diagonal lines (determinism)"},
-    {"x": 220, "y": 200, "dx": 120, "dy": 100, "tdx": 6, "tdy": -8, "label": "Block cluster (regime change)"},
+    {"x": 145, "y": 145, "dx": 160, "dy": -130, "tdx": 8, "tdy": -10, "label": "Main diagonal"},
+    {"x": 50, "y": 25, "dx": 180, "dy": -100, "tdx": 8, "tdy": -10, "label": "Diagonal lines (determinism)"},
+    {"x": 220, "y": 200, "dx": 140, "dy": 110, "tdx": 8, "tdy": -10, "label": "Block cluster (regime change)"},
 ]
 
 # Style
 custom_style = Style(
     background="white",
     plot_background="white",
-    foreground="#333333",
-    foreground_strong="#222222",
-    foreground_subtle="#999999",
+    foreground="#2c3e50",
+    foreground_strong="#1a252f",
+    foreground_subtle="#95a5a6",
     colors=("#306998",),
     title_font_size=58,
     legend_font_size=36,
