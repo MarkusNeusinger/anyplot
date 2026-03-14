@@ -1,0 +1,216 @@
+library: matplotlib
+specification_id: line-yield-curve
+created: '2026-03-14T22:18:06Z'
+updated: '2026-03-14T22:22:39Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23097460441
+issue: 4664
+python_version: 3.14.3
+library_version: 3.10.8
+preview_url: https://storage.googleapis.com/pyplots-images/plots/line-yield-curve/matplotlib/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/line-yield-curve/matplotlib/plot_thumb.png
+preview_html: null
+quality_score: 92
+review:
+  strengths:
+  - Excellent data storytelling with three contrasting yield curve shapes and highlighted
+    inversion region
+  - Professional financial publication aesthetic with muted colors and clean design
+  - Realistic U.S. Treasury data that accurately reflects historical yield environments
+  - Well-executed annotation with arrow pointing to the inversion region
+  weaknesses:
+  - X-axis tick labels at 14pt slightly below the 16pt guideline
+  image_description: 'The plot displays three U.S. Treasury yield curves on a clean
+    white background with a log-scaled x-axis showing bond maturities from 1M to 30Y.
+    Three lines with circular markers are drawn: a dark blue (#306998) line for Jan
+    2022 (Normal) showing a classic upward-sloping curve from ~0.08% to ~2.25%, a
+    muted red (#C44E52) line for Oct 2023 (Inverted) showing a downward-sloping curve
+    from ~5.55% to ~4.95%, and a gray (#8C8C8C) line for Jan 2025 (Normalizing) showing
+    a relatively flat curve around 4.2-4.85%. A light red shaded area highlights the
+    inversion region on the Oct 2023 curve between 1M and 5Y, with an annotation arrow
+    labeled "Yield curve inversion" pointing to the 3Y area. The title reads "line-yield-curve
+    · matplotlib · pyplots.ai". X-axis labeled "Maturity", y-axis labeled "Yield (%)".
+    Top and right spines are removed, with a subtle y-axis grid. Legend is frameless,
+    positioned at center-right. Markers have white edges for clarity.'
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set. X-tick labels at 14pt slightly below
+          16pt guideline.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text anywhere. Legend well-placed.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Lines at linewidth=3 with markersize=8 and white edges. All curves
+          clearly distinguishable.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue, muted red, and gray palette. Distinguishable under colorblind
+          conditions.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good canvas utilization with tight_layout at 16:9.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Maturity and Yield (%) with units.
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom muted palette appropriate for financial data, white marker
+          edges, professional look.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines removed, subtle grid, hidden tick marks, frameless legend.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Three dates showing normal to inverted to normalizing evolution with
+          highlighted inversion.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct line plot for yield curves.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Multiple curves, log x-axis, inversion highlighting, legend with
+          dates.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: maturity_years on x-axis with log spacing, yields on y-axis.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct title format and descriptive legend labels.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows normal, inverted, and normalizing yield curve shapes.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Realistic U.S. Treasury data from actual historical periods.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Yield values realistic for respective time periods.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear flow with no functions or classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: All data hardcoded and deterministic.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only matplotlib.pyplot and numpy imported, both used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean loop with zip, appropriate complexity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with dpi=300, no deprecated API.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Consistent axes API usage, proper spine manipulation, tick customization.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: fill_between, annotate with arrowprops, log scale with custom ticks.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - manual-ticks
+  patterns:
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
+  - grid-styling
