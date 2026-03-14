@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 recurrence-basic: Recurrence Plot for Nonlinear Time Series
-Library: highcharts | Python 3.13
-Quality: pending | Created: 2026-03-14
+Library: highcharts unknown | Python 3.14.3
+Quality: 76/100 | Created: 2026-03-14
 """
 
 import json
