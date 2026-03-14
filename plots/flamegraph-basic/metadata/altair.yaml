@@ -1,7 +1,7 @@
 library: altair
 specification_id: flamegraph-basic
 created: '2026-03-14T20:27:47Z'
-updated: '2026-03-14T20:38:26Z'
+updated: '2026-03-14T20:45:53Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23095681615
 issue: 4665
@@ -10,7 +10,7 @@ library_version: 6.0.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/flamegraph-basic/altair/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/flamegraph-basic/altair/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/flamegraph-basic/altair/plot.html
-quality_score: 89
+quality_score: 90
 review:
   strengths:
   - Excellent flame graph layout with correct caller-to-callee hierarchy and proportional
@@ -18,26 +18,28 @@ review:
   - Hot path highlighting via opacity creates effective visual storytelling
   - Realistic CPU profiling data with meaningful function names and plausible sample
     distributions
-  - Good use of Altair layer composition (mark_rect + mark_text) and interactive features
-    (tooltips, zoom/pan)
-  - Informative subtitle narrating the hot path
+  - Clean use of Altair layer composition with interactive features (tooltips, zoom/pan,
+    hover highlight)
+  - Informative subtitle narrating the hot path and interaction instructions
+  - Clean imports — numpy removed since previous attempt
   weaknesses:
-  - numpy is imported but serves no purpose — data is entirely deterministic with
-    no random generation
-  - Color palette, while conventional for flame graphs, could be slightly more accessible
-    with a perceptually uniform warm gradient
+  - Color palette could use a perceptually uniform warm gradient for slightly better
+    accessibility
+  - Library mastery could be pushed further with more advanced Altair-specific features
   image_description: 'The plot displays a flame graph with 6 depth levels (0-5) stacked
     bottom-to-top. The root "main" bar spans the full width (500 samples) at depth
-    0 in pale yellow. At depth 1, "request_handler" (420 samples) and smaller "gc_collect",
-    "logger" bars appear in warm yellow. Deeper levels show progressively warmer orange-to-red
-    colors: "process_request", "parse_headers", "route_dispatch" at depth 2; "db_query",
-    "template_render", "decode_utf8", "regex_match" at depth 3; "execute_sql", "render_html"
-    at depth 4; "fetch_rows" and "parse_query" in deep red at depth 5. The hot path
-    (main → request_handler → process_request → db_query → execute_sql) is rendered
-    at full opacity while non-hot-path bars are faded to ~0.6 opacity. Function names
-    are labeled inside bars when wide enough. White thin strokes separate adjacent
-    bars. Title reads "flamegraph-basic · altair · pyplots.ai" with a subtitle showing
-    the hot path. Axes labeled "Samples (count)" and "Stack Depth (level)".'
+    0 in pale peach. At depth 1, "request_handler" (420 samples) and smaller "gc_collect",
+    "logger" bars appear in light peach-orange. Deeper levels show progressively warmer
+    orange-to-red colors: "process_request", "parse_headers", "route_dispatch", "mark_sweep"
+    at depth 2; "db_query", "template_render", "decode_utf8", "regex_match" at depth
+    3; "execute_sql", "render_html" at depth 4; "fetch_rows" and "parse_query" in
+    deep red/maroon at depth 5. The hot path (main → request_handler → process_request
+    → db_query → execute_sql) is rendered at full opacity while non-hot-path bars
+    are faded to ~0.6 opacity. Function names are labeled in bold inside bars when
+    wide enough. White thin strokes separate adjacent bars with subtle corner radius.
+    Title reads "flamegraph-basic · altair · pyplots.ai" with a two-line subtitle.
+    X-axis labeled "Samples (count)", Y-axis labeled "Stack Depth (level)". Grid disabled,
+    clean minimal layout.'
   criteria_checklist:
     visual_quality:
       score: 29
@@ -55,7 +57,7 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text; labels only shown for bars >6% width
+        comment: Labels only shown for bars >6% width; no overlapping text
       - id: VQ-03
         name: Element Visibility
         score: 6
@@ -75,7 +77,7 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Plot fills canvas well with balanced margins
+        comment: Plot fills canvas well with balanced margins and generous padding
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -98,14 +100,15 @@ review:
         score: 4
         max: 6
         passed: true
-        comment: Grid disabled, view stroke removed, domain color lightened, generous
-          padding
+        comment: Grid disabled, view stroke removed, domain color lightened, label/title
+          colors customized, generous padding
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Hot path highlighted via opacity; subtitle narrates bottleneck path
+        comment: Hot path highlighted via opacity contrast; subtitle narrates bottleneck
+          path
     spec_compliance:
       score: 15
       max: 15
@@ -128,7 +131,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: X=samples, Y=stack depth, correct mapping
+        comment: X=samples, Y=stack depth with descending sort
       - id: SC-04
         name: Title & Legend
         score: 3
@@ -144,7 +147,8 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 6 depth levels, varying widths, multiple siblings at each depth
+        comment: 6 depth levels, varying widths, multiple siblings at each depth,
+          branching call stacks
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -159,7 +163,7 @@ review:
         passed: true
         comment: 500 total samples with realistic proportional distribution
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -167,19 +171,20 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports → data → position computation → plot → save; no functions/classes
+        comment: 'Clean linear flow: imports → data → position computation → plot
+          → save'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seed set and data is fully deterministic
+        comment: Fully deterministic data (hardcoded dictionary)
       - id: CQ-03
         name: Clean Imports
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: numpy imported but only used for seed; no random data generated
+        passed: true
+        comment: Only altair and pandas imported, both actively used
       - id: CQ-04
         name: Code Elegance
         score: 2
@@ -191,7 +196,7 @@ review:
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html, current API
+        comment: Saves as plot.png and plot.html; current Altair 6.x API
     library_mastery:
       score: 7
       max: 10
@@ -201,16 +206,16 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good mark_rect + mark_text layer composition, declarative encoding,
-          transform_calculate, tooltips
+        comment: 'Good declarative patterns: layer composition, encoding types, transform_calculate,
+          tooltips'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Interactive zoom/pan, rich tooltips, transform_calculate, HTML export,
-          layer composition
-  verdict: REJECTED
+        comment: Interactive zoom/pan, selection_point hover highlight, transform_calculate,
+          HTML export
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
