@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 funnel-meta-analysis: Meta-Analysis Funnel Plot for Publication Bias
 Library: altair 6.0.0 | Python 3.14.3
-Quality: 87/100 | Created: 2026-03-15
+Quality: 90/100 | Created: 2026-03-15
 """
 
 import altair as alt
