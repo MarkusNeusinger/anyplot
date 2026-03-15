@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 stereonet-equal-area: Structural Geology Stereonet (Equal-Area Projection)
 Library: altair 6.0.0 | Python 3.14.3
 Quality: 79/100 | Created: 2026-03-15
@@ -95,28 +95,66 @@ df_cross = pd.DataFrame(
     }
 )
 
-# Density heatmap using simple Gaussian KDE with numpy
-n_grid = 60
+# Density contours using Gaussian KDE - extract iso-lines via marching squares
+n_grid = 100
 gx = np.linspace(-r_prim, r_prim, n_grid)
 gy = np.linspace(-r_prim, r_prim, n_grid)
 gxx, gyy = np.meshgrid(gx, gy)
-bw = 0.12
+bw = 0.10
 density = np.zeros_like(gxx)
 for px, py in zip(pole_x, pole_y, strict=True):
     density += np.exp(-((gxx - px) ** 2 + (gyy - py) ** 2) / (2 * bw**2))
 density /= len(pole_x) * 2 * np.pi * bw**2
-
 circ_mask = gxx**2 + gyy**2 <= r_prim**2
-density[~circ_mask] = np.nan
-cell_w = gx[1] - gx[0]
-cell_h = gy[1] - gy[0]
+density[~circ_mask] = 0.0
 
-density_rows = []
-for ri in range(n_grid):
-    for ci in range(n_grid):
-        if circ_mask[ri, ci] and density[ri, ci] > np.nanmax(density) * 0.15:
-            density_rows.append({"x": gxx[ri, ci], "y": gyy[ri, ci], "density": density[ri, ci]})
-df_density = pd.DataFrame(density_rows) if density_rows else pd.DataFrame(columns=["x", "y", "density"])
+# Extract contour lines using simple marching squares
+contour_levels = np.linspace(np.nanmax(density) * 0.15, np.nanmax(density) * 0.85, 5)
+contour_rows = []
+for lev_idx, level in enumerate(contour_levels):
+    for ri in range(n_grid - 1):
+        for ci in range(n_grid - 1):
+            corners = [density[ri, ci], density[ri, ci + 1], density[ri + 1, ci + 1], density[ri + 1, ci]]
+            above = [c >= level for c in corners]
+            n_above = sum(above)
+            if n_above == 0 or n_above == 4:
+                continue
+            edges = []
+            edge_pairs = [
+                (0, 1, ri, ci, ri, ci + 1),
+                (1, 2, ri, ci + 1, ri + 1, ci + 1),
+                (2, 3, ri + 1, ci + 1, ri + 1, ci),
+                (3, 0, ri + 1, ci, ri, ci),
+            ]
+            for c1, c2, r1, col1, r2, col2 in edge_pairs:
+                if above[c1] != above[c2]:
+                    t = (level - corners[c1]) / (corners[c2] - corners[c1]) if corners[c2] != corners[c1] else 0.5
+                    ex = gxx[r1, col1] + t * (gxx[r2, col2] - gxx[r1, col1])
+                    ey = gyy[r1, col1] + t * (gyy[r2, col2] - gyy[r1, col1])
+                    edges.append((ex, ey))
+            if len(edges) >= 2:
+                seg_id = f"c{lev_idx}_{ri}_{ci}"
+                contour_rows.append(
+                    {"x": edges[0][0], "y": edges[0][1], "seg_id": seg_id, "level": float(lev_idx), "order": 0}
+                )
+                contour_rows.append(
+                    {"x": edges[1][0], "y": edges[1][1], "seg_id": seg_id, "level": float(lev_idx), "order": 1}
+                )
+
+df_contours = (
+    pd.DataFrame(contour_rows) if contour_rows else pd.DataFrame(columns=["x", "y", "seg_id", "level", "order"])
+)
+
+# Mean orientation for each feature type (for annotations)
+mean_rows = []
+for ft in ["Bedding", "Fault", "Joint"]:
+    mask = np.array(feature_types) == ft
+    mx = np.mean(pole_x[mask])
+    my = np.mean(pole_y[mask])
+    ms = np.mean(strikes[mask])
+    md = np.mean(dips[mask])
+    mean_rows.append({"x": mx, "y": my, "feature_type": ft, "label": f"μ {ms:.0f}°/{md:.0f}°"})
+df_means = pd.DataFrame(mean_rows)
 
 # Plot
 color_map = {"Bedding": "#306998", "Fault": "#C1432E", "Joint": "#2A9D8F"}
@@ -124,17 +162,24 @@ color_scale = alt.Scale(domain=list(color_map.keys()), range=list(color_map.valu
 x_enc = alt.X("x:Q", axis=None, scale=alt.Scale(domain=[-1.25, 1.25]))
 y_enc = alt.Y("y:Q", axis=None, scale=alt.Scale(domain=[-1.25, 1.25]))
 
-density_layer = (
+# Interactive selection for highlighting by feature type
+selection = alt.selection_point(fields=["feature_type"], bind="legend")
+
+# Density contour lines (smooth, not blocky)
+contour_layer = (
     (
-        alt.Chart(df_density)
-        .mark_rect(opacity=0.25)
+        alt.Chart(df_contours)
+        .mark_line(strokeWidth=1.0)
         .encode(
-            x=alt.X("x:Q", axis=None, scale=alt.Scale(domain=[-1.25, 1.25]), bin=alt.Bin(step=cell_w)),
-            y=alt.Y("y:Q", axis=None, scale=alt.Scale(domain=[-1.25, 1.25]), bin=alt.Bin(step=cell_h)),
-            color=alt.Color("max(density):Q", scale=alt.Scale(scheme="greys"), legend=None),
+            x=x_enc,
+            y=y_enc,
+            detail="seg_id:N",
+            order="order:O",
+            color=alt.Color("level:Q", scale=alt.Scale(scheme="greys", domain=[0, len(contour_levels)]), legend=None),
+            opacity=alt.value(0.35),
         )
     )
-    if len(df_density) > 0
+    if len(df_contours) > 0
     else alt.Chart(pd.DataFrame({"x": [0], "y": [0]})).mark_point(size=0).encode(x="x:Q", y="y:Q")
 )
 
@@ -152,14 +197,16 @@ cross_lines = (
 
 great_circles = (
     alt.Chart(df_gc)
-    .mark_line(strokeWidth=1.0, opacity=0.35)
+    .mark_line(strokeWidth=1.0)
     .encode(
         x=x_enc,
         y=y_enc,
         detail="gc_id:N",
         order="order:O",
         color=alt.Color("feature_type:N", scale=color_scale, legend=None),
+        opacity=alt.condition(selection, alt.value(0.35), alt.value(0.05)),
     )
+    .add_params(selection)
 )
 
 prim_circle = alt.Chart(df_circle).mark_line(strokeWidth=2.5, color="#333333").encode(x=x_enc, y=y_enc, order="order:O")
@@ -178,7 +225,7 @@ dir_labels = (
 
 poles_layer = (
     alt.Chart(df_poles)
-    .mark_point(filled=True, size=180, stroke="white", strokeWidth=1.2, opacity=0.9)
+    .mark_point(filled=True, size=180, stroke="white", strokeWidth=1.2)
     .encode(
         x=x_enc,
         y=y_enc,
@@ -190,21 +237,54 @@ poles_layer = (
                 titleFontSize=20,
                 labelFontSize=18,
                 symbolSize=300,
-                orient="right",
+                orient="top-right",
                 titleColor="#333333",
                 labelColor="#333333",
             ),
         ),
+        opacity=alt.condition(selection, alt.value(0.9), alt.value(0.15)),
         tooltip=[
             alt.Tooltip("feature_type:N", title="Type"),
-            alt.Tooltip("strike:Q", title="Strike"),
-            alt.Tooltip("dip:Q", title="Dip"),
+            alt.Tooltip("strike:Q", title="Strike (°)"),
+            alt.Tooltip("dip:Q", title="Dip (°)"),
         ],
     )
+    .add_params(selection)
+)
+
+# Mean orientation markers with labels
+mean_markers = (
+    alt.Chart(df_means)
+    .mark_point(shape="cross", size=400, strokeWidth=3)
+    .encode(
+        x=x_enc,
+        y=y_enc,
+        color=alt.Color("feature_type:N", scale=color_scale, legend=None),
+        opacity=alt.condition(selection, alt.value(1.0), alt.value(0.15)),
+    )
+    .add_params(selection)
+)
+
+mean_labels = (
+    alt.Chart(df_means)
+    .mark_text(fontSize=16, fontWeight="bold", dy=-18, color="#333333")
+    .encode(x=x_enc, y=y_enc, text="label:N", opacity=alt.condition(selection, alt.value(0.9), alt.value(0.1)))
+    .add_params(selection)
 )
 
 chart = (
-    alt.layer(density_layer, grid_circles, cross_lines, great_circles, prim_circle, tick_marks, dir_labels, poles_layer)
+    alt.layer(
+        contour_layer,
+        grid_circles,
+        cross_lines,
+        great_circles,
+        prim_circle,
+        tick_marks,
+        dir_labels,
+        poles_layer,
+        mean_markers,
+        mean_labels,
+    )
     .properties(
         width=1200,
         height=1200,
