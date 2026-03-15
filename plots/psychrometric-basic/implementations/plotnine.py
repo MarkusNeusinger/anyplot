@@ -1,6 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 psychrometric-basic: Psychrometric Chart for HVAC
 Library: plotnine 0.15.3 | Python 3.14.3
+Quality: 85/100 | Created: 2026-03-15
 """
 
 import numpy as np

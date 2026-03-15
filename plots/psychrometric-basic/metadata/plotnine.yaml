@@ -1,7 +1,7 @@
 library: plotnine
 specification_id: psychrometric-basic
 created: '2026-03-15T21:51:51Z'
-updated: '2026-03-15T22:05:52Z'
+updated: '2026-03-15T22:20:49Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23120046621
 issue: 4583
@@ -10,37 +10,36 @@ library_version: 0.15.3
 preview_url: https://storage.googleapis.com/pyplots-images/plots/psychrometric-basic/plotnine/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/psychrometric-basic/plotnine/plot_thumb.png
 preview_html: null
-quality_score: 82
+quality_score: 85
 review:
   strengths:
-  - Excellent spec compliance with all required psychrometric property lines, comfort
-    zone, and HVAC process path present
-  - Physically accurate data using proper ASHRAE psychrometric equations
-  - Good visual hierarchy with distinct colors and line styles for each property type
-  - Effective use of plotnine identity scales for flexible per-group styling
-  - Clean data storytelling with the red HVAC process arrow as focal point
+  - 'Perfect spec compliance: all psychrometric properties present with correct ASHRAE-based
+    calculations'
+  - Excellent data quality with realistic HVAC cooling/dehumidification process
+  - 'Strong color coding system: distinct colors for each property type (blue RH,
+    orange wet-bulb, green enthalpy, purple volume, red process)'
+  - Good data storytelling through HVAC process arrow and comfort zone highlight
+  - Clean layered plotnine composition using identity scales for per-group styling
   weaknesses:
-  - Label overlap in the 25-30°C region where RH, wet-bulb, and annotation labels
-    crowd together
-  - On-chart labels (geom_text size 6-7) are slightly small for reliable readability
-  - Enthalpy and specific volume lines could be more distinct from each other
-  - Library mastery could leverage more plotnine-distinctive features
-  image_description: The plot shows a psychrometric chart with dry-bulb temperature
-    (°C) on the x-axis ranging from -10 to 50, and humidity ratio (g/kg dry air) on
-    the y-axis from 0 to 30. The saturation curve (100% RH) is drawn as a thick dark
-    blue line forming the upper boundary of the chart. Lighter blue curves show relative
-    humidity from 10% to 90% in 10% increments. Orange diagonal lines represent wet-bulb
-    temperatures (0°C to 30°C). Green dashed diagonal lines show constant enthalpy
-    values (10-110 kJ/kg). Purple/gray dotted lines show constant specific volume
-    (0.80-0.92 m³/kg). A light blue shaded polygon marks the comfort zone (~20-26°C,
-    30-60% RH) with a bold "Comfort Zone" label. A red arrow shows an HVAC cooling/dehumidification
-    process from point A (35°C, 50% RH) to point B (24°C, 50% RH) with red dot markers
-    at both state points. The background is light gray (#FAFAFA) with subtle grid
-    lines. Title reads "psychrometric-basic · plotnine · pyplots.ai" in bold at the
-    top.
+  - Label overlap in dense regions (RH labels near state points, wet-bulb/enthalpy
+    labels near saturation curve)
+  - On-chart label sizes could be slightly larger for better readability
+  image_description: The plot displays a psychrometric chart on a light gray (#FAFBFC)
+    background. The x-axis shows "Dry-Bulb Temperature (°C)" ranging from -10 to 50,
+    and the y-axis shows "Humidity Ratio (g/kg dry air)" from 0 to 30. The title reads
+    "psychrometric-basic · plotnine · pyplots.ai" in bold dark text. The saturation
+    curve (100% RH) is a thick dark navy blue line forming the upper boundary. Light
+    blue curves represent relative humidity from 10% to 90%, each labeled with its
+    percentage. Orange diagonal lines show constant wet-bulb temperatures (0°C to
+    30°C) with italic labels. Green dashed lines represent constant enthalpy values
+    (10 to 110 kJ/kg) running diagonally. Purple dotted lines show specific volume
+    (0.80 to 0.92 m³/kg). A light blue shaded comfort zone polygon sits between approximately
+    20-26°C and 30-60% RH, labeled "Comfort Zone." A bold red arrow traces an HVAC
+    cooling/dehumidification process from point A (35°C, 50% RH) to point B (24°C,
+    50% RH), with both state points marked as red circles with bold text labels.
   criteria_checklist:
     visual_quality:
-      score: 24
+      score: 25
       max: 30
       items:
       - id: VQ-01
@@ -48,67 +47,68 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title=24, axis_title=20, axis_text=16).
-          Chart labels at size 6-7 are slightly small but readable.
+        comment: Title 24pt, axis titles 20pt, ticks 16pt all explicitly set. On-chart
+          labels slightly small but readable.
       - id: VQ-02
         name: No Overlap
         score: 3
         max: 6
         passed: false
-        comment: RH labels crowd wet-bulb labels around 25-30°C; B annotation overlaps
-          comfort zone; enthalpy/specific volume labels overlap at bottom-right.
+        comment: 'Some crowding: 50% RH label near point A, wet-bulb labels overlap
+          RH curves, enthalpy labels crowd near saturation curve.'
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Most elements visible. Saturation curve prominent. Enthalpy and specific
-          volume lines slightly faint at alpha 0.65.
+        comment: All line types visible with distinct colors/styles. Saturation curve
+          prominently thick. Some lighter RH curves slightly faint.
       - id: VQ-04
         name: Color Accessibility
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Blue, orange, green, purple, red generally distinguishable. Green
-          enthalpy and blue-gray RH curves could be confused by some.
+        comment: Blue, orange, green, purple, red provide excellent color diversity.
+          No red-green only distinction.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good 16:9 layout, chart fills canvas well with balanced margins.
+        comment: 16:9 aspect ratio, chart fills canvas well, balanced margins, no
+          content cut off.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: Dry-Bulb Temperature (°C), Humidity
+        comment: 'Both axis labels include units: Dry-Bulb Temperature (°C) and Humidity
           Ratio (g/kg dry air).'
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Custom color palette with intentional hierarchy. Light gray background,
-          custom typography. Above defaults but not publication-exceptional.
+        comment: Thoughtful domain-appropriate color scheme, custom background, distinct
+          line styles. Clearly above defaults.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: theme_minimal removes spines, subtle grid, no minor gridlines, light
-          background.
+        comment: theme_minimal removes spines, subtle grid, minor grid removed, custom
+          backgrounds. Good but not fully polished.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Clear visual hierarchy with prominent saturation curve, highlighted
-          comfort zone, and red HVAC process arrow as focal point.
+        comment: Red HVAC process arrow creates focal point, comfort zone provides
+          context, color hierarchy guides viewer.
     spec_compliance:
       score: 15
       max: 15
@@ -118,27 +118,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct psychrometric chart with all required property line types.
+        comment: Correct psychrometric chart with all required property lines.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: RH curves, wet-bulb, enthalpy, specific
-          volume, comfort zone, HVAC process path.'
+        comment: 'All features present: RH curves, wet-bulb, enthalpy, specific volume,
+          HVAC process, comfort zone, direct labels, 101.325 kPa.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=dry-bulb temperature, Y=humidity ratio, correct mapping with full
-          range.
+        comment: X = dry-bulb temperature, Y = humidity ratio, axes show full range.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Direct labels used instead of legend.
+        comment: Title follows spec-id · library · pyplots.ai format. Direct labels
+          used instead of legend.
     data_quality:
       score: 15
       max: 15
@@ -148,21 +148,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all psychrometric properties: RH, wet-bulb, enthalpy, specific
-          volume, comfort zone, HVAC process.'
+        comment: All psychrometric properties shown with HVAC process and comfort
+          zone.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real HVAC engineering scenario using standard atmospheric pressure
-          and ASHRAE formulas.
+        comment: HVAC engineering context with ASHRAE formulas, standard atmosphere,
+          realistic cooling process.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Standard psychrometric ranges with physically accurate equations.
+        comment: Standard -10 to 50°C range, 0-30 g/kg humidity ratio, physically
+          correct values.
     code_quality:
       score: 9
       max: 10
@@ -171,35 +172,36 @@ review:
         name: KISS Structure
         score: 2
         max: 3
-        passed: false
-        comment: Helper functions for psychrometric calculations. Justified for engineering
-          formulas but deviates from flat script.
+        passed: true
+        comment: Has helper functions psat() and w_from_rh() justified for reused
+          calculations, but violates no-functions guideline.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic — all data computed from physical equations.
+        comment: All data deterministic from psychrometric equations.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used.
+        comment: All imports are used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for an engineering chart. No fake UI elements.
+        comment: Well-organized, appropriate complexity for multi-layer engineering
+          chart.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300.
+        comment: Saves as plot.png with dpi=300, current plotnine API.
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -207,15 +209,15 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Good use of plotnine grammar: layered geoms, identity scales, annotate,
-          arrow in geom_segment.'
+        comment: 'Good grammar of graphics usage: layered geom composition, aes mappings,
+          identity scales, per-layer data.'
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Uses identity scales for per-group styling but overall approach is
-          standard ggplot grammar.
+        passed: true
+        comment: Uses geom_ribbon for comfort zone, identity scales for per-group
+          control. Somewhat distinctive to ggplot2 family.
   verdict: REJECTED
 impl_tags:
   dependencies: []
