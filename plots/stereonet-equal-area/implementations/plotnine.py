@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 stereonet-equal-area: Structural Geology Stereonet (Equal-Area Projection)
 Library: plotnine 0.15.3 | Python 3.14.3
 Quality: 82/100 | Created: 2026-03-15
@@ -20,6 +20,7 @@ from plotnine import (
     ggplot,
     labs,
     scale_color_manual,
+    scale_shape_manual,
     scale_x_continuous,
     scale_y_continuous,
     theme,
@@ -107,9 +108,19 @@ tick_df = pd.DataFrame(tick_rows)
 dir_labels = []
 for deg, label in [(0, "N"), (90, "E"), (180, "S"), (270, "W")]:
     rad = np.radians(deg)
-    offset = r_prim * 1.08
+    offset = r_prim * 1.12
     dir_labels.append({"x": offset * np.sin(rad), "y": offset * np.cos(rad), "label": label})
 dir_df = pd.DataFrame(dir_labels)
+
+# Degree labels every 30 degrees (excluding cardinal directions)
+deg_labels = []
+for deg in range(0, 360, 30):
+    if deg in (0, 90, 180, 270):
+        continue
+    rad = np.radians(deg)
+    offset = r_prim * 1.07
+    deg_labels.append({"x": offset * np.sin(rad), "y": offset * np.cos(rad), "label": f"{deg}°"})
+deg_label_df = pd.DataFrame(deg_labels)
 
 # Density contours (Kamb-style kernel density on projected pole coordinates)
 grid_res = 200
@@ -146,8 +157,9 @@ for level_segs in cs.allsegs:
 
 contour_df = pd.DataFrame(contour_rows) if contour_rows else pd.DataFrame({"x": [], "y": [], "contour_id": []})
 
-# Colors
-colors = {"Bedding": "#306998", "Fault": "#C44E52", "Joint": "#55A868"}
+# Colors (colorblind-safe: blue, orange, purple)
+colors = {"Bedding": "#306998", "Fault": "#E5A023", "Joint": "#7B68A0"}
+shapes = {"Bedding": "o", "Fault": "D", "Joint": "s"}
 
 # Plot
 plot = (
@@ -155,15 +167,19 @@ plot = (
     + geom_path(aes(x="x", y="y"), data=prim_df, color="#333333", size=1.2)
     + geom_segment(aes(x="x1", y="y1", xend="x2", yend="y2"), data=tick_df, color="#333333", size=0.5)
     + geom_path(
-        aes(x="x", y="y", group="contour_id"), data=contour_df, color="#999999", size=0.5, alpha=0.5, linetype="dashed"
+        aes(x="x", y="y", group="contour_id"), data=contour_df, color="#777777", size=0.7, alpha=0.7, linetype="dashed"
     )
-    + geom_path(aes(x="x", y="y", color="feature_type", group="gc_id"), data=gc_df, size=0.8, alpha=0.7)
-    + geom_point(aes(x="x", y="y", color="feature_type"), data=poles_df, size=3, alpha=0.8, stroke=0.5)
-    + geom_text(aes(x="x", y="y", label="label"), data=dir_df, size=16, fontweight="bold", color="#333333")
+    + geom_path(aes(x="x", y="y", color="feature_type", group="gc_id"), data=gc_df, size=0.9, alpha=0.7)
+    + geom_point(
+        aes(x="x", y="y", color="feature_type", shape="feature_type"), data=poles_df, size=3.5, alpha=0.85, stroke=0.5
+    )
+    + geom_text(aes(x="x", y="y", label="label"), data=dir_df, size=18, fontweight="bold", color="#222222")
+    + geom_text(aes(x="x", y="y", label="label"), data=deg_label_df, size=10, color="#555555")
     + scale_color_manual(name="Feature Type", values=colors)
+    + scale_shape_manual(name="Feature Type", values=shapes)
     + coord_fixed(ratio=1)
-    + scale_x_continuous(limits=(-1.7, 1.7))
-    + scale_y_continuous(limits=(-1.7, 1.7))
+    + scale_x_continuous(limits=(-1.8, 1.8))
+    + scale_y_continuous(limits=(-1.8, 1.8))
     + labs(title="stereonet-equal-area · plotnine · pyplots.ai")
     + theme(
         figure_size=(12, 12),
@@ -176,7 +192,7 @@ plot = (
         panel_grid_minor=element_blank(),
         panel_background=element_blank(),
         plot_background=element_blank(),
-        legend_title=element_text(size=16),
+        legend_title=element_text(size=16, weight="bold"),
         legend_text=element_text(size=14),
         legend_position="right",
     )
