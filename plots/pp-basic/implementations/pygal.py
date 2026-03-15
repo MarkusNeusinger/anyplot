@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 pp-basic: Probability-Probability (P-P) Plot
 Library: pygal 3.1.0 | Python 3.14.3
 Quality: 86/100 | Created: 2026-03-15
@@ -30,56 +30,57 @@ empirical_cdf = np.arange(1, n + 1) / (n + 1)
 sqrt2 = math.sqrt(2)
 theoretical_cdf = np.array([0.5 * (1.0 + math.erf((x - mu) / (sigma * sqrt2))) for x in observed])
 
-# Deviation from perfect fit
+# Deviation from perfect fit — used for classification and tooltips
 deviation = empirical_cdf - theoretical_cdf
+max_dev = float(np.max(np.abs(deviation)))
 
-# Three-tier classification for visual hierarchy
-close_points = []
-mild_points = []
-strong_points = []
+# Classify points into three tiers for visual hierarchy
+good_fit = []  # |Δ| ≤ 0.01 — tightly along diagonal
+mild_dev = []  # 0.01 < |Δ| ≤ 0.025 — moderate departure
+strong_dev = []  # |Δ| > 0.025 — clear distributional mismatch
+
 for i in range(n):
-    t_cdf = float(theoretical_cdf[i])
-    e_cdf = float(empirical_cdf[i])
-    d = deviation[i]
-    tooltip = "Sample #{}: {:.0f} MPa, Δ={:+.3f}".format(i + 1, observed[i], d)
-    point = {"value": (t_cdf, e_cdf), "label": tooltip}
-    if abs(d) <= 0.015:
-        close_points.append(point)
-    elif abs(d) <= 0.04:
-        mild_points.append(point)
+    t = float(theoretical_cdf[i])
+    e = float(empirical_cdf[i])
+    d = float(deviation[i])
+    label = "#{} · {:.0f} MPa · Δ = {:+.3f}".format(i + 1, observed[i], d)
+    pt = {"value": (t, e), "label": label}
+    if abs(d) <= 0.01:
+        good_fit.append(pt)
+    elif abs(d) <= 0.025:
+        mild_dev.append(pt)
     else:
-        strong_points.append(point)
+        strong_dev.append(pt)
 
-# Refined style — colorblind-safe palette with blue-orange-teal triad
+# Publication-grade style — Python Blue anchor with warm accent
 custom_style = Style(
-    background="#f7f9fb",
-    plot_background="#ffffff",
-    foreground="#3a3a3a",
-    foreground_strong="#1a1a1a",
-    foreground_subtle="#d8dde3",
-    opacity=".8",
+    background="#ffffff",
+    plot_background="#fafbfc",
+    foreground="#2d2d2d",
+    foreground_strong="#111111",
+    foreground_subtle="#e2e6ea",
+    opacity=".75",
     opacity_hover="1",
-    colors=("#a0b4c4", "#306998", "#e69f00", "#009e73"),
+    colors=("#c8d5e0", "#306998", "#e8913a", "#d04a3e"),
     title_font_size=72,
-    label_font_size=48,
-    major_label_font_size=42,
-    legend_font_size=36,
-    value_font_size=32,
+    label_font_size=46,
+    major_label_font_size=44,
+    legend_font_size=34,
+    value_font_size=30,
     stroke_width=2,
-    title_font_family="Trebuchet MS, Helvetica, sans-serif",
-    label_font_family="Trebuchet MS, Helvetica, sans-serif",
-    major_label_font_family="Trebuchet MS, Helvetica, sans-serif",
-    legend_font_family="Trebuchet MS, Helvetica, sans-serif",
-    value_font_family="Trebuchet MS, Helvetica, sans-serif",
-    tooltip_font_size=28,
-    tooltip_font_family="Trebuchet MS, Helvetica, sans-serif",
-    transition="200ms ease-in",
+    title_font_family="Trebuchet MS, Helvetica Neue, sans-serif",
+    label_font_family="Trebuchet MS, Helvetica Neue, sans-serif",
+    major_label_font_family="Trebuchet MS, Helvetica Neue, sans-serif",
+    legend_font_family="Trebuchet MS, Helvetica Neue, sans-serif",
+    value_font_family="Trebuchet MS, Helvetica Neue, sans-serif",
+    tooltip_font_size=26,
+    tooltip_font_family="Trebuchet MS, Helvetica Neue, sans-serif",
+    transition="150ms ease-in",
     value_colors=(),
-    guide_stroke_color="#e8ecf0",
-    major_guide_stroke_color="#d0d6dc",
+    guide_stroke_color="#eceef1",
+    major_guide_stroke_color="#dde1e6",
 )
 
-# Square XY chart
 chart = pygal.XY(
     width=3600,
     height=3600,
@@ -89,8 +90,8 @@ chart = pygal.XY(
     y_title="Empirical CDF (Steel Rod Tensile Strength)",
     show_legend=True,
     legend_at_bottom=True,
-    legend_box_size=26,
-    dots_size=9,
+    legend_box_size=24,
+    dots_size=8,
     stroke=False,
     show_x_guides=True,
     show_y_guides=True,
@@ -104,37 +105,41 @@ chart = pygal.XY(
     show_minor_x_labels=True,
     show_minor_y_labels=True,
     print_values=False,
-    tooltip_border_radius=10,
+    tooltip_border_radius=8,
+    tooltip_fancy_mode=True,
     explicit_size=True,
-    spacing=35,
-    margin_bottom=130,
-    margin_top=80,
-    margin_left=80,
+    spacing=30,
+    margin_bottom=100,
+    margin_top=75,
+    margin_left=75,
+    margin_right=50,
     truncate_legend=-1,
     dynamic_print_values=True,
+    inner_radius=0,
     js=[],
 )
 
-# 45° reference line — drawn first to sit behind data
+# 45° reference line — dashed, drawn first so data sits on top
 chart.add(
     "Perfect Normal Fit",
-    [(0, 0), (0.2, 0.2), (0.4, 0.4), (0.6, 0.6), (0.8, 0.8), (1, 1)],
+    [(0, 0), (0.25, 0.25), (0.5, 0.5), (0.75, 0.75), (1, 1)],
     stroke=True,
     show_dots=False,
     dots_size=0,
-    stroke_dasharray="16, 10",
+    stroke_dasharray="14, 8",
     stroke_style={"width": 3, "linecap": "round"},
+    formatter=lambda x, y: "Reference: y = x",
 )
 
-# Close-to-diagonal points (good fit region)
-chart.add("Good Fit (|Δ| ≤ 0.015)", close_points, dots_size=7)
+# Good fit band — largest group, subtle Python Blue
+chart.add("Good Fit  |Δ| ≤ 0.01  ({} pts)".format(len(good_fit)), good_fit, dots_size=7)
 
-# Mild deviation
-chart.add("Mild Deviation (0.015 < |Δ| ≤ 0.04)", mild_points, dots_size=10)
+# Mild deviation — medium emphasis
+chart.add("Mild Deviation  0.01 < |Δ| ≤ 0.025  ({} pts)".format(len(mild_dev)), mild_dev, dots_size=11)
 
-# Strong deviation — highlighted in teal for maximum accessibility
-chart.add("Strong Deviation (|Δ| > 0.04)", strong_points, dots_size=14)
+# Strong deviation — bold accent for maximum visual weight
+chart.add("Strong Deviation  |Δ| > 0.025  ({} pts)".format(len(strong_dev)), strong_dev, dots_size=15)
 
-# Save outputs
+# Dual output: interactive SVG as HTML + static PNG
 chart.render_to_png("plot.png")
 chart.render_to_file("plot.html")
