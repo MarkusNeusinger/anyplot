@@ -1,0 +1,218 @@
+library: matplotlib
+specification_id: funnel-meta-analysis
+created: '2026-03-15T16:43:09Z'
+updated: '2026-03-15T16:55:08Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23114663098
+issue: 4590
+python_version: 3.14.3
+library_version: 3.10.8
+preview_url: https://storage.googleapis.com/pyplots-images/plots/funnel-meta-analysis/matplotlib/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/funnel-meta-analysis/matplotlib/plot_thumb.png
+preview_html: null
+quality_score: 91
+review:
+  strengths:
+  - Excellent data storytelling with inside/outside funnel classification and publication
+    bias annotation
+  - Path effects on text and lines add professional polish distinctive to matplotlib
+  - Realistic meta-analysis data with intentional asymmetry demonstrating publication
+    bias
+  - Perfect spec compliance — all required funnel plot elements present
+  - Clean, well-structured code with appropriate complexity
+  weaknesses:
+  - Color accessibility could be improved — blue/red distinction relies partly on
+    shape as secondary encoding
+  - Grid on both axes is slightly heavier than the preferred y-axis-only approach
+  image_description: 'The plot displays a meta-analysis funnel plot with an inverted
+    y-axis showing Standard Error (0.0 at top, 0.6 at bottom) and Log Odds Ratio on
+    the x-axis. A solid blue vertical line marks the summary effect at approximately
+    -0.5, and a dotted gray line marks the null effect at 0. The inverted funnel shape
+    is formed by dashed blue diagonal lines representing pseudo 95% confidence limits,
+    filled with a very light blue shading. Blue circles (12 studies) represent studies
+    falling inside the funnel, while red/coral diamond markers (3 studies) represent
+    outliers outside the funnel. An annotation with a curved arrow points to the bottom-left
+    outlier labeled "Potential publication bias." The legend in the upper right clearly
+    identifies all four elements. Top and right spines are removed, with subtle gridlines
+    on both axes. The title follows the required format: "funnel-meta-analysis · matplotlib
+    · pyplots.ai".'
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt,
+          legend 16pt, annotation 13pt'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text elements, annotation well-placed
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Marker size s=240 appropriate for 15 studies, alpha=0.85
+      - id: VQ-04
+        name: Color Accessibility
+        score: 3
+        max: 4
+        passed: true
+        comment: Blue/red generally distinguishable but not ideal for all colorblind
+          types; shape provides secondary encoding
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 16:9 figure with tight_layout, balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive labels for inherently unitless measures
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Cohesive palette, path effects, intentional color hierarchy
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines removed, subtle grid, path effects on title; grid on both
+          axes slightly heavy
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Inside/outside funnel classification with annotation highlighting
+          publication bias
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct funnel plot with pseudo 95% CI limits
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All required features present: inverted SE axis, summary line, CI
+          funnel, null reference, scatter points'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=effect size, Y=standard error (inverted)
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct title format, meaningful legend labels
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows asymmetry, outliers, mix of precise/imprecise studies
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: 15 RCTs drug vs placebo with log odds ratios
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Realistic log OR and SE values for clinical meta-analysis
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean imports-data-plot-save flow, no functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, outlier logic justified
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot.png, dpi=300, no deprecated API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good axes-level API usage throughout
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Path effects, fill_betweenx, annotate with custom arrowprops
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
+  - grid-styling
