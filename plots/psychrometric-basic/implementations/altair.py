@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 psychrometric-basic: Psychrometric Chart for HVAC
-Library: altair | Python 3.13
-Quality: pending | Created: 2026-03-15
+Library: altair 6.0.0 | Python 3.14.3
+Quality: 82/100 | Created: 2026-03-15
 """
 
 import altair as alt
