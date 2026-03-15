@@ -1,7 +1,7 @@
 library: pygal
 specification_id: pp-basic
 created: '2026-03-15T20:16:37Z'
-updated: '2026-03-15T20:20:11Z'
+updated: '2026-03-15T20:27:24Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23118400186
 issue: 4587
@@ -10,34 +10,36 @@ library_version: 3.1.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/pp-basic/pygal/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/pp-basic/pygal/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/pp-basic/pygal/plot.html
-quality_score: 78
+quality_score: 83
 review:
   strengths:
-  - Perfect spec compliance — all required features implemented correctly
-  - Clean, well-structured code with no unnecessary dependencies (math.erf instead
-    of scipy)
-  - Correct square aspect ratio and 0-1 axis ranges as specified
-  - Good colorblind-safe color choice
-  - Data shows meaningful deviation from normality
+  - Excellent spec compliance with all P-P plot requirements fully met and correct
+    CDF computation
+  - Smart data storytelling through near-diagonal vs deviating point split with size
+    differentiation
+  - Clean well-structured code with good use of pygal XY chart and Style customization
+  - HTML export alongside PNG leverages pygal native SVG/interactive capability
   weaknesses:
-  - Design lacks visual sophistication — plain scatter on white with no emphasis or
-    hierarchy
-  - No visual storytelling — the deviation from normality is not highlighted or emphasized
-  - Generic library usage — does not leverage pygal-specific features beyond basics
-  - Data points cluster in middle range without visual differentiation
-  image_description: The plot displays a P-P (Probability-Probability) plot on a white
-    background with a square aspect ratio. Blue dots (#306998) represent 200 data
-    points plotting Theoretical CDF (x-axis) against Empirical CDF (y-axis), both
-    ranging from 0 to 1. A thin gray diagonal reference line labeled "Perfect Fit"
-    runs from (0,0) to (1,1). The data points follow the diagonal closely in the lower
-    range but deviate slightly above the line in the 0.4-0.8 range, reflecting the
-    slight right-skew from the mixed normal+exponential data. The title "pp-basic
-    · pygal · pyplots.ai" appears at top. Axis labels read "Theoretical CDF" and "Empirical
-    CDF". A legend at the bottom shows "Observed vs Normal" (blue) and "Perfect Fit"
-    (gray). Subtle light-gray grid lines are visible on both axes.
+  - Blue-red color pairing not optimal for colorblind accessibility - consider orange
+    or teal instead of red
+  - Design sophistication could be elevated further for publication quality
+  - Data context is somewhat generic - could benefit from more specific real-world
+    framing
+  image_description: The plot displays a P-P (Probability-Probability) plot on a square
+    3600x3600 canvas with a light gray (#fafafa) background and white plot area. The
+    title "pp-basic · pygal · pyplots.ai" appears at the top in a sans-serif font.
+    The x-axis is labeled "Theoretical CDF (Normal Distribution)" and the y-axis "Empirical
+    CDF", both ranging from 0 to 1 with tick marks at 0.2 intervals. A thin gray dashed
+    diagonal reference line labeled "Perfect Normal Fit" runs from (0,0) to (1,1).
+    Blue dots (muted steel blue, labeled "Near Diagonal (|Δ| ≤ 0.02)") closely follow
+    the diagonal throughout the range. Red/coral dots (labeled "Deviating (|Δ| > 0.02)")
+    appear where the skewed data deviates from normality, primarily visible in the
+    0.2-0.4 and 0.6-0.9 theoretical CDF range, forming a characteristic S-shaped departure
+    from the diagonal. The legend is positioned at the bottom with three entries.
+    Subtle grid lines are visible on both axes.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 26
       max: 30
       items:
       - id: VQ-01
@@ -45,60 +47,64 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title=72, labels=48, ticks=42). All text
-          clearly readable.
+        comment: All font sizes explicitly set (title=72, labels=48, major_labels=42,
+          legend=38) and clearly readable at 3600px
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No overlapping text anywhere.
+        comment: No text overlap; minor dot clustering in dense mid-range regions
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Dots visible but some clustering in middle range.
+        comment: Dots appropriately sized for 200 points; differentiated sizes (8
+          vs 12) for near/deviating groups
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
-        passed: true
-        comment: Blue vs gray is fully colorblind-safe.
-      - id: VQ-05
-        name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good square layout, some points near edges slightly cramped.
+        comment: Blue vs red distinguishable for most colorblind types but not optimal
+          for deuteranopia
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square aspect ratio per spec; good margins, plot fills canvas well
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis labels. CDF is unitless.
+        comment: Descriptive labels with context
     design_excellence:
-      score: 9
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Well-configured default but not exceptional.
+        passed: true
+        comment: Custom style with refined palette, intentional two-tone highlighting,
+          above defaults but not publication-ready
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
-        passed: false
-        comment: Subtle grid lines, some refinement but mostly default pygal styling.
+        passed: true
+        comment: Custom backgrounds, subtle grid, adequate whitespace; pygal limits
+          spine removal
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Deviation visible but not emphasized. Viewer must find the story.
+        passed: true
+        comment: Near-diagonal vs deviating split creates meaningful visual hierarchy
     spec_compliance:
       score: 15
       max: 15
@@ -108,28 +114,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct P-P plot using XY scatter.
+        comment: Correct P-P plot comparing empirical vs theoretical CDF
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: reference line, square ratio, correct CDF
-          formulas.'
+        comment: 'All spec features present: reference line, square aspect, 0-1 axes,
+          plotting position formula'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Theoretical CDF on X, Empirical CDF on Y. Correct.
+        comment: X = theoretical CDF, Y = empirical CDF, correctly mapped
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Legend labels meaningful.
+        comment: Title format correct, legend labels meaningful and descriptive
     data_quality:
-      score: 12
+      score: 13
       max: 15
       items:
       - id: DQ-01
@@ -137,19 +143,20 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Shows deviation from normality via mixed distribution.
+        comment: Shows both good-fit and deviation regions with S-shaped departure
       - id: DQ-02
         name: Realistic Context
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Plausible statistical scenario but generic.
+        comment: Statistical normality testing context; neutral and plausible but
+          somewhat generic
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 200 points within spec range, CDF correctly bounded 0-1.
+        comment: Probabilities correctly in 0-1 range, 200 samples appropriate
     code_quality:
       score: 10
       max: 10
@@ -159,54 +166,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean linear flow.
+        comment: 'Flat script: imports, data, computation, chart, save'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used.
+        comment: math, numpy, pygal, Style all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriate complexity.
+        comment: Clean, Pythonic, appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html.
+        comment: Saves as plot.png and plot.html
     library_mastery:
-      score: 5
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of pygal XY chart, Style object, per-series configuration
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Correct pygal.XY with stroke=False, proper Style config.
-      - id: LM-02
-        name: Distinctive Features
-        score: 2
-        max: 5
-        passed: false
-        comment: HTML export is pygal-distinctive but overall usage is generic.
+        comment: Tooltips via dict format, stroke_dasharray, HTML export, tooltip_border_radius
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
+  - hover-tooltips
   - html-export
   patterns:
   - data-generation
-  dataprep: []
+  - iteration-over-groups
+  dataprep:
+  - cdf-computation
   styling:
   - grid-styling
