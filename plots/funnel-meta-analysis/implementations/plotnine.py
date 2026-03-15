@@ -1,7 +1,6 @@
-""" pyplots.ai
+"""pyplots.ai
 funnel-meta-analysis: Meta-Analysis Funnel Plot for Publication Bias
 Library: plotnine 0.15.3 | Python 3.14.3
-Quality: 83/100 | Created: 2026-03-15
 """
 
 import numpy as np
@@ -41,6 +40,9 @@ effect_sizes = true_effect + np.random.normal(0, std_errors)
 # Add publication bias (shift small studies toward positive)
 bias_mask = std_errors > 0.35
 effect_sizes[bias_mask] += np.random.uniform(0.05, 0.2, bias_mask.sum())
+
+# Clip extreme outlier to keep funnel centered
+effect_sizes = np.clip(effect_sizes, -0.8, 0.95)
 
 summary_effect = np.average(effect_sizes, weights=1 / std_errors**2)
 
@@ -84,7 +86,7 @@ funnel_poly = pd.DataFrame(
 plot = (
     ggplot()
     # Shaded funnel region
-    + geom_polygon(funnel_poly, aes(x="x", y="y"), fill="#306998", alpha=0.06)
+    + geom_polygon(funnel_poly, aes(x="x", y="y"), fill="#306998", alpha=0.10)
     # Funnel boundary lines
     + geom_line(funnel_lines, aes(x="effect", y="se", group="side"), color="#8FAFC7", linetype="dashed", size=0.8)
     # Summary effect line
@@ -94,16 +96,17 @@ plot = (
     # Study points: sized by weight, colored by funnel position
     + geom_point(studies_df, aes(x="effect_size", y="std_error", size="weight", color="region"), alpha=0.85, stroke=0.4)
     + scale_size_continuous(range=(3, 9), guide=None)
-    + scale_color_manual(values={"Inside funnel": "#306998", "Outside funnel": "#D4652A"}, name=" ")
+    + scale_color_manual(values={"Inside funnel": "#306998", "Outside funnel": "#D4652A"})
     # Annotation for publication bias
     + annotate(
         "text",
-        x=summary_effect + 0.55,
-        y=0.56,
+        x=summary_effect + 0.45,
+        y=0.54,
         label="Asymmetry suggests\npublication bias",
-        size=10,
+        size=13,
         color="#D4652A",
         fontstyle="italic",
+        fontweight="bold",
         ha="center",
     )
     # Annotation for summary effect
@@ -112,16 +115,16 @@ plot = (
         x=summary_effect + 0.02,
         y=0.02,
         label=f"Pooled effect = {summary_effect:.2f}",
-        size=9,
+        size=12,
         color="#306998",
         ha="left",
         va="top",
     )
     # Null effect label
-    + annotate("text", x=-0.02, y=0.02, label="Null", size=9, color="#999999", ha="right", va="top")
+    + annotate("text", x=-0.02, y=0.02, label="Null", size=12, color="#999999", ha="right", va="top")
     + scale_y_reverse(limits=(0.65, -0.02))
-    + scale_x_continuous(breaks=np.arange(-0.6, 1.4, 0.2).round(1).tolist())
-    + labs(x="Log Odds Ratio", y="Standard Error", title="funnel-meta-analysis · plotnine · pyplots.ai")
+    + scale_x_continuous(breaks=np.arange(-0.6, 1.2, 0.2).round(1).tolist())
+    + labs(x="Log Odds Ratio", y="Standard Error", color="", title="funnel-meta-analysis · plotnine · pyplots.ai")
     + theme_minimal()
     + theme(
         figure_size=(16, 9),
@@ -135,6 +138,7 @@ plot = (
         legend_position=(0.15, 0.12),
         legend_background=element_rect(fill="white", alpha=0.8, color="none"),
         legend_text=element_text(size=14),
+        legend_title=element_blank(),
         axis_line=element_line(color="#BDC3C7", size=0.5),
     )
 )
