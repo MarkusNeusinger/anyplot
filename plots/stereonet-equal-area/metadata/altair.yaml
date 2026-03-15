@@ -1,0 +1,249 @@
+library: altair
+specification_id: stereonet-equal-area
+created: '2026-03-15T23:00:08Z'
+updated: '2026-03-15T23:32:49Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23121188868
+issue: 4576
+python_version: 3.14.3
+library_version: 6.0.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/stereonet-equal-area/altair/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/stereonet-equal-area/altair/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/stereonet-equal-area/altair/plot.html
+quality_score: 83
+review:
+  strengths:
+  - Full spec compliance with all required stereonet elements (great circles, poles,
+    density contours, grid, tick marks, cardinal labels, legend)
+  - Excellent three-color palette (blue/red/amber) with strong contrast and colorblind
+    safety
+  - Mean orientation annotations with strike/dip labels add valuable geological context
+    and create visual focal points
+  - Interactive legend selection and tooltips leverage Altair distinctive capabilities
+  - Mathematically correct equal-area projection with proper handling of poles and
+    great circles
+  weaknesses:
+  - Density contour segments from marching squares appear as disconnected short line
+    segments rather than smooth continuous contour lines
+  - Mean label overlaps with dense Bedding pole cluster
+  - Great circles at 0.35 opacity are somewhat faint and hard to trace
+  image_description: 'The plot displays a lower-hemisphere equal-area (Schmidt net)
+    stereonet projection within a bold black primitive circle on a square canvas.
+    Cardinal directions N, E, S, W are labeled in bold dark text (fontSize=24) around
+    the perimeter. Tick marks appear every 10 degrees with longer ticks at 30-degree
+    intervals. Three geological feature types are plotted with a well-differentiated
+    color palette: Bedding (steel blue, #306998), Fault (coral red, #C1432E), and
+    Joint (amber/gold, #D4A017). Poles to planes are rendered as filled circles (size=180)
+    with white stroke, clustered in three distinct groups — Bedding poles in the center
+    area, Fault poles in the upper-right NE quadrant, and Joint poles in the lower
+    portion near S. Great circles are drawn as semi-transparent colored lines for
+    each measurement. Orange-toned density contour segments (from marching squares
+    extraction) are visible around the three cluster areas at ~0.55 opacity. Subtle
+    gray grid circles at 30 and 60 degree dip and N-S/E-W cross lines provide reference.
+    Mean orientation cross markers with bold labels (mu 312/69 for Fault, mu 43/38
+    for Bedding, mu 90/80 for Joint) annotate each cluster center. A Feature Type
+    legend in the top-right shows all three categories with colored symbols. The title
+    reads stereonet-equal-area · altair · pyplots.ai with subtitle Lower-Hemisphere
+    Equal-Area (Schmidt) Projection.'
+  criteria_checklist:
+    visual_quality:
+      score: 25
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'Font sizes explicitly set: title=28, subtitle=20, cardinal=24, legend
+          title=20, labels=18, mean labels=19 bold. All readable.'
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Mean label for Bedding slightly overlaps with dense pole cluster.
+          All other text well-separated.
+      - id: VQ-03
+        name: Element Visibility
+        score: 4
+        max: 6
+        passed: true
+        comment: Poles well-sized with white stroke. Density contours appear as disconnected
+          segments from marching squares. Great circles somewhat faint at 0.35 opacity.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue/red/amber palette is excellent for colorblind safety and contrast.
+          Significant improvement over earlier blue/teal combination.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Square 1200x1200 ideal for stereonet. Circle fills canvas well. Some
+          inherent corner waste from circular projection.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Cardinal direction labels appropriate for stereonet. Descriptive
+          title with informative subtitle.
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Custom three-color palette, white stroke on markers, cross markers
+          for means, layered opacity hierarchy. Above defaults but not publication-level.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: View stroke removed, subtle grid lines, tick differentiation, generous
+          whitespace. Good cartographic detail.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Mean orientation annotations with strike/dip labels provide focal
+          points. Interactive legend selection enables exploration. Three distinct
+          clusters immediately evident.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct lower-hemisphere equal-area Schmidt net projection.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: great circles, poles, density contours, tick
+          marks, cardinal labels, color coding, legend, grid lines.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Equal-area projection formula correctly applied. Poles at 90 degrees
+          to planes.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format. Legend labels match data categories.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Three feature types with distinct orientations: Bedding moderate
+          dip, Fault steep, Joint near-vertical. Good variety.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Geological structural measurements with realistic feature types and
+          plausible orientations.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 65 measurements within spec range. Strike 0-360, dip 0-90 properly
+          clipped.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Flat script with linear flow. 307 lines with manual marching squares
+          is heavy for single script.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set at top.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only altair, numpy, pandas imported; all used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Complex but appropriate for stereonet projection math. No fake UI.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png and plot.html. Current Altair 6.0 API.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of alt.layer composition, Scale/Legend config, encoding
+          types, alt.Title with subtitle.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Interactive legend selection via selection_point with bind=legend
+          and conditional opacity. Tooltips and HTML export.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - polar-projection
+  - layer-composition
+  - annotations
+  - hover-tooltips
+  - html-export
+  - manual-ticks
+  - custom-legend
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  - matrix-construction
+  dataprep:
+  - kde
+  styling:
+  - alpha-blending
+  - edge-highlighting
+  - grid-styling
