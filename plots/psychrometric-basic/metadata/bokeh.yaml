@@ -1,7 +1,7 @@
 library: bokeh
 specification_id: psychrometric-basic
 created: '2026-03-15T21:52:32Z'
-updated: '2026-03-15T22:15:53Z'
+updated: '2026-03-15T22:24:37Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23120046458
 issue: 4583
@@ -10,41 +10,37 @@ library_version: 3.9.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/psychrometric-basic/bokeh/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/psychrometric-basic/bokeh/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/psychrometric-basic/bokeh/plot.html
-quality_score: 85
+quality_score: 88
 review:
   strengths:
-  - Perfect spec compliance with all required psychrometric property lines, comfort
-    zone, and HVAC process path
-  - Scientifically accurate ASHRAE psychrometric calculations at standard atmosphere
-  - Per-renderer HoverTool with property-specific tooltips is excellent distinctive
-    Bokeh usage
-  - HVAC process path with custom arrowhead creates effective data storytelling
-  - Well-differentiated color scheme with graduated blue RH palette and distinct hues
-    per property type
-  - Clean KISS code structure with deterministic vectorized computations
+  - Comprehensive psychrometric chart with all required thermodynamic property lines
+    computed from ASHRAE formulas
+  - Excellent data storytelling through the HVAC process path with arrow and energy
+    change annotation
+  - 'Strong use of Bokeh-specific features: per-renderer HoverTool tooltips, Band
+    glyph for comfort zone, HTML export'
+  - Semantic color coding makes each property type instantly identifiable
+  - All property lines labeled directly on chart as spec requires
   weaknesses:
-  - On-chart labels at 17pt could be slightly larger (18-20pt) in the densest regions
-  - Some label clustering persists near bottom-right where enthalpy and specific volume
-    labels converge
-  - Purple enthalpy and blue RH curves could benefit from greater hue separation
-  - Default Bokeh axis styling not fully customized
-  image_description: The plot displays a psychrometric chart on a light gray (#fafafa)
-    background. The x-axis shows "Dry-Bulb Temperature (°C)" from -10 to 50, and the
-    y-axis shows "Humidity Ratio (g/kg)" from 0 to ~30. Ten blue curved lines represent
-    relative humidity from 10% to 100%, with the 100% saturation curve drawn thicker
-    and darker (#1a5276). The blue palette graduates from darker tones at low RH to
-    lighter blues at mid-range. Orange dashed diagonal lines show wet-bulb temperatures
-    (0°C to 35°C) with labels like "25°C wb". Purple dotted diagonal lines indicate
-    enthalpy values (10 to 100 kJ/kg). Green dash-dot lines represent specific volume
-    (0.78 to 0.92 m³/kg). A light blue shaded polygon marks the "Comfort Zone" (~20-26°C,
-    30-60% RH) with bold blue label. A red line with a custom triangular arrowhead
-    traces an HVAC cooling/dehumidification process from "Outdoor Air (35°C, 60% RH)"
-    at the upper-right to "Supply Air (15°C, 90% RH)" at the lower-left, with red
-    circular markers at both state points. All property lines have direct on-chart
-    labels. Subtle grid lines at alpha 0.2. Bokeh toolbar icons at top-right.
+  - Some label crowding in the upper-left area where enthalpy labels stack and near
+    x-axis where specific volume labels compete with tick labels
+  - RH curve labels at higher percentages cluster in the upper-right area
+  - Grid could be more subtle for a cleaner engineering diagram aesthetic
+  image_description: The plot displays a psychrometric chart on a light gray-blue
+    background. The x-axis shows "Dry-Bulb Temperature (°C)" ranging from -10 to 50,
+    and the y-axis shows "Humidity Ratio (g/kg)" from 0 to 30. Blue curves represent
+    relative humidity lines from 10% to 100%, with the 100% saturation curve drawn
+    thicker and darker. Orange dashed diagonal lines show wet-bulb temperatures (0°C
+    to 35°C wb). Magenta/rose dotted diagonal lines show enthalpy values (10 to 80+
+    kJ/kg). Green dash-dot lines show specific volume (0.78 to 0.92 m³/kg). A light
+    blue shaded band marks the "Comfort Zone" (~20-26°C, 30-60% RH). A bold red process
+    path with arrowhead connects "Outdoor Air (35°C, 60% RH)" to "Supply Air (15°C,
+    90% RH)" representing cooling and dehumidification, with a Δh energy annotation.
+    Title reads "psychrometric-basic · bokeh · pyplots.ai" with subtitle "Standard
+    Atmosphere (101.325 kPa) · ASHRAE Psychrometric Properties".
   criteria_checklist:
     visual_quality:
-      score: 24
+      score: 25
       max: 30
       items:
       - id: VQ-01
@@ -52,69 +48,65 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 28pt, axes 22pt, ticks 18pt,
-          labels 17pt). 17pt on-chart labels adequate but slightly small for densest
-          regions.
+        comment: All font sizes explicitly set (title 30pt, axis labels 22pt, ticks
+          18pt, curve labels 16-20pt). Some property line labels slightly small.
       - id: VQ-02
         name: No Overlap
         score: 4
         max: 6
         passed: true
-        comment: RH labels well-staggered. Some clustering remains where enthalpy,
-          specific volume, and RH labels converge near bottom-right.
+        comment: Some label crowding in upper-left enthalpy region and specific volume
+          labels near x-axis.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: All curve families visible with appropriate line widths and alpha
-          values. RH curves use darker blues. Saturation curve prominent at 4.5px.
+        comment: Lines well-differentiated by color and dash pattern with good hierarchy.
       - id: VQ-04
         name: Color Accessibility
         score: 3
         max: 4
         passed: true
-        comment: Five distinct hues for property types. Purple and blue somewhat close
-          but differentiated by dash pattern. Not red-green dependent.
+        comment: Blue, orange, magenta, green scheme is colorblind-safe. Blue gradient
+          for RH curves may be hard to distinguish.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Chart fills canvas well. Minor unused space in upper-left where no
-          data exists.
+        comment: Chart fills canvas well with balanced margins.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: Dry-Bulb Temperature (°C), Humidity
-          Ratio (g/kg).'
+        comment: Descriptive labels with proper units.
     design_excellence:
-      score: 13
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Custom graduated blue palette for RH curves. Distinct color coding
-          per property type. Above defaults but not publication-grade.
+        comment: Custom semantic color palette, custom background, intentional hierarchy
+          through line weight/alpha.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Subtle grid (alpha 0.2), outline removed, minor ticks removed, custom
-          background. Different dash patterns add structure.
+        comment: Outline removed, subtle dashed grid at alpha 0.3, minor ticks hidden,
+          custom colors.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: HVAC process path with arrowhead creates clear focal point. Comfort
-          zone adds context. Color hierarchy guides viewer.
+        comment: HVAC process path with arrow and energy annotation tells clear engineering
+          story.
     spec_compliance:
       score: 15
       max: 15
@@ -124,28 +116,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct psychrometric chart with all required property curve families.
+        comment: Correct psychrometric chart with all curve types.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
         comment: 'All features present: RH curves, wet-bulb, enthalpy, specific volume,
-          comfort zone, HVAC process path, direct labels.'
+          comfort zone, process path.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=dry-bulb temperature, Y=humidity ratio. Correctly mapped with standard
-          ranges.
+        comment: Correct mapping of dry-bulb temperature and humidity ratio.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Direct labels used instead of legend (appropriate
-          for chart type).
+        comment: Title format correct. Direct labeling used appropriately.
     data_quality:
       score: 15
       max: 15
@@ -155,22 +145,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All psychrometric properties shown at multiple levels. Comfort zone
-          and process path demonstrate practical application.
+        comment: All psychrometric properties shown comprehensively.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real HVAC scenario with ASHRAE formulas at standard atmosphere (101.325
-          kPa).
+        comment: Real HVAC scenario using ASHRAE formulas at standard atmosphere.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Standard psychrometric chart ranges. All values thermodynamically
-          correct.
+        comment: Standard psychrometric chart range with realistic state points.
     code_quality:
       score: 10
       max: 10
@@ -180,13 +167,13 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear flow with no functions or classes.
+        comment: Linear flow, no functions/classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data deterministically computed from thermodynamic equations.
+        comment: Fully deterministic from ASHRAE equations.
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -198,14 +185,13 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Well-organized, vectorized numpy calculations. Manual arrowhead slightly
-          verbose but clear.
+        comment: Clean, well-organized, vectorized calculations.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html. Current Bokeh 3.9.0 API.
+        comment: Saves as plot.png and plot.html.
     library_mastery:
       score: 8
       max: 10
@@ -215,15 +201,14 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of ColumnDataSource, Label, figure configuration. Could
-          leverage ColorMapper or Band.
+        comment: Consistent ColumnDataSource usage, figure API, Label/Title layouts,
+          Band glyph.
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Per-renderer HoverTool with property-specific tooltips. Interactive
-          tools. HTML export with CDN.
+        comment: Per-renderer HoverTool tooltips, Band glyph, dual HTML+PNG export.
   verdict: REJECTED
 impl_tags:
   dependencies: []
@@ -234,8 +219,8 @@ impl_tags:
   - patches
   patterns:
   - data-generation
-  - iteration-over-groups
   - columndatasource
+  - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
