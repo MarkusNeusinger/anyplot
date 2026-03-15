@@ -1,7 +1,7 @@
 library: matplotlib
 specification_id: funnel-meta-analysis
 created: '2026-03-15T16:43:09Z'
-updated: '2026-03-15T16:46:22Z'
+updated: '2026-03-15T16:55:08Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23114663098
 issue: 4590
@@ -10,33 +10,35 @@ library_version: 3.10.8
 preview_url: https://storage.googleapis.com/pyplots-images/plots/funnel-meta-analysis/matplotlib/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/funnel-meta-analysis/matplotlib/plot_thumb.png
 preview_html: null
-quality_score: 86
+quality_score: 91
 review:
   strengths:
-  - Perfect spec compliance with all funnel plot features implemented correctly
-  - Excellent data generation with realistic publication bias asymmetry
-  - Clean well-structured code following KISS principles
-  - Subtle funnel fill alpha=0.06 is a nice design touch
+  - Excellent data storytelling with inside/outside funnel classification and publication
+    bias annotation
+  - Path effects on text and lines add professional polish distinctive to matplotlib
+  - Realistic meta-analysis data with intentional asymmetry demonstrating publication
+    bias
+  - Perfect spec compliance — all required funnel plot elements present
+  - Clean, well-structured code with appropriate complexity
   weaknesses:
-  - Monochromatic color scheme does not create enough visual hierarchy between different
-    plot elements
-  - No visual emphasis to highlight the publication bias story
-  - Missing subtle grid for easier reading of values
-  - Could leverage more distinctive matplotlib features
-  image_description: The plot displays a funnel plot with 15 blue circular markers
-    (#306998) representing individual studies, plotted with Log Odds Ratio on the
-    x-axis and Standard Error on the inverted y-axis (0.0 at top, 0.6 at bottom).
-    A solid blue vertical line marks the summary effect at approximately -0.45, and
-    a dotted gray line marks the null effect at 0. Two dashed diagonal blue lines
-    form the pseudo 95% confidence funnel, with a very subtle light blue fill between
-    them. The funnel narrows toward the top where more precise studies cluster. Visible
-    asymmetry shows smaller studies (higher SE) shifted to the left, suggesting publication
-    bias. Top and right spines are removed. Legend in the upper right shows "Summary
-    effect" and "Null effect" with frameon=False. Title reads "funnel-meta-analysis
-    · matplotlib · pyplots.ai".
+  - Color accessibility could be improved — blue/red distinction relies partly on
+    shape as secondary encoding
+  - Grid on both axes is slightly heavier than the preferred y-axis-only approach
+  image_description: 'The plot displays a meta-analysis funnel plot with an inverted
+    y-axis showing Standard Error (0.0 at top, 0.6 at bottom) and Log Odds Ratio on
+    the x-axis. A solid blue vertical line marks the summary effect at approximately
+    -0.5, and a dotted gray line marks the null effect at 0. The inverted funnel shape
+    is formed by dashed blue diagonal lines representing pseudo 95% confidence limits,
+    filled with a very light blue shading. Blue circles (12 studies) represent studies
+    falling inside the funnel, while red/coral diamond markers (3 studies) represent
+    outliers outside the funnel. An annotation with a curved arrow points to the bottom-left
+    outlier labeled "Potential publication bias." The legend in the upper right clearly
+    identifies all four elements. Top and right spines are removed, with subtle gridlines
+    on both axes. The title follows the required format: "funnel-meta-analysis · matplotlib
+    · pyplots.ai".'
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -45,59 +47,62 @@ review:
         max: 8
         passed: true
         comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt,
-          legend 16pt'
+          legend 16pt, annotation 13pt'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: No overlapping text elements, annotation well-placed
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Markers s=220 alpha=0.85 appropriate for 15 data points
+        comment: Marker size s=240 appropriate for 15 studies, alpha=0.85
       - id: VQ-04
         name: Color Accessibility
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Single blue color scheme, no colorblind issues
+        comment: Blue/red generally distinguishable but not ideal for all colorblind
+          types; shape provides secondary encoding
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions, tight_layout, nothing cut off
+        comment: 16:9 figure with tight_layout, balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels for unitless measures
+        comment: Descriptive labels for inherently unitless measures
     design_excellence:
-      score: 11
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: Monochromatic blue palette is cohesive but not distinctive
+        passed: true
+        comment: Cohesive palette, path effects, intentional color hierarchy
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Spines removed, subtle fill, frameless legend, white edgecolors
+        comment: Spines removed, subtle grid, path effects on title; grid on both
+          axes slightly heavy
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Asymmetry tells story implicitly but lacks visual emphasis
+        passed: true
+        comment: Inside/outside funnel classification with annotation highlighting
+          publication bias
     spec_compliance:
       score: 15
       max: 15
@@ -107,48 +112,48 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct funnel plot for meta-analysis
+        comment: Correct funnel plot with pseudo 95% CI limits
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: inverted y-axis, summary line, null line,
-          CI funnel, study points'
+        comment: 'All required features present: inverted SE axis, summary line, CI
+          funnel, null reference, scatter points'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=effect size, Y=standard error inverted correctly
+        comment: X=effect size, Y=standard error (inverted)
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend labels accurate
+        comment: Correct title format, meaningful legend labels
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows varying precision, asymmetry, studies inside and outside funnel
+        comment: Shows asymmetry, outliers, mix of precise/imprecise studies
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Drug vs placebo RCTs with log odds ratios, neutral clinical scenario
+        comment: 15 RCTs drug vs placebo with log odds ratios
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Log ORs -1.5 to 0.7, SEs 0.05-0.55, realistic for clinical trials
+        comment: Realistic log OR and SE values for clinical meta-analysis
     code_quality:
       score: 10
       max: 10
@@ -158,7 +163,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports-data-plot-save flow
+        comment: Clean imports-data-plot-save flow, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -170,21 +175,21 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib and numpy imported, both used
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Pythonic code, appropriate complexity
+        comment: Appropriate complexity, outlier logic justified
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png dpi=300 bbox_inches=tight
+        comment: Saves plot.png, dpi=300, no deprecated API
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -192,21 +197,22 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of Axes methods, fill_betweenx, axvline, invert_yaxis
+        comment: Good axes-level API usage throughout
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: fill_betweenx is nice but not particularly advanced
-  verdict: REJECTED
+        passed: true
+        comment: Path effects, fill_betweenx, annotate with custom arrowprops
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - layer-composition
+  - annotations
   patterns:
   - data-generation
   dataprep: []
   styling:
   - alpha-blending
   - edge-highlighting
+  - grid-styling

@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 funnel-meta-analysis: Meta-Analysis Funnel Plot for Publication Bias
 Library: matplotlib 3.10.8 | Python 3.14.3
-Quality: 86/100 | Created: 2026-03-15
+Quality: 91/100 | Created: 2026-03-15
 """
 
 import matplotlib.patheffects as pe
