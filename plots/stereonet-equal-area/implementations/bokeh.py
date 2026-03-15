@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 stereonet-equal-area: Structural Geology Stereonet (Equal-Area Projection)
 Library: bokeh 3.9.0 | Python 3.14.3
 Quality: 88/100 | Created: 2026-03-15
@@ -6,7 +6,7 @@ Quality: 88/100 | Created: 2026-03-15
 
 import numpy as np
 from bokeh.io import export_png, output_file, save
-from bokeh.models import ColumnDataSource, HoverTool, Label, Legend, LegendItem
+from bokeh.models import ColorBar, ColumnDataSource, HoverTool, Label, Legend, LegendItem, LinearColorMapper
 from bokeh.plotting import figure
 from scipy.ndimage import gaussian_filter
 from scipy.stats import gaussian_kde
@@ -74,8 +74,11 @@ for i in range(len(all_strikes)):
     gx = r * np.sin(trend)
     gy = r * np.cos(trend)
 
-    gc_xs.append(gx.tolist())
-    gc_ys.append(gy.tolist())
+    # Clip great circle points near the primitive circle to reduce edge clutter
+    gc_dist = np.sqrt(gx**2 + gy**2)
+    keep = gc_dist <= 0.94 * R_net
+    gc_xs.append(gx[keep].tolist())
+    gc_ys.append(gy[keep].tolist())
     gc_types.append(all_types[i])
 
 # Density grid for pole data using KDE
@@ -123,6 +126,29 @@ p = figure(
 
 # Density heatmap as Bokeh image_rgba (distinctive Bokeh feature)
 p.image_rgba(image=[img], x=-R_net, y=-R_net, dw=2 * R_net, dh=2 * R_net, level="image")
+
+# Density colorbar to quantify KDE levels
+density_colors = ["#FFFFFF", "#FDDCB5", "#F5A66A", "#E07030", "#B8391A", "#781414"]
+color_mapper = LinearColorMapper(palette=density_colors, low=0.0, high=float(d_max))
+color_bar = ColorBar(
+    color_mapper=color_mapper,
+    location=(0, 0),
+    title="Density",
+    title_text_font_size="22pt",
+    title_text_font_style="italic",
+    title_text_color="#333333",
+    major_label_text_font_size="20pt",
+    major_label_text_color="#444444",
+    label_standoff=18,
+    width=44,
+    height=900,
+    padding=20,
+    background_fill_alpha=0.0,
+    border_line_color=None,
+    major_tick_line_color="#666666",
+    major_tick_line_width=2,
+)
+p.add_layout(color_bar, "right")
 
 # Equal-area net grid lines (small circles at 10° dip intervals)
 for dip_angle in range(10, 90, 10):
@@ -177,7 +203,7 @@ for deg in range(0, 360, 30):
             x=lx,
             y=ly,
             text=f"{deg}°",
-            text_font_size="20pt",
+            text_font_size="22pt",
             text_align="center",
             text_baseline="middle",
             text_color="#555555",
@@ -209,7 +235,7 @@ for ftype in ["Bedding", "Joints", "Faults"]:
     idxs = [j for j, t in enumerate(gc_types) if t == ftype]
     fxs = [gc_xs[j] for j in idxs]
     fys = [gc_ys[j] for j in idxs]
-    r = p.multi_line(fxs, fys, line_color=colors_map[ftype], line_width=1.5, line_alpha=0.25)
+    r = p.multi_line(fxs, fys, line_color=colors_map[ftype], line_width=1.5, line_alpha=0.18)
     renderers_gc[ftype] = r
 
 # Poles by feature type with HoverTool
@@ -267,7 +293,7 @@ p.outline_line_color = None
 p.background_fill_color = "white"
 p.border_fill_color = "white"
 p.min_border_left = 40
-p.min_border_right = 40
+p.min_border_right = 180
 p.min_border_top = 10
 p.min_border_bottom = 40
 
@@ -277,7 +303,7 @@ p.add_layout(
         x=0,
         y=-1.30,
         text="Lower-hemisphere equal-area (Schmidt) projection · Click legend to toggle",
-        text_font_size="20pt",
+        text_font_size="22pt",
         text_align="center",
         text_color="#777777",
         text_font_style="italic",
