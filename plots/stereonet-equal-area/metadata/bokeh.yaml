@@ -1,0 +1,251 @@
+library: bokeh
+specification_id: stereonet-equal-area
+created: '2026-03-15T22:59:30Z'
+updated: '2026-03-15T23:38:02Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23121188869
+issue: 4576
+python_version: 3.14.3
+library_version: 3.9.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/stereonet-equal-area/bokeh/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/stereonet-equal-area/bokeh/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/stereonet-equal-area/bokeh/plot.html
+quality_score: 91
+review:
+  strengths:
+  - Correct equal-area projection math with proper visual layering (density → great
+    circles → poles)
+  - 'Excellent Bokeh-specific features: HoverTool with strike/dip tooltips, interactive
+    legend toggle, image_rgba raster overlay'
+  - Density colorbar added to quantify KDE levels, addressing previous review feedback
+  - Colorblind-safe blue/orange/purple palette with thoughtful styling throughout
+  - Three distinct structural domains create meaningful geological data with clear
+    clustering
+  weaknesses:
+  - Great circles at alpha=0.18 are very faint, nearly invisible in some areas
+  - Grid lines at alpha=0.55 could be more subtle for a cleaner look
+  - Colorbar placement is somewhat disconnected from the circular plot
+  image_description: 'The plot shows a lower-hemisphere equal-area (Schmidt net) stereonet
+    rendered as a circle on a white 3600x3600 square canvas. The title "stereonet-equal-area
+    · bokeh · pyplots.ai" is centered at top in large bold text. Cardinal directions
+    N (largest, bold), S, E, W (bold) mark the perimeter at 0, 180, 90, 270 degrees
+    respectively. Degree labels appear every 30 degrees (30, 60, 120, 150, 210, 240,
+    300, 330) in gray text with degree symbols. Tick marks are drawn every 10 degrees
+    with heavier marks at cardinal and 30-degree intervals. Inside the primitive circle,
+    subtle light gray grid lines form small circles at 10-degree dip intervals and
+    great circle arcs at 30-degree azimuth intervals. Three geological feature types
+    are plotted: Bedding (blue #306998, approximately 40 poles clustered in the NW
+    quadrant), Joints (orange #E8833A, poles near the S-SE region), and Faults (purple
+    #8B5CF6, poles in the SW quadrant). Great circles are rendered as very faint lines
+    (alpha approximately 0.18) for each feature type. Poles appear as solid dots (size=22)
+    with white edge highlighting. A warm orange-red KDE density heatmap overlays the
+    plot with three distinct hotspots around each pole cluster, transitioning from
+    pale cream to deep brown-red. A density colorbar on the right side quantifies
+    the KDE levels with a gradient from white through orange to dark red, labeled
+    "Density" with numeric scale. A styled legend in the upper-right corner with white
+    background and gray border lists all three feature types with colored markers.
+    An italic subtitle at the bottom reads "Lower-hemisphere equal-area (Schmidt)
+    projection · Click legend to toggle."'
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 38pt, N 38pt, cardinal 30pt,
+          degree labels 22pt, legend 26pt, subtitle 22pt, colorbar 20-22pt. All clearly
+          readable'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text elements; legend positioned outside data area
+          with white background
+      - id: VQ-03
+        name: Element Visibility
+        score: 4
+        max: 6
+        passed: true
+        comment: Poles clearly visible with white edges; density heatmap effective;
+          great circles at alpha=0.18 are very faint, nearly invisible in some areas
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue/orange/purple palette is colorblind-safe with excellent contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Square format appropriate for stereonet; net fills ~60% of canvas;
+          colorbar on right creates slight asymmetry
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Cardinal directions, degree labels with degree symbol, descriptive
+          title and subtitle
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Strong design with custom warm density palette, distinct feature
+          colors, white-edged markers, styled legend with semi-transparent background,
+          custom colorbar
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Axes hidden, outline removed, custom grid lines at alpha=0.55, tick
+          marks with varying widths by importance, styled legend border
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Clear visual hierarchy: density heatmap → great circles → poles.
+          Three distinct structural domains immediately visible. Colorbar quantifies
+          density levels'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct lower-hemisphere equal-area Schmidt net projection with proper
+          math
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: great circles, poles, density contours, equal-area
+          grid, tick marks, N label, color-coded by feature type, legend'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Strike/dip correctly converted to equal-area projection coordinates;
+          poles at 90 degrees to planes
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; legend labels match feature types
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Three distinct feature types with different strike orientations and
+          dip angles showing clear clustering patterns
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Realistic structural geology field measurement scenario with plausible
+          orientations
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Strike 0-360, dip 5-89 degrees - proper geological measurement ranges
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports, data, projection, density, plot, save'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used (numpy, bokeh models, scipy)
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Vectorized RGBA construction, clean Pythonic code, appropriate complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot.png via export_png and plot.html via save; current API
+    library_mastery:
+      score: 10
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert use of ColumnDataSource, multi_line, scatter, Label, Legend/LegendItem,
+          image_rgba, figure with match_aspect
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: HoverTool with structural data tooltips, interactive legend with
+          click_policy=hide, image_rgba for custom raster overlay, dual HTML+PNG export
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - scipy
+  techniques:
+  - polar-projection
+  - hover-tooltips
+  - custom-legend
+  - colorbar
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  - columndatasource
+  dataprep:
+  - kde
+  styling:
+  - alpha-blending
+  - edge-highlighting
+  - grid-styling
+  - minimal-chrome
+  - custom-colormap

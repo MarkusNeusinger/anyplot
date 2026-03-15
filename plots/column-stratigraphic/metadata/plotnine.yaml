@@ -1,0 +1,233 @@
+library: plotnine
+specification_id: column-stratigraphic
+created: '2026-03-15T22:55:35Z'
+updated: '2026-03-15T23:29:14Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23121198926
+issue: 4573
+python_version: 3.14.3
+library_version: 0.15.3
+preview_url: https://storage.googleapis.com/pyplots-images/plots/column-stratigraphic/plotnine/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/column-stratigraphic/plotnine/plot_thumb.png
+preview_html: null
+quality_score: 86
+review:
+  strengths:
+  - Excellent geological data with real Western US formation names and realistic stratigraphy
+  - Six distinct well-executed lithology patterns approximating FGDC/USGS conventions
+  - Strong focal point with bold red unconformity wavy line and annotation
+  - Full spec compliance with all required features implemented correctly
+  - Good use of plotnine grammar-of-graphics layering for complex multi-element visualization
+  weaknesses:
+  - Helper functions break the KISS flat-script structure expected by the project
+  - Column is somewhat narrow relative to full canvas width leaving notable flanking
+    whitespace
+  - Formation and age label font sizes could be slightly larger for optimal readability
+  image_description: 'The plot displays a vertical stratigraphic column spanning 0-180m
+    depth (increasing downward). The title reads "column-stratigraphic · plotnine
+    · pyplots.ai" in bold at the top. The column contains 10 geological layers with
+    distinct fill colors and lithology patterns: Sandstone (gold/yellow with stipple
+    dots), Shale (gray with horizontal dashes), Limestone (blue with brick pattern),
+    Siltstone (green with random short dashes), Conglomerate (salmon/coral with open
+    circles), and Mudstone (dark brown/gold with fine horizontal dashes). Age labels
+    (Late Cretaceous, Early Cretaceous, Late Jurassic, Middle Jurassic, Triassic)
+    appear on the left with vertical bracket lines. Formation names (Frontier Fm,
+    Madison Fm, Kootenai Fm, Morrison Fm, Sundance Fm) appear in italic on the right
+    with semi-transparent label backgrounds. A prominent red wavy unconformity line
+    at ~95m depth with bold italic "~ Unconformity ~" annotation serves as a focal
+    point. The bottom legend displays all 6 lithology types on a light gray background.
+    The y-axis shows "Depth (m)" with 20m tick intervals.'
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title=26, axis=22, ticks=18, legend=16-18,
+          labels=17). All readable, formation/age labels slightly small.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text; age and formation labels well-spaced.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All 6 lithology patterns clearly distinguishable.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Colorblind-friendly palette with good contrast.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Vertical format suits stratigraphy but column is narrow relative
+          to canvas width.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Y-axis has Depth (m) with units. X-axis appropriately hidden.
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom earth-tone palette, styled formation labels, bold red unconformity
+          highlight. Clearly above defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: theme_minimal, removed x-axis, subtle y-grid with low alpha, light
+          panel background.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Red unconformity creates clear focal point. Age progression and varying
+          thicknesses guide the viewer.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct vertical stratigraphic column with stacked blocks and lithology
+          patterns.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: 6 lithology patterns, formation names, age
+          labels, depth scale, boundaries, unconformity.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Depth increasing downward per spec, lithology patterns correctly
+          mapped.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct. Legend shows all 6 lithology types with correct
+          labels.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 6 lithologies, varying thicknesses, 5 formations, multiple periods,
+          unconformity.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real Western US formations (Frontier, Madison, Kootenai, Morrison,
+          Sundance), real geological periods.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Layer thicknesses 12-23m and total depth 180m are realistic for a
+          sedimentary borehole.
+    code_quality:
+      score: 7
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 1
+        max: 3
+        passed: false
+        comment: Defines helper functions _add_random_points and _add_horiz_dashes,
+          breaking flat KISS structure.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set before random operations.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used, no unused imports.
+      - id: CQ-04
+        name: Code Elegance
+        score: 1
+        max: 2
+        passed: true
+        comment: Helpers reduce duplication but add structural complexity. No fake
+          functionality.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with dpi=300. Current plotnine API.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Good grammar-of-graphics: aes mappings, layered geoms, scale_fill_manual,
+          coord_cartesian, guide_legend, extensive theme customization.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses geom_label with label_padding/label_size, geom_linerange for
+          brackets, grammar-driven layer composition.
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  - custom-legend
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  - groupby-aggregation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling
