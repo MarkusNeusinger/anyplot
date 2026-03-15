@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 area-elevation-profile: Terrain Elevation Profile Along Transect
 Library: pygal 3.1.0 | Python 3.14.3
 Quality: 86/100 | Created: 2026-03-15
@@ -51,7 +51,7 @@ for lm in landmarks:
 TYPE_COLORS = {
     "summit": "#b5342b",  # deep red for highest point
     "pass": "#c45a00",  # orange for mountain passes
-    "hut": "#8b6914",  # warm brown for alpine huts
+    "hut": "#7b4ea0",  # purple for alpine huts (distinct from orange)
     "valley": "#2a7f3f",  # green for valley floors
     "town": "#306998",  # blue for towns/settlements
 }
@@ -63,7 +63,7 @@ custom_style = Style(
     foreground="#2d2d2d",
     foreground_strong="#2d2d2d",
     foreground_subtle="#e8e8e8",
-    colors=("#4a7fb5", "#c45a00"),
+    colors=("#4a7fb5", "#d4690e"),
     font_family="DejaVu Sans, Helvetica, Arial, sans-serif",
     title_font_family="DejaVu Sans, Helvetica, Arial, sans-serif",
     title_font_size=48,
@@ -75,8 +75,8 @@ custom_style = Style(
     label_font_family="DejaVu Sans, Helvetica, Arial, sans-serif",
     major_label_font_family="DejaVu Sans, Helvetica, Arial, sans-serif",
     value_font_family="DejaVu Sans, Helvetica, Arial, sans-serif",
-    opacity=0.6,
-    opacity_hover=0.7,
+    opacity=0.65,
+    opacity_hover=0.75,
     guide_stroke_color="#e8e8e8",
     guide_stroke_dasharray="4,4",
     major_guide_stroke_color="#d0d0d0",
@@ -120,6 +120,13 @@ chart = pygal.XY(
     xrange=(0, 128),
     show_minor_x_labels=False,
     show_minor_y_labels=False,
+    truncate_legend=-1,
+    dynamic_print_values=True,
+    print_values=False,
+    show_x_labels=True,
+    show_y_labels=True,
+    x_labels_major_count=7,
+    y_labels_major_count=6,
 )
 
 # Elevation profile as filled XY series
@@ -199,14 +206,14 @@ for i, circle in enumerate(circles[: len(landmarks)]):
     vline.set("stroke", lm_color)
     vline.set("stroke-width", "2")
     vline.set("stroke-dasharray", "8,5")
-    vline.set("opacity", "0.45")
+    vline.set("opacity", "0.55")
 
     # Landmark name (bold, colored by type)
     name_el = ET.SubElement(parent_elem, f"{ns}text")
     name_el.set("x", f"{cx + dx:.1f}")
     name_el.set("y", f"{cy + y_off:.1f}")
     name_el.set("text-anchor", anchor)
-    name_el.set("font-size", "30")
+    name_el.set("font-size", "32")
     name_el.set("font-family", "DejaVu Sans, Helvetica, Arial, sans-serif")
     name_el.set("fill", lm_color)
     name_el.set("font-weight", "bold")
@@ -219,7 +226,7 @@ for i, circle in enumerate(circles[: len(landmarks)]):
     elev_el.set("text-anchor", anchor)
     elev_el.set("font-size", "26")
     elev_el.set("font-family", "DejaVu Sans, Helvetica, Arial, sans-serif")
-    elev_el.set("fill", "#777777")
+    elev_el.set("fill", "#555555")
     elev_el.text = f"{lm['elev']:.0f} m"
 
 # Add vertical exaggeration note (spec requirement) - positioned bottom-right
@@ -227,9 +234,9 @@ note_el = ET.SubElement(root, f"{ns}text")
 note_el.set("x", "4650")
 note_el.set("y", f"{plot_bottom_y + 48:.0f}")
 note_el.set("text-anchor", "end")
-note_el.set("font-size", "24")
+note_el.set("font-size", "28")
 note_el.set("font-family", "DejaVu Sans, Helvetica, Arial, sans-serif")
-note_el.set("fill", "#999999")
+note_el.set("fill", "#555555")
 note_el.set("font-style", "italic")
 note_el.text = "Vertical exaggeration ~10\u00d7 for terrain visibility"
 
