@@ -1,7 +1,7 @@
 library: seaborn
 specification_id: pp-basic
 created: '2026-03-15T20:17:56Z'
-updated: '2026-03-15T20:22:36Z'
+updated: '2026-03-15T20:31:43Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23118400216
 issue: 4587
@@ -10,33 +10,38 @@ library_version: 0.13.2
 preview_url: https://storage.googleapis.com/pyplots-images/plots/pp-basic/seaborn/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/pp-basic/seaborn/plot_thumb.png
 preview_html: null
-quality_score: 79
+quality_score: 87
 review:
   strengths:
-  - Perfect spec compliance — all P-P plot requirements implemented correctly including
-    reference line, square aspect, and CDF computation
-  - Clean, reproducible code with proper seed and KISS structure
-  - Good visual refinement with spine removal and subtle grid styling
-  - Appropriate data generation showing realistic distributional deviation
+  - 'Significant improvement from attempt 1: deviation-based color and size mapping
+    adds genuine data storytelling'
+  - Tolerance band provides useful visual reference for assessing fit quality
+  - Perfect spec compliance with all P-P plot requirements implemented correctly
+  - Clean, reproducible code with proper KISS structure
+  - Good visual refinement with removed spines, subtle grid, and thoughtful color
+    choices
   weaknesses:
-  - Marker size too large (s=200) for 200 data points — causes significant point overlap,
-    obscuring the reference line
-  - No data storytelling — the deviation from normality is not visually emphasized
-  - Minimal seaborn-specific features — mostly matplotlib with a thin seaborn wrapper
-  image_description: 'The plot displays a P-P (Probability-Probability) plot on a
-    square canvas. 200 blue scatter points (Python Blue #306998) with white edge highlighting
-    are plotted with theoretical cumulative probability on the x-axis and empirical
-    cumulative probability on the y-axis, both ranging from 0.0 to 1.0. A red-orange
-    dashed diagonal reference line runs from (0,0) to (1,1) representing perfect distributional
-    fit. The points generally follow the diagonal but show a slight S-shaped deviation
-    in the upper portion (around 0.7-0.9 on the theoretical axis), consistent with
-    the right-skewed data component. Top and right spines are removed. Subtle grid
-    lines appear on both axes. Title reads "pp-basic · seaborn · pyplots.ai". The
-    markers appear somewhat large for the data density, causing overlap between adjacent
-    points especially in the middle region.'
+  - Data context is abstract/synthetic — no real-world scenario framing for the normality
+    test
+  - Smallest scatter points (low deviation) are slightly hard to distinguish at minimum
+    size of 30
+  - Layout has minor asymmetry due to colorbar placement vs left margin
+  image_description: The plot displays a P-P (Probability-Probability) plot on a square
+    12x12 canvas. Scatter points are plotted with Theoretical Cumulative Probability
+    on the x-axis and Empirical Cumulative Probability on the y-axis, both ranging
+    from 0.0 to 1.0. Points are colored using the "flare" colormap (light orange for
+    small deviations, dark purple for larger deviations) and sized proportionally
+    to their absolute deviation from the diagonal. A dashed red-orange reference line
+    runs from (0,0) to (1,1) representing perfect distributional fit. A light blue
+    ±0.02 tolerance band surrounds the diagonal. A colorbar on the right shows "Absolute
+    Deviation from Perfect Fit" ranging from ~0.003 to ~0.037. The legend in the lower
+    right identifies "Perfect fit" and "±0.02 tolerance band". Points generally follow
+    the diagonal with visible S-shaped deviation in the 0.4-0.7 range, consistent
+    with the slightly skewed data mixture. Top and right spines are removed, grid
+    is subtle. Title reads "pp-basic · seaborn · pyplots.ai".
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -44,60 +49,63 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title=24, labels=20, ticks=16'
+        comment: 'All font sizes explicitly set: title=24, labels=20, ticks=16, colorbar
+          label=16, colorbar ticks=13, legend=14'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlap, all labels readable
+        comment: No text overlap, all labels fully readable
       - id: VQ-03
         name: Element Visibility
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Marker size s=200 too large for 200 points, causing point overlap
-          and obscuring reference line
+        passed: true
+        comment: Sizes 30-120 for 200 points with alpha=0.75 is reasonable, but smallest
+          points harder to distinguish
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Blue vs red-orange is colorblind-safe
+        comment: Flare colormap is perceptually uniform and colorblind-safe
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Square aspect ratio, good canvas utilization
+        comment: Square aspect correct per spec; colorbar creates slight layout asymmetry
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels, probabilities are unitless
+        comment: Descriptive labels; cumulative probabilities are unitless
     design_excellence:
-      score: 10
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: Well-configured default, competent but not exceptional
+        passed: true
+        comment: 'Above defaults: flare palette with dual hue+size encoding, tolerance
+          band, white edges, intentional color harmony'
       - id: DE-02
         name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines removed, grid alpha=0.25, generous whitespace, colorbar well-proportioned
+      - id: DE-03
+        name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Spines removed, subtle grid, tight layout
-      - id: DE-03
-        name: Data Storytelling
-        score: 2
-        max: 6
-        passed: false
-        comment: Deviation from normality present but not visually emphasized
+        comment: Deviation-based coloring shows where data departs from normality;
+          tolerance band provides threshold
     spec_compliance:
       score: 15
       max: 15
@@ -107,27 +115,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct P-P plot
+        comment: Correct P-P plot comparing empirical vs theoretical CDF
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: reference line, square aspect, CDF computation'
+        comment: 'All spec features present: reference line, square aspect, CDF computation,
+          skewed data'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Theoretical on X, empirical on Y, both 0-1
+        comment: Theoretical CDF on X, Empirical CDF on Y, both 0-1
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format, no legend needed
+        comment: Correct title format; legend identifies reference line and tolerance
+          band
     data_quality:
-      score: 13
+      score: 12
       max: 15
       items:
       - id: DQ-01
@@ -135,19 +145,22 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Shows distributional deviation, could be more pronounced
+        comment: Shows S-shaped deviation from diagonal; demonstrates what P-P plots
+          reveal about fit
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 3
         max: 5
-        passed: true
-        comment: Realistic normality testing scenario
+        passed: false
+        comment: Abstract statistical scenario with synthetic normal+exponential mixture,
+          no real-world framing
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 200 points, sensible distribution parameters
+        comment: 200 samples appropriate; Normal(50,10) with 15% exponential skew
+          is sensible
     code_quality:
       score: 10
       max: 10
@@ -157,7 +170,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions or classes
+        comment: Clean Imports-Data-Plot-Style-Save structure, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -169,7 +182,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: 'All imports used: matplotlib, numpy, pandas, seaborn, scipy'
       - id: CQ-04
         name: Code Elegance
         score: 2
@@ -181,33 +194,37 @@ review:
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png, dpi=300, current API
+        comment: Saves as plot.png, dpi=300, bbox_inches=tight, current API
     library_mastery:
-      score: 4
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
-        passed: false
-        comment: Uses sns.scatterplot but most work is matplotlib
+        passed: true
+        comment: Good use of sns.scatterplot with DataFrame, hue/size mapping, set_theme,
+          set_context
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 3
         max: 5
-        passed: false
-        comment: Generic usage, no seaborn-distinctive features
+        passed: true
+        comment: Dual hue+size encoding via sns.scatterplot is seaborn-specific; set_theme
+          with rc customization
   verdict: REJECTED
 impl_tags:
   dependencies:
   - scipy
-  techniques: []
+  techniques:
+  - colorbar
   patterns:
   - data-generation
   - explicit-figure
   dataprep: []
   styling:
+  - custom-colormap
   - alpha-blending
   - edge-highlighting
   - grid-styling
