@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 psychrometric-basic: Psychrometric Chart for HVAC
 Library: matplotlib 3.10.8 | Python 3.14.3
 Quality: 85/100 | Created: 2026-03-15
@@ -48,7 +48,7 @@ for rh in np.arange(0.1, 1.01, 0.1):
                 t_p[idx],
                 w_p[idx] + 0.4,
                 f"{rh_pct}%",
-                fontsize=10,
+                fontsize=11,
                 color=rh_color,
                 alpha=0.85,
                 ha="center",
@@ -64,16 +64,18 @@ for t_wb in np.arange(0, 35, 5):
     mask = (w >= 0) & (w <= W_MAX) & (t_range >= -10) & (t_range <= 50)
     t_p, w_p = t_range[mask], w[mask]
     if len(t_p) > 2:
-        ax.plot(t_p, w_p, color=wb_color, linewidth=1.0, alpha=0.55, linestyle="--")
+        ax.plot(t_p, w_p, color=wb_color, linewidth=1.5, alpha=0.7, linestyle="--")
+        # Place label along the line away from saturation curve to avoid crowding
+        label_idx = min(len(t_p) - 1, max(1, int(len(t_p) * 0.15)))
         ax.text(
-            t_p[0] - 0.3,
-            w_p[0] + 0.3,
+            t_p[label_idx],
+            w_p[label_idx] + 0.5,
             f"{int(t_wb)}°C",
-            fontsize=10,
+            fontsize=11,
             color=wb_color,
-            alpha=0.8,
+            alpha=0.85,
             rotation=-45,
-            ha="right",
+            ha="center",
         )
 
 # Enthalpy lines (kJ/kg dry air)
@@ -82,9 +84,23 @@ for h in np.arange(10, 120, 10):
     mask = (w >= 0) & (w <= W_MAX) & (t_db >= -10) & (t_db <= 50)
     t_p, w_p = t_db[mask], w[mask]
     if len(t_p) > 2:
-        ax.plot(t_p, w_p, color=enth_color, linewidth=1.0, alpha=0.55, linestyle="-.")
-        if w_p[0] <= W_MAX:
-            ax.text(t_p[0] - 0.5, w_p[0] + 0.2, f"{int(h)}", fontsize=9, color=enth_color, alpha=0.75, rotation=-30)
+        ax.plot(t_p, w_p, color=enth_color, linewidth=1.5, alpha=0.7, linestyle="-.")
+        # Place label along the line, skip if too close to top to avoid title overlap
+        if w_p[0] <= W_MAX - 5:
+            ax.text(t_p[0] - 0.5, w_p[0] + 0.3, f"{int(h)}", fontsize=11, color=enth_color, alpha=0.85, rotation=-30)
+        elif len(t_p) > 10:
+            # For high-enthalpy lines, place label further along the line
+            label_idx = min(len(t_p) - 1, int(len(t_p) * 0.2))
+            if w_p[label_idx] < W_MAX - 3:
+                ax.text(
+                    t_p[label_idx],
+                    w_p[label_idx] + 0.3,
+                    f"{int(h)}",
+                    fontsize=11,
+                    color=enth_color,
+                    alpha=0.85,
+                    rotation=-30,
+                )
 
 # Specific volume lines (m³/kg dry air)
 for v in np.arange(0.78, 0.96, 0.02):
@@ -93,9 +109,9 @@ for v in np.arange(0.78, 0.96, 0.02):
     mask = (w >= 0) & (w <= W_MAX) & (t_db >= -10) & (t_db <= 50)
     t_p, w_p = t_db[mask], w[mask]
     if len(t_p) > 2:
-        ax.plot(t_p, w_p, color=vol_color, linewidth=1.0, alpha=0.55, linestyle=":")
+        ax.plot(t_p, w_p, color=vol_color, linewidth=1.5, alpha=0.7, linestyle=":")
         if 0 <= w_p[-1] <= W_MAX:
-            ax.text(t_p[-1] + 0.3, w_p[-1], f"{v:.2f}", fontsize=9, color=vol_color, alpha=0.75, rotation=-75)
+            ax.text(t_p[-1] + 0.3, w_p[-1], f"{v:.2f}", fontsize=11, color=vol_color, alpha=0.85, rotation=-75)
 
 # Comfort zone (20-26°C, 30-60% RH) - inline humidity ratio calculation
 comfort_temps = np.array([20, 26])
@@ -161,9 +177,9 @@ ax.xaxis.grid(True, alpha=0.15, linewidth=0.6)
 
 legend_elements = [
     Line2D([0], [0], color=rh_color, linewidth=2, label="Relative Humidity"),
-    Line2D([0], [0], color=wb_color, linewidth=1, linestyle="--", label="Wet-Bulb Temp"),
-    Line2D([0], [0], color=enth_color, linewidth=1, linestyle="-.", label="Enthalpy (kJ/kg)"),
-    Line2D([0], [0], color=vol_color, linewidth=1, linestyle=":", label="Specific Volume (m\u00b3/kg)"),
+    Line2D([0], [0], color=wb_color, linewidth=1.5, linestyle="--", label="Wet-Bulb Temp"),
+    Line2D([0], [0], color=enth_color, linewidth=1.5, linestyle="-.", label="Enthalpy (kJ/kg)"),
+    Line2D([0], [0], color=vol_color, linewidth=1.5, linestyle=":", label="Specific Volume (m\u00b3/kg)"),
     Line2D([0], [0], color="#D32F2F", linewidth=2, marker="o", markersize=6, label="HVAC Process"),
 ]
 ax.legend(handles=legend_elements, fontsize=16, loc="upper left", framealpha=0.9, edgecolor="none")
