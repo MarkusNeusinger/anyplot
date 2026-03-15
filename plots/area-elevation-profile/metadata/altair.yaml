@@ -1,7 +1,7 @@
 library: altair
 specification_id: area-elevation-profile
 created: '2026-03-15T21:50:13Z'
-updated: '2026-03-15T22:10:44Z'
+updated: '2026-03-15T22:26:31Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23120069446
 issue: 4578
@@ -10,36 +10,39 @@ library_version: 6.0.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/area-elevation-profile/altair/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/area-elevation-profile/altair/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/area-elevation-profile/altair/plot.html
-quality_score: 87
+quality_score: 86
 review:
   strengths:
-  - Excellent spec compliance with all required features including gradient fill,
-    labeled landmarks, vertical exaggeration note
-  - Real-world Swiss Alpine data with authentic place names creates compelling visualization
-  - Strong use of Altair-specific features (gradient stops, layer composition, conditional
-    encoding, multi-line text labels)
-  - Cohesive blue color theme with meaningful landmark type differentiation via shape
-    and color
-  - Clean well-structured code following KISS principles
+  - Excellent spec compliance with all required features present (filled silhouette,
+    landmarks, vertical markers, vertical exaggeration note)
+  - Strong data quality with realistic Swiss Alpine geography and plausible place
+    names/elevations
+  - Sophisticated use of Altair gradient fill, shape/color encoding by landmark type,
+    and layer composition
+  - Good visual hierarchy with summit triangles and type-based coloring creating natural
+    focal points
+  - Subtitle provides useful context with route description and vertical exaggeration
   weaknesses:
-  - Large black empty area below plot wastes canvas space (VQ-05)
-  - Some landmark labels overlap with terrain profile line at lower elevations (VQ-02)
-  - Landmark label font size 14pt slightly small relative to axis labels 18pt (VQ-01)
-  image_description: 'The plot shows a terrain elevation profile of the Bernese Oberland
-    Trail, a 120 km hiking transect from Grindelwald to Wengen. The x-axis displays
-    "Distance (km)" from 0 to 120, and the y-axis shows "Elevation (m)" from 800 to
-    2,800. The area below the elevation profile line is filled with a blue linear
-    gradient (lighter/more transparent at the bottom, darker/more opaque at higher
-    elevations), creating a terrain silhouette effect. The profile line itself is
-    dark blue. Seven landmarks are annotated with dashed vertical gray/brown lines
-    and two-line text labels showing name and elevation: Grindelwald (Start) at 878
-    m, Bachsee Lake at 1313 m, Faulhorn Summit at 2542 m, Schynige Platte at 1039
-    m, Kleine Scheidegg at 1337 m, Männlichen Summit at 2595 m, and Wengen (End) at
-    876 m. Landmark points use different shapes and colors by type — brown triangles
-    for summits, blue diamonds for lakes, crosses for passes, green squares for plateaus,
-    gray circles for towns. The title reads "Bernese Oberland Trail · area-elevation-profile
-    · altair · pyplots.ai" with a subtitle noting the 120 km transect and vertical
-    exaggeration ~10×. There is a large black empty area below the plot canvas.'
+  - Significant empty whitespace at bottom of image (~30% blank) despite PIL trimming
+    code
+  - Wengen (End) label partially clipped at the right chart edge
+  - Label positioning logic split across 4 chart layers is verbose
+  image_description: 'The plot displays an area chart showing a terrain elevation
+    profile for the "Bernese Oberland Trail," a 120 km hiking transect from Grindelwald
+    to Wengen. The x-axis shows "Distance (km)" from 0 to 120, and the y-axis shows
+    "Elevation (m)" from 800 to 2,800. The terrain silhouette is filled with a vertical
+    linear gradient transitioning from very light blue at the bottom to a medium blue
+    at the peaks. A darker blue outline (stroke) traces the profile line. Seven landmarks
+    are annotated with bold two-line labels (name + elevation): "Grindelwald (Start)
+    878 m" (left-aligned), "Bachsee Lake 1313 m," "Faulhorn Summit 2542 m," "Schynige
+    Platte 1038 m," "Kleine Scheidegg 1337 m," "Männlichen Summit 2595 m," and "Wengen
+    (End) 876 m" (right-aligned). Each landmark has a dashed vertical rule and a shaped/colored
+    point marker — triangles for summits (brown), diamond for lake (steel blue), cross
+    for pass, square for plateau (olive), circles for towns (gray). The title reads
+    "Bernese Oberland Trail · area-elevation-profile · altair · pyplots.ai" with a
+    subtitle noting vertical exaggeration ~10×. The background is white with subtle
+    gridlines. There is noticeable empty whitespace at the bottom of the image below
+    the x-axis.'
   criteria_checklist:
     visual_quality:
       score: 24
@@ -50,44 +53,43 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title 28pt, subtitle 16pt, axis labels
-          18pt, axis titles 22pt, landmark labels 14pt). All readable, landmark labels
-          slightly small.
+        comment: All font sizes explicitly set (title 28pt, subtitle 16pt, axis titles
+          22pt, ticks 18pt, landmarks 16pt bold). All readable; landmark labels could
+          be slightly larger.
       - id: VQ-02
         name: No Overlap
         score: 4
         max: 6
-        passed: false
-        comment: Some landmark labels overlap with terrain profile line at lower elevations
-          (Bachsee Lake, Schynige Platte, Kleine Scheidegg). Wengen label at right
-          edge.
+        passed: true
+        comment: Wengen (End) label partially clipped at right edge. Some labels sit
+          close to dashed rules.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Area fill, profile line, and landmark points clearly visible. Markers
-          could be slightly larger.
+        comment: Area fill clear, profile line well-defined at 2.5px stroke. Landmark
+          points size=160 appropriate.
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Colorblind-safe palette using blues, browns, olive greens, grays.
-          No red-green issues.
+        comment: Blue-based palette colorblind-safe. Landmark type colors distinguishable
+          without red-green.
       - id: VQ-05
         name: Layout & Canvas
         score: 2
         max: 4
         passed: false
-        comment: Large black empty area below plot wastes significant vertical canvas
-          space. Plot fills about 65% vertically.
+        comment: Significant empty whitespace at bottom (~30% blank) despite PIL trimming.
+          Plot fills only ~65-70% vertically.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Distance (km) and Elevation (m) with proper units.
+        comment: Distance (km) and Elevation (m) - descriptive with units.
     design_excellence:
       score: 14
       max: 20
@@ -97,22 +99,22 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Strong design with gradient fill, custom landmark colors by type,
-          shape encoding, cohesive blue theme. Above defaults.
+        comment: Custom 3-stop gradient fill, type-based color/shape encoding, harmonized
+          label colors, clean subtitle. Clearly above defaults.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: View stroke removed, grid opacity 0.12, subtle dashed rules, white
-          stroke on points. Good refinement.
+        comment: Subtle grid (opacity 0.12), view border removed, dashed rules with
+          low opacity. Bottom whitespace detracts.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Two major summits as visual focal points, landmark type differentiation
-          adds context, terrain silhouette guides viewer.
+        comment: Landmarks create focal points. Summit triangles stand out. Terrain
+          silhouette tells ascent/descent story.
     spec_compliance:
       score: 15
       max: 15
@@ -122,27 +124,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct area chart with filled elevation profile.
+        comment: Correct area chart with filled terrain silhouette.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: filled area, labeled start/end, annotated
-          landmarks with vertical lines, vertical exaggeration noted, gradient fill.'
+        comment: 'All spec requirements met: filled area, start/end labels, landmark
+          annotations, vertical markers, vertical exaggeration note.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = distance (km), Y = elevation (m), correct mapping.
+        comment: Distance on x-axis, elevation on y-axis. Y-axis domain tightened
+          to data range.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct with spec-id, library, pyplots.ai. No legend
-          needed since landmarks directly labeled.
+        comment: Title follows format with spec-id · library · pyplots.ai. No legend
+          needed; landmarks individually labeled.
     data_quality:
       score: 15
       max: 15
@@ -152,24 +155,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows peaks, valleys, varied terrain. Multiple landmark types demonstrate
-          feature diversity.
+        comment: Multiple peaks, deep valleys, varied terrain. Different landmark
+          types showcase full range of features.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real Swiss hiking trail (Bernese Oberland) with authentic place names.
-          Neutral nature topic.
+        comment: Real Swiss location (Bernese Oberland) with actual place names. Neutral
+          hiking topic.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Elevations 800-2600m realistic for Swiss Alps. 120km trail distance
-          plausible.
+        comment: Alpine elevations 800-2600m realistic for Bernese Oberland. 120km
+          trail plausible.
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -177,32 +180,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports, data, plot, save structure. No functions or classes.
+        comment: 'Linear flow: imports, data generation, chart layers, composition,
+          save.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42) set before all random operations.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used (altair, numpy, pandas).
+        comment: 'All four imports used: altair, numpy, pandas, PIL.'
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Well-structured, appropriate complexity. Label alignment splitting
-          necessary for proper positioning.
+        passed: false
+        comment: Label positioning split into 4 chart layers adds verbosity. PIL post-processing
+          adds complexity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png and plot.html, current Altair API.
+        comment: Saves as plot.png. Current Altair 6.0 API.
     library_mastery:
       score: 9
       max: 10
@@ -212,21 +216,22 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Expert declarative API usage: mark_area, encoding types, alt.Scale,
-          alt.Title, alt.layer, configure_axis/view.'
+        comment: 'Expertly uses Altair declarative Grammar of Graphics: encoding channels,
+          layer composition, alt.Title, configure methods.'
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: 'Altair-specific: Gradient/GradientStop, layer composition, mark_text
-          lineBreak, alt.condition, interactive(), tooltip encoding.'
+        comment: alt.Gradient with GradientStop, alt.condition for conditional coloring,
+          shape encoding, .interactive() for HTML.
   verdict: REJECTED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - pillow
   techniques:
-  - annotations
   - layer-composition
+  - annotations
   - hover-tooltips
   - html-export
   patterns:
