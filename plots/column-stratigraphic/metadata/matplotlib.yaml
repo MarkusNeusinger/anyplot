@@ -1,7 +1,7 @@
 library: matplotlib
 specification_id: column-stratigraphic
 created: '2026-03-15T22:55:31Z'
-updated: '2026-03-15T22:59:19Z'
+updated: '2026-03-15T23:10:12Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23121198649
 issue: 4573
@@ -10,100 +10,101 @@ library_version: 3.10.8
 preview_url: https://storage.googleapis.com/pyplots-images/plots/column-stratigraphic/matplotlib/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/column-stratigraphic/matplotlib/plot_thumb.png
 preview_html: null
-quality_score: 87
+quality_score: 91
 review:
   strengths:
-  - Excellent geological data with real formation names in correct stratigraphic order
-  - All 5 lithology types have distinct, recognizable hatching patterns and appropriate
-    earth-tone colors
-  - Complete spec compliance with every required feature present
-  - Clean, well-structured code with no unnecessary complexity
-  - Age bracket annotations on the left add professional geological context
+  - Geologically accurate data using real US Great Plains formations with correct
+    stratigraphic order
+  - Five distinct lithology patterns with appropriate earthy colors approximating
+    geological conventions
+  - Well-executed unconformity wavy line as a visual focal point
+  - Clean age bracket system with italic labels on the left side
+  - Subtle age-group background shading adds depth without cluttering
+  - All font sizes explicitly set and readable
   weaknesses:
-  - Formation name labels (14pt) and age labels (13pt) slightly below recommended
-    16pt minimum
-  - Column is narrow relative to canvas, leaving wasted horizontal space
-  - All layers have equal visual weight with no focal point or emphasis
-  - Could benefit from more typographic refinement
+  - Conglomerate ooo hatch pattern could be slightly less dense for better visibility
+    at smaller scales
   image_description: 'The plot displays a vertical stratigraphic column spanning 0-200m
     depth (increasing downward). Ten geological layers are shown as stacked rectangular
-    blocks, each filled with a distinct hatching pattern and color: conglomerate (orange
-    with circle pattern, Ogallala Fm), sandstone (wheat/tan with dot stipple, Arikaree/Dakota/Entrada
-    Fms), siltstone (tan with diagonal hatching, White River/Morrison Fms), shale
-    (gray with horizontal dashes, Chadron/Carlile Fms), and limestone (light blue
-    with cross/plus pattern, Niobrara/Greenhorn Fms). Formation names appear to the
-    right of each layer. Geological age labels (Miocene, Oligocene, Eocene, Cretaceous,
-    Jurassic) appear on the left in italics with bracket lines spanning their respective
-    depth ranges. The Y-axis is labeled "Depth (m)" with tick marks every 25m. A lithology
-    legend sits in the lower right. The title reads "column-stratigraphic · matplotlib
-    · pyplots.ai". Top, right, and bottom spines are removed; a subtle y-axis grid
-    is present.'
+    blocks, each filled with a distinct hatch pattern and color: sandstone (wheat
+    with dot stipple), shale (gray with horizontal dashes), limestone (light blue
+    with cross/plus pattern), siltstone (tan with diagonal lines), and conglomerate
+    (burlywood with circle pattern). Formation names (Ogallala Fm, Arikaree Fm, White
+    River Fm, Chadron Fm, Niobrara Fm, Carlile Shale, Greenhorn Fm, Dakota Fm, Morrison
+    Fm, Entrada Fm) are labeled in bold to the right of each layer. Age labels (Miocene,
+    Oligocene, Eocene, Cretaceous, Jurassic) appear in italics on the left with bracket
+    lines spanning their respective depth ranges. A red wavy line marks an unconformity
+    between the Eocene and Cretaceous at 72m depth with an italic red "unconformity"
+    label. The y-axis is labeled "Depth (m)" and the title reads "column-stratigraphic
+    · matplotlib · pyplots.ai". A horizontal legend at the bottom shows all 5 lithology
+    types with their patterns. Top, right, and bottom spines are removed; a subtle
+    dashed grid is visible on the y-axis.'
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 24, ylabel 20, ticks 16, formations
-          14, ages 13). Formation and age labels slightly below 16pt guideline.
+        comment: 'All font sizes explicitly set: title 24pt, ylabel 20pt, ticks 16pt,
+          formation labels 16pt, age labels 16pt'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All text clearly separated, no collisions.
+        comment: No overlapping text elements
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: All layers clearly visible with distinct hatching patterns and colors.
+        comment: Hatch patterns distinct; conglomerate ooo pattern slightly dense
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Earth-tone palette is colorblind-safe with good contrast.
+        comment: Earthy palette with good contrast, no red-green confusion
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Portrait format appropriate but column narrow relative to canvas
-          width.
+        comment: Tall portrait layout ideal for stratigraphic column, balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Depth (m) with units, correct title format.
+        comment: Depth (m) with units, x-axis appropriately removed
     design_excellence:
-      score: 12
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Geologically appropriate earth-tone palette shows design intent.
-          Above defaults but not publication-level.
+        comment: Custom earthy palette, distinct hatch patterns, age-group background
+          shading
       - id: DE-02
         name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Three spines removed, subtle grid, legend with shadow, clean whitespace
+      - id: DE-03
+        name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Three spines removed, subtle grid, bracket lines for ages. Good refinement.
-      - id: DE-03
-        name: Data Storytelling
-        score: 3
-        max: 6
-        passed: false
-        comment: Geological sequence tells a natural story but no focal point or emphasis.
+        comment: Unconformity creates focal point, age brackets guide reading through
+          time
     spec_compliance:
       score: 15
       max: 15
@@ -113,26 +114,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct vertical column with stacked rectangular blocks.
+        comment: Correct vertical column with stacked lithology pattern blocks
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: 5 lithology patterns, depth downward,
-          formation names, age labels, depth scale.'
+        comment: 'All features present: 5 lithology patterns, formation names, age
+          labels, depth scale, unconformity'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Depth correctly mapped to Y-axis with inverted convention.
+        comment: Depth increases downward per borehole convention
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format. Legend shows all 5 lithology types.
+        comment: Correct title format and legend with all lithology types
     data_quality:
       score: 15
       max: 15
@@ -142,20 +143,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 10 layers across 5 lithology types with varying thicknesses and repeated
-          lithologies.
+        comment: 10 layers, 5 lithology types, varying thicknesses, unconformity
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real US Great Plains formations in correct stratigraphic order.
+        comment: Real US Great Plains formations with correct geological ages
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Depths 0-200m realistic for borehole section.
+        comment: 0-200m depth range realistic for borehole
     code_quality:
       score: 10
       max: 10
@@ -165,31 +165,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports, data, styles, plot, save.'
+        comment: Clean linear structure, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic data, no randomness.
+        comment: Fully deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib.patches and matplotlib.pyplot, both used.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, clean age span aggregation.
+        comment: Clean code, appropriate complexity, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300 and bbox_inches='tight'.
+        comment: Saves as plot.png with dpi=300, bbox_inches=tight
     library_mastery:
       score: 7
       max: 10
@@ -199,21 +199,21 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of Axes methods, FancyBboxPatch, mpatches.Patch for legend.
+        comment: Axes methods throughout, FancyBboxPatch appropriate for this plot
+          type
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: FancyBboxPatch with hatching, custom legend handles, clip_on=False
-          for bracket lines.
-  verdict: REJECTED
+        comment: Hatching system, FancyBboxPatch, clip_on, custom legend handles
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - patches
   - custom-legend
+  - patches
   patterns:
   - iteration-over-groups
   dataprep: []
