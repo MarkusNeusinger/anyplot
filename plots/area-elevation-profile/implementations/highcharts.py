@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 area-elevation-profile: Terrain Elevation Profile Along Transect
 Library: highcharts unknown | Python 3.14.3
 Quality: 87/100 | Created: 2026-03-15
@@ -62,19 +62,19 @@ chart.options.chart = {
     "width": 4800,
     "height": 2700,
     "backgroundColor": "#ffffff",
-    "marginBottom": 200,
+    "marginBottom": 230,
     "marginLeft": 250,
-    "marginRight": 120,
-    "marginTop": 280,
+    "marginRight": 250,
+    "marginTop": 300,
 }
 
 chart.options.title = {
-    "text": "Alpine Trail Bernese Oberland · area-elevation-profile · highcharts · pyplots.ai",
+    "text": "area-elevation-profile · highcharts · pyplots.ai",
     "style": {"fontSize": "60px", "fontWeight": "bold"},
 }
 
 chart.options.subtitle = {
-    "text": "120 km Hiking Route — Grindelwald to Lauterbrunnen · Vertical Exaggeration ~10×",
+    "text": "Alpine Trail Bernese Oberland — 120 km Hiking Route · Grindelwald to Lauterbrunnen · Vertical Exaggeration ~10×",
     "style": {"fontSize": "38px", "color": "#666666"},
 }
 
@@ -96,11 +96,14 @@ chart.options.x_axis = {
             "dashStyle": "Dot",
             "zIndex": 4,
             "label": {
-                "text": f"{lm[2]} ({lm[1]:.0f} m)",
-                "rotation": 315,
-                "y": -15,
-                "x": 5,
-                "style": {"fontSize": "24px", "color": "#333333", "fontWeight": "bold"},
+                "text": f"{lm[2]}<br/>({lm[1]:.0f} m)",
+                "rotation": 0,
+                "verticalAlign": "bottom",
+                "y": -25,
+                "x": 0,
+                "textAlign": "center",
+                "useHTML": True,
+                "style": {"fontSize": "28px", "color": "#333333", "fontWeight": "bold", "textAlign": "center"},
             },
         }
         for lm in landmarks
@@ -113,10 +116,45 @@ chart.options.y_axis = {
     "labels": {"style": {"fontSize": "34px"}, "format": "{value} m"},
     "gridLineWidth": 1,
     "gridLineColor": "rgba(0, 0, 0, 0.06)",
-    "min": 800,
+    "min": 1000,
     "max": 3200,
     "startOnTick": False,
     "endOnTick": False,
+    "plotBands": [
+        {
+            "from": 1000,
+            "to": 1500,
+            "color": "rgba(139, 195, 74, 0.08)",
+            "label": {
+                "text": "Valley",
+                "align": "left",
+                "x": 15,
+                "style": {"fontSize": "28px", "color": "rgba(100, 130, 60, 0.5)", "fontStyle": "italic"},
+            },
+        },
+        {
+            "from": 1500,
+            "to": 2500,
+            "color": "rgba(255, 193, 7, 0.06)",
+            "label": {
+                "text": "Alpine",
+                "align": "left",
+                "x": 15,
+                "style": {"fontSize": "28px", "color": "rgba(180, 140, 20, 0.5)", "fontStyle": "italic"},
+            },
+        },
+        {
+            "from": 2500,
+            "to": 3200,
+            "color": "rgba(156, 204, 232, 0.08)",
+            "label": {
+                "text": "High Alpine",
+                "align": "left",
+                "x": 15,
+                "style": {"fontSize": "28px", "color": "rgba(80, 130, 170, 0.5)", "fontStyle": "italic"},
+            },
+        },
+    ],
 }
 
 # Plot options
@@ -135,7 +173,7 @@ chart.options.plot_options = {
         "marker": {"enabled": False},
         "tooltip": {"headerFormat": "", "pointFormat": "<b>{point.x:.1f} km</b> — Elevation: <b>{point.y:.0f} m</b>"},
         "states": {"hover": {"lineWidthPlus": 1}},
-        "threshold": 800,
+        "threshold": 1000,
     }
 }
 
