@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 pp-basic: Probability-Probability (P-P) Plot
 Library: altair 6.0.0 | Python 3.14.3
 Quality: 89/100 | Created: 2026-03-15
@@ -24,7 +24,18 @@ empirical_cdf = np.arange(1, n + 1) / (n + 1)
 theoretical_cdf = np.array([dist.cdf(x) for x in observed_sorted])
 deviation = np.abs(empirical_cdf - theoretical_cdf)
 
-df = pd.DataFrame({"Theoretical CDF (Normal)": theoretical_cdf, "Empirical CDF": empirical_cdf, "Deviation": deviation})
+# Mark the point of maximum deviation for annotation
+max_dev_idx = int(np.argmax(deviation))
+is_max_deviation = [i == max_dev_idx for i in range(n)]
+
+df = pd.DataFrame(
+    {
+        "Theoretical CDF (Normal)": theoretical_cdf,
+        "Empirical CDF": empirical_cdf,
+        "Deviation": deviation,
+        "Max Deviation": is_max_deviation,
+    }
+)
 
 ref_df = pd.DataFrame({"x": [0, 1], "y": [0, 1]})
 
@@ -35,7 +46,19 @@ band_df = pd.DataFrame(
     {"x": band_x, "y_lo": np.clip(band_x - ks_bound, 0, 1), "y_hi": np.clip(band_x + ks_bound, 0, 1)}
 )
 
-# Plot
+# Max deviation annotation label
+max_dev_df = pd.DataFrame(
+    {
+        "x": [theoretical_cdf[max_dev_idx]],
+        "y": [empirical_cdf[max_dev_idx]],
+        "label": [f"Max deviation: {deviation[max_dev_idx]:.3f}"],
+    }
+)
+
+# Interactive selection — hovering highlights nearby points (Altair-distinctive)
+hover = alt.selection_point(on="pointerover", nearest=True, empty=False)
+
+# Plot layers
 band = (
     alt.Chart(band_df).mark_area(opacity=0.08, color="#306998").encode(x=alt.X("x:Q"), y=alt.Y("y_lo:Q"), y2="y_hi:Q")
 )
@@ -62,18 +85,35 @@ points = (
                 gradientLength=150,
             ),
         ),
-        size=alt.Size("Deviation:Q", scale=alt.Scale(range=[60, 220]), legend=None),
-        opacity=alt.value(0.8),
+        size=alt.condition(
+            hover, alt.value(280), alt.Size("Deviation:Q", scale=alt.Scale(range=[55, 200]), legend=None)
+        ),
+        opacity=alt.condition(hover, alt.value(1.0), alt.value(0.65)),
+        strokeWidth=alt.condition(hover, alt.value(2.0), alt.value(0.8)),
         tooltip=[
             alt.Tooltip("Theoretical CDF (Normal):Q", format=".3f"),
             alt.Tooltip("Empirical CDF:Q", format=".3f"),
             alt.Tooltip("Deviation:Q", format=".4f", title="Abs. Deviation"),
         ],
     )
+    .add_params(hover)
+)
+
+# Highlight max-deviation point with contrasting ring
+max_point = (
+    alt.Chart(max_dev_df)
+    .mark_circle(size=400, stroke="#d62728", strokeWidth=2.5, filled=False)
+    .encode(x="x:Q", y="y:Q")
+)
+
+max_label = (
+    alt.Chart(max_dev_df)
+    .mark_text(align="left", dx=14, dy=-10, fontSize=15, fontWeight="bold", color="#d62728")
+    .encode(x="x:Q", y="y:Q", text="label:N")
 )
 
 chart = (
-    (band + reference_line + points)
+    (band + reference_line + points + max_point + max_label)
     .properties(
         width=1200,
         height=1200,
@@ -81,7 +121,7 @@ chart = (
             "pp-basic · altair · pyplots.ai",
             fontSize=28,
             fontWeight="bold",
-            subtitle="Normality check — points colored by deviation from perfect fit",
+            subtitle="Blood pressure normality check — points colored by deviation from perfect fit",
             subtitleFontSize=18,
             subtitleColor="#666666",
         ),
