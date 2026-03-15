@@ -1,0 +1,230 @@
+library: matplotlib
+specification_id: area-elevation-profile
+created: '2026-03-15T21:51:14Z'
+updated: '2026-03-15T22:06:30Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23120069342
+issue: 4578
+python_version: 3.14.3
+library_version: 3.10.8
+preview_url: https://storage.googleapis.com/pyplots-images/plots/area-elevation-profile/matplotlib/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/area-elevation-profile/matplotlib/plot_thumb.png
+preview_html: null
+quality_score: 90
+review:
+  strengths:
+  - Excellent gradient fill technique using LinearSegmentedColormap with clipped fill_between
+    layers creates a beautiful terrain silhouette effect
+  - Realistic Alpine hiking data with authentic German place names and plausible elevation
+    values
+  - Full spec compliance with all required features including gradient coloring, landmark
+    annotations, vertical exaggeration note, and start/end labeling
+  - Clean well-structured code with appropriate complexity for the visual effect achieved
+  - Professional color palette (green-to-brown) that evokes real topographic maps
+  weaknesses:
+  - Annotation font size (11pt) is slightly small for the output resolution
+  - Some landmark labels are in close proximity in the 18-28 km region
+  image_description: 'The plot displays an alpine trail elevation profile spanning
+    0-120 km (x-axis) and approximately 600-2500 m (y-axis). The terrain silhouette
+    is filled with a custom gradient colormap transitioning from deep green at low
+    elevations through light green to warm brown/dark brown at high elevations, evoking
+    topographic map aesthetics. A dark green profile line (linewidth 2.5) traces the
+    terrain contour. Eight landmarks are annotated with dashed vertical lines, dark
+    green circle markers with white edges, and bold text labels showing name and elevation:
+    Bergdorf (1351 m), Sonnalm (1503 m), Hoher Kamm (1720 m), Talbach (1367 m), Gipfelkreuz
+    (2242 m), Seefeld Hut (1394 m), Felsgrat (1470 m), and Alpstadt (1293 m). The
+    title reads "Alpine Trail Profile · area-elevation-profile · matplotlib · pyplots.ai"
+    at 24pt font. Top and right spines are removed, a subtle y-axis grid is present
+    at alpha=0.2, and an italic "Vertical exaggeration ≈ 10×" note appears in a rounded
+    box at the bottom right corner.'
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title 24pt, labels 20pt, ticks 16pt explicitly set. Annotation text
+          at 11pt bold is readable but slightly below ideal for 4800x2700.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Most labels well-spaced. Sonnalm and Hoher Kamm labels in close proximity
+          but readable.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Profile line at 2.5 linewidth clearly visible. Markers at size 7
+          with white edges stand out well.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Green-to-brown gradient is colorblind-friendly with good contrast.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 16:9 aspect with tight_layout. Plot fills canvas well with balanced
+          margins.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Distance (km) and Elevation (m) with proper units.
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom terrain colormap evokes topographic maps. Intentional color
+          hierarchy with dark green accents. Above default styling.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines removed, subtle y-grid, rounded box for exaggeration note,
+          generous whitespace.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Gipfelkreuz peak dominates as focal point. Landmarks create hiking
+          narrative. Gradient reinforces elevation.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct area/line chart with filled terrain silhouette.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: filled area, gradient coloring, landmarks,
+          vertical exaggeration note.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Distance on x-axis, elevation on y-axis. All data visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title follows correct format. No legend needed for single-series.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Multiple peaks, valleys, ridges. 8 landmarks cover summits, passes,
+          huts, towns.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Alpine hiking trail with authentic German/Austrian place names.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Elevations 800-2300m and 120km distance realistic for Alpine trail.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean imports-data-plot-save structure. No functions or classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All three imports used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Gradient fill loop appropriately complex. No over-engineering.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with dpi=300 and bbox_inches=tight.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses Axes methods, fill_between, annotate, LinearSegmentedColormap.
+          Good idiomatic matplotlib.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: LinearSegmentedColormap.from_list and fill_between clipping for gradient
+          fill are distinctive matplotlib capabilities.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - cumulative-sum
+  styling:
+  - custom-colormap
+  - gradient-fill
+  - alpha-blending
+  - grid-styling
+  - edge-highlighting
