@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 stereonet-equal-area: Structural Geology Stereonet (Equal-Area Projection)
 Library: letsplot 4.9.0 | Python 3.14.3
 Quality: 84/100 | Created: 2026-03-15
@@ -16,6 +16,7 @@ from lets_plot import (
     geom_density2d,
     geom_path,
     geom_point,
+    geom_polygon,
     geom_segment,
     geom_text,
     ggplot,
@@ -23,6 +24,7 @@ from lets_plot import (
     labs,
     layer_tooltips,
     scale_color_manual,
+    scale_fill_manual,
     scale_x_continuous,
     scale_y_continuous,
     theme,
@@ -104,8 +106,13 @@ for i in range(len(strikes)):
     sc = 1.0 / np.sqrt(1.0 - pz)
     gx = px * sc
     gy = py * sc
-    for j in range(len(alphas)):
-        gc_rows.append({"x": gx[j], "y": gy[j], "group": i, "feature_type": feature_types[i]})
+    # Clip to unit circle boundary
+    r2 = gx**2 + gy**2
+    mask_inside = r2 <= 1.0
+    gx_clip = gx[mask_inside]
+    gy_clip = gy[mask_inside]
+    for j in range(len(gx_clip)):
+        gc_rows.append({"x": gx_clip[j], "y": gy_clip[j], "group": i, "feature_type": feature_types[i]})
 
 gc_df = pd.DataFrame(gc_rows)
 
@@ -129,9 +136,10 @@ ref_df = pd.DataFrame(
 # Cardinal direction labels
 label_df = pd.DataFrame({"x": [0, 1.09, 0, -1.09], "y": [1.09, 0, -1.09, 0], "label": ["N", "E", "S", "W"]})
 
-# Mean pole annotations per feature type (circular mean for strike)
+# Mean pole annotations and confidence ellipses per feature type
 mean_annotations = []
-for ft in ["Bedding", "Joint", "Fault", "Foliation"]:
+ellipse_rows = []
+for idx, ft in enumerate(["Bedding", "Joint", "Fault", "Foliation"]):
     mask = np.array(feature_types) == ft
     mx = pole_x[mask].mean()
     my = pole_y[mask].mean()
@@ -140,7 +148,22 @@ for ft in ["Bedding", "Joint", "Fault", "Foliation"]:
     ms = np.degrees(np.arctan2(np.sin(s_rad).mean(), np.cos(s_rad).mean())) % 360
     md = dips[mask].mean()
     mean_annotations.append({"x": mx, "y": my, "label": f"{ft}\n{ms:.0f}/{md:.0f}"})
+    # Confidence ellipse (1-sigma) around each cluster
+    px_ft = pole_x[mask]
+    py_ft = pole_y[mask]
+    cov = np.cov(px_ft, py_ft)
+    eigvals, eigvecs = np.linalg.eigh(cov)
+    angle = np.arctan2(eigvecs[1, 1], eigvecs[0, 1])
+    t = np.linspace(0, 2 * np.pi, 40)
+    ex = np.sqrt(eigvals[1]) * np.cos(t)
+    ey = np.sqrt(eigvals[0]) * np.sin(t)
+    rx = mx + ex * np.cos(angle) - ey * np.sin(angle)
+    ry = my + ex * np.sin(angle) + ey * np.cos(angle)
+    for j in range(len(t)):
+        ellipse_rows.append({"x": rx[j], "y": ry[j], "group": idx, "feature_type": ft})
+
 mean_df = pd.DataFrame(mean_annotations)
+ellipse_df = pd.DataFrame(ellipse_rows)
 
 # Colorblind-safe palette (4 feature types)
 color_values = ["#306998", "#CC79A7", "#E69F00", "#009E73"]
@@ -169,6 +192,10 @@ plot = (
     )
     # Great circles
     + geom_path(aes(x="x", y="y", group="group", color="feature_type"), data=gc_df, size=0.4, alpha=0.3)
+    # Confidence ellipses around each cluster
+    + geom_polygon(
+        aes(x="x", y="y", group="group", fill="feature_type"), data=ellipse_df, alpha=0.12, size=0, show_legend=False
+    )
     # Poles to planes with tooltips
     + geom_point(aes(x="x", y="y", color="feature_type"), data=poles_df, size=5, alpha=0.85, tooltips=pole_tooltips)
     # Mean pole markers (larger, outlined)
@@ -177,9 +204,9 @@ plot = (
     + geom_text(
         aes(x="x", y="y", label="label"),
         data=mean_df,
-        size=11,
-        color="#333333",
-        nudge_y=-0.08,
+        size=14,
+        color="#222222",
+        nudge_y=-0.12,
         fontface="italic",
         show_legend=False,
     )
@@ -191,6 +218,7 @@ plot = (
     + geom_text(aes(x="x", y="y", label="label"), data=label_df, size=18, color="#333333", fontface="bold")
     # Color scale
     + scale_color_manual(values=color_values, name="Feature Type")
+    + scale_fill_manual(values=color_values)
     + coord_fixed()
     + scale_x_continuous(limits=[-1.25, 1.25])
     + scale_y_continuous(limits=[-1.25, 1.25])
