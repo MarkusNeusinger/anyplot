@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 column-stratigraphic: Stratigraphic Column with Lithology Patterns
 Library: highcharts unknown | Python 3.14.3
 Quality: 83/100 | Created: 2026-03-15
@@ -11,6 +11,7 @@ import urllib.request
 from collections import OrderedDict
 from pathlib import Path
 
+from highcharts_core.chart import Chart
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
@@ -102,13 +103,13 @@ lithology_config = {
                     "d": "M 8 8 m -5 0 a 5 5 0 1 0 10 0 a 5 5 0 1 0 -10 0 "
                     "M 20 18 m -3.5 0 a 3.5 3.5 0 1 0 7 0 a 3.5 3.5 0 1 0 -7 0 "
                     "M 19 5 m -2.5 0 a 2.5 2.5 0 1 0 5 0 a 2.5 2.5 0 1 0 -5 0",
-                    "stroke": "#6B4226",
+                    "stroke": "#5C3A6E",
                     "strokeWidth": 2,
                     "fill": "none",
                 },
                 "width": 26,
                 "height": 26,
-                "backgroundColor": "#D4A76A",
+                "backgroundColor": "#C4A0D4",
             }
         },
     },
@@ -136,30 +137,37 @@ chart_config = {
         "type": "columnrange",
         "width": 4800,
         "height": 2700,
-        "backgroundColor": "#ffffff",
-        "marginLeft": 380,
-        "marginRight": 700,
-        "marginTop": 220,
-        "marginBottom": 180,
+        "backgroundColor": "#FAFAF8",
+        "marginLeft": 340,
+        "marginRight": 480,
+        "marginTop": 200,
+        "marginBottom": 130,
+        "style": {"fontFamily": "'Segoe UI', Helvetica, Arial, sans-serif"},
     },
     "title": {
         "text": "column-stratigraphic \u00b7 highcharts \u00b7 pyplots.ai",
-        "style": {"fontSize": "56px", "fontWeight": "bold"},
+        "style": {"fontSize": "52px", "fontWeight": "bold", "color": "#2C3E50"},
     },
     "subtitle": {
         "text": "Synthetic Sedimentary Section \u2014 Colorado Plateau Stratigraphy",
-        "style": {"fontSize": "36px", "color": "#666666"},
+        "style": {"fontSize": "34px", "color": "#7F8C8D"},
     },
-    "xAxis": {"categories": [""], "visible": False},
+    "xAxis": {"visible": False, "min": -0.25, "max": 1.3},
     "yAxis": {
         "reversed": True,
-        "title": {"text": "Depth (m)", "style": {"fontSize": "44px", "color": "#333333"}, "margin": 30},
-        "labels": {"style": {"fontSize": "34px"}, "format": "{value}"},
+        "title": {
+            "text": "Depth (m)",
+            "style": {"fontSize": "42px", "color": "#2C3E50", "fontWeight": "600"},
+            "margin": 30,
+        },
+        "labels": {"style": {"fontSize": "32px", "color": "#444444"}, "format": "{value}"},
         "min": 0,
-        "max": 200,
+        "max": 204,
         "tickInterval": 20,
         "gridLineWidth": 1,
-        "gridLineColor": "rgba(0, 0, 0, 0.08)",
+        "gridLineColor": "rgba(0, 0, 0, 0.06)",
+        "lineWidth": 2,
+        "lineColor": "#CCCCCC",
         "plotBands": [
             {
                 "from": band["from"],
@@ -168,7 +176,7 @@ chart_config = {
                 "label": {
                     "text": band["label"],
                     "align": "left",
-                    "x": -170,
+                    "x": -160,
                     "verticalAlign": "middle",
                     "rotation": 270,
                     "style": {"fontSize": "30px", "fontWeight": "bold", "color": "#555555"},
@@ -177,7 +185,7 @@ chart_config = {
             for band in age_bands
         ],
         "plotLines": [
-            {"value": boundary, "color": "rgba(0, 0, 0, 0.3)", "width": 3, "dashStyle": "Dash", "zIndex": 5}
+            {"value": boundary, "color": "rgba(0, 0, 0, 0.35)", "width": 3, "dashStyle": "Dash", "zIndex": 5}
             for boundary in [18, 100, 142]
         ],
     },
@@ -186,13 +194,16 @@ chart_config = {
         "layout": "vertical",
         "align": "right",
         "verticalAlign": "middle",
-        "x": -50,
+        "x": -30,
         "y": 0,
-        "itemStyle": {"fontSize": "28px"},
-        "symbolHeight": 24,
-        "symbolWidth": 24,
-        "itemMarginBottom": 14,
-        "title": {"text": "Lithology", "style": {"fontSize": "32px", "fontWeight": "bold"}},
+        "itemStyle": {"fontSize": "30px", "color": "#333333"},
+        "symbolHeight": 28,
+        "symbolWidth": 28,
+        "itemMarginBottom": 18,
+        "title": {"text": "Lithology", "style": {"fontSize": "34px", "fontWeight": "bold", "color": "#2C3E50"}},
+        "backgroundColor": "rgba(255, 255, 255, 0.7)",
+        "borderRadius": 8,
+        "padding": 20,
     },
     "tooltip": {
         "style": {"fontSize": "26px"},
@@ -230,29 +241,44 @@ for lith, layer_list in lithology_groups.items():
             "name": config["name"],
             "data": data_points,
             "color": config["color"],
-            "borderColor": "#333333",
-            "borderWidth": 3,
-            "pointWidth": 350,
-            "dataLabels": [
-                {
-                    "enabled": True,
-                    "inside": False,
-                    "align": "left",
-                    "verticalAlign": "middle",
-                    "x": 220,
-                    "y": 0,
-                    "format": "{point.custom.formation}",
-                    "style": {"fontSize": "30px", "fontWeight": "600", "color": "#333333", "textOutline": "none"},
-                    "overflow": "allow",
-                    "crop": False,
-                }
-            ],
+            "borderColor": "#2C3E50",
+            "borderWidth": 2.5,
+            "pointWidth": 2200,
         }
     )
 
-# Generate JavaScript
+# Add formation name labels as a scatter series positioned to the right of the column
+formation_labels = []
+for layer in layers:
+    mid_depth = (layer["top"] + layer["bottom"]) / 2
+    formation_labels.append({"x": 0.68, "y": mid_depth, "name": layer["formation"]})
+
+chart_config["series"].append(
+    {
+        "type": "scatter",
+        "name": "Formations",
+        "data": formation_labels,
+        "showInLegend": False,
+        "enableMouseTracking": False,
+        "marker": {"enabled": False},
+        "dataLabels": {
+            "enabled": True,
+            "format": "{point.name}",
+            "align": "left",
+            "x": 10,
+            "y": 4,
+            "style": {"fontSize": "30px", "fontWeight": "600", "color": "#2C3E50", "textOutline": "3px #FAFAF8"},
+            "overflow": "allow",
+            "crop": False,
+        },
+    }
+)
+
+# Generate JavaScript - using raw JSON config because highcharts-core cannot
+# serialize SVG pattern path objects needed for lithology fills
+chart = Chart(container="container")
 js_config = json.dumps(chart_config, ensure_ascii=False)
-js_code = f"Highcharts.chart('container', {js_config});"
+js_code = f"Highcharts.chart('{chart.container}', {js_config});"
 
 # Load Highcharts JS modules
 highcharts_base = Path(__file__).resolve().parents[3] / "node_modules" / "highcharts"
