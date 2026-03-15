@@ -1,7 +1,7 @@
 library: pygal
 specification_id: line-load-duration
 created: '2026-03-15T21:42:27Z'
-updated: '2026-03-15T22:12:09Z'
+updated: '2026-03-15T22:20:06Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23119898935
 issue: 4586
@@ -10,36 +10,37 @@ library_version: 3.1.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/line-load-duration/pygal/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/line-load-duration/pygal/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/line-load-duration/pygal/plot.html
-quality_score: 81
+quality_score: 80
 review:
   strengths:
-  - Full spec compliance — all required features implemented (regions, capacity lines,
-    annotations, total energy)
-  - Excellent data generation with realistic seasonal/daily load patterns
-  - Smart SVG downsampling (step=15) to prevent performance issues with 8760 points
-  - Clean, well-structured code with good use of pygal Style system
-  - Strong data storytelling with clear region labels and capacity tier context
+  - Full spec compliance on chart type, data mapping, and title format with total
+    energy annotation
+  - Excellent realistic data generation with seasonal and daily load patterns
+  - Smart SVG downsampling (step=15) to prevent performance issues with 8760 data
+    points
+  - Clean well-structured code with good use of pygal Style system
+  - Good data storytelling with capacity tiers providing engineering context
+  - No overlap issues with clean layout and well-spaced legend
   weaknesses:
-  - Capacity line labels overlap y-axis tick labels at the left edge, creating visual
-    clutter
-  - Base Load region is extremely narrow (~187 hrs), making it barely visible
-  - BASE LOAD label text is cut off at the right edge
-  - Red fill region and red dashed Peak Capacity line are too similar in color
-  image_description: 'The plot displays a load duration curve for a mid-sized utility.
-    Three filled regions are clearly visible: Peak Load (salmon/red, ~0–3277 hrs)
-    on the left with the steepest decline, Intermediate (teal/cyan, ~3277–8573 hrs)
-    in the middle forming the bulk of the curve, and Base Load (blue/steel, ~8573–8760
-    hrs) as a narrow sliver on the far right. Three horizontal dashed capacity lines
-    cross the plot: Peak Capacity at 1200 MW (red dashed), Intermediate Capacity at
-    900 MW (purple dashed), and Base Capacity at 500 MW (dark gray dashed). Region
-    labels "PEAK LOAD", "INTERMEDIATE", and "BASE LOAD" are rendered in large bold
-    text within their respective regions. The title includes total energy (7.3 TWh)
-    and follows the required format. X-axis shows "Hours of Year (ranked by demand)"
-    from 0 to 8760, Y-axis shows "Power Demand (MW)". Legend at the bottom lists all
-    six series. White background with subtle dashed grid lines.'
+  - Red and green as primary region fill colors creates colorblind accessibility issue
+  - No direct on-chart annotations labeling the three load regions (spec requirement)
+  - Base Load region is narrow (~428 hrs) making it less visually prominent
+  image_description: 'The plot displays a load duration curve for a mid-sized utility
+    on a white background. Three filled regions are visible with semi-transparency
+    (opacity 0.55): Peak Load (salmon/red, 0–3277 hrs) on the left with a steep initial
+    decline, Intermediate (green/teal, 3277–8332 hrs) in the middle forming the bulk
+    of the curve, and Base Load (blue, 8332–8760 hrs) as a narrow region on the far
+    right. Three horizontal dashed capacity lines cross the plot at 550 MW (Base Capacity),
+    900 MW (Intermediate Capacity), and 1200 MW (Peak Capacity) in dark gray/purple
+    tones. The title reads "Load Duration Curve (Total Energy: 7.3 TWh) · line-load-duration
+    · pygal · pyplots.ai". X-axis: "Hours of Year (ranked by demand)" from 0 to 8760.
+    Y-axis: "Power Demand (MW)" with values from 0 to ~1,200 MW. A 6-entry legend
+    at the bottom lists all series in two rows. Subtle dashed horizontal grid lines
+    are present. No direct on-chart region annotations or labels exist — regions are
+    identified only through legend entries.'
   criteria_checklist:
     visual_quality:
-      score: 23
+      score: 24
       max: 30
       items:
       - id: VQ-01
@@ -47,36 +48,36 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=50, label=36, legend=30). Clearly
-          readable.
+        comment: All font sizes explicitly set (title=50, label=36, major_label=32,
+          legend=30, value=28). All text clearly readable.
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 6
         max: 6
         passed: true
-        comment: Capacity line labels overlap y-axis tick labels at left edge, creating
-          visual clutter.
+        comment: No overlapping text elements. Legend well-spaced, capacity lines
+          don't clash with labels.
       - id: VQ-03
         name: Element Visibility
         score: 4
         max: 6
         passed: true
-        comment: Peak and Intermediate regions visible. Base Load region is extremely
-          narrow sliver (~187 hrs).
+        comment: Peak and Intermediate regions clearly visible. Base Load region narrow
+          (~428 hrs) but distinguishable. Capacity dashed lines subtle.
       - id: VQ-04
         name: Color Accessibility
-        score: 3
+        score: 2
         max: 4
-        passed: true
-        comment: Red, teal, blue distinguishable. Red fill and red dashed Peak Capacity
-          line too similar.
+        passed: false
+        comment: Red (#e74c3c) and green (#27ae60) as primary region fill colors is
+          a classic red-green colorblind accessibility problem.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good canvas utilization. BASE LOAD label text partially cut off at
-          right edge.
+        comment: Good canvas utilization. Chart fills most of the space. Minor wasted
+          space in bottom margin.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -93,24 +94,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom color palette, custom fonts, styled dashed lines. Above defaults
-          but not publication-level.
+        comment: Custom color palette, custom font family, styled dashed capacity
+          lines. Above defaults but not publication-level.
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: White background, subtle dashed grid, x-guides hidden. Some refinement
-          but left-edge clutter.
+        comment: White background, subtle dashed grid, x-guides hidden, custom margins.
+          Some refinement visible.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Clear visual hierarchy with distinct region colors and bold labels.
-          Capacity tiers provide context.
+        comment: Clear visual hierarchy with distinct region colors and informative
+          legend labels. Capacity tiers provide engineering context.
     spec_compliance:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: SC-01
@@ -118,26 +119,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct load duration curve with fill, monotonically decreasing.
+        comment: Correct load duration curve, monotonically decreasing, with filled
+          regions.
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 2
         max: 4
-        passed: true
-        comment: 'All features: shaded regions, dashed capacity lines, region annotations,
-          total energy.'
+        passed: false
+        comment: Shaded regions, dashed capacity lines, total energy present. Missing
+          direct on-chart region annotations as spec requires.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=ranked hours (0-8760), Y=power demand (MW). Correct.
+        comment: X=ranked hours (0-8760), Y=power demand (MW). Correct and complete.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows required format with total energy. Legend labels descriptive.
+        comment: Title follows required format with total energy. Legend labels descriptive
+          with hour ranges and MW values.
     data_quality:
       score: 14
       max: 15
@@ -147,14 +150,15 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Shows all three load regions. Base load region very narrow but realistic.
+        comment: Shows all three load regions with realistic proportions. Base region
+          somewhat narrow but distinguishable.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Mid-sized utility load profile. Neutral energy domain. Plausible
-          values.
+        comment: Mid-sized utility load profile with seasonal and daily components.
+          Neutral energy domain.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
@@ -183,19 +187,20 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports used (numpy, pygal, Style).
+        comment: 'All imports used: numpy, pygal, Style.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-organized. Pragmatic downsampling and boundary overlap logic.
+        comment: Well-organized with pragmatic downsampling and clean boundary overlap
+          logic.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png. Uses current API including np.trapezoid.
+        comment: Saves as plot.png and plot.html. Uses current API including np.trapezoid.
     library_mastery:
       score: 7
       max: 10
@@ -205,15 +210,15 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of pygal.Line with per-series fill, custom Style, stroke_style
+        comment: Good use of pygal.Line with per-series fill, Style system, stroke_style
           dasharray, value_formatter.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: SVG-native rendering, per-series fill/stroke overrides, tooltip formatting,
-          smart downsampling.
+        comment: SVG-native rendering with HTML export, per-series fill/stroke overrides,
+          tooltip formatting, smart downsampling.
   verdict: REJECTED
 impl_tags:
   dependencies: []
