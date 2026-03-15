@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 column-stratigraphic: Stratigraphic Column with Lithology Patterns
-Library: seaborn | Python 3.13
-Quality: pending | Created: 2026-03-15
+Library: seaborn 0.13.2 | Python 3.14.3
+Quality: 77/100 | Created: 2026-03-15
 """
 
 import matplotlib.patches as mpatches
