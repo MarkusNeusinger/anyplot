@@ -1,7 +1,7 @@
 library: seaborn
 specification_id: stereonet-equal-area
 created: '2026-03-15T22:58:38Z'
-updated: '2026-03-15T23:11:44Z'
+updated: '2026-03-15T23:20:21Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23121188794
 issue: 4576
@@ -10,36 +10,43 @@ library_version: 0.13.2
 preview_url: https://storage.googleapis.com/pyplots-images/plots/stereonet-equal-area/seaborn/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/stereonet-equal-area/seaborn/plot_thumb.png
 preview_html: null
-quality_score: 85
+quality_score: 89
 review:
   strengths:
-  - Excellent spec compliance - all required features implemented correctly (great
-    circles, poles, density contours, grid, tick marks)
-  - Correct equal-area projection math with proper pole conversion
-  - Good data storytelling through marker size encoding by dip angle and clear density
-    contours
+  - Perfect spec compliance - all required stereonet features correctly implemented
+    (great circles, poles, density contours, grid, tick marks, legend)
+  - Correct equal-area projection math with proper pole conversion formulas
+  - Excellent color accessibility - blue/orange/purple/teal colorblind-safe palette
+  - 'Strong design polish: outer glow rings, graduated tick marks, marker shape+size
+    encoding, FAFAFA background'
   - Clean, well-structured code with appropriate complexity for a specialized plot
     type
+  - Good data storytelling through marker size encoding by dip angle and density contour
+    overlay
   weaknesses:
-  - 'Color accessibility: green/red pairing could be improved for colorblind viewers'
-  - Design polish could be elevated further (e.g., more refined typography, subtle
-    background tint)
-  - Heavy matplotlib reliance limits library mastery score
+  - Library mastery limited by inherent need for low-level matplotlib for stereonet
+    primitives
+  - Degree labels at 14pt could be slightly larger for optimal readability at full
+    resolution
   image_description: 'The plot displays a lower-hemisphere equal-area (Schmidt net)
-    stereonet projection on a square canvas. A black primitive circle contains the
-    stereonet with cardinal direction labels (N, S, E, W) in bold at the perimeter
-    and degree labels every 30° in gray. Tick marks appear every 10° around the circle.
-    Four feature types are plotted as colored poles (scatter points): Bedding (blue,
-    #306998), Joint Set 1 (orange, #E88D39), Joint Set 2 (green, #3AA655), and Fault
-    (red, #C44E52). Each cluster shows distinct orientation patterns. Gray KDE density
-    contours (filled with low alpha and outlined) highlight preferred orientations.
+    stereonet projection on a square canvas with a light gray (#FAFAFA) background.
+    A bold black primitive circle contains the stereonet with subtle outer glow rings
+    for depth. Cardinal direction labels (N in larger bold, S, E, W in bold) are placed
+    around the perimeter, with degree labels every 30° in gray. Graduated tick marks
+    appear every 10° around the circle. Four feature types are plotted as colored
+    poles with distinct marker shapes: Bedding (blue circles, #306998, clustered in
+    SW), Joint Set 1 (orange squares, #E88D39, clustered in SW/S), Joint Set 2 (purple
+    diamonds, #8B5FC7, clustered in NW/N), and Fault (teal triangles, #17A2B8, clustered
+    in E). Marker sizes vary by dip angle (steeper = larger). KDE density contours
+    (filled with low alpha, outlined) highlight preferred orientations for each cluster.
     Representative great circles are drawn in each feature type''s color at reduced
-    opacity. A subtle equal-area grid (light gray, thin lines) provides reference.
-    The legend in the upper left lists all four feature types. The title reads "stereonet-equal-area
-    · seaborn · pyplots.ai". Marker sizes vary by dip angle, adding visual hierarchy.'
+    opacity. A subtle equal-area grid (light gray dashed lines) provides reference.
+    The legend in the upper left lists all four feature types with matching marker
+    shapes. Title reads "stereonet-equal-area · seaborn · pyplots.ai". An italic annotation
+    "n = 110 measurements" appears in the bottom right.'
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -47,67 +54,68 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title=24, cardinal=22, degrees=16, legend=15/17).
-          All clearly readable.
+        comment: 'Font sizes explicitly set: title=24, cardinal=26/22, degree=14,
+          legend=15/17, annotation=13. Degree labels at 14pt slightly small but readable.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlap. Legend well-positioned outside the stereonet.
+        comment: No text overlap. Legend well-positioned outside stereonet with bbox_to_anchor.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Poles clearly visible with good sizing and alpha. Some clusters are
-          dense but distinguishable.
+        comment: Poles clearly visible with distinct marker shapes and colors. 110
+          points with sizes 80-200, alpha=0.88. Some density in Bedding cluster.
       - id: VQ-04
         name: Color Accessibility
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Blue-orange excellent. Green-red pairing could be problematic for
-          deuteranopia/protanopia.
+        comment: Blue/orange/purple/teal palette is colorblind-safe. No red-green
+          pairing. Previous color issue resolved.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
         comment: Square 12x12 figure ideal for stereonet. Projection fills canvas
-          well.
+          well with balanced margins.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
         comment: Cardinal directions and degree labels serve as appropriate axis labels
-          for a stereonet.
+          for a stereonet projection.
     design_excellence:
-      score: 13
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Custom palette, white marker edges, gray density contours. Above
-          defaults but not publication-level.
+        comment: Custom colorblind-safe palette, outer glow rings, graduated tick
+          marks, marker shape differentiation, size encoding, white edges, FAFAFA
+          background. Strong design.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Spines removed, axes hidden, subtle grid, tick mark differentiation.
-          Clean white background.
+        comment: Spines removed, axes hidden, subtle dashed grid, graduated ticks,
+          outer glow, clean FAFAFA background.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Marker size encoding by dip angle. Four distinct clusters immediately
-          apparent. Density contours highlight preferred orientations.
+        comment: Marker size encodes dip angle. Four distinct clusters apparent. KDE
+          density contours highlight preferred orientations.
     spec_compliance:
       score: 15
       max: 15
@@ -117,51 +125,52 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct lower-hemisphere equal-area Schmidt net projection.
+        comment: Correct lower-hemisphere equal-area (Schmidt net) projection.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
         comment: 'All features present: great circles, poles, density contours, grid,
-          tick marks, legend.'
+          tick marks, cardinal labels, legend.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Strike/dip correctly converted to equal-area projection. Pole math
-          is correct.
+        comment: Strike/dip correctly converted to equal-area pole projections.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Legend labels match data categories.
+        comment: Title format correct. Legend labels match data categories with correct
+          marker shapes.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Four feature types with varied orientations and dips. Good variety.
+        comment: Four feature types with distinct orientations and dip angles. Shows
+          clustering patterns and varied spreads.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Geological field measurements. Realistic, neutral, scientifically
-          appropriate.
+        comment: Geological field measurements. Scientifically appropriate, neutral
+          context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
         comment: 110 measurements within spec range. Realistic normal distributions
-          clipped to valid range.
+          clipped to valid ranges.
     code_quality:
       score: 10
       max: 10
@@ -184,13 +193,14 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All four imports used.
+        comment: All four imports used (matplotlib, numpy, pandas, seaborn).
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-structured. Complex math is necessarily so. No fake UI.
+        comment: Well-structured. Complex projection math is necessarily so. No fake
+          UI.
       - id: CQ-05
         name: Output & API
         score: 1
@@ -206,15 +216,15 @@ review:
         score: 3
         max: 5
         passed: true
-        comment: Uses sns.kdeplot, scatterplot, set_theme, despine, color_palette.
-          But majority is pure matplotlib.
+        comment: Uses sns.kdeplot, scatterplot, set_theme, set_context, despine, color_palette,
+          desaturate. But majority is matplotlib.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: sns.kdeplot for density contours and scatterplot with hue+size encoding
-          are seaborn-specific. But heavy lifting is matplotlib.
+        comment: sns.kdeplot for density contours with hue and sns.scatterplot with
+          multi-encoding are distinctly seaborn.
   verdict: REJECTED
 impl_tags:
   dependencies: []
