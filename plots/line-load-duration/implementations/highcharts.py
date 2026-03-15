@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 line-load-duration: Load Duration Curve for Energy Systems
 Library: highcharts unknown | Python 3.14.3
-Quality: 88/100 | Created: 2026-03-15
+Quality: 91/100 | Created: 2026-03-15
 """
 
 import tempfile
