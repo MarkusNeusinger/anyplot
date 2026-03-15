@@ -1,0 +1,230 @@
+library: letsplot
+specification_id: funnel-meta-analysis
+created: '2026-03-15T16:43:37Z'
+updated: '2026-03-15T17:04:19Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23114663102
+issue: 4590
+python_version: 3.14.3
+library_version: 4.9.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/funnel-meta-analysis/letsplot/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/funnel-meta-analysis/letsplot/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/funnel-meta-analysis/letsplot/plot.html
+quality_score: 92
+review:
+  strengths:
+  - Excellent data storytelling with inside/outside funnel classification and color
+    coding
+  - Clean professional visual design with refined grid, typography, and color palette
+  - Perfect spec compliance with all required features implemented correctly
+  - Interactive tooltips leveraging lets-plot distinctive capabilities
+  - Realistic domain-appropriate data with proper inverse-variance weighting
+  - Pooled OR annotation converting log OR to interpretable scale
+  weaknesses:
+  - Jensen 2020 label extends close to right canvas edge
+  - Could use more advanced lets-plot features for higher library mastery score
+  image_description: 'The plot displays a meta-analysis funnel plot with an inverted
+    y-axis showing Standard Error (precision →) and x-axis showing Log Odds Ratio.
+    The title reads "funnel-meta-analysis · letsplot · pyplots.ai" in bold dark gray.
+    A solid blue vertical line marks the pooled effect at ~0.33 with a bold annotation
+    "Pooled OR = 1.40" near the top. A dashed gray vertical line marks the null effect
+    at x=0. The funnel shape is formed by light blue dashed diagonal lines emanating
+    from the pooled effect line, with a very subtle blue-shaded polygon region filling
+    the funnel interior. Fifteen studies are plotted as circles — blue (#306998) for
+    "Inside funnel" and orange (#D4762C) for "Outside funnel" — with sizes varying
+    by inverse-variance weight. Outlier studies are labeled in bold orange: "Klein
+    2020" on the left side and "Jensen 2020" at the bottom right. Three high-weight
+    inside-funnel studies are labeled in dark gray: "Ito 2019", "Evans 2017", and
+    "Garcia 2018". A legend box in the upper right shows the "Classification" categories.
+    The background is clean white with only subtle horizontal gridlines on the y-axis.'
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title=24, axis_title=20, axis_text=16,
+          legend_title=16, legend_text=14'
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Jensen 2020 label extends close to right canvas edge, Klein 2020
+          positioned slightly far from its point
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 15 data points with sizes varying by weight, well-adapted to density,
+          alpha=0.85
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue-orange palette is colorblind-safe with excellent contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills ~65% of canvas, balanced margins, funnel well-centered
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Log Odds Ratio and Standard Error (precision →) are descriptive and
+          domain-appropriate
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom blue/orange palette, intentional color coding, bold annotations,
+          clean professional appearance
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: X-axis grid removed, y-axis grid subtle, spines removed, white background,
+          legend with border
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Inside/outside funnel classification, outliers highlighted, pooled
+          OR annotated, asymmetry visible
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct funnel plot for meta-analysis with inverted y-axis
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: inverted SE axis, pooled effect line,
+          funnel CI, sized points, null reference'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=effect_size, Y=std_error inverted. All data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct, legend shows Classification with Inside/Outside
+          funnel
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows funnel asymmetry, inside/outside studies, range of precision
+          levels, positive and negative effects
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: 15 RCTs with realistic study names, years, sample sizes, and clinical
+          log odds ratios
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Log odds ratios -0.15 to 1.05, standard errors 0.10 to 0.38 — realistic
+          for clinical meta-analyses
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean linear flow: imports, data, computation, plot, save'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set, data is hardcoded/deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: numpy, pandas, lets_plot — all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-organized, tooltips are legitimate lets-plot features
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with scale=3 for 4800x2700, also HTML
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good ggplot grammar usage with layered geoms, proper aes, scales,
+          theme customization
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses layer_tooltips() with formatted multi-line tooltips, HTML export
+          for interactivity
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling
