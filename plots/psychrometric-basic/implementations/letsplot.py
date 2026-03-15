@@ -1,7 +1,6 @@
-""" pyplots.ai
+"""pyplots.ai
 psychrometric-basic: Psychrometric Chart for HVAC
 Library: letsplot 4.9.0 | Python 3.14.3
-Quality: 76/100 | Created: 2026-03-15
 """
 
 import numpy as np
@@ -17,6 +16,7 @@ from lets_plot import (
     geom_path,
     geom_point,
     geom_polygon,
+    geom_segment,
     geom_text,
     ggplot,
     ggsize,
@@ -36,10 +36,17 @@ LetsPlot.setup_html()
 # Constants
 P_ATM = 101325.0  # Pa, standard atmospheric pressure
 
+# Colorblind-safe palette (no red-green)
+COLOR_SATURATION = "#306998"  # Python blue for 100% RH
+COLOR_WET_BULB = "#0072B2"  # Blue (colorblind-safe)
+COLOR_ENTHALPY = "#D55E00"  # Vermillion (colorblind-safe)
+COLOR_VOLUME = "#9467bd"  # Purple
+COLOR_COMFORT = "#306998"  # Python blue
+COLOR_PROCESS = "#e67e22"  # Orange
+
 
 # Psychrometric equations (ASHRAE-based)
 def saturation_pressure(t):
-    """Saturation vapor pressure in Pa from dry-bulb temp in C."""
     t_k = t + 273.15
     if t >= 0:
         ln_ps = (
@@ -64,34 +71,21 @@ def saturation_pressure(t):
 
 
 def humidity_ratio(t_db, rh):
-    """Humidity ratio (kg/kg) from dry-bulb temp and relative humidity (0-1)."""
     p_s = saturation_pressure(t_db)
     p_w = rh * p_s
-    w = 0.621945 * p_w / (P_ATM - p_w)
-    return w
+    return 0.621945 * p_w / (P_ATM - p_w)
 
 
 def wet_bulb_line(t_wb, t_db_range):
-    """Approximate humidity ratio along a constant wet-bulb line."""
     w_sat = humidity_ratio(t_wb, 1.0)
-    h_fg = 2501.0  # kJ/kg, latent heat of vaporization at 0C
-    cp_a = 1.006  # kJ/(kg·K), specific heat of dry air
-    cp_w = 1.86  # kJ/(kg·K), specific heat of water vapor
+    h_fg = 2501.0
+    cp_a = 1.006
+    cp_w = 1.86
     w_values = []
     for t_db in t_db_range:
         w = (h_fg * w_sat - cp_a * (t_db - t_wb)) / (h_fg + cp_w * t_db - cp_a * t_wb + (cp_w - cp_a) * t_wb)
         w_values.append(max(w, 0))
     return np.array(w_values)
-
-
-def enthalpy_value(t_db, w):
-    """Enthalpy of moist air in kJ/kg."""
-    return 1.006 * t_db + w * (2501.0 + 1.86 * t_db)
-
-
-def specific_volume_value(t_db, w):
-    """Specific volume in m3/kg."""
-    return 0.287042 * (t_db + 273.15) * (1 + 1.6078 * w) / (P_ATM / 1000)
 
 
 # Data - Generate psychrometric curves
@@ -144,7 +138,7 @@ for t_wb in wb_temps:
     w_vals = wet_bulb_line(t_wb, t_range) * 1000  # g/kg
     mask = (w_vals >= 0) & (w_vals <= 30)
     df_wb = pd.DataFrame(
-        {"t_db": t_range[mask], "w": w_vals[mask], "group": f"WB {t_wb}°C", "color": "#2ca02c", "line_type": "wb"}
+        {"t_db": t_range[mask], "w": w_vals[mask], "group": f"WB {t_wb}°C", "color": COLOR_WET_BULB, "line_type": "wb"}
     )
     wb_frames.append(df_wb)
 
@@ -165,7 +159,13 @@ for h_target in enthalpy_values_list:
             w_points.append(w_gkg)
     if len(t_points) > 1:
         df_h = pd.DataFrame(
-            {"t_db": t_points, "w": w_points, "group": f"h={h_target}", "color": "#d62728", "line_type": "enthalpy"}
+            {
+                "t_db": t_points,
+                "w": w_points,
+                "group": f"h={h_target}",
+                "color": COLOR_ENTHALPY,
+                "line_type": "enthalpy",
+            }
         )
         enth_frames.append(df_h)
 
@@ -186,7 +186,7 @@ for v_target in vol_values:
             w_points.append(w_gkg)
     if len(t_points) > 1:
         df_v = pd.DataFrame(
-            {"t_db": t_points, "w": w_points, "group": f"v={v_target}", "color": "#9467bd", "line_type": "volume"}
+            {"t_db": t_points, "w": w_points, "group": f"v={v_target}", "color": COLOR_VOLUME, "line_type": "volume"}
         )
         vol_frames.append(df_v)
 
@@ -211,43 +211,59 @@ state2_w = humidity_ratio(state2_t, state2_rh) * 1000
 
 df_process = pd.DataFrame({"t_db": [state1_t, state2_t], "w": [state1_w, state2_w]})
 
-# RH label positions (placed at the right end of each curve)
+# RH label positions (staggered to avoid overlap)
 rh_label_frames = []
 for rh_val in np.arange(0.1, 1.05, 0.1):
     rh_val = round(rh_val, 1)
-    t_label = 42 if rh_val <= 0.3 else (35 if rh_val <= 0.6 else 28)
+    t_label = (
+        44
+        if rh_val <= 0.2
+        else (
+            40
+            if rh_val == 0.3
+            else (
+                34
+                if rh_val == 0.4
+                else (
+                    30
+                    if rh_val <= 0.6
+                    else (24 if rh_val == 0.7 else (22 if rh_val == 0.8 else (17 if rh_val == 0.9 else 14)))
+                )
+            )
+        )
+    )
     w_label = humidity_ratio(t_label, rh_val) * 1000
     if w_label <= 28:
         rh_label_frames.append({"t_db": t_label, "w": w_label, "label": f"{int(rh_val * 100)}%"})
 
 df_rh_labels = pd.DataFrame(rh_label_frames)
 
-# Wet-bulb labels
+# Wet-bulb labels (offset from saturation curve to avoid RH label collision)
 wb_label_frames = []
 for t_wb in wb_temps:
     w_at_sat = humidity_ratio(t_wb, 1.0) * 1000
-    if w_at_sat <= 30:
-        wb_label_frames.append({"t_db": t_wb - 1, "w": w_at_sat + 0.5, "label": f"{t_wb}°C"})
+    if w_at_sat <= 28:
+        wb_label_frames.append({"t_db": t_wb + 2.5, "w": w_at_sat + 1.0, "label": f"{t_wb}°C"})
 
 df_wb_labels = pd.DataFrame(wb_label_frames)
 
-# Enthalpy labels
+# Enthalpy labels (with units)
 enth_label_frames = []
 for h_target in enthalpy_values_list:
     w_at_zero = (h_target - 1.006 * (-5)) / (2501.0 + 1.86 * (-5))
     w_gkg = w_at_zero * 1000
     if 0 < w_gkg <= 28:
-        enth_label_frames.append({"t_db": -8, "w": w_gkg, "label": f"{h_target}"})
+        enth_label_frames.append({"t_db": -8, "w": w_gkg, "label": f"{h_target} kJ/kg"})
 
 df_enth_labels = pd.DataFrame(enth_label_frames)
 
-# Volume labels
+# Volume labels (with units)
 vol_label_frames = []
 for v_target in vol_values:
     w_at_45 = (v_target * (P_ATM / 1000) / (0.287042 * (45 + 273.15)) - 1) / 1.6078
     w_gkg = w_at_45 * 1000
     if 0 < w_gkg <= 28:
-        vol_label_frames.append({"t_db": 46, "w": w_gkg, "label": f"{v_target}"})
+        vol_label_frames.append({"t_db": 46, "w": w_gkg, "label": f"{v_target} m³/kg"})
 
 df_vol_labels = pd.DataFrame(vol_label_frames)
 
@@ -258,45 +274,63 @@ plot = (
     + geom_polygon(
         data=df_comfort,
         mapping=aes(x="t_db", y="w"),
-        fill="#306998",
-        alpha=0.12,
-        color="#306998",
-        size=0.8,
+        fill=COLOR_COMFORT,
+        alpha=0.10,
+        color=COLOR_COMFORT,
+        size=1.0,
         linetype="dashed",
     )
     # RH curves
     + geom_line(data=df_rh_all, mapping=aes(x="t_db", y="w", group="group", color="color"), size=1.0)
-    # Wet-bulb lines
-    + geom_line(data=df_wb_all, mapping=aes(x="t_db", y="w", group="group"), color="#2ca02c", size=0.6, alpha=0.6)
-    # Enthalpy lines
-    + geom_line(data=df_enth_all, mapping=aes(x="t_db", y="w", group="group"), color="#d62728", size=0.5, alpha=0.5)
+    # Wet-bulb lines (colorblind-safe blue)
+    + geom_line(data=df_wb_all, mapping=aes(x="t_db", y="w", group="group"), color=COLOR_WET_BULB, size=0.6, alpha=0.55)
+    # Enthalpy lines (colorblind-safe vermillion)
+    + geom_line(
+        data=df_enth_all, mapping=aes(x="t_db", y="w", group="group"), color=COLOR_ENTHALPY, size=0.5, alpha=0.45
+    )
     # Specific volume lines
-    + geom_line(data=df_vol_all, mapping=aes(x="t_db", y="w", group="group"), color="#9467bd", size=0.5, alpha=0.5)
-    # HVAC process path
+    + geom_line(data=df_vol_all, mapping=aes(x="t_db", y="w", group="group"), color=COLOR_VOLUME, size=0.5, alpha=0.45)
+    # HVAC process path with arrow
     + geom_path(
-        data=df_process, mapping=aes(x="t_db", y="w"), color="#e67e22", size=2.5, arrow={"type": "closed", "length": 12}
+        data=df_process,
+        mapping=aes(x="t_db", y="w"),
+        color=COLOR_PROCESS,
+        size=2.5,
+        arrow={"type": "closed", "length": 12},
     )
     # State points
-    + geom_point(data=df_process, mapping=aes(x="t_db", y="w"), color="#e67e22", size=5, shape=16)
+    + geom_point(data=df_process, mapping=aes(x="t_db", y="w"), color=COLOR_PROCESS, size=5, shape=16)
     # RH labels
-    + geom_text(data=df_rh_labels, mapping=aes(x="t_db", y="w", label="label"), size=9, color="#505050")
+    + geom_text(data=df_rh_labels, mapping=aes(x="t_db", y="w", label="label"), size=8, color="#505050")
     # Wet-bulb labels
-    + geom_text(data=df_wb_labels, mapping=aes(x="t_db", y="w", label="label"), size=8, color="#2ca02c")
+    + geom_text(data=df_wb_labels, mapping=aes(x="t_db", y="w", label="label"), size=7, color=COLOR_WET_BULB)
+    # Enthalpy labels (with units, on left edge)
+    + geom_text(data=df_enth_labels, mapping=aes(x="t_db", y="w", label="label"), size=7, color=COLOR_ENTHALPY, hjust=1)
+    # Volume labels (with units, on right edge)
+    + geom_text(data=df_vol_labels, mapping=aes(x="t_db", y="w", label="label"), size=7, color=COLOR_VOLUME, hjust=0)
     # Comfort zone label
     + geom_text(
-        data=pd.DataFrame({"t_db": [23], "w": [8.0], "label": ["Comfort\nZone"]}),
+        data=pd.DataFrame({"t_db": [23], "w": [7.5], "label": ["Comfort\nZone"]}),
         mapping=aes(x="t_db", y="w", label="label"),
         size=10,
-        color="#306998",
+        color=COLOR_COMFORT,
         fontface="bold",
     )
-    # Process label
+    # Process label (positioned clear of RH labels)
     + geom_text(
-        data=pd.DataFrame({"t_db": [28], "w": [state1_w + 1.0], "label": ["Cooling &\nDehumidification"]}),
+        data=pd.DataFrame({"t_db": [40], "w": [16.0], "label": ["Cooling &\nDehumidification"]}),
         mapping=aes(x="t_db", y="w", label="label"),
         size=9,
-        color="#e67e22",
+        color=COLOR_PROCESS,
         fontface="bold",
+    )
+    # Arrow annotation connecting label to process path
+    + geom_segment(
+        data=pd.DataFrame({"x": [38], "xend": [33], "y": [15.5], "yend": [14.0]}),
+        mapping=aes(x="x", y="y", xend="xend", yend="yend"),
+        color=COLOR_PROCESS,
+        size=0.5,
+        alpha=0.6,
     )
     + scale_color_identity()
     + scale_fill_identity()
@@ -307,13 +341,14 @@ plot = (
     )
     + theme_minimal()
     + theme(
-        plot_title=element_text(size=24, face="bold"),
-        axis_title=element_text(size=20),
-        axis_text=element_text(size=16),
+        plot_title=element_text(size=24, face="bold", color="#1a1a1a"),
+        axis_title=element_text(size=20, color="#333333"),
+        axis_text=element_text(size=16, color="#555555"),
         legend_position="none",
-        panel_grid_major=element_line(color="#e0e0e0", size=0.3),
+        panel_grid_major=element_line(color="#e8e8e8", size=0.3),
         panel_grid_minor=element_blank(),
         plot_background=element_rect(fill="white", color="white"),
+        panel_background=element_rect(fill="#fafafa"),
     )
     + ggsize(1600, 900)
 )
