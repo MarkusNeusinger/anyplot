@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 stereonet-equal-area: Structural Geology Stereonet (Equal-Area Projection)
 Library: plotly 6.6.0 | Python 3.14.3
 Quality: 83/100 | Created: 2026-03-15
@@ -34,7 +34,7 @@ feature_types = ["Bedding"] * 20 + ["Joint Set 1"] * 15 + ["Joint Set 2"] * 12 +
 strikes = strikes % 360
 dips = np.clip(dips, 0, 90)
 
-type_colors = {"Bedding": "#306998", "Joint Set 1": "#E07B39", "Joint Set 2": "#4CAF50", "Fault": "#C62828"}
+type_colors = {"Bedding": "#306998", "Joint Set 1": "#E07B39", "Joint Set 2": "#4CAF50", "Fault": "#8E24AA"}
 
 # Equal-area (Schmidt) projection of poles to planes
 # Pole to plane: trend = dip direction = strike + 90°, plunge = 90° - dip
@@ -171,6 +171,10 @@ for idx in gc_indices:
 # Plot poles by feature type
 for feat_type in ["Bedding", "Joint Set 1", "Joint Set 2", "Fault"]:
     mask = np.array([t == feat_type for t in feature_types])
+    hover_texts = [
+        f"<b>{feat_type}</b><br>Strike: {s:.0f}°<br>Dip: {d:.0f}°"
+        for s, d in zip(strikes[mask], dips[mask], strict=True)
+    ]
     fig.add_trace(
         go.Scatter(
             x=pole_x[mask].tolist(),
@@ -183,6 +187,8 @@ for feat_type in ["Bedding", "Joint Set 1", "Joint Set 2", "Fault"]:
                 "line": {"width": 1.5, "color": "white"},
                 "symbol": "circle",
             },
+            hovertext=hover_texts,
+            hoverinfo="text",
         )
     )
 
@@ -214,7 +220,12 @@ for deg in range(0, 360, 30):
 
 # Style
 fig.update_layout(
-    title={"text": "stereonet-equal-area · plotly · pyplots.ai", "font": {"size": 28}, "x": 0.5, "xanchor": "center"},
+    title={
+        "text": "stereonet-equal-area · plotly · pyplots.ai<br><sup>Lower Hemisphere, Equal-Area (Schmidt) Projection</sup>",
+        "font": {"size": 28},
+        "x": 0.5,
+        "xanchor": "center",
+    },
     xaxis={
         "scaleanchor": "y",
         "scaleratio": 1,
@@ -239,6 +250,27 @@ fig.update_layout(
     },
     plot_bgcolor="white",
     margin={"l": 40, "r": 200, "t": 80, "b": 40},
+)
+
+# Annotation highlighting dominant bedding cluster
+bedding_pole_x = pole_x[:20].mean()
+bedding_pole_y = pole_y[:20].mean()
+fig.add_annotation(
+    x=bedding_pole_x + 0.25,
+    y=bedding_pole_y - 0.15,
+    ax=bedding_pole_x,
+    ay=bedding_pole_y,
+    text="Dominant NE-striking<br>bedding fabric",
+    showarrow=True,
+    arrowhead=2,
+    arrowsize=1,
+    arrowwidth=1.5,
+    arrowcolor="#306998",
+    font={"size": 14, "color": "#306998"},
+    bgcolor="rgba(255,255,255,0.85)",
+    bordercolor="#306998",
+    borderwidth=1,
+    borderpad=4,
 )
 
 # Save
