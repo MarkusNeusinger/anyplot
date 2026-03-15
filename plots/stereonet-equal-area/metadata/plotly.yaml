@@ -1,7 +1,7 @@
 library: plotly
 specification_id: stereonet-equal-area
 created: '2026-03-15T22:59:29Z'
-updated: '2026-03-15T23:03:26Z'
+updated: '2026-03-15T23:12:14Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23121188861
 issue: 4576
@@ -10,43 +10,41 @@ library_version: 6.6.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/stereonet-equal-area/plotly/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/stereonet-equal-area/plotly/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/stereonet-equal-area/plotly/plot.html
-quality_score: 83
+quality_score: 87
 review:
   strengths:
   - Mathematically correct equal-area (Schmidt) projection with proper pole and great
     circle computation
-  - 'All specification features fully implemented: great circles, poles, density contours,
-    tick marks, cardinal labels, legend'
-  - Excellent data quality with realistic geological context and appropriate structural
-    feature variety
-  - Clean, well-structured code with good comments explaining the projection geometry
-  - Thoughtful density contour styling with warm color gradient and appropriate transparency
+  - All specification features fully implemented with perfect spec compliance
+  - Excellent data quality with realistic geological context
+  - 'Addressed all feedback from attempt 1: hover tooltips enabled, colorblind-safe
+    purple replaces red, subtitle added, annotation for data storytelling'
+  - Clean, well-structured code with good comments
   weaknesses:
-  - Hover information disabled on all traces — Plotly key strength of interactivity
-    is completely unused for pole data
-  - Red-green color combination (Fault vs Joint Set 2) may be problematic for colorblind
-    viewers
-  - No subtitle or descriptive annotation indicating this is a Lower Hemisphere Equal-Area
-    Projection
-  - Library mastery is limited — implementation treats Plotly as a static renderer
-    rather than leveraging interactive capabilities
+  - Design could use more refinement to reach publication quality (DE-01 at 5, needs
+    6+ for 90)
+  - Bottom whitespace slightly unbalanced — stereonet could be more vertically centered
+  - Degree labels (15pt) and annotation text (14pt) are on the smaller side relative
+    to other text elements
   image_description: 'The plot displays a structural geology stereonet using Schmidt
-    equal-area (lower-hemisphere) projection. A black primitive circle defines the
-    boundary, with tick marks every 10 degrees around the perimeter and bold cardinal
-    direction labels (N, S, E, W) plus degree labels every 30 degrees. Four feature
-    types are plotted as colored pole points: Bedding (steel blue, ~20 points clustered
-    in the SE quadrant), Joint Set 1 (orange, ~15 points near the E edge), Joint Set
-    2 (green, ~12 points near the S edge), and Fault (red, ~8 points scattered in
-    the SW quadrant). Semi-transparent great circle arcs are drawn in matching colors
-    for a subset of planes. Warm-toned KDE density contours (yellow-orange-red gradient)
-    highlight pole concentration areas, particularly around the Bedding cluster. Subtle
-    dotted grid lines show 30 and 60 degree small circles plus N-S and E-W diameters.
-    A bordered legend titled "Feature Type" sits outside the plot to the upper right.
-    The title reads "stereonet-equal-area · plotly · pyplots.ai" centered at the top.
-    White background with plotly_white template.'
+    equal-area (lower-hemisphere) projection on a white background. A thick black
+    primitive circle defines the boundary with tick marks every 10° (longer ticks
+    every 30°). Bold cardinal direction labels (N, S, E, W) are positioned outside
+    the circle, with degree labels (30°, 60°, 120°, 150°, 210°, 240°, 300°, 330°)
+    in gray. Four feature types are plotted as colored poles: Bedding (dark blue,
+    ~20 points clustered in the center-south area), Joint Set 1 (orange, ~15 points
+    near the E edge), Joint Set 2 (green, ~12 points near the S edge), and Fault (purple,
+    ~8 points scattered in the SW quadrant). Semi-transparent great circle arcs in
+    matching colors are drawn for representative planes. Warm-toned KDE density contours
+    (transparent yellow-orange-red gradient) highlight pole concentration areas. Subtle
+    dotted gray grid lines show 30° and 60° small circles plus N-S and E-W diameters.
+    A bordered annotation with arrow reads "Dominant NE-striking bedding fabric" pointing
+    to the bedding cluster. Legend titled "Feature Type" sits to the upper right outside
+    the circle. Title: "stereonet-equal-area · plotly · pyplots.ai" with subtitle
+    "Lower Hemisphere, Equal-Area (Schmidt) Projection".'
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -54,44 +52,41 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 28, cardinal 22, degrees 15,
-          legend title 20, legend items 18). Degree labels slightly small at 15pt.
+        comment: All font sizes explicitly set. Degree labels (15pt) and annotation
+          (14pt) slightly small.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or elements. All labels well-separated.
+        comment: No overlapping text elements
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Markers size 13 with white edges clearly visible. Some Bedding poles
-          overlap slightly in cluster.
+        comment: Markers visible with white edges. Some inherent clustering overlap
+          in Bedding poles.
       - id: VQ-04
         name: Color Accessibility
-        score: 3
-        max: 4
-        passed: true
-        comment: Red and green used together for Fault and Joint Set 2 may be problematic
-          for colorblind viewers.
-      - id: VQ-05
-        name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Stereonet well-centered with good proportions. Legend positioned
-          outside with adequate margin.
+        comment: Blue, orange, green, purple palette avoids red-green ambiguity
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Well-centered stereonet, some unused whitespace below
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: Cardinal directions and degree labels present but no descriptive
-          subtitle for projection type.
+        comment: Descriptive subtitle and cardinal direction labels
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -99,22 +94,21 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom palette, white marker edges, semi-transparent great circles.
-          Above defaults but not publication-quality.
+        comment: Custom palette, white marker edges, styled annotation. Above defaults
+          but not publication-quality.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Axes hidden, subtle dotted grid, tick mark variation. Good attention
-          to detail.
+        comment: Axes hidden, subtle dotted grid, tick variation, clean background
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Density contours highlight orientations but no annotation guiding
-          viewer to key insights.
+        comment: Annotation highlights dominant bedding fabric. Density contours guide
+          eye to preferred orientations.
     spec_compliance:
       score: 15
       max: 15
@@ -124,27 +118,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Schmidt equal-area lower-hemisphere projection.
+        comment: Correct Schmidt equal-area lower-hemisphere projection
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: great circles, poles, density contours, tick
-          marks, cardinal labels, legend, subtle grid.'
+        comment: 'All features present: great circles, poles, density contours, ticks,
+          legend, grid'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Strike/dip correctly converted to poles and projected via equal-area
-          formula.
+        comment: Strike/dip correctly converted to poles via equal-area formula
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format. Legend labels match feature types.
+        comment: Title format correct, legend labels match feature types
     data_quality:
       score: 15
       max: 15
@@ -154,21 +147,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Four distinct feature types with different orientation patterns showing
-          clustering, spread, and variety.
+        comment: Four distinct feature types with varied orientations showing clustering
+          and spread
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic geological field mapping scenario with plausible structural
-          features.
+        comment: Realistic geological field mapping scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: All values within valid ranges with realistic scatter.
+        comment: All values within valid geological ranges
     code_quality:
       score: 10
       max: 10
@@ -178,55 +170,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear flow with no functions or classes.
+        comment: Linear flow, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set at start.
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All three imports used.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean implementation with well-structured projection math.
+        comment: Clean implementation with clear comments
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with correct dimensions.
+        comment: Correct output format and dimensions
     library_mastery:
-      score: 5
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic go.Figure, go.Scatter, go.Contour usage. Hover tooltips
+          now enabled with HTML formatting.
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Correct go.Figure/go.Scatter/go.Contour usage but stereonet built
-          entirely in Cartesian with manual math.
-      - id: LM-02
-        name: Distinctive Features
-        score: 2
-        max: 5
-        passed: false
-        comment: HTML export used but hover interactivity completely disabled on all
-          traces.
+        comment: Interactive hover with HTML tooltips, HTML export, Contour trace
+          for density
   verdict: REJECTED
 impl_tags:
   dependencies:
   - scipy
   techniques:
   - annotations
+  - hover-tooltips
   - html-export
   - polar-projection
   patterns:
@@ -238,4 +231,3 @@ impl_tags:
   - alpha-blending
   - edge-highlighting
   - grid-styling
-  - custom-colormap
