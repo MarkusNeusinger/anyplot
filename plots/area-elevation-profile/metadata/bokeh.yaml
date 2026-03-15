@@ -1,7 +1,7 @@
 library: bokeh
 specification_id: area-elevation-profile
 created: '2026-03-15T21:51:53Z'
-updated: '2026-03-15T21:57:01Z'
+updated: '2026-03-15T22:06:32Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23120069541
 issue: 4578
@@ -10,78 +10,78 @@ library_version: 3.9.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/area-elevation-profile/bokeh/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/area-elevation-profile/bokeh/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/area-elevation-profile/bokeh/plot.html
-quality_score: 85
+quality_score: 86
 review:
   strengths:
-  - Full spec compliance with all required features (filled area, landmarks, vertical
-    markers, exaggeration note)
-  - Realistic Swiss Alpine trail context with real location names
-  - Clean code structure with proper reproducibility seed
-  - Good visual refinement (subtle grid, removed outline, generous padding)
-  - Dual output (PNG + HTML) leveraging Bokeh strengths
+  - Full spec compliance with all required features including slope-based coloring
+  - HoverTool added for interactive HTML output leveraging Bokeh key strength
+  - Excellent vertical space utilization with y-axis starting near minimum elevation
+  - Realistic Swiss Alpine trail data with 7 named landmarks and compelling terrain
+    variation
+  - Clean well-structured code with all Bokeh idioms
   weaknesses:
-  - Kandersteg label clipped at right canvas edge — needs more right margin or adjusted
-    alignment
-  - Vertical exaggeration note too small (18pt) and too light (#888888) to be readable
-  - Y-axis starts at 0 wasting vertical space when minimum elevation is ~450m
-  - No HoverTool in HTML version — missing key Bokeh distinctive feature
-  - Color palette functional but could be more sophisticated (gradient fill based
-    on slope)
-  image_description: 'The plot shows an alpine trail elevation profile spanning 0–120
-    km. The area below the profile line is filled with a semi-transparent blue (#306998
-    at ~35% alpha), creating a terrain silhouette. A solid blue line traces the profile
-    on top. Seven landmarks are annotated with brown dots (size 18), dashed vertical
-    brown lines, and bold text labels showing name and elevation: Grindelwald (1358
-    m), Kleine Scheidegg (1822 m), Männlichen (1043 m), Lauterbrunnen (1730 m), Mürren
-    (907 m), Schilthorn Pass (863 m), and Kandersteg (1077 m). The title reads "Alpine
-    Trail Profile · area-elevation-profile · bokeh · pyplots.ai". X-axis labeled "Distance
-    (km)", Y-axis labeled "Elevation (m)". A barely visible italic note "Note: Vertical
-    exaggeration ~10×" appears in the upper left. Y-axis ranges from 0 to ~2500 m.
-    X-grid is hidden, Y-grid is subtle. The Kandersteg label at the far right edge
-    is partially cut off.'
+  - Green-to-red slope color palette is not colorblind-safe — needs perceptually uniform
+    alternative
+  - Kandersteg label still slightly tight at right canvas edge
+  - Scatter points overlaid on profile line create visual noise
+  image_description: 'The plot shows an alpine trail elevation profile spanning 0-120
+    km on the x-axis (Distance in km) and ~350-2100 m on the y-axis (Elevation in
+    m). The area below the profile line is filled with semi-transparent blue, creating
+    a terrain silhouette. A darker blue line traces the elevation profile. Overlaid
+    scatter points are colored by slope steepness using a green-to-red gradient (green=flat,
+    amber=moderate, red=steep). Seven landmarks are annotated with dashed brown vertical
+    lines, brown dot markers, and bold dark text labels showing name and elevation:
+    Grindelwald (1138 m), Kleine Scheidegg (1822 m), Männlichen (1043 m), Lauterbrunnen
+    (1730 m), Mürren (907 m), Schilthorn Pass (863 m), and Kandersteg (1077 m). The
+    title reads "Alpine Trail Profile · area-elevation-profile · bokeh · pyplots.ai".
+    An italic note "Note: Vertical exaggeration ~10×" and slope color legend appear
+    in the upper left. X-grid is hidden, y-grid is subtle dashed. The y-axis starts
+    near minimum elevation for efficient vertical space usage.'
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 26
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title 42pt, labels 32pt, ticks 26pt, landmarks
-          22pt). Vertical exaggeration note at 18pt barely readable.
+        comment: 'All font sizes explicitly set: title 42pt, axis labels 32pt, ticks
+          26pt, landmarks 22pt, notes 26pt/22pt'
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Generally clean but Kandersteg label clipped at right edge.
+        comment: Generally clean, Kandersteg label slightly tight at right edge
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Line width 5, marker size 18, area fill clearly visible.
+        comment: Profile line, area fill, and landmarks clear. Slope scatter points
+          dense but visible at size 9 with 480 points
       - id: VQ-04
         name: Color Accessibility
+        score: 2
+        max: 4
+        passed: false
+        comment: Green-to-red slope palette is problematic for deuteranopia/protanopia.
+          Should use colorblind-safe sequential palette
+      - id: VQ-05
+        name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Single-series Python Blue with brown landmarks. No colorblind issues.
-      - id: VQ-05
-        name: Layout & Canvas
-        score: 3
-        max: 4
-        passed: true
-        comment: Good utilization but Y-axis starting at 0 wastes vertical space.
-          Kandersteg label clipped.
+        comment: Good canvas utilization. Y-axis starts near minimum elevation. Generous
+          margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Distance (km) and Elevation (m) — descriptive with units.
+        comment: Distance (km) and Elevation (m) — descriptive with units
     design_excellence:
       score: 13
       max: 20
@@ -91,22 +91,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Cohesive color palette, clean frame, above defaults but not publication-level.
+        comment: Custom color scheme with blue fill, slope-colored profile, brown
+          landmarks. Above defaults but scatter noise reduces polish
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: X-grid hidden, Y-grid subtle, outline removed, generous padding.
+        comment: X-grid hidden, Y-grid subtle dashed, outline removed, toolbar removed,
+          axis colors customized
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Real Swiss Alpine locations create compelling narrative. Landmarks
-          guide viewer through terrain.
+        comment: Real Swiss Alpine trail with named landmarks guides viewer. Slope
+          coloring tells terrain difficulty story
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -114,49 +116,50 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct area/line chart with filled terrain silhouette.
+        comment: Correct area/line chart with filled terrain silhouette
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Filled area, start/end labels, landmark annotations, vertical markers,
-          exaggeration note.
+        comment: Filled area, labeled endpoints, landmark annotations, vertical exaggeration
+          note, slope coloring all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Distance on X, elevation on Y, correctly mapped.
+        comment: Distance on X, elevation on Y, correctly mapped
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: Title includes spec-id, library, pyplots.ai. No legend needed.
+        comment: Title includes required format. Legend hidden for single series with
+          slope annotation text
     data_quality:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Multiple peaks and valleys, 7 landmarks, good terrain variation.
+        comment: Multiple peaks and valleys, varying steepness, 7 landmarks at different
+          elevations
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real Swiss Alpine locations. Neutral geographic topic.
+        comment: Real Swiss Alpine locations. Neutral geographic topic
       - id: DQ-03
         name: Appropriate Scale
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Plausible Alpine elevation range but synthetic elevations don't match
-          real locations.
+        comment: Elevations 450-2050m and 120km distance plausible for Alpine terrain
     code_quality:
       score: 10
       max: 10
@@ -166,33 +169,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure.
+        comment: Clean imports → data → plot → style → save. No functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriate complexity.
+        comment: Clean, Pythonic. Good use of zip with strict, list comprehensions
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png via export_png.
+        comment: Saves as plot.png via export_png. Also exports HTML
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -200,25 +203,29 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses ColumnDataSource, varea, Span, Label — idiomatic Bokeh.
+        comment: Uses ColumnDataSource, varea, scatter with linear_cmap, HoverTool,
+          Label, Span — idiomatic Bokeh patterns
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: varea is Bokeh-specific, HTML export is a strength. Missing HoverTool.
+        comment: HoverTool with vline mode, linear_cmap, varea, dual PNG+HTML export
+          — distinctively Bokeh capabilities
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
+  - hover-tooltips
   - html-export
+  - layer-composition
   patterns:
   - data-generation
   - columndatasource
   - iteration-over-groups
   dataprep: []
   styling:
+  - custom-colormap
   - alpha-blending
   - grid-styling
-  - edge-highlighting
