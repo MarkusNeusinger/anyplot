@@ -1,7 +1,7 @@
 library: pygal
 specification_id: stereonet-equal-area
 created: '2026-03-15T22:58:45Z'
-updated: '2026-03-15T23:17:58Z'
+updated: '2026-03-15T23:27:35Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23121188964
 issue: 4576
@@ -10,107 +10,114 @@ library_version: 3.1.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/stereonet-equal-area/pygal/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/stereonet-equal-area/pygal/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/stereonet-equal-area/pygal/plot.html
-quality_score: 68
+quality_score: 70
 review:
   strengths:
-  - Correct equal-area projection math with proper Schmidt net formulas
-  - Clean code structure with well-documented projection computations
-  - Good geological data with three distinct feature types showing realistic orientations
-  - Proper use of pygal allow_interruptions for disconnected great circle segments
-  - Dual output (PNG + interactive HTML)
+  - Correct equal-area projection math with proper Schmidt net formulas for great
+    circles and poles
+  - Colorblind-safe blue-red-amber palette with good contrast
+  - Realistic geological data with three distinct feature types showing characteristic
+    orientations
+  - Creative workarounds for pygal limitations (N label as line segments, allow_interruptions
+    for disconnected segments)
+  - Dual PNG + HTML output leveraging pygal native capabilities
   weaknesses:
-  - Missing Kamb density contours (key spec requirement)
-  - Compass direction labels (N/E/S/W) not rendered as readable text
-  - Legend naming inconsistency (Faults vs Fault)
-  - No equal-area net grid lines as spec requires
-  - Canvas underutilized with too much empty space
+  - Density contours produce scattered disconnected line segments rather than smooth
+    contour shapes
+  - Two unnamed legend entries (grid and structural elements) appear as orphan colored
+    squares
+  - Great circle rendering may extend slightly beyond the primitive circle boundary
+  - No visual hierarchy or storytelling emphasis to guide viewer interpretation
   image_description: 'The plot shows an equal-area (Schmidt net) stereonet rendered
     as a pygal XY chart on a white 3600x3600 canvas. A gray primitive circle forms
-    the outer boundary with tick marks every 10 degrees around the perimeter. Very
-    faint compass labels (N, E, S, W) appear at the cardinal positions but are barely
-    readable due to the light gray color. Three geological feature types are plotted:
-    Bedding planes (blue great circles and poles), Faults (orange/red great circles
-    and poles), and Joints (purple great circles and poles). Great circles arc across
-    the stereonet showing plane orientations, while poles appear as colored dots.
-    Bedding poles cluster in the SW quadrant (low dip, NE strike), Fault poles cluster
-    in the center-south area, and Joint poles cluster in the NE-E area (sub-vertical,
-    N-S strike). A legend at the bottom lists all six series in three columns. The
-    title reads "stereonet-equal-area · pygal · pyplots.ai" at the top. No density
-    contours are present.'
+    the outer boundary with tick marks every 10 degrees around the perimeter. An "N"
+    label is drawn at the top using connected line segments (creative workaround for
+    pygal''s lack of text annotations). Three geological feature types are plotted
+    with a colorblind-safe palette: Bedding planes (blue great circles arcing across
+    the stereonet with blue pole dots clustered in the center area), Faults (red/salmon
+    great circles with red pole dots in the SW quadrant), and Joints (amber/gold great
+    circles with gold pole dots clustered in the upper-right/NE area). Dashed gray
+    density contour lines are scattered across the projection attempting to show pole
+    concentration zones. Subtle dashed grid lines show the equal-area net with small
+    circles at 30 and 60 degree dip intervals and diametral lines every 30 degrees.
+    A legend at the bottom lists all series in 4 columns including Bedding (planes),
+    Faults (planes), Joints (planes), corresponding poles, and Density contours —
+    though two unnamed series (grid and structural elements) also appear as small
+    colored squares. The title "stereonet-equal-area · pygal · pyplots.ai" appears
+    at the top.'
   criteria_checklist:
     visual_quality:
-      score: 20
+      score: 22
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Title and legend explicitly sized and readable, but compass direction
-          labels are tiny cross marks rather than readable text
+        comment: Title (56pt) and legend (36pt) explicitly sized and readable. N label
+          drawn as line segments is creative but small.
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: No text overlap; great circle convergence in center is inherent to
-          stereonets
+        comment: Great circle overlap inherent to stereonets. Two unnamed legend entries
+          create visual clutter.
       - id: VQ-03
         name: Element Visibility
         score: 4
         max: 6
         passed: true
-        comment: Pole dots clearly visible; great circle lines somewhat thin at 1.5px
-          stroke width
+        comment: Poles visible at dots_size=14, great circles at stroke 2.5. Density
+          contours scattered and don't form coherent shapes.
       - id: VQ-04
         name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue-red-amber palette is colorblind-safe with good contrast.
+      - id: VQ-05
+        name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Blue-orange-green palette acceptable but blue-green could be problematic
-          for some colorblind viewers
-      - id: VQ-05
-        name: Layout & Canvas
-        score: 2
-        max: 4
-        passed: true
-        comment: Stereonet reasonably centered but canvas underutilized with large
-          empty areas
+        comment: Square format appropriate for stereonet, well-centered. Some wasted
+          space in bottom legend area.
       - id: VQ-06
         name: Axis Labels & Title
         score: 1
         max: 2
         passed: true
-        comment: Title in correct format; compass directions not rendered as readable
-          text
+        comment: Title in correct format. N label present but E/S/W compass labels
+          missing.
     design_excellence:
-      score: 9
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: true
-        comment: Custom palette and clean background; looks like a well-configured
-          default
+        comment: Custom palette with harmonious blue-red-amber colors, clean white
+          background. Not quite publication-ready due to contour quality.
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Axes hidden, tick marks present, but compass labels and visual weight
-          could be better balanced
+        comment: Axes hidden, grid subtle with dashing, tick marks present. Empty
+          legend entries and cluttered impression detract.
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Three feature types create natural clustering but no density contours
-          to guide interpretation
+        comment: Three feature types create natural clustering but no visual hierarchy
+          guides the viewer.
     spec_compliance:
-      score: 10
+      score: 11
       max: 15
       items:
       - id: SC-01
@@ -118,28 +125,29 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct equal-area stereonet with great circles and poles; missing
-          net grid lines
+        comment: Correct equal-area stereonet with great circles and poles. Some rendering
+          extends beyond primitive circle.
       - id: SC-02
         name: Required Features
-        score: 2
+        score: 3
         max: 4
-        passed: false
-        comment: Missing Kamb density contours, degree tick labels, and readable N
-          label
+        passed: true
+        comment: Great circles, poles, color-coding, N label, tick marks, grid lines
+          present. Density contours produce scattered segments.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
         comment: Strike/dip correctly mapped using Schmidt net equal-area projection
+          formulas.
       - id: SC-04
         name: Title & Legend
         score: 1
         max: 3
         passed: false
-        comment: Title correct; legend inconsistent (Faults vs Fault) and six entries
-          create clutter
+        comment: Title format correct. Two unnamed series appear as orphan colored
+          squares in legend.
     data_quality:
       score: 14
       max: 15
@@ -149,55 +157,57 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Three feature types with distinct orientations; missing density contour
-          demonstration
+        comment: 'Three distinct feature types with different orientations: shallow
+          bedding, steep faults, sub-vertical joints.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Geological field measurements - realistic, neutral scientific scenario
+        comment: Geological field measurements - realistic, neutral scientific scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Strike and dip values are geologically realistic with appropriate
-          sample sizes
+        comment: Strike/dip values geologically realistic with appropriate sample
+          sizes.
     code_quality:
-      score: 10
+      score: 8
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: Linear flow with appropriate loop over feature sets
+        comment: Linear flow but manual contour extraction adds significant complexity
+          (~50 lines).
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: numpy, pygal, Style - all used.
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: Well-structured with clear comments explaining projection math
+        comment: Manual contour extraction necessarily complex but sorting-by-angle
+          produces poor shapes. N label as line segments is creative but verbose.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png using current pygal API
+        comment: Saves as plot.png and plot.html using current pygal API.
     library_mastery:
       score: 5
       max: 10
@@ -207,15 +217,16 @@ review:
         score: 3
         max: 5
         passed: true
-        comment: Proper use of pygal.XY with allow_interruptions and Style configuration
+        comment: Proper pygal.XY with allow_interruptions, custom Style, stroke_style
+          per series. Core visualization is manual XY math.
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Uses allow_interruptions and dual output but core visualization is
-          manual XY math
-  verdict: REJECTED
+        comment: Uses allow_interruptions, dual output (PNG + HTML), per-series stroke_style.
+          Heavy manual computation overshadows library features.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -225,7 +236,9 @@ impl_tags:
   patterns:
   - data-generation
   - iteration-over-groups
-  dataprep: []
+  - matrix-construction
+  dataprep:
+  - kde
   styling:
   - minimal-chrome
-  - alpha-blending
+  - grid-styling

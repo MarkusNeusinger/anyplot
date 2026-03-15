@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 stereonet-equal-area: Structural Geology Stereonet (Equal-Area Projection)
 Library: pygal 3.1.0 | Python 3.14.3
-Quality: 68/100 | Created: 2026-03-15
+Quality: 70/100 | Created: 2026-03-15
 """
 
 import numpy as np
