@@ -1,7 +1,7 @@
 library: pygal
 specification_id: area-elevation-profile
 created: '2026-03-15T21:50:48Z'
-updated: '2026-03-15T22:21:31Z'
+updated: '2026-03-15T22:30:45Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23120069560
 issue: 4578
@@ -13,31 +13,33 @@ preview_html: https://storage.googleapis.com/pyplots-images/plots/area-elevation
 quality_score: 86
 review:
   strengths:
-  - Excellent spec compliance with all required features implemented (filled silhouette,
-    landmark annotations, vertical lines, exaggeration note)
+  - Full spec compliance with all required features (filled silhouette, landmark annotations,
+    vertical lines, exaggeration note)
   - Outstanding data quality using real Swiss Alpine locations with realistic elevations
-  - Strong design with color-coded landmark types adding semantic depth
-  - Clean code structure with well-organized SVG post-processing
-  - Interactive HTML version alongside PNG output showcases pygal strengths
+    and terrain variation
+  - Strong design with color-coded landmark types adding semantic depth beyond simple
+    markers
+  - Interactive HTML output alongside PNG showcases pygal native tooltip capabilities
+  - Clean, reproducible code with well-organized SVG post-processing
   weaknesses:
-  - Vertical exaggeration note is too faint (small font + light gray color) to be
-    easily noticed
-  - Brown/orange distinction for landmark types could be more pronounced
-  - SVG post-processing for annotations adds code complexity
+  - Vertical exaggeration note is somewhat faint (light gray italic at font-size 28)
+  - Landmark type color differentiation could be more pronounced in the rendered PNG
+  - Y-axis range extends above the data peak, leaving some unused canvas space
   image_description: 'The plot displays a terrain elevation profile of the Bernese
-    Oberland Traverse, rendered as a filled area chart. The x-axis shows "Distance
-    (km)" from 0 to ~128, and the y-axis shows "Elevation (m)" ranging from ~500 to
-    2,200. The terrain silhouette is filled in a muted steel-blue with subtle transparency.
-    Seven landmarks are annotated with orange dots, vertical dashed lines extending
-    to the plot floor, bold colored name labels (color-coded by type: blue for towns,
-    orange for passes, red for summit, green for valley, brown for hut), and gray
-    elevation values below each name. Landmarks from left to right: Grindelwald (1160
-    m), Kleine Scheidegg (1544 m), Lauterbrunnen (774 m), Mürren (2009 m), Blüemlisalp
-    Hut (1365 m), Hohtürli Pass (1580 m), and Kandersteg (889 m). The title reads
-    "Bernese Oberland Traverse · area-elevation-profile · pygal · pyplots.ai". A legend
-    at the bottom shows "Elevation Profile" (blue) and "Landmarks" (orange). An italic
-    note in the bottom-right reads "Vertical exaggeration ~10× for terrain visibility".
-    Horizontal dashed grid lines appear on y-axis only. The background is clean white.'
+    Oberland Traverse, rendered as a filled area chart using pygal''s XY type. The
+    x-axis shows "Distance (km)" from 0 to 120 km, and the y-axis shows "Elevation
+    (m)" ranging from ~500 to 2,200 m. The terrain silhouette is filled in a muted
+    steel-blue color with subtle transparency (opacity 0.65). Seven landmarks are
+    annotated with orange dots, vertical dashed lines extending to the plot floor,
+    bold colored name labels (color-coded by type: blue for towns, orange for passes,
+    red for summit, green for valley, purple for hut), and gray elevation values beneath
+    each name. Landmarks from left to right: Grindelwald (1100 m), Kleine Scheidegg
+    (1544 m), Lauterbrunnen (774 m), Mürren (2009 m), Blüemlisalp Hut (1365 m), Hohtürli
+    Pass (1580 m), and Kandersteg (889 m). The title reads "Bernese Oberland Traverse
+    · area-elevation-profile · pygal · pyplots.ai". A legend at the bottom shows "Elevation
+    Profile" (blue square) and "Landmarks" (orange square). An italic note in the
+    bottom-right reads "Vertical exaggeration ~10× for terrain visibility". Horizontal
+    dashed grid lines appear on y-axis only. Background is clean white.'
   criteria_checklist:
     visual_quality:
       score: 25
@@ -49,35 +51,36 @@ review:
         max: 8
         passed: true
         comment: All font sizes explicitly set (title 48, labels 36, major labels
-          34, legend 30, annotations 30/26). Vertical exaggeration note slightly faint.
+          34, legend 30, annotation names 32, elevation values 26). Vertical exaggeration
+          note slightly faint.
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Well-staggered landmark labels with custom y-offsets. Minor proximity
-          but no actual text collision.
+        comment: Well-staggered landmark labels with custom y-offsets. No actual text
+          collision. Minor proximity between some labels.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
         comment: Filled area clearly visible, orange dots (size 16) stand out. Dashed
-          vertical lines appropriately subtle at opacity 0.45.
+          vertical lines appropriately subtle at opacity 0.55.
       - id: VQ-04
         name: Color Accessibility
         score: 3
         max: 4
         passed: true
-        comment: Good contrast between blue fill and orange dots. Brown/orange landmark
-          type colors are close.
+        comment: Good contrast between blue fill and orange dots. Landmark type color
+          differentiation is present but some hues are close in rendered PNG.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Plot fills canvas well with appropriate margins. Legend positioned
-          cleanly at bottom.
+        comment: Plot fills canvas well with appropriate margins. Y-axis extends to
+          2200 m but peak is ~2009 m, leaving some unused space.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -218,7 +221,7 @@ review:
         passed: true
         comment: 'Leverages pygal-distinctive features: interactive HTML with native
           tooltips, cubic interpolation, fill mode, fancy tooltips, value formatters.'
-  verdict: REJECTED
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - cairosvg
