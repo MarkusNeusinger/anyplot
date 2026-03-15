@@ -1,7 +1,7 @@
 library: bokeh
 specification_id: psychrometric-basic
 created: '2026-03-15T21:52:32Z'
-updated: '2026-03-15T21:57:47Z'
+updated: '2026-03-15T22:07:38Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23120046458
 issue: 4583
@@ -10,38 +10,38 @@ library_version: 3.9.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/psychrometric-basic/bokeh/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/psychrometric-basic/bokeh/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/psychrometric-basic/bokeh/plot.html
-quality_score: 76
+quality_score: 83
 review:
   strengths:
-  - Perfect spec compliance with all required property lines, comfort zone, and HVAC
-    process path
-  - Excellent data quality with ASHRAE-based psychrometric calculations at standard
-    atmosphere
-  - Good color differentiation between property types (blue RH, orange wet-bulb, brown
-    enthalpy, green specific volume)
-  - Comfort zone correctly follows RH curves rather than being a simple rectangle
-  - HVAC process path with custom arrowhead creates an effective narrative element
+  - Correct psychrometric calculations using ASHRAE saturation pressure formulas
+  - HVAC process path with arrow creates effective data storytelling and clear focal
+    point
+  - Per-renderer HoverTool with property-specific tooltips is excellent Bokeh usage
+  - Well-differentiated color scheme by property type with intentional visual hierarchy
+  - Full spec compliance — all required features present and correctly implemented
+  - Deterministic scientifically accurate data generation
   weaknesses:
-  - Low RH curves (10%, 20%) nearly invisible due to very light colors against light
-    background
-  - Label overlapping in dense areas (enthalpy labels at top, RH labels in upper right)
-  - On-chart labels too small (10-12pt) for 4800x2700 canvas
-  - No use of ColumnDataSource or HoverTool — misses bokeh core interactive strengths
-  - Helper functions violate KISS flat-script structure
-  image_description: The plot displays a psychrometric chart with dry-bulb temperature
-    (°C) on the x-axis (-10 to 50) and humidity ratio (g/kg) on the y-axis (0 to 30).
-    Blue curved lines represent relative humidity from 10% to 100%, with the 100%
-    saturation curve drawn thicker. Orange dashed diagonal lines show wet-bulb temperatures
-    (0°C to 35°C). Brown dotted diagonal lines indicate enthalpy values (10 to 100
-    kJ/kg). Green dash-dot lines represent specific volume (0.78 to 0.92 m³/kg). A
-    light blue shaded polygon marks the "Comfort Zone" (~20-26°C, 30-60% RH). A red
-    arrow traces an HVAC cooling/dehumidification process from "Outdoor Air (35°C,
-    60% RH)" to "Supply Air (15°C, 90% RH)" with red dot markers at each state point.
-    The background is light gray (#fafafa) with subtle grid lines. Title reads "psychrometric-basic
-    · bokeh · pyplots.ai" at top left.
+  - On-chart annotation labels (enthalpy, specific volume, wet-bulb) are too small
+    (13-14pt) for the 4800x2700 canvas
+  - Enthalpy and specific volume lines are too faint at alpha=0.5
+  - RH percentage labels cluster in the upper-right causing visual clutter
+  - Brown (enthalpy) and orange (wet-bulb) are somewhat close in hue
+  image_description: The plot displays a psychrometric chart on a light gray background
+    (#fafafa) with "psychrometric-basic · bokeh · pyplots.ai" as the title. The x-axis
+    shows "Dry-Bulb Temperature (°C)" from -10 to 50, and the y-axis shows "Humidity
+    Ratio (g/kg)" from 0 to 30. Blue curved lines represent relative humidity from
+    10% to 100% in 10% increments, with the 100% saturation curve drawn thicker and
+    darker. Orange dashed diagonal lines show wet-bulb temperatures (0°C to 35°C),
+    brown dotted diagonal lines show enthalpy (10 to 100 kJ/kg), and green dash-dot
+    lines show specific volume (0.78 to 0.92 m³/kg). A light blue shaded polygon marks
+    the "Comfort Zone" (20-26°C, 30-60% RH). A red line with arrowhead traces an HVAC
+    cooling/dehumidification process from "Outdoor Air (35°C, 60% RH)" to "Supply
+    Air (15°C, 90% RH)", with red circular markers at both state points. All property
+    lines have direct labels. Grid lines are subtle. Bokeh toolbar icons appear at
+    top-right.
   criteria_checklist:
     visual_quality:
-      score: 21
+      score: 22
       max: 30
       items:
       - id: VQ-01
@@ -49,43 +49,45 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Title/axis labels explicitly sized. On-chart labels (10-12pt) too
-          small for 4800x2700.
+        comment: Font sizes explicitly set for title/axes/ticks, but on-chart annotation
+          labels (enthalpy 13pt, specific volume 13pt, wet-bulb 14pt) are too small
+          for 4800x2700 canvas
       - id: VQ-02
         name: No Overlap
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Enthalpy labels overlap at top-left. RH labels crowd in upper-right.
-          Wet-bulb labels overlap near saturation curve.
+        passed: true
+        comment: RH percentage labels cluster in upper-right area. Enthalpy and specific
+          volume labels near bottom-right are in close proximity
       - id: VQ-03
         name: Element Visibility
         score: 4
         max: 6
         passed: true
-        comment: Most lines visible but 10% and 20% RH curves nearly invisible against
-          light background.
+        comment: Enthalpy lines (alpha=0.5) and specific volume lines (alpha=0.5)
+          are quite faint. Saturation and RH curves well-visible
       - id: VQ-04
         name: Color Accessibility
         score: 3
         max: 4
         passed: true
-        comment: Distinct hues per property type. Lightest RH curves lack contrast.
+        comment: Good hue differentiation (blue, orange, brown, green, red). Brown
+          and orange somewhat close
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good canvas utilization with minor wasted space at edges.
+        comment: Chart fills canvas well. Slight wasted space at top-left
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: Dry-Bulb Temperature (°C), Humidity
-          Ratio (g/kg).'
+        comment: 'Descriptive axis labels with units: Dry-Bulb Temperature (°C), Humidity
+          Ratio (g/kg)'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -93,22 +95,23 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Graduated blue palette for RH curves, distinct color coding per property
-          type. Above defaults.
+        comment: Custom color palette with intentional hierarchy by property type.
+          Clean background, removed outline. Above defaults but not publication-ready
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Subtle grid (alpha 0.2), outline removed, custom background. Some
-          refinement visible.
+        comment: Subtle grid (alpha=0.2), custom background, outline removed. Saturation
+          curve emphasized with thicker line. Good dash pattern differentiation
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: HVAC process path with labeled state points creates focal point and
-          narrative. Comfort zone adds context.
+        comment: HVAC process path with arrow and labeled state points creates clear
+          focal point. Comfort zone provides practical context. Color hierarchy guides
+          viewer
     spec_compliance:
       score: 15
       max: 15
@@ -118,27 +121,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct psychrometric chart with all property line types.
+        comment: Correct psychrometric chart with all required property curves
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
         comment: 'All features present: RH curves, wet-bulb, enthalpy, specific volume,
-          comfort zone, HVAC process path.'
+          comfort zone, HVAC process path with arrow, direct labels'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=dry-bulb temp, Y=humidity ratio. Correct range -10 to 50°C.
+        comment: X=dry-bulb temperature, Y=humidity ratio, correctly mapped with standard
+          ranges
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. On-chart labels appropriate for this chart
-          type.
+        comment: Correct title format. No legend needed — lines labeled directly as
+          spec requires
     data_quality:
       score: 15
       max: 15
@@ -148,82 +152,86 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All psychrometric properties shown with comfort zone and process
-          path.
+        comment: Shows all psychrometric properties with comfort zone and realistic
+          HVAC process path
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real HVAC scenario using ASHRAE formulas at standard atmosphere.
+        comment: HVAC cooling/dehumidification scenario is realistic engineering use
+          case. Standard atmospheric pressure and ASHRAE formulas
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Standard temperature and humidity ratio ranges with realistic state
-          points.
+        comment: Standard psychrometric chart ranges. Values computed from established
+          thermodynamic equations
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 1
+        score: 3
         max: 3
-        passed: false
-        comment: Five helper functions defined instead of flat script structure.
+        passed: true
+        comment: Linear flow with no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic — mathematical formulas with no randomness.
+        comment: All data deterministically computed from thermodynamic equations
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-organized, appropriate complexity for psychrometric domain.
+        comment: Well-organized code. Arrowhead calculation slightly verbose but clear
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png via export_png. Current API.
+        comment: Saves as plot.png via export_png. Current Bokeh API
     library_mastery:
-      score: 5
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Uses bokeh figure, line, scatter, patch, Label. Does not use ColumnDataSource.
+        comment: Good use of ColumnDataSource, Label, figure. Could leverage more
+          Bokeh-specific patterns
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 4
         max: 5
-        passed: false
-        comment: HTML export is a bokeh feature. Missing HoverTool for interactive
-          property exploration.
+        passed: true
+        comment: Per-renderer HoverTool with property-specific tooltips. Interactive
+          tools. HTML export with CDN
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - patches
+  - hover-tooltips
   - html-export
+  - patches
   patterns:
   - data-generation
   - iteration-over-groups
+  - columndatasource
   dataprep: []
   styling:
   - alpha-blending
