@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 pp-basic: Probability-Probability (P-P) Plot
 Library: altair 6.0.0 | Python 3.14.3
-Quality: 89/100 | Created: 2026-03-15
+Quality: 93/100 | Created: 2026-03-15
 """
 
 from statistics import NormalDist
