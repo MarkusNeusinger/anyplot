@@ -1,7 +1,7 @@
 library: highcharts
 specification_id: pp-basic
 created: '2026-03-15T20:19:49Z'
-updated: '2026-03-15T20:41:25Z'
+updated: '2026-03-15T20:54:41Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23118400170
 issue: 4587
@@ -10,37 +10,37 @@ library_version: unknown
 preview_url: https://storage.googleapis.com/pyplots-images/plots/pp-basic/highcharts/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/pp-basic/highcharts/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/pp-basic/highcharts/plot.html
-quality_score: 89
+quality_score: 90
 review:
   strengths:
-  - Deviation-based color gradient from steel blue to red creates intuitive visual
+  - Deviation-based color gradient from steel blue to gold creates intuitive visual
     storytelling
-  - Max deviation point highlighted with diamond marker and data label is an excellent
+  - Max deviation point highlighted with diamond marker and data label provides clear
     focal point
   - KS test statistic in subtitle adds statistical rigor and analytical value
   - 'Comprehensive Highcharts feature usage: plotBands, zoom/pan, per-point styling,
-    rich tooltips'
-  - Clean well-structured code with proper reproducibility seed
-  - Square aspect ratio correctly chosen per spec requirements
+    rich HTML tooltips'
+  - Clean well-structured code with proper reproducibility and appropriate complexity
+  - Square aspect ratio correctly chosen per spec with polished typography hierarchy
   weaknesses:
-  - Green reference line + red deviation points may challenge red-green colorblind
-    viewers
-  - Central Region plotBand lacks clear statistical justification
-  - Some point clustering in center region reduces individual point distinguishability
+  - Green reference line paired with red diamond marker creates mild red-green colorblind
+    concern
+  - LineSeries imported from area module rather than line module
   image_description: 'The plot displays a P-P (Probability-Probability) plot on a
     square canvas with a light gray (#fafbfc) background. The title "pp-basic · highcharts
     · pyplots.ai" appears in bold dark text at the top, with a subtitle showing "Mixed
     Normal + Exponential vs. Normal Reference — KS Statistic = 0.064 (p = 0.3729)".
     The x-axis is labeled "Theoretical CDF (Normal)" and the y-axis "Empirical CDF",
-    both ranging from 0 to 1 with tick intervals of 0.2. A green dashed diagonal line
-    represents the perfect fit (y=x). 200 scatter points are plotted with a deviation-based
-    color gradient: points near the diagonal are steel blue/gray with lower opacity,
-    while points farther from the diagonal transition to red with higher opacity.
-    A diamond-shaped marker in red highlights the maximum deviation point near (0.55,
-    0.68) with the label "Max Δ = 0.063". A subtle light blue vertical band spans
-    x = 0.3 to 0.7 labeled "Central Region". The legend in the upper right corner
-    shows "Perfect Fit (y=x)" and "P-P Points (N=200)" with a white semi-transparent
-    background and rounded border.'
+    both ranging from 0 to 1 with tick intervals of 0.2. A dashed diagonal line represents
+    the perfect fit (y=x). 200 scatter points are plotted with a deviation-based color
+    gradient: points near the diagonal are steel blue/gray with lower opacity, while
+    points farther from the diagonal transition to gold/orange with higher opacity.
+    A diamond-shaped marker highlights the maximum deviation point near (0.55, 0.68)
+    with the label "Max Δ = 0.061". Two faint gray diagonal lines flank the reference
+    line representing 95% KS bounds. The legend in the upper right corner shows "Perfect
+    Fit (y=x)", "95% KS Bounds", and "P-P Points (N=200)" with a white semi-transparent
+    background and rounded border. Subtle dotted gridlines and a clean plot border
+    complete the refined appearance.'
   criteria_checklist:
     visual_quality:
       score: 28
@@ -52,26 +52,28 @@ review:
         max: 8
         passed: true
         comment: 'All font sizes explicitly set: title 64px, subtitle 34px, axis titles
-          44px, tick labels 34px, legend 32px'
+          44px, tick labels 34px, legend 32px, data labels 28px'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: No overlapping text elements; legend positioned away from data
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Good marker sizing but some density clustering in center region
+        comment: Good marker sizing (radius 12) for 200 points; some clustering in
+          center region
       - id: VQ-04
         name: Color Accessibility
         score: 3
         max: 4
         passed: true
-        comment: Blue-to-red gradient ok but green reference line + red points problematic
-          for red-green colorblind
+        comment: Blue-to-gold gradient is colorblind-friendly; green reference line
+          + red diamond marker is mild red-green concern mitigated by dash pattern
+          and shape
       - id: VQ-05
         name: Layout & Canvas
         score: 4
@@ -85,7 +87,7 @@ review:
         passed: true
         comment: 'Descriptive labels: Theoretical CDF (Normal) and Empirical CDF'
     design_excellence:
-      score: 15
+      score: 16
       max: 20
       items:
       - id: DE-01
@@ -94,21 +96,21 @@ review:
         max: 8
         passed: true
         comment: Custom deviation color gradient, professional typography hierarchy,
-          styled background and legend
+          styled background and legend with rounded border
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: Dotted grid at low opacity, custom plot border, generous spacing,
-          clean legend styling
+        comment: Dotted grid at low opacity (0.06), custom plot border, generous spacing,
+          polished legend styling
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Color gradient guides eye to deviations, max deviation diamond is
-          clear focal point, Central Region band somewhat arbitrary
+        comment: Color gradient reveals deviation patterns, max deviation diamond
+          is clear focal point, KS statistic adds analytical context
     spec_compliance:
       score: 15
       max: 15
@@ -147,15 +149,14 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Mixed distribution shows clear deviation pattern, S-shaped deviation
-          visible
+        comment: Mixed distribution shows clear S-shaped deviation pattern from diagonal
       - id: DQ-02
         name: Realistic Context
         score: 4
         max: 5
         passed: true
-        comment: Statistical context with KS test, synthetic but plausible goodness-of-fit
-          scenario
+        comment: Goodness-of-fit scenario with KS test is plausible for quality control/regression
+          diagnostics
       - id: DQ-03
         name: Appropriate Scale
         score: 4
@@ -171,7 +172,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports-data-plot-save flow, no functions or classes
+        comment: 'Clean sequential flow: imports, data, plot, save'
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -205,16 +206,15 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good Highcharts API usage, LineSeries import from area module slightly
-          non-idiomatic
+        comment: Good Highcharts API usage; LineSeries from area module slightly non-idiomatic
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
         comment: plotBands, zoomType with panning, per-point markers, data labels,
-          rich HTML tooltips
-  verdict: REJECTED
+          rich HTML tooltips, resetZoomButton
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - scipy

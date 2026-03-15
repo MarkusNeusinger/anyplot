@@ -1,7 +1,7 @@
 """ pyplots.ai
 pp-basic: Probability-Probability (P-P) Plot
 Library: highcharts unknown | Python 3.14.3
-Quality: 89/100 | Created: 2026-03-15
+Quality: 90/100 | Created: 2026-03-15
 """
 
 import tempfile
