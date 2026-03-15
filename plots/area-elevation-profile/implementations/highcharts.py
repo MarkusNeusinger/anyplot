@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 area-elevation-profile: Terrain Elevation Profile Along Transect
 Library: highcharts unknown | Python 3.14.3
-Quality: 87/100 | Created: 2026-03-15
+Quality: 89/100 | Created: 2026-03-15
 """
 
 import tempfile
