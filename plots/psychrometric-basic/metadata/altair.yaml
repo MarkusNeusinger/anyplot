@@ -1,7 +1,7 @@
 library: altair
 specification_id: psychrometric-basic
 created: '2026-03-15T21:55:16Z'
-updated: '2026-03-15T21:59:34Z'
+updated: '2026-03-15T22:11:25Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23120046544
 issue: 4583
@@ -13,37 +13,36 @@ preview_html: https://storage.googleapis.com/pyplots-images/plots/psychrometric-
 quality_score: 82
 review:
   strengths:
-  - Complete spec compliance — all required psychrometric property lines, comfort
-    zone, and HVAC process path are present
-  - Physically accurate calculations using ASHRAE formulas at standard atmospheric
-    pressure
-  - Good visual hierarchy with prominent saturation curve and process path against
-    subtle background lines
-  - Clear data storytelling through the cooling/dehumidification process path
-  - Proper direct labeling on the chart as specified
+  - Comprehensive psychrometric data from proper ASHRAE formulas at standard atmosphere
+  - 'All spec features present: RH curves, wet-bulb, enthalpy, specific volume, comfort
+    zone, HVAC process path'
+  - Excellent visual hierarchy with prominent saturation curve, subtle secondary lines,
+    and bold process path
+  - Good use of direct labeling throughout the chart instead of a legend
+  - Effective opacity layering to manage visual complexity
   weaknesses:
-  - Red-green color combination for wet-bulb and enthalpy lines is not colorblind-safe
-  - Some label crowding near the upper-left (enthalpy) and upper-right (RH percentages)
-    regions
-  - ASHRAE saturation pressure formula is duplicated many times, making the code unnecessarily
-    verbose
-  - Specific volume lines are too faint and could benefit from slightly higher opacity
-  image_description: The plot displays a psychrometric chart with dry-bulb temperature
-    (°C) on the x-axis ranging from -10 to 50, and humidity ratio (g/kg) on the y-axis
-    from 0 to 30. The saturation curve (100% RH) is drawn as a prominent dark blue
-    line forming the upper boundary of the chart. Other relative humidity curves (10%–90%)
-    appear as lighter blue lines with percentage labels positioned along the right
-    side. Wet-bulb temperature lines are shown as red dashed diagonal lines labeled
-    0°C through 30°C near the saturation curve. Green dashed diagonal enthalpy lines
-    are labeled with values (70–110 kJ/kg) along the upper-left edge. Purple dotted
-    near-vertical specific volume lines are visible. A translucent green shaded rectangle
-    marks the comfort zone (~20–26°C). A red HVAC process path with two labeled endpoints
-    connects "Outdoor Air (35°C, 50% RH)" to "Supply Air (13°C, 100% RH)". Title reads
-    "psychrometric-basic · altair · pyplots.ai" with subtitle "Standard Atmosphere
-    (101.325 kPa) · HVAC Air Properties".
+  - Red-green color pairing for wet-bulb and enthalpy lines is not colorblind-safe
+  - Label overlap in dense areas where wet-bulb and enthalpy labels converge near
+    saturation curve
+  - Does not leverage Altair interactive capabilities (tooltips, selections)
+  - Repetitive ASHRAE saturation pressure formula duplicated ~6 times
+  image_description: The plot displays a psychrometric chart with "psychrometric-basic
+    · altair · pyplots.ai" as the title and "Standard Atmosphere (101.325 kPa) · HVAC
+    Air Properties" as the subtitle. The x-axis shows "Dry-Bulb Temperature (°C)"
+    from -10 to 50, and the y-axis shows "Humidity Ratio (g/kg)" from 0 to 30. Blue
+    curves represent relative humidity lines from 10% to 100%, with the saturation
+    curve (100% RH) drawn as a thick dark blue line forming the upper boundary. RH
+    percentage labels appear in blue along the right side of curves. Red dashed lines
+    show wet-bulb temperature (0°C to 30°C) running diagonally with red labels at
+    the saturation curve. Green dashed lines represent enthalpy with labels along
+    the left edge. Purple dashed lines show specific volume with labels near the bottom-right.
+    A green shaded rectangle marks the "Comfort Zone" (approximately 20-26°C). A bold
+    red line with red dots connects "Outdoor Air (35°C, 50% RH)" to "Supply Air (13°C,
+    100% RH)" showing an HVAC cooling/dehumidification process path. The grid is very
+    subtle with 0.15 opacity, and the view border is removed.
   criteria_checklist:
     visual_quality:
-      score: 24
+      score: 25
       max: 30
       items:
       - id: VQ-01
@@ -51,42 +50,42 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title 28pt, axes 22pt, ticks 18pt). Some
-          annotation labels at 11pt slightly small.
+        comment: Font sizes explicitly set throughout (title 28pt, subtitle 18pt,
+          axis titles 22pt, ticks 18pt, labels 11-14pt). Annotation labels at 11pt
+          slightly small.
       - id: VQ-02
         name: No Overlap
         score: 4
         max: 6
         passed: false
-        comment: Enthalpy labels crowd together; some RH labels overlap with curves
-          near top-right.
+        comment: Label overlap in upper-left where wet-bulb, enthalpy, and RH labels
+          converge. Supply Air label overlaps with nearby wet-bulb labels.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Lines visible with good stroke widths. Specific volume lines quite
-          faint at opacity 0.4.
+        comment: All lines visible with differentiated styles and colors. Saturation
+          curve prominent at strokeWidth=3.
       - id: VQ-04
         name: Color Accessibility
-        score: 2
+        score: 3
         max: 4
         passed: false
-        comment: Red-green color pairing for wet-bulb and enthalpy lines is problematic
-          for colorblind users.
+        comment: Red-green color pairing for wet-bulb and enthalpy lines is not colorblind-safe.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good canvas utilization with balanced margins.
+        comment: Good proportions at 1600x900, data fills canvas well.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: Dry-Bulb Temperature (°C), Humidity
-          Ratio (g/kg).'
+        comment: 'Axes include units: Dry-Bulb Temperature (°C) and Humidity Ratio
+          (g/kg).'
     design_excellence:
       score: 13
       max: 20
@@ -95,21 +94,23 @@ review:
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: true
-        comment: Thoughtful color scheme and line styles. Above defaults but not publication-level.
+        passed: false
+        comment: Thoughtful color palette and opacity layering, above defaults but
+          not publication-level.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Subtle grid (0.15 opacity), view stroke removed, good whitespace.
+        comment: View stroke removed, subtle grid at 0.15 opacity, differentiated
+          line styles.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: HVAC process path tells engineering story. Comfort zone provides
-          context. Good visual hierarchy.
+        comment: HVAC process path and comfort zone create clear focal points and
+          visual hierarchy.
     spec_compliance:
       score: 15
       max: 15
@@ -119,26 +120,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct psychrometric chart with all required overlaid curves.
+        comment: Correct psychrometric chart with all property lines.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
         comment: 'All features present: RH curves, wet-bulb, enthalpy, specific volume,
-          comfort zone, process path.'
+          comfort zone, HVAC process path, direct labeling.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = dry-bulb temperature, Y = humidity ratio, correctly mapped.
+        comment: 'Correct mapping: X=dry-bulb temp, Y=humidity ratio, full range shown.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Direct labeling used appropriately.
+        comment: Title format correct, direct labeling used throughout.
     data_quality:
       score: 15
       max: 15
@@ -148,36 +149,37 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows all thermodynamic property families plus comfort zone and process
-          path.
+        comment: 'Shows all psychrometric properties: RH, wet-bulb, enthalpy, specific
+          volume, comfort zone, HVAC process.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real HVAC engineering scenario with physically accurate process path.
+        comment: ASHRAE formulas, standard atmosphere, realistic HVAC cooling scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Standard atmosphere, -10 to 50°C range, ASHRAE formulas.
+        comment: 'Standard psychrometric ranges: -10 to 50°C, 0-30 g/kg.'
     code_quality:
-      score: 9
+      score: 8
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Follows Imports → Data → Plot → Save structure.
+        passed: false
+        comment: Flat structure but very long (341 lines) with ASHRAE formula repeated
+          ~6 times.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic, computed from physical equations.
+        comment: Fully deterministic, all data from equations.
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -189,13 +191,13 @@ review:
         score: 1
         max: 2
         passed: false
-        comment: ASHRAE formula duplicated ~7 times inline, making code verbose.
+        comment: Repeated saturation pressure formula ~6 times is verbose.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html.
+        comment: Saves plot.png and plot.html, current Altair 6.0 API.
     library_mastery:
       score: 6
       max: 10
@@ -205,15 +207,15 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of alt.layer, encoding channels, mark types, configure methods,
-          alt.Title.
+        comment: Good declarative usage with alt.layer(), appropriate marks, proper
+          encoding, alt.Title.
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Layer composition and HTML export used, but no Altair transforms,
-          selections, or other distinctive features.
+        comment: 'Uses layer composition and HTML export but not Altair''s key differentiators:
+          tooltips, selections, interactive filtering.'
   verdict: REJECTED
 impl_tags:
   dependencies: []
