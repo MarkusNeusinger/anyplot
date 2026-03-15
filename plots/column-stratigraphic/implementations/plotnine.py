@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 column-stratigraphic: Stratigraphic Column with Lithology Patterns
 Library: plotnine 0.15.3 | Python 3.14.3
 Quality: 86/100 | Created: 2026-03-15
@@ -9,21 +9,24 @@ import pandas as pd
 from plotnine import (
     aes,
     annotate,
+    coord_cartesian,
     element_blank,
     element_line,
     element_rect,
     element_text,
+    geom_label,
+    geom_linerange,
     geom_point,
-    geom_rect,
     geom_segment,
     geom_text,
+    geom_tile,
     ggplot,
     guide_legend,
     guides,
     labs,
     scale_fill_manual,
     scale_x_continuous,
-    scale_y_reverse,
+    scale_y_continuous,
     theme,
     theme_minimal,
 )
@@ -73,32 +76,26 @@ layers = pd.DataFrame(
     }
 )
 
+# Derived columns for grammar-of-graphics mapping
 layers["mid"] = (layers["top"] + layers["bottom"]) / 2
 layers["thickness"] = layers["bottom"] - layers["top"]
+layers["x_center"] = 2.0
 
 # Column position constants
 col_left = 0.0
 col_right = 4.0
 
-# Lithology colors - improved contrast between siltstone and shale
+# Lithology colors - improved contrast (Shale lighter gray, Mudstone warm brown)
 lith_colors = {
     "Sandstone": "#F5D76E",
-    "Shale": "#7A7A7A",
+    "Shale": "#A8A8A8",
     "Limestone": "#6DAEDB",
     "Siltstone": "#C8DCC0",
     "Conglomerate": "#D4785C",
-    "Mudstone": "#7B6B5E",
+    "Mudstone": "#8B6914",
 }
 
-# Build rectangle data for the column
-rect_df = layers.copy()
-rect_df["xmin"] = col_left
-rect_df["xmax"] = col_right
-rect_df["ymin"] = rect_df["top"]
-rect_df["ymax"] = rect_df["bottom"]
-
-# Highlight the unconformity between Kootenai Fm and Morrison Fm (J/K boundary)
-# This adds storytelling: a major geological event
+# Unconformity depth (J/K boundary between Kootenai Fm and Morrison Fm)
 unconformity_depth = 95.0
 
 # Generate pattern overlay data for each lithology
@@ -112,7 +109,6 @@ for _, row in layers.iterrows():
     thickness = bot_val - top_val
 
     if lith == "Sandstone":
-        # Stipple dots pattern - denser
         n_dots = int(thickness * 4)
         for _ in range(n_dots):
             px = np.random.uniform(col_left + 0.3, col_right - 0.3)
@@ -120,7 +116,6 @@ for _, row in layers.iterrows():
             pattern_rows.append({"x": px, "y": py, "xend": px, "yend": py, "ptype": "dot", "lithology": lith})
 
     elif lith == "Shale":
-        # Horizontal dashes
         spacing = 2.5
         y_pos = top_val + 1.0
         while y_pos < bot_val - 0.5:
@@ -131,7 +126,6 @@ for _, row in layers.iterrows():
             y_pos += spacing
 
     elif lith == "Limestone":
-        # Brick pattern: horizontal lines with offset verticals
         spacing = 4.0
         y_pos = top_val + 2.0
         row_idx = 0
@@ -156,7 +150,6 @@ for _, row in layers.iterrows():
             row_idx += 1
 
     elif lith == "Siltstone":
-        # Short random dashes - much denser for visibility
         n_dashes = int(thickness * 6)
         for _ in range(n_dashes):
             px = np.random.uniform(col_left + 0.3, col_right - 0.3)
@@ -167,7 +160,6 @@ for _, row in layers.iterrows():
             )
 
     elif lith == "Conglomerate":
-        # Scattered circles (represented as large dots)
         n_circles = int(thickness * 2)
         for _ in range(n_circles):
             px = np.random.uniform(col_left + 0.5, col_right - 0.5)
@@ -175,7 +167,6 @@ for _, row in layers.iterrows():
             pattern_rows.append({"x": px, "y": py, "xend": px, "yend": py, "ptype": "circle", "lithology": lith})
 
     elif lith == "Mudstone":
-        # Dense horizontal dashes (finer than shale)
         spacing = 2.0
         y_pos = top_val + 0.8
         while y_pos < bot_val - 0.3:
@@ -199,40 +190,37 @@ dots_df = pattern_df[pattern_df["ptype"] == "dot"].copy()
 circles_df = pattern_df[pattern_df["ptype"] == "circle"].copy()
 lines_df = pattern_df[pattern_df["ptype"].isin(["dash", "brick_h", "brick_v", "short_dash", "fine_dash"])].copy()
 
-# Formation label data (one label per formation, positioned at midpoint)
-form_groups = layers.groupby("formation", sort=False).agg({"top": "min", "bottom": "max"})
+# Formation label data (one per formation at midpoint) using grammar groupby
+form_groups = layers.groupby("formation", sort=False).agg({"top": "min", "bottom": "max"}).reset_index()
 form_groups["mid"] = (form_groups["top"] + form_groups["bottom"]) / 2
-form_labels = pd.DataFrame({"x": col_right + 0.3, "y": form_groups["mid"].values, "label": form_groups.index.tolist()})
+form_groups["x"] = col_right + 0.4
 
-# Age label data (one label per age, positioned at midpoint)
-age_groups = layers.groupby("age", sort=False).agg({"top": "min", "bottom": "max"})
+# Age label data (one per age at midpoint)
+age_groups = layers.groupby("age", sort=False).agg({"top": "min", "bottom": "max"}).reset_index()
 age_groups["mid"] = (age_groups["top"] + age_groups["bottom"]) / 2
-age_labels = pd.DataFrame({"x": col_left - 0.3, "y": age_groups["mid"].values, "label": age_groups.index.tolist()})
+age_groups["x"] = col_left - 0.6
+age_groups["ymin"] = age_groups["top"] + 0.5
+age_groups["ymax"] = age_groups["bottom"] - 0.5
+age_groups["bracket_x"] = col_left - 0.2
 
-# Age bracket lines connecting age labels to the column
-age_brackets = []
-for _, grp in age_groups.iterrows():
-    age_brackets.append({"x": col_left - 0.15, "y": grp["top"], "xend": col_left - 0.15, "yend": grp["bottom"]})
-age_bracket_df = pd.DataFrame(age_brackets)
-
-# Layer boundary lines
+# Boundary depths for horizontal lines
 boundaries = sorted(set(layers["top"].tolist() + layers["bottom"].tolist()))
 boundary_df = pd.DataFrame(
     {"x": [col_left] * len(boundaries), "xend": [col_right] * len(boundaries), "y": boundaries, "yend": boundaries}
 )
 
-# Unconformity wavy line data (zigzag at Jurassic/Cretaceous boundary)
+# Unconformity wavy line data
 wavy_x = np.linspace(col_left, col_right, 40)
 wavy_y = unconformity_depth + np.sin(wavy_x * 8) * 0.8
 wavy_df = pd.DataFrame({"x": wavy_x[:-1], "y": wavy_y[:-1], "xend": wavy_x[1:], "yend": wavy_y[1:]})
 
-# Plot
+# Build plot using plotnine grammar of graphics
 plot = (
     ggplot()
-    # Colored rectangles for each layer
-    + geom_rect(
-        data=rect_df,
-        mapping=aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax", fill="lithology"),
+    # Layer fills using geom_tile with grammar-driven aesthetic mapping
+    + geom_tile(
+        data=layers,
+        mapping=aes(x="x_center", y="mid", width=col_right - col_left, height="thickness", fill="lithology"),
         color="#2C2C2C",
         size=0.8,
         alpha=0.6,
@@ -241,9 +229,9 @@ plot = (
     + geom_segment(
         data=lines_df, mapping=aes(x="x", y="y", xend="xend", yend="yend"), color="#2C2C2C", size=0.6, alpha=0.75
     )
-    # Pattern overlays - dots (sandstone)
+    # Pattern overlays - stipple dots (sandstone)
     + geom_point(data=dots_df, mapping=aes(x="x", y="y"), color="#2C2C2C", size=1.0, alpha=0.65)
-    # Pattern overlays - circles (conglomerate)
+    # Pattern overlays - open circles (conglomerate)
     + geom_point(
         data=circles_df,
         mapping=aes(x="x", y="y"),
@@ -256,68 +244,76 @@ plot = (
     )
     # Layer boundary lines
     + geom_segment(data=boundary_df, mapping=aes(x="x", y="y", xend="xend", yend="yend"), color="#2C2C2C", size=0.8)
-    # Unconformity wavy line (focal point - major geological event)
+    # Unconformity wavy line (red - focal point for data storytelling)
     + geom_segment(
         data=wavy_df, mapping=aes(x="x", y="y", xend="xend", yend="yend"), color="#B22222", size=1.8, alpha=0.9
     )
     # Unconformity annotation
     + annotate(
         "text",
-        x=col_right + 0.3,
+        x=col_right + 0.4,
         y=unconformity_depth,
         label="~ Unconformity ~",
         ha="left",
-        size=12,
+        size=14,
         color="#B22222",
         fontstyle="italic",
         fontweight="bold",
     )
-    # Age bracket lines
-    + geom_segment(data=age_bracket_df, mapping=aes(x="x", y="y", xend="xend", yend="yend"), color="#444444", size=0.7)
-    # Formation labels (right side) - larger font
-    + geom_text(
-        data=form_labels,
-        mapping=aes(x="x", y="y", label="label"),
+    # Age bracket lines using geom_linerange (idiomatic plotnine for vertical ranges)
+    + geom_linerange(data=age_groups, mapping=aes(x="bracket_x", ymin="ymin", ymax="ymax"), color="#444444", size=0.8)
+    # Formation labels using geom_label (plotnine-native styled text with background)
+    + geom_label(
+        data=form_groups,
+        mapping=aes(x="x", y="mid", label="formation"),
         ha="left",
-        size=14,
+        size=16,
         fontstyle="italic",
         color="#1A1A1A",
+        fill="#FFFFFF",
+        alpha=0.7,
+        label_padding=0.3,
+        label_size=0,
     )
-    # Age labels (left side) - larger font
+    # Age labels (left side)
     + geom_text(
-        data=age_labels,
-        mapping=aes(x="x", y="y", label="label"),
+        data=age_groups,
+        mapping=aes(x="x", y="mid", label="age"),
         ha="right",
-        size=13,
+        size=15,
         fontweight="bold",
         color="#333333",
     )
-    # Scales
-    + scale_fill_manual(values=lith_colors)
-    + scale_y_reverse(name="Depth (m)", breaks=list(range(0, 200, 20)))
-    + scale_x_continuous(limits=(-4.0, 9.5), breaks=[])
+    # Scales - grammar-driven fill mapping with manual color values
+    + scale_fill_manual(values=lith_colors, name="Lithology")
+    + scale_x_continuous(limits=(-4.5, 9.0), breaks=[])
+    + scale_y_continuous(trans="reverse", name="Depth (m)", breaks=list(range(0, 200, 20)))
+    # Clipping for clean edges
+    + coord_cartesian(ylim=(185, -5))
     # Labels
-    + labs(title="column-stratigraphic · plotnine · pyplots.ai", fill="Lithology", x="")
-    # Legend styling
+    + labs(title="column-stratigraphic · plotnine · pyplots.ai", x="")
+    # Legend configuration
     + guides(fill=guide_legend(nrow=1))
-    # Theme
+    # Theme - extensive plotnine theme customization
     + theme_minimal()
     + theme(
-        figure_size=(11, 16),
-        plot_title=element_text(size=24, face="bold", ha="center"),
-        axis_title_y=element_text(size=20),
+        figure_size=(12, 16),
+        plot_title=element_text(size=26, face="bold", ha="center"),
+        axis_title_y=element_text(size=22),
         axis_title_x=element_blank(),
-        axis_text_y=element_text(size=16),
+        axis_text_y=element_text(size=18),
         axis_text_x=element_blank(),
         axis_ticks_major_x=element_blank(),
-        legend_title=element_text(size=16, face="bold"),
-        legend_text=element_text(size=14),
+        legend_title=element_text(size=18, face="bold"),
+        legend_text=element_text(size=16),
         legend_position="bottom",
         legend_direction="horizontal",
-        legend_key_size=20,
+        legend_key_size=22,
+        legend_background=element_rect(fill="#FAFAFA", color="#E0E0E0", size=0.3),
+        legend_margin=10,
         panel_grid_major_x=element_blank(),
         panel_grid_minor_x=element_blank(),
-        panel_grid_major_y=element_line(color="#E8E8E8", size=0.25, alpha=0.3),
+        panel_grid_major_y=element_line(color="#E0E0E0", size=0.3, alpha=0.4),
         panel_grid_minor_y=element_blank(),
         panel_background=element_rect(fill="#FAFAFA", color="none"),
         plot_background=element_rect(fill="white", color="none"),
@@ -325,4 +321,4 @@ plot = (
 )
 
 # Save
-plot.save("plot.png", dpi=300, width=11, height=16)
+plot.save("plot.png", dpi=300, width=12, height=16)
