@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 line-load-duration: Load Duration Curve for Energy Systems
 Library: altair 6.0.0 | Python 3.14.3
 Quality: 88/100 | Created: 2026-03-15
@@ -63,7 +63,7 @@ base_df = pd.DataFrame({"hour": base_hours, "load_mw": base_load_vals})
 full_df = pd.DataFrame({"hour": hour_ds, "load_mw": load_ds})
 
 # Peak area
-peak_area = alt.Chart(peak_df).mark_area(opacity=0.55, color="#e74c3c").encode(x=alt.X("hour:Q"), y=alt.Y("load_mw:Q"))
+peak_area = alt.Chart(peak_df).mark_area(opacity=0.55, color="#8e44ad").encode(x=alt.X("hour:Q"), y=alt.Y("load_mw:Q"))
 
 # Intermediate area
 inter_area = (
@@ -73,10 +73,13 @@ inter_area = (
 # Base area
 base_area = alt.Chart(base_df).mark_area(opacity=0.55, color="#306998").encode(x=alt.X("hour:Q"), y=alt.Y("load_mw:Q"))
 
+# Nearest-point selection for interactive crosshair (Altair-distinctive)
+nearest = alt.selection_point(nearest=True, on="pointerover", fields=["hour"], empty=False)
+
 # Line overlay on top of the full curve
 line = (
     alt.Chart(full_df)
-    .mark_line(color="#1a1a2e", strokeWidth=2)
+    .mark_line(color="#1a1a2e", strokeWidth=2.5)
     .encode(
         x=alt.X("hour:Q", title="Hours of Year (ranked)", axis=alt.Axis(format=",d")),
         y=alt.Y("load_mw:Q", title="Power Demand (MW)", scale=alt.Scale(domain=[0, 1400])),
@@ -85,6 +88,21 @@ line = (
             alt.Tooltip("load_mw:Q", title="Load (MW)", format=",.0f"),
         ],
     )
+)
+
+# Crosshair point that snaps to nearest data point
+crosshair_points = (
+    alt.Chart(full_df)
+    .mark_point(size=120, color="#1a1a2e", filled=True)
+    .encode(x="hour:Q", y="load_mw:Q", opacity=alt.condition(nearest, alt.value(1), alt.value(0)))
+    .add_params(nearest)
+)
+
+# Vertical rule at crosshair position
+crosshair_rule = (
+    alt.Chart(full_df)
+    .mark_rule(color="#555555", strokeDash=[4, 4], strokeWidth=1)
+    .encode(x="hour:Q", opacity=alt.condition(nearest, alt.value(0.6), alt.value(0)))
 )
 
 # Capacity tier dashed lines
@@ -103,7 +121,7 @@ tier_rules = (
 
 tier_labels = (
     alt.Chart(tier_data)
-    .mark_text(align="right", dx=-10, dy=-12, fontSize=15, fontWeight="bold", color="#2c3e50")
+    .mark_text(align="right", dx=-10, dy=-12, fontSize=18, fontWeight="bold", color="#2c3e50")
     .encode(x=alt.value(1580), y="y_val:Q", text="label:N")
 )
 
@@ -133,7 +151,7 @@ energy_label = (
     .encode(x="hour:Q", y="load_mw:Q", text="text:N")
 )
 
-# Compose
+# Compose - static layers for PNG
 chart = (
     alt.layer(peak_area, inter_area, base_area, line, tier_rules, tier_labels, region_labels, energy_label)
     .properties(width=1600, height=900, title=alt.Title("line-load-duration · altair · pyplots.ai", fontSize=28))
@@ -141,6 +159,26 @@ chart = (
     .configure_view(strokeWidth=0)
 )
 
-# Save
+# Save PNG (static)
 chart.save("plot.png", scale_factor=3.0)
-chart.interactive().save("plot.html")
+
+# Interactive HTML version with crosshair and zoom/pan
+interactive_chart = (
+    alt.layer(
+        peak_area,
+        inter_area,
+        base_area,
+        line,
+        crosshair_points,
+        crosshair_rule,
+        tier_rules,
+        tier_labels,
+        region_labels,
+        energy_label,
+    )
+    .properties(width=1600, height=900, title=alt.Title("line-load-duration · altair · pyplots.ai", fontSize=28))
+    .configure_axis(labelFontSize=18, titleFontSize=22, gridOpacity=0.15)
+    .configure_view(strokeWidth=0)
+    .interactive()
+)
+interactive_chart.save("plot.html")
