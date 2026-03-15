@@ -1,7 +1,7 @@
 library: matplotlib
 specification_id: stereonet-equal-area
 created: '2026-03-15T23:01:12Z'
-updated: '2026-03-15T23:12:00Z'
+updated: '2026-03-15T23:22:15Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23121188769
 issue: 4576
@@ -10,103 +10,102 @@ library_version: 3.10.8
 preview_url: https://storage.googleapis.com/pyplots-images/plots/stereonet-equal-area/matplotlib/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/stereonet-equal-area/matplotlib/plot_thumb.png
 preview_html: null
-quality_score: 83
+quality_score: 90
 review:
   strengths:
-  - Mathematically correct equal-area (Schmidt) projection with proper spherical Gaussian
-    kernel density estimation
-  - 'All specification features fully implemented: great circles, poles, density contours,
-    cardinal directions, degree ticks, color-coded legend'
-  - Realistic geological dataset with three distinct structural feature types at plausible
-    orientations
-  - Clean, well-structured code with appropriate complexity for the domain
+  - Mathematically correct equal-area (Schmidt) projection with proper formula
+  - Sophisticated spherical Gaussian kernel density estimation for contours
+  - 'Strong visual hierarchy: bedding emphasized through larger markers and thicker
+    great circles'
+  - Excellent colorblind-safe palette with redundant shape encoding
+  - Professional-quality stereonet suitable for geology publication
   weaknesses:
-  - Drawing all 75 great circles creates visual clutter - show only representative
-    subset per group
-  - Legend position slightly overlaps degree tick marks
-  - All three feature types have equal visual weight with no focal point or hierarchy
-  - Top area with N label and title creates slight layout imbalance
-  image_description: 'The plot shows a stereonet (Schmidt equal-area, lower-hemisphere
-    projection) rendered as a circular polar plot. A bold "N" marks North at the top.
-    The title reads "stereonet-equal-area · matplotlib · pyplots.ai". Three geological
-    feature types are plotted with distinct colors and markers: Bedding poles (blue
-    circles) clustered in the SE quadrant (~120-150°), Joint poles (orange squares)
-    clustered in the NE quadrant (~30-60°), and Fault poles (dark maroon triangles)
-    clustered in the W-NW quadrant (~270-300°). Great circles are drawn as arcs for
-    each plane, color-coded by feature type (blue, orange, pink/maroon). Density contours
-    using a YlOrBr colormap with alpha=0.3 highlight concentration areas around each
-    pole cluster. The primitive circle is emphasized with a dark outline. Degree tick
-    marks appear every 10° around the perimeter with cardinal directions (N, E, S,
-    W) and degree labels at 30° intervals. A legend in the upper left identifies the
-    three feature types.'
+  - Defines a helper function (draw_great_circle) instead of inline code, minor KISS
+    violation
+  image_description: 'The plot displays a Schmidt equal-area (lower-hemisphere) stereonet
+    projection on a polar axis with a light off-white background. Three structural
+    feature types are plotted: Bedding poles (blue circles, ~30 points clustered in
+    the SE quadrant around 120-140° azimuth), Joint poles (orange squares, ~25 points
+    clustered in the NE quadrant around 20-40°), and Fault poles (dark maroon triangles,
+    ~20 points clustered in the W-NW quadrant around 270-290°). Great circles are
+    drawn for each feature type in matching colors — bedding great circles (blue)
+    are thicker and more opaque, creating visual hierarchy. Density contours in a
+    YlOrBr colormap with low opacity highlight the three pole clusters. The primitive
+    circle is emphasized with a dark border. Cardinal directions (N, E, S, W) are
+    bold at 20pt, degree tick marks appear every 10° around the perimeter, and intermediate
+    labels at 30° intervals show degree values. A legend in the lower-left shows all
+    three feature types. Title reads "stereonet-equal-area · matplotlib · pyplots.ai"
+    at 24pt.'
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title 24pt, ticks 16pt, legend 16pt, N
-          label 24pt). All readable.
+        comment: 'All font sizes explicitly set: title=24pt, cardinal=20pt bold, ticks=16pt,
+          legend=16pt'
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Legend partially overlaps 330° tick mark area.
+        comment: No overlapping text. Legend positioned outside data area
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Poles well-sized (s=160) with white edges. 75 great circles create
-          visual clutter.
+        comment: Markers well-sized (s=140-200) with white edges and path effects.
+          Distinct shapes per type
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Blue/orange/maroon palette is colorblind-safe with good contrast.
+        comment: Blue/orange/dark-red palette is colorblind-safe with redundant shape
+          encoding
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Square figure appropriate for stereonet. Slight top-heavy whitespace.
+        comment: Square 12x12 figure fills canvas well with balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Cardinal directions and degree marks serve as appropriate axis labels.
+        comment: Cardinal directions and degree marks serve as labels. Title in correct
+          format
     design_excellence:
-      score: 12
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Custom palette, distinct markers, YlOrBr contours, white edge highlights.
-          Above defaults.
+        comment: Custom palette, visual hierarchy, path effects, density contours.
+          Above defaults
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Subtle grid, radial ticks removed, primitive circle emphasized, contour
-          styling refined.
+        comment: Subtle grid, radial ticks removed, primitive circle emphasized, path
+          effects
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Three distinct clusters visible with contours. Great circle clutter
-          dilutes focal point.
+        comment: Visual hierarchy through marker size/alpha/lineweight. Three distinct
+          clusters tell geological story
     spec_compliance:
       score: 15
       max: 15
@@ -116,86 +115,85 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct lower-hemisphere equal-area (Schmidt net) projection.
+        comment: Correct Schmidt equal-area lower-hemisphere stereonet
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: great circles, poles, contours, N label,
-          legend, ticks.'
+        comment: 'All spec features present: great circles, poles, density contours,
+          tick marks, legend'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Strike/dip correctly mapped with proper equal-area formula.
+        comment: Correct strike/dip to pole conversion with equal-area projection
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format and descriptive legend labels.
+        comment: Title format correct. Legend labels match data
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Three feature types with different orientations and dip angles.
+        comment: Three feature types with distinct orientations, great circles, poles,
+          and density
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible geological field measurements with realistic strike/dip
-          values.
+        comment: Realistic structural geology field measurements
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 75 measurements typical for field campaign stereonet, all values
-          in valid ranges.
+        comment: Realistic strike/dip values and sample sizes
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: Linear flow with no functions/classes.
+        comment: Has draw_great_circle function, minor KISS violation
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib and numpy imported, both used.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for spherical geometry computations.
+        comment: Appropriate complexity for stereonet with density estimation
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png, dpi=300, bbox_inches='tight'.
+        comment: Saves as plot.png, dpi=300, bbox_inches tight
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -203,22 +201,21 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of polar projection, contourf/contour, scatter with markers.
+        comment: Good use of polar projection, LineCollection, contourf, path_effects
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Uses polar projection and contourf but heavy manual math doesn't
-          showcase distinctive matplotlib features.
-  verdict: REJECTED
+        passed: true
+        comment: LineCollection, path_effects, polar projection are matplotlib-distinctive
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - polar-projection
-  - annotations
   - manual-ticks
   - layer-composition
+  - custom-legend
   patterns:
   - data-generation
   - iteration-over-groups

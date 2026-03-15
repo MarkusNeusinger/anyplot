@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 stereonet-equal-area: Structural Geology Stereonet (Equal-Area Projection)
 Library: matplotlib 3.10.8 | Python 3.14.3
-Quality: 83/100 | Created: 2026-03-15
+Quality: 90/100 | Created: 2026-03-15
 """
 
 import matplotlib.patheffects as pe
