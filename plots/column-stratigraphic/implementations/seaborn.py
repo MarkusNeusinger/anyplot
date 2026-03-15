@@ -1,7 +1,6 @@
-""" pyplots.ai
+"""pyplots.ai
 column-stratigraphic: Stratigraphic Column with Lithology Patterns
 Library: seaborn 0.13.2 | Python 3.14.3
-Quality: 89/100 | Created: 2026-03-15
 """
 
 import matplotlib.patches as mpatches
@@ -59,8 +58,12 @@ age_bg_colors = {age: (*age_bg_palette[i], 0.10) for i, age in enumerate(age_lis
 
 total_depth = 180
 
-# Plot - two-panel layout: age brackets on left, column on right
-fig, (ax_age, ax) = plt.subplots(1, 2, figsize=(16, 9), width_ratios=[0.18, 0.82])
+# Build thickness data for side panel (seaborn distinctive feature)
+thickness_df = df[["lithology", "thickness"]].copy()
+thickness_df["lithology"] = thickness_df["lithology"].str.title()
+
+# Plot - three-panel layout: age brackets | stratigraphic column | thickness strip
+fig, (ax_age, ax, ax_thick) = plt.subplots(1, 3, figsize=(16, 9), width_ratios=[0.16, 0.54, 0.30])
 
 # Use sns.barplot for the lithology layers (seaborn plotting function)
 sns.barplot(
@@ -76,6 +79,7 @@ sns.barplot(
 )
 
 # Reposition bars from categorical to proportional depth scale and add hatching
+col_width = 0.55
 for i, (_, row) in enumerate(df.iterrows()):
     bar = ax.patches[i]
     style = lithology_styles[row["lithology"]]
@@ -84,7 +88,7 @@ for i, (_, row) in enumerate(df.iterrows()):
     bar.set_y(row["top"])
     bar.set_height(row["thickness"])
     bar.set_x(0)
-    bar.set_width(0.65)
+    bar.set_width(col_width)
 
 # Switch to continuous depth axis
 ax.set_ylim(total_depth, 0)
@@ -93,10 +97,10 @@ ax.set_yticks([])
 # Formation labels to the right of each layer
 for _, row in df.iterrows():
     ax.text(
-        0.70,
+        col_width + 0.05,
         row["mid_depth"],
         row["formation"],
-        fontsize=16,
+        fontsize=15,
         fontweight="medium",
         va="center",
         ha="left",
@@ -107,21 +111,22 @@ for _, row in df.iterrows():
 unconformities = [(100, "Cretaceous–Jurassic"), (140, "Jurassic–Triassic"), (162, "Triassic–Permian")]
 
 for depth, label in unconformities:
-    x_wave = np.linspace(0, 0.65, 80)
+    x_wave = np.linspace(0, col_width, 80)
     y_wave = depth + 0.8 * np.sin(x_wave * 40)
     ax.plot(x_wave, y_wave, color="#CC3333", linewidth=2.5, zorder=5)
-    # Offset the last label downward to avoid crowding with Kaibab Fm
-    y_offset = 3.0 if depth == 162 else 1.5
+    # Place unconformity labels above the wavy line, inside column
     ax.text(
-        0.70,
-        depth + y_offset,
+        col_width / 2,
+        depth - 2.0,
         label,
-        fontsize=12,
+        fontsize=10,
         fontweight="bold",
-        va="top",
-        ha="left",
+        va="bottom",
+        ha="center",
         color="#CC3333",
         fontstyle="italic",
+        zorder=6,
+        bbox={"facecolor": "white", "alpha": 0.85, "edgecolor": "none", "pad": 1.5},
     )
 
 # Age labels on the left panel
@@ -135,13 +140,13 @@ for _, row in df.iterrows():
 
 ax_age.set_xlim(0, 1)
 ax_age.set_ylim(total_depth, 0)
-ax.set_xlim(-0.02, 1.15)
+ax.set_xlim(-0.02, 1.20)
 
 for age, pos in age_positions.items():
     mid_y = (pos["top"] + pos["bottom"]) / 2
     bg = age_bg_colors[age]
 
-    # Subtle background band
+    # Subtle background band across both panels
     ax_age.axhspan(pos["top"], pos["bottom"], color=bg, zorder=0)
     ax.axhspan(pos["top"], pos["bottom"], color=bg, zorder=0)
 
@@ -157,7 +162,7 @@ for age, pos in age_positions.items():
         0.35,
         mid_y,
         age.replace(" ", "\n"),
-        fontsize=16,
+        fontsize=15,
         fontweight="bold",
         va="center",
         ha="center",
@@ -165,7 +170,7 @@ for age, pos in age_positions.items():
         color="#333333",
     )
 
-# Style axes
+# Style age axis
 ax_age.set_ylabel("Depth (m)", fontsize=20, labelpad=10)
 ax_age.tick_params(axis="y", labelsize=16)
 ax_age.set_yticks(np.arange(0, total_depth + 1, 20))
@@ -178,27 +183,53 @@ ax.set_ylabel("")
 ax.tick_params(axis="y", left=False, labelleft=False)
 sns.despine(ax=ax, left=True, bottom=True, top=True, right=True)
 
-# Title
-fig.suptitle("column-stratigraphic · seaborn · pyplots.ai", fontsize=24, fontweight="medium", y=0.97)
+# Right panel: seaborn stripplot showing layer thicknesses by lithology
+# Uses distinctive seaborn categorical visualization (strip plot with jitter)
+lith_order = [s["label"] for s in lithology_styles.values()]
+strip_palette = {s["label"]: s["color"] for s in lithology_styles.values()}
+sns.stripplot(
+    data=thickness_df,
+    x="thickness",
+    y="lithology",
+    ax=ax_thick,
+    palette=strip_palette,
+    hue="lithology",
+    order=lith_order,
+    size=14,
+    marker="D",
+    edgecolor="black",
+    linewidth=1.0,
+    jitter=False,
+    legend=False,
+)
+ax_thick.set_xlabel("Thickness (m)", fontsize=16)
+ax_thick.set_ylabel("")
+ax_thick.tick_params(axis="both", labelsize=13)
+ax_thick.set_title("Layer Thickness", fontsize=16, fontweight="medium", pad=8)
+ax_thick.xaxis.grid(True, alpha=0.3, linewidth=0.8)
+sns.despine(ax=ax_thick, top=True, right=True)
 
-# Legend using seaborn's move_legend pattern
+# Lithology legend on the thickness panel (avoids overlapping column labels)
 legend_handles = [
     mpatches.Patch(facecolor=style["color"], edgecolor="black", hatch=style["hatch"], label=style["label"])
     for style in lithology_styles.values()
 ]
 
-ax.legend(
+ax_thick.legend(
     handles=legend_handles,
-    loc="upper right",
-    fontsize=14,
+    loc="lower right",
+    fontsize=12,
     framealpha=0.95,
     title="Lithology",
-    title_fontsize=16,
+    title_fontsize=14,
     edgecolor="#CCCCCC",
     fancybox=True,
 )
 
-plt.subplots_adjust(wspace=0.02)
+# Title
+fig.suptitle("column-stratigraphic · seaborn · pyplots.ai", fontsize=24, fontweight="medium", y=0.97)
+
+plt.subplots_adjust(wspace=0.08)
 plt.tight_layout(rect=[0, 0, 1, 0.95])
 
 # Save
