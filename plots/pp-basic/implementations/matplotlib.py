@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 pp-basic: Probability-Probability (P-P) Plot
 Library: matplotlib 3.10.8 | Python 3.14.3
-Quality: 75/100 | Created: 2026-03-15
+Quality: 90/100 | Created: 2026-03-15
 """
 
 import os as _os
