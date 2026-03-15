@@ -1,0 +1,233 @@
+library: letsplot
+specification_id: column-stratigraphic
+created: '2026-03-15T23:02:48Z'
+updated: '2026-03-15T23:34:40Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23121198898
+issue: 4573
+python_version: 3.14.3
+library_version: 4.9.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/column-stratigraphic/letsplot/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/column-stratigraphic/letsplot/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/column-stratigraphic/letsplot/plot.html
+quality_score: 88
+review:
+  strengths:
+  - 'Excellent lithology patterns: five distinct patterns (stipple, brick, dash, tilted
+    dash, circle) closely approximating FGDC/USGS conventions'
+  - Strong geological realism with plausible formation names, correct age ordering,
+    and unconformity feature
+  - Professional design with custom earth-tone palette, red unconformity emphasis,
+    and age brackets
+  - Good use of lets-plot interactive tooltips providing formation details on hover
+  - Complete spec compliance — all required features present and correctly implemented
+  weaknesses:
+  - Formation and age label font sizes (15) slightly smaller than ideal for perfect
+    legibility
+  - Color palette not specifically optimized for colorblind accessibility
+  - Some horizontal whitespace could be better utilized
+  image_description: 'The plot displays a vertical stratigraphic column showing 10
+    geological layers from 0–260m depth (increasing downward). Each layer is a colored
+    rectangle with distinctive lithology patterns: yellow with stipple dots for sandstone,
+    gray with horizontal dashes for shale, blue with brick patterns for limestone,
+    brown with tilted dashes for siltstone, and pink/red with open circles for conglomerate.
+    Age labels (Triassic, Jurassic, Cretaceous, Paleogene) appear in italics on the
+    left with bracket indicators. Formation names (Basal Sand Fm, Dark Shale Mbr,
+    Reef Limestone Fm, etc.) are labeled on the right. A red wavy line at 110m marks
+    an unconformity between Jurassic and Cretaceous with a bold red "Unconformity"
+    label. Dashed lines mark non-unconformity age boundaries at 35m and 195m. The
+    y-axis shows "Depth (m)" and the x-axis is blank (appropriate for a column). A
+    bottom legend shows all 5 lithology types. Title reads "column-stratigraphic ·
+    letsplot · pyplots.ai" with subtitle "Synthetic Mesozoic–Cenozoic sedimentary
+    section · Triassic to Paleogene".'
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set. Formation/age labels at size 15 slightly
+          below ideal 16pt.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or elements anywhere.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Layer rectangles and patterns clearly visible and well-adapted to
+          density.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 3
+        max: 4
+        passed: true
+        comment: Earth-tone palette reasonably distinguishable but not specifically
+          colorblind-optimized.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good layout with column centered. Some wasted horizontal space on
+          far right.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Y-axis labeled 'Depth (m)' with units. X-axis intentionally blank.
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom earth-tone palette, five distinct lithology patterns, professional
+          typography hierarchy.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: X-axis removed, subtle y-grid, clean white background, generous margins.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Red unconformity creates focal point. Age brackets guide viewer through
+          geological time.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct vertical stratigraphic column with stacked rectangular blocks.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: 5 lithology patterns, depth downward, formation
+          labels, age labels, unconformity.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Depth correctly mapped to reversed y-axis. All 10 layers visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title follows exact format. Legend shows all 5 lithology types correctly.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All 5 lithology types, varying thicknesses, 4 geological periods,
+          unconformity.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Geologically plausible sedimentary section with realistic formation
+          names and correct age ordering.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Depths 0-260m and thicknesses 15-35m are realistic for a sedimentary
+          section.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports, data, patterns, labels, plot, save. No functions
+          or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic data with no random elements.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: os, shutil, pandas, lets_plot.'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-structured pattern generation with clear per-lithology logic.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with scale=3. Current lets-plot API.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good grammar-of-graphics usage with layered geoms, scales, and theme.
+          Uses flavor_high_contrast_light().
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses layer_tooltips() with formatting chain and flavor_high_contrast_light()
+          — distinctive lets-plot features.
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling
