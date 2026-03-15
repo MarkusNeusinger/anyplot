@@ -1,7 +1,7 @@
 library: plotnine
 specification_id: column-stratigraphic
 created: '2026-03-15T22:55:35Z'
-updated: '2026-03-15T22:59:31Z'
+updated: '2026-03-15T23:10:04Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23121198926
 issue: 4573
@@ -10,97 +10,104 @@ library_version: 0.15.3
 preview_url: https://storage.googleapis.com/pyplots-images/plots/column-stratigraphic/plotnine/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/column-stratigraphic/plotnine/plot_thumb.png
 preview_html: null
-quality_score: 81
+quality_score: 86
 review:
   strengths:
-  - Excellent spec compliance with all required features and correct layout conventions
-  - Realistic geological data using actual Western US formation names
-  - Good variety of lithology patterns approximating standard geological symbols
-  - Well-structured plotnine layer composition with clean theme customization
+  - Excellent spec compliance with all required features (6 lithology patterns, formation
+    names, age labels, unconformity)
+  - Realistic geological data with real Western US formation names and plausible stratigraphy
+  - Strong data storytelling through the red unconformity highlight at J/K boundary
+  - Clean well-organized code with good reproducibility
+  - Custom color palette with thoughtful geological color choices
   weaknesses:
-  - Formation and age label font sizes too small (10-11pt)
-  - Siltstone pattern too sparse and hard to distinguish
-  - Color contrast between siltstone and shale insufficient
-  - No visual emphasis or focal point for data storytelling
-  - Title at 22pt slightly under 24pt guideline
-  image_description: 'The plot displays a vertical stratigraphic column spanning 0-180m
-    depth with 10 geological layers. Each layer is filled with a distinct muted color
-    and overlaid with lithology-specific patterns: sandstone (yellow with stipple
-    dots), shale (gray with horizontal dashes), limestone (blue with brick pattern),
-    siltstone (light blue-gray with short random dashes), conglomerate (salmon with
-    open circles), and mudstone (brown with dense horizontal dashes). Age labels (Late
-    Cretaceous through Triassic) appear on the left side, and formation names (Frontier
-    Fm, Madison Fm, Kootenai Fm, Morrison Fm, Sundance Fm) in italics on the right.
-    The y-axis shows "Depth (m)" increasing downward with ticks every 20m. A horizontal
-    legend at the bottom identifies all 6 lithology types. The title reads "column-stratigraphic
-    · plotnine · pyplots.ai" in bold at the top. Background is white with subtle horizontal
-    grid lines.'
+  - Formation labels (14pt) and age labels (13pt) slightly undersized for full resolution
+  - Shale and Mudstone colors too similar in lightness for colorblind accessibility
+  - Horizontal canvas space underutilized with wide x-limits
+  - Library mastery could be improved with more distinctive plotnine features
+  image_description: 'The plot displays a vertical stratigraphic column showing 10
+    geological layers from 0 to 180 meters depth (increasing downward). Each layer
+    is filled with a distinct color and overlaid with lithology-specific patterns:
+    yellow with stipple dots for Sandstone, gray with horizontal dashes for Shale,
+    blue with brick pattern for Limestone, light green with short random dashes for
+    Siltstone, salmon/orange with open circles for Conglomerate, and brown with fine
+    horizontal dashes for Mudstone. Formation names (Frontier Fm, Madison Fm, Kootenai
+    Fm, Morrison Fm, Sundance Fm) appear in italics on the right side. Geological
+    age labels (Late Cretaceous, Early Cretaceous, Late Jurassic, Middle Jurassic,
+    Triassic) appear in bold on the left side with bracket lines. A red wavy line
+    at 95m marks an unconformity between Kootenai Fm and Morrison Fm, labeled "~ Unconformity
+    ~" in red italic bold. The title reads "column-stratigraphic · plotnine · pyplots.ai"
+    at top. A horizontal legend at the bottom shows all 6 lithology types. The background
+    is light gray with subtle horizontal grid lines.'
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 26
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set but title slightly under 24pt; formation/age
-          labels (10-11pt) are small
+        comment: All font sizes explicitly set. Formation labels (14pt) and age labels
+          (13pt) slightly small for canvas size.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All text well-spaced with no collisions
+        comment: No overlapping text elements. Labels well-separated.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Most patterns visible; siltstone pattern sparse and hard to distinguish
+        comment: Most patterns clearly visible. Siltstone short dashes are subtler
+          than other patterns.
       - id: VQ-04
         name: Color Accessibility
         score: 3
         max: 4
         passed: true
-        comment: Generally distinguishable but siltstone and shale too similar in
-          lightness
+        comment: Shale and Mudstone colors too similar in lightness for colorblind
+          viewers.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good vertical utilization; some horizontal space underutilized
+        comment: Good vertical usage but significant horizontal empty space around
+          the column.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis shows Depth (m) with units; x-axis appropriately blank
+        comment: Y-axis labeled Depth (m) with units. X-axis intentionally blank.
     design_excellence:
-      score: 12
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Custom geological palette with muted tones, pattern overlays, italic
-          labels — above defaults but not publication-level
+        comment: Custom geological color palette, thoughtful typography hierarchy,
+          red unconformity highlight. Above defaults.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: theme_minimal, removed x-axis, subtle grid — good refinement
+        comment: theme_minimal with customized subtle y-grid, x-axis removed, light
+          panel background, age brackets.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Natural geological narrative but no focal point or emphasis
+        comment: Red unconformity at J/K boundary creates focal point. Age progression
+          guides viewer through time.
     spec_compliance:
       score: 15
       max: 15
@@ -110,51 +117,52 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct vertical stratigraphic column with stacked layers
+        comment: Correct vertical stratigraphic column with stacked layers and lithology
+          patterns.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All required features present: 6 lithology patterns, formation/age
-          labels, depth scale, boundaries'
+        comment: 'All required features present: 6 lithology patterns, depth downward,
+          formation names, age labels, depth scale, boundaries, unconformity.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Depth correctly mapped increasing downward
+        comment: Depth axis correctly reversed, layers correctly positioned.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend labels match data
+        comment: Title format correct, legend shows all 6 lithology types.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 6 lithology types, varying thicknesses, 5 formations and ages; could
-          include unconformity
+        comment: 10 layers, 6 lithologies, varying thicknesses, 5 formations, 5 ages,
+          unconformity.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real Western US formation names with plausible age assignments
+        comment: Western US sedimentary section with real formation names.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 0-180m depth with 12-25m thicknesses is realistic
+        comment: 0-180m depth range and 12-23m layer thicknesses are realistic.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -162,31 +170,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear flow, no functions/classes
+        comment: Linear flow with no functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set before random pattern generation.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: All imports used.
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: Pattern generation loop somewhat verbose but necessary
+        comment: Pattern generation well-organized by lithology type. No fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300
+        comment: Saves as plot.png with dpi=300.
     library_mastery:
       score: 6
       max: 10
@@ -196,23 +204,26 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good grammar-of-graphics usage with layered geoms, scales, and themes
+        comment: Good use of plotnine grammar with multiple geom layers, scale functions,
+          and theme customization.
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
-        passed: true
-        comment: Layer composition is nice but complexity is in manual data prep,
-          not plotnine features
+        passed: false
+        comment: Uses some plotnine features but core visualization relies on manual
+          coordinate computation.
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - layer-composition
+  - custom-legend
   patterns:
   - data-generation
   - iteration-over-groups
+  - groupby-aggregation
   dataprep: []
   styling:
   - alpha-blending

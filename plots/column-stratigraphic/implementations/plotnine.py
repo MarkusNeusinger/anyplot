@@ -1,6 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 column-stratigraphic: Stratigraphic Column with Lithology Patterns
 Library: plotnine 0.15.3 | Python 3.14.3
+Quality: 86/100 | Created: 2026-03-15
 """
 
 import numpy as np
