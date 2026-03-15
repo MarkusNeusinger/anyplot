@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 area-elevation-profile: Terrain Elevation Profile Along Transect
 Library: altair 6.0.0 | Python 3.14.3
 Quality: 81/100 | Created: 2026-03-15
@@ -15,11 +15,11 @@ num_points = 480
 distance = np.linspace(0, 120, num_points)
 
 # Build realistic elevation profile with multiple peaks and valleys
-elevation = 800 + np.zeros(num_points)
-# Broad terrain shape using sine components
-elevation += 600 * np.sin(distance * np.pi / 60) ** 2
-elevation += 300 * np.sin(distance * np.pi / 30 + 1.2) ** 2
-elevation += 200 * np.sin(distance * np.pi / 15 + 0.5)
+elevation = 900 + np.zeros(num_points)
+# Broad terrain shape - two major peaks matching real Bernese Oberland terrain
+elevation += 1000 * np.sin(distance * np.pi / 60) ** 2
+elevation += 500 * np.sin(distance * np.pi / 30 + 1.2) ** 2
+elevation += 250 * np.sin(distance * np.pi / 15 + 0.5)
 # Add ruggedness
 elevation += np.cumsum(np.random.randn(num_points) * 3)
 elevation += np.random.randn(num_points) * 15
@@ -67,7 +67,7 @@ area = (
     )
     .encode(
         x=alt.X("distance:Q", title="Distance (km)", scale=alt.Scale(domain=[0, 125])),
-        y=alt.Y("elevation:Q", title="Elevation (m)", scale=alt.Scale(domain=[400, 3000])),
+        y=alt.Y("elevation:Q", title="Elevation (m)", scale=alt.Scale(domain=[400, 2800])),
         tooltip=[
             alt.Tooltip("distance:Q", title="Distance", format=".1f"),
             alt.Tooltip("elevation:Q", title="Elevation", format=".0f"),
@@ -89,23 +89,58 @@ landmark_points = (
     .encode(x="distance:Q", y="elevation:Q")
 )
 
-# Landmark text labels above points
-landmark_labels = (
-    alt.Chart(landmarks)
-    .mark_text(align="center", dy=-22, fontSize=13, fontWeight="bold", color="#4a3520", lineBreak="\n")
+# Split landmarks into edge and middle groups for alignment
+lm_start = landmarks[landmarks["distance"] == 0.0]
+lm_end = landmarks[landmarks["distance"] == 120.0]
+lm_mid = landmarks[(landmarks["distance"] > 0.0) & (landmarks["distance"] < 120.0)]
+
+# Landmark text labels - left-aligned for start, right-aligned for end, centered for middle
+landmark_labels_start = (
+    alt.Chart(lm_start)
+    .mark_text(align="left", dx=8, dy=-24, fontSize=14, fontWeight="bold", color="#4a3520", lineBreak="\n")
+    .encode(x="distance:Q", y="elevation:Q", text="name:N")
+)
+landmark_labels_end = (
+    alt.Chart(lm_end)
+    .mark_text(align="right", dx=-8, dy=-24, fontSize=14, fontWeight="bold", color="#4a3520", lineBreak="\n")
+    .encode(x="distance:Q", y="elevation:Q", text="name:N")
+)
+landmark_labels_mid = (
+    alt.Chart(lm_mid)
+    .mark_text(align="center", dy=-24, fontSize=14, fontWeight="bold", color="#4a3520", lineBreak="\n")
     .encode(x="distance:Q", y="elevation:Q", text="name:N")
 )
 
-# Elevation labels at landmarks (show elevation value)
-elevation_labels = (
-    alt.Chart(landmarks)
-    .mark_text(align="center", dy=-60, fontSize=11, color="#666666")
+# Elevation value labels - matching alignment
+elev_labels_start = (
+    alt.Chart(lm_start)
+    .mark_text(align="left", dx=8, dy=-65, fontSize=13, color="#555555", fontWeight=600)
+    .encode(x="distance:Q", y="elevation:Q", text=alt.Text("elevation:Q", format=".0f"))
+)
+elev_labels_end = (
+    alt.Chart(lm_end)
+    .mark_text(align="right", dx=-8, dy=-65, fontSize=13, color="#555555", fontWeight=600)
+    .encode(x="distance:Q", y="elevation:Q", text=alt.Text("elevation:Q", format=".0f"))
+)
+elev_labels_mid = (
+    alt.Chart(lm_mid)
+    .mark_text(align="center", dy=-65, fontSize=13, color="#555555", fontWeight=600)
     .encode(x="distance:Q", y="elevation:Q", text=alt.Text("elevation:Q", format=".0f"))
 )
 
 # Compose layered chart
 chart = (
-    alt.layer(area, landmark_rules, landmark_points, landmark_labels, elevation_labels)
+    alt.layer(
+        area,
+        landmark_rules,
+        landmark_points,
+        landmark_labels_start,
+        landmark_labels_mid,
+        landmark_labels_end,
+        elev_labels_start,
+        elev_labels_mid,
+        elev_labels_end,
+    )
     .properties(
         width=1600,
         height=900,
