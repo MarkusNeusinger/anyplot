@@ -1,7 +1,7 @@
 library: highcharts
 specification_id: pp-basic
 created: '2026-03-15T20:19:49Z'
-updated: '2026-03-15T20:23:43Z'
+updated: '2026-03-15T20:32:26Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23118400170
 issue: 4587
@@ -10,32 +10,32 @@ library_version: unknown
 preview_url: https://storage.googleapis.com/pyplots-images/plots/pp-basic/highcharts/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/pp-basic/highcharts/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/pp-basic/highcharts/plot.html
-quality_score: 79
+quality_score: 85
 review:
   strengths:
-  - 'Perfect spec compliance: all required features present with correct title format'
-  - Clean, well-structured code with proper seed for reproducibility
-  - 'Good data choice: mixed normal+exponential distribution creates meaningful P-P
-    deviation'
-  - Appropriate square aspect ratio as specified
-  - Interactive HTML export alongside static PNG
+  - Deviation-based color gradient from blue to coral effectively communicates distributional
+    mismatch
+  - Perfect spec compliance with correct P-P plot implementation and all required
+    features
+  - Clean code structure with proper reproducibility
+  - Informative subtitle that explains what the viewer should look for
   weaknesses:
-  - Design lacks visual sophistication beyond well-configured defaults
-  - No visual hierarchy or emphasis on the key deviation regions
-  - Markers slightly too large for 200 points, causing visual clutter in dense areas
-  - Does not leverage Highcharts-specific features like native plot lines or plot
-    bands
-  image_description: The plot displays a P-P (Probability-Probability) scatter plot
-    on a square canvas with a white background. The title "pp-basic · highcharts ·
-    pyplots.ai" is prominently displayed at the top in bold. The x-axis is labeled
-    "Theoretical CDF (Normal)" and the y-axis "Empirical CDF", both ranging from 0
-    to 1 with tick marks at 0.2 intervals. 200 blue circular markers (steel blue with
-    slight transparency) plot empirical vs theoretical CDF values. A yellow dashed
-    diagonal reference line represents the perfect fit (y=x). The points follow the
-    diagonal closely but deviate noticeably in the middle and upper portions, showing
-    the characteristic S-shaped pattern from the mixed normal+exponential data. A
-    legend in the upper-right shows "Perfect Fit (y=x)" and "P-P Points (N=200)".
-    Subtle dashed grid lines appear on both axes.
+  - Library Mastery could be improved by leveraging more distinctive Highcharts features
+    in the interactive HTML version
+  - Markers could be slightly larger for better visibility on the 3600px canvas
+  - The Central region plotBand label is barely visible due to low-opacity color
+  image_description: The plot shows a P-P (Probability-Probability) plot on a square
+    3600x3600 canvas with a light grey background (#fafbfc). The title "pp-basic ·
+    highcharts · pyplots.ai" is displayed in bold dark text at the top, with a subtitle
+    "Mixed Normal + Exponential vs. Normal Reference — Deviation Highlights Distributional
+    Mismatch" below it. The x-axis is labeled "Theoretical CDF (Normal)" and the y-axis
+    "Empirical CDF", both ranging from 0 to 1 with tick intervals of 0.2. A green
+    dashed diagonal line represents "Perfect Fit (y=x)". 200 scatter points follow
+    a gradient color scheme from blue/grey (near the diagonal, low deviation) to coral/red
+    (far from diagonal, high deviation). A subtle blue-tinted "Central region" band
+    spans x=0.3 to 0.7. The legend in the top-right corner shows two entries. Dotted
+    grid lines are subtle. Points show a clear S-shaped deviation from the diagonal
+    in the middle range, consistent with the mixed normal+exponential data distribution.
   criteria_checklist:
     visual_quality:
       score: 27
@@ -46,64 +46,66 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 68px, axes 48px, ticks 36px,
-          legend 36px). Legend text slightly small relative to plot area.
+        comment: Font sizes explicitly set (title 64px, axis titles 44px, tick labels
+          34px). Central region label at 28px with low opacity is slightly hard to
+          read.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or elements anywhere.
+        comment: No overlapping text elements anywhere.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: 200 points with radius 14 are visible but slightly large causing
-          minor clutter in dense regions.
+        comment: Markers at radius 9 are visible but could be slightly larger on 3600px
+          canvas. Alpha 0.55-0.90 is appropriate.
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Blue and yellow provide excellent contrast and are colorblind-safe.
+        comment: Blue-to-coral gradient is colorblind-safe with good contrast.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Square format appropriate. Some wasted space at bottom from marginBottom
-          200px.
+        comment: Square format appropriate per spec. Good utilization but margins
+          slightly generous.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with distribution context.
+        comment: Descriptive labels. Probabilities are inherently unitless.
     design_excellence:
-      score: 10
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: Well-configured default look with Python Blue and yellow reference
-          line. Not distinctively designed.
+        passed: true
+        comment: Custom deviation color gradient, clean background, intentional typography
+          hierarchy, styled plot border. Clearly above defaults.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Dashed grid lines are a nice touch but chart borders remain at defaults.
+        passed: true
+        comment: Dotted grid lines, styled plot border, subtle center plotLines. Good
+          but plotBand label adds slight noise.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Mixed distribution creates meaningful deviation but no visual emphasis
-          guides the viewer.
+        passed: true
+        comment: Deviation-based coloring creates visual hierarchy. Subtitle explains
+          insight. Central region band adds context.
     spec_compliance:
       score: 15
       max: 15
@@ -113,29 +115,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct P-P plot with scatter points comparing empirical vs theoretical
-          CDF.
+        comment: 'Correct P-P plot: empirical vs theoretical CDF values.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: reference line, 0-1 axes, square ratio, CDF
-          formulas, 200 points.'
+        comment: Reference diagonal, both axes 0-1, square aspect, correct CDF computation.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Correct X=theoretical CDF, Y=empirical CDF mapping.
+        comment: X=theoretical CDF, Y=empirical CDF, correct mapping.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows exact format. Legend labels are descriptive and accurate.
+        comment: Title format correct. Legend labels descriptive and appropriate.
     data_quality:
-      score: 12
+      score: 13
       max: 15
       items:
       - id: DQ-01
@@ -143,21 +143,20 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Shows deviation from diagonal via mixed normal+exponential data.
-          Could show more extreme cases.
+        comment: Shows S-shaped deviation from mixed distribution. Could show more
+          extreme tails.
       - id: DQ-02
         name: Realistic Context
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Statistical context is plausible but abstract without real-world
-          scenario labels.
+        comment: Statistical context is plausible. Not tied to specific named dataset.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: All values correctly within 0-1 range. 200 points within spec range.
+        comment: 200 samples within spec range. Parameters are sensible.
     code_quality:
       score: 10
       max: 10
@@ -167,13 +166,13 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean linear flow with no functions or classes.
+        comment: Linear flow, no functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output.
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -185,41 +184,44 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic code with appropriate complexity.
+        comment: Clean, appropriate complexity. No fake functionality.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png via screenshot and plot.html for interactivity.
+        comment: Saves plot.png and plot.html. Current API.
     library_mastery:
-      score: 5
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Correct Chart/HighchartsOptions/Series pattern with Selenium export.
-          Standard usage.
+        comment: Good use of Chart/HighchartsOptions, series types, plotBands, plotLines,
+          tooltip pointFormat.
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Interactive HTML export is a Highcharts strength. Doesn't use plotLines,
-          plotBands, or advanced tooltip formatting.
+        comment: Uses plotBands/plotLines and custom tooltip but doesn't leverage
+          deeply distinctive Highcharts features like drilldown or advanced interactivity.
   verdict: REJECTED
 impl_tags:
   dependencies:
   - scipy
   - selenium
   techniques:
+  - hover-tooltips
   - html-export
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
   - grid-styling
+  - edge-highlighting
