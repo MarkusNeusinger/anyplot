@@ -1,0 +1,228 @@
+library: seaborn
+specification_id: pp-basic
+created: '2026-03-15T20:17:56Z'
+updated: '2026-03-15T20:40:09Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23118400216
+issue: 4587
+python_version: 3.14.3
+library_version: 0.13.2
+preview_url: https://storage.googleapis.com/pyplots-images/plots/pp-basic/seaborn/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/pp-basic/seaborn/plot_thumb.png
+preview_html: null
+quality_score: 90
+review:
+  strengths:
+  - Excellent data storytelling through annotation, tolerance band, and multi-dimensional
+    encoding (color, size, shape)
+  - Professional visual refinement with removed spines, subtle grid, and cohesive
+    viridis_r colormap
+  - Realistic manufacturing QC scenario with plausible tensile strength data
+  - Clean, well-structured code with appropriate use of seaborn semantic mapping
+  weaknesses:
+  - Colorbar tick labels slightly below recommended 16pt minimum (13pt)
+  - Some marker sizes exceed guidelines for 200-point density (up to 140 vs recommended
+    max 100)
+  image_description: 'The plot displays a P-P (Probability-Probability) plot with
+    a square aspect ratio. Both axes range from 0.0 to 1.0. The x-axis is labeled
+    "Theoretical Cumulative Probability (Normal)" and the y-axis "Empirical Cumulative
+    Probability". A dashed red/orange diagonal reference line represents perfect normal
+    fit. A light gray ±0.02 tolerance band surrounds the diagonal. 200 data points
+    are plotted along the diagonal using three marker shapes: circles for the lower
+    tail, diamonds for the center, and squares for the upper tail. Points are colored
+    by deviation magnitude using a viridis_r colormap (yellow = low deviation, dark
+    purple = high deviation), with a vertical colorbar on the right labeled "Absolute
+    Deviation from Normal Fit". An annotation with an arrow points to the maximum
+    deviation point (~0.051) noting "hardening skew". The title reads "pp-basic ·
+    seaborn · pyplots.ai". Top and right spines are removed, and the grid is very
+    subtle. The legend in the lower right shows the tolerance band and perfect normal
+    fit line.'
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All major font sizes explicitly set. Colorbar tick labels at 13pt
+          slightly below 16pt guideline.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text. Legend, annotation, and colorbar well-positioned.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: 200 points with sizes 50-140 and alpha 0.75. Some larger markers
+          slightly crowd center region.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Viridis_r colormap is perceptually uniform and colorblind-safe.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square aspect ratio as spec requires. Plot fills canvas well with
+          balanced margins.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive labels. Probabilities are unitless.
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Strong design with viridis_r colormap, tolerance band, multi-dimensional
+          encoding. Above defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines removed, grid alpha 0.2, subtle styling, generous whitespace.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Annotation highlights max deviation, color/size encoding shows deviation
+          pattern, tolerance band provides context.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct P-P plot comparing empirical vs theoretical CDF.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All required features present: reference line, square aspect, CDF
+          computation, both axes 0-1.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = theoretical CDF, Y = empirical CDF. Correct mapping.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format. Legend labels correct.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows right-skew deviation from normality. Could show slightly more
+          dramatic deviation.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Manufacturing QC: bolt tensile strengths. Real-world, plausible,
+          neutral.'
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 520 MPa mean tensile strength for steel bolts. Realistic values.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear flow with no functions or classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic, appropriate complexity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with dpi=300.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of seaborn axes-level API, set_theme, set_context. Falls
+          back to matplotlib for reference elements.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Triple semantic mapping (hue + size + style) is distinctively seaborn.
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - scipy
+  techniques:
+  - colorbar
+  - annotations
+  patterns:
+  - data-generation
+  - explicit-figure
+  dataprep:
+  - binning
+  styling:
+  - custom-colormap
+  - alpha-blending
+  - edge-highlighting
+  - grid-styling
