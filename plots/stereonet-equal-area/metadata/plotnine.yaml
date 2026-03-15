@@ -1,7 +1,7 @@
 library: plotnine
 specification_id: stereonet-equal-area
 created: '2026-03-15T22:58:28Z'
-updated: '2026-03-15T23:17:05Z'
+updated: '2026-03-15T23:25:16Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23121188785
 issue: 4576
@@ -10,35 +10,39 @@ library_version: 0.15.3
 preview_url: https://storage.googleapis.com/pyplots-images/plots/stereonet-equal-area/plotnine/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/stereonet-equal-area/plotnine/plot_thumb.png
 preview_html: null
-quality_score: 83
+quality_score: 87
 review:
   strengths:
-  - Mathematically correct equal-area projection with proper pole and great circle
-    calculations
-  - Excellent colorblind-safe palette with redundant shape encoding for accessibility
-  - Clean visual design with removed axes, subtle grid, and well-placed cardinal labels
-  - Cluster annotations provide useful geological context (mean strike/dip)
-  - Good use of plotnine grammar of graphics with multiple layered geoms
+  - Comprehensive stereonet implementation with correct equal-area projection mathematics
+  - Excellent colorblind-safe blue/gold/purple palette with distinct marker shapes
+    per feature type
+  - Clean visual refinement with all panel chrome removed, subtle grid lines, and
+    well-proportioned primitive circle
+  - Mean strike/dip annotations add geological context and data storytelling to each
+    cluster
+  - 'Full spec compliance: great circles, poles, density contours, tick marks, and
+    cardinal labels all present'
   weaknesses:
-  - Cluster annotations overlap with data points, reducing readability
-  - Density contours use 2D KDE rather than true Kamb contouring method
-  - Some wasted whitespace at bottom of canvas
-  image_description: 'The plot displays a structural geology stereonet using the Schmidt
-    equal-area (lower-hemisphere) projection. A black primitive circle represents
-    the horizontal plane with N, E, S, W cardinal direction labels in bold and degree
-    labels every 30° around the perimeter. Three geological feature types are plotted:
-    Bedding (blue circles, clustered in the SE quadrant), Fault (gold/amber diamonds,
-    clustered in the SW quadrant), and Joint (purple squares, clustered in the N/NW
-    quadrant). Great circles are drawn in corresponding colors for representative
-    planes of each type. Dashed gray density contours (2D KDE) surround each pole
-    cluster. Subtle light gray grid lines show concentric equal-area circles at 30°
-    dip intervals and radial lines at 30° azimuth intervals. Italic annotations near
-    each cluster show mean strike/dip values. The legend is positioned to the right
-    of the stereonet. The title reads "stereonet-equal-area · plotnine · pyplots.ai".
-    The figure uses a 1:1 aspect ratio (3600x3600 px).'
+  - Annotation text size=11 is somewhat small relative to other text elements
+  - Layout has slight asymmetry with legend on right and unused space on left
+  - Density contours use generic Gaussian KDE rather than Kamb-method contouring
+  image_description: 'The plot displays a Schmidt equal-area (lower-hemisphere) stereonet
+    projection on a clean white background. A bold black primitive circle marks the
+    projection boundary, with tick marks every 10 degrees around the perimeter. Cardinal
+    directions (N, S, E, W) are labeled in bold dark text, and intermediate degree
+    labels (30, 60, 120, etc.) appear in gray around the exterior. Inside the circle,
+    subtle light gray grid lines form concentric dip-interval circles and radial azimuth
+    lines. Three feature types are plotted: Bedding (blue circles, clustered in the
+    center-south area), Fault (gold/amber diamonds, in the southwest), and Joint (purple
+    squares, in the north-northeast). Great circles are drawn as colored arcs for
+    representative planes of each type. Dashed gray density contours from geom_density_2d
+    overlay the pole data. Mean strike/dip annotations (42/30, 148/67, 279/75) appear
+    in italic near each cluster in matching colors. The legend on the right shows
+    Feature Type with all three categories. Title reads stereonet-equal-area plotnine
+    pyplots.ai at the top.'
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 26
       max: 30
       items:
       - id: VQ-01
@@ -46,69 +50,66 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'Font sizes explicitly set: title 24pt, cardinal labels 18pt, degree
-          labels 13pt, legend 16/14pt. All readable.'
+        comment: Font sizes explicitly set throughout. Annotations at size=11 slightly
+          small.
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Cluster annotations overlap with data points, reducing readability
-          of labels.
+        passed: true
+        comment: Minor proximity between annotations and poles but mostly clear.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Poles well-sized with distinct shapes. Great circles and density
-          contours visible. Grid appropriately subtle.
+        comment: Poles at size=3.5 with distinct shapes are well-visible. Great circles
+          clear.
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Colorblind-safe blue/amber/purple palette with redundant shape encoding.
+        comment: Colorblind-safe blue/gold/purple palette with good contrast.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Square figure, stereonet well-centered, some wasted whitespace at
-          bottom.
+        comment: Square figure appropriate for stereonet. Slight asymmetry from right-side
+          legend.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Axes hidden (appropriate for stereonet). Cardinal directions and
-          degree labels serve as orientation.
+        comment: Axes hidden for stereonet. Cardinal and degree labels serve as orientation.
     design_excellence:
-      score: 13
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Custom color palette with good harmony, different marker shapes,
-          clean stereonet design.
+        comment: Custom palette, distinct shapes, clean professional appearance above
+          defaults.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Axes/spines/backgrounds removed. Grid subtle. Tick marks clean. Good
-          refinement.
+        comment: All chrome removed, subtle grid, generous whitespace.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Cluster annotations with mean strike/dip, distinct color/shape encoding,
-          density contours reinforce patterns.
+        comment: Mean strike/dip annotations and density contours provide geological
+          context.
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -116,27 +117,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct equal-area Schmidt net lower-hemisphere projection.
+        comment: Correct Schmidt equal-area lower-hemisphere stereonet.
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: All features present. Density contours use 2D KDE approximation rather
-          than true Kamb method.
+        comment: 'All spec features present: great circles, poles, density contours,
+          tick marks, grid.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Strike/dip correctly converted to equal-area projection coordinates.
+        comment: Strike/dip correctly mapped to equal-area projection.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Legend shows all three feature types with matching
-          colors and shapes.
+        comment: Title format correct. Legend labeled Feature Type with all categories.
     data_quality:
       score: 14
       max: 15
@@ -146,20 +146,20 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Three distinct feature types with different orientation distributions.
-          Great circles for representative planes.
+        comment: Three feature types with different orientations covering shallow
+          to steep dips.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic geological field measurements with proper strike/dip conventions.
+        comment: Geological field measurements - real-world plausible and neutral.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Realistic strike/dip values for bedding, faults, and joints.
+        comment: 100 measurements with geologically reasonable strike/dip values.
     code_quality:
       score: 10
       max: 10
@@ -169,7 +169,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean linear flow with no functions or classes.
+        comment: Linear flow with no functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -187,13 +187,13 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for stereonet calculations. No over-engineering.
+        comment: Well-organized with clear section comments. No fake functionality.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png using current plotnine API.
+        comment: Saves as plot.png via plot.save(). Current API.
     library_mastery:
       score: 7
       max: 10
@@ -203,27 +203,27 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good grammar of graphics usage with multiple geom layers, aes mappings,
-          scales, and theme customization.
+        comment: Good grammar of graphics usage with layered geoms, aes, scales, and
+          after_stat.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses geom_density_2d with after_stat for alpha mapping, layer composition,
-          and guides control.
-  verdict: APPROVED
+        comment: geom_density_2d with after_stat alpha mapping is plotnine-specific.
+          Most math is numpy-based.
+  verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
-  - polar-projection
   - annotations
   - layer-composition
-  - manual-ticks
+  - polar-projection
   patterns:
   - data-generation
   - iteration-over-groups
-  dataprep: []
+  dataprep:
+  - kde
   styling:
   - minimal-chrome
   - alpha-blending
