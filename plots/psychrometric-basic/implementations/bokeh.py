@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 psychrometric-basic: Psychrometric Chart for HVAC
 Library: bokeh 3.9.0 | Python 3.14.3
 Quality: 83/100 | Created: 2026-03-15
@@ -87,28 +87,22 @@ for rh_val in [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]:
     # Label - position to avoid overlap: stagger labels along the curves
     if len(t_plot) > 0:
         label_text = f"{int(rh_val * 100)}%"
-        # Place labels at different x-positions to avoid clustering
-        if rh_val == 1.0:
-            target_x = 30
-        elif rh_val >= 0.7:
-            target_x = 42
-        elif rh_val >= 0.4:
-            target_x = 46
-        else:
-            target_x = 48
+        # Place labels at staggered x-positions to avoid clustering
+        rh_label_x = {1.0: 28, 0.9: 33, 0.8: 37, 0.7: 40, 0.6: 43, 0.5: 45, 0.4: 47, 0.3: 48, 0.2: 49, 0.1: 49.5}
+        target_x = rh_label_x[rh_val]
         idx = np.argmin(np.abs(t_plot - target_x))
-        if w_plot[idx] > 29:
-            idx = np.argmin(np.abs(w_plot - 28))
+        if w_plot[idx] > 28:
+            idx = np.argmin(np.abs(w_plot - 27))
         p.add_layout(
             Label(
                 x=t_plot[idx],
                 y=w_plot[idx],
                 text=label_text,
-                text_font_size="16pt",
+                text_font_size="17pt",
                 text_color=rh_colors[rh_val],
                 text_font_style="bold" if rh_val == 1.0 else "normal",
-                x_offset=5,
-                y_offset=-2,
+                x_offset=6,
+                y_offset=-3,
             )
         )
 
@@ -129,9 +123,7 @@ for twb in wb_temps:
         t_plot = t_range[mask]
         w_plot = w[mask]
         source = ColumnDataSource(data={"t": t_plot, "w": w_plot})
-        wb_r = p.line(
-            "t", "w", source=source, line_color="#e07b39", line_width=1.5, line_alpha=0.65, line_dash="dashed"
-        )
+        wb_r = p.line("t", "w", source=source, line_color="#e07b39", line_width=1.6, line_alpha=0.7, line_dash="dashed")
         p.add_tools(
             HoverTool(
                 renderers=[wb_r],
@@ -147,11 +139,11 @@ for twb in wb_temps:
                     x=t_plot[mid],
                     y=w_plot[mid],
                     text=f"{twb}°C wb",
-                    text_font_size="14pt",
+                    text_font_size="17pt",
                     text_color="#c96a2d",
                     x_offset=2,
                     y_offset=-14,
-                    text_alpha=0.8,
+                    text_alpha=0.85,
                 )
             )
 
@@ -166,12 +158,12 @@ for h in enthalpy_values:
         w_plot = w[mask]
         source = ColumnDataSource(data={"t": t_plot, "w": w_plot})
         enth_r = p.line(
-            "t", "w", source=source, line_color="#8b5e3c", line_width=1.2, line_alpha=0.5, line_dash="dotted"
+            "t", "w", source=source, line_color="#7b2d8e", line_width=1.4, line_alpha=0.65, line_dash="dotted"
         )
         p.add_tools(
             HoverTool(
                 renderers=[enth_r],
-                tooltips=[("Enthalpy", f"{h} kJ/kg"), ("Dry-Bulb", "@t{0.1} °C"), ("W", "@w{0.1} g/kg")],
+                tooltips=[("Enthalpy", f"{h} kJ/kg"), ("Dry-Bulb", "@t{0.1} °C"), ("Humidity Ratio", "@w{0.1} g/kg")],
                 line_policy="nearest",
             )
         )
@@ -186,10 +178,10 @@ for h in enthalpy_values:
                 Label(
                     x=t_plot[idx],
                     y=w_plot[idx],
-                    text=f"{h}",
-                    text_font_size="13pt",
-                    text_color="#8b5e3c",
-                    text_alpha=0.75,
+                    text=f"{h} kJ/kg",
+                    text_font_size="17pt",
+                    text_color="#7b2d8e",
+                    text_alpha=0.85,
                     x_offset=3,
                     y_offset=-12,
                 )
@@ -206,7 +198,7 @@ for v in sv_values:
         w_plot = w[mask]
         source = ColumnDataSource(data={"t": t_plot, "w": w_plot})
         sv_r = p.line(
-            "t", "w", source=source, line_color="#6b8e5e", line_width=1.2, line_alpha=0.5, line_dash="dashdot"
+            "t", "w", source=source, line_color="#6b8e5e", line_width=1.4, line_alpha=0.65, line_dash="dashdot"
         )
         p.add_tools(
             HoverTool(
@@ -227,9 +219,9 @@ for v in sv_values:
                     x=t_plot[idx],
                     y=w_plot[idx],
                     text=f"{v} m³/kg",
-                    text_font_size="13pt",
+                    text_font_size="17pt",
                     text_color="#6b8e5e",
-                    text_alpha=0.8,
+                    text_alpha=0.85,
                     x_offset=0,
                     y_offset=-18,
                 )
@@ -364,6 +356,14 @@ p.ygrid.grid_line_alpha = 0.2
 p.background_fill_color = "#fafafa"
 p.border_fill_color = "white"
 p.outline_line_color = None
+
+p.xaxis.axis_line_color = "#666666"
+p.yaxis.axis_line_color = "#666666"
+p.xaxis.major_tick_line_color = "#666666"
+p.yaxis.major_tick_line_color = "#666666"
+p.xaxis.minor_tick_line_color = None
+p.yaxis.minor_tick_line_color = None
+p.title.text_color = "#2c3e50"
 
 # Save
 export_png(p, filename="plot.png")
