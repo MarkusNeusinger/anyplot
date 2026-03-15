@@ -1,0 +1,236 @@
+library: pygal
+specification_id: area-elevation-profile
+created: '2026-03-15T21:50:48Z'
+updated: '2026-03-15T22:30:45Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23120069560
+issue: 4578
+python_version: 3.14.3
+library_version: 3.1.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/area-elevation-profile/pygal/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/area-elevation-profile/pygal/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/area-elevation-profile/pygal/plot.html
+quality_score: 86
+review:
+  strengths:
+  - Full spec compliance with all required features (filled silhouette, landmark annotations,
+    vertical lines, exaggeration note)
+  - Outstanding data quality using real Swiss Alpine locations with realistic elevations
+    and terrain variation
+  - Strong design with color-coded landmark types adding semantic depth beyond simple
+    markers
+  - Interactive HTML output alongside PNG showcases pygal native tooltip capabilities
+  - Clean, reproducible code with well-organized SVG post-processing
+  weaknesses:
+  - Vertical exaggeration note is somewhat faint (light gray italic at font-size 28)
+  - Landmark type color differentiation could be more pronounced in the rendered PNG
+  - Y-axis range extends above the data peak, leaving some unused canvas space
+  image_description: 'The plot displays a terrain elevation profile of the Bernese
+    Oberland Traverse, rendered as a filled area chart using pygal''s XY type. The
+    x-axis shows "Distance (km)" from 0 to 120 km, and the y-axis shows "Elevation
+    (m)" ranging from ~500 to 2,200 m. The terrain silhouette is filled in a muted
+    steel-blue color with subtle transparency (opacity 0.65). Seven landmarks are
+    annotated with orange dots, vertical dashed lines extending to the plot floor,
+    bold colored name labels (color-coded by type: blue for towns, orange for passes,
+    red for summit, green for valley, purple for hut), and gray elevation values beneath
+    each name. Landmarks from left to right: Grindelwald (1100 m), Kleine Scheidegg
+    (1544 m), Lauterbrunnen (774 m), Mürren (2009 m), Blüemlisalp Hut (1365 m), Hohtürli
+    Pass (1580 m), and Kandersteg (889 m). The title reads "Bernese Oberland Traverse
+    · area-elevation-profile · pygal · pyplots.ai". A legend at the bottom shows "Elevation
+    Profile" (blue square) and "Landmarks" (orange square). An italic note in the
+    bottom-right reads "Vertical exaggeration ~10× for terrain visibility". Horizontal
+    dashed grid lines appear on y-axis only. Background is clean white.'
+  criteria_checklist:
+    visual_quality:
+      score: 25
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 48, labels 36, major labels
+          34, legend 30, annotation names 32, elevation values 26). Vertical exaggeration
+          note slightly faint.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Well-staggered landmark labels with custom y-offsets. No actual text
+          collision. Minor proximity between some labels.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Filled area clearly visible, orange dots (size 16) stand out. Dashed
+          vertical lines appropriately subtle at opacity 0.55.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 3
+        max: 4
+        passed: true
+        comment: Good contrast between blue fill and orange dots. Landmark type color
+          differentiation is present but some hues are close in rendered PNG.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Plot fills canvas well with appropriate margins. Y-axis extends to
+          2200 m but peak is ~2009 m, leaving some unused space.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Distance (km) and Elevation (m) — descriptive with units.
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Strong design with custom color palette for landmark types, refined
+          typography, intentional visual hierarchy. Clearly above defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: X-guides hidden, y-guides with subtle dashed styling, clean white
+          background, custom margins.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear traverse narrative with color-coded landmark types adding semantic
+          meaning. Mürren summit creates natural focal point.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct: filled area XY chart creating terrain silhouette effect.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: filled area, start/end labels, landmark
+          annotations with vertical lines, vertical exaggeration note.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = distance (km), Y = elevation (m), correctly mapped.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title includes descriptive name, spec-id, library, and pyplots.ai.
+          Legend labels match data series.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Multiple peaks, valleys, gradual slopes, steep ascents. Seven landmarks
+          cover all terrain types.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real Swiss Alpine locations in the Bernese Oberland with realistic
+          elevation values.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Elevations 650-2100 m and 120 km distance are realistic for multi-day
+          alpine traverse.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports, data generation, chart config, data series,
+          SVG post-processing, PNG output.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set for terrain noise.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: re, xml.etree, cairosvg, numpy, pygal, Style.'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: SVG post-processing is complex but necessary and well-structured.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png via cairosvg. Also outputs interactive HTML.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of pygal.XY with fill, custom Style, dict-format data, cubic
+          interpolation, tooltips. Heavy SVG post-processing reduces pygal-native
+          feel.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: 'Leverages pygal-distinctive features: interactive HTML with native
+          tooltips, cubic interpolation, fill mode, fancy tooltips, value formatters.'
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - cairosvg
+  techniques:
+  - annotations
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - grid-styling
+  - alpha-blending

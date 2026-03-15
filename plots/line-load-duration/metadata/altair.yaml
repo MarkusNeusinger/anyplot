@@ -1,0 +1,236 @@
+library: altair
+specification_id: line-load-duration
+created: '2026-03-15T21:43:45Z'
+updated: '2026-03-15T22:07:43Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23119898937
+issue: 4586
+python_version: 3.14.3
+library_version: 6.0.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/line-load-duration/altair/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/line-load-duration/altair/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/line-load-duration/altair/plot.html
+quality_score: 90
+review:
+  strengths:
+  - 'Perfect spec compliance: all six specification requirements fully implemented
+    (monotonic curve, shaded regions, capacity tier lines, region labels, energy annotation,
+    professional style)'
+  - Semantic color palette with intentional meaning (purple=peak, golden=intermediate,
+    blue=base) creates strong visual storytelling
+  - Realistic synthetic data with daily, seasonal, and weekday components produces
+    a convincing load profile
+  - Clean code structure with appropriate downsampling for Vega performance
+  - Dual output (static PNG + interactive HTML) leverages Altair strengths
+  weaknesses:
+  - Y-axis tick density (every 50 MW) creates visual clutter; coarser ticks would
+    be cleaner
+  - Tier labels on the right margin are slightly crowded against the canvas edge
+  - Region data splitting is done manually in numpy rather than using Altair transform_filter
+  image_description: 'The plot displays a load duration curve showing electrical power
+    demand (MW) on the y-axis against ranked hours of the year (0-8,760) on the x-axis.
+    The curve is monotonically decreasing from ~1,250 MW to ~380 MW, rendered as a
+    dark line (#1a1a2e) with strokeWidth 2.5. Three distinct filled regions under
+    the curve represent load zones: purple (#8e44ad) for Peak Load (leftmost, ~0-1,000
+    hours), golden yellow (#f39c12) for Intermediate Load (middle, ~1,000-7,200 hours),
+    and steel blue (#306998) for Base Load (rightmost, ~7,200-8,760 hours). Each region
+    is filled at 55% opacity. Three horizontal dashed lines mark capacity tiers: Peak
+    Capacity (1,100 MW), Intermediate Capacity (900 MW), and Base Capacity (550 MW),
+    with bold labels aligned to the right. Region names appear in italic bold within
+    their respective zones. A bold annotation reads "Total Energy: 7,075 GWh/year"
+    in the lower-center area. The title "line-load-duration · altair · pyplots.ai"
+    is displayed at the top in 28pt font. The grid is very subtle (0.15 opacity) and
+    the view border is removed.'
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 28, axis 22, ticks 18, annotations
+          18). Y-axis has dense tick marks but all readable.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text. Tier labels, region labels, and annotations
+          well-separated.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Curve line at strokeWidth 2.5 clearly visible. Area fills at 0.55
+          opacity show regions distinctly.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Purple/golden/blue palette is colorblind-safe with strong luminance
+          contrast.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Plot fills canvas well (~65%). Tier labels on right extend close
+          to edge.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive labels with units: Power Demand (MW), Hours of Year
+          (ranked).'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful custom palette with semantic color mapping. Professional
+          hierarchy clearly above defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid (0.15 opacity), view border removed. Y-axis tick density
+          adds some clutter.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Strong storytelling through color-coded regions, capacity tiers,
+          and energy annotation.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct load duration curve with monotonically decreasing sorted
+          data.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: monotonic decrease, shaded regions, dashed
+          capacity lines, region labels, energy annotation, professional style.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=ranked hours (0-8760), Y=power demand (MW). Full range visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title in correct format. No legend needed as regions are directly
+          labeled.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all aspects: clear peak/intermediate/base separation, smooth
+          monotonic decline, realistic load shape.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Mid-sized utility with realistic peak, base, and total energy values.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Realistic values for a mid-sized utility. Sensible capacity tier
+          thresholds.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean imports-data-plot-save flow. No functions or classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) ensures deterministic output.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All three imports (altair, numpy, pandas) are used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity. Region splitting is necessary and cleanly
+          implemented.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with scale_factor=3.0. Also generates interactive
+          HTML.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good declarative usage with alt.layer(), proper encoding types, alt.Scale,
+          alt.Axis. Manual data splitting rather than Altair transforms.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Layer composition is idiomatic Altair. Interactive HTML uses selection_point
+          and .interactive() — distinctive Altair features.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling
