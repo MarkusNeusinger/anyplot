@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 funnel-meta-analysis: Meta-Analysis Funnel Plot for Publication Bias
 Library: letsplot 4.9.0 | Python 3.14.3
-Created: 2026-03-15
+Quality: 92/100 | Created: 2026-03-15
 """
 
 import numpy as np
