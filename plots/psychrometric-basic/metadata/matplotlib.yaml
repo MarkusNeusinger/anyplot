@@ -1,7 +1,7 @@
 library: matplotlib
 specification_id: psychrometric-basic
 created: '2026-03-15T21:52:01Z'
-updated: '2026-03-15T22:18:15Z'
+updated: '2026-03-15T22:27:19Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23120046454
 issue: 4583
@@ -13,35 +13,35 @@ preview_html: null
 quality_score: 87
 review:
   strengths:
-  - Excellent spec compliance with all required psychrometric properties computed
-    and displayed correctly
+  - Full spec compliance with all psychrometric properties correctly computed and
+    displayed
   - Strong data storytelling through HVAC process path with numbered state points
-    and descriptive label
+    and descriptive annotation
   - Professional color palette with line style differentiation for accessibility
-  - Clean deterministic code using proper psychrometric equations
-  - Comfort zone and HVAC process create clear focal points
+  - Clean deterministic code using proper psychrometric equations (Buck equation)
+  - Comfort zone and HVAC process create clear focal points in a complex chart
   weaknesses:
-  - Some label overlap in the dense middle region where wet-bulb and RH labels crowd
-    together around 20-25C
-  - Inline chart labels at fontsize 11 are slightly small for 4800x2700 output resolution
-  - Blue and teal colors for RH and wet-bulb could be difficult to distinguish for
-    some colorblind viewers
+  - Some label crowding in the mid-chart region where wet-bulb and RH percentage labels
+    overlap around 15-25C
+  - Brown and orange-red colors for wet-bulb and enthalpy are close in hue, relying
+    on line style for differentiation
+  - Inline label fontsize of 13 is adequate but not generous for the information density
   image_description: 'The plot displays a psychrometric chart with dry-bulb temperature
     (°C) on the x-axis ranging from -10 to 50, and humidity ratio (g/kg dry air) on
-    the y-axis ranging from 0 to 30. The saturation curve (100% RH) is drawn as a
-    thick dark blue line forming the upper boundary. Relative humidity curves from
-    10% to 90% are shown as thinner blue lines with percentage labels placed along
-    the curves. Wet-bulb temperature lines (0°C to 30°C in 5°C steps) are drawn as
-    teal dashed diagonals with degree labels. Enthalpy lines (10 to 110 kJ/kg) appear
-    as orange-red dash-dot diagonals with numeric labels. Specific volume lines (0.78
-    to 0.94 m³/kg) are shown as light purple dotted diagonals with decimal labels
-    at the right edge. A shaded blue comfort zone rectangle spans approximately 20-26°C
-    and the corresponding 30-60% RH humidity ratios, labeled "Comfort Zone" in bold
-    blue text. A red HVAC process path with arrows connects three numbered state points:
-    point 1 (35°C, ~17.5 g/kg), point 2 (13°C, ~9 g/kg), and point 3 (24°C, ~9.5 g/kg),
-    with italic red text "Cool + Dehumidify → Reheat". The legend in the upper-left
-    identifies all five line types. Top and right spines are removed, and subtle gridlines
-    appear on both axes.'
+    the y-axis from 0 to 30. The saturation curve (100% RH) is drawn as a thick dark
+    blue line forming the upper boundary. Relative humidity curves from 10% to 90%
+    appear as thinner blue lines with percentage labels positioned along the right
+    side of each curve. Wet-bulb temperature lines (0°C to 30°C in 5°C steps) are
+    drawn as brown dashed diagonals with degree labels rotated at -45°. Enthalpy lines
+    (10 to 110 kJ/kg) appear as orange-red dash-dot diagonals with numeric labels
+    near the upper-left. Specific volume lines (0.78 to 0.94 m³/kg) are shown as light
+    purple dotted diagonals with decimal labels at the right edge. A shaded light-blue
+    comfort zone rectangle spans approximately 20-26°C with humidity ratios corresponding
+    to 30-60% RH, labeled "Comfort Zone" in bold blue text. A red HVAC process path
+    with arrows connects three numbered state points: 1 (35°C, ~17.5 g/kg) → 2 (13°C,
+    ~9 g/kg) → 3 (24°C, ~9.5 g/kg), with italic red text "Cool + Dehumidify → Reheat"
+    above. The legend in the upper-left identifies all five line types. Top and right
+    spines are removed, with subtle gridlines on both axes.'
   criteria_checklist:
     visual_quality:
       score: 25
@@ -52,35 +52,36 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All main text sizes explicitly set. Inline chart labels at fontsize=11
-          slightly small for 4800x2700.
+        comment: All main font sizes explicitly set (title=24, labels=20, ticks=16,
+          legend=16). Inline chart labels at fontsize=13 adequate but slightly small
+          for dense regions.
       - id: VQ-02
         name: No Overlap
         score: 4
         max: 6
         passed: false
-        comment: 'Some crowding in dense middle region: wet-bulb and RH labels overlap
-          around 20-25C.'
+        comment: Some crowding where 50%/60% RH labels cluster; wet-bulb and enthalpy
+          labels overlap in mid-chart region around 15-25C.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Lines well-differentiated by style and color. Saturation curve visually
-          prominent.
+        comment: Lines well-differentiated by style. Saturation curve visually prominent.
+          HVAC arrows and markers clear.
       - id: VQ-04
         name: Color Accessibility
         score: 3
         max: 4
         passed: true
-        comment: Good palette variety with line style reinforcement. Blue and teal
-          could be close for deuteranopia.
+        comment: Brown and orange-red wet-bulb/enthalpy colors are somewhat close
+          in hue; line style differentiation compensates.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good 16:9 proportions, tight_layout, balanced margins.
+        comment: Good 16:9 proportions, chart fills canvas well with balanced margins.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -103,7 +104,8 @@ review:
         score: 4
         max: 6
         passed: true
-        comment: Spines removed, subtle grid, clean legend. Good refinement.
+        comment: Spines removed, subtle grid (alpha=0.15), path effects for label
+          readability. Good refinement.
       - id: DE-03
         name: Data Storytelling
         score: 5
@@ -133,7 +135,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Correct axis mapping. Range -10 to 50C as specified.
+        comment: Correct axis mapping. Range -10 to 50C as specified. Standard atmosphere.
       - id: SC-04
         name: Title & Legend
         score: 3
@@ -214,9 +216,8 @@ review:
         score: 3
         max: 5
         passed: true
-        comment: FancyArrowPatch, Polygon patches, and manual Line2D legend are distinctively
-          matplotlib.
-  verdict: APPROVED
+        comment: FancyArrowPatch, patheffects, Polygon patches are distinctively matplotlib.
+  verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
@@ -230,3 +231,4 @@ impl_tags:
   styling:
   - alpha-blending
   - grid-styling
+  - edge-highlighting
