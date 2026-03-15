@@ -1,6 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 column-stratigraphic: Stratigraphic Column with Lithology Patterns
 Library: pygal 3.1.0 | Python 3.14.3
+Quality: 74/100 | Created: 2026-03-15
 """
 
 import re

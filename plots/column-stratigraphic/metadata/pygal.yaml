@@ -1,7 +1,7 @@
 library: pygal
 specification_id: column-stratigraphic
 created: '2026-03-15T22:57:51Z'
-updated: '2026-03-15T23:03:03Z'
+updated: '2026-03-15T23:24:24Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23121198913
 issue: 4573
@@ -10,36 +10,39 @@ library_version: 3.1.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/column-stratigraphic/pygal/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/column-stratigraphic/pygal/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/column-stratigraphic/pygal/plot.html
-quality_score: 76
+quality_score: 74
 review:
   strengths:
-  - Excellent spec compliance with all required features present and well-executed
-  - Well-crafted SVG lithology patterns approximating standard geological conventions
-  - Coherent geological data with proper chronological ordering and realistic formation
-    names
-  - Clean readable monospace typography appropriate for scientific visualization
+  - Creative SVG pattern injection for geological lithology patterns (stipple, brick,
+    dashes, circles, diamonds)
+  - Well-designed age bracket annotations grouping layers by geological period
+  - Good data with 10 realistic geological formations spanning Triassic to Eocene
+  - HTML export preserving pygal native interactive tooltips
+  - Professional monospace typography matching scientific convention
   weaknesses:
-  - Library mastery critically low - pygal used only as SVG container with dummy data,
-    none of pygal charting features utilized
-  - Significant empty white space on right 40% of canvas
-  - Siltstone and conglomerate background colors too similar (both tan/brown)
-  image_description: 'The plot displays a vertical stratigraphic column spanning 0-135m
-    depth with 10 geological layers. The title "column-stratigraphic · pygal · pyplots.ai"
-    appears at top center in monospace font. On the left, an "Age" column lists geological
-    periods (Eocene, Paleocene, Late Cretaceous, Early Cretaceous, Jurassic, Triassic)
-    with vertical brackets grouping contiguous layers. A "Depth (m)" scale with tick
-    marks every 10m runs alongside the column. The central column shows rectangular
-    blocks filled with distinct lithology patterns: yellow with stipple dots (sandstone),
-    gray with horizontal dashes (shale), light blue with brick pattern (limestone),
-    tan with short dashes (siltstone), burlywood with circles (conglomerate), medium
-    gray with thin lines (mudstone), and purple-pink with diamond crosshatch (dolomite).
-    Formation names appear in monospace to the right of each layer, with lithology
-    type in smaller italic gray text further right. A "Lithology Key" in the upper
-    right shows all 7 pattern swatches with labels. The right approximately 40% of
-    the canvas is largely empty white space.'
+  - 'Critical color-pattern mismatch: colors tuple follows original layers order but
+    series added in reversed order, causing 8/10 incorrect lithology patterns'
+  - Formation names only in bottom legend, not beside or within layers as spec requests
+  - Value labels inside patterned bars have low contrast
+  - 'Shale and mudstone colors too similar (#808080 vs #A9A9A9)'
+  image_description: The plot shows a stacked bar chart representing a stratigraphic
+    column with the title "column-stratigraphic · pygal · pyplots.ai". The vertical
+    axis is labeled "Stratigraphic Thickness (m)" ranging from 0 to 140m. Ten geological
+    layers are stacked vertically with distinct fill patterns and colors. Age brackets
+    (Triassic, Jurassic, E. Cretaceous, L. Cretaceous, Paleocene, Eocene) appear on
+    the left side with connecting bracket lines. Thickness values (12m, 13m, 14m,
+    etc.) are printed within bars. The legend at the bottom lists all 10 formations
+    with their ages in a 3-column layout using monospace font. The lithology patterns
+    include stipple dots, horizontal dashes, brick/block patterns, circles, and diamond
+    shapes. However, the patterns are mismatched to the wrong lithology types — the
+    bottom layer (Crystal Ridge Fm, dolomite) shows a gold stipple-dot pattern (sandstone
+    pattern), and the top layer (Red Mesa Fm, sandstone) shows a purple diamond pattern
+    (dolomite pattern). Only the two limestone layers display correct patterns. The
+    color palette includes gold, gray, light blue, green, brown/orange, dark gray,
+    and purple.
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 24
       max: 30
       items:
       - id: VQ-01
@@ -47,43 +50,41 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'Font sizes explicitly set (34, 30, 28, 26, 36px). All readable.
-          Minor: italic lithology labels at 26px slightly small.'
+        comment: Font sizes explicitly set. Value labels inside patterned bars slightly
+          hard to read.
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No overlapping text anywhere. All labels well-spaced.
+        comment: Legend slightly cramped with long formation names but mostly readable.
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: All lithology patterns distinct and clearly visible. Layer boundaries
-          sharp.
+        comment: All bars clearly visible with distinct patterns and colors.
       - id: VQ-04
         name: Color Accessibility
-        score: 3
-        max: 4
-        passed: true
-        comment: Siltstone and conglomerate are both brownish/tan, relying on pattern
-          alone to differentiate.
-      - id: VQ-05
-        name: Layout & Canvas
         score: 2
         max: 4
         passed: false
-        comment: Stratigraphic column occupies left ~55% of canvas. Right side largely
-          empty.
+        comment: Shale and mudstone grays too similar. Color-pattern mismatch undermines
+          legend reliability.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Square format works. Some wasted space at top of y-axis range.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Depth (m) includes units. Age header present. Title correct format.
+        comment: Y-axis has units. Title in correct format.
     design_excellence:
-      score: 11
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -91,53 +92,51 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom SVG lithology patterns well-crafted. Monospace font gives
-          technical feel. Above defaults but not publication-ready.
+        comment: Custom SVG lithology patterns and color palette. Monospace typography
+          fits scientific context.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Clean white background, no unnecessary grid, age brackets are nice.
-          Significant wasted space on right.
+        comment: Custom margins, rounded bars, age brackets add scientific polish.
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
-        passed: true
-        comment: Geological sequence tells coherent temporal narrative. Age brackets
-          provide context. No strong focal point.
+        passed: false
+        comment: Age brackets create geological narrative but incorrect patterns undermine
+          the story.
     spec_compliance:
-      score: 15
+      score: 9
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: 'Correct chart type: vertical stratigraphic column with stacked lithology
-          blocks.'
+        comment: Stacked bar representing stratigraphic column is a reasonable adaptation
+          for pygal.
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 1
         max: 4
-        passed: true
-        comment: 'All spec features present: 7 lithology patterns, depth scale, formation
-          names, age labels, layer boundaries.'
+        passed: false
+        comment: 'Critical: lithology patterns mismatched for 8/10 layers due to color-series
+          ordering bug. Formation names only in legend.'
       - id: SC-03
         name: Data Mapping
-        score: 3
+        score: 1
         max: 3
-        passed: true
-        comment: Depth mapping correct, layers properly positioned and scaled.
+        passed: false
+        comment: Layer order correct but pattern-to-lithology mapping is wrong.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Lithology Key shows all 7 types with pattern
-          swatches.
+        comment: Title format correct. Legend labels show Formation and Age.
     data_quality:
       score: 14
       max: 15
@@ -147,21 +146,19 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: 10 layers, 7 lithology types, varying thicknesses, 6 geological periods.
-          Could include unconformity.
+        comment: 10 layers, 7 lithology types, 6 geological ages, varying thicknesses.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic formation names, proper geological ages in correct chronological
-          order.
+        comment: Realistic geological formation names and plausible ages/depths.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 0-135m depth range realistic. Layer thicknesses vary naturally.
+        comment: Total depth 135m with 8-18m layers is realistic for sedimentary section.
     code_quality:
       score: 8
       max: 10
@@ -171,61 +168,58 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Linear flow but extensive manual SVG string construction adds complexity.
+        comment: Linear flow but complex SVG regex manipulation adds fragility.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic hardcoded data.
+        comment: Fully deterministic data.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: cairosvg, pygal, Style.'
+        comment: All imports used.
       - id: CQ-04
         name: Code Elegance
         score: 1
         max: 2
         passed: false
-        comment: Bypasses pygal charting API, using it only as SVG container with
-          dummy data.
+        comment: Color-series ordering bug is a logic error. SVG regex approach is
+          brittle.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png via cairosvg. Also saves plot.html.
+        comment: Saves plot.png via cairosvg and plot.html for interactive SVG.
     library_mastery:
-      score: 2
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 1
+        score: 4
         max: 5
-        passed: false
-        comment: Pygal used only as SVG scaffold with dummy data. No data API, series,
-          labeling, or axis features utilized.
+        passed: true
+        comment: Good use of StackedBar, Style, legend config, value_formatter, tooltip_fancy_mode.
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 3
         max: 5
-        passed: false
-        comment: No distinctive pygal features used. Could be replicated with any
-          SVG tool.
+        passed: true
+        comment: HTML export with interactive tooltips. SVG pattern injection is creative.
   verdict: REJECTED
 impl_tags:
   dependencies:
   - cairosvg
   techniques:
   - annotations
-  - custom-legend
   - html-export
   patterns:
+  - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
-  - minimal-chrome
   - edge-highlighting
