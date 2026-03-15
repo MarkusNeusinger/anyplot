@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 stereonet-equal-area: Structural Geology Stereonet (Equal-Area Projection)
 Library: letsplot 4.9.0 | Python 3.14.3
 Quality: 85/100 | Created: 2026-03-15
@@ -134,7 +134,14 @@ ref_df = pd.DataFrame(
 )
 
 # Cardinal direction labels
-label_df = pd.DataFrame({"x": [0, 1.09, 0, -1.09], "y": [1.09, 0, -1.09, 0], "label": ["N", "E", "S", "W"]})
+cardinal_positions = [(0, 1.12, "N"), (1.12, 0, "E"), (0, -1.12, "S"), (-1.12, 0, "W")]
+label_df = pd.DataFrame(
+    {
+        "x": [c[0] for c in cardinal_positions],
+        "y": [c[1] for c in cardinal_positions],
+        "label": [c[2] for c in cardinal_positions],
+    }
+)
 
 # Mean pole annotations and confidence ellipses per feature type
 mean_annotations = []
@@ -147,7 +154,19 @@ for idx, ft in enumerate(["Bedding", "Joint", "Fault", "Foliation"]):
     s_rad = np.radians(strikes[mask])
     ms = np.degrees(np.arctan2(np.sin(s_rad).mean(), np.cos(s_rad).mean())) % 360
     md = dips[mask].mean()
-    mean_annotations.append({"x": mx, "y": my, "label": f"{ft}\n{ms:.0f}/{md:.0f}"})
+    # Smart label nudge: avoid overlap with cardinal labels (N/E/S/W)
+    nudge_x, nudge_y = 0.0, -0.13
+    for cx, cy, _ in cardinal_positions:
+        dist = np.sqrt((mx - cx) ** 2 + (my - cy) ** 2)
+        if dist < 0.35:
+            # Push label away from cardinal direction
+            dx, dy = mx - cx, my - cy
+            norm = max(np.sqrt(dx**2 + dy**2), 0.01)
+            nudge_x = dx / norm * 0.15
+            nudge_y = dy / norm * 0.15 - 0.08
+    mean_annotations.append(
+        {"x": mx, "y": my, "label": f"{ft}\n{ms:.0f}/{md:.0f}", "nudge_x": nudge_x, "nudge_y": nudge_y}
+    )
     # Confidence ellipse (1-sigma) around each cluster
     px_ft = pole_x[mask]
     py_ft = pole_y[mask]
@@ -162,8 +181,13 @@ for idx, ft in enumerate(["Bedding", "Joint", "Fault", "Foliation"]):
     for j in range(len(t)):
         ellipse_rows.append({"x": rx[j], "y": ry[j], "group": idx, "feature_type": ft})
 
-mean_df = pd.DataFrame(mean_annotations)
 ellipse_df = pd.DataFrame(ellipse_rows)
+
+# Split mean annotations by nudge direction for separate geom_text layers
+mean_df_list = []
+for ann in mean_annotations:
+    mean_df_list.append(ann)
+mean_df = pd.DataFrame(mean_df_list)
 
 # Colorblind-safe palette (4 feature types)
 color_values = ["#306998", "#CC79A7", "#E69F00", "#009E73"]
@@ -171,63 +195,80 @@ color_values = ["#306998", "#CC79A7", "#E69F00", "#009E73"]
 # Tooltips for poles showing strike/dip
 pole_tooltips = layer_tooltips().line("@feature_type").line("Strike: @strike").line("Dip: @dip")
 
+# Build individual mean label layers to handle per-label nudge offsets
+mean_label_layers = []
+for _, row in mean_df.iterrows():
+    single_df = pd.DataFrame([{"x": row["x"], "y": row["y"], "label": row["label"]}])
+    mean_label_layers.append(
+        geom_text(
+            aes(x="x", y="y", label="label"),
+            data=single_df,
+            size=14,
+            color="#222222",
+            nudge_x=row["nudge_x"],
+            nudge_y=row["nudge_y"],
+            fontface="italic",
+            show_legend=False,
+        )
+    )
+
 # Plot
 plot = (
     ggplot()
     # Reference cross lines
     + geom_segment(
-        aes(x="x", y="y", xend="xend", yend="yend"), data=ref_df, color="#DDDDDD", size=0.5, linetype="dashed"
+        aes(x="x", y="y", xend="xend", yend="yend"), data=ref_df, color="#E0E0E0", size=0.4, linetype="dashed"
     )
     # Density contours using lets-plot built-in geom_density2d (Kamb-style)
     + geom_density2d(
         aes(x="x", y="y"),
         data=poles_df,
-        color="#888888",
-        alpha=0.6,
-        size=0.6,
+        color="#999999",
+        alpha=0.5,
+        size=0.5,
         bins=6,
         kernel="gaussian",
         adjust=0.8,
         show_legend=False,
     )
     # Great circles
-    + geom_path(aes(x="x", y="y", group="group", color="feature_type"), data=gc_df, size=0.4, alpha=0.3)
+    + geom_path(aes(x="x", y="y", group="group", color="feature_type"), data=gc_df, size=0.35, alpha=0.25)
     # Confidence ellipses around each cluster
     + geom_polygon(
-        aes(x="x", y="y", group="group", fill="feature_type"), data=ellipse_df, alpha=0.12, size=0, show_legend=False
+        aes(x="x", y="y", group="group", fill="feature_type"), data=ellipse_df, alpha=0.10, size=0, show_legend=False
     )
     # Poles to planes with tooltips
     + geom_point(aes(x="x", y="y", color="feature_type"), data=poles_df, size=5, alpha=0.85, tooltips=pole_tooltips)
-    # Mean pole markers (larger, outlined)
-    + geom_point(aes(x="x", y="y"), data=mean_df, size=10, shape=18, color="#333333", alpha=0.9, show_legend=False)
-    # Mean pole labels with strike/dip
-    + geom_text(
-        aes(x="x", y="y", label="label"),
-        data=mean_df,
-        size=14,
-        color="#222222",
-        nudge_y=-0.12,
-        fontface="italic",
-        show_legend=False,
-    )
+    # Mean pole markers (diamond shape, dark)
+    + geom_point(aes(x="x", y="y"), data=mean_df, size=10, shape=18, color="#222222", alpha=0.95, show_legend=False)
+)
+
+# Add per-label mean annotation layers
+for layer in mean_label_layers:
+    plot = plot + layer
+
+plot = (
+    plot
     # Primitive circle
-    + geom_path(aes(x="x", y="y"), data=circle_df, color="#333333", size=1.2)
+    + geom_path(aes(x="x", y="y"), data=circle_df, color="#2A2A2A", size=1.3)
     # Tick marks
-    + geom_segment(aes(x="x", y="y", xend="xend", yend="yend"), data=tick_df, color="#333333", size=0.7)
+    + geom_segment(aes(x="x", y="y", xend="xend", yend="yend"), data=tick_df, color="#2A2A2A", size=0.8)
     # Cardinal labels
-    + geom_text(aes(x="x", y="y", label="label"), data=label_df, size=18, color="#333333", fontface="bold")
+    + geom_text(aes(x="x", y="y", label="label"), data=label_df, size=20, color="#1A1A1A", fontface="bold")
     # Color scale
     + scale_color_manual(values=color_values, name="Feature Type")
     + scale_fill_manual(values=color_values)
     + coord_fixed()
-    + scale_x_continuous(limits=[-1.25, 1.25])
-    + scale_y_continuous(limits=[-1.25, 1.25])
+    + scale_x_continuous(limits=[-1.3, 1.3])
+    + scale_y_continuous(limits=[-1.35, 1.3])
     + labs(title="stereonet-equal-area · letsplot · pyplots.ai")
     + theme(
-        plot_title=element_text(size=24, hjust=0.5),
-        legend_title=element_text(size=18),
+        plot_title=element_text(size=26, hjust=0.5, face="bold", margin=[0, 0, 16, 0]),
+        legend_title=element_text(size=18, face="bold"),
         legend_text=element_text(size=16),
-        legend_position="right",
+        legend_position=[0.85, 0.15],
+        legend_justification=[0.5, 0.5],
+        legend_background=element_rect(fill="white", color="#CCCCCC", size=0.5),
         axis_title=element_blank(),
         axis_text=element_blank(),
         axis_ticks=element_blank(),
