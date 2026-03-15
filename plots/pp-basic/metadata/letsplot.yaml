@@ -1,0 +1,223 @@
+library: letsplot
+specification_id: pp-basic
+created: '2026-03-15T20:18:14Z'
+updated: '2026-03-15T20:46:03Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23118400267
+issue: 4587
+python_version: 3.14.3
+library_version: 4.9.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/pp-basic/letsplot/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/pp-basic/letsplot/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/pp-basic/letsplot/plot.html
+quality_score: 90
+review:
+  strengths:
+  - Excellent data storytelling through deviation color mapping, size encoding, and
+    max deviation annotation
+  - Darcula dark theme gives professional, distinctive appearance
+  - Kolmogorov confidence band adds statistical rigor beyond spec requirements
+  - Lets-plot tooltips with formatted weight and deviation values showcase library
+    capabilities
+  - Pharmaceutical QC scenario is realistic, neutral, and compelling
+  - Inline CDF computation avoids unnecessary scipy dependency
+  weaknesses:
+  - Minor point overlap along the tight diagonal at lower CDF values
+  - Red-blue diverging palette is acceptable but not the most colorblind-optimal choice
+  image_description: 'The plot displays a P-P (Probability-Probability) plot on a
+    dark Darcula-themed background with a square 1:1 aspect ratio. Both axes range
+    from 0 to 1. A dashed light-gray 45-degree diagonal reference line runs from (0,0)
+    to (1,1). A blue semi-transparent ribbon represents the 95% Kolmogorov confidence
+    band around the diagonal. 200 data points are scattered along the diagonal, colored
+    by a diverging blue-to-red gradient representing deviation from perfect fit —
+    blue for positive deviations (empirical > theoretical), salmon/red for negative
+    deviations, and gray/white near zero. Point sizes vary by absolute deviation magnitude.
+    An italic annotation "Max deviation: +0.052" appears near the center. Title reads
+    "pp-basic · letsplot · pyplots.ai" with subtitle "QC Check: Tablet Weight Distribution
+    vs. Normal Reference (n=200)". X-axis: "Theoretical CDF (Normal)", Y-axis: "Empirical
+    CDF". A color legend on the right shows the deviation scale from -0.04 to +0.04.'
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title=24, subtitle=16, axis_title=20,
+          axis_text=16, legend_title=16, legend_text=14'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text elements
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Points visible with size variation, some natural overlap along diagonal
+      - id: VQ-04
+        name: Color Accessibility
+        score: 3
+        max: 4
+        passed: true
+        comment: Blue-red diverging through gray midpoint, acceptable but not optimal
+          for all colorblind types
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square aspect ratio, well-proportioned with balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive labels: Theoretical CDF (Normal) and Empirical CDF'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Strong design with Darcula theme, custom diverging palette, and good
+          typography
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Darcula removes chrome, subtle grid at 0.3 weight, minor grid removed
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Deviation color/size mapping, max deviation annotation, confidence
+          band create clear visual hierarchy
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct P-P plot type
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: All spec features present plus Kolmogorov confidence band
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=Theoretical CDF, Y=Empirical CDF, both 0-1
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct title format and legend labels
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows S-shaped deviation pattern, points near/above/below diagonal
+          visible
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Pharmaceutical tablet weight QC - real-world neutral scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 500mg target with 8mg std dev is realistic for tablet manufacturing
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear flow, no functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-organized, inline CDF avoids scipy dependency
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot.png with scale=3 and plot.html
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good ggplot grammar with layered geoms, scales, and theme
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: layer_tooltips with formatting, flavor_darcula, HTML export
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  dataprep:
+  - normalization
+  styling:
+  - dark-theme
+  - custom-colormap
+  - alpha-blending
+  - grid-styling
