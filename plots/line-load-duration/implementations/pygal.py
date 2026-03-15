@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 line-load-duration: Load Duration Curve for Energy Systems
 Library: pygal 3.1.0 | Python 3.14.3
 Quality: 81/100 | Created: 2026-03-15
@@ -39,8 +39,8 @@ raw_load = mid_load + seasonal + daily + noise
 raw_load = np.clip(raw_load, base_load * 0.9, peak_load * 1.05)
 load_mw = np.sort(raw_load)[::-1]
 
-# Capacity tiers
-base_capacity = 500
+# Capacity tiers (base at 550 MW so base region is visually wider)
+base_capacity = 550
 intermediate_capacity = 900
 
 # Region boundaries
@@ -90,7 +90,7 @@ custom_style = Style(
     foreground="#2d2d2d",
     foreground_strong="#2d2d2d",
     foreground_subtle="#e8e8e8",
-    colors=("#c0392b", "#e67e22", "#306998", "#888888", "#888888", "#888888"),
+    colors=("#e74c3c", "#27ae60", "#306998", "#444444", "#7b4173", "#1a1a2e"),
     font_family="DejaVu Sans, Helvetica, Arial, sans-serif",
     title_font_family="DejaVu Sans, Helvetica, Arial, sans-serif",
     title_font_size=50,
@@ -135,8 +135,8 @@ chart = pygal.Line(
     min_scale=4,
     max_scale=8,
     margin_bottom=140,
-    margin_left=100,
-    margin_right=60,
+    margin_left=160,
+    margin_right=140,
     margin_top=60,
     range=(0, 1350),
     truncate_label=10,
