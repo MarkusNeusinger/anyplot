@@ -1,7 +1,6 @@
-""" pyplots.ai
+"""pyplots.ai
 line-load-duration: Load Duration Curve for Energy Systems
 Library: plotnine 0.15.3 | Python 3.14.3
-Quality: 85/100 | Created: 2026-03-15
 """
 
 import numpy as np
@@ -9,14 +8,18 @@ import pandas as pd
 from plotnine import (
     aes,
     annotate,
+    coord_cartesian,
     element_blank,
     element_line,
+    element_rect,
     element_text,
-    geom_hline,
     geom_line,
     geom_ribbon,
+    geom_segment,
     ggplot,
+    guide_legend,
     labs,
+    scale_fill_manual,
     scale_x_continuous,
     scale_y_continuous,
     theme,
@@ -44,106 +47,177 @@ hourly_load = np.clip(hourly_load, base_load, peak_load)
 load_sorted = np.sort(hourly_load)[::-1]
 
 base_capacity = 500
-intermediate_capacity = 850
-
-df = pd.DataFrame({"hour": np.arange(hours_in_year), "load_mw": load_sorted})
+intermediate_capacity = 800
 
 total_energy_gwh = np.trapezoid(load_sorted) / 1000
 peak_hours = int((load_sorted > intermediate_capacity).sum())
-intermediate_hours = int(((load_sorted > base_capacity) & (load_sorted <= intermediate_capacity)).sum())
 
-# Region shading: three ribbons stacked
-df["base_top"] = np.minimum(df["load_mw"], base_capacity)
-df["inter_top"] = np.clip(df["load_mw"], base_capacity, intermediate_capacity)
-df["peak_top"] = np.where(df["load_mw"] > intermediate_capacity, df["load_mw"], intermediate_capacity)
+# Long-format data for grammar-of-graphics fill mapping
+hours = np.arange(hours_in_year)
+df_regions = pd.concat(
+    [
+        pd.DataFrame(
+            {"hour": hours, "ymin": 0.0, "ymax": np.minimum(load_sorted, base_capacity), "region": "Base Load"}
+        ),
+        pd.DataFrame(
+            {
+                "hour": hours,
+                "ymin": float(base_capacity),
+                "ymax": np.clip(load_sorted, base_capacity, intermediate_capacity),
+                "region": "Intermediate",
+            }
+        ),
+        pd.DataFrame(
+            {
+                "hour": hours,
+                "ymin": float(intermediate_capacity),
+                "ymax": np.where(load_sorted > intermediate_capacity, load_sorted, float(intermediate_capacity)),
+                "region": "Peak",
+            }
+        ),
+    ],
+    ignore_index=True,
+)
+df_regions["region"] = pd.Categorical(
+    df_regions["region"], categories=["Peak", "Intermediate", "Base Load"], ordered=True
+)
 
-# Label positions
-peak_label_x = peak_hours / 2
-inter_label_x = peak_hours + intermediate_hours / 2
-base_label_x = hours_in_year / 2
+df_line = pd.DataFrame({"hour": hours, "load_mw": load_sorted})
+
+# Color palette — warm-to-cool semantic encoding with strong contrast
+region_colors = {"Peak": "#C0392B", "Intermediate": "#6CA6CD", "Base Load": "#1B4F72"}
+
+# Capacity line segment data for geom_segment (plotnine-idiomatic)
+df_segments = pd.DataFrame(
+    {
+        "x": [0, 0],
+        "xend": [hours_in_year, hours_in_year],
+        "y": [base_capacity, intermediate_capacity],
+        "yend": [base_capacity, intermediate_capacity],
+        "label": [f"Base Capacity ({base_capacity} MW)", f"Intermediate Capacity ({intermediate_capacity} MW)"],
+        "color": ["#2C5F88", "#5B8DB8"],
+    }
+)
 
 # Plot
 plot = (
-    ggplot(df, aes(x="hour"))
-    + geom_ribbon(aes(ymin=0, ymax="base_top"), fill="#306998", alpha=0.4)
-    + geom_ribbon(aes(ymin=base_capacity, ymax="inter_top"), fill="#4A90C4", alpha=0.4)
-    + geom_ribbon(aes(ymin=intermediate_capacity, ymax="peak_top"), fill="#E8734A", alpha=0.4)
-    + geom_line(aes(y="load_mw"), color="#1a1a1a", size=0.8)
-    + geom_hline(yintercept=base_capacity, linetype="dashed", color="#306998", size=0.7, alpha=0.8)
-    + geom_hline(yintercept=intermediate_capacity, linetype="dashed", color="#4A90C4", size=0.7, alpha=0.8)
-    + annotate(
-        "text",
-        x=hours_in_year - 200,
-        y=base_capacity + 25,
-        label=f"Base Capacity ({base_capacity} MW)",
-        size=11,
-        ha="right",
-        color="#306998",
-        fontweight="bold",
+    ggplot()
+    # Filled regions using mapped fill aesthetic (grammar-of-graphics approach)
+    + geom_ribbon(data=df_regions, mapping=aes(x="hour", ymin="ymin", ymax="ymax", fill="region"), alpha=0.5)
+    # Capacity threshold lines using geom_segment
+    + geom_segment(
+        data=df_segments,
+        mapping=aes(x="x", xend="xend", y="y", yend="yend"),
+        linetype="dashed",
+        color="#4A6A8A",
+        size=0.6,
+        alpha=0.7,
     )
+    # Main load curve
+    + geom_line(data=df_line, mapping=aes(x="hour", y="load_mw"), color="#0D1B2A", size=1.0)
+    # Capacity labels — positioned away from right edge
     + annotate(
-        "text",
-        x=hours_in_year - 200,
-        y=intermediate_capacity + 25,
-        label=f"Intermediate Capacity ({intermediate_capacity} MW)",
-        size=11,
-        ha="right",
-        color="#4A90C4",
-        fontweight="bold",
-    )
-    + annotate(
-        "text",
-        x=peak_label_x,
-        y=intermediate_capacity + 80,
-        label="Peak",
-        size=14,
+        "label",
+        x=hours_in_year * 0.82,
+        y=base_capacity,
+        label=f"Base Capacity — {base_capacity} MW",
+        size=10,
         ha="center",
-        color="#C0552E",
+        color="#2C5F88",
+        fill="#FFFFFF",
+        alpha=0.85,
         fontweight="bold",
+        label_padding=0.4,
+    )
+    + annotate(
+        "label",
+        x=hours_in_year * 0.82,
+        y=intermediate_capacity,
+        label=f"Intermediate Capacity — {intermediate_capacity} MW",
+        size=10,
+        ha="center",
+        color="#5B8DB8",
+        fill="#FFFFFF",
+        alpha=0.85,
+        fontweight="bold",
+        label_padding=0.4,
+    )
+    # Region labels
+    + annotate(
+        "text",
+        x=peak_hours * 0.45,
+        y=intermediate_capacity + 100,
+        label="Peak",
+        size=15,
+        ha="center",
+        color="#9E3322",
+        fontweight="bold",
+        fontstyle="italic",
     )
     + annotate(
         "text",
-        x=inter_label_x,
+        x=hours_in_year * 0.35,
         y=(base_capacity + intermediate_capacity) / 2,
         label="Intermediate",
-        size=14,
+        size=15,
         ha="center",
-        color="#3570A0",
+        color="#3D6D94",
         fontweight="bold",
+        fontstyle="italic",
     )
     + annotate(
         "text",
-        x=base_label_x,
-        y=base_capacity / 2,
+        x=hours_in_year * 0.55,
+        y=base_capacity * 0.45,
         label="Base Load",
-        size=14,
+        size=15,
         ha="center",
-        color="#1E4060",
+        color="#1A3D5C",
         fontweight="bold",
+        fontstyle="italic",
     )
+    # Total energy annotation with background box
     + annotate(
-        "text",
-        x=hours_in_year * 0.75,
-        y=peak_load - 40,
+        "label",
+        x=hours_in_year * 0.72,
+        y=peak_load - 60,
         label=f"Total Energy: {total_energy_gwh:,.0f} GWh",
         size=12,
         ha="center",
-        color="#333333",
+        color="#1a1a1a",
+        fill="#F0F4F8",
+        alpha=0.9,
         fontweight="bold",
+        label_padding=0.5,
     )
-    + scale_x_continuous(breaks=[0, 2000, 4000, 6000, 8000], labels=["0", "2,000", "4,000", "6,000", "8,000"])
-    + scale_y_continuous(breaks=[0, 200, 400, 600, 800, 1000, 1200], limits=[0, peak_load + 100])
+    # Scales with plotnine-specific fill mapping
+    + scale_fill_manual(
+        values=region_colors, guide=guide_legend(title="Load Region", override_aes={"alpha": 0.7}, nrow=1)
+    )
+    + scale_x_continuous(
+        breaks=[0, 2000, 4000, 6000, 8000], labels=["0", "2,000", "4,000", "6,000", "8,000"], expand=(0.02, 0)
+    )
+    + scale_y_continuous(breaks=[0, 200, 400, 600, 800, 1000, 1200], expand=(0.02, 0))
+    + coord_cartesian(ylim=(0, peak_load + 120))
     + labs(x="Hours", y="Load (MW)", title="line-load-duration · plotnine · pyplots.ai")
     + theme_minimal()
     + theme(
         figure_size=(16, 9),
-        text=element_text(size=14),
-        axis_title=element_text(size=20),
-        axis_text=element_text(size=16),
-        plot_title=element_text(size=24, weight="bold"),
+        text=element_text(size=14, color="#2D3436"),
+        axis_title=element_text(size=20, weight="bold"),
+        axis_text=element_text(size=16, color="#636E72"),
+        plot_title=element_text(size=24, weight="bold", color="#0D1B2A"),
         panel_grid_major_x=element_blank(),
         panel_grid_minor=element_blank(),
-        panel_grid_major_y=element_line(alpha=0.2, size=0.5),
+        panel_grid_major_y=element_line(alpha=0.15, size=0.4, color="#B2BEC3"),
+        panel_background=element_rect(fill="#FAFBFC", alpha=1),
+        plot_background=element_rect(fill="#FFFFFF"),
+        legend_position="bottom",
+        legend_title=element_text(size=14, weight="bold"),
+        legend_text=element_text(size=13),
+        legend_background=element_rect(fill="#FAFBFC", color="#DFE6E9", size=0.5),
+        legend_key_size=18,
+        plot_margin=0.04,
     )
 )
 
