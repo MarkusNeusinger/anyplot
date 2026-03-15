@@ -1,0 +1,225 @@
+library: pygal
+specification_id: funnel-meta-analysis
+created: '2026-03-15T16:44:54Z'
+updated: '2026-03-15T17:15:33Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23114663070
+issue: 4590
+python_version: 3.14.3
+library_version: 3.1.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/funnel-meta-analysis/pygal/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/funnel-meta-analysis/pygal/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/funnel-meta-analysis/pygal/plot.html
+quality_score: 90
+review:
+  strengths:
+  - Excellent data storytelling through high/low precision grouping with distinct
+    colors and sizes
+  - All spec features fully implemented with correct funnel plot geometry
+  - Realistic neutral clinical meta-analysis data with clear publication bias signal
+  - Clean colorblind-safe palette (blue/orange) with refined typography
+  - Dual PNG/HTML output leverages pygal SVG nature
+  weaknesses:
+  - Minor canvas waste on left side of x-axis (xrange could be tighter)
+  - Legend text is functional but could be more refined in presentation
+  image_description: The plot displays a funnel plot for meta-analysis of 15 RCTs
+    comparing drug vs placebo. The x-axis shows "Log Odds Ratio (Effect Size)" ranging
+    from -1.10 to ~0.18, and the y-axis shows "Standard Error (precision ↑)" inverted
+    from 0 (top) to 0.30 (bottom). A solid dark navy vertical line marks the pooled
+    effect at LOR = -0.47, and a grey vertical line marks the null effect at LOR =
+    0. Dashed teal-blue diagonal lines form the funnel shape (95% pseudo CI). High-precision
+    studies appear as larger dark blue dots clustered tightly near the pooled effect
+    at the top, while low-precision studies appear as smaller orange dots scattered
+    more widely toward the bottom, with visible rightward asymmetry suggesting publication
+    bias. The background is a subtle off-white (#F8FAFB) with y-axis grid lines only.
+    The legend at the bottom shows five entries across three columns. Overall layout
+    is clean and professional.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title=48, label=28, major_label=24,
+          legend=22, value=18. All text clearly readable.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text elements. Legend entries well-spaced across 3
+          columns.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Study dots clearly visible with differentiated sizing (22 vs 16).
+          Funnel and reference lines distinguishable.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue/orange colorblind-safe combination with excellent contrast.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good utilization overall. Minor wasted space on left side of x-axis.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive labels with context: Log Odds Ratio (Effect Size) and
+          Standard Error (precision ↑).'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Strong design with custom palette, refined typography, intentional
+          color hierarchy. Clearly above defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle plot background, y-guides only, muted gridlines, generous
+          whitespace.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Two-group coloring with bias region label creates visual hierarchy.
+          Asymmetry communicates publication bias.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct funnel plot as XY scatter with reference lines and CI boundaries.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: inverted y-axis, pooled effect line,
+          null effect line, CI funnel, study points with size variation.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=effect size, Y=standard error, y-axis correctly inverted.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format. Legend labels descriptive and accurate.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows high/low precision studies, visible asymmetry, studies inside/outside
+          CI, outlier present.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: 15 RCTs drug vs placebo with realistic author/year names. Neutral
+          healthcare topic.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Log odds ratios around -0.5, SE 0.07-0.26 — realistic for clinical
+          meta-analyses.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean linear structure with no functions or classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set and data is hardcoded.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only numpy, pygal, and Style — all used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean Pythonic code with boolean masking for group separation.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png. Also generates plot.html.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of XY chart, Style class, per-series stroke_style/dots_size,
+          formatter, legend suppression, inverse_y_axis.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: 'Uses pygal-specific: inverse_y_axis, SVG dasharray, tooltip_border_radius,
+          dual PNG/HTML output.'
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - manual-ticks
+  - custom-legend
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - grid-styling

@@ -1,0 +1,230 @@
+library: seaborn
+specification_id: funnel-meta-analysis
+created: '2026-03-15T16:43:21Z'
+updated: '2026-03-15T17:05:14Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23114663087
+issue: 4590
+python_version: 3.14.3
+library_version: 0.13.2
+preview_url: https://storage.googleapis.com/pyplots-images/plots/funnel-meta-analysis/seaborn/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/funnel-meta-analysis/seaborn/plot_thumb.png
+preview_html: null
+quality_score: 92
+review:
+  strengths:
+  - Excellent spec compliance with all funnel plot features correctly implemented
+    including outlier annotations
+  - Cohesive monochromatic blue design using sns.light_palette creates professional
+    unified appearance
+  - Strong data storytelling through precision tiers, size variation, and targeted
+    outlier annotations highlighting publication bias
+  - Idiomatic seaborn usage with distinctive features (rugplot, light_palette, hue-based
+    scatter, set_context)
+  - Clean well-organized code with perfect KISS structure
+  weaknesses:
+  - Annotation font size (13pt) is slightly small relative to other text elements
+  - Three blue precision tiers could benefit from slightly more contrast between shades
+  - X-axis extends wider than necessary on the left due to symmetric margin calculation
+  image_description: The plot displays a meta-analysis funnel plot with an inverted
+    y-axis labeled "Standard Error" (0.0 at top, ~0.55 at bottom) and x-axis labeled
+    "Log Odds Ratio (Drug vs Placebo)". The title reads "funnel-meta-analysis · seaborn
+    · pyplots.ai" in medium-weight sans-serif. A solid blue vertical line marks the
+    summary effect at -0.39, with a dotted gray line at 0 for the null effect. Dashed
+    blue diagonal lines form the inverted funnel shape (pseudo 95% CI) with a very
+    light blue shaded fill between them. Fifteen study points are plotted as circles
+    with white edges, colored in three shades of blue by precision tier (dark blue
+    = high precision near top, medium blue = moderate, light blue = low precision
+    near bottom). Point sizes vary by inverse-variance weight. Two outlier studies
+    ("Lee 2019" and "Martinez 2020") are annotated in italic gray text in the lower
+    right, outside the funnel boundary, clearly indicating publication bias asymmetry.
+    A subtle rug plot runs along the x-axis showing effect size distribution. The
+    legend in the lower left lists summary effect, null effect, and three precision
+    tiers. Top and right spines are removed. Grid is extremely subtle (alpha=0.12).
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All major font sizes explicitly set (title=24, labels=20, ticks=16,
+          legend=14). Annotation text at 13pt slightly small.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or elements
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Points well-sized with sizes=(120, 470) for 15 studies, alpha=0.85
+      - id: VQ-04
+        name: Color Accessibility
+        score: 3
+        max: 4
+        passed: true
+        comment: Monochromatic blue is colorblind-safe but three precision tiers may
+          be hard to distinguish
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good proportions but some wasted space on left due to symmetric 1.5x
+          margin
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive labels appropriate for domain
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom light_palette, cohesive monochromatic scheme, white edges,
+          intentional hierarchy
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: despine, grid alpha=0.12, generous whitespace, rug plot detail
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Outlier annotations, precision tiers, size variation create clear
+          publication bias narrative
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct funnel plot with inverted y-axis
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: inverted y-axis, summary line, null line,
+          CI funnel, sized points, annotations'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=effect size, Y=standard error (inverted)
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct title format and descriptive legend labels
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows asymmetry, varying precision tiers, outliers outside funnel
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Drug vs placebo RCT meta-analysis with named studies, neutral medical
+          research
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Log odds ratios and SE values realistic for clinical trial meta-analysis
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean linear flow: imports, theme, data, plot, style, save'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic, appropriate complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png, dpi=300, no deprecated APIs
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert use of sns.set_theme, set_context, scatterplot with hue/size,
+          rugplot, despine, light_palette
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: rugplot, light_palette, hue-based scatter, set_context are distinctly
+          seaborn features
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
+  - explicit-figure
+  dataprep:
+  - binning
+  styling:
+  - alpha-blending
+  - edge-highlighting
+  - grid-styling
