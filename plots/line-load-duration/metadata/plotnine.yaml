@@ -1,0 +1,225 @@
+library: plotnine
+specification_id: line-load-duration
+created: '2026-03-15T21:41:28Z'
+updated: '2026-03-15T21:56:27Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23119898942
+issue: 4586
+python_version: 3.14.3
+library_version: 0.15.3
+preview_url: https://storage.googleapis.com/pyplots-images/plots/line-load-duration/plotnine/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/line-load-duration/plotnine/plot_thumb.png
+preview_html: null
+quality_score: 94
+review:
+  strengths:
+  - Perfect spec compliance with all required features (regions, capacity lines, labels,
+    total energy)
+  - Excellent visual quality with no overlap issues and well-positioned annotations
+  - Strong data storytelling through semantic color coding (warm=urgent peak, cool=stable
+    base)
+  - Idiomatic plotnine usage with grammar-of-graphics patterns for region fill mapping
+  - Professional polish with styled annotation boxes, subtle grid, and refined typography
+  weaknesses:
+  - Peak load reaches only ~1,000 MW vs spec suggested ~1,200 MW
+  - Design excellence is strong but not yet publication-perfect
+  image_description: 'The plot displays a load duration curve for a mid-sized utility
+    on a clean white/light gray background. The x-axis shows "Hours" (0-8,000) and
+    the y-axis shows "Load (MW)" (0-1,200). A bold dark line monotonically decreases
+    from ~1,000 MW at hour 0 to ~450 MW at hour 8,760. Three shaded regions fill the
+    area under the curve: a salmon-red "Peak" region (above 800 MW, leftmost), a light
+    blue "Intermediate" region (between 500-800 MW), and a dark steel-blue "Base Load"
+    region (below 500 MW). Two horizontal dashed lines mark "Base Capacity — 500 MW"
+    and "Intermediate Capacity — 800 MW" with white-background label boxes positioned
+    at ~82% of the x-axis. Region labels ("Peak", "Intermediate", "Base Load") appear
+    in bold italic text with matching colors. A "Total Energy: 6,500 GWh" annotation
+    in a light blue box sits in the upper right. Title reads "line-load-duration ·
+    plotnine · pyplots.ai" in bold dark text. A bottom legend shows "Load Region"
+    with three colored squares for Peak, Intermediate, and Base Load. The layout is
+    16:9 landscape with balanced margins.'
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 24pt, axis titles 20pt, axis
+          text 16pt, base text 14pt, annotations 10-15pt'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text. Capacity labels repositioned to x=82% with centered
+          alignment
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Main line bold and visible, shaded regions well-differentiated with
+          alpha=0.5
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Red, light blue, dark blue — distinguishable by hue and value, colorblind-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good 16:9 proportions with plot_margin=0.04, labels well inside canvas
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Hours and Load (MW) are descriptive with units
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom semantic color palette, styled annotation boxes, intentional
+          typography hierarchy
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: X-grid removed, y-grid subtle alpha=0.15, custom panel background,
+          styled legend
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy with semantic colors, capacity thresholds,
+          total energy annotation
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct load duration curve with line and filled area regions
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: curve, regions, capacity lines, labels,
+          total energy'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=rank-ordered hours, Y=load in MW sorted descending
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct, legend shows Load Region with proper labels
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows all three load regions with realistic curve shape
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Mid-sized utility with seasonal and diurnal load patterns, neutral
+          energy domain
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 3
+        max: 4
+        passed: true
+        comment: Peak reaches ~1000 MW vs spec suggested ~1200 MW, otherwise realistic
+          values
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean Imports-Data-Plot-Save structure, no functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used, no extras
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-structured code with clear sections, appropriate complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with dpi=300, uses np.trapezoid
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Excellent plotnine grammar-of-graphics: aes mappings, layered geoms,
+          scale_fill_manual, theme system'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses annotate label with fill/padding, guide_legend override_aes,
+          pd.Categorical for ordered factors
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling
