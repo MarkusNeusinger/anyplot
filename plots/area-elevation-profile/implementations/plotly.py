@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 area-elevation-profile: Terrain Elevation Profile Along Transect
 Library: plotly 6.6.0 | Python 3.14.3
-Quality: 89/100 | Created: 2026-03-15
+Quality: 94/100 | Created: 2026-03-15
 """
 
 import numpy as np
