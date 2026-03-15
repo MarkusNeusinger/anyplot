@@ -1,18 +1,14 @@
-""" pyplots.ai
+"""pyplots.ai
 stereonet-equal-area: Structural Geology Stereonet (Equal-Area Projection)
 Library: bokeh 3.9.0 | Python 3.14.3
 Quality: 75/100 | Created: 2026-03-15
 """
 
-import matplotlib
-
-
-matplotlib.use("Agg")
-import matplotlib.pyplot as plt
 import numpy as np
 from bokeh.io import export_png, output_file, save
-from bokeh.models import ColumnDataSource, Label, Legend, LegendItem
+from bokeh.models import ColumnDataSource, HoverTool, Label, Legend, LegendItem
 from bokeh.plotting import figure
+from scipy.ndimage import gaussian_filter
 from scipy.stats import gaussian_kde
 
 
@@ -37,8 +33,6 @@ all_types = ["Bedding"] * 40 + ["Joints"] * 35 + ["Faults"] * 25
 colors_map = {"Bedding": "#306998", "Joints": "#E8833A", "Faults": "#8B5CF6"}
 
 # Equal-area projection: convert pole (plunge, trend) to x, y
-# Pole to a plane: trend = dip_direction + 180, plunge = 90 - dip
-# Dip direction = strike + 90 (right-hand rule)
 R_net = 1.0
 
 pole_trends = (all_strikes + 90 + 180) % 360
@@ -51,8 +45,6 @@ pole_x = pole_r * np.sin(pole_trends_rad)
 pole_y = pole_r * np.cos(pole_trends_rad)
 
 # Great circles for each plane
-# Parameterize: for rake angle alpha from 0 to pi, compute line in the plane
-# then project to equal-area
 gc_xs = []
 gc_ys = []
 gc_types = []
@@ -62,27 +54,22 @@ for i in range(len(all_strikes)):
     dip_rad = np.radians(all_dips[i])
     dd_rad = strike_rad + np.pi / 2
 
-    # Strike vector (horizontal, in plane)
     sx = np.sin(strike_rad)
     sy = np.cos(strike_rad)
 
-    # Down-dip vector (in the plane, dipping)
     dx = np.sin(dd_rad) * np.cos(dip_rad)
     dy = np.cos(dd_rad) * np.cos(dip_rad)
     dz = -np.sin(dip_rad)
 
-    # Parameterize great circle: v = cos(alpha)*s_vec + sin(alpha)*d_vec
     alpha = np.linspace(0, np.pi, 90)
     vx = np.cos(alpha) * sx + np.sin(alpha) * dx
     vy = np.cos(alpha) * sy + np.sin(alpha) * dy
     vz = np.sin(alpha) * dz
 
-    # Convert to plunge and trend
     horiz = np.sqrt(vx**2 + vy**2)
     plunge = np.arctan2(-vz, horiz)
     trend = np.arctan2(vx, vy)
 
-    # Equal-area projection
     r = R_net * np.sqrt(2) * np.sin((np.pi / 2 - plunge) / 2)
     gx = r * np.sin(trend)
     gy = r * np.cos(trend)
@@ -91,136 +78,215 @@ for i in range(len(all_strikes)):
     gc_ys.append(gy.tolist())
     gc_types.append(all_types[i])
 
-# Kamb density contours on pole data
-grid_n = 200
-gx_lin = np.linspace(-1.05, 1.05, grid_n)
-gy_lin = np.linspace(-1.05, 1.05, grid_n)
+# Density grid for pole data using KDE
+grid_n = 300
+gx_lin = np.linspace(-R_net, R_net, grid_n)
+gy_lin = np.linspace(-R_net, R_net, grid_n)
 gx_grid, gy_grid = np.meshgrid(gx_lin, gy_lin)
 
-# Mask to circular region
 dist_grid = np.sqrt(gx_grid**2 + gy_grid**2)
 mask = dist_grid <= R_net
 
-# KDE on pole positions
 pole_xy = np.vstack([pole_x, pole_y])
 kde = gaussian_kde(pole_xy, bw_method=0.2)
 density = kde(np.vstack([gx_grid.ravel(), gy_grid.ravel()])).reshape(grid_n, grid_n)
-density[~mask] = 0
+density = gaussian_filter(density, sigma=3)
 
-# Extract contour lines using matplotlib (computation only, not for display)
-fig_temp, ax_temp = plt.subplots()
-levels = np.linspace(density[mask].max() * 0.2, density[mask].max() * 0.9, 5)
-cs = ax_temp.contour(gx_lin, gy_lin, density, levels=levels)
-contour_xs = []
-contour_ys = []
-for level_segs in cs.allsegs:
-    for seg in level_segs:
-        # Clip to circle
-        d = np.sqrt(seg[:, 0] ** 2 + seg[:, 1] ** 2)
-        inside = d <= R_net * 1.01
-        if np.sum(inside) > 2:
-            contour_xs.append(seg[inside, 0].tolist())
-            contour_ys.append(seg[inside, 1].tolist())
-plt.close(fig_temp)
+# Create RGBA density overlay (masked to circle)
+density_masked = density.copy()
+density_masked[~mask] = np.nan
+d_min = np.nanmin(density_masked[mask])
+d_max = np.nanmax(density_masked[mask])
+d_norm = (density_masked - d_min) / (d_max - d_min)
+
+# Build uint32 RGBA array for Bokeh image_rgba
+img = np.zeros((grid_n, grid_n), dtype=np.uint32)
+view = img.view(dtype=np.uint8).reshape((grid_n, grid_n, 4))
+for iy in range(grid_n):
+    for ix in range(grid_n):
+        if mask[iy, ix] and d_norm[iy, ix] > 0.12:
+            v = d_norm[iy, ix]
+            gray = int(170 - v * 110)
+            alpha_val = int(v * 150)
+            view[iy, ix, 0] = gray
+            view[iy, ix, 1] = gray
+            view[iy, ix, 2] = min(gray + 15, 255)
+            view[iy, ix, 3] = alpha_val
 
 # Plot - Square format for circular stereonet
 p = figure(
     width=3600,
     height=3600,
     title="stereonet-equal-area · bokeh · pyplots.ai",
-    x_range=(-1.45, 1.45),
-    y_range=(-1.40, 1.45),
+    x_range=(-1.35, 1.35),
+    y_range=(-1.38, 1.40),
     tools="pan,wheel_zoom,reset,save",
     toolbar_location=None,
     match_aspect=True,
 )
 
+# Density heatmap as Bokeh image_rgba (distinctive Bokeh feature)
+p.image_rgba(image=[img], x=-R_net, y=-R_net, dw=2 * R_net, dh=2 * R_net, level="image")
+
+# Equal-area net grid lines (small circles at 10° dip intervals)
+for dip_angle in range(10, 90, 10):
+    dip_rad = np.radians(dip_angle)
+    grid_r = R_net * np.sqrt(2) * np.sin(dip_rad / 2)
+    theta = np.linspace(0, 2 * np.pi, 180)
+    gx = grid_r * np.cos(theta)
+    gy = grid_r * np.sin(theta)
+    p.line(gx, gy, line_color="#CCCCCC", line_width=1, line_alpha=0.55)
+
+# Great circle grid lines at every 30° azimuth
+for az_deg in range(0, 180, 30):
+    az_rad = np.radians(az_deg)
+    alpha = np.linspace(0, np.pi, 90)
+    vx = np.cos(alpha) * np.sin(az_rad)
+    vy = np.cos(alpha) * np.cos(az_rad)
+    vz = -np.sin(alpha)
+    horiz = np.sqrt(vx**2 + vy**2)
+    plunge = np.arctan2(-vz, horiz)
+    trend = np.arctan2(vx, vy)
+    r = R_net * np.sqrt(2) * np.sin((np.pi / 2 - plunge) / 2)
+    grid_gx = r * np.sin(trend)
+    grid_gy = r * np.cos(trend)
+    p.line(grid_gx, grid_gy, line_color="#CCCCCC", line_width=1, line_alpha=0.55)
+
 # Primitive circle (outer boundary)
 theta_circle = np.linspace(0, 2 * np.pi, 360)
 circle_x = R_net * np.cos(theta_circle)
 circle_y = R_net * np.sin(theta_circle)
-p.line(circle_x, circle_y, line_color="#333333", line_width=3)
+p.line(circle_x, circle_y, line_color="#222222", line_width=4)
 
 # Tick marks every 10 degrees around perimeter
 for deg in range(0, 360, 10):
     rad = np.radians(deg)
-    x_inner = 0.96 * R_net * np.sin(rad)
-    y_inner = 0.96 * R_net * np.cos(rad)
-    x_outer = 1.03 * R_net * np.sin(rad)
-    y_outer = 1.03 * R_net * np.cos(rad)
-    lw = 3 if deg % 90 == 0 else 2
-    p.line([x_inner, x_outer], [y_inner, y_outer], line_color="#333333", line_width=lw)
+    tick_len = 0.06 if deg % 30 == 0 else 0.04
+    x_inner = (1.0 - tick_len) * R_net * np.sin(rad)
+    y_inner = (1.0 - tick_len) * R_net * np.cos(rad)
+    x_outer = 1.04 * R_net * np.sin(rad)
+    y_outer = 1.04 * R_net * np.cos(rad)
+    lw = 4 if deg % 90 == 0 else (3 if deg % 30 == 0 else 2)
+    p.line([x_inner, x_outer], [y_inner, y_outer], line_color="#222222", line_width=lw)
+
+# Degree labels every 30 degrees
+for deg in range(0, 360, 30):
+    if deg % 90 == 0:
+        continue
+    rad = np.radians(deg)
+    lx = 1.13 * R_net * np.sin(rad)
+    ly = 1.13 * R_net * np.cos(rad)
+    p.add_layout(
+        Label(
+            x=lx,
+            y=ly,
+            text=f"{deg}°",
+            text_font_size="18pt",
+            text_align="center",
+            text_baseline="middle",
+            text_color="#555555",
+        )
+    )
 
 # Cardinal direction labels
 for deg, label in [(0, "N"), (90, "E"), (180, "S"), (270, "W")]:
     rad = np.radians(deg)
-    lx = 1.12 * R_net * np.sin(rad)
-    ly = 1.12 * R_net * np.cos(rad)
-    fs = "26pt" if label == "N" else "20pt"
-    fw = "bold" if label == "N" else "normal"
+    lx = 1.18 * R_net * np.sin(rad)
+    ly = 1.18 * R_net * np.cos(rad)
+    fs = "38pt" if label == "N" else "30pt"
     p.add_layout(
         Label(
             x=lx,
             y=ly,
             text=label,
             text_font_size=fs,
-            text_font_style=fw,
+            text_font_style="bold",
             text_align="center",
             text_baseline="middle",
-            text_color="#333333",
+            text_color="#222222",
         )
     )
 
-# Density contour lines
-for cx, cy in zip(contour_xs, contour_ys, strict=True):
-    p.line(cx, cy, line_color="#888888", line_width=2, line_alpha=0.5, line_dash="dotted")
-
-# Great circles by feature type (draw with low alpha for clarity)
+# Great circles by feature type
 renderers_gc = {}
 for ftype in ["Bedding", "Joints", "Faults"]:
     idxs = [j for j, t in enumerate(gc_types) if t == ftype]
     fxs = [gc_xs[j] for j in idxs]
     fys = [gc_ys[j] for j in idxs]
-    r = p.multi_line(fxs, fys, line_color=colors_map[ftype], line_width=2, line_alpha=0.35)
+    r = p.multi_line(fxs, fys, line_color=colors_map[ftype], line_width=2.5, line_alpha=0.4)
     renderers_gc[ftype] = r
 
-# Poles by feature type
+# Poles by feature type with HoverTool
 renderers_pole = {}
 for ftype in ["Bedding", "Joints", "Faults"]:
     idxs = [j for j, t in enumerate(all_types) if t == ftype]
     px = pole_x[idxs]
     py = pole_y[idxs]
-    source = ColumnDataSource(data={"x": px, "y": py})
+    strikes = all_strikes[idxs]
+    dips = all_dips[idxs]
+    source = ColumnDataSource(
+        data={"x": px, "y": py, "strike": np.round(strikes, 1), "dip": np.round(dips, 1), "type": [ftype] * len(idxs)}
+    )
     r = p.scatter(
-        "x", "y", source=source, size=18, color=colors_map[ftype], line_color="white", line_width=1.5, alpha=0.85
+        "x", "y", source=source, size=22, color=colors_map[ftype], line_color="white", line_width=2, alpha=0.9
     )
     renderers_pole[ftype] = r
 
-# Legend
+# HoverTool for pole data (Bokeh distinctive feature)
+hover = HoverTool(
+    renderers=list(renderers_pole.values()),
+    tooltips=[("Type", "@type"), ("Strike", "@strike°"), ("Dip", "@dip°")],
+    point_policy="snap_to_data",
+)
+p.add_tools(hover)
+
+# Interactive legend (Bokeh distinctive feature - click to hide/show)
 legend_items = []
 for ftype in ["Bedding", "Joints", "Faults"]:
     legend_items.append(LegendItem(label=ftype, renderers=[renderers_gc[ftype], renderers_pole[ftype]]))
 
 legend = Legend(items=legend_items, location="top_right")
-legend.label_text_font_size = "20pt"
-legend.glyph_height = 30
-legend.glyph_width = 30
-legend.spacing = 10
-legend.background_fill_alpha = 0.85
-legend.border_line_color = "#cccccc"
+legend.label_text_font_size = "26pt"
+legend.glyph_height = 40
+legend.glyph_width = 40
+legend.spacing = 16
+legend.background_fill_alpha = 0.92
+legend.background_fill_color = "#FAFAFA"
+legend.border_line_color = "#AAAAAA"
 legend.border_line_width = 2
-legend.padding = 15
+legend.padding = 24
+legend.margin = 20
+legend.click_policy = "hide"
 p.add_layout(legend)
 
 # Style
-p.title.text_font_size = "30pt"
+p.title.text_font_size = "38pt"
 p.title.align = "center"
+p.title.text_color = "#222222"
 p.xaxis.visible = False
 p.yaxis.visible = False
 p.xgrid.visible = False
 p.ygrid.visible = False
 p.outline_line_color = None
 p.background_fill_color = "white"
+p.border_fill_color = "white"
+p.min_border_left = 40
+p.min_border_right = 40
+p.min_border_top = 10
+p.min_border_bottom = 40
+
+# Subtitle annotation
+p.add_layout(
+    Label(
+        x=0,
+        y=-1.30,
+        text="Lower-hemisphere equal-area (Schmidt) projection · Click legend to toggle",
+        text_font_size="20pt",
+        text_align="center",
+        text_color="#777777",
+        text_font_style="italic",
+    )
+)
 
 # Save
 export_png(p, filename="plot.png")
