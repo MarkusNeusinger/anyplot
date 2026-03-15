@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 column-stratigraphic: Stratigraphic Column with Lithology Patterns
-Library: plotly | Python 3.13
-Quality: pending | Created: 2026-03-15
+Library: plotly 6.6.0 | Python 3.14.3
+Quality: 86/100 | Created: 2026-03-15
 """
 
 import plotly.graph_objects as go
