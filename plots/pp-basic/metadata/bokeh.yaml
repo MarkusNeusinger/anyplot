@@ -1,0 +1,232 @@
+library: bokeh
+specification_id: pp-basic
+created: '2026-03-15T20:21:04Z'
+updated: '2026-03-15T20:33:25Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23118400207
+issue: 4587
+python_version: 3.14.3
+library_version: 3.9.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/pp-basic/bokeh/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/pp-basic/bokeh/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/pp-basic/bokeh/plot.html
+quality_score: 91
+review:
+  strengths:
+  - Excellent use of Cividis colormap to encode deviation magnitude — transforms a
+    simple scatter into a diagnostic tool
+  - KS confidence band adds statistical rigor beyond spec requirements
+  - Annotations explain the S-shaped deviation pattern, guiding viewer interpretation
+  - Strong Bokeh mastery with HoverTool, Band, and transform-based color mapping
+  - Realistic manufacturing QC context with plausible bolt strength data
+  weaknesses:
+  - 'Minor: alpha=0.85 is slightly high for 200 points; could use 0.6-0.7 for better
+    density handling in crowded regions'
+  image_description: 'The plot displays a P-P (Probability-Probability) plot at 3600x3600px
+    with a square aspect ratio. The title "pp-basic · bokeh · pyplots.ai" appears
+    in dark charcoal at the top left. The x-axis is labeled "Theoretical Cumulative
+    Probability (Normal Fit)" and the y-axis "Empirical Cumulative Probability", both
+    ranging from 0 to 1. 200 data points trace a path near the 45-degree dashed gray
+    reference diagonal. Points are colored using the Cividis colormap based on their
+    deviation from the diagonal — darker navy-blue for negative deviations and golden-yellow
+    for positive deviations, creating a visible S-shaped pattern. A subtle light blue
+    95% KS confidence band flanks the diagonal. Two italic annotations explain the
+    deviation pattern: "Heavy right tail → points fall below diagonal" in sienna-brown
+    on the right, and "← Light left tail empirical > theoretical" in teal-blue on
+    the lower left. A smaller label notes "95% KS confidence band (D = 0.096)." The
+    background is off-white (#fafafa) with subtle dashed gridlines, no tick marks,
+    and no plot outline.'
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 48pt, axis labels 34pt, tick
+          labels 26pt, annotations 20-22pt'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text elements, annotations well-positioned
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: 200 points visible with white edge highlighting; slight density in
+          lower-left
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Cividis is perceptually uniform and colorblind-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square aspect ratio as spec requires, balanced margins, good canvas
+          utilization
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive labels with context: Theoretical Cumulative Probability
+          (Normal Fit)'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful Cividis color mapping, custom annotation colors, white
+          marker edges, off-white background
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Outline removed, ticks removed, dashed gridlines at low alpha, generous
+          margins
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Color mapping creates visual hierarchy, annotations explain S-shaped
+          pattern, KS band adds context
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct P-P plot with both axes showing cumulative probabilities
+          0 to 1
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Reference line, square ratio, empirical CDF, theoretical CDF, S-shaped
+          deviation, plus KS band
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=theoretical CDF, Y=empirical CDF, correctly mapped
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches format, no legend needed for single-series color-mapped
+          scatter
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows S-shaped deviation, points above and below diagonal, KS band
+          for fit assessment
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Manufacturing QC bolt tensile strength — real, neutral engineering
+          context
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 850 MPa mean, 45 MPa std for bolt tensile strength is realistic
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports, data, plot, style, save'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-organized, appropriate complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png and plot.html, current API
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: ColumnDataSource, transform(), Band, HoverTool, Label — all idiomatic
+          Bokeh
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: HoverTool with tooltips, Band model, LinearColorMapper with transform
+          — distinctively Bokeh
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - scipy
+  techniques:
+  - annotations
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  - columndatasource
+  dataprep: []
+  styling:
+  - custom-colormap
+  - alpha-blending
+  - edge-highlighting
+  - grid-styling

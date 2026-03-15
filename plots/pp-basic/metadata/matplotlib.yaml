@@ -1,0 +1,230 @@
+library: matplotlib
+specification_id: pp-basic
+created: '2026-03-15T20:16:45Z'
+updated: '2026-03-15T20:35:11Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23118400187
+issue: 4587
+python_version: 3.14.3
+library_version: 3.10.8
+preview_url: https://storage.googleapis.com/pyplots-images/plots/pp-basic/matplotlib/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/pp-basic/matplotlib/plot_thumb.png
+preview_html: null
+quality_score: 90
+review:
+  strengths:
+  - Excellent data storytelling through color-coded deviations and domain-contextual
+    annotation
+  - 'Strong visual refinement: path effects, thinned/colored spines, dual-level grid,
+    confidence band'
+  - Perfect spec compliance with all required P-P plot features including square aspect
+    ratio and i/(n+1) formula
+  - Realistic manufacturing quality control scenario with plausible bolt tensile strength
+    values
+  - 95% confidence band adds genuine statistical value beyond spec requirements
+  weaknesses:
+  - Marker size (s=70) could be slightly larger for better visibility at 200 points
+  - Blue/red color pairing could be improved for deuteranopia accessibility
+  image_description: 'The plot displays a P-P (Probability-Probability) plot on a
+    square canvas with both axes ranging from 0 to 1. The x-axis is labeled "Theoretical
+    Cumulative Probability (Normal)" and the y-axis "Empirical Cumulative Probability."
+    The title reads "pp-basic · matplotlib · pyplots.ai" with an italic subtitle "Bolt
+    tensile strength (MPa) vs. normal distribution — quality control diagnostic."
+    Data points are colored in two tones: Python Blue (#306998) for points near the
+    diagonal and coral red (#C44E52) for points deviating more than 0.03 from the
+    reference line. A dashed gray 45-degree reference line with a subtle stroke path
+    effect runs diagonally. A light blue 95% confidence band surrounds the reference
+    line. An annotation with a curved arrow points to the deviation region, reading
+    "Heavier upper tail (secondary supplier batch)." The legend in the lower right
+    shows "95% confidence band" and "Perfect normal fit." Top and right spines are
+    removed; remaining spines are thinned and colored gray. Both major and minor grid
+    lines are present at very low alpha. The S-shaped departure from the diagonal
+    in the upper portion is clearly visible, telling the story of a mixture distribution.'
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt,
+          legend 14pt, annotation 14pt'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text; annotation well-positioned away from data
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: s=70 for 200 points within guideline range but on smaller side; alpha=0.65
+          appropriate
+      - id: VQ-04
+        name: Color Accessibility
+        score: 3
+        max: 4
+        passed: true
+        comment: Blue vs coral/red generally colorblind-safe but not optimal for all
+          types
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square aspect ratio well-utilized, balanced margins, nothing cut
+          off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive labels with distribution context specified
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Strong design: custom two-color deviation encoding, path effects,
+          confidence band, italic subtitle'
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines removed/thinned, subtle major+minor grid, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Color-coded deviations, annotation explains cause, subtitle provides
+          domain context
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct P-P plot: empirical CDF vs theoretical CDF'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features: reference line, square aspect, i/(n+1) formula, theoretical
+          CDF, S-shaped deviation'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=theoretical CDF, Y=empirical CDF, both 0-1
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; legend labels meaningful
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Mixture distribution creates clear S-shaped departure, showing both
+          conforming and deviating regions
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Bolt tensile strength for quality control is real, neutral engineering
+          scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 840/910 MPa with sigma 28-35 realistic for steel bolt tensile strength
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Linear flow but sys.path manipulation adds boilerplate; vectorized
+          normal_cdf borderline function definition
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, appropriate complexity, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png, dpi=300, bbox_inches=tight
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Consistent Axes methods, mticker for tick control, fill_between for
+          confidence band
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses patheffects for reference line depth, MultipleLocator for precise
+          ticks
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - manual-ticks
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
+  - grid-styling

@@ -1,0 +1,227 @@
+library: plotnine
+specification_id: pp-basic
+created: '2026-03-15T20:17:02Z'
+updated: '2026-03-15T20:27:00Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23118400191
+issue: 4587
+python_version: 3.14.3
+library_version: 0.15.3
+preview_url: https://storage.googleapis.com/pyplots-images/plots/pp-basic/plotnine/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/pp-basic/plotnine/plot_thumb.png
+preview_html: null
+quality_score: 93
+review:
+  strengths:
+  - 'Exceptional data storytelling: deviation-colored points with S-curve annotation
+    create a compelling narrative about batch variation'
+  - Sophisticated use of plotnine grammar of graphics with layered composition (ribbon
+    + abline + points + annotations)
+  - KS confidence band adds real statistical value beyond the basic spec requirements
+  - Realistic quality-control scenario with appropriate steel tensile strength values
+  - Clean, well-structured code with all font sizes explicitly set
+  weaknesses:
+  - Diverging color scale midpoint (#306998) is too close to the low end (#2166AC),
+    reducing ability to distinguish near-zero from negative deviations
+  image_description: The plot displays a P-P (Probability-Probability) plot with a
+    square aspect ratio on a light gray (#FAFAFA) background. The bold title "pp-basic
+    · plotnine · pyplots.ai" sits at the top. 200 data points are plotted along a
+    45-degree dashed gray reference line, colored by a diverging blue-to-red gradient
+    representing deviation from the diagonal. A subtle light blue 95% KS confidence
+    band (ribbon) surrounds the reference line. In the upper-left, an italic annotation
+    reads "Tensile strength of 200 steel rods vs. normal reference distribution."
+    A bold red annotation "← S-curve reveals batch variation" highlights the mid-range
+    deviation region where points shift red (positive deviation). A labeled "95% KS
+    confidence band" note appears near the bottom. The legend in the lower-right shows
+    the "Deviation from fit" color scale ranging from -0.025 (blue) to 0.050 (red).
+    Both axes range 0.0-1.0 with 0.2 increments. The S-shaped departure from the diagonal
+    is clearly visible in the 0.4-0.7 theoretical probability range, indicating the
+    mixture distribution departs from normality.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title=24pt, axis_title=20pt, axis_text=16pt,
+          legend_title=14pt, legend_text=12pt'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: All annotations well-positioned with no collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: 200 points with size=3.5 and alpha=0.75 clearly visible, slightly
+          generous sizing
+      - id: VQ-04
+        name: Color Accessibility
+        score: 3
+        max: 4
+        passed: true
+        comment: Blue-to-red diverging scale is colorblind-distinguishable but midpoint
+          too close to low end
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square aspect ratio via coord_fixed, 3600x3600px, balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive labels with context: Theoretical Cumulative Probability
+          (Normal CDF)'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom diverging palette, intentional typography hierarchy, styled
+          legend and background
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: theme_minimal, subtle grid, styled legend background, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Deviation color mapping, S-curve annotation, KS band create compelling
+          narrative
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct P-P plot comparing empirical vs theoretical CDF
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: All spec features present plus KS confidence band and deviation coloring
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=theoretical CDF, Y=empirical CDF, axes correctly range 0-1
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct, legend labeled Deviation from fit
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Mixture distribution creates clear S-curve showing both good fit
+          and poor fit regions
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Steel rod tensile strength in quality control is a real neutral manufacturing
+          scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 520±35 MPa main batch, 580±20 MPa variant — realistic for steel
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean imports-data-plot-save structure, no functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All 16 plotnine imports and scipy.stats are used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic, appropriate complexity with well-commented layers
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with dpi=360, current plotnine API
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Exemplary grammar-of-graphics: layered ggplot with multiple data
+          sources, proper aes, theme customization'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: geom_ribbon, annotate label, scale_color_gradient2, multiple data
+          sources in single ggplot
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - scipy
+  techniques:
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep:
+  - normalization
+  styling:
+  - custom-colormap
+  - alpha-blending
+  - grid-styling
