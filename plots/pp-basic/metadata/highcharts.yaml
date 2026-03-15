@@ -1,0 +1,234 @@
+library: highcharts
+specification_id: pp-basic
+created: '2026-03-15T20:19:49Z'
+updated: '2026-03-15T20:54:41Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23118400170
+issue: 4587
+python_version: 3.14.3
+library_version: unknown
+preview_url: https://storage.googleapis.com/pyplots-images/plots/pp-basic/highcharts/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/pp-basic/highcharts/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/pp-basic/highcharts/plot.html
+quality_score: 90
+review:
+  strengths:
+  - Deviation-based color gradient from steel blue to gold creates intuitive visual
+    storytelling
+  - Max deviation point highlighted with diamond marker and data label provides clear
+    focal point
+  - KS test statistic in subtitle adds statistical rigor and analytical value
+  - 'Comprehensive Highcharts feature usage: plotBands, zoom/pan, per-point styling,
+    rich HTML tooltips'
+  - Clean well-structured code with proper reproducibility and appropriate complexity
+  - Square aspect ratio correctly chosen per spec with polished typography hierarchy
+  weaknesses:
+  - Green reference line paired with red diamond marker creates mild red-green colorblind
+    concern
+  - LineSeries imported from area module rather than line module
+  image_description: 'The plot displays a P-P (Probability-Probability) plot on a
+    square canvas with a light gray (#fafbfc) background. The title "pp-basic · highcharts
+    · pyplots.ai" appears in bold dark text at the top, with a subtitle showing "Mixed
+    Normal + Exponential vs. Normal Reference — KS Statistic = 0.064 (p = 0.3729)".
+    The x-axis is labeled "Theoretical CDF (Normal)" and the y-axis "Empirical CDF",
+    both ranging from 0 to 1 with tick intervals of 0.2. A dashed diagonal line represents
+    the perfect fit (y=x). 200 scatter points are plotted with a deviation-based color
+    gradient: points near the diagonal are steel blue/gray with lower opacity, while
+    points farther from the diagonal transition to gold/orange with higher opacity.
+    A diamond-shaped marker highlights the maximum deviation point near (0.55, 0.68)
+    with the label "Max Δ = 0.061". Two faint gray diagonal lines flank the reference
+    line representing 95% KS bounds. The legend in the upper right corner shows "Perfect
+    Fit (y=x)", "95% KS Bounds", and "P-P Points (N=200)" with a white semi-transparent
+    background and rounded border. Subtle dotted gridlines and a clean plot border
+    complete the refined appearance.'
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 64px, subtitle 34px, axis titles
+          44px, tick labels 34px, legend 32px, data labels 28px'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text elements; legend positioned away from data
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Good marker sizing (radius 12) for 200 points; some clustering in
+          center region
+      - id: VQ-04
+        name: Color Accessibility
+        score: 3
+        max: 4
+        passed: true
+        comment: Blue-to-gold gradient is colorblind-friendly; green reference line
+          + red diamond marker is mild red-green concern mitigated by dash pattern
+          and shape
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square 3600x3600 ideal for P-P plot, good canvas utilization
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive labels: Theoretical CDF (Normal) and Empirical CDF'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom deviation color gradient, professional typography hierarchy,
+          styled background and legend with rounded border
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Dotted grid at low opacity (0.06), custom plot border, generous spacing,
+          polished legend styling
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Color gradient reveals deviation patterns, max deviation diamond
+          is clear focal point, KS statistic adds analytical context
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct P-P plot comparing empirical vs theoretical CDF
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: reference line, square aspect, 0-1 axes,
+          proper CDF computation'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=theoretical CDF, Y=empirical CDF, both axes 0-1
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct title format and descriptive legend labels
+    data_quality:
+      score: 13
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Mixed distribution shows clear S-shaped deviation pattern from diagonal
+      - id: DQ-02
+        name: Realistic Context
+        score: 4
+        max: 5
+        passed: true
+        comment: Goodness-of-fit scenario with KS test is plausible for quality control/regression
+          diagnostics
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: CDF values correctly 0-1, 200 points within spec range
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean sequential flow: imports, data, plot, save'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean and appropriate complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot.png and plot.html, current API
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good Highcharts API usage; LineSeries from area module slightly non-idiomatic
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: plotBands, zoomType with panning, per-point markers, data labels,
+          rich HTML tooltips, resetZoomButton
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - scipy
+  - selenium
+  techniques:
+  - annotations
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - normalization
+  styling:
+  - alpha-blending
+  - grid-styling
+  - edge-highlighting
