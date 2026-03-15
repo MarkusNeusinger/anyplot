@@ -1,7 +1,7 @@
-""" pyplots.ai
+"""pyplots.ai
 stereonet-equal-area: Structural Geology Stereonet (Equal-Area Projection)
 Library: bokeh 3.9.0 | Python 3.14.3
-Quality: 84/100 | Created: 2026-03-15
+Created: 2026-03-15
 """
 
 import numpy as np
@@ -99,19 +99,15 @@ d_min = np.nanmin(density_masked[mask])
 d_max = np.nanmax(density_masked[mask])
 d_norm = (density_masked - d_min) / (d_max - d_min)
 
-# Build uint32 RGBA array for Bokeh image_rgba
+# Build uint32 RGBA array for Bokeh image_rgba (vectorized)
 img = np.zeros((grid_n, grid_n), dtype=np.uint32)
 view = img.view(dtype=np.uint8).reshape((grid_n, grid_n, 4))
-for iy in range(grid_n):
-    for ix in range(grid_n):
-        if mask[iy, ix] and d_norm[iy, ix] > 0.12:
-            v = d_norm[iy, ix]
-            gray = int(170 - v * 110)
-            alpha_val = int(v * 150)
-            view[iy, ix, 0] = gray
-            view[iy, ix, 1] = gray
-            view[iy, ix, 2] = min(gray + 15, 255)
-            view[iy, ix, 3] = alpha_val
+visible = mask & (d_norm > 0.08)
+v = np.where(visible, d_norm, 0.0)
+view[visible, 0] = (220 - v[visible] * 100).astype(np.uint8)  # R: warm orange-red
+view[visible, 1] = (160 - v[visible] * 130).astype(np.uint8)  # G: decreasing for warmth
+view[visible, 2] = (80 - v[visible] * 60).astype(np.uint8)  # B: low for warm tones
+view[visible, 3] = (v[visible] * 220).astype(np.uint8)  # A: stronger alpha
 
 # Plot - Square format for circular stereonet
 p = figure(
@@ -181,7 +177,7 @@ for deg in range(0, 360, 30):
             x=lx,
             y=ly,
             text=f"{deg}°",
-            text_font_size="18pt",
+            text_font_size="20pt",
             text_align="center",
             text_baseline="middle",
             text_color="#555555",
@@ -213,7 +209,7 @@ for ftype in ["Bedding", "Joints", "Faults"]:
     idxs = [j for j, t in enumerate(gc_types) if t == ftype]
     fxs = [gc_xs[j] for j in idxs]
     fys = [gc_ys[j] for j in idxs]
-    r = p.multi_line(fxs, fys, line_color=colors_map[ftype], line_width=2.5, line_alpha=0.4)
+    r = p.multi_line(fxs, fys, line_color=colors_map[ftype], line_width=1.5, line_alpha=0.25)
     renderers_gc[ftype] = r
 
 # Poles by feature type with HoverTool
