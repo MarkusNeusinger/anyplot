@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 column-stratigraphic: Stratigraphic Column with Lithology Patterns
 Library: bokeh 3.9.0 | Python 3.14.3
 Quality: 85/100 | Created: 2026-03-15
@@ -23,30 +23,31 @@ layers = [
     {"top": 180, "bottom": 200, "lithology": "Siltstone", "formation": "Uinta Fm", "age": "Eocene"},
 ]
 
-# Lithology style mapping: color, hatch_pattern (improved color differentiation)
+# Lithology style mapping: improved colorblind-safe palette
+# Sandstone: warm yellow, Siltstone: olive green (high contrast vs sandstone)
 lithology_styles = {
     "Sandstone": {"color": "#F5DEB3", "hatch_pattern": ".", "hatch_color": "#8B7355"},
     "Shale": {"color": "#A9A9A9", "hatch_pattern": "-", "hatch_color": "#4A4A4A"},
     "Limestone": {"color": "#87CEEB", "hatch_pattern": "+", "hatch_color": "#2E5A88"},
-    "Siltstone": {"color": "#8B6F5E", "hatch_pattern": "/", "hatch_color": "#3E2F23"},
+    "Siltstone": {"color": "#7B9971", "hatch_pattern": "/", "hatch_color": "#3B5335"},
     "Conglomerate": {"color": "#E8923F", "hatch_pattern": "o", "hatch_color": "#6B3A00"},
 }
 
-# K-Pg boundary depth (between Fox Hills Fm / Late Cretaceous and Dawson Fm / Paleocene)
+# K-Pg boundary depth
 KPG_DEPTH = 88
 
-# Column x-position and width (wider column for better canvas use)
-col_center = 0.5
-col_width = 1.0
+# Column geometry — wider for better canvas fill
+col_center = 0.55
+col_width = 1.1
 
-# Plot (tighter x_range for better horizontal utilization)
+# Plot — tighter x_range for better horizontal utilization
 p = figure(
     width=4800,
     height=2700,
     title="column-stratigraphic · bokeh · pyplots.ai",
     y_axis_label="Depth (m)",
     toolbar_location=None,
-    x_range=Range1d(-0.7, 2.0),
+    x_range=Range1d(-0.55, 1.85),
     y_range=Range1d(210, -10),
 )
 
@@ -102,31 +103,51 @@ for layer in layers:
     )
     p.add_tools(hover)
 
-# K-Pg boundary emphasis — bold red dashed line with annotation
-kpg_span = Span(location=KPG_DEPTH, dimension="width", line_color="#CC0000", line_width=4, line_dash="dashed")
+# Depth tick marks at each layer boundary for polished geological appearance
+boundary_depths = sorted({layer["top"] for layer in layers} | {layer["bottom"] for layer in layers})
+for depth in boundary_depths:
+    x_left = col_center - col_width / 2
+    p.line(x=[x_left - 0.04, x_left], y=[depth, depth], line_color="#555555", line_width=1.5, line_alpha=0.6)
+    # Small depth label at boundary
+    label = Label(
+        x=x_left - 0.06,
+        y=depth,
+        text=f"{depth:.0f}",
+        text_font_size="13pt",
+        text_align="right",
+        text_baseline="middle",
+        text_color="#777777",
+    )
+    p.add_layout(label)
+
+# K-Pg boundary emphasis — bold red dashed line with prominent annotation
+kpg_span = Span(location=KPG_DEPTH, dimension="width", line_color="#CC0000", line_width=5, line_dash="dashed")
 p.add_layout(kpg_span)
 
 kpg_label = Label(
     x=col_center,
     y=KPG_DEPTH,
     text="K-Pg Boundary (~66 Ma)",
-    text_font_size="16pt",
+    text_font_size="20pt",
     text_font_style="bold",
     text_color="#CC0000",
     text_align="center",
     text_baseline="bottom",
-    y_offset=8,
+    y_offset=10,
+    background_fill_color="white",
+    background_fill_alpha=0.8,
 )
 p.add_layout(kpg_label)
 
-# Formation labels on the right side
+# Formation labels on the right side — closer to column
 for layer in layers:
     mid_y = (layer["top"] + layer["bottom"]) / 2
     label = Label(
-        x=1.08,
+        x=col_center + col_width / 2 + 0.04,
         y=mid_y,
         text=layer["formation"],
-        text_font_size="18pt",
+        text_font_size="19pt",
+        text_font_style="bold",
         text_align="left",
         text_baseline="middle",
         text_color="#2C2C2C",
@@ -143,13 +164,14 @@ for layer in layers:
         age_groups[age]["bottom"] = max(age_groups[age]["bottom"], layer["bottom"])
         age_groups[age]["top"] = min(age_groups[age]["top"], layer["top"])
 
+bracket_x = -0.12
 for age, bounds in age_groups.items():
     mid_y = (bounds["top"] + bounds["bottom"]) / 2
     label = Label(
-        x=-0.08,
+        x=bracket_x - 0.04,
         y=mid_y,
         text=age,
-        text_font_size="18pt",
+        text_font_size="19pt",
         text_align="right",
         text_baseline="middle",
         text_color="#2C2C2C",
@@ -157,40 +179,68 @@ for age, bounds in age_groups.items():
     )
     p.add_layout(label)
 
-    p.line(x=[-0.05, -0.05], y=[bounds["top"], bounds["bottom"]], line_color="#2C2C2C", line_width=2)
-    p.line(x=[-0.07, -0.05], y=[bounds["top"], bounds["top"]], line_color="#2C2C2C", line_width=2)
-    p.line(x=[-0.07, -0.05], y=[bounds["bottom"], bounds["bottom"]], line_color="#2C2C2C", line_width=2)
+    # Bracket lines
+    p.line(x=[bracket_x, bracket_x], y=[bounds["top"] + 1, bounds["bottom"] - 1], line_color="#2C2C2C", line_width=2.5)
+    p.line(
+        x=[bracket_x - 0.025, bracket_x], y=[bounds["top"] + 1, bounds["top"] + 1], line_color="#2C2C2C", line_width=2.5
+    )
+    p.line(
+        x=[bracket_x - 0.025, bracket_x],
+        y=[bounds["bottom"] - 1, bounds["bottom"] - 1],
+        line_color="#2C2C2C",
+        line_width=2.5,
+    )
 
-# Legend — positioned adjacent to column, not in far corner
+# Legend — positioned adjacent to column on right side
 legend_items = [LegendItem(label=lith, renderers=[rend]) for lith, rend in legend_items_dict.items()]
 legend = Legend(
     items=legend_items,
     location="top_right",
     label_text_font_size="20pt",
-    spacing=12,
+    spacing=14,
     padding=20,
-    background_fill_alpha=0.85,
-    glyph_height=30,
-    glyph_width=30,
+    margin=10,
+    background_fill_color="#F5F5F0",
+    background_fill_alpha=0.9,
+    border_line_color="#CCCCCC",
+    border_line_width=1,
+    glyph_height=32,
+    glyph_width=32,
     title="Lithology",
     title_text_font_size="22pt",
     title_text_font_style="bold",
 )
 p.add_layout(legend, "right")
 
-# Style
+# Typography hierarchy
 p.title.text_font_size = "36pt"
+p.title.text_color = "#1A1A1A"
+p.title.offset = 10
 p.yaxis.axis_label_text_font_size = "28pt"
+p.yaxis.axis_label_text_font_style = "bold"
+p.yaxis.axis_label_text_color = "#333333"
 p.yaxis.major_label_text_font_size = "22pt"
+p.yaxis.major_label_text_color = "#444444"
 
+# Visual refinement
 p.xaxis.visible = False
 p.xgrid.grid_line_color = None
-p.ygrid.grid_line_alpha = 0.15
-p.ygrid.grid_line_dash = "dashed"
+p.ygrid.grid_line_alpha = 0.12
+p.ygrid.grid_line_dash = [4, 4]
+p.ygrid.grid_line_color = "#999999"
 
 p.yaxis.minor_tick_line_color = None
+p.yaxis.major_tick_line_color = "#AAAAAA"
+p.yaxis.axis_line_color = "#888888"
 p.outline_line_color = None
-p.background_fill_color = "#FAFAFA"
+p.background_fill_color = "#FAFAF6"
+p.border_fill_color = "#FFFFFF"
+
+# Padding
+p.min_border_left = 100
+p.min_border_right = 40
+p.min_border_top = 60
+p.min_border_bottom = 60
 
 # Save
 export_png(p, filename="plot.png")
