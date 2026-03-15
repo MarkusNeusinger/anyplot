@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 funnel-meta-analysis: Meta-Analysis Funnel Plot for Publication Bias
-Library: plotly | Python 3.13
-Quality: pending | Created: 2026-03-15
+Library: plotly 6.6.0 | Python 3.14.3
+Quality: 85/100 | Created: 2026-03-15
 """
 
 import numpy as np
