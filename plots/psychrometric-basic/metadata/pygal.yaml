@@ -1,7 +1,7 @@
 library: pygal
 specification_id: psychrometric-basic
 created: '2026-03-15T21:54:03Z'
-updated: '2026-03-15T21:58:52Z'
+updated: '2026-03-15T22:15:54Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23120046646
 issue: 4583
@@ -10,74 +10,74 @@ library_version: 3.1.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/psychrometric-basic/pygal/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/psychrometric-basic/pygal/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/psychrometric-basic/pygal/plot.html
-quality_score: 72
+quality_score: 77
 review:
   strengths:
-  - Correct ASHRAE psychrometric formulas produce physically accurate curves
-  - Thoughtful custom color palette with blue gradient for RH, orange for wet-bulb,
-    purple for specific volume
-  - Comfort zone polygon with green fill creates a clear visual focal point
-  - HVAC process path with state point dots effectively tells an engineering story
-  - Deterministic reproducible calculations
+  - Excellent spec compliance with all required psychrometric properties present and
+    correct
+  - Strong data storytelling with comfort zone and HVAC process path creating engineering
+    context
+  - Thoughtful color coding with distinct color families per property type
+  - Direct labels on curves as spec requires with good placement strategy
+  - ASHRAE-based psychrometric calculations produce accurate curves
   weaknesses:
-  - Missing enthalpy lines - spec explicitly requires enthalpy isolines (kJ/kg) as
-    diagonal lines
-  - No direct labels on curves - spec requires all property lines labeled directly
-    on the chart not just in a legend
-  - Lower RH curves (10% and 20%) are extremely faint and nearly invisible
-  - Saturation pressure formula duplicated 5+ times - code is unnecessarily verbose
-  - Crowded 24-entry legend at bottom
-  image_description: The plot shows a psychrometric chart with dry-bulb temperature
-    (°C) on the x-axis (-10 to 50) and humidity ratio (g/kg) on the y-axis (0 to 30).
-    Relative humidity curves are drawn as a blue gradient from dark navy (100% RH
-    saturation curve, thickest line) through progressively lighter blues down to a
-    very pale blue (10% RH). Dashed orange lines represent wet-bulb temperature isolines
-    (0°C to 30°C) running diagonally. Dotted purple lines show specific volume isolines
-    (0.80 to 0.96 m³/kg). A green filled polygon marks the comfort zone (20-26°C,
-    30-60% RH). A red line with two red dots shows an HVAC cooling and dehumidification
-    process from approximately 35°C/21 g/kg to 24°C/9.5 g/kg. The title reads "psychrometric-basic
-    · pygal · pyplots.ai". A crowded legend at the bottom lists all 24 series. The
-    background is white with a light gray plot area and subtle grid lines. No enthalpy
-    lines are present. No direct labels appear on the curves themselves.
+  - Labels cut off at right edge of chart (Tw 30, Tw 25, Tw 20 truncated) — needs
+    more right margin or adjusted label positions
+  - Label crowding at bottom of chart where wet-bulb and enthalpy labels overlap near
+    the x-axis
+  - Specific volume lines and labels are too faint and small relative to other elements
+  image_description: The plot displays a psychrometric chart with dry-bulb temperature
+    (°C) on the x-axis ranging from -10 to 50, and humidity ratio (g/kg) on the y-axis
+    from 0 to 30. Blue curved lines represent relative humidity from 10% to 100%,
+    with the saturation curve (100%) being the thickest. Orange dashed diagonal lines
+    show wet-bulb temperatures (Tw 0°C through Tw 30°C). Purple dotted lines indicate
+    specific volume values (0.80, 0.84, 0.88, 0.92). Teal dash-dot diagonal lines
+    represent enthalpy values (h=10 through h=90). A large green filled polygon marks
+    the comfort zone (approximately 20-26°C, 30-60% RH) with a "Comfort Zone" label.
+    A red line with dots connects State A (35°C, 60% RH) to State B (24°C, 50% RH)
+    showing an HVAC cooling/dehumidification process. The title reads "psychrometric-basic
+    · pygal · pyplots.ai". All curve types are labeled directly on the chart. The
+    plot background is slightly off-white with subtle grid lines. Some labels on the
+    right edge are truncated (Tw 30°, Tw 25°, Tw 20° partially cut off), and there
+    is label crowding near the bottom x-axis area.
   criteria_checklist:
     visual_quality:
-      score: 23
+      score: 21
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title=72, labels=42, major=46, legend=30).
-          All readable, legend entries dense.
+        comment: Font sizes explicitly set in Style and SVG labels. Title, axis labels,
+          and RH labels clear. Some injected SVG labels slightly small.
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 3
         max: 6
         passed: false
-        comment: Legend at bottom crowded with 24 entries across multiple rows; hard
-          to distinguish individual items.
+        comment: Label crowding at bottom where wet-bulb and enthalpy labels cluster.
+          Minor overlap near right edge.
       - id: VQ-03
         name: Element Visibility
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Lower RH curves (10%, 20%) extremely faint. Wet-bulb and specific
-          volume lines thin at lower values.
+        passed: true
+        comment: Lines distinguishable with different dash patterns and colors. Specific
+          volume lines quite faint.
       - id: VQ-04
         name: Color Accessibility
         score: 3
         max: 4
         passed: true
-        comment: Good color family separation (blue/orange/purple/green/red). Blue
-          gradient makes adjacent RH curves hard to distinguish.
+        comment: Blue/orange/purple/teal scheme is colorblind-safe. No red-green dependency.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 2
         max: 4
-        passed: true
-        comment: Good canvas utilization. Legend takes significant vertical space.
+        passed: false
+        comment: Several labels cut off at right edge (Tw 30, Tw 25, Tw 20 truncated).
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -86,7 +86,7 @@ review:
         comment: 'Descriptive labels with units: Dry-Bulb Temperature (°C) and Humidity
           Ratio (g/kg).'
     design_excellence:
-      score: 11
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -94,107 +94,112 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom blue gradient palette, orange/purple differentiation. Above
-          defaults but not publication-ready.
+        comment: Custom color palette with distinct families per property type. Custom
+          font. Intentional hierarchy with line widths and dash patterns.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Custom grid colors, subtle guides. Dense legend detracts from polish.
+        passed: true
+        comment: Subtle grid colors, off-white background, different dash patterns.
+          Good attention to detail.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Comfort zone and HVAC process create some narrative. No direct curve
-          labels forces legend reference.
+        passed: true
+        comment: Comfort zone and HVAC process path create engineering narrative.
+          State points with labels tell a clear story.
     spec_compliance:
-      score: 11
+      score: 15
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: XY line approach is correct for psychrometric chart in pygal.
+        comment: Correct psychrometric chart with all required curve types.
       - id: SC-02
         name: Required Features
-        score: 1
+        score: 4
         max: 4
-        passed: false
-        comment: Missing enthalpy lines entirely. No direct labels on curves as spec
-          requires.
+        passed: true
+        comment: 'All features present: RH curves, wet-bulb, enthalpy, specific volume,
+          comfort zone, HVAC process path.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = dry-bulb temperature, Y = humidity ratio, correctly mapped.
+        comment: 'Correct mapping: X=dry-bulb temp, Y=humidity ratio. Full range shown.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Legend labels descriptive and match data.
+        comment: Title format correct. Legend hidden with direct labels on curves
+          — appropriate.
     data_quality:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 4
+        score: 6
         max: 6
-        passed: false
-        comment: Shows RH, wet-bulb, specific volume, comfort zone, HVAC process.
-          Missing enthalpy lines.
+        passed: true
+        comment: 'All psychrometric properties shown: RH, wet-bulb, enthalpy, specific
+          volume, comfort zone, HVAC process.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real HVAC engineering scenario with ASHRAE formulas at standard atmosphere.
+        comment: HVAC engineering context with realistic state points. ASHRAE-based
+          formulas.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Standard psychrometric chart ranges: -10 to 50°C, 0-30 g/kg.'
+        comment: Standard psychrometric chart ranges. Comfort zone at standard values.
     code_quality:
-      score: 9
+      score: 8
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: 'Linear structure: imports, constants, data, chart, save.'
+        passed: false
+        comment: Helper functions reasonable for domain complexity but deviate from
+          pure KISS.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic ASHRAE formulas with fixed constants.
+        comment: Fully deterministic — computed from thermodynamic equations.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: math, numpy, pygal, Style.'
+        comment: 'All imports used: math, cairosvg, numpy, pygal, Style.'
       - id: CQ-04
         name: Code Elegance
         score: 1
         max: 2
         passed: false
-        comment: Saturation pressure formula duplicated 5+ times. Very verbose.
+        comment: SVG injection adds complexity. Brute-force search for wet-bulb/specific
+          volume is wasteful.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png. Also renders HTML.
+        comment: Saves as plot.png via cairosvg.
     library_mastery:
       score: 5
       max: 10
@@ -203,22 +208,23 @@ review:
         name: Idiomatic Usage
         score: 3
         max: 5
-        passed: false
-        comment: Uses pygal.XY with Style, stroke_style, fill, show_dots. Correct
-          but basic.
+        passed: true
+        comment: Uses pygal.XY() with Style class and stroke_style options. SVG injection
+          bypasses pygal API.
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: stroke_style dasharray and fill=True are somewhat pygal-specific
-          but basic.
+        comment: Uses stroke_style with dasharray and fill parameter. Heavy SVG injection
+          is not pygal-distinctive.
   verdict: REJECTED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - cairosvg
   techniques:
+  - annotations
   - layer-composition
-  - html-export
   patterns:
   - data-generation
   - iteration-over-groups
