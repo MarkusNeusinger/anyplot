@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 line-load-duration: Load Duration Curve for Energy Systems
 Library: letsplot 4.9.0 | Python 3.14.3
 Quality: 87/100 | Created: 2026-03-15
@@ -104,9 +104,17 @@ df_labels = pd.DataFrame(
     }
 )
 
-# Energy annotation
+# Compute storytelling metrics
+peak_load_hours = int(np.sum(load_sorted > peak_threshold))
+load_factor = np.mean(load_sorted) / np.max(load_sorted) * 100
+
+# Energy annotation with load factor
 df_energy = pd.DataFrame(
-    {"hour": [6500], "load_mw": [1150], "label": [f"Total Energy: {total_energy_gwh:,.0f} GWh/year"]}
+    {
+        "hour": [5800],
+        "load_mw": [1180],
+        "label": [f"Total Energy: {total_energy_gwh:,.0f} GWh/year\nLoad Factor: {load_factor:.0f}%"],
+    }
 )
 
 # Color palette
@@ -152,15 +160,15 @@ plot = (
         data=df_line,
         mapping=aes(x="hour", y="load_mw"),
         color="#1a1a1a",
-        size=1.2,
+        size=1.8,
         tooltips=layer_tooltips()
         .format("@load_mw", ".0f")
         .format("@hour", ",d")
         .line("Hour: @hour")
         .line("Demand: @load_mw MW"),
     )
-    + geom_hline(yintercept=peak_threshold, linetype="dashed", color="#C0392B", size=0.8)
-    + geom_hline(yintercept=intermediate_threshold, linetype="dashed", color="#D68910", size=0.8)
+    + geom_hline(yintercept=peak_threshold, linetype="dashed", color="#C0392B", size=1.0)
+    + geom_hline(yintercept=intermediate_threshold, linetype="dashed", color="#D68910", size=1.0)
     + geom_text(
         data=df_labels, mapping=aes(x="hour", y="load_mw", label="label"), size=14, color="#2c3e50", fontface="bold"
     )
@@ -169,23 +177,25 @@ plot = (
     )
     + geom_text(
         data=pd.DataFrame(
-            {"hour": [7800], "load_mw": [peak_threshold + 30], "label": [f"Peak Capacity: {peak_threshold} MW"]}
+            {"hour": [6200], "load_mw": [peak_threshold + 35], "label": [f"Peak Capacity: {peak_threshold} MW"]}
         ),
         mapping=aes(x="hour", y="load_mw", label="label"),
-        size=11,
+        size=12,
         color="#C0392B",
+        fontface="bold",
     )
     + geom_text(
         data=pd.DataFrame(
             {
-                "hour": [7800],
-                "load_mw": [intermediate_threshold + 30],
-                "label": [f"Base Capacity: {intermediate_threshold} MW"],
+                "hour": [6200],
+                "load_mw": [intermediate_threshold + 35],
+                "label": [f"Intermediate Capacity: {intermediate_threshold} MW"],
             }
         ),
         mapping=aes(x="hour", y="load_mw", label="label"),
-        size=11,
+        size=12,
         color="#D68910",
+        fontface="bold",
     )
     + scale_fill_manual(values=colors)
     + scale_x_continuous(
@@ -194,17 +204,23 @@ plot = (
         labels=["0", "2,000", "4,000", "6,000", "8,000"],
     )
     + scale_y_continuous(name="Power Demand (MW)", breaks=[0, 200, 400, 600, 800, 1000, 1200])
-    + labs(title="line-load-duration · letsplot · pyplots.ai")
+    + labs(
+        title="line-load-duration · letsplot · pyplots.ai",
+        subtitle=f"Mid-sized utility · Peak demand {np.max(load_sorted):.0f} MW · {peak_load_hours:,} hours above peak threshold",
+    )
     + theme_minimal()
     + theme(
-        plot_title=element_text(size=24, face="bold"),
-        axis_title=element_text(size=20),
-        axis_text=element_text(size=16),
+        plot_title=element_text(size=24, face="bold", color="#1a1a1a"),
+        plot_subtitle=element_text(size=16, color="#5a6d7e"),
+        axis_title=element_text(size=20, color="#2c3e50"),
+        axis_text=element_text(size=16, color="#4a4a4a"),
         panel_grid_major_x=element_blank(),
         panel_grid_minor=element_blank(),
-        panel_grid_major_y=element_line(color="#e0e0e0", size=0.3),
+        panel_grid_major_y=element_line(color="#e8e8e8", size=0.3),
         legend_position="none",
-        plot_background=element_rect(fill="white", color="white"),
+        plot_background=element_rect(fill="#fafafa", color="#fafafa"),
+        panel_background=element_rect(fill="#fafafa", color="#fafafa"),
+        plot_margin=[40, 20, 20, 20],
     )
     + ggsize(1600, 900)
 )
