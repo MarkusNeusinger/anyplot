@@ -1,7 +1,7 @@
 library: bokeh
 specification_id: line-load-duration
 created: '2026-03-15T21:43:11Z'
-updated: '2026-03-15T21:57:35Z'
+updated: '2026-03-15T22:08:13Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23119899004
 issue: 4586
@@ -10,34 +10,39 @@ library_version: 3.9.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/line-load-duration/bokeh/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/line-load-duration/bokeh/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/line-load-duration/bokeh/plot.html
-quality_score: 89
+quality_score: 92
 review:
   strengths:
-  - Perfect spec compliance — every required feature (shaded regions, capacity tier
-    lines, region labels, total energy annotation) is present and well-implemented
-  - Excellent data quality with realistic load profile using seasonal and daily patterns
-  - Strong color accessibility with a well-chosen amber/teal/blue palette
-  - 'Clean visual refinement: subtle y-only grid, removed outline, lightened axis
-    lines'
-  - Good use of Bokeh-specific patterns (ColumnDataSource, Span, varea, HTML export)
+  - Complete spec compliance with all required features (shaded regions, capacity
+    tiers, annotations)
+  - Excellent colorblind-safe palette (amber/teal/blue) with distinct luminance values
+  - Strong data storytelling through region labeling, capacity tier lines, total energy,
+    and load factor annotations
+  - Rich HoverTool implementation with cumulative energy and duration percentage adds
+    distinctive Bokeh value
+  - Dual PNG + HTML output maximizes Bokeh web-native strengths
+  - Clean professional styling suitable for engineering reports
   weaknesses:
-  - Base Load region label is cramped in a narrow strip at the far right
-  - Whitespace gap between title and peak capacity line at top could be reduced
-  - Could leverage Bokeh interactive capabilities more (e.g., HoverTool for HTML export)
-  image_description: 'The plot displays a load duration curve for a mid-sized utility.
-    A dark navy line traces the monotonically decreasing power demand from approximately
-    1,080 MW at hour 0 down to approximately 400 MW at hour 8,760. Three distinct
-    shaded regions fill the area under the curve: an amber/gold region on the left
-    labeled "Peak Load," a teal/cyan region in the middle labeled "Intermediate Load,"
-    and a blue/purple region on the far right labeled "Base Load." Three horizontal
-    dashed lines mark capacity tiers: "Peak Capacity: 1,200 MW" (amber, at top), "Intermediate
-    Capacity: 900 MW" (teal, middle), and "Base Load Capacity: 500 MW" (blue, lower).
-    A bold annotation reads "Total Energy: 6,132 GWh/year" centered near the top.
-    The title "line-load-duration · bokeh · pyplots.ai" appears in the upper left.
-    A legend on the right side lists the three load types with colored swatches. The
-    background is white with subtle horizontal y-axis gridlines. X-axis is "Hours
-    of the Year" and Y-axis is "Power Demand (MW)," both with comma-formatted tick
-    labels.'
+  - Capacity tier labels positioned near right edge could be slightly better spaced
+    from legend panel
+  - Minor excess whitespace at top of canvas between title and peak capacity line
+  image_description: 'The plot displays a load duration curve for a mid-sized electrical
+    utility. The x-axis shows "Hours of the Year" (0 to ~8,760) and the y-axis shows
+    "Power Demand (MW)" (0 to ~1,320). A dark navy monotonically decreasing curve
+    runs from approximately 1,100 MW at hour 0 down to about 400 MW at hour 8,760.
+    Three shaded regions fill the area under the curve: an amber/gold region for "Peak
+    Load" on the far left (0 to ~800 hours), a teal/cyan region for "Intermediate
+    Load" spanning the middle (~800 to ~8,200 hours), and a blue/periwinkle region
+    for "Base Load" on the far right (~8,200 to 8,760 hours). Three horizontal dashed
+    lines mark capacity tiers: "Peak Capacity: 1,200 MW" in amber at the top, "Intermediate
+    Capacity: 900 MW" in teal in the middle, and "Base Load Capacity: 500 MW" in blue
+    lower down. Bold region labels ("Peak Load", "Intermediate Load", "Base Load")
+    appear within their respective shaded areas. A centered annotation reads "Total
+    Energy: 6,132 GWh/year" near the top. A subtle italic "Load Factor" annotation
+    appears below. The legend is positioned in a panel on the right side. The title
+    "line-load-duration · bokeh · pyplots.ai" appears top-left. The background is
+    white with subtle y-axis-only grid lines. Overall, a clean, professional engineering-style
+    visualization.'
   criteria_checklist:
     visual_quality:
       score: 27
@@ -48,46 +53,45 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 36pt, labels 24pt, ticks 18pt,
-          annotations 20-24pt). All readable, some capacity labels at right edge slightly
-          compact.
+        comment: 'All font sizes explicitly set (title 36pt, axis labels 24pt, ticks
+          18pt, annotations 20-26pt). All readable. Minor: capacity tier labels near
+          right edge slightly compact.'
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Base Load region label squeezed into narrow strip at far right. Capacity
-          tier labels near right edge are close together. No severe overlap but minor
-          crowding.
+        comment: Capacity tier labels near right side close to legend panel. Minor
+          crowding but all text readable.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Curve line at width 4.5 well visible. Shaded regions clearly distinguishable
-          with alpha=0.25.
+        comment: Line clearly visible at 4.5px width. Shaded regions well-distinguished
+          with 0.25 alpha.
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Amber/teal/blue palette is colorblind-safe with good luminance and
-          hue contrast.
+        comment: Amber/teal/blue palette is colorblind-safe with distinct luminance
+          and hue differences.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good overall but whitespace gap between title and peak capacity line.
-          Legend outside plot takes additional space.
+        comment: Good canvas utilization. Legend panel on right takes extra space.
+          Minor excess whitespace at top.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive with units: Hours of the Year, Power Demand (MW).'
+        comment: 'Descriptive labels with units: Hours of the Year, Power Demand (MW).'
     design_excellence:
-      score: 15
+      score: 16
       max: 20
       items:
       - id: DE-01
@@ -95,23 +99,22 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom color palette, intentional typography hierarchy, professional
-          engineering aesthetic. Above defaults but not publication-level polish.
+        comment: Custom colorblind-safe palette, intentional hierarchy, professional
+          typography. Clearly above defaults.
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
         comment: Outline removed, minor ticks removed, x-grid removed, y-grid subtle
-          at alpha 0.18, axis lines lightened.
+          at 0.18 alpha, axis lines styled light gray.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Three regions with distinct colors and labels guide the viewer. Capacity
-          tier lines add planning context. Total energy annotation provides summary
-          insight.
+        comment: Three shaded regions with labels, capacity tier lines, total energy
+          and load factor annotations create clear narrative.
     spec_compliance:
       score: 15
       max: 15
@@ -121,26 +124,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct load duration curve with filled area regions.
+        comment: Correct load duration curve with area fill regions.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
         comment: 'All spec features present: monotonic curve, shaded regions, dashed
-          capacity lines, region labels, total energy annotation.'
+          capacity lines, region labels, energy annotation.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=rank-ordered hours, Y=power demand MW sorted descending.
+        comment: X = rank-ordered hour index, Y = load MW sorted descending. Correct.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Legend labels match data.
+        comment: Title format correct. Legend labels match data regions.
     data_quality:
       score: 15
       max: 15
@@ -150,22 +153,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Full 8760 hours with realistic curve shape showing clear peak, intermediate,
-          and base load regions.
+        comment: Shows all three load regions with realistic proportions and characteristic
+          curve shape.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Mid-sized utility scenario with realistic seasonal and daily patterns.
-          Neutral engineering domain.
+        comment: Mid-sized utility 400-1200 MW range. Energy systems domain is neutral
+          and appropriate.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Base 400 MW, peak ~1100 MW, capacities at 500/900/1200 MW, total
-          energy 6132 GWh/year — all plausible.
+        comment: 'Realistic values: 400 MW base, 1200 MW peak, 8760 hours, ~6132 GWh
+          total.'
     code_quality:
       score: 10
       max: 10
@@ -175,60 +178,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean Imports-Data-Plot-Save flow, no functions or classes.
+        comment: 'Linear flow: imports, data, plot, style, save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42) ensures deterministic output.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used including save for HTML export.
+        comment: All imports are used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized, appropriate complexity.
+        comment: Clean, well-organized. No fake UI or over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png and plot.html with current Bokeh API.
+        comment: Saves as plot.png via export_png. Uses current np.trapezoid API.
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert Bokeh patterns: ColumnDataSource, figure, varea, Span, Label,
+          Legend, NumeralTickFormatter.'
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: 'Good idiomatic Bokeh: ColumnDataSource, varea, Span, Label, Legend
-          with add_layout, NumeralTickFormatter.'
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: 'Bokeh-specific: Span models, varea, HTML export with CDN, Legend
-          via add_layout to right panel.'
-  verdict: REJECTED
+        comment: HoverTool with vline mode and rich tooltips. Dual PNG + HTML output
+          with CDN resources.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - custom-legend
+  - hover-tooltips
   - html-export
+  - custom-legend
   patterns:
   - data-generation
   - columndatasource
-  dataprep: []
+  dataprep:
+  - cumulative-sum
   styling:
   - alpha-blending
   - grid-styling
