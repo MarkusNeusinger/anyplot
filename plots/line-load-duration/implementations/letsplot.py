@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 line-load-duration: Load Duration Curve for Energy Systems
 Library: letsplot 4.9.0 | Python 3.14.3
-Quality: 87/100 | Created: 2026-03-15
+Quality: 90/100 | Created: 2026-03-15
 """
 
 import numpy as np
