@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 stereonet-equal-area: Structural Geology Stereonet (Equal-Area Projection)
 Library: seaborn 0.13.2 | Python 3.14.3
 Quality: 89/100 | Created: 2026-03-15
@@ -131,7 +131,7 @@ for az in range(30, 360, 30):
         f"{az}°",
         ha="center",
         va="center",
-        fontsize=14,
+        fontsize=16,
         color="#777777",
         zorder=6,
     )
