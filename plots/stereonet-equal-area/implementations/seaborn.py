@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 stereonet-equal-area: Structural Geology Stereonet (Equal-Area Projection)
 Library: seaborn 0.13.2 | Python 3.14.3
 Quality: 81/100 | Created: 2026-03-15
@@ -8,7 +8,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
-from scipy.stats import gaussian_kde
 
 
 # Data - field measurements from a geological mapping campaign
@@ -41,12 +40,16 @@ pole_r = np.sqrt(2) * np.sin((np.pi / 2 - pole_plunge_rad) / 2)
 df["pole_x"] = pole_r * np.sin(pole_trend_rad)
 df["pole_y"] = pole_r * np.cos(pole_trend_rad)
 
-# Plot
-sns.set_context("talk", font_scale=1.2)
+# Scale marker size by dip angle for visual hierarchy (steeper dips = larger markers)
+df["marker_size"] = 80 + (df["dip"] / 90) * 120
+
+# Set up seaborn theme and palette
+sns.set_theme(style="white", font_scale=1.2)
+palette = sns.color_palette(["#306998", "#E88D39", "#3AA655", "#C44E52"])
+palette_dict = dict(zip(["Bedding", "Joint Set 1", "Joint Set 2", "Fault"], palette, strict=True))
+
 fig, ax = plt.subplots(figsize=(12, 12))
 ax.set_aspect("equal")
-
-palette = {"Bedding": "#306998", "Joint Set 1": "#E88D39", "Joint Set 2": "#3AA655", "Fault": "#C44E52"}
 
 # Primitive circle
 theta_circle = np.linspace(0, 2 * np.pi, 300)
@@ -95,7 +98,7 @@ for az, label in [(0, "N"), (90, "E"), (180, "S"), (270, "W")]:
         label,
         ha="center",
         va="center",
-        fontsize=20,
+        fontsize=22,
         fontweight="bold",
         zorder=6,
     )
@@ -111,21 +114,50 @@ for az in range(30, 360, 30):
         f"{az}°",
         ha="center",
         va="center",
-        fontsize=13,
+        fontsize=16,
         color="#555555",
         zorder=6,
     )
 
-# Density contours (Kamb-style) on pole data
-kde = gaussian_kde(np.vstack([df["pole_x"], df["pole_y"]]), bw_method=0.15)
-xi = np.linspace(-1, 1, 200)
-yi = np.linspace(-1, 1, 200)
-Xi, Yi = np.meshgrid(xi, yi)
-mask = Xi**2 + Yi**2 <= 1
-Zi = kde(np.vstack([Xi.ravel(), Yi.ravel()])).reshape(Xi.shape)
-Zi[~mask] = np.nan
-ax.contourf(Xi, Yi, Zi, levels=6, cmap="Greys", alpha=0.15, zorder=2)
-ax.contour(Xi, Yi, Zi, levels=6, colors="#999999", linewidths=0.7, alpha=0.5, zorder=2)
+# Density contours using seaborn kdeplot (Kamb-style)
+# Track existing artists to clip only KDE additions
+n_collections_before = len(ax.collections)
+n_lines_before = len(ax.lines)
+
+sns.kdeplot(
+    data=df,
+    x="pole_x",
+    y="pole_y",
+    fill=True,
+    levels=8,
+    thresh=0.1,
+    cmap="Greys",
+    alpha=0.35,
+    bw_adjust=0.6,
+    ax=ax,
+    zorder=2,
+)
+sns.kdeplot(
+    data=df,
+    x="pole_x",
+    y="pole_y",
+    levels=8,
+    thresh=0.1,
+    color="#777777",
+    linewidths=0.8,
+    bw_adjust=0.6,
+    ax=ax,
+    zorder=2,
+)
+
+# Clip density contours to the primitive circle
+clip_circle = plt.Circle((0, 0), 1.0, transform=ax.transData, fill=False)
+ax.add_patch(clip_circle)
+clip_circle.set_visible(False)
+for c in ax.collections[n_collections_before:]:
+    c.set_clip_path(clip_circle)
+for line in ax.lines[n_lines_before:]:
+    line.set_clip_path(clip_circle)
 
 # Great circles for representative planes (3 per feature type)
 for feature_type in df["feature_type"].unique():
@@ -144,21 +176,23 @@ for feature_type in df["feature_type"].unique():
         gc_r = np.sqrt(2) * np.sin((np.pi / 2 - gc_plunge) / 2)
         gc_x = gc_r * np.sin(gc_trend)
         gc_y = gc_r * np.cos(gc_trend)
-        ax.plot(gc_x, gc_y, color=palette[feature_type], linewidth=1.5, alpha=0.4, zorder=3)
+        ax.plot(gc_x, gc_y, color=palette_dict[feature_type], linewidth=1.8, alpha=0.5, zorder=3)
 
-# Poles using seaborn scatterplot
+# Poles using seaborn scatterplot with size encoding for visual hierarchy
 sns.scatterplot(
     data=df,
     x="pole_x",
     y="pole_y",
     hue="feature_type",
-    palette=palette,
-    s=150,
+    size="marker_size",
+    sizes=(80, 200),
+    palette=palette_dict,
     edgecolor="white",
     linewidth=0.8,
     alpha=0.85,
     ax=ax,
     zorder=5,
+    legend="brief",
 )
 
 # Style
@@ -168,10 +202,27 @@ ax.set_xlabel("")
 ax.set_ylabel("")
 ax.set_xticks([])
 ax.set_yticks([])
-for spine in ax.spines.values():
-    spine.set_visible(False)
+sns.despine(ax=ax, left=True, bottom=True)
+
+# Build a custom legend (feature types only, excluding size legend)
+handles = []
+for ft, color in palette_dict.items():
+    handles.append(
+        plt.Line2D(
+            [0],
+            [0],
+            marker="o",
+            color="w",
+            markerfacecolor=color,
+            markersize=10,
+            markeredgecolor="white",
+            markeredgewidth=0.5,
+            label=ft,
+        )
+    )
 
 ax.legend(
+    handles=handles,
     title="Feature Type",
     loc="upper left",
     fontsize=15,
