@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 column-stratigraphic: Stratigraphic Column with Lithology Patterns
-Library: bokeh | Python 3.13
-Quality: pending | Created: 2026-03-15
+Library: bokeh 3.9.0 | Python 3.14.3
+Quality: 83/100 | Created: 2026-03-15
 """
 
 from bokeh.io import export_png
