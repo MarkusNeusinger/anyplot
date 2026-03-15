@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 area-elevation-profile: Terrain Elevation Profile Along Transect
-Library: altair | Python 3.13
-Quality: pending | Created: 2026-03-15
+Library: altair 6.0.0 | Python 3.14.3
+Quality: 81/100 | Created: 2026-03-15
 """
 
 import altair as alt
