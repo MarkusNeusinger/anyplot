@@ -1,7 +1,7 @@
 library: seaborn
 specification_id: funnel-meta-analysis
 created: '2026-03-15T16:43:21Z'
-updated: '2026-03-15T16:57:21Z'
+updated: '2026-03-15T17:05:14Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23114663087
 issue: 4590
@@ -10,42 +10,49 @@ library_version: 0.13.2
 preview_url: https://storage.googleapis.com/pyplots-images/plots/funnel-meta-analysis/seaborn/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/funnel-meta-analysis/seaborn/plot_thumb.png
 preview_html: null
-quality_score: 88
+quality_score: 92
 review:
   strengths:
-  - Perfect spec compliance with all funnel plot features present and correctly implemented
-  - Clean monochromatic Python Blue color scheme with subtle CI fill region
-  - Good data storytelling through intentional asymmetry showing publication bias
-  - Excellent code quality with clean linear structure and reproducible seed
+  - Excellent spec compliance with all funnel plot features correctly implemented
+    including outlier annotations
+  - Cohesive monochromatic blue design using sns.light_palette creates professional
+    unified appearance
+  - Strong data storytelling through precision tiers, size variation, and targeted
+    outlier annotations highlighting publication bias
+  - Idiomatic seaborn usage with distinctive features (rugplot, light_palette, hue-based
+    scatter, set_context)
+  - Clean well-organized code with perfect KISS structure
   weaknesses:
-  - Library mastery could be stronger - heavy reliance on matplotlib for funnel construction
-    (fill_betweenx, axvline, plot lines)
-  - Design could be pushed to publication level with typography refinement and more
-    intentional visual hierarchy
-  - Could add study label annotations for key outlier studies to strengthen storytelling
-  image_description: The plot shows a meta-analysis funnel plot with an inverted y-axis
-    labeled "Standard Error" (0.0 at top, 0.5 at bottom) and x-axis labeled "Log Odds
-    Ratio (Drug vs Placebo)". The title reads "funnel-meta-analysis · seaborn · pyplots.ai".
-    A solid blue vertical line marks the summary effect at -0.39, with a dotted gray
-    line at 0 for the null effect. Dashed blue diagonal lines form the inverted funnel
-    shape (pseudo 95% CI), with a very light blue shaded region between them. 15 study
-    points are displayed as blue circles with white edges, sized by inverse-variance
-    weight. More precise studies (small SE) cluster near the top around the summary
-    effect, while less precise studies scatter wider. Two outlier points in the lower
-    right suggest publication bias asymmetry. Legend in lower left shows "Summary
-    effect (-0.39)" and "Null effect (0)". Top and right spines are removed. Grid
-    is very subtle.
+  - Annotation font size (13pt) is slightly small relative to other text elements
+  - Three blue precision tiers could benefit from slightly more contrast between shades
+  - X-axis extends wider than necessary on the left due to symmetric margin calculation
+  image_description: The plot displays a meta-analysis funnel plot with an inverted
+    y-axis labeled "Standard Error" (0.0 at top, ~0.55 at bottom) and x-axis labeled
+    "Log Odds Ratio (Drug vs Placebo)". The title reads "funnel-meta-analysis · seaborn
+    · pyplots.ai" in medium-weight sans-serif. A solid blue vertical line marks the
+    summary effect at -0.39, with a dotted gray line at 0 for the null effect. Dashed
+    blue diagonal lines form the inverted funnel shape (pseudo 95% CI) with a very
+    light blue shaded fill between them. Fifteen study points are plotted as circles
+    with white edges, colored in three shades of blue by precision tier (dark blue
+    = high precision near top, medium blue = moderate, light blue = low precision
+    near bottom). Point sizes vary by inverse-variance weight. Two outlier studies
+    ("Lee 2019" and "Martinez 2020") are annotated in italic gray text in the lower
+    right, outside the funnel boundary, clearly indicating publication bias asymmetry.
+    A subtle rug plot runs along the x-axis showing effect size distribution. The
+    legend in the lower left lists summary effect, null effect, and three precision
+    tiers. Top and right spines are removed. Grid is extremely subtle (alpha=0.12).
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title=24, labels=20, ticks=16'
+        comment: All major font sizes explicitly set (title=24, labels=20, ticks=16,
+          legend=14). Annotation text at 13pt slightly small.
       - id: VQ-02
         name: No Overlap
         score: 6
@@ -57,49 +64,51 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Points well-sized with sizes=(120, 470) for 15 studies
+        comment: Points well-sized with sizes=(120, 470) for 15 studies, alpha=0.85
       - id: VQ-04
         name: Color Accessibility
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Monochromatic blue scheme, colorblind-safe
+        comment: Monochromatic blue is colorblind-safe but three precision tiers may
+          be hard to distinguish
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Good proportions, funnel centered around summary effect
+        comment: Good proportions but some wasted space on left due to symmetric 1.5x
+          margin
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels for both axes
+        comment: Descriptive labels appropriate for domain
     design_excellence:
-      score: 13
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Cohesive monochromatic scheme with subtle CI fill, above defaults
-          but not publication-showcase
+        comment: Custom light_palette, cohesive monochromatic scheme, white edges,
+          intentional hierarchy
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: sns.despine, grid alpha=0.15, clean whitespace
+        comment: despine, grid alpha=0.12, generous whitespace, rug plot detail
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Asymmetric scatter tells publication bias story, size variation creates
-          hierarchy
+        comment: Outlier annotations, precision tiers, size variation create clear
+          publication bias narrative
     spec_compliance:
       score: 15
       max: 15
@@ -116,7 +125,7 @@ review:
         max: 4
         passed: true
         comment: 'All features present: inverted y-axis, summary line, null line,
-          CI funnel, sized points'
+          CI funnel, sized points, annotations'
       - id: SC-03
         name: Data Mapping
         score: 3
@@ -128,29 +137,30 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Correct title format and legend labels
+        comment: Correct title format and descriptive legend labels
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows asymmetry, varying precision, outliers
+        comment: Shows asymmetry, varying precision tiers, outliers outside funnel
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Drug vs placebo RCT meta-analysis, neutral medical research
+        comment: Drug vs placebo RCT meta-analysis with named studies, neutral medical
+          research
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Log odds ratios and SE values realistic for meta-analysis
+        comment: Log odds ratios and SE values realistic for clinical trial meta-analysis
     code_quality:
       score: 10
       max: 10
@@ -160,7 +170,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, plot, style, save'
+        comment: 'Clean linear flow: imports, theme, data, plot, style, save'
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -178,39 +188,42 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriate complexity
+        comment: Clean, Pythonic, appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png, dpi=300
+        comment: Saves as plot.png, dpi=300, no deprecated APIs
     library_mastery:
-      score: 6
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert use of sns.set_theme, set_context, scatterplot with hue/size,
+          rugplot, despine, light_palette
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Good use of sns.set_theme, set_context, scatterplot, despine
-      - id: LM-02
-        name: Distinctive Features
-        score: 2
-        max: 5
-        passed: false
-        comment: Most construction uses matplotlib; seaborn mainly for scatter and
-          theming
-  verdict: REJECTED
+        comment: rugplot, light_palette, hue-based scatter, set_context are distinctly
+          seaborn features
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
   - custom-legend
   patterns:
   - data-generation
   - explicit-figure
-  dataprep: []
+  dataprep:
+  - binning
   styling:
   - alpha-blending
   - edge-highlighting
