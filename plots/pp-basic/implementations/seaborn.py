@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 pp-basic: Probability-Probability (P-P) Plot
 Library: seaborn 0.13.2 | Python 3.14.3
-Quality: 87/100 | Created: 2026-03-15
+Quality: 90/100 | Created: 2026-03-15
 """
 
 import matplotlib.pyplot as plt
