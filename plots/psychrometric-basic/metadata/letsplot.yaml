@@ -1,7 +1,7 @@
 library: letsplot
 specification_id: psychrometric-basic
 created: '2026-03-15T21:50:52Z'
-updated: '2026-03-15T22:11:07Z'
+updated: '2026-03-15T22:24:24Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23120046652
 issue: 4583
@@ -10,40 +10,40 @@ library_version: 4.9.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/psychrometric-basic/letsplot/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/psychrometric-basic/letsplot/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/psychrometric-basic/letsplot/plot.html
-quality_score: 76
+quality_score: 81
 review:
   strengths:
-  - Accurate ASHRAE-based psychrometric equations producing physically correct curves
-  - Effective visual hierarchy with orange process path as clear focal point and blue
-    comfort zone
-  - Custom grayscale gradient for RH curves creates visual depth
-  - Proper use of ggplot layer composition for complex multi-layer technical chart
-  - 'All major spec features present: RH curves, wet-bulb, enthalpy, specific volume,
-    comfort zone, process path'
+  - Complete psychrometric chart with all required property families computed from
+    ASHRAE equations
+  - Excellent colorblind-safe palette with intuitive grayscale gradient for RH curves
+  - Strong data storytelling through comfort zone highlight and HVAC process path
+    with arrow
+  - Perfect spec compliance — every required feature is present and correctly implemented
+  - Professional color hierarchy that differentiates property families clearly
   weaknesses:
-  - Red (#d62728) enthalpy and green (#2ca02c) wet-bulb lines remain colorblind-unsafe
-    — flagged in attempt 1 but not fixed
-  - Text overlap between Cooling & Dehumidification label and RH% labels, and wet-bulb
-    labels near saturation curve
-  - 'Dead code: df_enth_labels, df_vol_labels, enthalpy_value(), specific_volume_value()
-    defined but unused in plot'
-  - Enthalpy and volume labels lack units (kJ/kg, m³/kg)
-  image_description: The plot displays a psychrometric chart on a white background
-    with dry-bulb temperature (°C) on the x-axis (-10 to 50) and humidity ratio (g/kg)
-    on the y-axis (0 to 30). Relative humidity curves (10%–100%) are rendered using
-    a grayscale gradient from light gray (10%) to dark gray (90%), with the 100% saturation
-    curve highlighted in blue (#306998). Wet-bulb temperature lines (0°C to 30°C)
-    run diagonally in green with labels near the saturation curve. Enthalpy lines
-    run diagonally in red/orange with labels on the left edge (10–60 kJ/kg visible).
-    Specific volume lines run at a different diagonal in purple/lavender with labels
-    near the bottom (0.78–0.90). A light blue dashed-border polygon marks the Comfort
-    Zone (~20–26°C, ~4–9 g/kg) with bold blue label. An orange arrow shows an HVAC
-    cooling & dehumidification process path from ~(32°C, 15 g/kg) to ~(24°C, 9 g/kg)
-    with bold orange label. Title reads "psychrometric-basic · letsplot · pyplots.ai"
-    in bold. Subtle gray major gridlines, no minor gridlines.
+  - Label overlap in the central region (15-25°C) where RH%, wet-bulb, and enthalpy
+    labels compete for space
+  - On-chart labels at size 7 are at the lower bound of legibility
+  - Helper functions add structural complexity (though justified by domain math)
+  - Enthalpy and volume lines are somewhat faint at alpha 0.45
+  image_description: The plot displays a psychrometric chart with dry-bulb temperature
+    (°C) on the x-axis (-10 to 50) and humidity ratio (g/kg) on the y-axis (0 to 30).
+    Relative humidity curves from 10% to 100% are drawn as smooth curves in a grayscale
+    gradient, with the 100% saturation curve prominently rendered in dark blue (#306998).
+    Wet-bulb temperature lines (0°C to 35°C) appear in blue running diagonally from
+    upper-left to lower-right. Enthalpy lines (10 to 110 kJ/kg) in vermillion/orange
+    run diagonally, labeled on the left edge with units. Specific volume lines (0.78
+    to 0.94 m³/kg) in purple run at a slightly different diagonal angle, labeled on
+    the right edge. A comfort zone is highlighted as a light blue shaded polygon (approximately
+    20-26°C, 30-60% RH) with a dashed border and bold "Comfort Zone" label. An HVAC
+    process path is shown as a thick orange arrow from ~32°C/50%RH to ~24°C/50%RH
+    with orange state points and a bold "Cooling & Dehumidification" label connected
+    by an annotation line. The title reads "psychrometric-basic · letsplot · pyplots.ai"
+    in bold at the top. The background is white with a light gray (#fafafa) panel
+    and subtle gridlines.
   criteria_checklist:
     visual_quality:
-      score: 23
+      score: 24
       max: 30
       items:
       - id: VQ-01
@@ -51,45 +51,45 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'Font sizes explicitly set: title=24, axis_title=20, axis_text=16.
-          Label texts at size 8-10 readable but small for busy chart.'
+        comment: Font sizes explicitly set for title (24), axis titles (20), ticks
+          (16). On-chart labels at size 7 are slightly small but readable.
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 3
         max: 6
         passed: false
-        comment: Cooling & Dehumidification label encroaches on 70% RH area. Wet-bulb
-          labels cluster near RH labels at saturation curve. Volume labels near x-axis
-          ticks.
+        comment: 'Moderate overlap in central region: 80%/70% RH labels crowd each
+          other, wet-bulb 15°C overlaps 90% RH label, congestion around 15-25°C.'
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: All curve types distinguishable with appropriate line widths and
-          alpha blending on secondary lines.
+        comment: Lines distinguishable. Enthalpy and volume lines at alpha 0.45 somewhat
+          faint. Process path prominent at size 2.5.
       - id: VQ-04
         name: Color Accessibility
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: Red (#d62728) enthalpy and green (#2ca02c) wet-bulb is classic red-green
-          colorblind problem. Not fixed from attempt 1.
+        passed: true
+        comment: 'Excellent colorblind-safe palette: grayscale for RH, blue for wet-bulb,
+          vermillion for enthalpy, purple for volume.'
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good 16:9 proportions at 1600x900, chart fills canvas well. Minor
-          clutter at edges.
+        comment: Good canvas utilization at 1600x900. Chart fills most of the space,
+          some edge labels slightly cramped.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Dry-Bulb Temperature (°C) and Humidity Ratio (g/kg) with proper units.
+        comment: 'Descriptive labels with units: Dry-Bulb Temperature (°C), Humidity
+          Ratio (g/kg).'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -97,24 +97,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom grayscale gradient for RH curves, blue saturation curve, intentional
-          color coding. Above defaults but red-green detracts.
+        comment: Thoughtful color scheme with grayscale gradient for RH curves, distinct
+          colorblind-safe colors for property families. Professional engineering appearance.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: theme_minimal removes spines, custom grid color and size, no minor
-          grid. Decent but not highly polished.
+        passed: true
+        comment: theme_minimal(), subtle grid, minor grid removed, custom panel background.
+          Good refinement visible.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Good visual hierarchy with orange process path as focal point and
-          comfort zone highlight. HVAC story is clear.
+        comment: Comfort zone and HVAC process path create clear focal points. Orange
+          arrow with label tells immediate engineering story.
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -122,51 +122,52 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct psychrometric chart with temperature vs humidity ratio and
-          multiple property overlays.
+        comment: Correct psychrometric chart with all required curve families.
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 'All features present: RH curves, wet-bulb, enthalpy, volume lines,
-          comfort zone, process path. Labels lack units.'
+        comment: 'All features present: RH curves 10-100%, wet-bulb, enthalpy, volume
+          lines, comfort zone, HVAC process path.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=dry-bulb temperature, Y=humidity ratio. Full specified range covered.
+        comment: Correct mapping with full specified range (-10 to 50°C). Standard
+          atmosphere (101.325 kPa).
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows exact format. No legend needed as labels are on-chart.
+        comment: Correct title format. Direct on-chart labels used instead of legend.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows all psychrometric property types, comfort zone, and HVAC process.
-          Good coverage.
+        comment: Comprehensive coverage of all psychrometric properties, comfort zone,
+          and HVAC process path.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: ASHRAE-based equations at standard atmosphere (101.325 kPa). Real
-          engineering context.
+        comment: ASHRAE-based equations, standard atmospheric pressure, realistic
+          HVAC cooling scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Standard psychrometric ranges: -10 to 50°C, 0-30 g/kg.'
+        comment: Standard engineering ranges with physically correct thermodynamic
+          values.
     code_quality:
       score: 8
       max: 10
@@ -176,51 +177,51 @@ review:
         score: 2
         max: 3
         passed: false
-        comment: Uses helper functions for psychrometric equations. Justified by domain
-          complexity but not flat KISS.
+        comment: Three helper functions for thermodynamic calculations. Justified
+          by domain complexity but violates strict KISS.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic, no random data.
+        comment: Fully deterministic data from equations, no random elements.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used.
+        comment: All imports are used.
       - id: CQ-04
         name: Code Elegance
         score: 1
         max: 2
         passed: false
-        comment: 'Dead code: df_enth_labels, df_vol_labels created but not rendered.
-          enthalpy_value() and specific_volume_value() defined but never called.'
+        comment: Verbose nested ternary for label positions. Repetitive DataFrame
+          construction loops.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with scale=3 per guidelines. Also saves HTML.
+        comment: Saves as plot.png with scale=3 and also HTML.
     library_mastery:
-      score: 5
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
-        passed: false
-        comment: Correct ggplot grammar with layer composition. Standard patterns
-          throughout.
+        passed: true
+        comment: 'Good ggplot grammar: layered geoms, aes mappings, scale_color_identity,
+          theme_minimal with overrides.'
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: scale_color_identity, geom_path with arrow, HTML export. Some library-specific
-          but largely generic.
+        comment: Arrow in geom_path and HTML export somewhat distinctive. Overall
+          could be replicated in plotnine.
   verdict: REJECTED
 impl_tags:
   dependencies: []
