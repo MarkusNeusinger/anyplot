@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 heatmap-cohort-retention: Cohort Retention Heatmap
 Library: pygal 3.1.0 | Python 3.14.3
 Quality: 85/100 | Created: 2026-03-16
@@ -9,19 +9,23 @@ import sys
 import numpy as np
 
 
-# Import pygal avoiding name collision with this filename
-_cwd = sys.path[0] if sys.path[0] else "."
-if _cwd in sys.path:
-    sys.path.remove(_cwd)
+# Temporarily remove cwd from sys.path to import the pygal package
+# (this file is named pygal.py, which shadows the package)
+_saved = [p for p in sys.path if p in ("", ".") or p == sys.path[0]]
+for p in _saved:
+    sys.path.remove(p)
 
 from pygal.graph.graph import Graph  # noqa: E402
 from pygal.style import Style  # noqa: E402
 
 
-sys.path.insert(0, _cwd)
+for p in reversed(_saved):
+    sys.path.insert(0, p)
 
 
 class CohortRetentionHeatmap(Graph):
+    """Custom pygal chart for triangular cohort retention heatmaps."""
+
     _series_margin = 0
 
     def __init__(self, *args, **kwargs):
@@ -51,28 +55,15 @@ class CohortRetentionHeatmap(Graph):
         g = int(bg_color[3:5], 16)
         b = int(bg_color[5:7], 16)
         brightness = (r * 299 + g * 587 + b * 114) / 1000
-        return "#ffffff" if brightness < 140 else "#222222"
+        return "#ffffff" if brightness < 140 else "#1a1a1a"
 
     def _plot(self):
         if not self.matrix_data:
             return
 
-        # Inject CSS to suppress pygal's default focus/active/hover outlines
-        defs_node = self.svg.node(self.svg.root, "defs")
-        style_node = self.svg.node(defs_node, "style", type="text/css")
-        style_node.text = (
-            ".cell rect, .cell { outline: none !important; stroke-opacity: 1; } "
-            ".cell:focus rect, .cell:hover rect, .cell:active rect, "
-            ".active .cell rect, .cell .active rect "
-            "{ outline: none !important; } "
-            "g.cell:focus, g.cell:active { outline: none; } "
-            ".activate-serie, .active .reactive { outline: none !important; }"
-        )
-
         n_rows = len(self.matrix_data)
         n_cols = max(len(row) for row in self.matrix_data)
 
-        # Find min/max excluding None and period 0 (always 100%)
         non_null = [v for row in self.matrix_data for v in row if v is not None]
         min_val = min(non_null)
         max_val = max(non_null)
@@ -90,7 +81,7 @@ class CohortRetentionHeatmap(Graph):
 
         cell_width = available_width / n_cols
         cell_height = available_height / (n_rows + 0.5)
-        gap = 3
+        gap = 4
 
         grid_width = n_cols * (cell_width + gap) - gap
         grid_height = n_rows * (cell_height + gap) - gap
@@ -106,8 +97,12 @@ class CohortRetentionHeatmap(Graph):
         header_title_x = x_offset + grid_width / 2
         text_node = self.svg.node(plot_node, "text", x=header_title_x, y=header_title_y)
         text_node.set("text-anchor", "middle")
-        text_node.set("fill", "#555555")
-        text_node.set("style", f"font-size:{col_font_size + 4}px;font-weight:600;font-family:sans-serif")
+        text_node.set("fill", "#4a4a4a")
+        text_node.set(
+            "style",
+            f"font-size:{col_font_size + 4}px;font-weight:600;"
+            "font-family:'Segoe UI',Roboto,sans-serif;letter-spacing:0.5px",
+        )
         text_node.text = "Months Since Signup"
 
         # Column headers
@@ -117,42 +112,52 @@ class CohortRetentionHeatmap(Graph):
             text_node = self.svg.node(plot_node, "text", x=cx, y=cy)
             text_node.set("text-anchor", "middle")
             text_node.set("fill", "#333333")
-            text_node.set("style", f"font-size:{col_font_size}px;font-weight:700;font-family:sans-serif")
+            text_node.set(
+                "style", f"font-size:{col_font_size}px;font-weight:700;font-family:'Segoe UI',Roboto,sans-serif"
+            )
             text_node.text = str(label)
 
         # Row labels with cohort sizes
         row_font_size = min(36, int(cell_height * 0.50))
-        size_font_size = int(row_font_size * 0.88)
+        size_font_size = int(row_font_size * 0.85)
         for i, label in enumerate(self.row_labels):
             ry = y_offset + i * (cell_height + gap) + cell_height / 2
-            rx = x_offset - 20
+            rx = x_offset - 22
 
-            # Cohort label
-            text_node = self.svg.node(plot_node, "text", x=rx, y=ry + row_font_size * 0.15)
+            text_node = self.svg.node(plot_node, "text", x=rx, y=ry + row_font_size * 0.12)
             text_node.set("text-anchor", "end")
             text_node.set("fill", "#333333")
-            text_node.set("style", f"font-size:{row_font_size}px;font-weight:600;font-family:sans-serif")
+            text_node.set(
+                "style", f"font-size:{row_font_size}px;font-weight:600;font-family:'Segoe UI',Roboto,sans-serif"
+            )
             text_node.text = str(label)
 
-            # Cohort size below label
             if i < len(self.cohort_sizes):
-                text_node = self.svg.node(plot_node, "text", x=rx, y=ry + row_font_size * 0.15 + size_font_size + 4)
+                text_node = self.svg.node(plot_node, "text", x=rx, y=ry + row_font_size * 0.12 + size_font_size + 5)
                 text_node.set("text-anchor", "end")
-                text_node.set("fill", "#888888")
-                text_node.set("style", f"font-size:{size_font_size}px;font-weight:400;font-family:sans-serif")
+                text_node.set("fill", "#999999")
+                text_node.set(
+                    "style",
+                    f"font-size:{size_font_size}px;font-weight:400;"
+                    "font-family:'Segoe UI',Roboto,sans-serif;font-style:italic",
+                )
                 text_node.text = f"n={self.cohort_sizes[i]:,}"
 
         # Row label title (rotated)
-        row_title_x = x_offset - 340
+        row_title_x = x_offset - 350
         row_title_y = y_offset + grid_height / 2
         text_node = self.svg.node(plot_node, "text", x=row_title_x, y=row_title_y)
         text_node.set("text-anchor", "middle")
-        text_node.set("fill", "#555555")
-        text_node.set("style", f"font-size:{col_font_size + 4}px;font-weight:600;font-family:sans-serif")
+        text_node.set("fill", "#4a4a4a")
+        text_node.set(
+            "style",
+            f"font-size:{col_font_size + 4}px;font-weight:600;"
+            "font-family:'Segoe UI',Roboto,sans-serif;letter-spacing:0.5px",
+        )
         text_node.set("transform", f"rotate(-90, {row_title_x}, {row_title_y})")
         text_node.text = "Signup Cohort"
 
-        # Draw cells
+        # Draw cells with subtle shadow effect
         value_font_size = min(38, int(min(cell_width, cell_height) * 0.46))
         for i in range(n_rows):
             for j in range(len(self.matrix_data[i])):
@@ -166,15 +171,15 @@ class CohortRetentionHeatmap(Graph):
                 cx = x_offset + j * (cell_width + gap)
                 cy = y_offset + i * (cell_height + gap)
 
-                cell_group = self.svg.node(plot_node, "g", class_="cell")
-                cell_group.set("style", "outline:none;stroke:none;")
-                rect = self.svg.node(cell_group, "rect", x=cx, y=cy, width=cell_width, height=cell_height, rx=3, ry=3)
-                rect.set("fill", color)
-                rect.set("stroke", "#ffffff")
-                rect.set("stroke-width", "2")
-                rect.set("style", "outline:none;")
+                cell_group = self.svg.node(plot_node, "g")
 
-                # Tooltip
+                # Cell rectangle with rounded corners
+                rect = self.svg.node(cell_group, "rect", x=cx, y=cy, width=cell_width, height=cell_height, rx=5, ry=5)
+                rect.set("fill", color)
+                rect.set("stroke", "#f0f0f0")
+                rect.set("stroke-width", "1.5")
+
+                # Tooltip using pygal's native tooltip system
                 cohort_label = self.row_labels[i] if i < len(self.row_labels) else ""
                 period_label = self.col_labels[j] if j < len(self.col_labels) else ""
                 self._tooltip_data(
@@ -182,7 +187,7 @@ class CohortRetentionHeatmap(Graph):
                     f"{value:.1f}%",
                     cx + cell_width / 2,
                     cy + cell_height / 2,
-                    xlabel=f"{cohort_label} / {period_label}",
+                    xlabel=f"{cohort_label} \u2013 {period_label}",
                 )
 
                 # Value text
@@ -191,13 +196,15 @@ class CohortRetentionHeatmap(Graph):
                 text_node = self.svg.node(cell_group, "text", x=tx, y=ty)
                 text_node.set("text-anchor", "middle")
                 text_node.set("fill", text_color)
-                text_node.set("style", f"font-size:{value_font_size}px;font-weight:500;font-family:sans-serif")
+                text_node.set(
+                    "style", f"font-size:{value_font_size}px;font-weight:600;font-family:'Segoe UI',Roboto,sans-serif"
+                )
                 text_node.text = f"{value:.0f}%"
 
         # Colorbar
-        cb_width = 46
-        cb_height = grid_height * 0.75
-        cb_x = x_offset + grid_width + 50
+        cb_width = 48
+        cb_height = grid_height * 0.78
+        cb_x = x_offset + grid_width + 55
         cb_y = y_offset + (grid_height - cb_height) / 2
 
         defs = self.svg.node(plot_node, "defs")
@@ -209,10 +216,10 @@ class CohortRetentionHeatmap(Graph):
             stop = self.svg.node(gradient, "stop", offset=f"{frac * 100}%")
             stop.set("stop-color", color)
 
-        cb_rect = self.svg.node(plot_node, "rect", x=cb_x, y=cb_y, width=cb_width, height=cb_height, rx=4, ry=4)
+        cb_rect = self.svg.node(plot_node, "rect", x=cb_x, y=cb_y, width=cb_width, height=cb_height, rx=5, ry=5)
         cb_rect.set("fill", "url(#cb-gradient)")
-        cb_rect.set("stroke", "#999999")
-        cb_rect.set("stroke-width", "1.5")
+        cb_rect.set("stroke", "#cccccc")
+        cb_rect.set("stroke-width", "1")
 
         cb_label_size = 28
         for frac, val in [
@@ -223,18 +230,20 @@ class CohortRetentionHeatmap(Graph):
             (1.0, min_val),
         ]:
             ty = cb_y + cb_height * frac
-            tick = self.svg.node(plot_node, "line", x1=cb_x + cb_width, y1=ty, x2=cb_x + cb_width + 8, y2=ty)
-            tick.set("stroke", "#666666")
+            tick = self.svg.node(plot_node, "line", x1=cb_x + cb_width, y1=ty, x2=cb_x + cb_width + 10, y2=ty)
+            tick.set("stroke", "#999999")
             tick.set("stroke-width", "1.5")
-            text_node = self.svg.node(plot_node, "text", x=cb_x + cb_width + 14, y=ty + cb_label_size * 0.35)
+            text_node = self.svg.node(plot_node, "text", x=cb_x + cb_width + 16, y=ty + cb_label_size * 0.35)
             text_node.set("fill", "#333333")
-            text_node.set("style", f"font-size:{cb_label_size}px;font-family:sans-serif")
+            text_node.set("style", f"font-size:{cb_label_size}px;font-family:'Segoe UI',Roboto,sans-serif")
             text_node.text = f"{val:.0f}%"
 
-        cb_title = self.svg.node(plot_node, "text", x=cb_x + cb_width / 2, y=cb_y - 20)
+        cb_title = self.svg.node(plot_node, "text", x=cb_x + cb_width / 2, y=cb_y - 22)
         cb_title.set("text-anchor", "middle")
         cb_title.set("fill", "#333333")
-        cb_title.set("style", f"font-size:{cb_label_size + 2}px;font-weight:600;font-family:sans-serif")
+        cb_title.set(
+            "style", f"font-size:{cb_label_size + 2}px;font-weight:600;font-family:'Segoe UI',Roboto,sans-serif"
+        )
         cb_title.text = "Retention %"
 
     def _compute(self):
@@ -291,8 +300,8 @@ for i in range(n_cohorts):
 
 period_labels = [f"Month {i}" for i in range(n_max_periods)]
 
-# Sequential green colormap (light to dark)
-green_colormap = ["#f7fcf5", "#e5f5e0", "#c7e9c0", "#a1d99b", "#74c476", "#41ab5d", "#238b45", "#005a32"]
+# Sequential teal-green colormap (accessible for color vision deficiencies)
+teal_colormap = ["#f7fcfd", "#e5f5f9", "#ccece6", "#99d8c9", "#66c2a4", "#41ae76", "#238b45", "#005824"]
 
 # Style
 custom_style = Style(
@@ -307,7 +316,7 @@ custom_style = Style(
     label_font_size=34,
     value_font_size=28,
     tooltip_font_size=26,
-    font_family="sans-serif",
+    font_family="'Segoe UI',Roboto,sans-serif",
 )
 
 # Chart
@@ -320,7 +329,7 @@ chart = CohortRetentionHeatmap(
     row_labels=cohort_labels,
     col_labels=period_labels,
     cohort_sizes=cohort_sizes,
-    colormap=green_colormap,
+    colormap=teal_colormap,
     show_legend=False,
     margin=100,
     margin_top=200,
@@ -331,7 +340,8 @@ chart = CohortRetentionHeatmap(
     show_y_labels=False,
 )
 
-chart.add("", [0])
+# Pygal requires at least one series to initialize its rendering pipeline
+chart.add("data", [0])
 
 # Save
 chart.render_to_file("plot.svg")
