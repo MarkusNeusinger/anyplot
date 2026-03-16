@@ -1,7 +1,7 @@
-""" pyplots.ai
+"""pyplots.ai
 heatmap-cohort-retention: Cohort Retention Heatmap
 Library: plotnine 0.15.3 | Python 3.14.3
-Quality: 88/100 | Created: 2026-03-16
+Quality: 90/100 | Created: 2026-03-16
 """
 
 import numpy as np
@@ -66,8 +66,8 @@ df["cohort_label"] = df.apply(lambda r: f"{r['cohort']} (n={r['cohort_size']:,})
 cohort_labels = [f"{c} (n={s:,})" for c, s in zip(cohorts, cohort_sizes, strict=True)]
 df["cohort_label"] = pd.Categorical(df["cohort_label"], categories=cohort_labels[::-1], ordered=True)
 
-# Text color: white on dark cells, dark on light cells
-df["text_color"] = df["retention_rate"].apply(lambda v: "#ffffff" if v > 55 else "#1a1a2e")
+# Text color: white on dark cells (viridis dark end), dark on light cells
+df["text_color"] = df["retention_rate"].apply(lambda v: "#ffffff" if v < 60 else "#1a1a2e")
 
 # Format retention text
 df["label"] = df["retention_rate"].apply(lambda v: f"{v:.0f}%")
@@ -78,17 +78,17 @@ earliest = df[(df["cohort"] == "Jan 2024") & (df["period"] == compare_period)]["
 latest = df[(df["cohort"] == "Jun 2024") & (df["period"] == compare_period)]["retention_rate"].values[0]
 improvement = latest - earliest
 
-# Clean 3-stop color palette: cream → teal → deep navy
-colors = ["#0d1b2a", "#2a9d8f", "#fefae0"]
+# Perceptually uniform sequential palette (viridis-inspired: dark purple → teal → yellow)
+colors = ["#440154", "#31688e", "#35b779", "#fde725"]
 
 # Plot
 plot = (
     ggplot(df, aes(x="period", y="cohort_label", fill="retention_rate"))
     + geom_tile(color="#f8f9fa", size=0.6)
     + geom_text(aes(label="label", color="text_color"), size=13, fontweight="bold")
-    + scale_fill_gradientn(colors=colors[::-1], limits=(0, 100), name="Retention %")
+    + scale_fill_gradientn(colors=colors, limits=(0, 100), name="Retention %")
     + scale_color_identity()
-    + scale_x_continuous(breaks=range(n_cohorts), labels=[f"Month {i}" for i in range(n_cohorts)])
+    + scale_x_continuous(breaks=range(n_cohorts), labels=[f"M{i}" for i in range(n_cohorts)])
     + scale_y_discrete(expand=(0.05, 0))
     + annotate(
         "text",
@@ -96,7 +96,7 @@ plot = (
         y=3,
         label=f"Month {compare_period} retention improved\n+{improvement:.0f}pp from Jan→Jun 2024",
         size=11,
-        color="#0d1b2a",
+        color="#2d2d2d",
         ha="center",
         fontweight="bold",
     )
@@ -112,7 +112,7 @@ plot = (
         plot_title=element_text(size=26, ha="center", weight="bold", color="#0d1b2a"),
         plot_subtitle=element_text(size=18, ha="center", color="#555555", style="italic"),
         axis_title_x=element_text(size=20, color="#333333"),
-        axis_text_x=element_text(size=16, rotation=45, ha="right", color="#444444"),
+        axis_text_x=element_text(size=16, color="#444444"),
         axis_text_y=element_text(size=16, color="#444444"),
         legend_title=element_text(size=16, weight="bold"),
         legend_text=element_text(size=14),
