@@ -1,0 +1,232 @@
+library: bokeh
+specification_id: line-retention-cohort
+created: '2026-03-16T20:44:38Z'
+updated: '2026-03-16T21:02:56Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23164943124
+issue: 4572
+python_version: 3.14.3
+library_version: 3.9.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/line-retention-cohort/bokeh/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/line-retention-cohort/bokeh/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/line-retention-cohort/bokeh/plot.html
+quality_score: 90
+review:
+  strengths:
+  - Excellent spec compliance — every requirement from the specification is implemented
+  - Strong visual hierarchy through progressive line width and opacity that emphasizes
+    newer cohorts
+  - Idiomatic Bokeh usage with ColumnDataSource, HoverTool, and dual PNG/HTML output
+  - Custom colorblind-safe palette with warm-to-cool progression
+  - Clean, well-structured code with good reproducibility
+  weaknesses:
+  - Legend and threshold label text could be slightly larger for better readability
+    on the large canvas
+  - Axis spines are still fully present — removing top/right spines would improve
+    visual refinement
+  - Cohort curves converge at later weeks, making individual lines harder to distinguish
+  image_description: The plot displays 5 user retention cohort curves (Jan–May 2025)
+    on a light gray background. All curves start at 100% retention at week 0 and decay
+    over 12 weeks. Colors progress from warm gold/amber (Jan 2025) through teal (Feb),
+    dark blue (Mar), purple (Apr), to dark navy (May 2025). Line widths increase and
+    opacity grows from older to newer cohorts, visually emphasizing the most recent
+    cohort. Each data point has a circular marker with a white edge. A horizontal
+    dashed gray line at 20% marks a retention threshold, labeled "20% Threshold" near
+    the right edge. The legend in the top-right corner lists all cohorts with sample
+    sizes (e.g., "Jan 2025 (n=1,245)"). Y-axis runs from 0 to ~105% with subtle dashed
+    gridlines; X-axis shows "Weeks Since Signup" from 0 to 12. Title reads "line-retention-cohort
+    · bokeh · pyplots.ai" in dark text at top-left.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 42pt, labels 32pt, ticks 24pt,
+          legend 20pt). Legend and threshold label readable but slightly small for
+          canvas size.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlaps. Legend positioned clear of data.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Lines and markers clearly visible. Curves converge at later weeks
+          making distinction harder.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Gold, teal, blue, purple, navy palette avoids red-green confusion.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills canvas well with balanced margins.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive labels with units: Weeks Since Signup, Retention Rate
+          (%).'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom palette with warm-to-cool progression. Intentional hierarchy
+          through line width and opacity. Above defaults but not FiveThirtyEight-level.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle y-grid (dashed, alpha 0.15), x-grid removed, light gray background.
+          Axis spines still fully present.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Progressive line width/opacity emphasizes newer cohorts. 20% threshold
+          adds business context. Data shows improving retention over time.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct line chart showing retention curves by cohort.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec requirements implemented: 100% start, distinct colors,
+          legend with sizes, gridlines, reference line.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=weeks since signup, Y=retention rate percentage. Correct mapping.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title follows spec-id · library · pyplots.ai format. Legend labels
+          use cohort (n=size) format.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: 5 cohorts with varying decay rates. Good spread but could show more
+          variation in curve shapes.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Monthly signup cohorts for a product. Cohort sizes 1,245-1,680 are
+          plausible for mid-size SaaS.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Retention decays realistically from 100%. Final values 12-32% at
+          week 12 are consistent with typical retention curves.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean Imports → Data → Plot → Save structure. No functions or classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used including output_file/save for HTML export.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-organized code with appropriate complexity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png via export_png. Also saves interactive HTML.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Excellent use of ColumnDataSource, figure API, Legend model, Span,
+          Label, HoverTool.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: HoverTool with tooltips, dual PNG+HTML output, ColumnDataSource data
+          binding, Span for reference lines.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - hover-tooltips
+  - custom-legend
+  - annotations
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  - columndatasource
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
+  - grid-styling
