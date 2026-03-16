@@ -1,7 +1,7 @@
 library: bokeh
 specification_id: heatmap-cohort-retention
 created: '2026-03-16T20:46:00Z'
-updated: '2026-03-16T20:51:11Z'
+updated: '2026-03-16T20:58:44Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23165008001
 issue: 4570
@@ -10,36 +10,34 @@ library_version: 3.9.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/heatmap-cohort-retention/bokeh/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/heatmap-cohort-retention/bokeh/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/heatmap-cohort-retention/bokeh/plot.html
-quality_score: 85
+quality_score: 90
 review:
   strengths:
-  - Full spec compliance with all required features (triangular shape, cell annotations,
-    cohort sizes, color bar)
-  - Clean well-structured code with good Bokeh idioms (ColumnDataSource, transform,
-    LinearColorMapper)
-  - Smart adaptive text color logic (white on dark cells, dark on light cells)
-  - Realistic and plausible SaaS retention data with good variation across cohorts
+  - Excellent spec compliance — all required features implemented correctly (triangular
+    shape, cell text, cohort sizes, colorbar)
+  - Strong visual refinement with removed grid/spines, adaptive text colors, and custom
+    typography hierarchy
+  - Viridis palette is a perfect choice for this data type (perceptually uniform,
+    colorblind-safe)
+  - Clean, well-structured code with appropriate complexity
+  - Insight annotation adds data storytelling value
   weaknesses:
-  - Green palette is less accessible than recommended perceptually-uniform colormaps
-    (viridis/cividis)
-  - No data storytelling emphasis or focal point beyond natural triangular shape
-  - Tick label font size 16pt is below the recommended 18pt from library guide
-  - Does not leverage distinctive Bokeh features like HoverTool for interactivity
-  image_description: 'The plot displays a triangular cohort retention heatmap using
-    a sequential green colormap. The title "heatmap-cohort-retention · bokeh · pyplots.ai"
-    is centered at the top. The x-axis shows "Month 0" through "Month 9" positioned
-    above the heatmap with an "Months Since Signup" axis label. The y-axis lists 10
-    monthly cohorts from "Jan 2024 (n=1,926)" at the top to "Oct 2024 (n=1,266)" at
-    the bottom, with a "Signup Cohort" label. Each cell displays the retention percentage
-    as text (e.g., "100.0%", "66.1%", "2.4%"). The triangular shape is correctly formed
-    — Jan 2024 spans all 10 periods while Oct 2024 has only 1. Colors range from dark
-    green (100% retention) to very light green/white (low retention ~2%). White borders
-    separate the cells. A vertical color bar on the right shows the "Retention %"
-    scale from 0 to 100. Text colors adapt for contrast: white text on dark green
-    cells, dark text on light cells.'
+  - 'Insight annotation text (16pt, #666666) is slightly undersized relative to other
+    text elements'
+  - Colorbar title position at bottom-right is slightly cramped
+  image_description: The plot displays a triangular cohort retention heatmap with
+    10 monthly cohorts (Jan–Oct 2024) on the y-axis and 10 periods (Month 0–Month
+    9) on the x-axis (positioned above). Each cell shows a retention percentage as
+    bold text. The viridis color scheme maps values from yellow (100%) to dark purple
+    (low single digits). The triangular shape is correctly formed — Jan 2024 spans
+    all 10 months while Oct 2024 has only Month 0. Cohort sizes (e.g., n=1,926, n=2,259)
+    appear alongside cohort labels. A vertical color bar on the right shows the "Retention
+    %" scale from 0 to 100. An italic insight annotation at the bottom left reads
+    "Month 3 retention ranges from 27% to 48% across cohorts." Background is light
+    gray (#fafafa) with white borders, no grid lines, no axis lines, and no tick marks.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -47,67 +45,64 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (28pt title, 22pt axis labels, 18pt
-          cell text). Tick labels at 16pt slightly below 18pt recommendation.
+        comment: All font sizes explicitly set (title 30pt, axis labels 22pt, ticks
+          18pt, cell text 17pt). Insight annotation at 16pt slightly small.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text anywhere. All cell annotations, axis labels,
-          and tick labels fully readable.
+        comment: No overlapping text. Cell text fits cleanly within rectangles.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All heatmap cells clearly visible with appropriate sizing. Triangular
-          shape well-defined.
+        comment: Heatmap cells well-sized and clearly distinguishable.
       - id: VQ-04
         name: Color Accessibility
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Sequential green palette is single-hue and generally accessible but
-          not as optimal as viridis/cividis for colorblind users.
+        comment: Viridis palette is perceptually uniform and colorblind-safe.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good canvas utilization. Triangular shape naturally leaves empty
-          space in lower-right. Colorbar title somewhat cramped.
+        comment: Good proportions. Minor whitespace imbalance between left margin
+          and right colorbar.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels: Months Since Signup and Signup Cohort.'
+        comment: 'Descriptive labels: Months Since Signup, Signup Cohort.'
     design_excellence:
-      score: 12
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Custom green palette, white cell borders, adaptive text colors. Above
-          default but not publication-ready.
+        comment: Viridis palette with adaptive text colors, custom typography hierarchy,
+          subtle cell borders. Clearly above defaults.
       - id: DE-02
         name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: No grid, no axis lines, no tick marks, custom background, outline
+          removed, generous margins.
+      - id: DE-03
+        name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Axis lines removed, grid removed, white cell borders provide clean
-          separation.
-      - id: DE-03
-        name: Data Storytelling
-        score: 3
-        max: 6
-        passed: true
-        comment: Triangular shape conveys cohort narrative. No particular focal point
-          or emphasis.
+        comment: Insight annotation highlights Month 3 retention variance. Triangular
+          shape naturally guides the eye.
     spec_compliance:
       score: 15
       max: 15
@@ -123,44 +118,44 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: triangular shape, retention text, cohort
-          sizes, colormap, color bar.'
+        comment: 'All features present: triangular shape, cell text, cohort sizes,
+          colorbar, sequential colormap.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = periods, Y = cohorts, color = retention rate. All correct.
+        comment: X=periods, Y=cohorts, color=retention rate.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format. Color bar serves as legend.
+        comment: Title follows exact format. Colorbar serves as legend.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 10 cohorts, 10 periods, proper triangular shape, period 0 always
-          100%. Good variation in decay rates.
+        comment: 10 cohorts, 10 periods, triangular shape, varying decay rates, different
+          cohort sizes.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Monthly SaaS signup cohorts with realistic retention decay. Neutral
-          business context.
+        comment: Monthly SaaS signup cohorts. Neutral business analytics scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Realistic retention percentages and cohort sizes.
+        comment: Retention starts at 100%, decays realistically. Cohort sizes 800-2500
+          plausible.
     code_quality:
       score: 10
       max: 10
@@ -170,31 +165,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script with no functions or classes.
+        comment: 'Clean linear flow: imports, data, plot, styling, save.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set at start.
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used.
+        comment: All imports used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-structured code. No fake UI.
+        comment: Appropriate complexity. No fake functionality.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png using export_png. Current API.
+        comment: Saves via export_png. Current Bokeh API.
     library_mastery:
       score: 7
       max: 10
@@ -204,21 +199,22 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of ColumnDataSource, figure with categorical ranges, rect/text
-          glyphs, transform with LinearColorMapper, ColorBar.
+        comment: ColumnDataSource, figure with categorical ranges, transform() for
+          color mapping, rect/text glyphs, Label, ColorBar.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses ColumnDataSource, transform(), LinearColorMapper — Bokeh-specific
-          but standard for heatmaps.
-  verdict: REJECTED
+        comment: HoverTool with custom tooltips is distinctive Bokeh feature. ColumnDataSource
+          + transform pattern is Bokeh-specific.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
   - annotations
+  - hover-tooltips
   patterns:
   - data-generation
   - matrix-construction
@@ -226,4 +222,5 @@ impl_tags:
   dataprep: []
   styling:
   - custom-colormap
+  - minimal-chrome
   - edge-highlighting
