@@ -1,0 +1,225 @@
+library: letsplot
+specification_id: line-retention-cohort
+created: '2026-03-16T20:44:20Z'
+updated: '2026-03-16T20:57:20Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23164943466
+issue: 4572
+python_version: 3.14.3
+library_version: 4.9.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/line-retention-cohort/letsplot/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/line-retention-cohort/letsplot/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/line-retention-cohort/letsplot/plot.html
+quality_score: 91
+review:
+  strengths:
+  - Excellent data storytelling through progressive line weights and color intensity
+    emphasizing newer cohorts
+  - Endpoint labels with overlap prevention provide clear final-retention context
+  - 20% threshold reference line adds analytical value
+  - Full spec compliance with all required features implemented
+  - Interactive tooltips leverage lets-plot distinctive capabilities
+  weaknesses:
+  - Endpoint labels for lower cohorts (12%, 15%, 17%) are slightly tight despite overlap
+    prevention
+  image_description: 'The plot displays 5 retention curves for monthly signup cohorts
+    (Jan–May 2025) on a clean white background. All curves start at 100% at week 0
+    and decay over 12 weeks with exponential profiles. Colors progress from light
+    blue (Jan 2025, oldest) through green (Feb), orange (Mar), red (Apr), to dark
+    navy blue (May 2025, newest). Newer cohorts have thicker lines, creating clear
+    visual hierarchy. Data points are marked along each curve. Endpoint percentage
+    labels (12%, 15%, 17%, 23%, 31%) are displayed at week 12, color-matched to their
+    respective cohorts. A dashed gray horizontal line at y=20 marks the "20% threshold"
+    benchmark. The legend on the right lists each cohort with sample size (e.g., "Jan
+    2025 (n=1,245)"). Title reads "line-retention-cohort · letsplot · pyplots.ai".
+    X-axis: "Weeks Since Signup", Y-axis: "Retained Users (%)". Subtle light gray
+    major gridlines on a minimal theme.'
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title=28, axis_title=22, axis_text=18,
+          legend_text=16'
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Endpoint labels use overlap prevention but 12%/15%/17% are still
+          fairly tight
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Lines well-sized with progressive widths 1.5-3.0, points at size=4
+          clearly visible
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Distinct colorblind-friendly palette: light blue, green, orange,
+          red, dark blue'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills canvas well, x-axis extended to accommodate endpoint labels
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive labels with units: Weeks Since Signup, Retained Users
+          (%)'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom palette with light-to-bold progression, endpoint labels and
+          threshold annotation add polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: theme_minimal(), subtle grid, no minor grid, white background
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Strong visual hierarchy through line width/color, endpoint labels,
+          threshold reference line
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct line chart with multiple cohort retention curves
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: All spec features present including threshold line, varying line
+          thickness, legend with sizes
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=weeks since signup, Y=retention percentage, correctly mapped
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct, legend labels match spec format with cohort
+          size
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 5 cohorts with different decay rates showing clear variation
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Monthly signup cohorts with realistic sizes and plausible retention
+          decay rates
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Retention values 12-31% at week 12, cohort sizes 1102-1510 realistic
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean imports-data-plot-save flow
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: numpy, pandas, lets_plot'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean code with thoughtful endpoint label overlap prevention
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with scale=3 and plot.html
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good ggplot grammar usage, per-group loop justified for varying line
+          widths
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses layer_tooltips() for interactive hover, HTML export, ggsize()
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling
