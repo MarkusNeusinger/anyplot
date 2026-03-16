@@ -1,4 +1,4 @@
-"""pyplots.ai
+""" pyplots.ai
 heatmap-cohort-retention: Cohort Retention Heatmap
 Library: plotnine 0.15.3 | Python 3.14.3
 Quality: 90/100 | Created: 2026-03-16
