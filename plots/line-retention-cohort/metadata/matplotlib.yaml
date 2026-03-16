@@ -1,7 +1,7 @@
 library: matplotlib
 specification_id: line-retention-cohort
 created: '2026-03-16T20:43:57Z'
-updated: '2026-03-16T20:47:43Z'
+updated: '2026-03-16T20:54:59Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23164943198
 issue: 4572
@@ -10,97 +10,97 @@ library_version: 3.10.8
 preview_url: https://storage.googleapis.com/pyplots-images/plots/line-retention-cohort/matplotlib/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/line-retention-cohort/matplotlib/plot_thumb.png
 preview_html: null
-quality_score: 85
+quality_score: 91
 review:
   strengths:
-  - Full spec compliance - all required features implemented correctly
-  - Progressive visual emphasis (linewidth, alpha, color) effectively differentiates
-    cohorts
-  - Clean well-structured code with proper seed and KISS pattern
-  - Good data storytelling through visual hierarchy and 20% target reference line
+  - Excellent visual hierarchy with graduated line width, opacity, and color from
+    older to newer cohorts
+  - Path effects (white stroke) elegantly separate overlapping curves — distinctive
+    matplotlib technique
+  - Complete spec compliance with all required features including reference line,
+    cohort sizes, opacity variation
+  - Realistic, well-calibrated data with meaningful variation across cohorts
   weaknesses:
-  - Jan and Feb cohort colors are too similar (both pale blue-gray) making them hard
-    to distinguish
-  - Legend font size 14 instead of recommended 16
-  - Could leverage more distinctive matplotlib features (FuncFormatter, PathEffects)
-  - Color palette could have more separation between adjacent cohorts
-  image_description: 'The plot displays 5 retention curves (Jan-May 2025) on a white
-    background. All lines start at 100% at week 0 and decay over 12 weeks. Colors
-    transition from pale blue-gray (Jan, Feb) through medium blue (Mar) to green (Apr,
-    May). Older cohorts use thinner lines and lower opacity; newer cohorts are bolder
-    and more prominent. A dashed gray horizontal line marks the "20% target" benchmark.
-    The title reads "line-retention-cohort · matplotlib · pyplots.ai". X-axis: "Weeks
-    Since Signup" (0-12), Y-axis: "Retained Users (%)" (0-100). The upper-right legend
-    lists each cohort with its sample size. Top and right spines are removed; a subtle
-    y-axis grid is present.'
+  - The three blue shades (Jan/Feb/Mar) are somewhat close in hue; wider separation
+    would improve distinguishability
+  image_description: The plot displays 5 user retention curves (Jan–May 2025 cohorts)
+    on a 16:9 canvas. Colors transition from light blue (Jan 2025) through medium
+    blue (Feb, Mar) to green shades (Apr, May), with line width and opacity increasing
+    for newer cohorts. All curves start at 100% at week 0 and exhibit exponential
+    decay. A dashed gray horizontal reference line at 20% is labeled "20% retention
+    target" in italic. The Y-axis shows percentages from 0% to 100% with gridlines;
+    the X-axis shows weeks 0–12. The legend in the upper right lists each cohort with
+    sample size (e.g., "Jan 2025 (n=1,245)"). Top and right spines are removed; left/bottom
+    spines are subtle gray. White stroke path effects separate overlapping lines.
+    Newer cohorts (Apr, May) clearly retain better, plateauing around 20–30%, while
+    older cohorts (Jan, Feb) drop below 15%.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set. Legend font 14 instead of recommended
-          16.
+        comment: 'All font sizes explicitly set: title=24, labels=20, ticks=16, legend=16,
+          annotation=13'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements anywhere.
+        comment: No text collisions; legend positioned clear of data
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Lines well-sized with white-edged markers. Jan and Feb hard to distinguish
-          at lower values.
+        comment: Lines well-sized with markers and path effects for separation
       - id: VQ-04
         name: Color Accessibility
         score: 3
         max: 4
         passed: true
-        comment: Blue-to-green avoids red-green issues but Jan and Feb are too similar.
+        comment: Blue-to-green gradient is colorblind-safe but three blue shades are
+          somewhat close
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills canvas well with balanced margins.
+        comment: 16:9 figsize with tight_layout, good canvas utilization
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units.
+        comment: Descriptive labels with % formatter on Y-axis
     design_excellence:
-      score: 13
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Custom blue-to-green palette with progressive emphasis. Above defaults
-          but not publication-level.
+        comment: Cohesive blue-to-green palette, path effects, graduated opacity/width
+          — above defaults
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Spines removed, subtle grid, good whitespace. Reference line annotation
-          adds context.
+        comment: Spines removed, subtle grid, generous whitespace, polished details
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Progressive emphasis creates visual hierarchy. 20% target line adds
-          business context.
+        comment: Visual hierarchy through line weight/opacity emphasizes newer cohorts;
+          20% target provides context
     spec_compliance:
       score: 15
       max: 15
@@ -110,49 +110,51 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct line chart with multiple retention curves.
+        comment: Correct line chart with multiple retention curves
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All spec features present including reference line and progressive
-          emphasis.
+        comment: 'All spec features present: 100% start, distinct colors, legend with
+          sizes, reference line, opacity variation'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=weeks since signup, Y=retention percentage. Correct.
+        comment: X=weeks since signup, Y=retention percentage, correctly mapped
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Legend labels match spec format.
+        comment: Correct title format and legend labels with cohort sizes
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 5 cohorts with varying decay rates and noise. Could show more variety
-          in plateau behavior.
+        comment: 5 cohorts with distinct decay rates and plateau levels showing improvement
+          trend
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic product analytics scenario with monthly signup cohorts.
+        comment: Monthly SaaS signup cohorts — realistic, neutral business analytics
+          scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Cohort sizes and retention values are plausible.
+        comment: Cohort sizes 1100-1510, retention 8-100% over 12 weeks — plausible
+          values
     code_quality:
       score: 10
       max: 10
@@ -162,33 +164,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports-data-plot-save flow.
+        comment: 'Linear flow: imports, data, plot, style, save'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib and numpy imported.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriate complexity.
+        comment: Clean parallel lists for per-cohort styling, appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with correct settings.
+        comment: Saves plot.png with dpi=300
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -196,15 +198,14 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Proper ax methods, spines manipulation, tick_params. Could use FuncFormatter.
+        comment: Proper Axes methods, FuncFormatter, path_effects, spine control
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Uses zorder and marker edge styling but no distinctive features like
-          FuncFormatter or PathEffects.
-  verdict: REJECTED
+        passed: true
+        comment: path_effects with Stroke+Normal for white halo is matplotlib-specific
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
