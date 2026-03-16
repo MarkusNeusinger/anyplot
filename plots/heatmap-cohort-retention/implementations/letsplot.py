@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 heatmap-cohort-retention: Cohort Retention Heatmap
 Library: letsplot 4.9.0 | Python 3.14.3
 Quality: 89/100 | Created: 2026-03-16
@@ -103,13 +103,13 @@ plot = (
         plot_title=element_text(size=24, face="bold"),
         plot_subtitle=element_text(size=16, color="#555555"),
         axis_title=element_text(size=20),
-        axis_text_x=element_text(size=15),
-        axis_text_y=element_text(size=14),
+        axis_text_x=element_text(size=16),
+        axis_text_y=element_text(size=16),
         legend_title=element_text(size=18),
         legend_text=element_text(size=14),
         panel_grid=element_blank(),
     )
-    + ggsize(1600, 900)
+    + ggsize(1200, 1200)
 )
 
 # Save
