@@ -1,0 +1,235 @@
+library: matplotlib
+specification_id: heatmap-cohort-retention
+created: '2026-03-16T20:48:01Z'
+updated: '2026-03-16T21:00:45Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23165008020
+issue: 4570
+python_version: 3.14.3
+library_version: 3.10.8
+preview_url: https://storage.googleapis.com/pyplots-images/plots/heatmap-cohort-retention/matplotlib/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/heatmap-cohort-retention/matplotlib/plot_thumb.png
+preview_html: null
+quality_score: 92
+review:
+  strengths:
+  - Rounded-corner cells via FancyBboxPatch give a modern, polished look distinct
+    from standard heatmaps
+  - Best-cohort highlighting (star icon + gold dashed border + bold text) creates
+    effective data storytelling
+  - 'Excellent spec compliance: triangular shape, cell annotations, cohort sizes,
+    colorbar all present'
+  - Clean, well-structured code with meaningful data variation across cohorts
+  weaknesses:
+  - Cell text fontsize (15) is slightly below the recommended 16pt minimum for tick-level
+    text
+  - Could explore a warmer sequential colormap that maps more intuitively to good
+    retention = green
+  image_description: 'The plot displays a triangular cohort retention heatmap with
+    10 monthly signup cohorts (Jan 2024 – Oct 2024) on the y-axis and periods (Month
+    0 – Month 9) on the x-axis. Cells use the viridis colormap — bright yellow-green
+    for high retention (100%), transitioning through teal to dark blue for low retention
+    (~33–39%). Each cell contains a bold percentage label with automatic contrast
+    (white text on dark cells, dark text on light cells). The triangular shape is
+    correctly formed: Jan 2024 has all 10 periods while Oct 2024 has only 1. Cohort
+    sizes are shown in parentheses next to each cohort label (e.g., "Jan 2024 (n=1,200)").
+    The May 2024 cohort is marked with a gold star (★) and surrounded by a gold dashed
+    border, identifying it as the best-performing cohort with retention of 74% at
+    Month 5. Cells have rounded corners with white borders, creating a clean, modern
+    appearance. A vertical colorbar on the right labeled "Retention Rate (%)" maps
+    the 0–100% range. The title reads "heatmap-cohort-retention · matplotlib · pyplots.ai".'
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 24, labels 20, ticks 16, cell
+          text 15). Cell text slightly below 16pt guideline but readable.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text anywhere. All cell values, axis labels, and tick
+          labels fully readable.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Cells well-sized with white borders and rounded corners creating
+          excellent separation.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Viridis is perceptually-uniform and colorblind-safe.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills canvas well. Colorbar compact and well-positioned. Balanced
+          margins.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive labels: Months Since Signup, Signup Cohort.'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Rounded-corner cells, white borders, gold star/border highlight,
+          luminance-based text contrast. Above defaults with intentional design.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: All spines removed, tick marks hidden, colorbar outline removed,
+          generous whitespace between cells.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Best cohort highlighted with star icon and gold dashed border. Clear
+          focal point guides viewer to key insight.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct triangular cohort retention heatmap.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: triangular shape, cell annotations, cohort
+          sizes, colorbar, period labels.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Cohorts on Y, periods on X, retention mapped to color.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title follows exact format. Colorbar serves as legend with proper
+          label.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Good variation: fast-churning and high-retention cohorts shown.
+          Could show slightly more extreme variation.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: SaaS monthly cohort retention is a real, neutral business analytics
+          scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Realistic retention values: 100% at signup, decaying to 30-40%.
+          Cohort sizes 980-1450 plausible.'
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean linear structure: imports, data, plot, style, save.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set at start.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: mcolors, mpatches, plt, np.'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity. FancyBboxPatch justified for rounded-corner
+          aesthetic.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with dpi=300, bbox_inches=tight. No deprecated
+          API.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses Axes methods, FancyBboxPatch, ScalarMappable, mcolors.Normalize
+          correctly. Manual heatmap for rounded corners.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: FancyBboxPatch with BoxStyle.Round, luminance-based text color, ScalarMappable
+          for standalone colorbar are distinctively matplotlib.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - annotations
+  - patches
+  - manual-ticks
+  patterns:
+  - data-generation
+  - matrix-construction
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - custom-colormap
+  - edge-highlighting
