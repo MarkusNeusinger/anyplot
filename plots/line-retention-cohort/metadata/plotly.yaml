@@ -1,7 +1,7 @@
 library: plotly
 specification_id: line-retention-cohort
 created: '2026-03-16T20:45:14Z'
-updated: '2026-03-16T21:01:31Z'
+updated: '2026-03-16T21:08:56Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23164943702
 issue: 4572
@@ -10,35 +10,34 @@ library_version: 6.6.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/line-retention-cohort/plotly/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/line-retention-cohort/plotly/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/line-retention-cohort/plotly/plot.html
-quality_score: 85
+quality_score: 90
 review:
   strengths:
-  - Perfect spec compliance with all required features including reference line, legend
-    with cohort sizes, and progressive emphasis
-  - Clean well-structured code with appropriate data generation and realistic retention
-    curves
-  - Good visual refinement with subtle grid, clean template, and borderless legend
-  - Dual output (HTML + PNG) leverages Plotly interactive strengths
+  - Excellent data storytelling with +19pp improvement annotation and visual hierarchy
+    through line width/opacity progression
+  - All spec requirements met perfectly including cohort sizes in legend, 20% threshold
+    line, and emphasis on newer cohorts
+  - Clean, well-structured code with good reproducibility
+  - Subtle fill areas add visual depth without cluttering
   weaknesses:
-  - 'Color palette is monochromatic blue (#8DA0B5 to #306998) providing insufficient
-    contrast for 5-series chart'
-  - No fill areas under curves to create visual depth and layering
-  - Data storytelling could be stronger with visual emphasis on the key insight
-  image_description: 'The plot displays a multi-line retention curve chart titled
-    "line-retention-cohort · plotly · pyplots.ai". Five cohort lines (Jan–May 2025)
-    start at 100% at week 0 and decay over 12 weeks. The image shows lines in distinct
-    colors (blue-grey, orange, green, purple, red) with markers, each labeled in the
-    legend with cohort name and sample size (e.g., "Jan 2025 (n=1,245)"). A horizontal
-    dashed grey line at 20% is labeled "20% retention threshold". The Y-axis reads
-    "Retained Users (%)" ranging from 0% to ~105%, and the X-axis reads "Weeks Since
-    Signup" from 0 to 12. Newer cohorts (May 2025) retain users better, showing an
-    improving trend. The layout uses a white background with subtle horizontal gridlines.
-    Note: The code defines a monochromatic blue palette (#8DA0B5 through #306998)
-    which would produce lines that are very hard to distinguish; the rendered image
-    appears to show more varied colors, possibly from a prior code version.'
+  - Red-green color pair (Apr/Mar cohorts) could be improved for colorblind accessibility
+  - The improvement annotation extends slightly beyond the comfortable right margin
+  image_description: 'The plot displays 5 user retention curves for monthly signup
+    cohorts (Jan–May 2025) on a white background. Each cohort is rendered as a line
+    with markers, using distinct colors: blue (Jan), gold (Feb), green (Mar), red
+    (Apr), and purple (May). Line widths and opacity increase for newer cohorts, creating
+    visual emphasis on recent performance. Subtle semi-transparent fill areas appear
+    beneath each curve. All curves start at 100% at week 0 and decay over 12 weeks.
+    A dashed gray horizontal line marks the 20% retention threshold with a label at
+    the top left. A green-bordered annotation at the far right reads "+19pp improvement"
+    with an arrow, highlighting the gap between the oldest and newest cohort at week
+    12. The title "line-retention-cohort · plotly · pyplots.ai" is centered at the
+    top. The y-axis reads "Retained Users (%)" with 0–100% range and percentage suffix,
+    gridlines at 20% intervals. The x-axis reads "Weeks Since Signup" with integer
+    ticks 0–13. The legend in the upper right lists each cohort with sample sizes.'
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -46,66 +45,64 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 28pt, axis labels 22pt, ticks
-          18pt, legend 16pt, annotation 14pt'
+        comment: 'All font sizes explicitly set: title=28, axis labels=22, ticks=18,
+          legend=16, annotations=14-15'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or elements
+        comment: All text elements fully readable with no collisions
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Progressive line width and markers visible, but oldest cohort at
-          opacity=0.5 is somewhat faint
+        comment: Lines and markers well-adapted with progressive widths and opacity
       - id: VQ-04
         name: Color Accessibility
-        score: 2
-        max: 4
-        passed: false
-        comment: Monochromatic blue palette provides insufficient hue contrast for
-          5-series chart
-      - id: VQ-05
-        name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Good proportions, plot fills ~65% of canvas with balanced margins
+        comment: Good diversity but red-green pair present, mitigated by marker sizes
+          and line widths
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good canvas utilization, annotation slightly cramped at right edge
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: Weeks Since Signup, Retained Users
-          (%)'
+        comment: Descriptive labels with units
     design_excellence:
-      score: 12
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Intentional hierarchy through opacity/width, clean template, but
-          monochromatic palette limits impact
+        comment: Custom palette, intentional hierarchy, fill areas for depth, clearly
+          above defaults
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: X-grid removed, y-grid subtle at 0.08 opacity, borderless legend,
-          axis lines styled
+        comment: plotly_white template, subtle y-grid at 0.08 opacity, x-grid disabled,
+          clean whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Progressive emphasis conveys improvement, threshold line adds benchmark,
-          but could use fill areas or annotations
+        passed: true
+        comment: Strong storytelling with improvement annotation, line progression,
+          and threshold context
     spec_compliance:
       score: 15
       max: 15
@@ -115,51 +112,48 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct line chart with retention curves
+        comment: Correct line chart showing retention curves by cohort
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: 100% start, distinct colors, legend with
-          sizes, gridlines, reference line'
+        comment: All spec features present and working
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X maps weeks since signup, Y maps retention percentage correctly
+        comment: X=weeks since signup, Y=retention percentage, correct mapping
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows spec format, legend labels match data with cohort (n=X,XXX)
-          format
+        comment: Title format correct, legend labels match spec format with cohort
+          sizes
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Five cohorts with different decay rates showing improvement trend,
-          noise adds realism
+        comment: 5 cohorts with different decay rates showing clear improvement trend
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Monthly signup cohorts for product analytics - realistic and neutral
-          scenario
+        comment: Realistic SaaS/product analytics scenario with neutral business domain
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Cohort sizes 1102-1510 and decay rates realistic for SaaS product
+        comment: Realistic exponential decay, sensible cohort sizes and time window
     code_quality:
       score: 10
       max: 10
@@ -169,13 +163,13 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports, data, plot, style, save'
+        comment: Clean linear structure with no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set at the top
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -187,13 +181,13 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Clean Pythonic code with appropriate dictionary-based cohort parameters
+        comment: Clean, readable code with appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html using current API
+        comment: Saves as plot.png with correct dimensions, also exports HTML
     library_mastery:
       score: 7
       max: 10
@@ -203,15 +197,15 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of go.Figure, go.Scatter, add_hline with annotation, update_layout
+        comment: Good use of graph_objects API with idiomatic Plotly patterns
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: HTML export leverages interactivity, add_hline with annotation is
-          Plotly-specific
-  verdict: REJECTED
+        comment: Uses add_hline, fill=tozeroy, hoverinfo=skip, HTML export - Plotly-distinctive
+          features
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
