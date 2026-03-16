@@ -1,0 +1,227 @@
+library: seaborn
+specification_id: line-retention-cohort
+created: '2026-03-16T20:44:49Z'
+updated: '2026-03-16T21:08:27Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23164943129
+issue: 4572
+python_version: 3.14.3
+library_version: 0.13.2
+preview_url: https://storage.googleapis.com/pyplots-images/plots/line-retention-cohort/seaborn/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/line-retention-cohort/seaborn/plot_thumb.png
+preview_html: null
+quality_score: 91
+review:
+  strengths:
+  - Excellent data storytelling through progressive line emphasis and endpoint annotations
+  - All spec requirements fully met including cohort sizes in legend, 20% reference
+    line, and 100% start
+  - Clean, well-structured code with good anti-overlap logic for annotations
+  - Professional color palette and refined visual styling with subtle grid and spine
+    removal
+  weaknesses:
+  - Library mastery could be stronger — much of the customization uses raw matplotlib
+    rather than seaborn features
+  - Earliest cohort line (Jan 2025) is slightly thin/transparent due to progressive
+    emphasis
+  image_description: 'The plot displays 5 user retention curves for monthly signup
+    cohorts (Jan–May 2025) on a light gray (#FAFAFA) background. Each cohort is represented
+    by a distinct color: dark blue (Jan 2025, n=1,245), orange (Feb 2025, n=1,380),
+    green (Mar 2025, n=1,510), red (Apr 2025, n=1,420), and purple (May 2025, n=1,605).
+    All curves start at 100% at week 0 and decay over 12 weeks. Newer cohorts retain
+    better — May ends at ~52% while Jan drops to ~20%. Lines have progressive emphasis:
+    older cohorts are thinner and more transparent, newer ones are bolder with larger
+    markers. Each line uses a unique marker style (circle, X, square, plus, diamond).
+    Endpoint annotations on the right show final retention percentages (20%, 24%,
+    31%, 41%, 52%) in matching colors. A dashed gray horizontal reference line at
+    20% is labeled "20% target" in italic. The title reads "line-retention-cohort
+    · seaborn · pyplots.ai" in bold dark gray. Y-axis: "Retained Users (%)" from 0–108,
+    X-axis: "Weeks Since Signup" from 0–12. Top, right, and left spines are removed.
+    A framed legend in the upper right shows "Signup Cohort" as title with all cohort
+    labels and sizes.'
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt,
+          legend 13pt, annotations 13-14pt'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text. Anti-overlap logic for endpoint annotations
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Lines visible with markers; earliest cohort slightly thin due to
+          progressive emphasis
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Custom 5-color palette with good distinction plus marker encoding
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 16:9 aspect, plot fills canvas well with balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive labels with units: Weeks Since Signup, Retained Users
+          (%)'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom palette, harmonious colors, styled legend, custom facecolor,
+          above defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Three spines removed, subtle y-only grid, generous whitespace, clean
+          legend
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Progressive emphasis, endpoint annotations, 20% target line, clear
+          improvement narrative
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct line chart with multiple cohort curves
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: 100% start, distinct colors, legend with
+          n=, gridlines, reference line, progressive emphasis'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=weeks since signup, Y=retention percentage, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct title format and legend labels with cohort name and size
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 5 cohorts with distinct decay rates, range from ~20% to ~52%, exponential
+          decay with noise
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Monthly signup cohorts for product analytics, neutral SaaS scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Plausible cohort sizes (1,245-1,605), standard 12-week tracking,
+          realistic retention values
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports, data, plot, style, save. No functions or classes'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All four imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, appropriate complexity with nice anti-overlap annotation logic
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png, dpi=300, bbox_inches=tight, no deprecated API
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of sns.lineplot with hue/style, set_theme, set_context,
+          despine; falls back to matplotlib for customization
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Standard seaborn features used but not deeply distinctive
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - manual-ticks
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - grid-styling
+  - alpha-blending
