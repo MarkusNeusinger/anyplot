@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 line-retention-cohort: User Retention Curve by Cohort
 Library: highcharts unknown | Python 3.14.3
 Quality: 89/100 | Created: 2026-03-16
@@ -23,11 +23,11 @@ weeks = list(range(13))
 week_labels = [f"Week {w}" for w in weeks]
 
 cohorts = {
-    "Jan 2025": {"size": 1245, "decay": 0.18},
-    "Feb 2025": {"size": 1102, "decay": 0.16},
-    "Mar 2025": {"size": 1380, "decay": 0.14},
-    "Apr 2025": {"size": 1510, "decay": 0.12},
-    "May 2025": {"size": 1625, "decay": 0.10},
+    "Jan 2025": {"size": 1245, "decay": 0.22},
+    "Feb 2025": {"size": 1102, "decay": 0.17},
+    "Mar 2025": {"size": 1380, "decay": 0.13},
+    "Apr 2025": {"size": 1510, "decay": 0.09},
+    "May 2025": {"size": 1625, "decay": 0.06},
 }
 
 retention_data = {}
@@ -47,58 +47,77 @@ chart.options.chart = {
     "type": "line",
     "width": 4800,
     "height": 2700,
-    "backgroundColor": "#fafafa",
-    "marginBottom": 240,
-    "marginLeft": 200,
-    "marginRight": 180,
-    "marginTop": 160,
+    "backgroundColor": {
+        "linearGradient": {"x1": 0, "y1": 0, "x2": 0, "y2": 1},
+        "stops": [[0, "#ffffff"], [1, "#f4f4f8"]],
+    },
+    "marginBottom": 260,
+    "marginLeft": 220,
+    "marginRight": 380,
+    "marginTop": 180,
     "style": {"fontFamily": "'Segoe UI', 'Helvetica Neue', Arial, sans-serif"},
 }
 
 chart.options.title = {
     "text": "line-retention-cohort \u00b7 highcharts \u00b7 pyplots.ai",
-    "style": {"fontSize": "48px", "fontWeight": "bold", "color": "#2a2a2a"},
+    "style": {"fontSize": "48px", "fontWeight": "700", "color": "#1a1a2e"},
+    "margin": 30,
 }
 
 chart.options.subtitle = {
-    "text": "User Retention by Monthly Signup Cohort",
-    "style": {"fontSize": "32px", "color": "#777777"},
+    "text": "User Retention by Monthly Signup Cohort \u2014 Newer cohorts show improving retention trends",
+    "style": {"fontSize": "30px", "color": "#6c6c80", "fontWeight": "400"},
 }
 
 # X-axis
 chart.options.x_axis = {
     "categories": week_labels,
-    "title": {"text": "Weeks Since Signup", "style": {"fontSize": "36px", "color": "#444444"}},
-    "labels": {"style": {"fontSize": "28px", "color": "#555555"}},
+    "title": {"text": "Weeks Since Signup", "style": {"fontSize": "36px", "color": "#3a3a4a", "fontWeight": "500"}},
+    "labels": {"style": {"fontSize": "28px", "color": "#555566"}},
     "gridLineWidth": 0,
-    "lineColor": "#cccccc",
+    "lineColor": "rgba(100, 100, 140, 0.15)",
     "lineWidth": 1,
     "tickWidth": 0,
+    "crosshair": {"width": 2, "color": "rgba(100, 100, 140, 0.15)", "dashStyle": "ShortDot"},
 }
 
-# Y-axis
+# Y-axis - start at 10% to reduce empty space below threshold
 chart.options.y_axis = {
-    "title": {"text": "Retained Users (%)", "style": {"fontSize": "36px", "color": "#444444"}},
-    "labels": {"style": {"fontSize": "28px", "color": "#555555"}, "format": "{value}%"},
-    "min": 0,
+    "title": {"text": "Retained Users (%)", "style": {"fontSize": "36px", "color": "#3a3a4a", "fontWeight": "500"}},
+    "labels": {"style": {"fontSize": "28px", "color": "#555566"}, "format": "{value}%"},
+    "min": 10,
     "max": 100,
-    "tickInterval": 20,
+    "tickInterval": 10,
     "gridLineWidth": 1,
-    "gridLineColor": "rgba(0, 0, 0, 0.06)",
-    "gridLineDashStyle": "Dot",
+    "gridLineColor": "rgba(100, 100, 140, 0.08)",
+    "gridLineDashStyle": "Dash",
     "lineWidth": 0,
     "plotLines": [
         {
             "value": 20,
             "color": "#b0413e",
             "dashStyle": "LongDash",
-            "width": 3,
+            "width": 4,
+            "zIndex": 3,
             "label": {
-                "text": "20% Retention Target",
+                "text": "\u26a0 20% Retention Target",
+                "align": "left",
+                "style": {"fontSize": "26px", "color": "#b0413e", "fontWeight": "600"},
+                "x": 10,
+                "y": -16,
+            },
+        }
+    ],
+    "plotBands": [
+        {
+            "from": 10,
+            "to": 20,
+            "color": "rgba(176, 65, 62, 0.04)",
+            "label": {
+                "text": "Below Target",
                 "align": "right",
-                "style": {"fontSize": "24px", "color": "#b0413e", "fontWeight": "600"},
-                "x": -20,
-                "y": -14,
+                "style": {"fontSize": "22px", "color": "rgba(176, 65, 62, 0.35)"},
+                "x": -15,
             },
         }
     ],
@@ -107,14 +126,16 @@ chart.options.y_axis = {
 # Legend
 chart.options.legend = {
     "enabled": True,
-    "itemStyle": {"fontSize": "30px", "fontWeight": "normal", "color": "#444444"},
-    "itemHoverStyle": {"color": "#222222"},
-    "symbolWidth": 80,
-    "symbolHeight": 20,
+    "itemStyle": {"fontSize": "28px", "fontWeight": "normal", "color": "#3a3a4a"},
+    "itemHoverStyle": {"color": "#1a1a2e"},
+    "symbolWidth": 70,
+    "symbolHeight": 18,
     "layout": "vertical",
     "align": "right",
     "verticalAlign": "middle",
-    "x": -30,
+    "x": -20,
+    "itemMarginBottom": 14,
+    "title": {"text": "Signup Cohort", "style": {"fontSize": "26px", "fontWeight": "600", "color": "#3a3a4a"}},
 }
 
 # Tooltip - distinctive Highcharts feature
@@ -130,22 +151,29 @@ chart.options.tooltip = {
 chart.options.plot_options = {
     "line": {
         "lineWidth": 5,
-        "marker": {"enabled": True, "radius": 9, "lineWidth": 2, "lineColor": "#ffffff"},
+        "marker": {"enabled": True, "radius": 9, "lineWidth": 3, "lineColor": "#ffffff", "symbol": "circle"},
         "animation": False,
+        "shadow": {"color": "rgba(0,0,0,0.06)", "offsetX": 1, "offsetY": 2, "width": 4},
+        "connectNulls": True,
     }
 }
 
 # Colors - colorblind-safe palette starting with Python Blue
 colors = ["#306998", "#e07b39", "#8c564b", "#7b4f8a", "#d4a84b"]
 
-# Add series - older cohorts first (thinner), newest last (thickest)
+# Add series - older cohorts first (thinner, more transparent), newest last (thickest, opaque)
+opacities = [0.55, 0.65, 0.75, 0.88, 1.0]
+line_widths = [3, 4, 5, 6, 8]
+marker_radii = [5, 6, 8, 10, 12]
+
 for i, (cohort, rates) in enumerate(retention_data.items()):
     series = LineSeries()
     series.name = f"{cohort} (n={cohorts[cohort]['size']:,})"
     series.data = rates
     series.color = colors[i]
-    series.line_width = 3 + i
-    series.marker = {"radius": 5 + i}
+    series.opacity = opacities[i]
+    series.line_width = line_widths[i]
+    series.marker = {"radius": marker_radii[i]}
     # Zones: dash line below 20% retention target (distinctive Highcharts feature)
     series.zone_axis = "y"
     series.zones = [{"value": 20, "dashStyle": "Dot"}, {"dashStyle": "Solid"}]
