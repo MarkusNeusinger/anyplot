@@ -1,0 +1,225 @@
+library: seaborn
+specification_id: heatmap-cohort-retention
+created: '2026-03-16T20:46:04Z'
+updated: '2026-03-16T20:57:29Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23165008151
+issue: 4570
+python_version: 3.14.3
+library_version: 0.13.2
+preview_url: https://storage.googleapis.com/pyplots-images/plots/heatmap-cohort-retention/seaborn/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/heatmap-cohort-retention/seaborn/plot_thumb.png
+preview_html: null
+quality_score: 90
+review:
+  strengths:
+  - Excellent spec compliance — all required features implemented correctly
+  - Custom colormap with warm-to-green transition creates a distinctive professional
+    look
+  - 'Clean visual refinement: all spines removed, tick marks hidden, custom background,
+    styled colorbar'
+  - Idiomatic seaborn usage with mask, annotations, and context/style configuration
+  - Well-structured readable code with proper reproducibility
+  weaknesses:
+  - Annotation font size (13pt) could be slightly larger for better readability at
+    full resolution
+  - Color palette is not perceptually uniform — mid-range retention values may be
+    harder to distinguish
+  - Some cohorts show very similar decay patterns limiting cross-cohort comparison
+    insight
+  image_description: The plot displays a triangular cohort retention heatmap with
+    10 monthly cohorts (Jan 2024 – Oct 2024) on the y-axis and 10 periods (Month 0
+    – Month 9) on the x-axis positioned at the top. Each cell shows bold retention
+    percentages with a "%" suffix. The color scheme transitions from light tan/peach
+    (low retention) through medium green to dark forest green (high retention), using
+    a custom colormap. Cohort sizes (n=921 to n=2,438) are shown in parentheses next
+    to each cohort label. The triangular shape is correctly formed — earlier cohorts
+    have more columns. The background is light gray (#fafafa), all spines are removed,
+    tick marks are hidden, and the colorbar on the right displays "Retention %" from
+    0–100 with its outline removed. The title reads "heatmap-cohort-retention · seaborn
+    · pyplots.ai" in medium weight.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 24pt, labels 20pt, ticks 16pt,
+          annotations 13pt). Annotations slightly small but readable.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text. Clean cell spacing with linewidths=2.5.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Heatmap cells well-sized with clear separation and good contrast.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 3
+        max: 4
+        passed: true
+        comment: Custom tan-to-green palette avoids red-green issues but is not perceptually
+          uniform.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills canvas well, colorbar appropriately sized and positioned.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive labels: Periods Since Signup, Signup Cohort.'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom colormap, custom background, styled colorbar — clearly above
+          defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: All spines removed, tick marks hidden, custom background, colorbar
+          outline removed.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Triangular shape communicates cohort narrative, color intensity shows
+          retention decay.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct triangular cohort retention heatmap.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: triangular shape, Period 0 = 100%, colormap,
+          annotations, cohort sizes, Month N labels, colorbar.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Cohorts on Y, periods on X, retention as color. Correct.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct. Colorbar serves as legend.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows varying decay rates, different cohort sizes, full triangular
+          pattern. Some similar decay profiles.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Monthly SaaS cohort retention — real-world neutral business scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Realistic retention values and cohort sizes.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports, data, plot, save. No functions or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean and Pythonic. Elegant .map() for annotations.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with dpi=300. No deprecated API.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert use of sns.heatmap with mask, annot, fmt, cbar_kws. Idiomatic
+          set_context, set_style, despine.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Leverages seaborn-specific mask, built-in annotations, cbar_kws,
+          sns.despine.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - annotations
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep: []
+  styling:
+  - custom-colormap
+  - edge-highlighting

@@ -1,0 +1,232 @@
+library: pygal
+specification_id: heatmap-cohort-retention
+created: '2026-03-16T20:46:42Z'
+updated: '2026-03-16T21:18:07Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23165008448
+issue: 4570
+python_version: 3.14.3
+library_version: 3.1.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/heatmap-cohort-retention/pygal/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/heatmap-cohort-retention/pygal/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/heatmap-cohort-retention/pygal/plot.html
+quality_score: 89
+review:
+  strengths:
+  - Excellent spec compliance — all required features present and correct
+  - Professional visual design with custom colormap, rounded corners, cell gaps, and
+    adaptive text colors
+  - Data storytelling through Apr 2024 cohort dip and improving retention trend
+  - Proper use of pygal Graph extension pattern with native tooltip support
+  - Colorbar with tick marks and gradient provides clear retention scale reference
+  weaknesses:
+  - sys.path manipulation for import shadowing adds code complexity
+  - Slight wasted vertical space below last cohort row
+  - Cohort size labels could be slightly larger for better readability
+  image_description: The plot displays a triangular cohort retention heatmap with
+    10 monthly cohorts (Jan 2024 – Oct 2024) on the y-axis and "Months Since Signup"
+    (Month 0 – Month 9) on the x-axis. A teal-green sequential colormap transitions
+    from light for low retention to dark green for high retention. Each cell contains
+    a bold percentage label with adaptive text color (white on dark backgrounds, dark
+    on light). All Month 0 cells show 100%. The triangular shape is correctly rendered
+    — Jan 2024 has 10 columns, Oct 2024 has 1. Cohort sizes (e.g., n=1,200) appear
+    in italic gray beneath each cohort label. A vertical colorbar on the right side
+    shows "Retention %" with tick marks from 21% to 100%. Cells have rounded corners
+    with subtle gaps between them, creating a clean modern appearance. The title "heatmap-cohort-retention
+    · pygal · pyplots.ai" is centered at the top. The Apr 2024 cohort visibly shows
+    worse retention compared to neighbors, while later cohorts trend greener, telling
+    a product-improvement story.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 54px, headers ~38px, row labels
+          ~36px, cell values ~38px). Cohort size text slightly small but readable.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text anywhere. Cell gaps and label spacing prevent
+          collisions.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Cells well-sized, percentage labels clearly visible, color differentiation
+          excellent.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Teal-green sequential colormap is colorblind-safe. Adaptive text
+          color ensures readability.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good layout, minor wasted space at bottom beneath Oct 2024 row.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive axis titles: Months Since Signup and Signup Cohort.'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom teal-green colormap, rounded corners, cell gaps, custom typography,
+          polished professional appearance.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Clean white background, subtle borders, generous whitespace, rounded
+          corners, colorbar with ticks.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Apr 2024 cohort dip and improving trend tell a clear story through
+          color variation.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct triangular heatmap for cohort retention.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: triangular shape, percentages in cells, cohort
+          sizes, colormap, color bar.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Cohorts on y-axis, periods on x-axis, color maps to retention correctly.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct title format. Colorbar serves as legend with Retention %
+          label.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows triangular shape, 100% at period 0, decay curves, cohort variation,
+          improving trend.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: SaaS monthly cohort retention — classic neutral business analytics
+          scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Realistic retention values (100% at signup, decaying to ~22%). Cohort
+          sizes 980-1520.
+    code_quality:
+      score: 8
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Class extending pygal Graph is necessary for custom chart types but
+          adds complexity.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Uses np.random.seed(42) for deterministic data generation.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: sys, numpy, pygal Graph and Style.'
+      - id: CQ-04
+        name: Code Elegance
+        score: 1
+        max: 2
+        passed: true
+        comment: sys.path hack for import shadowing is necessary but inelegant.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png via render_to_png. Also produces SVG and HTML.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Extends pygal Graph correctly using SVG node system, _plot() and
+          _compute() hooks, and Style class.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Leverages pygal native SVG rendering, _tooltip_data() for interactive
+          tooltips, linearGradient for colorbar, HTML embedding.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - colorbar
+  - custom-legend
+  - html-export
+  patterns:
+  - data-generation
+  - matrix-construction
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - custom-colormap
+  - edge-highlighting

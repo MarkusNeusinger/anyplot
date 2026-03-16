@@ -1,0 +1,243 @@
+library: highcharts
+specification_id: line-retention-cohort
+created: '2026-03-16T20:44:42Z'
+updated: '2026-03-16T21:16:27Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23164943620
+issue: 4572
+python_version: 3.14.3
+library_version: unknown
+preview_url: https://storage.googleapis.com/pyplots-images/plots/line-retention-cohort/highcharts/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/line-retention-cohort/highcharts/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/line-retention-cohort/highcharts/plot.html
+quality_score: 91
+review:
+  strengths:
+  - Excellent visual hierarchy through graduated line widths, marker sizes, and opacities
+    — newer cohorts are visually emphasized
+  - 'Strong use of Highcharts-distinctive features: zones (dotted lines below threshold),
+    plotLines, plotBands, shared tooltips'
+  - Professional polish with gradient background, line shadows, white-bordered markers,
+    and subtle dashed grid
+  - Complete spec compliance with all required features including reference line,
+    legend with cohort sizes, and decreasing emphasis for older cohorts
+  - Clean, well-structured code with appropriate complexity
+  weaknesses:
+  - LineSeries imported from .area submodule rather than .line (works but not idiomatic)
+  - Y-axis starts at 10% instead of spec-required 0% (trade-off for better canvas
+    utilization)
+  - Some line clustering in weeks 4-6 makes individual cohorts slightly harder to
+    distinguish
+  image_description: The plot displays a line chart on a white-to-light-gray gradient
+    background with the title "line-retention-cohort · highcharts · pyplots.ai" in
+    bold dark text (48px) and subtitle "User Retention by Monthly Signup Cohort —
+    Newer cohorts show improving retention trends" in gray (30px). Five cohort retention
+    curves span from Week 0 to Week 12 on the x-axis ("Weeks Since Signup") and 10%
+    to 100% on the y-axis ("Retained Users (%)"). All curves start at 100% and decay
+    at different rates. Jan 2025 (blue, thinnest at 3px, most transparent at 0.55
+    opacity) decays fastest, reaching near 20% by week 12. Feb 2025 (orange), Mar
+    2025 (brown), Apr 2025 (purple), and May 2025 (gold/yellow, thickest at 8px, fully
+    opaque) decay progressively slower. A red dashed horizontal line at 20% is labeled
+    "⚠ 20% Retention Target" with a subtle pink plot band below it labeled "Below
+    Target." Lines crossing below 20% become dotted via Highcharts zones. The vertical
+    legend on the right displays "Signup Cohort" as a title with each cohort name
+    and sample size (e.g., "Jan 2025 (n=1,245)"). Subtle dashed gridlines at 10% intervals
+    on the y-axis aid reading. Markers are circles with white borders, varying in
+    size from 5px to 12px by cohort.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 48px, subtitle 30px, axis titles
+          36px, tick labels 28px, legend 28px, plot line label 26px'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text elements. Legend well-positioned on right. Lines
+          distinct despite proximity
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Lines and markers clearly visible with graduated widths (3-8px) and
+          radii (5-12px). Some clustering in weeks 4-6
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Colorblind-safe palette: blue, orange, brown, purple, gold. No red-green
+          dependency'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good canvas utilization with y-axis min=10%. Right margin somewhat
+          generous for legend. Plot fills ~60% of canvas
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive labels with units: Retained Users (%) and Weeks Since
+          Signup'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Strong design with custom palette, gradient background, line shadows,
+          graduated weights/opacities, white-bordered markers
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle dashed grid at 0.08 opacity, y-axis line removed, x-axis gridlines
+          removed, plot band below threshold, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Graduated line widths/opacities create visual hierarchy. Zones highlight
+          threshold crossing. Subtitle provides narrative. Plot band reinforces benchmark
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct line chart with multiple cohort retention curves
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: 'All spec features present. Minor: Y-axis starts at 10% instead of
+          spec-required 0%'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = weeks since signup, Y = retention percentage, correctly mapped
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title follows exact format. Legend labels show cohort name with sample
+          size
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 5 cohorts with distinct decay rates showing improving retention trend.
+          Good spread from fast to slow decay
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Monthly signup cohorts with realistic sample sizes (1,100-1,625).
+          Neutral product analytics/SaaS scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Realistic exponential decay patterns. Plausible cohort sizes for
+          mid-size SaaS product
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean linear flow: imports, data, chart config, series, export.
+          No functions or classes'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set before data generation
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used. LineSeries from .area works but should be from
+          .line
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean loop for series creation with graduated styling. Zones elegantly
+          applied
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png via Selenium screenshot. Current API
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Proper use of HighchartsOptions, LineSeries, chart.add_series(),
+          plotLines, plotBands. Minor: wrong import submodule'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Zones (dotted below threshold), plotLines, plotBands, shared tooltips
+          with custom formatting, crosshair, line shadows, HTML export
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - gradient-fill
+  - alpha-blending
+  - grid-styling
