@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 line-retention-cohort: User Retention Curve by Cohort
-Library: highcharts | Python 3.13
-Quality: pending | Created: 2026-03-16
+Library: highcharts unknown | Python 3.14.3
+Quality: 82/100 | Created: 2026-03-16
 """
 
 import tempfile
