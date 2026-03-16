@@ -1,7 +1,7 @@
 library: letsplot
 specification_id: heatmap-cohort-retention
 created: '2026-03-16T20:45:58Z'
-updated: '2026-03-16T21:05:36Z'
+updated: '2026-03-16T21:12:38Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23165008512
 issue: 4570
@@ -10,81 +10,79 @@ library_version: 4.9.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/heatmap-cohort-retention/letsplot/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/heatmap-cohort-retention/letsplot/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/heatmap-cohort-retention/letsplot/plot.html
-quality_score: 89
+quality_score: 91
 review:
   strengths:
-  - Excellent storytelling with orange borders highlighting critical Month 1 churn
-    drop
-  - Clean adaptive text contrast (white on dark, dark on light cells)
-  - Perfect spec compliance — all required features implemented
-  - Viridis colormap reversed so dark=high retention is intuitive
-  - Interactive tooltips via layer_tooltips() leverage lets-plot distinctive capabilities
+  - Excellent data storytelling with orange borders highlighting critical Month 1
+    churn — creates an immediate focal point
+  - 'Perfect spec compliance: all required features present including triangular shape,
+    cohort sizes, percentage labels, and color bar'
+  - Realistic, well-differentiated cohort data with distinct retention profiles (Mar
+    best, Aug worst)
+  - 'Clean visual refinement: removed grid, subtle tile gaps, adaptive text contrast'
   weaknesses:
-  - Cohort variation is subtle — retention curves are very similar across cohorts,
-    reducing feature coverage slightly
-  - Some vertical gaps between tile rows create minor visual discontinuity
-  - Could use slightly more typographic refinement to reach publication quality
+  - Cell text size (11) is functional but could be slightly larger for better readability
+    at a glance
+  - Some wasted canvas space on the right side near the legend area
   image_description: The plot displays a triangular cohort retention heatmap with
-    10 monthly cohorts (Jan 2024 through Oct 2024) on the y-axis and months since
-    signup (Month 0 through Month 9) on the x-axis. The heatmap uses a reversed viridis
-    colormap — dark purple for high retention (100%) transitioning through teal to
-    yellow-green for low retention (~20%). Each cell contains bold percentage text
-    with adaptive contrast (white text on dark cells, dark text on light cells). White
-    borders separate tiles cleanly. Orange borders highlight the Month 1 column, drawing
-    attention to the critical first-month churn drop. Cohort sizes are shown in parentheses
-    next to each cohort label (e.g., "Jan 2024 (n=1926)"). A vertical color bar legend
-    on the right shows the retention scale from 0-100%. The title follows the required
-    format with a subtitle explaining the orange border storytelling element. The
-    triangular shape is correctly rendered — Oct 2024 has only Month 0, while Jan
-    2024 spans all 10 months.
+    10 monthly cohorts (Jan–Oct 2024) on the y-axis, each labeled with cohort size
+    (e.g., "Jan 2024 (n=1,926)"). The x-axis shows "Month 0" through "Month 9" labeled
+    "Months Since Signup." Cells use a reversed viridis colormap — dark purple for
+    100% retention fading through teal/green to yellow-green for low values (~14–18%).
+    Each cell contains a bold percentage label with adaptive text color (white on
+    dark cells, dark on light cells). Orange borders highlight the Month 1 column
+    across all cohorts, drawing attention to the critical first-month churn drop.
+    A subtitle explains this storytelling element. A vertical color bar legend on
+    the right shows "Retention %" from 0% to 100%. The triangular shape is correct
+    — Jan 2024 has all 10 periods while Oct 2024 has only Month 0. The white background
+    is clean with no grid lines.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title=24, subtitle=16, axis_title=20,
-          axis_text=16, legend_title=18, legend_text=14. Cell text size=12 bold is
-          readable.'
+        comment: All font sizes explicitly set. Cell text size=11 bold is readable
+          but slightly compact.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text. All cell percentages, axis labels, and legend
-          are fully separated.
+        comment: No overlapping text anywhere.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Tiles well-sized with clear color differentiation. White borders
-          provide excellent cell separation.
+        comment: Tiles well-sized with clear color differentiation across retention
+          range.
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Viridis is perceptually uniform and colorblind-safe.
+        comment: Viridis is perceptually uniform and colorblind-safe. Dual text color
+          for contrast.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Square format works well. Minor vertical gaps between rows and legend
-          area takes noticeable space.
+        comment: Good utilization overall. Some wasted space on right due to triangular
+          shape and legend positioning.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels: Months Since Signup, Signup Cohort.'
+        comment: 'Descriptive axis labels: Months Since Signup, Signup Cohort.'
     design_excellence:
-      score: 14
+      score: 16
       max: 20
       items:
       - id: DE-01
@@ -92,21 +90,22 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Reversed viridis, white borders, orange storytelling highlights,
-          clean subtitle. Above defaults but not publication-level.
+        comment: Strong design with reversed viridis, orange border highlights, clean
+          white background. Above defaults.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Panel grid removed, minimal theme, white tile separators. Good refinement.
+        comment: Grid removed, subtle tile gaps, clean background, generous spacing.
+          Well-polished.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Orange borders on Month 1 create focal point. Subtitle explains insight.
-          Visual hierarchy guides viewer.
+        comment: Orange borders on Month 1 create clear focal point. Subtitle explains
+          insight. Varying cohort performance adds narrative.
     spec_compliance:
       score: 15
       max: 15
@@ -116,50 +115,50 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct triangular heatmap with cohort retention data.
+        comment: Correct triangular cohort retention heatmap.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: triangular shape, 100% at period 0, text
-          in cells, cohort sizes, colormap, color bar.'
+        comment: 'All spec features present: triangular shape, Period 0=100%, sequential
+          colormap, percentage text, cohort sizes, Month X labels, color bar.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=periods, Y=cohorts, fill=retention. Correct mapping.
+        comment: X=periods, Y=cohorts, fill=retention. Correct.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows required format. Color bar correctly labeled Retention
-          %.
+        comment: Title matches required format. Legend Retention % with 0-100% scale.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows realistic decay, triangular shape, per-cohort variation. Cohort
-          curves are somewhat similar.
+        comment: Shows varying cohort quality, natural decay curves, triangular shape,
+          varied cohort sizes.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: SaaS monthly cohort retention — real, neutral business scenario.
+        comment: Monthly SaaS cohorts with realistic retention curves. Neutral business
+          analytics context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Realistic retention values consistent with typical SaaS patterns.
+        comment: Realistic retention drops and cohort sizes for mid-size product.
     code_quality:
       score: 10
       max: 10
@@ -169,7 +168,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports, data, plot, save structure. No functions or classes.
+        comment: Clean linear flow, no functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -181,19 +180,20 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports used.
+        comment: All imports used, no extras.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity. Dual text layer for contrast is necessary.
+        comment: Clean and appropriate complexity. Dual geom_text layers for contrast
+          are necessary.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with scale=3.
+        comment: Saves plot.png with scale=3. Current API.
     library_mastery:
       score: 7
       max: 10
@@ -203,25 +203,25 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good ggplot grammar usage with aes, geom_tile, scale_fill_viridis,
-          pd.Categorical ordering, ggsave.
+        comment: Good ggplot grammar usage with proper aes, scales, themes, coord_fixed,
+          layer_tooltips.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: layer_tooltips() for interactive hover, HTML export, tooltip @variable
-          syntax are lets-plot specific.
-  verdict: REJECTED
+        comment: Uses lets-plot-specific layer_tooltips() with formatting and HTML
+          export.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - layer-composition
   - hover-tooltips
+  - html-export
   patterns:
   - data-generation
-  - iteration-over-groups
   dataprep: []
   styling:
   - custom-colormap
