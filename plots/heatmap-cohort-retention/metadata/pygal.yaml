@@ -1,7 +1,7 @@
 library: pygal
 specification_id: heatmap-cohort-retention
 created: '2026-03-16T20:46:42Z'
-updated: '2026-03-16T21:00:33Z'
+updated: '2026-03-16T21:08:04Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23165008448
 issue: 4570
@@ -13,35 +13,32 @@ preview_html: https://storage.googleapis.com/pyplots-images/plots/heatmap-cohort
 quality_score: 85
 review:
   strengths:
-  - Excellent spec compliance with all required features present and correctly implemented
-  - Advanced pygal usage with custom Graph subclass — correct approach for unsupported
-    chart type
-  - Strong data storytelling with triangular shape, improvement trend, and cohort
-    sizes
-  - Interactive tooltips in SVG/HTML output via pygal _tooltip_data system
-  - Clean color interpolation with automatic text contrast
+  - Excellent triangular heatmap structure with all spec requirements implemented
+  - Custom Graph subclass demonstrates deep pygal knowledge
+  - Thoughtful data storytelling with Apr 2024 dip and progressive cohort improvement
+  - Professional green colormap with smooth interpolation and dynamic text contrast
+  - Native pygal tooltips and HTML export leverage the library interactive SVG capabilities
+  - Clean colorbar with gradient and labeled tick marks
   weaknesses:
-  - Yellow/gold outlines on diagonal-edge cells from pygal SVG rendering artifact
-  - Design not fully publication-quality due to rendering artifacts and slightly cramped
-    colorbar area
-  - Cohort size labels are small relative to other text
-  image_description: 'The plot shows a triangular cohort retention heatmap with 10
-    monthly cohorts (Jan 2024 – Oct 2024) on the y-axis and 10 periods (Month 0 –
-    Month 9) on the x-axis. The title reads "heatmap-cohort-retention · pygal · pyplots.ai"
-    at the top. A sequential green colormap ranges from very light green (low retention
-    ~25%) to dark forest green (high retention 100%). Each cell displays the retention
-    percentage as text, with automatic dark/light text color based on background brightness.
-    Cohort sizes (e.g., n=1,200) appear below each cohort label on the left. A vertical
-    colorbar on the right shows "Retention %" with tick marks at 25%, 44%, 63%, 81%,
-    and 100%. The "SIGNUP COHORT" label is rotated vertically on the left, and "MONTHS
-    SINCE SIGNUP" appears as a header above the column labels. The triangular shape
-    is correctly formed with each subsequent cohort having one fewer period. Cells
-    have rounded corners with white gaps between them. Notable visual artifact: some
-    cells along the diagonal edge display yellow/gold outlines instead of clean white
-    borders, likely from pygal''s SVG rendering behavior leaking into the PNG export.'
+  - sys.path manipulation to avoid filename collision adds unnecessary complexity
+  - CSS injection hack to suppress pygal focus outlines is fragile
+  - Dummy chart.add call is a workaround that could confuse readers
+  - Single-hue green colormap could be more accessible for some color vision deficiencies
+  image_description: The plot displays a triangular cohort retention heatmap with
+    the title "heatmap-cohort-retention · pygal · pyplots.ai" at the top. Ten monthly
+    cohorts (Jan 2024 through Oct 2024) are listed on the Y-axis under the rotated
+    label "Signup Cohort", each with cohort sizes shown below (e.g., n=1,200, n=1,350).
+    The X-axis shows "Month 0" through "Month 9" under the header "Months Since Signup".
+    Cells use a sequential green colormap ranging from very light green (low retention
+    ~21%) to deep dark green (high retention/100%). Each cell contains the retention
+    percentage as text, with white text on dark cells and dark text on light cells
+    for readability. The triangular shape is correctly formed — Jan 2024 has all 10
+    periods while Oct 2024 has only Month 0. A vertical colorbar on the right labeled
+    "Retention %" shows the scale from 21% to 100% with tick marks at 5 intervals.
+    White background with subtle gaps between cells and rounded corners on each cell.
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -49,66 +46,66 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set throughout; all text readable. Cohort size
-          labels slightly small but legible.
+        comment: All font sizes explicitly set via style attributes. Title, column
+          headers, row labels, cell values, and colorbar labels all clearly readable.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements anywhere.
+        comment: No overlapping text or elements anywhere. Clean spacing between all
+          cells and labels.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: All cells visible with good color differentiation. Yellow/gold outlines
-          on diagonal-edge cells are a rendering artifact.
+        comment: All cells clearly visible with good sizing. Some lighter-green cells
+          could benefit from more color differentiation.
       - id: VQ-04
         name: Color Accessibility
         score: 3
         max: 4
         passed: true
-        comment: Green sequential colormap is colorblind-friendly. Auto text contrast.
-          Monochromatic limits fine differentiation.
+        comment: Green sequential colormap works for most color vision deficiencies.
+          Dynamic text color based on brightness is good.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good canvas utilization with balanced margins. Some extra space on
-          right side.
+        comment: Plot fills canvas well with balanced margins. Nothing cut off.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive axis titles: MONTHS SINCE SIGNUP and SIGNUP COHORT.'
+        comment: 'Descriptive contextual labels: Months Since Signup and Signup Cohort.'
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Custom 8-stop green palette, rounded corners, white gaps, clean typography.
-          Yellow border artifacts prevent higher score.
+        comment: Custom green palette with smooth interpolation, rounded cell corners,
+          white gaps, professional font weights. Clearly above defaults.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: White background, no grid/spines, generous whitespace, cell gaps
-          for visual separation.
+        comment: Clean white background, cell gaps, colorbar with gradient and ticks.
+          CSS hack is functional but not elegant.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Triangular shape communicates time-based data. Color gradient shows
-          retention decay. Improvement trend visible.
+        comment: Apr 2024 cohort dip and progressive improvement tell a meaningful
+          story. Triangular shape guides the viewer.
     spec_compliance:
       score: 15
       max: 15
@@ -118,26 +115,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct triangular cohort retention heatmap.
+        comment: Correct triangular heatmap structure.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All required features present: triangular shape, retention % in
-          cells, cohort sizes, colorbar, period 0 = 100%.'
+        comment: 'All spec requirements met: triangular shape, percentages, cohort
+          sizes, colorbar, green colormap.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'Correct mapping: cohorts on y, periods on x, color = retention rate.'
+        comment: X=periods, Y=cohorts, color=retention rate. All correct.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows exact format. No legend needed for single heatmap.
+        comment: Title follows exact format. Colorbar serves as legend.
     data_quality:
       score: 14
       max: 15
@@ -147,22 +144,22 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Shows retention decay, triangular shape, cohort variation, improvement
-          trend. Could benefit from more dramatic variation.
+        comment: Shows triangular shape, period 0=100%, decay curves, cohort variation
+          with Apr dip and progressive improvement.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: SaaS monthly cohort retention — realistic neutral business context.
+        comment: SaaS monthly retention scenario is realistic, neutral, and comprehensible.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Retention 100% to ~25%, cohort sizes 980-1520 — plausible for SaaS.
+        comment: Retention values 21-100% are sensible for SaaS product retention.
     code_quality:
-      score: 9
+      score: 8
       max: 10
       items:
       - id: CQ-01
@@ -170,34 +167,34 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Uses custom class extending Graph — necessary for pygal but not pure
-          KISS.
+        comment: Custom class necessary for pygal but sys.path manipulation adds complexity.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42) ensures deterministic output.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used. sys.path manipulation necessary for filename collision.
+        comment: All imports used.
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: Well-structured code, no fake UI.
+        comment: sys.path manipulation, CSS injection, and dummy data call are functional
+          workarounds but reduce elegance.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.svg correctly.
+        comment: Saves as plot.png via render_to_png.
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -205,22 +202,22 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Properly extends Graph with _plot() and _compute() overrides. Uses
-          Style class.
+        comment: Correctly subclasses Graph with _plot() and _compute() overrides,
+          uses svg.node() and _tooltip_data().
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: SVG node manipulation, _tooltip_data for tooltips, linearGradient
-          for colorbar, pygal rendering pipeline.
-  verdict: REJECTED
+        comment: Custom Graph subclass, native SVG tooltips, HTML export with embedded
+          interactive SVG.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - colorbar
-  - hover-tooltips
+  - custom-legend
   - html-export
   patterns:
   - data-generation
