@@ -1,7 +1,6 @@
-""" pyplots.ai
+"""pyplots.ai
 heatmap-cohort-retention: Cohort Retention Heatmap
 Library: plotly 6.6.0 | Python 3.14.3
-Quality: 84/100 | Created: 2026-03-16
 """
 
 import numpy as np
@@ -37,28 +36,46 @@ for i in range(num_cohorts):
         trend_bonus = i * 0.8
         retention[i, j] = np.clip(base_drop + noise + trend_bonus, 5, 100)
 
-# Build annotation text and hovertext
-annotations_text = []
+# Build hovertext and cell annotations with conditional coloring
 hover_text = []
+cell_annotations = []
 for i in range(num_cohorts):
-    row_text = []
     row_hover = []
     for j in range(num_periods):
         if np.isnan(retention[i, j]):
-            row_text.append("")
             row_hover.append("")
         else:
             val = retention[i, j]
-            row_text.append(f"{val:.0f}%")
             row_hover.append(
-                f"Cohort: {cohort_labels[i]}<br>Size: {cohort_sizes[i]:,}<br>Month {j}<br>Retention: {val:.1f}%"
+                f"<b>{cohort_labels[i]}</b> · Month {j}<br>"
+                f"Cohort size: {cohort_sizes[i]:,} users<br>"
+                f"Retained: <b>{val:.1f}%</b>"
             )
-    annotations_text.append(row_text)
+            cell_annotations.append(
+                {
+                    "x": f"Month {j}",
+                    "y": f"{cohort_labels[i]}  (n={cohort_sizes[i]:,})",
+                    "text": f"<b>{val:.0f}%</b>",
+                    "showarrow": False,
+                    "font": {"size": 15, "color": "#1a2e1a" if val < 45 else "white"},
+                }
+            )
     hover_text.append(row_hover)
 
 # Y-axis labels with cohort size
-y_labels = [f"{label} (n={size:,})" for label, size in zip(cohort_labels, cohort_sizes, strict=False)]
+y_labels = [f"{label}  (n={size:,})" for label, size in zip(cohort_labels, cohort_sizes, strict=False)]
 x_labels = [f"Month {i}" for i in range(num_periods)]
+
+# Custom colorscale — teal-green sequential with good perceptual uniformity
+colorscale = [
+    [0.0, "#f0f9f4"],
+    [0.15, "#c6e7d4"],
+    [0.30, "#7cc5a3"],
+    [0.50, "#3a9d6e"],
+    [0.70, "#1e7a4e"],
+    [0.85, "#135c39"],
+    [1.0, "#0a3d26"],
+]
 
 # Plot
 fig = go.Figure(
@@ -66,41 +83,70 @@ fig = go.Figure(
         z=retention,
         x=x_labels,
         y=y_labels,
-        text=annotations_text,
-        texttemplate="%{text}",
-        textfont={"size": 15, "color": "white"},
+        showscale=True,
         hovertext=hover_text,
         hoverinfo="text",
-        colorscale=[[0.0, "#e0f2e9"], [0.25, "#7bc8a4"], [0.5, "#3a9d6e"], [0.75, "#1a7a4e"], [1.0, "#0d5233"]],
+        colorscale=colorscale,
         zmin=0,
         zmax=100,
         colorbar={
-            "title": {"text": "Retention %", "font": {"size": 18}},
-            "tickfont": {"size": 16},
+            "title": {"text": "Retention Rate", "font": {"size": 18, "color": "#2d2d2d"}},
+            "tickfont": {"size": 16, "color": "#2d2d2d"},
             "ticksuffix": "%",
-            "len": 0.8,
-            "thickness": 20,
+            "tickvals": [0, 20, 40, 60, 80, 100],
+            "len": 0.75,
+            "thickness": 18,
+            "outlinewidth": 0,
+            "x": 1.02,
         },
-        xgap=2,
-        ygap=2,
+        xgap=3,
+        ygap=3,
     )
+)
+
+# Add cell annotations with conditional text coloring (dark on light, white on dark)
+for ann in cell_annotations:
+    fig.add_annotation(**ann)
+
+# Add a subtle annotation highlighting the improving trend
+fig.add_annotation(
+    text="↑ Later cohorts retain better",
+    xref="paper",
+    yref="paper",
+    x=0.0,
+    y=-0.10,
+    showarrow=False,
+    font={"size": 15, "color": "#3a9d6e", "family": "Arial"},
+    xanchor="left",
 )
 
 # Style
 fig.update_layout(
     title={
         "text": "heatmap-cohort-retention · plotly · pyplots.ai",
-        "font": {"size": 28},
+        "font": {"size": 28, "color": "#1a1a1a", "family": "Arial Black, Arial"},
         "x": 0.5,
         "xanchor": "center",
+        "y": 0.96,
     },
-    xaxis={"title": {"text": "Months Since Signup", "font": {"size": 22}}, "tickfont": {"size": 16}, "side": "bottom"},
-    yaxis={"title": {"text": "Signup Cohort", "font": {"size": 22}}, "tickfont": {"size": 16}, "autorange": "reversed"},
+    xaxis={
+        "title": {"text": "Months Since Signup", "font": {"size": 22, "color": "#2d2d2d"}, "standoff": 15},
+        "tickfont": {"size": 17, "color": "#3d3d3d"},
+        "side": "bottom",
+        "dtick": 1,
+    },
+    yaxis={
+        "title": {"text": "Signup Cohort", "font": {"size": 22, "color": "#2d2d2d"}, "standoff": 20},
+        "tickfont": {"size": 16, "color": "#3d3d3d"},
+        "autorange": "reversed",
+    },
     template="plotly_white",
     width=1600,
     height=900,
-    margin={"l": 180, "r": 80, "t": 80, "b": 80},
-    plot_bgcolor="white",
+    margin={"l": 195, "r": 90, "t": 75, "b": 95},
+    paper_bgcolor="#fafafa",
+    plot_bgcolor="#fafafa",
+    font={"family": "Arial, Helvetica, sans-serif"},
 )
 
 # Save
