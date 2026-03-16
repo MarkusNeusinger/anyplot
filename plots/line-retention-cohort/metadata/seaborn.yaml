@@ -1,7 +1,7 @@
 library: seaborn
 specification_id: line-retention-cohort
 created: '2026-03-16T20:44:49Z'
-updated: '2026-03-16T20:49:30Z'
+updated: '2026-03-16T20:59:56Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23164943129
 issue: 4572
@@ -10,31 +10,32 @@ library_version: 0.13.2
 preview_url: https://storage.googleapis.com/pyplots-images/plots/line-retention-cohort/seaborn/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/line-retention-cohort/seaborn/plot_thumb.png
 preview_html: null
-quality_score: 84
+quality_score: 87
 review:
   strengths:
-  - Perfect spec compliance with all required features including 20% reference line
-    and legend with cohort sizes
-  - Effective visual hierarchy through line weight and color saturation progression
-    emphasizing newer cohorts
-  - Clean well-structured code with proper seed and explicit font sizing
-  - Good data storytelling with immediately apparent improving retention trend
+  - All spec requirements fully implemented including progressive emphasis and 20%
+    reference line
+  - Colorblind-accessible palette with distinct marker shapes per cohort
+  - Clean, well-structured data generation with realistic exponential decay model
+    and floor values
+  - Excellent spec compliance — perfect 15/15
   weaknesses:
-  - Color palette has insufficient contrast between similar-hue pairs (Jan/Feb grays,
-    Apr/May greens) for colorblind users
-  - Library mastery is low - manual iteration over groups rather than using seaborn
-    hue-based grouping
-  - No distinctive seaborn features leveraged - all styling is matplotlib
-  image_description: The plot shows a line chart with 5 retention curves, one per
-    monthly signup cohort (Jan-May 2025). All curves start at 100% at week 0 and decay
-    over 12 weeks. Older cohorts (Jan, Feb) use lighter gray/blue tones with thinner
-    lines, while newer cohorts (Apr, May) use darker green tones with thicker lines
-    and larger markers. The x-axis is labeled "Weeks Since Signup" (0-12), and the
-    y-axis is "Retained Users (%)" (0-100%). A dashed gray horizontal line marks the
-    20% retention target. The legend in the upper right, titled "Signup Cohort," shows
-    each cohort label with its sample size (e.g., "Jan 2025 (n=1,245)"). Top and right
-    spines are removed, with a subtle y-axis grid. The title reads "line-retention-cohort
-    · seaborn · pyplots.ai".
+  - Design sophistication could be elevated toward publication quality (DE-01=5)
+  - Could add endpoint value annotations to strengthen data storytelling (DE-03=4)
+  - Library mastery could leverage more seaborn-distinctive features (LM-02=3)
+  image_description: 'The plot displays 5 user retention curves for monthly signup
+    cohorts (Jan–May 2025) over 12 weeks. Each curve starts at 100% at week 0 and
+    decays at different rates. Colors are from seaborn''s colorblind palette: blue
+    (Jan 2025, circles), orange (Feb 2025, X markers), green (Mar 2025, squares),
+    red-orange (Apr 2025, plus signs), and pink/purple (May 2025, diamonds). Lines
+    have progressive linewidth and opacity — older cohorts are thinner and more transparent,
+    newer ones are bolder. Jan 2025 decays fastest to ~20% by week 12, while May 2025
+    retains best at ~53%. A dashed gray horizontal reference line at 20% is labeled
+    "20% target" in italic at the right edge. Title: "line-retention-cohort · seaborn
+    · pyplots.ai" at top center. Y-axis: "Retained Users (%)" ranging 0–105. X-axis:
+    "Weeks Since Signup" with ticks 0–12. Top and right spines are removed. Subtle
+    y-axis-only gridlines at low alpha. Legend in upper right titled "Signup Cohort"
+    (semibold) lists all 5 cohorts with sample sizes.'
   criteria_checklist:
     visual_quality:
       score: 28
@@ -42,44 +43,43 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt,
-          legend 14pt'
+        comment: All major font sizes explicitly set. The 20% target annotation at
+          13pt is slightly small.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or elements
+        comment: No text collisions. Lines converge at week 0 but remain distinguishable.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Lines and markers clearly visible; Apr/May green lines close in hue
-          though distinguishable by thickness
+        comment: Distinct marker shapes via style parameter. Progressive linewidth
+          helps distinguish cohorts.
       - id: VQ-04
         name: Color Accessibility
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Blue-to-green palette mostly distinguishable but Jan/Feb and Apr/May
-          pairs are close for colorblind users
+        comment: Uses seaborn colorblind palette. Excellent accessibility.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good use of 16:9 canvas with tight_layout and balanced margins
+        comment: 16x9 figure with tight_layout. Plot fills canvas well.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: Weeks Since Signup, Retained Users
-          (%)'
+        comment: 'Descriptive labels with units: Retained Users (%) and Weeks Since
+          Signup.'
     design_excellence:
       score: 13
       max: 20
@@ -89,21 +89,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Thoughtful palette progression with increasing linewidths and marker
-          sizes, above defaults but not publication-showcase
+        comment: Above configured defaults with progressive emphasis and reference
+          line, but not yet publication-ready.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Spines removed, subtle y-axis grid, frameless legend, generous whitespace
+        comment: Spines removed, y-only grid at alpha=0.15, generous whitespace. Good
+          refinement.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Clear visual hierarchy through line weight and color saturation;
-          20% target adds context
+        comment: Progressive emphasis creates hierarchy. 20% target adds benchmark
+          context. Could add endpoint annotations.
     spec_compliance:
       score: 15
       max: 15
@@ -113,27 +114,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct line chart with retention curves
+        comment: Line chart with multiple cohort curves. Correct.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: 100% start, distinct colors, legend with sizes,
-          gridlines, reference line'
+        comment: 'All spec features present: 100% start, distinct colors, legend with
+          sizes, reference line, progressive emphasis.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=weeks since signup, Y=retention percentage, correctly mapped
+        comment: X=weeks, Y=retention%, hue=cohort. All correct.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format and legend labels with cohort names and sample
-          sizes
+        comment: Title follows spec format. Legend labels use cohort (n=size) format.
     data_quality:
       score: 14
       max: 15
@@ -143,22 +143,21 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: 5 cohorts with 13 time periods each, good variation in decay rates
-          and floor values
+        comment: 5 cohorts with distinct decay rates and floor values. Good variation
+          with noise.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Monthly user signup cohorts tracked for retention - classic product
-          analytics scenario
+        comment: Monthly SaaS signup cohorts tracked weekly. Realistic, neutral business
+          scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Retention 100% to 20-50% over 12 weeks is realistic; cohort sizes
-          1,245-1,605 are plausible
+        comment: Cohort sizes 1245-1605, retention 100% to 20-53%. Realistic values.
     code_quality:
       score: 10
       max: 10
@@ -168,49 +167,49 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean Imports-Data-Plot-Style-Save flow, no functions or classes
+        comment: Flat script structure. No functions/classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: plt, np, pd, sns'
+        comment: All imports used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-structured, appropriate complexity
+        comment: Clean, Pythonic, appropriate complexity. No fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300, bbox_inches=tight
+        comment: Saves as plot.png, dpi=300, current API.
     library_mastery:
-      score: 4
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
-        passed: false
-        comment: Uses sns.lineplot but iterates manually over groups instead of using
-          hue parameter
+        passed: true
+        comment: Uses sns.lineplot with hue/style, sns.set_theme, sns.set_context,
+          axes-level API.
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 3
         max: 5
-        passed: false
-        comment: All customization via matplotlib; plot could be replicated with pure
-          matplotlib
+        passed: true
+        comment: style parameter for marker differentiation, sns.set_theme rc dict,
+          colorblind palette. Some distinctive usage.
   verdict: REJECTED
 impl_tags:
   dependencies: []
@@ -220,7 +219,7 @@ impl_tags:
   patterns:
   - data-generation
   - iteration-over-groups
-  - explicit-figure
   dataprep: []
   styling:
   - grid-styling
+  - alpha-blending
