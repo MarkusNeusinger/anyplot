@@ -1,7 +1,7 @@
 library: altair
 specification_id: line-retention-cohort
 created: '2026-03-16T20:46:06Z'
-updated: '2026-03-16T20:58:22Z'
+updated: '2026-03-16T21:07:28Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23164943114
 issue: 4572
@@ -10,76 +10,75 @@ library_version: 6.0.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/line-retention-cohort/altair/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/line-retention-cohort/altair/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/line-retention-cohort/altair/plot.html
-quality_score: 86
+quality_score: 93
 review:
   strengths:
-  - Excellent spec compliance - all required features implemented perfectly
-  - Strong data storytelling through graduated line opacity/width creating clear visual
-    hierarchy
-  - Colorblind-safe palette with good luminance variation
-  - Interactive hover highlighting and tooltips leverage Altair strengths
-  - Insightful subtitle communicates the data narrative
+  - Graduated opacity and line width by cohort order creates excellent visual hierarchy
+    emphasizing newer cohorts
+  - Interactive hover highlighting via selection_point is a strong use of Altair distinctive
+    capabilities
+  - Insightful subtitle tells the data story directly
+  - 20% threshold reference line adds meaningful benchmark context
+  - Tol-inspired colorblind-safe palette with good contrast
   weaknesses:
-  - Per-cohort loop with separate Chart objects is not idiomatic Altair
-  - Legend label font size (15pt) slightly small
-  - Oldest cohort opacity (0.35) is quite faint
-  - Could further refine visual polish by removing domain lines
-  image_description: The plot displays 5 user retention curves (Jan-May 2025) on a
-    light gray (#FAFAFA) background. All curves start at 100% at week 0 and decay
-    over 12 weeks. Colors range from light blue (Jan 2025) through teal (Feb), golden
-    yellow (Mar), rose/pink (Apr), to deep navy (May 2025). Newer cohorts are drawn
-    with thicker, more opaque lines and larger point markers, creating a clear visual
-    hierarchy. A dashed gray horizontal line marks the "20% Target" threshold with
-    a bold label. The legend on the right shows cohort labels with sample sizes (e.g.,
-    "Jan 2025 (n=1,245)"). Title reads "line-retention-cohort · altair · pyplots.ai"
-    with a subtitle "Newer cohorts retain better — product improvements are working".
-    Axes are labeled "Weeks Since Signup" (x) and "Retention (%)" (y), with y ranging
-    0-100 and x from 0-12. Grid lines are subtle, view borders removed.
+  - Jan 2025 cohort at 0.45 opacity is somewhat faint, could benefit from a slightly
+    higher minimum opacity
+  image_description: 'The plot displays five user retention curves on a light gray
+    (#FAFAFA) background. The title reads "line-retention-cohort · altair · pyplots.ai"
+    in bold ~28pt font, with a subtitle "Newer cohorts retain better — product improvements
+    are working" in gray. The X-axis is labeled "Weeks Since Signup" (0-12) and the
+    Y-axis "Retention (%)" (0-100). Five cohorts are plotted: Jan 2025 (light blue,
+    thinnest/most transparent), Feb 2025 (teal-green), Mar 2025 (muted yellow), Apr
+    2025 (salmon-pink), and May 2025 (dark indigo, thickest/most opaque). All curves
+    start at 100% and decay exponentially, with newer cohorts retaining better. Each
+    data point has a filled circle marker. A dashed horizontal reference line at 20%
+    is labeled "20% Target" on the left. The legend on the right shows each cohort
+    with its sample size (e.g., "Jan 2025 (n=1,245)"). Grid lines are very subtle,
+    spines are removed, and the overall design is clean and professional.'
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 28, axis titles 22, ticks 18,
-          legend title 18, threshold 16). Legend labels at 15pt slightly below ideal.
+        comment: 'All font sizes explicitly set: title 28pt, axis titles 22pt, tick
+          labels 18pt, legend title 18pt, legend labels 16pt'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlaps anywhere.
+        comment: No overlapping text or data elements
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Graduated line widths and point sizes work well. Oldest cohort at
-          0.35 opacity is faint.
+        comment: Graduated opacity works well but oldest cohort at 0.45 is quite faint
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Colorblind-safe Tol-inspired palette with luminance+hue variation.
+        comment: Tol-inspired colorblind-safe palette with good contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good proportions. Slight right-side whitespace around legend.
+        comment: Good layout but external legend takes some horizontal space
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with context: Weeks Since Signup, Retention (%).'
+        comment: 'Descriptive with units: Weeks Since Signup, Retention (%)'
     design_excellence:
-      score: 15
+      score: 16
       max: 20
       items:
       - id: DE-01
@@ -87,22 +86,22 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom palette, graduated styling, refined background, insightful
-          subtitle.
+        comment: Custom Tol palette, graduated hierarchy, insightful subtitle, clean
+          background
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Subtle grid, view stroke removed, custom axis colors. Domain lines
-          still present.
+        comment: Spines removed, subtle grid at 0.3 opacity, view stroke removed,
+          customized tick colors
       - id: DE-03
         name: Data Storytelling
         score: 5
         max: 6
         passed: true
-        comment: Strong hierarchy through graduated styling. Subtitle states insight.
-          20% target adds context.
+        comment: Subtitle communicates insight, graduated opacity creates visual hierarchy,
+          20% threshold adds benchmark context
     spec_compliance:
       score: 15
       max: 15
@@ -112,111 +111,115 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct line chart with multiple retention curves.
+        comment: Correct line chart with multiple retention curves by cohort
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All spec features present including graduated styling, reference
-          line, legend with sizes.
+        comment: All spec features present including graduated opacity, reference
+          line, legend with sizes
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=weeks since signup, Y=retention percentage. Correct.
+        comment: X=weeks, Y=retention %, color=cohort - all correct
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Legend labels show cohort name with n= size.
+        comment: Title format correct, legend labels show cohort name with sample
+          size
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 5 cohorts with different decay rates and noise. Good differentiation.
+        comment: 5 cohorts with distinct decay rates showing clear improvement trend
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Monthly signup cohorts for product analytics. Realistic SaaS scenario.
+        comment: Monthly signup cohorts with realistic user counts, neutral business
+          scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Cohort sizes 1100-1500, retention decaying over 12 weeks. Realistic.
+        comment: Realistic exponential decay with noise, plausible cohort sizes and
+          half-lives
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Linear structure but per-cohort loop adds complexity.
+        comment: Clean imports, data, plot, save structure with no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used.
+        comment: Only altair, numpy, pandas - all used
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: Per-cohort loop with separate DataFrames is verbose.
+        comment: Well-organized, graduated styling via order-based scales is elegant
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with scale_factor=3.0.
+        comment: Saves as plot.png with scale_factor=3.0, also saves HTML
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 5
         max: 5
         passed: true
-        comment: Uses layering, selection, conditional encoding. Per-cohort loop not
-          fully idiomatic.
+        comment: Expert declarative API usage with proper encoding types, layered
+          composition, configure chain
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Interactive selection_point, conditional encoding, tooltips, HTML
-          export.
-  verdict: REJECTED
+        comment: selection_point hover, conditional encoding, tooltips, HTML export
+          - distinctively Altair
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
   - hover-tooltips
   - html-export
+  - annotations
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
-  - alpha-blending
   - grid-styling
+  - alpha-blending
