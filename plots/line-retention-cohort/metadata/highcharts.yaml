@@ -1,7 +1,7 @@
 library: highcharts
 specification_id: line-retention-cohort
 created: '2026-03-16T20:44:42Z'
-updated: '2026-03-16T20:55:49Z'
+updated: '2026-03-16T21:06:25Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23164943620
 issue: 4572
@@ -10,34 +10,37 @@ library_version: unknown
 preview_url: https://storage.googleapis.com/pyplots-images/plots/line-retention-cohort/highcharts/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/line-retention-cohort/highcharts/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/line-retention-cohort/highcharts/plot.html
-quality_score: 84
+quality_score: 89
 review:
   strengths:
-  - Full spec compliance with all required features implemented correctly
-  - Effective use of Highcharts-specific zones feature to visually mark lines crossing
-    below the 20% retention target
-  - Good data storytelling through increasing line widths for newer cohorts and the
-    reference line
-  - Clean, well-structured code with proper seed for reproducibility
+  - Excellent spec compliance with all required features implemented (100%)
+  - Strong data storytelling through graduated line widths and the zones feature (dotted
+    below 20% threshold)
+  - Custom colorblind-safe palette with good visual hierarchy
+  - Clean, well-structured code with appropriate use of Highcharts-specific features
+  - Professional typography hierarchy with explicitly set font sizes throughout
   weaknesses:
-  - Color palette includes red and green which are problematic for colorblind users
-  - LineSeries imported from wrong module path (area instead of line)
-  - Bottom margin could be reduced to improve canvas utilization
-  image_description: 'The plot displays 5 line curves on a white background showing
-    user retention over 12 weeks. The title "line-retention-cohort · highcharts ·
-    pyplots.ai" appears at top in bold, with subtitle "User Retention by Monthly Signup
-    Cohort" in gray below. The Y-axis is labeled "Retained Users (%)" ranging from
-    0% to 100% with gridlines at 20% intervals. The X-axis shows "Weeks Since Signup"
-    from Week 0 to Week 12. Five cohort lines (Jan-May 2025) all start at 100% and
-    decay at different rates — Jan 2025 (blue, thinnest) decays fastest, May 2025
-    (dark brown, thickest) decays slowest. A dashed gray horizontal line at 20% is
-    labeled "20% Retention Target." Lines that drop below 20% become dotted (Highcharts
-    zones feature). A vertical legend on the right shows cohort names with sample
-    sizes (e.g., "Jan 2025 (n=1,245)"). Colors used: blue, orange, green, red, brown.
-    Markers are visible on each data point with white outlines.'
+  - Some line clustering in the mid-range (weeks 4-6) makes individual cohorts slightly
+    harder to distinguish
+  - Large empty area below the 20% retention line wastes canvas space
+  - LineSeries imported from .area submodule rather than .line (works but not idiomatic)
+  image_description: The plot displays a line chart on a light gray (#fafafa) background
+    with the title "line-retention-cohort · highcharts · pyplots.ai" in bold dark
+    text and subtitle "User Retention by Monthly Signup Cohort" in gray. Five cohort
+    retention curves span from Week 0 to Week 12 on the x-axis ("Weeks Since Signup")
+    and 0% to 100% on the y-axis ("Retained Users (%)"). All curves start at 100%
+    and decay at different rates. Jan 2025 (blue, thinnest) decays fastest, reaching
+    near 20% by week 12. Feb 2025 (salmon/orange), Mar 2025 (dark brown), Apr 2025
+    (purple), and May 2025 (gold/yellow, thickest) decay progressively slower. Line
+    widths and marker sizes increase from oldest to newest cohort, creating visual
+    hierarchy. A red dashed horizontal line at 20% is labeled "20% Retention Target."
+    Lines crossing below 20% become dotted (Highcharts zones feature). The legend
+    is positioned vertically on the right showing cohort names with sample sizes (e.g.,
+    "Jan 2025 (n=1,245)"). Dotted grid lines at 20% intervals on the y-axis aid reading.
+    The x-axis has no gridlines.
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -46,34 +49,35 @@ review:
         max: 8
         passed: true
         comment: 'All font sizes explicitly set: title 48px, subtitle 32px, axis titles
-          36px, tick labels 28px, legend 30px'
+          36px, tick labels 28px, legend 30px, plot line label 24px'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements, legend well-positioned on right
+        comment: No overlapping text. Lines close in mid-range but distinct. Legend
+          well-positioned
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Lines visible with good widths and markers, but marker size differentiation
-          between cohorts is subtle
+        comment: Lines and markers clearly visible with graduated widths. Some clustering
+          in Week 4-6 range
       - id: VQ-04
         name: Color Accessibility
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: Palette includes red and green which are problematic for red-green
-          colorblind users
+        passed: true
+        comment: 'Colorblind-safe palette: blue, orange, brown, purple, gold. No red-green
+          dependency'
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good overall layout but some excess whitespace at bottom due to large
-          marginBottom
+        comment: Good margins. Large empty area below 20% retention. Target label
+          slightly crowded at right edge
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -82,30 +86,30 @@ review:
         comment: 'Descriptive labels with units: Retained Users (%) and Weeks Since
           Signup'
     design_excellence:
-      score: 12
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Custom palette, subtitle, increasing line widths, marker outlines
-          — above defaults but not publication-ready
+        comment: Custom palette, intentional typography hierarchy, light gray background,
+          white-bordered markers, graduated line weights
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Subtle grid opacity, no x-axis gridlines; but Highcharts default
-          spines remain
+        comment: Subtle dotted grid at low opacity, y-axis line removed, x-axis gridlines
+          removed, clean background
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Increasing line width creates visual hierarchy, 20% target adds context,
-          zones reinforce narrative
+        comment: Graduated line widths emphasize newer cohorts, zones feature highlights
+          threshold crossing, benchmark line provides context
     spec_compliance:
       score: 15
       max: 15
@@ -121,20 +125,21 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: All spec features present including reference line, legend with sizes,
-          varying thickness
+        comment: 'All spec features present: 100% start, distinct colors, legend with
+          sizes, y-axis 0-100%, reference line at 20%'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=weeks since signup, Y=retention percentage, correctly mapped
+        comment: X = weeks since signup, Y = retention percentage, correctly mapped
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows exact format, legend labels match spec requirement
+        comment: Title follows exact format. Legend labels show cohort name with sample
+          size
     data_quality:
       score: 14
       max: 15
@@ -144,22 +149,24 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: 5 cohorts with different decay rates showing improving retention
-          trend
+        comment: 5 cohorts with different decay rates, clear separation, Jan 2025
+          approaches 20% threshold
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic SaaS retention scenario with plausible cohort sizes
+        comment: Monthly signup cohorts with realistic sample sizes. Neutral product
+          analytics scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Retention values follow realistic exponential decay patterns
+        comment: Realistic exponential decay patterns. Plausible cohort sizes for
+          mid-size SaaS
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -167,31 +174,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → chart → export flow
+        comment: 'Clean linear flow: imports, data, chart config, series, export.
+          No functions or classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set before data generation
       - id: CQ-03
         name: Clean Imports
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: LineSeries imported from area module instead of line module
+        passed: true
+        comment: All imports used. LineSeries from .area works but should be from
+          .line
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-structured code with elegant use of zones
+        comment: Clean loop for series creation with graduated styling. Zones elegantly
+          applied
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png, current API usage
+        comment: Saves as plot.png via Selenium screenshot. Current API
     library_mastery:
       score: 8
       max: 10
@@ -201,21 +211,22 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of HighchartsOptions, LineSeries, plotLines, plot_options
+        comment: 'Proper use of HighchartsOptions, LineSeries, chart.add_series(),
+          plotLines. Minor: wrong import submodule'
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Zones, plotLines, shared tooltip with custom formatting are distinctive
-          Highcharts features
+        comment: Zones (dotted below threshold), plotLines, shared tooltips with custom
+          formatting, HTML export
   verdict: REJECTED
 impl_tags:
   dependencies:
   - selenium
   techniques:
-  - html-export
   - hover-tooltips
+  - html-export
   patterns:
   - data-generation
   - iteration-over-groups
