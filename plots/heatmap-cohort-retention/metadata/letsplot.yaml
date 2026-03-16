@@ -1,7 +1,7 @@
 library: letsplot
 specification_id: heatmap-cohort-retention
 created: '2026-03-16T20:45:58Z'
-updated: '2026-03-16T20:50:53Z'
+updated: '2026-03-16T20:57:54Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23165008512
 issue: 4570
@@ -10,30 +10,33 @@ library_version: 4.9.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/heatmap-cohort-retention/letsplot/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/heatmap-cohort-retention/letsplot/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/heatmap-cohort-retention/letsplot/plot.html
-quality_score: 85
+quality_score: 89
 review:
   strengths:
-  - Perfect spec compliance with all required features implemented correctly
-  - Smart dual geom_text approach for text contrast on varying cell colors
-  - Clean well-structured code with proper categorical ordering
-  - Realistic SaaS retention data with per-cohort variation
+  - Excellent data storytelling with orange border highlighting on Month 1 churn column
+    with explanatory subtitle
+  - Perfect spec compliance — all required features implemented correctly
+  - Clean, well-structured code with proper reproducibility
+  - Effective dual-layer text approach for contrast on varying cell colors
+  - Good use of lets-plot interactive tooltip capabilities
   weaknesses:
-  - Non-monotonic retention values reduce data realism
-  - Green gradient is not perceptually uniform - viridis or cividis would be more
-    accessible
-  - No visual storytelling emphasis to highlight key insights
-  - Limited use of lets-plot distinctive features beyond basic ggplot grammar
+  - Axis text sizes (14-15pt) slightly below the recommended 16pt minimum for optimal
+    readability
+  - Right side of the plot has dead space where the triangular shape leaves empty
+    columns
   image_description: 'The plot displays a triangular cohort retention heatmap with
-    10 monthly cohorts (Jan 2024 through Oct 2024) on the y-axis and "Month 0" through
-    "Month 9" on the x-axis. The heatmap uses a green sequential colormap ranging
-    from light sage to dark forest green. Each cell contains the retention percentage
-    as text with adaptive contrast — white text on darker cells and dark text on lighter
-    cells. The triangular shape is correctly formed: Jan 2024 has all 10 periods while
-    Oct 2024 has only Month 0. Period 0 consistently shows 100% across all cohorts.
-    Cohort sizes (e.g., n=1926, n=2259) are embedded in the y-axis labels. A vertical
-    color bar legend labeled "Retention %" appears on the right side with scale 0-100.
-    The title reads "heatmap-cohort-retention · letsplot · pyplots.ai" in bold at
-    the top. Panel grid lines are removed, and white borders separate cells cleanly.'
+    10 monthly cohorts (Jan 2024 through Oct 2024) on the y-axis and 10 periods (Month
+    0 through Month 9) on the x-axis. The heatmap uses a reversed viridis colormap:
+    dark purple represents high retention (100%) and yellow-green represents low retention
+    (~20%). Each cell contains a bold percentage label with appropriate contrast —
+    white text on dark cells and dark text on light cells. Orange borders highlight
+    the Month 1 column across all cohorts, drawing attention to the critical first-month
+    churn drop. The title reads "heatmap-cohort-retention · letsplot · pyplots.ai"
+    with a subtitle explaining the orange border storytelling. Cohort sizes (n=921
+    to n=2438) appear in parentheses next to each y-axis label. A vertical color bar
+    legend on the right shows the "Retention %" scale from 0 to 100. The triangular
+    shape is clearly visible — Jan 2024 has all 10 periods while Oct 2024 has only
+    Month 0.'
   criteria_checklist:
     visual_quality:
       score: 28
@@ -44,62 +47,62 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set. Cell text size=11 slightly small but
-          readable.
+        comment: Font sizes explicitly set but axis_text_x=15 and axis_text_y=14 slightly
+          below 16pt recommendation
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements.
+        comment: No overlapping text anywhere
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All cells clearly visible with good color differentiation and white
-          borders.
+        comment: Tiles well-sized with white borders providing clear separation
       - id: VQ-04
         name: Color Accessibility
-        score: 3
-        max: 4
-        passed: true
-        comment: Green gradient reasonably accessible but not perceptually uniform.
-      - id: VQ-05
-        name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good canvas utilization. Triangular empty space is natural.
+        comment: Reversed viridis colormap is colorblind-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good layout but right side has dead space from triangular shape
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis labels with no units needed.
+        comment: 'Descriptive labels: Months Since Signup, Signup Cohort'
     design_excellence:
-      score: 12
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Custom green palette, dual-layer text contrast, white cell borders.
-          Above defaults.
+        comment: Strong design with reversed viridis, white cell borders, orange highlights,
+          good typography hierarchy
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Panel grid removed, minimal theme, white tile borders.
+        comment: Grid removed, theme_minimal, white cell borders for structure
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Triangular shape guides the eye but no emphasis on key insights.
+        passed: true
+        comment: Orange borders on Month 1 with explanatory subtitle create genuine
+          data storytelling
     spec_compliance:
       score: 15
       max: 15
@@ -109,25 +112,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct triangular cohort retention heatmap.
+        comment: Correct triangular cohort retention heatmap
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All spec features present.
+        comment: 'All spec features present: triangular shape, 100% at period 0, colormap,
+          text in cells, cohort sizes, color bar'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=periods, Y=cohorts, fill=retention correctly mapped.
+        comment: X/Y correctly assigned with proper categorical ordering
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Legend label appropriate.
+        comment: Title format correct, color bar labeled Retention %
     data_quality:
       score: 14
       max: 15
@@ -137,19 +141,21 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Good coverage but non-monotonic retention values slightly unrealistic.
+        comment: Shows cohort variation, monotonic decay, triangular shape; variation
+          could be slightly more pronounced
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: SaaS monthly cohort retention, neutral business context.
+        comment: SaaS monthly user retention — realistic neutral business scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Realistic retention decay and cohort sizes.
+        comment: 'Realistic retention values: 60-65% at Month 1 decaying to 20% by
+          Month 9'
     code_quality:
       score: 10
       max: 10
@@ -159,33 +165,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script structure.
+        comment: 'Linear structure: imports, data, plot, save'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean code with elegant dual geom_text solution.
+        comment: Clean implementation, dual text layers for contrast is appropriate
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png via ggsave with scale=3.
+        comment: Saves as plot.png with scale=3
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -193,20 +199,22 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good ggplot grammar with pd.Categorical, scale_fill_gradient, theme
-          customization.
+        comment: Good idiomatic ggplot2-style grammar with geom_tile, scale_fill_viridis,
+          pd.Categorical
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: HTML export is distinctive but otherwise standard ggplot grammar.
+        passed: true
+        comment: Uses layer_tooltips() for interactive hover info and HTML export
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - layer-composition
+  - hover-tooltips
+  - html-export
   patterns:
   - data-generation
   - iteration-over-groups
