@@ -1,7 +1,7 @@
 library: matplotlib
 specification_id: scatter-constellation-diagram
 created: '2026-03-17T23:20:11Z'
-updated: '2026-03-17T23:32:16Z'
+updated: '2026-03-17T23:39:41Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23220948516
 issue: 4562
@@ -10,35 +10,34 @@ library_version: 3.10.8
 preview_url: https://storage.googleapis.com/pyplots-images/plots/scatter-constellation-diagram/matplotlib/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/scatter-constellation-diagram/matplotlib/plot_thumb.png
 preview_html: null
-quality_score: 89
+quality_score: 92
 review:
   strengths:
-  - Perfect spec compliance - all required features correctly implemented
-  - Error magnitude color mapping with plasma colorbar adds both visual interest and
-    analytical value
-  - Clean well-structured code with proper SNR-based noise model and EVM calculation
-  - All font sizes explicitly set and correctly sized per library guidelines
-  - Good visual hierarchy between ideal markers and received symbols
+  - Excellent spec compliance — all required features implemented precisely
+  - Sophisticated color encoding via inferno + PowerNorm creates meaningful visual
+    hierarchy
+  - Professional design with custom background, subtle region shading, and styled
+    spines
+  - Clean, well-structured code with appropriate use of matplotlib-specific features
+    (PathEffects, PowerNorm, patches)
+  - Realistic 16-QAM data with proper SNR modeling and EVM calculation
   weaknesses:
-  - Light-colored dots from plasma colormap extremes have reduced visibility against
-    white background
-  - Design excellence could benefit from additional refinement to reach publication
-    quality
-  - Library mastery could leverage more distinctive matplotlib features
-  image_description: The plot displays a 16-QAM constellation diagram on a square
-    canvas (12x12 inches) with equal aspect ratio. Sixteen large dark red "X" markers
-    (s=320) with white edge highlights mark the ideal constellation points in a 4x4
-    grid at +/-1 and +/-3 on both I and Q axes. Approximately 1200 received symbols
-    are scattered around the ideal points as small semi-transparent dots (s=28, alpha=0.55)
-    colored by error magnitude using the plasma colormap - purple/dark dots near ideal
-    positions transitioning to pink/yellow for larger errors. A vertical colorbar
-    on the right displays "Error Magnitude" ranging from about 0.1 to 1.0. Dashed
-    gray decision boundary lines at -2, 0, and 2 on both axes separate the 16 decision
-    regions. Faint origin lines are drawn at x=0 and y=0. The title reads "scatter-constellation-diagram
-    - matplotlib - pyplots.ai" (fontsize 24). Axes labeled "In-Phase (I)" and "Quadrature
-    (Q)" (fontsize 20). A bold "EVM = 14.0%" annotation in a rounded white box sits
-    in the bottom-right corner. Top and right spines are removed. Legend "Ideal symbols"
-    in upper-left corner.
+  - Alpha=0.65 is slightly high for 1200 data points; some clusters appear dense in
+    center regions
+  image_description: The plot displays a 16-QAM constellation diagram on a light gray
+    (#F8F9FA) background with subtle alternating checkerboard shading for decision
+    regions. Sixteen ideal constellation points are rendered as large red "X" markers
+    (with white stroke path effects) at the standard ±1, ±3 grid positions on both
+    I and Q axes. 1200 received symbols are scattered around these ideal points, colored
+    by error magnitude using the inferno colormap with PowerNorm (dark purple = low
+    error, through orange/red, to yellow = high error). A vertical colorbar on the
+    right is labeled "Error Magnitude" with scale from ~0 to 1.0. Dashed gray decision
+    boundaries at -2, 0, and 2 divide the I/Q plane into 16 regions. Subtle concentric
+    circles (radius 0.5) surround each ideal point. The title reads "scatter-constellation-diagram
+    · matplotlib · pyplots.ai". Axes are labeled "In-Phase (I)" and "Quadrature (Q)".
+    A boxed annotation at bottom right shows "EVM = 14.0%", with italic gray text
+    above it reading "SNR = 20 dB | 1200 symbols". A legend in the upper left identifies
+    "Ideal symbols".
   criteria_checklist:
     visual_quality:
       score: 29
@@ -49,64 +48,65 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title=24, labels=20, ticks=16, colorbar=18,
-          legend=16'
+        comment: 'All font sizes explicitly set: title 24, axis labels 20, ticks 16,
+          legend 16, EVM 20, SNR 14, colorbar label 18, colorbar ticks 14'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or marker overlap anywhere
+        comment: No overlapping text elements
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: s=28 appropriate for 1200 points but light yellow/pink plasma dots
-          less visible on white background
+        comment: s=32 appropriate for 1200 points but alpha=0.65 slightly high for
+          this density
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Plasma colormap is perceptually uniform and colorblind-safe
+        comment: Inferno colormap is perceptually uniform and colorblind-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square canvas ideal for constellation diagram with equal aspect ratio
+        comment: Square figure with equal aspect ratio fills canvas well
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with standard notation: In-Phase (I) and Quadrature
+        comment: 'Descriptive labels with standard notation: In-Phase (I), Quadrature
           (Q)'
     design_excellence:
-      score: 13
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Plasma colormap visually appealing, red markers with white edges,
-          custom annotation styling. Above default but not publication-level.
+        comment: Custom background, alternating region shading, inferno+PowerNorm,
+          path effects, styled spines
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Spines removed, subtle decision boundaries, well-integrated colorbar
+        comment: Subtle gray spines, light dashed boundaries, alternating region shading,
+          shadow on legend
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Error magnitude color mapping creates storytelling, EVM provides
-          quantitative context, clear visual hierarchy
+        comment: Error magnitude coloring with PowerNorm creates visual hierarchy,
+          EVM/SNR annotations provide context
     spec_compliance:
       score: 15
       max: 15
@@ -116,26 +116,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct I/Q scatter constellation diagram
+        comment: Correct I/Q scatter constellation diagram for 16-QAM
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: ideal markers, received symbols, decision
-          boundaries, equal aspect, EVM annotation'
+        comment: 'All spec features present: ideal points, received symbols, decision
+          boundaries, equal aspect, axis labels, EVM'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: I to x-axis, Q to y-axis correctly assigned
+        comment: I mapped to x-axis, Q to y-axis, all data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend label matches data
+        comment: Correct title format, legend labels match
     data_quality:
       score: 15
       max: 15
@@ -145,21 +145,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All 16 points shown, noise scatter visible, error magnitude visualized,
-          EVM calculated
+        comment: All 16 constellation points, noise dispersion, error magnitude variation
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 16-QAM modulation is the standard example with realistic SNR-based
-          noise model
+        comment: 16-QAM is a standard real-world modulation scheme, SNR=20dB is realistic
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: SNR 20dB, 1200 symbols, proper signal power and noise computation
+        comment: Standard constellation levels ±1, ±3, realistic SNR and sample size
     code_quality:
       score: 10
       max: 10
@@ -169,33 +167,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports, seed, data, plot, save'
+        comment: Clean linear flow, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42)
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: matplotlib.colors, matplotlib.pyplot, numpy - all used
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, appropriate complexity
+        comment: Appropriate complexity, clean and readable
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300, no deprecated API
+        comment: Saves as plot.png with dpi=300
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -203,21 +201,21 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Proper Axes API, mcolors.Normalize, fig.colorbar, zorder layering,
-          transAxes
+        comment: Consistent Axes methods, proper fig/ax pattern
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Scatter color mapping with cmap+norm, colorbar linked to scatter
-          artist, bbox annotation styling
-  verdict: REJECTED
+        comment: PathEffects, PowerNorm, plt.Circle patches, fill_between, zorder
+          layering
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
   - annotations
+  - patches
   patterns:
   - data-generation
   dataprep: []

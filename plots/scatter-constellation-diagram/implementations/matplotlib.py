@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 scatter-constellation-diagram: Digital Modulation Constellation Diagram
 Library: matplotlib 3.10.8 | Python 3.14.3
-Quality: 89/100 | Created: 2026-03-17
+Quality: 92/100 | Created: 2026-03-17
 """
 
 import matplotlib.colors as mcolors
