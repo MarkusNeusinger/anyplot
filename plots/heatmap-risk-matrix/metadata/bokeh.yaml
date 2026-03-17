@@ -1,7 +1,7 @@
 library: bokeh
 specification_id: heatmap-risk-matrix
 created: '2026-03-17T21:55:34Z'
-updated: '2026-03-17T22:18:00Z'
+updated: '2026-03-17T22:26:27Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23217984768
 issue: 4567
@@ -10,40 +10,36 @@ library_version: 3.9.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/heatmap-risk-matrix/bokeh/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/heatmap-risk-matrix/bokeh/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/heatmap-risk-matrix/bokeh/plot.html
-quality_score: 82
+quality_score: 83
 review:
   strengths:
-  - Perfect spec compliance — all five required features implemented correctly
-  - Excellent data quality with realistic enterprise risk management scenario across
-    4 categories
-  - 'Strong code quality: clean KISS structure, reproducible, all imports used, current
-    API'
-  - 'Good visual refinement: removed all chrome, clean white cell borders'
-  - Watermark risk scores in each cell add useful information density
-  - Dual PNG+HTML export leverages Bokeh web output capabilities
+  - Full spec compliance with all required features implemented correctly
+  - Clean visual design with removed axes/grid chrome, white cell borders, and faint
+    score watermarks
+  - Thoughtful data storytelling through marker size variation by risk score
+  - Well-organized dual legend (zones + categories) placed in extended canvas area
+  - Excellent code quality with clean structure and appropriate complexity
   weaknesses:
-  - Category marker colors too dark and similar — hard to distinguish
-  - Risk labels still at 14pt despite feedback to increase to 16pt
-  - No marker size variation by risk score — missed opportunity for visual hierarchy
-  - Label overlap persists in cells with multiple risks
-  - Axis labels simplified from previous attempt — lost context
-  image_description: 'The plot displays a 5×5 risk assessment matrix heatmap. The
-    x-axis is labeled "Impact" with categories Negligible, Minor, Moderate, Major,
-    and Catastrophic. The y-axis is labeled "Likelihood" with categories Rare, Unlikely,
-    Possible, Likely, and Almost Certain. Background cells are color-coded using a
-    green→yellow-green→yellow→orange→dark red gradient based on risk score (likelihood
-    × impact, ranging 1–25). Each cell contains a semi-transparent watermark number
-    showing the risk score. Fifteen risk items are plotted as colored circular markers
-    with white borders and bold text labels on semi-transparent white backgrounds
-    beneath each marker. Two custom legends on the right side: "Risk Zones" listing
-    Low (1-4), Medium (5-9), High (10-16), Critical (20-25) in matching colors; and
-    "Categories" showing Technical (dark navy), Financial (dark purple), Operational
-    (dark teal), Legal (dark red-orange) with colored dots. The title reads "heatmap-risk-matrix
-    · bokeh · pyplots.ai" centered at top. Axis lines, ticks, grid lines, and outline
-    are all removed for a clean appearance.'
+  - Green-to-red heatmap gradient is not colorblind-safe (standard convention but
+    could use a more accessible palette)
+  - Risk item labels (16pt) could be slightly larger for better readability on the
+    4800x2700 canvas
+  - Minor crowding in cells with multiple risk items
+  image_description: 'The plot displays a 5x5 risk assessment matrix with Impact (Consequence
+    Severity) on the x-axis (Negligible to Catastrophic) and Likelihood (Probability
+    of Occurrence) on the y-axis (Rare to Almost Certain). Background cells use a
+    green-yellow-orange-red gradient based on risk scores (1-25), with faint watermark
+    numbers showing each cell''s score. Fifteen risk items are plotted as colored
+    circular markers with bold labels beneath them: blue (Technical), purple (Financial),
+    teal (Operational), and orange (Legal). Marker sizes vary by risk score - larger
+    for higher-risk items. A Risk Zones legend on the right shows Low (1-4) in green,
+    Medium (5-9) in olive, High (10-16) in orange, and Critical (20-25) in dark red.
+    A Categories legend below it shows colored dots for each category. The title reads
+    heatmap-risk-matrix bokeh pyplots.ai. Axis lines, ticks, and grid lines are removed
+    for a clean look. White borders separate cells.'
   criteria_checklist:
     visual_quality:
-      score: 23
+      score: 24
       max: 30
       items:
       - id: VQ-01
@@ -51,43 +47,43 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set. Risk item labels at 14pt slightly
-          small for 4800x2700 canvas.
+        comment: All font sizes explicitly set (title 28pt, axis labels 22pt, ticks
+          18pt, risk labels 16pt). Readable but risk labels slightly small.
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: 'Label overlap in crowded cells: Scope Creep/Skill Gap, Vendor Failure/System
-          Migration, Data Breach/Cyber Attack.'
+        passed: true
+        comment: Structured offsets prevent most overlap. Minor crowding in multi-item
+          cells.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Markers at size=30 visible with white borders. All markers same size
-          regardless of risk severity.
+        comment: Markers well-sized with score-based variation. Some smaller markers
+          slightly small against bright backgrounds.
       - id: VQ-04
         name: Color Accessibility
-        score: 3
+        score: 2
         max: 4
         passed: false
-        comment: Category marker colors too dark and similar. Heatmap green-red gradient
-          has intermediates but not ideal for colorblind.
+        comment: Green-to-red gradient is standard for risk matrices but problematic
+          for colorblind users.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Extended x_range accommodates legend. Plot fills ~60% of canvas.
-          Slight right-side imbalance.
+        comment: Good use of space with legend on right. Extended x_range creates
+          some unused space.
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Impact and Likelihood are descriptive but lack additional context
-          or units.
+        passed: true
+        comment: 'Descriptive labels with context: Impact (Consequence Severity) and
+          Likelihood (Probability of Occurrence).'
     design_excellence:
       score: 13
       max: 20
@@ -97,22 +93,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom palette, category markers, watermark scores, dual legends.
-          Above defaults but not publication-level.
+        comment: Custom 10-color gradient, category-colored markers, white cell borders,
+          faint score watermarks. Above defaults.
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: All chrome removed, white cell borders, generous whitespace. Strong
-          refinement.
+        comment: Axis lines, ticks, grid, outline removed. White cell borders, background
+          fill alpha on labels.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Color gradient communicates severity but no visual emphasis on critical
-          risks. All markers same size.
+        passed: true
+        comment: Marker sizes vary by risk score creating visual hierarchy. High-risk
+          items prominent via larger markers and red/orange backgrounds.
     spec_compliance:
       score: 15
       max: 15
@@ -128,21 +124,21 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: color gradient, descriptive labels, jitter
-          markers, zone legend, grid delineation.'
+        comment: 'All spec features present: gradient, descriptive labels, labeled
+          markers with offsets, zone legend, grid lines.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Impact on x-axis, Likelihood on y-axis, risk scores correctly computed.
+        comment: X=Impact, Y=Likelihood correctly mapped with proper 1-5 ranges.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Zone and category legends present with matching
-          labels.
+        comment: Title follows spec-id · library · pyplots.ai format. Zone and category
+          legends present.
     data_quality:
       score: 14
       max: 15
@@ -152,21 +148,21 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: 15 risks across 4 categories distributed throughout the matrix. No
-          risk at absolute corner (5,5).
+        comment: 15 risk items across 4 categories, spread across zones. Some cells
+          empty but realistic.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real-world enterprise risk management scenario with plausible neutral
-          business context.
+        comment: Real-world enterprise risk management with plausible risks. Neutral
+          topic.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Likelihood and impact 1-5, risk scores 1-25, all appropriate.
+        comment: Appropriate integer values 1-5 matching standard risk matrix conventions.
     code_quality:
       score: 10
       max: 10
@@ -176,7 +172,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean linear flow, no functions or classes.
+        comment: 'Linear flow: imports, data, grid, risk items, plot, styling, save.
+          No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -194,13 +191,14 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriate complexity.
+        comment: Well-structured cell offset logic. Appropriate complexity. No fake
+          UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html using current Bokeh 3.9 API.
+        comment: Saves as plot.png via export_png. Also provides HTML export.
     library_mastery:
       score: 7
       max: 10
@@ -210,15 +208,15 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of ColumnDataSource, LinearColorMapper, transform(), LabelSet,
-          Label.
+        comment: Good use of ColumnDataSource, LinearColorMapper with transform(),
+          LabelSet, and Label annotations.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses Bokeh-distinctive ColumnDataSource, transform(), LabelSet, HTML
-          export. No interactive features.
+        comment: Uses LinearColorMapper with transform, ColumnDataSource pattern,
+          and HTML export with CDN resources.
   verdict: REJECTED
 impl_tags:
   dependencies: []
@@ -236,4 +234,3 @@ impl_tags:
   - custom-colormap
   - alpha-blending
   - edge-highlighting
-  - minimal-chrome

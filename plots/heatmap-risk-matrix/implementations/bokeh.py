@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 heatmap-risk-matrix: Risk Assessment Matrix (Probability vs Impact)
 Library: bokeh 3.9.0 | Python 3.14.3
-Quality: 82/100 | Created: 2026-03-17
+Quality: 83/100 | Created: 2026-03-17
 """
 
 from collections import defaultdict
