@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 heatmap-chromagram: Music Chromagram (Pitch Class Distribution over Time)
 Library: letsplot 4.9.0 | Python 3.14.3
 Quality: 88/100 | Created: 2026-03-17
@@ -22,7 +22,6 @@ from lets_plot import (
     scale_x_continuous,
     scale_y_continuous,
     theme,
-    theme_minimal,
 )
 from lets_plot.export import ggsave
 
@@ -48,7 +47,7 @@ chords = {
     "F_major": [5, 9, 0],  # F, A, C
 }
 
-# Assign chords to time segments
+# Assign chords to time segments with varying intensities
 segments = [(0, 50, "C_major"), (50, 100, "G_major"), (100, 150, "A_minor"), (150, 200, "F_major")]
 
 for start, end, chord_name in segments:
@@ -76,18 +75,28 @@ df = pd.DataFrame(
     }
 )
 
-# Inferno colormap for energy intensity
+# Inferno colormap - extended color stops for smoother perceptual gradients
 inferno_colors = [
     "#000004",
-    "#160b39",
+    "#0d0829",
+    "#1b0c41",
+    "#300a5b",
     "#420a68",
+    "#560f6d",
     "#6a176e",
+    "#7e1e6c",
     "#932667",
+    "#a72f5f",
     "#bc3754",
+    "#cd4247",
     "#dd513a",
+    "#e8642b",
     "#f37819",
+    "#f98e09",
     "#fca50a",
+    "#fbbe23",
     "#f6d746",
+    "#f1ed71",
     "#fcffa4",
 ]
 
@@ -102,24 +111,31 @@ plot = (
         .line("Energy: @energy")
     )
     + scale_fill_gradientn(
-        colors=inferno_colors, name="Energy", guide=guide_colorbar(barwidth=18, barheight=300, nbin=256)
+        colors=inferno_colors, name="Energy", guide=guide_colorbar(barwidth=14, barheight=260, nbin=256)
     )
     + scale_x_continuous(
         name="Time (seconds)", breaks=list(np.arange(0, n_frames * frame_duration + 0.5, 1.0)), expand=[0, 0]
     )
     + scale_y_continuous(name="Pitch Class", breaks=list(range(n_pitches)), labels=pitch_classes, expand=[0, 0])
-    + labs(title="heatmap-chromagram · letsplot · pyplots.ai")
-    + theme_minimal()
+    + labs(
+        title="heatmap-chromagram · letsplot · pyplots.ai", subtitle="Chord progression: C maj → G maj → A min → F maj"
+    )
     + theme(
-        plot_title=element_text(size=26, face="bold", color="#1a1a2e"),
-        axis_title=element_text(size=20, color="#2d2d44"),
-        axis_text_x=element_text(size=14, color="#3d3d55"),
+        plot_title=element_text(size=28, face="bold", color="#1a1a2e", margin=[0, 0, 4, 0]),
+        plot_subtitle=element_text(size=18, color="#5a5a7a", face="italic", margin=[0, 0, 10, 0]),
+        axis_title_x=element_text(size=20, color="#2d2d44", margin=[10, 0, 0, 0]),
+        axis_title_y=element_text(size=20, color="#2d2d44", margin=[0, 10, 0, 0]),
+        axis_text_x=element_text(size=16, color="#3d3d55"),
         axis_text_y=element_text(size=16, face="bold", color="#2d2d44"),
-        legend_text=element_text(size=14),
-        legend_title=element_text(size=16, face="bold"),
+        axis_ticks=element_blank(),
+        axis_line=element_blank(),
+        legend_text=element_text(size=14, color="#3d3d55"),
+        legend_title=element_text(size=16, face="bold", color="#2d2d44"),
         panel_grid=element_blank(),
-        plot_background=element_rect(fill="#fafafa", color="#fafafa"),
-        plot_margin=[40, 20, 20, 20],
+        panel_background=element_rect(fill="#0a0a1a", color="#0a0a1a"),
+        plot_background=element_rect(fill="#f5f5f0", color="#f5f5f0"),
+        plot_margin=[40, 30, 20, 20],
+        legend_background=element_rect(fill="#f5f5f0", color="#f5f5f0"),
     )
     + ggsize(1600, 900)
 )
