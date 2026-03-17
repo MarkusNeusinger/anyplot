@@ -1,7 +1,7 @@
 library: bokeh
 specification_id: scatter-constellation-diagram
 created: '2026-03-17T23:21:54Z'
-updated: '2026-03-17T23:26:31Z'
+updated: '2026-03-17T23:33:56Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23220948618
 issue: 4562
@@ -10,107 +10,105 @@ library_version: 3.9.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/scatter-constellation-diagram/bokeh/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/scatter-constellation-diagram/bokeh/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/scatter-constellation-diagram/bokeh/plot.html
-quality_score: 80
+quality_score: 91
 review:
   strengths:
-  - Perfect code quality with clean KISS structure and correct EVM calculation
-  - All spec-required features implemented completely (16-QAM, ideal markers, decision
-    boundaries, EVM annotation)
-  - Realistic telecommunications data with proper SNR modeling
-  - Explicitly set font sizes for all text elements ensuring readability
-  - Dual output (PNG + HTML) leveraging Bokeh web-native capabilities
+  - Excellent spec compliance — every requirement from the specification is implemented
+  - Color-coding received symbols by error magnitude adds meaningful data storytelling
+    beyond what the spec required
+  - 'Strong use of Bokeh-specific features: HoverTool, LinearColorMapper with transform(),
+    dual PNG+HTML output'
+  - 'Clean visual refinement: removed grid, subtle axis styling, custom background'
+  - Physically accurate data generation with proper SNR-based noise modeling
   weaknesses:
-  - Received symbol markers too small (size=10) and too transparent (alpha=0.35) making
-    clusters faint
-  - 16:9 canvas with equal aspect ratio wastes horizontal space - square format would
-    be better
-  - No legend identifying ideal points vs received symbols
-  - Design could be elevated with color-coding by error magnitude
-  - HTML version does not leverage Bokeh interactive features (HoverTool, interactive
-    legend)
+  - Received symbol markers could be slightly larger for better individual visibility
+    at the 3600px canvas size
+  - Minor excess whitespace at canvas edges (range ±4.8 vs data extent ~±4.2)
   image_description: The plot displays a 16-QAM constellation diagram on a light gray
-    (#FAFAFA) background. Sixteen clusters of semi-transparent blue dots (received
-    symbols, alpha ~0.35) are arranged in a 4×4 grid pattern centered at I/Q coordinates
-    ±1 and ±3. Red cross markers indicate the 16 ideal constellation points at the
-    center of each cluster. Three vertical and three horizontal dashed gray lines
-    at -2, 0, and 2 serve as decision boundaries separating the symbol regions. The
-    title reads "scatter-constellation-diagram · bokeh · pyplots.ai" in the top-left.
-    The x-axis is labeled "In-Phase (I)" and the y-axis "Quadrature (Q)". An EVM annotation
-    "EVM = 7.4%" appears in bold in the lower-right area. The default bokeh grid is
-    hidden and the outline is removed. The plot uses equal aspect ratio with symmetric
-    axis limits of ±4.8.
+    (#F5F5F5) background. Sixteen clusters of received symbols are arranged in a 4×4
+    grid at I/Q coordinates ±1 and ±3. Each cluster centers on a red cross marker
+    representing the ideal constellation point. Received symbols are rendered as semi-transparent
+    dots color-coded using a Viridis colormap based on error vector magnitude — dark
+    purple/blue for symbols close to the ideal point, transitioning through teal/green
+    to yellow for larger deviations. Dashed gray decision boundary lines appear at
+    -2, 0, and 2 on both axes. The title reads "scatter-constellation-diagram · bokeh
+    · pyplots.ai". The x-axis is labeled "In-Phase (I)" and y-axis "Quadrature (Q)".
+    A legend in the top-left corner identifies "Received Symbols (color = error)"
+    and "Ideal 16-QAM Points". An EVM annotation "EVM = 7.4%" is positioned in the
+    lower-right area. The plot uses a square 3600×3600 canvas with equal aspect ratio.
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 36pt, axis labels 28pt, tick
-          labels 22pt'
+        comment: All font sizes explicitly set (title 36pt, labels 28pt, ticks 22pt,
+          legend 20pt, EVM 28pt). All text clearly readable.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: No overlapping text elements. Legend and EVM annotation well-positioned.
       - id: VQ-03
         name: Element Visibility
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Received symbols at size=10 alpha=0.35 are small and faint; increase
-          to size 14-18 and alpha 0.45-0.5
+        passed: true
+        comment: Received symbols (size=16, alpha=0.5) visible and appropriately sized.
+          Ideal crosses prominent at size=32.
       - id: VQ-04
         name: Color Accessibility
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: Blue/red generally colorblind-safe but thin red crosses could be
-          harder to distinguish
+        passed: true
+        comment: Viridis256 colormap is colorblind-safe. Red crosses contrast well
+          against Viridis range.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
-        passed: false
-        comment: Equal aspect ratio on 16:9 canvas wastes horizontal space; square
-          3600x3600 better suited
+        passed: true
+        comment: Square canvas with match_aspect=True correct for constellation diagrams.
+          Minor wasted space at edges.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: In-Phase (I) and Quadrature (Q) are descriptive with standard notation
+        comment: In-Phase (I) and Quadrature (Q) are domain-appropriate descriptive
+          labels.
     design_excellence:
-      score: 10
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: Well-configured default with custom background and color choices
-          but not exceptional
+        passed: true
+        comment: 'Strong design: Viridis color-mapping by error magnitude, custom
+          background, subtle axis styling, intentional color hierarchy.'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Grid removed, outline removed, background customized, but spines
-          still present
+        passed: true
+        comment: Grid removed, outline removed, axis lines muted to gray, minor ticks
+          hidden, background customized.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Inherent constellation hierarchy and EVM annotation but no color-coding
-          by error magnitude
+        passed: true
+        comment: Color-coding by error magnitude reveals deviation patterns. Red ideal
+          points as focal points. EVM annotation provides context.
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -118,51 +116,51 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct I/Q scatter constellation diagram
+        comment: Correct I/Q scatter constellation diagram.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: 16-QAM, ideal markers, decision boundaries,
-          EVM, equal aspect ratio'
+        comment: 'All spec features present: 16-QAM, ideal crosses, semi-transparent
+          received symbols, decision boundaries, equal aspect, EVM.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: I mapped to x-axis, Q to y-axis correctly
+        comment: I mapped to x-axis, Q mapped to y-axis, all data visible.
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Title format correct but no legend identifying ideal points vs received
-          symbols
+        passed: true
+        comment: Title matches required format. Legend labels descriptive and accurate.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
-        passed: false
-        comment: Shows all 16 QAM points with noise scatter and EVM; could show phase
-          offset or amplitude distortion
+        passed: true
+        comment: Shows all 16 constellation points, noise scatter, error magnitude
+          variation, decision boundaries.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 16-QAM is real-world modulation, SNR 20dB is realistic operating
-          point
+        comment: 16-QAM is a standard real-world modulation scheme. SNR of 20dB is
+          realistic. Neutral technical domain.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Standard ±1, ±3 grid for 16-QAM with realistic noise levels
+        comment: Standard 16-QAM levels, 1000 symbols, physically plausible noise,
+          EVM of 7.4% is reasonable.
     code_quality:
       score: 10
       max: 10
@@ -172,59 +170,63 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports, data, plot, save'
+        comment: 'Clean linear flow: imports, data, plot, style, glyphs, legend, annotation,
+          save.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42)
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: All imports used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Pythonic code with correct EVM calculation
+        comment: Clean, Pythonic, appropriate complexity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png via export_png, also generates HTML
+        comment: Saves as plot.png via export_png. Current Bokeh API.
     library_mastery:
-      score: 6
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
-        passed: false
-        comment: Good use of ColumnDataSource, Span, Label; could leverage more Bokeh
-          patterns
+        passed: true
+        comment: 'Expert Bokeh patterns: ColumnDataSource, figure(), scatter(), Span,
+          Label, Legend/LegendItem, LinearColorMapper with transform().'
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 4
         max: 5
-        passed: false
-        comment: HTML export and Span objects are Bokeh-specific but no HoverTool
-          or interactive features
-  verdict: REJECTED
+        passed: true
+        comment: HoverTool for interactive tooltips, LinearColorMapper with transform(),
+          dual PNG+HTML export, ColumnDataSource pattern.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
+  - hover-tooltips
+  - custom-legend
   - html-export
   patterns:
   - data-generation
   - columndatasource
   dataprep: []
   styling:
+  - custom-colormap
   - alpha-blending
-  - grid-styling
+  - minimal-chrome
