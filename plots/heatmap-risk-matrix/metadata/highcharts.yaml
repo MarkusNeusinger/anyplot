@@ -1,7 +1,7 @@
 library: highcharts
 specification_id: heatmap-risk-matrix
 created: '2026-03-17T21:55:20Z'
-updated: '2026-03-17T22:19:16Z'
+updated: '2026-03-17T22:27:15Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23217984799
 issue: 4567
@@ -10,107 +10,103 @@ library_version: unknown
 preview_url: https://storage.googleapis.com/pyplots-images/plots/heatmap-risk-matrix/highcharts/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/heatmap-risk-matrix/highcharts/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/heatmap-risk-matrix/highcharts/plot.html
-quality_score: 85
+quality_score: 90
 review:
   strengths:
-  - Perfect spec compliance with all required features (gradient, labels, jitter,
-    zones, grid)
-  - Excellent realistic data with 14 well-chosen risk items across 3 categories spanning
-    all grid cells
-  - 'Good use of Highcharts-specific features: colorAxis, annotations API, combined
-    series types'
-  - Clean code structure with pragmatic label offset approach
-  - Adaptive text colors for heatmap cell scores (white on dark, dark on light)
+  - Excellent spec compliance with all required features implemented correctly
+  - Professional design with custom color gradient, Inter font, rounded cell borders,
+    and styled zone annotations
+  - Marker size scaling by risk score creates effective visual hierarchy
+  - Adaptive text color on heatmap cells ensures readability across the gradient
+  - Per-point label offsets demonstrate attention to detail for overlap prevention
+  - Realistic, well-chosen risk data with appropriate likelihood/impact ratings
   weaknesses:
-  - Minor label overlap in crowded cells (PR Crisis / Reg. Change area)
-  - Green-red gradient not ideal for colorblind accessibility (mitigated by numeric
-    scores)
-  - Design excellence is good but not exceptional — could benefit from more distinctive
-    typography or subtle design touches
+  - Minor label proximity in cells with multiple risks (Major/Unlikely area)
+  - Bottom margin slightly excessive, reducing canvas utilization
+  - Raw JavaScript used for formatter functions rather than pure Python API
   image_description: 'The plot displays a 5×5 risk assessment matrix heatmap with
-    "Likelihood" on the Y-axis (Rare to Almost Certain) and "Impact" on the X-axis
-    (Negligible to Catastrophic). Background cells use a green-yellow-orange-red gradient
-    based on risk scores (likelihood × impact), with numeric scores displayed in each
-    cell. 14 risk items are plotted as colored circular markers with white borders
-    and text labels: Technical risks in blue (#306998), Financial in purple (#8e44ad),
-    and Operational in teal (#16a085). Zone annotation labels (LOW, MEDIUM, HIGH,
-    CRITICAL) appear as bordered boxes at diagonal positions. The title reads "heatmap-risk-matrix
-    · highcharts · pyplots.ai" with a subtitle explaining the risk scoring zones.
-    A vertical legend on the right identifies the three category colors. The background
-    is light gray (#fafafa).'
+    the title "heatmap-risk-matrix · highcharts · pyplots.ai" and a subtitle explaining
+    the risk score formula and zone ranges. The X-axis is labeled "IMPACT ▶" with
+    categories Negligible, Minor, Moderate, Major, Catastrophic. The Y-axis is labeled
+    "▲ LIKELIHOOD" with categories Rare, Unlikely, Possible, Likely, Almost Certain.
+    Background cells use a green-yellow-orange-red color gradient based on risk scores
+    (1–25), with scores displayed as numbers in each cell (white text on dark cells,
+    dark text on light cells). 14 risk items are plotted as colored circular markers
+    with white borders and bold text labels. Three risk categories are shown in a
+    vertical legend on the right: Technical (blue), Financial (orange), Operational
+    (teal). Zone annotation labels (LOW, MEDIUM, HIGH, CRITICAL) appear as styled
+    badges with rounded corners and shadows at diagonal positions on the matrix. The
+    overall layout has a light gray (#f7f9fc) background with clean spacing and no
+    visible gridlines, giving a polished professional appearance.'
   criteria_checklist:
     visual_quality:
-      score: 24
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (title 52px, axes 36px, ticks 30px,
-          data labels 28-34px). All readable. Minor: some risk labels slightly small
-          relative to canvas.'
+        comment: 'All font sizes explicitly set: title 52px, subtitle 30px, axis titles
+          34px, axis labels 30px, data labels 26px, cell scores 36px'
       - id: VQ-02
         name: No Overlap
-        score: 4
-        max: 6
-        passed: true
-        comment: Per-point label offsets mitigate most overlap but PR Crisis and Reg.
-          Change crowd in Major/Unlikely cell. Some label-score competition.
-      - id: VQ-03
-        name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Markers (radius 22) with white borders clearly visible and well-adapted
-          to 14-point density.
+        comment: Per-point label offsets prevent most overlaps; minor proximity in
+          Major/Unlikely cell
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Markers well-sized with white borders for clear distinction against
+          heatmap background
       - id: VQ-04
         name: Color Accessibility
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Category colors distinguishable for most colorblind types. Green-red
-          heatmap gradient conventional but not ideal; numeric scores mitigate.
+        comment: Colorblind-safe category colors and adaptive text color on cells
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good proportions with explicit margins. Plot fills most of the canvas.
-          Slight right-side whitespace for legend.
+        comment: Good proportions, slightly excessive bottom margin
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis titles (Impact, Likelihood) with appropriate categorical
-          labels.
+        comment: Descriptive axis labels with directional arrows and full category
+          names
     design_excellence:
-      score: 13
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Custom gradient, category colors, white marker borders, light gray
-          background, styled zone annotations. Above defaults but not publication-level.
+        comment: Custom gradient, Inter font, rounded borders, styled zone annotations
+          with shadows
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Spines removed, grid lines removed, cell separation via borders,
-          generous margins, clean subtitle.
+        comment: No axis lines, no grid lines, cell borders match background, styled
+          legend
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Zone labels guide interpretation. Color gradient draws eye from safe
-          to critical. Category grouping adds dimension.
+        comment: Marker size scales with risk score, zone labels guide interpretation
     spec_compliance:
       score: 15
       max: 15
@@ -120,51 +116,48 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 5x5 grid heatmap with risk matrix structure.
+        comment: Correct 5x5 heatmap with scatter overlay
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: gradient, descriptive labels, jittered
-          markers, zone labels, grid delineation.'
+        comment: 'All spec features present: gradient, labels, markers with jitter,
+          zone labels, categories'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=Impact, Y=Likelihood correctly assigned. All 14 risk items properly
-          positioned.
+        comment: X=Impact, Y=Likelihood correctly mapped
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format. Legend correctly shows three categories.
+        comment: Correct title format and legend categories
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: 14 risk items across 3 categories spanning all likelihood and impact
-          levels. Multiple risks share cells demonstrating jitter.
+        comment: 14 risks across 3 categories with good distribution across the matrix
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real-world plausible and neutral risk names. Standard risk management
-          categories.
+        comment: Real-world IT/business risk management scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Standard 1-5 Likert scale. Risk scores are correct products.
+        comment: Ratings appropriately match risk names
     code_quality:
       score: 10
       max: 10
@@ -174,33 +167,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, chart config, HTML template, screenshot.
-          No functions or classes.'
+        comment: Clean imports-data-config-render-export flow
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set for deterministic jitter.
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-structured with pragmatic label offset dictionary. Appropriate
-          complexity.
+        comment: Well-organized, appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html. Current API.
+        comment: Saves as plot.png using current API
     library_mastery:
       score: 8
       max: 10
@@ -210,15 +201,14 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses highcharts-core Python API correctly. Combines Python API with
-          custom JS for advanced features.
+        comment: Good use of highcharts-core Python API, but drops to raw JS for formatters
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Leverages colorAxis, annotations API, combined heatmap+scatter series,
-          interactive tooltips.
+        comment: Annotations API, colorAxis, heatmap module, custom formatter with
+          useHTML
   verdict: APPROVED
 impl_tags:
   dependencies:
@@ -231,6 +221,7 @@ impl_tags:
   patterns:
   - data-generation
   - iteration-over-groups
+  - matrix-construction
   dataprep: []
   styling:
   - custom-colormap
