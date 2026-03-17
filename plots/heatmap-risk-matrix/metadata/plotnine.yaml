@@ -1,0 +1,224 @@
+library: plotnine
+specification_id: heatmap-risk-matrix
+created: '2026-03-17T21:53:37Z'
+updated: '2026-03-17T22:21:10Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23217984854
+issue: 4567
+python_version: 3.14.3
+library_version: 0.15.3
+preview_url: https://storage.googleapis.com/pyplots-images/plots/heatmap-risk-matrix/plotnine/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/heatmap-risk-matrix/plotnine/plot_thumb.png
+preview_html: null
+quality_score: 90
+review:
+  strengths:
+  - Excellent spec compliance — all required features implemented perfectly
+  - Smart label positioning logic handles same-cell risks elegantly with vertical
+    offsets
+  - Professional color scheme with 7-stop gradient and dark tile borders
+  - Score numbers positioned in top-left corners avoid label overlap while adding
+    information density
+  - Realistic, well-distributed risk data covering all zones
+  weaknesses:
+  - Risk label font size (size=9) could be slightly larger for better readability
+  - Green-to-red gradient is conventional but not fully colorblind-safe
+  image_description: 'The plot displays a 5×5 risk assessment matrix with "Impact
+    →" on the x-axis (Negligible, Minor, Moderate, Major, Catastrophic) and "Likelihood
+    →" on the y-axis (Rare, Unlikely, Possible, Likely, Almost Certain). Background
+    tiles follow a green-yellow-orange-red gradient based on risk score (likelihood
+    × impact). Each cell shows its numeric risk score in the top-left corner in semi-transparent
+    bold text. 12 risk items appear as dark navy labeled boxes with white text (e.g.,
+    "Scope Creep", "Budget Overrun", "Data Breach", "Key Staff Loss"). A zone annotation
+    above the grid reads "Zones: Low (1–4) · Medium (5–9) · High (10–16) · Critical
+    (20–25)". A vertical colorbar legend on the right shows the Risk Score scale from
+    1 to 25. The title reads "heatmap-risk-matrix · plotnine · pyplots.ai". Background
+    is light gray (#fafafa). Risks are well-distributed across zones with smart vertical
+    offsets for shared cells (e.g., "Market Shift" and "Compliance Gap" in the same
+    cell).'
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set. Risk labels at size=9 slightly small
+          but readable.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Smart label positioning with vertical offsets for shared cells. Score
+          numbers in top-left corners.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Tiles clearly visible, labels well-sized, color gradient distinct
+          across all 25 cells.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 3
+        max: 4
+        passed: true
+        comment: Green-to-red gradient standard for risk matrices but not ideal for
+          colorblind. Score numbers provide redundant encoding.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Excellent use of 16:9 canvas. Matrix fills space well with balanced
+          margins.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis labels with arrows and descriptive tick labels.
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom 7-stop gradient, dark tile borders, navy risk labels with
+          white text, semi-transparent score numbers.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Grid removed, tile borders as clean separators, light gray background,
+          generous whitespace.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Color gradient creates immediate visual hierarchy. Zone annotation
+          contextualizes scores.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct 5×5 grid heatmap risk matrix.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: gradient, labels, markers, jitter, zones,
+          grid lines.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Impact on x-axis, Likelihood on y-axis, correctly assigned.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct. Legend shows Risk Score with appropriate breaks.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 12 risks across all zones. Shared-cell handling demonstrated.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Project management context with realistic risk names and categories.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sensible risk assignments matching real-world expectations.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean linear flow: imports → data → plot → save.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used, no extras.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity. Smart label offset logic is clean.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with dpi=300, current API.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Excellent grammar of graphics usage with layered composition.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses geom_label with plotnine-specific params, scale_fill_gradientn,
+          annotate.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - custom-colormap
+  - alpha-blending
+  - edge-highlighting
