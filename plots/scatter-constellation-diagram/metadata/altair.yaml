@@ -1,7 +1,7 @@
 library: altair
 specification_id: scatter-constellation-diagram
 created: '2026-03-17T23:22:50Z'
-updated: '2026-03-17T23:27:21Z'
+updated: '2026-03-17T23:36:38Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23220948598
 issue: 4562
@@ -10,35 +10,34 @@ library_version: 6.0.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/scatter-constellation-diagram/altair/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/scatter-constellation-diagram/altair/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/scatter-constellation-diagram/altair/plot.html
-quality_score: 82
+quality_score: 85
 review:
   strengths:
-  - All specification features implemented correctly — ideal points, received symbols,
-    decision boundaries, EVM annotation, equal aspect ratio
-  - Good visual hierarchy between ideal constellation points (large red crosses) and
-    received symbols (small transparent blue dots)
-  - Clean, well-structured code with correct EVM calculation
-  - Good use of Altair layer composition and interactive/web-native features (tooltips,
-    zoom/pan, HTML export)
+  - Perfect spec compliance — all 8 required features implemented correctly
+  - Clean code structure with correct EVM calculation and proper signal processing
+    math
+  - Good visual hierarchy between ideal constellation points and received symbols
+  - Effective use of Altair layer composition pattern
   weaknesses:
-  - Canvas undersized at 2700x2700 vs target 3600x3600 — use width=1200, height=1200
-  - 'Design lacks polish: axis spines still visible, no background refinement'
-  - Received symbol opacity (0.35) is slightly too low, making clusters appear washed
-    out
-  - Color pairing (blue/red) is functional but not an optimized colorblind-safe palette
+  - Canvas dimensions 2700x2700 instead of standard 3600x3600 (width/height should
+    be 1200, not 900)
+  - Decision boundary lines are quite faint at opacity 0.45
+  - Library mastery could be improved by leveraging more distinctive Altair features
+  - Design could be elevated with a more refined color palette or subtle background
+    treatment
   image_description: The plot shows a 16-QAM constellation diagram on a square canvas.
-    Sixteen red cross markers indicate ideal constellation points arranged in a 4x4
-    grid at I/Q coordinates ±1 and ±3. Approximately 1000 semi-transparent blue dots
-    represent received symbols, clustered around each ideal point with Gaussian noise
-    spread. Dashed gray decision boundary lines are drawn at I/Q values of -4, -2,
-    0, 2, and 4, separating the 16 symbol regions. The title reads "scatter-constellation-diagram
-    · altair · pyplots.ai" at the top. Axes are labeled "In-Phase (I)" (x) and "Quadrature
-    (Q)" (y) with range approximately -5 to 5. An EVM annotation "EVM = 14.0%" appears
-    in the upper-right area. The background is white with no grid lines. The overall
-    layout is clean with a square aspect ratio preserving constellation geometry.
+    Sixteen ideal constellation points are displayed as orange/red cross markers at
+    the standard ±1, ±3 grid positions. Approximately 1000 received symbols are shown
+    as semi-transparent teal/green dots clustered around each ideal point. Dashed
+    grey decision boundary lines are drawn at -4, -2, 0, 2, 4 on both axes, separating
+    the 16 symbol regions. The title reads "scatter-constellation-diagram · altair
+    · pyplots.ai" at the top. Axes are labeled "In-Phase (I)" (x) and "Quadrature
+    (Q)" (y) with range -5 to 5. An "EVM = 14.0%" annotation appears in bold in the
+    upper-right area. The background is white with no grid lines; the view border
+    is removed for a clean appearance.
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -46,66 +45,65 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title=28, axis=22, ticks=18, EVM=20).
-          All readable but canvas undersized reduces effective resolution.
+        comment: All font sizes explicitly set (title 28, axis titles 22, ticks 18,
+          EVM 20). All readable.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or elements.
+        comment: No text or element overlap anywhere
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Received symbols at size=40/opacity=0.35 appropriate for 1000 points
-          but slightly faint. Ideal crosses clearly visible.
+        comment: Received symbols at size=40/opacity=0.35 appropriate for 1000 points.
+          Ideal crosses prominent at size=350.
       - id: VQ-04
         name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue vs red/orange is colorblind-safe with good contrast
+      - id: VQ-05
+        name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Blue/red distinguishable but not an optimized colorblind-safe pairing.
-      - id: VQ-05
-        name: Layout & Canvas
-        score: 2
-        max: 4
-        passed: false
-        comment: Canvas 900x900 at scale_factor=3.0 = 2700x2700 px. Target is 3600x3600.
-          Undersized by 25%.
+        comment: Square aspect correct but 900x900 at scale 3.0 produces 2700x2700
+          instead of standard 3600x3600
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with standard notation: In-Phase (I) and Quadrature
-          (Q).'
+        comment: In-Phase (I) and Quadrature (Q) are correct domain-specific labels
     design_excellence:
-      score: 11
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Well-configured with custom colors but looks like a configured default
-          rather than publication-quality.
+        passed: true
+        comment: Thoughtful color choices, clean look with removed view stroke and
+          disabled grid. Above defaults but not publication-level.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Grid disabled and view stroke removed. Axis spines still visible,
-          no background refinement.
+        passed: true
+        comment: View stroke removed, default grid disabled, decision boundaries as
+          contextual grid. Good refinement.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Good visual hierarchy between ideal and received points. EVM annotation
-          adds quantitative context.
+        comment: Clear visual hierarchy between ideal crosses and received dots. EVM
+          annotation provides quantitative insight.
     spec_compliance:
       score: 15
       max: 15
@@ -115,26 +113,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct I/Q constellation scatter diagram.
+        comment: Correct I/Q scatter constellation diagram
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: 16-QAM, ideal crosses, received dots,
-          decision boundaries, equal aspect, EVM annotation.'
+        comment: 'All features present: 16-QAM, ideal points, received symbols, decision
+          boundaries, equal aspect, EVM annotation'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: I mapped to x, Q mapped to y, symmetric limits centered at origin.
+        comment: I mapped to x, Q to y, symmetric limits centered at origin
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows spec-id · library · pyplots.ai format. No legend needed.
+        comment: Title follows exact format. No legend needed for this plot type.
     data_quality:
       score: 14
       max: 15
@@ -144,21 +142,20 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Shows ideal points, noisy received symbols, decision boundaries,
-          EVM. Could color-code by nearest ideal point.
+        comment: All 16 constellation points with noise clusters shown. Could show
+          more impairments.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 16-QAM digital modulation is a real telecommunications scenario.
+        comment: 16-QAM constellation is a real wireless communications scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Standard 16-QAM grid at ±1, ±3. SNR=20 dB realistic. 1000 symbols
-          appropriate.
+        comment: Standard ±1, ±3 grid, 20dB SNR, 1000 symbols — all realistic
     code_quality:
       score: 10
       max: 10
@@ -168,33 +165,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, plot layers, composition, save.'
+        comment: 'Clean linear flow: imports, data, plot layers, composition, save'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: altair, numpy, pandas.'
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized code with correct EVM calculation.
+        comment: Clean, well-structured, no over-engineering
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html. Current API.
+        comment: Saves as plot.png and plot.html, current API
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -202,15 +199,15 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of alt.layer(), encoding types, alt.Scale, alt.Title, configure
-          methods.
+        comment: Good use of layered composition, proper encoding types, configure
+          methods. Idiomatic declarative approach.
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: true
-        comment: Uses .interactive(), tooltips, HTML export, mark_rule with x2/y2
-          for boundaries.
+        passed: false
+        comment: Uses .interactive() and tooltips but these are basic. Could leverage
+          selections, conditional encoding, or parameters.
   verdict: REJECTED
 impl_tags:
   dependencies: []

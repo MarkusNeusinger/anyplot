@@ -1,7 +1,7 @@
 """ pyplots.ai
 scatter-constellation-diagram: Digital Modulation Constellation Diagram
 Library: altair 6.0.0 | Python 3.14.3
-Quality: 82/100 | Created: 2026-03-17
+Quality: 85/100 | Created: 2026-03-17
 """
 
 import altair as alt
