@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 heatmap-risk-matrix: Risk Assessment Matrix (Probability vs Impact)
 Library: plotnine 0.15.3 | Python 3.14.3
-Quality: 79/100 | Created: 2026-03-17
+Quality: 84/100 | Created: 2026-03-17
 """
 
 import numpy as np
