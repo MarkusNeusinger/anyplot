@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 heatmap-chromagram: Music Chromagram (Pitch Class Distribution over Time)
 Library: seaborn 0.13.2 | Python 3.14.3
-Quality: 83/100 | Created: 2026-03-17
+Quality: 92/100 | Created: 2026-03-17
 """
 
 import matplotlib.pyplot as plt
