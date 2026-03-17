@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 scatter-constellation-diagram: Digital Modulation Constellation Diagram
 Library: altair 6.0.0 | Python 3.14.3
 Quality: 83/100 | Created: 2026-03-17
@@ -32,63 +32,102 @@ error_vectors = np.sqrt((received_i - ideal_i[symbol_indices]) ** 2 + (received_
 rms_signal = np.sqrt(signal_power)
 evm_pct = np.sqrt(np.mean(error_vectors**2)) / rms_signal * 100
 
-df_received = pd.DataFrame({"I": received_i, "Q": received_q})
-df_ideal = pd.DataFrame({"I": ideal_i, "Q": ideal_q})
+# Per-symbol error magnitude for color encoding
+df_received = pd.DataFrame(
+    {
+        "I": received_i,
+        "Q": received_q,
+        "Error Magnitude": error_vectors,
+        "Nearest I": ideal_i[symbol_indices],
+        "Nearest Q": ideal_q[symbol_indices],
+    }
+)
+df_ideal = pd.DataFrame({"I": ideal_i, "Q": ideal_q, "label": "Ideal"})
 
 # Decision boundaries
 boundary_vals = [-4, -2, 0, 2, 4]
-boundary_h = pd.DataFrame([{"x": -4.5, "x2": 4.5, "y": v} for v in boundary_vals])
-boundary_v = pd.DataFrame([{"y": -4.5, "y2": 4.5, "x": v} for v in boundary_vals])
+boundary_h = pd.DataFrame([{"x": -5.2, "x2": 5.2, "y": v} for v in boundary_vals])
+boundary_v = pd.DataFrame([{"y": -5.2, "y2": 5.2, "x": v} for v in boundary_vals])
 
 # EVM annotation
-df_evm = pd.DataFrame({"I": [3.2], "Q": [4.0], "label": [f"EVM = {evm_pct:.1f}%"]})
+df_evm = pd.DataFrame({"I": [4.2], "Q": [4.8], "label": [f"EVM = {evm_pct:.1f}%"]})
 
-# Plot
+# Selection for interactive nearest-point highlighting
+nearest = alt.selection_point(on="pointerover", nearest=True, fields=["I", "Q"], empty=False)
+
+# Plot layers
+scale_x = alt.Scale(domain=[-5.5, 5.5], nice=False)
+scale_y = alt.Scale(domain=[-5.5, 5.5], nice=False)
+
 received_layer = (
     alt.Chart(df_received)
-    .mark_circle(size=40, opacity=0.35)
+    .mark_circle(size=45)
     .encode(
-        x=alt.X("I:Q", title="In-Phase (I)", scale=alt.Scale(domain=[-4.8, 4.8])),
-        y=alt.Y("Q:Q", title="Quadrature (Q)", scale=alt.Scale(domain=[-4.8, 4.8])),
-        color=alt.value("#306998"),
-        tooltip=["I:Q", "Q:Q"],
+        x=alt.X("I:Q", title="In-Phase (I)", scale=scale_x),
+        y=alt.Y("Q:Q", title="Quadrature (Q)", scale=scale_y),
+        color=alt.Color(
+            "Error Magnitude:Q",
+            scale=alt.Scale(scheme="viridis"),
+            legend=alt.Legend(
+                title="Error Mag.", titleFontSize=16, labelFontSize=14, orient="right", gradientLength=200
+            ),
+        ),
+        opacity=alt.condition(nearest, alt.value(0.85), alt.value(0.3)),
+        size=alt.condition(nearest, alt.value(120), alt.value(45)),
+        tooltip=[
+            alt.Tooltip("I:Q", format=".3f"),
+            alt.Tooltip("Q:Q", format=".3f"),
+            alt.Tooltip("Error Magnitude:Q", format=".3f", title="Error"),
+            alt.Tooltip("Nearest I:Q", format=".0f", title="Ideal I"),
+            alt.Tooltip("Nearest Q:Q", format=".0f", title="Ideal Q"),
+        ],
     )
+    .add_params(nearest)
 )
 
 ideal_layer = (
     alt.Chart(df_ideal)
-    .mark_point(size=350, filled=False, strokeWidth=3)
-    .encode(x="I:Q", y="Q:Q", color=alt.value("#D62728"), shape=alt.value("cross"), tooltip=["I:Q", "Q:Q"])
+    .mark_point(size=400, filled=False, strokeWidth=3.5)
+    .encode(
+        x="I:Q",
+        y="Q:Q",
+        color=alt.value("#E45756"),
+        shape=alt.value("cross"),
+        tooltip=[alt.Tooltip("I:Q", format=".0f", title="Ideal I"), alt.Tooltip("Q:Q", format=".0f", title="Ideal Q")],
+    )
 )
 
 h_rules = (
     alt.Chart(boundary_h)
-    .mark_rule(strokeDash=[6, 4], strokeWidth=1.2, opacity=0.45)
-    .encode(x=alt.X("x:Q"), x2="x2:Q", y=alt.Y("y:Q"), color=alt.value("#999999"))
+    .mark_rule(strokeDash=[8, 5], strokeWidth=1, opacity=0.35)
+    .encode(x=alt.X("x:Q", scale=scale_x), x2="x2:Q", y=alt.Y("y:Q", scale=scale_y), color=alt.value("#AAAAAA"))
 )
 
 v_rules = (
     alt.Chart(boundary_v)
-    .mark_rule(strokeDash=[6, 4], strokeWidth=1.2, opacity=0.45)
-    .encode(y=alt.Y("y:Q"), y2="y2:Q", x=alt.X("x:Q"), color=alt.value("#999999"))
+    .mark_rule(strokeDash=[8, 5], strokeWidth=1, opacity=0.35)
+    .encode(y=alt.Y("y:Q", scale=scale_y), y2="y2:Q", x=alt.X("x:Q", scale=scale_x), color=alt.value("#AAAAAA"))
 )
 
 evm_label = (
     alt.Chart(df_evm)
-    .mark_text(fontSize=20, fontWeight="bold", align="right")
-    .encode(x="I:Q", y="Q:Q", text="label:N", color=alt.value("#333333"))
+    .mark_text(fontSize=22, fontWeight="bold", align="right", font="monospace")
+    .encode(x="I:Q", y="Q:Q", text="label:N", color=alt.value("#222222"))
 )
 
 chart = (
     alt.layer(h_rules, v_rules, received_layer, ideal_layer, evm_label)
     .properties(
-        width=900,
-        height=900,
-        title=alt.Title("scatter-constellation-diagram · altair · pyplots.ai", fontSize=28, anchor="middle"),
+        width=1020,
+        height=1100,
+        title=alt.Title(
+            "scatter-constellation-diagram \u00b7 altair \u00b7 pyplots.ai", fontSize=28, anchor="middle", offset=12
+        ),
     )
-    .configure_axis(labelFontSize=18, titleFontSize=22, grid=False)
+    .configure_axis(
+        labelFontSize=18, titleFontSize=22, tickSize=8, domainColor="#666666", tickColor="#888888", grid=False
+    )
     .configure_view(strokeWidth=0)
-    .interactive()
 )
 
 # Save
