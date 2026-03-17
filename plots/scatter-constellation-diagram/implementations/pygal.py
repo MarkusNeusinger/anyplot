@@ -1,6 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 scatter-constellation-diagram: Digital Modulation Constellation Diagram
 Library: pygal 3.1.0 | Python 3.14.3
+Quality: 85/100 | Created: 2026-03-17
 """
 
 import cairosvg
