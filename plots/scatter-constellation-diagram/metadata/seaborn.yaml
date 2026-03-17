@@ -1,0 +1,227 @@
+library: seaborn
+specification_id: scatter-constellation-diagram
+created: '2026-03-17T23:21:47Z'
+updated: '2026-03-17T23:33:51Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23220948491
+issue: 4562
+python_version: 3.14.3
+library_version: 0.13.2
+preview_url: https://storage.googleapis.com/pyplots-images/plots/scatter-constellation-diagram/seaborn/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/scatter-constellation-diagram/seaborn/plot_thumb.png
+preview_html: null
+quality_score: 91
+review:
+  strengths:
+  - Excellent use of seaborn kdeplot for density contours — a distinctive library
+    feature adding genuine analytical value
+  - Quadrant-based coloring with colorblind palette creates meaningful visual grouping
+    while being accessible
+  - All font sizes explicitly set and well-calibrated for canvas size
+  - Complete spec compliance with all required features implemented correctly
+  - Realistic data with proper 16-QAM signal characteristics and plausible EVM
+  weaknesses:
+  - KDE contour lines from adjacent quadrants overlap creating slight visual clutter
+    in boundary regions
+  - Quadrant labeling loop could be vectorized for cleaner code
+  image_description: 'The plot shows a 16-QAM constellation diagram on a square canvas
+    (3600x3600 px) with equal aspect ratio. Sixteen ideal constellation points are
+    displayed as large black "X" markers with white edges arranged in a 4x4 grid at
+    ±1, ±3 positions. Approximately 1200 received symbols appear as small semi-transparent
+    dots clustered around each ideal point, colored by quadrant: blue (Q1, +I/+Q),
+    orange (Q2, -I/+Q), teal/green (Q3, -I/-Q), and salmon/coral (Q4, +I/-Q) using
+    the seaborn colorblind palette. KDE density contour lines in matching colors surround
+    each cluster, showing signal density distribution. Dashed gray decision boundary
+    lines are drawn at -4, -2, 0, 2, 4 on both axes. The title reads "scatter-constellation-diagram
+    · seaborn · pyplots.ai". Axes are labeled "In-Phase (I)" and "Quadrature (Q)".
+    A styled EVM annotation box in the bottom-right reads "EVM = 9.9%". A legend in
+    the upper left shows the four quadrant labels. Top and right spines are removed.
+    Subtle dotted grid lines appear in the background.'
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title=24, labels=20, ticks=16, legend=14/16,
+          EVM=18'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text elements
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Good marker sizing for density; minor KDE contour overlap between
+          quadrants
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Colorblind palette used, all quadrant colors distinguishable
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square figure with equal aspect ratio, well-balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive labels with standard engineering notation
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Strong design with meaningful quadrant coloring, KDE contours, styled
+          annotations
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines removed, subtle grid, refined legend styling; KDE overlap
+          prevents full polish
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy with ideal markers, quadrant grouping, EVM
+          metric context
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct I/Q scatter constellation diagram
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: ideal markers, received symbols, decision
+          boundaries, equal aspect, EVM, axis labels'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: I on x-axis, Q on y-axis, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct title format, clear legend labels
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All 16 constellation points, noise spread, density contours, EVM
+          metric
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Authentic 16-QAM digital communications scenario, neutral technical
+          domain
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Standard grid values, realistic SNR=20dB, plausible EVM ~9.9%
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean linear flow, no functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean Pythonic code with correct EVM calculation
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot.png at dpi=300, current API
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Axes-level API with hue mapping, set_context/set_style theming;
+          minor: manual kdeplot iteration'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: kdeplot 2D density contours, hue-based palette mapping, set_context
+          scaling
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - kde
+  styling:
+  - alpha-blending
+  - grid-styling
+  - edge-highlighting
