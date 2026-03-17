@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 scatter-constellation-diagram: Digital Modulation Constellation Diagram
 Library: highcharts unknown | Python 3.14.3
 Quality: 80/100 | Created: 2026-03-17
@@ -44,65 +44,85 @@ evm = np.sqrt(np.mean(error_i**2 + error_q**2)) / np.sqrt(signal_power) * 100
 chart = Chart(container="container")
 chart.options = HighchartsOptions()
 
-# Chart settings
+# Chart settings - square canvas for equal aspect ratio (required by spec)
 chart.options.chart = {
     "type": "scatter",
-    "width": 4800,
-    "height": 2700,
-    "backgroundColor": "#ffffff",
+    "width": 3600,
+    "height": 3600,
+    "backgroundColor": "#f8f9fa",
     "marginBottom": 250,
-    "marginLeft": 200,
-    "marginRight": 150,
-    "marginTop": 150,
+    "marginLeft": 250,
+    "marginRight": 200,
+    "marginTop": 180,
+    "plotBorderWidth": 1,
+    "plotBorderColor": "#cccccc",
+    "plotBackgroundColor": "#ffffff",
 }
 
 # Title
 chart.options.title = {
     "text": "16-QAM Constellation · scatter-constellation-diagram · highcharts · pyplots.ai",
-    "style": {"fontSize": "44px", "fontWeight": "bold"},
+    "style": {"fontSize": "42px", "fontWeight": "bold", "color": "#222222"},
 }
 
 # Axes
 axis_limit = 5.0
 chart.options.x_axis = {
-    "title": {"text": "In-Phase (I)", "style": {"fontSize": "36px"}, "margin": 20},
-    "labels": {"style": {"fontSize": "24px"}},
+    "title": {"text": "In-Phase (I)", "style": {"fontSize": "36px", "color": "#333333"}, "margin": 20},
+    "labels": {"style": {"fontSize": "24px", "color": "#555555"}},
     "min": -axis_limit,
     "max": axis_limit,
     "tickInterval": 1,
     "gridLineWidth": 0,
     "lineWidth": 2,
-    "lineColor": "#333333",
+    "lineColor": "#444444",
+    "tickWidth": 2,
+    "tickLength": 8,
+    "tickColor": "#444444",
 }
 
 chart.options.y_axis = {
-    "title": {"text": "Quadrature (Q)", "style": {"fontSize": "36px"}, "margin": 20},
-    "labels": {"style": {"fontSize": "24px"}},
+    "title": {"text": "Quadrature (Q)", "style": {"fontSize": "36px", "color": "#333333"}, "margin": 20},
+    "labels": {"style": {"fontSize": "24px", "color": "#555555"}},
     "min": -axis_limit,
     "max": axis_limit,
     "tickInterval": 1,
     "gridLineWidth": 0,
     "lineWidth": 2,
-    "lineColor": "#333333",
+    "lineColor": "#444444",
+    "tickWidth": 2,
+    "tickLength": 8,
+    "tickColor": "#444444",
 }
 
-# Legend
+# Legend - positioned inside plot area at top-right
 chart.options.legend = {
     "enabled": True,
     "layout": "vertical",
     "align": "right",
-    "verticalAlign": "middle",
-    "itemStyle": {"fontSize": "28px"},
+    "verticalAlign": "top",
+    "floating": True,
+    "x": -30,
+    "y": 30,
+    "backgroundColor": "rgba(255, 255, 255, 0.85)",
+    "borderWidth": 1,
+    "borderColor": "#cccccc",
+    "borderRadius": 6,
+    "padding": 14,
+    "itemStyle": {"fontSize": "28px", "fontWeight": "normal", "color": "#333333"},
     "symbolRadius": 8,
-    "itemMarginTop": 10,
+    "symbolHeight": 16,
+    "symbolWidth": 16,
+    "itemMarginTop": 6,
+    "itemMarginBottom": 6,
 }
 
 # Received symbols series
 received_series = ScatterSeries()
 received_series.name = "Received Symbols"
 received_series.data = [{"x": float(received_i[j]), "y": float(received_q[j])} for j in range(num_symbols)]
-received_series.color = "rgba(48, 105, 152, 0.35)"
-received_series.marker = {"radius": 6, "symbol": "circle"}
+received_series.color = "rgba(48, 105, 152, 0.5)"
+received_series.marker = {"radius": 9, "symbol": "circle"}
 chart.add_series(received_series)
 
 # Ideal constellation points series
@@ -110,8 +130,17 @@ ideal_series = ScatterSeries()
 ideal_series.name = "Ideal Points"
 ideal_series.data = [{"x": float(ideal_i[k]), "y": float(ideal_q[k])} for k in range(16)]
 ideal_series.color = "#E74C3C"
-ideal_series.marker = {"radius": 18, "symbol": "diamond", "lineWidth": 4, "lineColor": "#E74C3C"}
+ideal_series.marker = {
+    "radius": 16,
+    "symbol": "diamond",
+    "lineWidth": 3,
+    "lineColor": "#C0392B",
+    "fillColor": "#E74C3C",
+}
 chart.add_series(ideal_series)
+
+# Disable credits
+chart.options.credits = {"enabled": False}
 
 # Plot options
 chart.options.plot_options = {
@@ -201,7 +230,7 @@ html_content = f"""<!DOCTYPE html>
     <script>{custom_js}</script>
 </head>
 <body style="margin:0;">
-    <div id="container" style="width: 4800px; height: 2700px;"></div>
+    <div id="container" style="width: 3600px; height: 3600px;"></div>
     <script>{html_str}</script>
 </body>
 </html>"""
@@ -220,7 +249,7 @@ chrome_options.add_argument("--headless")
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
 chrome_options.add_argument("--disable-gpu")
-chrome_options.add_argument("--window-size=4800,2700")
+chrome_options.add_argument("--window-size=3600,3600")
 
 driver = webdriver.Chrome(options=chrome_options)
 driver.get(f"file://{temp_path}")
