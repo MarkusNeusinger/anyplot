@@ -1,0 +1,221 @@
+library: plotly
+specification_id: heatmap-risk-matrix
+created: '2026-03-17T21:53:52Z'
+updated: '2026-03-17T22:14:46Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23217984742
+issue: 4567
+python_version: 3.14.3
+library_version: 6.6.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/heatmap-risk-matrix/plotly/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/heatmap-risk-matrix/plotly/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/heatmap-risk-matrix/plotly/plot.html
+quality_score: 91
+review:
+  strengths:
+  - Excellent visual hierarchy through marker sizing by zone severity — critical risks
+    are immediately prominent
+  - Clean cell design with white borders and subtle score annotations that don't compete
+    with data
+  - Dual encoding through both shape and color for risk categories enhances readability
+  - Rich hover tooltips with full risk details (a distinctive Plotly feature)
+  - Well-designed jitter system prevents marker overlap in shared cells
+  weaknesses:
+  - Minor label proximity in cells with multiple risks (e.g., Regulatory/Compliance
+    Gap)
+  - Could benefit from even more visual polish (e.g., rounded corners, gradient fills
+    within cells)
+  image_description: 'The plot displays a 5×5 risk assessment matrix with Likelihood
+    (Rare to Almost Certain) on the Y-axis and Impact Severity (Negligible to Catastrophic)
+    on the X-axis. Cells are color-coded with soft blue (Low, scores 1–4), yellow
+    (Medium, 5–9), light orange (High, 10–16), and light pink/red (Critical, 20–25)
+    backgrounds. Risk score numbers appear subtly in each cell''s bottom-right corner
+    in muted gray. Twelve risk items are plotted as labeled markers with distinct
+    shapes per category: blue circles for Technical (Data Breach, System Outage, Cyber
+    Attack, Tech Debt), purple diamonds for Financial (Budget Overrun, Regulatory,
+    Vendor Failure, Market Shift), and orange squares for Operational (Supply Chain,
+    Staff Turnover, Scope Creep, Compliance Gap). Marker sizes scale with zone severity
+    — critical-zone markers are visibly larger. The title reads "heatmap-risk-matrix
+    · plotly · pyplots.ai" with a subtitle "Enterprise Risk Assessment — Likelihood
+    vs Impact Matrix". A well-organized legend on the right shows both category markers
+    and risk zone colors with score ranges. White borders separate cells cleanly.'
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 28pt, axis labels 22pt, ticks
+          18pt, annotations 14pt'
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Minor label proximity in shared cells but all readable
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Markers well-sized with distinct shapes and white outlines
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Colorblind-safe palette for both categories and zones
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good canvas utilization with balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis labels with directional arrows
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom palette, refined typography with subtitle, marker sizing hierarchy
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Clean canvas, white cell borders, muted score annotations
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Visual hierarchy through marker sizing by zone severity
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct 5x5 grid heatmap risk matrix
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: All spec features present including jitter, zones, categories
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=Impact, Y=Likelihood correctly mapped
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct title format and comprehensive legend
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 12 risks across all zones and three categories
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Enterprise risk management with realistic risk names
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Standard 1-5 ordinal scale for risk matrices
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean linear flow, no functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only numpy and plotly.graph_objects, both used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-structured with appropriate complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with correct dimensions
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Proper Plotly Graph Objects patterns throughout
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Hover templates, legend groups, add_shape, HTML export
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  - matrix-construction
+  dataprep: []
+  styling:
+  - edge-highlighting
+  - alpha-blending
