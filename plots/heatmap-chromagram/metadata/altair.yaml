@@ -1,0 +1,222 @@
+library: altair
+specification_id: heatmap-chromagram
+created: '2026-03-17T22:26:30Z'
+updated: '2026-03-17T22:30:20Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23219179015
+issue: 4564
+python_version: 3.14.3
+library_version: 6.0.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/heatmap-chromagram/altair/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/heatmap-chromagram/altair/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/heatmap-chromagram/altair/plot.html
+quality_score: 90
+review:
+  strengths:
+  - Excellent data modeling with realistic chord templates and smooth transitions
+    between chords
+  - Idiomatic Altair usage with x/x2 rect encoding for gap-free heatmap cells
+  - Clean visual design with inferno colormap, removed grid/borders, and informative
+    subtitle
+  - Perfect spec compliance — all required features present
+  weaknesses:
+  - X-axis tick font size at 15pt is slightly below the 16pt guideline
+  - Minor extra whitespace near the colorbar area
+  image_description: 'The plot displays a heatmap chromagram using the inferno colormap
+    on a dark background. The x-axis shows "Time (seconds)" from 0 to 24 with ticks
+    every 2 seconds. The y-axis shows "Pitch Class" with all 12 chromatic pitch classes
+    (C, C#, D, D#, E, F, F#, G, G#, A, A#, B). A vertical colorbar on the right indicates
+    "Energy" from 0.0 to 1.0. The title reads "heatmap-chromagram · altair · pyplots.ai"
+    with a subtitle "Pitch class energy over time · C → G → Am → F chord progression".
+    The chord progression is clearly visible: C major (0-6s) lights up C, E, G rows;
+    G major (6-12s) activates G, B, D; Am (12-18s) shows A, C, E; F major (18-24s)
+    highlights F, A, C. Colors range from black (zero energy) through deep purple/magenta
+    to bright orange/yellow (high energy). Smooth transitions are visible between
+    chord boundaries.'
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'Font sizes explicitly set: title 26pt, axis titles 20pt, y-ticks
+          16pt. X-axis ticks at 15pt slightly below 16pt guideline.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text. Pitch class labels well-spaced, time ticks at
+          2s intervals.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Rect marks with x/x2 encoding produce gap-free cells. All energy
+          levels distinguishable.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Inferno is perceptually uniform and colorblind-safe.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good proportions. Minor extra whitespace near colorbar.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Time (seconds) with units, Pitch Class is descriptive.
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Inferno colormap is domain-appropriate. Subtitle adds polish. Above
+          defaults but not exceptional.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Grid removed, view stroke removed, generous padding. Clean appearance.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Chord progression creates clear visual narrative. Subtitle guides
+          interpretation.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct heatmap type using mark_rect().
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: All 12 pitch classes, sequential colormap, colorbar, time axis in
+          seconds, chord transitions.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=time, Y=pitch class, color=energy. All correct.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct. Colorbar legend labeled Energy.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Four distinct chords, smooth transitions, background noise, full
+          chromatic range.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: C-G-Am-F is a common pop chord progression. Musically accurate energy
+          patterns.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Energy 0-1, 24s duration, 120 frames. Realistic for chroma extraction.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports, data generation, DataFrame, chart, save.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-structured. Chord templates as arrays are elegant.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot.png and plot.html. Current API.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: mark_rect() with x/x2 encoding for bin rendering. Declarative typed
+          fields. Proper config objects.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: x/x2 bin-edge encoding, tooltip with format strings, HTML export.
+          Could add selection parameters.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  - matrix-construction
+  - iteration-over-groups
+  dataprep:
+  - normalization
+  styling:
+  - custom-colormap
