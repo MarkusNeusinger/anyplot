@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 eye-diagram-basic: Signal Integrity Eye Diagram
 Library: pygal 3.1.0 | Python 3.14.3
-Quality: 80/100 | Created: 2026-03-17
+Quality: 82/100 | Created: 2026-03-17
 """
 
 import importlib

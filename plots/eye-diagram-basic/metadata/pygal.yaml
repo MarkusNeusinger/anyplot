@@ -1,7 +1,7 @@
 library: pygal
 specification_id: eye-diagram-basic
 created: '2026-03-17T23:35:46Z'
-updated: '2026-03-17T23:40:57Z'
+updated: '2026-03-17T23:51:18Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23221365490
 issue: 4561
@@ -10,31 +10,33 @@ library_version: 3.1.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/eye-diagram-basic/pygal/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/eye-diagram-basic/pygal/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/eye-diagram-basic/pygal/plot.html
-quality_score: 80
+quality_score: 82
 review:
   strengths:
-  - Visually impressive density heatmap eye diagram with striking dark background
-    and vibrant colors
-  - Perfect spec compliance — all required features present with correct data parameters
-  - Excellent data quality with realistic NRZ signal simulation
-  - 'Good design choices: colorbar, reference lines, informative subtitle'
+  - Dark plot background brilliantly mimics real oscilloscope displays, creating an
+    authentic eye diagram aesthetic
+  - Viridis-inspired colorblind-safe palette with 6 density bands effectively conveys
+    trace density
+  - Solid signal simulation with realistic NRZ parameters (noise, jitter, sigmoid
+    transitions)
+  - HTML export with native pygal interactive SVG is a nice library-specific addition
+  - Clean data pipeline from signal generation through density binning to visualization
   weaknesses:
-  - pygal is completely unused — the implementation builds raw SVG manually instead
-    of using any pygal chart API
-  - Unused imports (_pygal, _Style) indicate the library was imported but abandoned
-  - Jet-like colormap is not colorblind-accessible
-  - Manual SVG construction is verbose and fragile
-  image_description: The plot displays a density heatmap eye diagram on a dark navy
-    background (#0a0a28). Two clear eye openings are visible across the 2 UI time
-    window. The color scale runs from dark blue (low density) through cyan, green,
-    yellow to red (high density). Red hotspots appear at the 0V and 1V logic levels
-    where traces concentrate, with smooth sigmoid transitions forming the eye boundaries.
-    Axis labels read "Time (UI)" on x-axis (0.0 to 2.0) and "Voltage (V)" on y-axis
-    (-0.2 to 1.2). Title is "eye-diagram-basic · pygal · pyplots.ai" with subtitle
-    "NRZ Signal — 300 overlaid traces with jitter and noise". A vertical colorbar
-    on the right shows "Density" with High/Low labels. White dashed reference lines
-    mark the 0V and 1V logic levels. The eye openings are wide and clean, indicating
-    good signal quality.
+  - Dot size (dots_size=12) is too large, making the eye pattern look coarse/pixelated
+  - Legend text at bottom is barely legible at the rendered size
+  - XY scatter approach produces a dot-matrix look rather than smooth density
+  - Library mastery could be improved by leveraging more pygal-specific features
+  image_description: 'The plot displays a signal integrity eye diagram on a dark navy
+    (#0a0a28) plot background with a white outer frame. Colored dots represent density-binned
+    signal trace data spanning 2 unit intervals (UI) on the x-axis (labeled "Time
+    (UI)", 0 to 2) and voltage on the y-axis (labeled "Voltage (V)", approximately
+    -0.1 to 1.1). Two eye-shaped openings are clearly visible — dark voids where few
+    traces pass. The density is color-coded using a viridis-inspired palette: dark
+    purple (Very Low), blue (Low), teal (Medium), green (High), yellow-green (Very
+    High), and bright yellow (Peak). High-density yellow/green concentrations appear
+    at the 0V and 1V signal levels, with transition regions in lower-density purple/blue.
+    A legend at the bottom shows all 6 density bands. The title reads "eye-diagram-basic
+    · pygal · pyplots.ai".'
   criteria_checklist:
     visual_quality:
       score: 26
@@ -42,44 +44,44 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: All font sizes explicitly set (72px title, 52px axis labels, 42px
-          ticks). Clearly readable.
+        comment: Font sizes explicitly set (title=56, labels=34, legend=28), all readable
+          except legend text which is small
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements anywhere.
+        comment: No overlapping text elements
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Density heatmap well-sized, excellent color contrast against dark
-          background.
+        comment: Dots visible and eye pattern recognizable, but dots_size=12 makes
+          pattern slightly coarse
       - id: VQ-04
         name: Color Accessibility
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: Jet-like colormap is not colorblind-safe. Viridis or inferno would
-          be better.
+        passed: true
+        comment: Viridis-inspired palette is colorblind-safe with good contrast against
+          dark background
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good proportions, plot fills ~60% of canvas. Slight excess whitespace
-          at bottom.
+        comment: Plot fills canvas well, dark/white contrast effective, some wasted
+          margin space
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Time (UI) and Voltage (V) are descriptive with units.
+        comment: Time (UI) and Voltage (V) are descriptive with units
     design_excellence:
       score: 14
       max: 20
@@ -89,77 +91,79 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Dark background with vibrant heatmap is striking. Custom color palette,
-          subtitle, colorbar show intentional design.
+        comment: Dark background mimics oscilloscope displays; viridis palette is
+          thoughtful; above defaults but not publication-ready
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Only left/bottom axes, dashed reference lines at logic levels, dark
-          plot background, colorbar.
+        comment: Guides disabled, dark background provides contrast, legend organized;
+          dot grid aesthetic slightly rough
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Density coloring highlights trace concentration. Reference lines
-          guide interpretation.
+        comment: Density color mapping tells signal quality story; viewer sees eye
+          opening and trace concentration
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Correct eye diagram with density heatmap coloring.
+        comment: Eye diagram using density-colored XY scatter; reasonable for pygal
+          but slight compromise vs continuous heatmap
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All required features present: density coloring, NRZ with noise/jitter,
-          sigmoid transitions, 300 traces.'
+        comment: 'All spec features present: density coloring, UI axis, signal levels,
+          NRZ with noise/jitter, sigmoid transitions'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=Time (UI), Y=Voltage (V), color=density. Correct.
+        comment: X=time [0,2] UI, Y=voltage — correct mapping
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Colorbar legend with Density label present.
+        comment: Title format correct, legend shows density band names
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Shows eye openings, transition jitter, noise on logic levels, bandwidth-limited
-          edges, two complete UIs.
+        comment: Shows both signal levels, transitions, eye openings, noise and jitter
+          effects
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: NRZ signal integrity testing is a real engineering scenario with
-          realistic parameters.
+        comment: Simulated NRZ signal is real engineering application, 0-1V realistic
+          for digital logic
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 0-1V NRZ levels, 2 UI window, 5% noise, 3% jitter all appropriate.
+        comment: 300 traces, 5% noise, 3% jitter — all realistic for signal integrity
+          analysis
     code_quality:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -167,58 +171,54 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data generation, density calculation, SVG
-          construction, save.'
+        comment: 'Linear flow: imports → data → density → chart → save'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: _pygal and _Style imported but never used.
+        passed: true
+        comment: All imports used including sys/importlib for name collision workaround
       - id: CQ-04
         name: Code Elegance
         score: 1
         max: 2
-        passed: false
-        comment: Manual SVG string construction is very verbose. Nested sigmoid loop
-          could be vectorized.
+        passed: true
+        comment: sys.path manipulation is clunky but necessary; density computation
+          well-structured
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png via cairosvg, also saves plot.html.
+        comment: Saves plot.png via render_to_png, also generates HTML
     library_mastery:
-      score: 2
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 1
+        score: 3
         max: 5
-        passed: false
-        comment: pygal is not used for plotting at all. Entire chart is hand-built
-          SVG with string concatenation.
+        passed: true
+        comment: Correct pygal.XY usage with Style but XY scatter as heatmap proxy
+          is a workaround
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 2
         max: 5
-        passed: false
-        comment: No pygal features used. No chart classes, no styling API, no data
-          binding.
+        passed: true
+        comment: HTML export with native SVG interactivity and legend_at_bottom_columns
+          are pygal-specific
   verdict: REJECTED
 impl_tags:
-  dependencies:
-  - cairosvg
+  dependencies: []
   techniques:
-  - colorbar
-  - manual-ticks
   - html-export
   patterns:
   - data-generation
@@ -227,5 +227,4 @@ impl_tags:
   dataprep:
   - binning
   styling:
-  - custom-colormap
   - dark-theme
