@@ -1,7 +1,7 @@
 library: bokeh
 specification_id: heatmap-chromagram
 created: '2026-03-17T22:28:50Z'
-updated: '2026-03-17T22:43:02Z'
+updated: '2026-03-17T22:57:19Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23219179043
 issue: 4564
@@ -10,73 +10,75 @@ library_version: 3.9.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/heatmap-chromagram/bokeh/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/heatmap-chromagram/bokeh/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/heatmap-chromagram/bokeh/plot.html
-quality_score: 88
+quality_score: 91
 review:
   strengths:
-  - Excellent dark theme design with magma colormap — visually striking and appropriate
-    for the domain
-  - Realistic chord progression data (C→G→Am→F) with harmonic overtones creates authentic
-    chromagram patterns
+  - Excellent dark theme design that complements the magma colormap, creating a cohesive
+    music-analysis aesthetic
+  - Seamless heatmap via p.image() glyph with no visible gaps between cells
+  - Realistic chord progression data (C→G→Am→F) with harmonic overtones and smooth
+    transitions
   - Dual output (PNG + interactive HTML with hover tooltips) leverages Bokeh strengths
-  - All spec requirements met perfectly (12 pitch classes, sequential colormap, colorbar,
-    time axis)
-  - Clean, well-structured code with appropriate data generation complexity
+  - Clean, well-organized code with appropriate complexity
   weaknesses:
-  - Colorbar area has white/light background that clashes with the dark theme — the
-    most prominent visual flaw
-  - Minor thin gaps visible between heatmap rows despite height=1.1 overlap
-  image_description: 'The plot displays a chromagram heatmap with a dark background
-    (#0a0a0a). The y-axis shows all 12 pitch classes (C through B, top to bottom)
-    and the x-axis shows time from 0 to 8 seconds. Color intensity uses a magma-inspired
-    palette ranging from black/dark purple (low energy) through orange to bright yellow/white
-    (high energy). A vertical colorbar on the right indicates energy scale from 0
-    to ~1.0. The title reads "heatmap-chromagram · bokeh · pyplots.ai". Four chord
-    regions are clearly visible: C major (C, E, G bright ~0-2s), G major (G, B, D
-    bright ~2-4s), A minor (A, C, E bright ~4-6s), and F major (F, A, C bright ~6-8s).
-    There are noticeable gaps between pitch class rows. The colorbar labels and "Energy"
-    title appear small relative to the canvas.'
+  - Color bar Energy title slightly cramped at right canvas edge
+  - Could push Library Mastery further with additional Bokeh-specific features like
+    span annotations for chord boundaries
+  image_description: 'The plot displays a chromagram heatmap on a dark background
+    (#0a0a0a) using a magma-inspired color palette ranging from near-black/dark purple
+    (low energy) through orange to bright yellow (high energy). The y-axis shows all
+    12 pitch classes (C at top through B at bottom) with clear labels. The x-axis
+    spans 0 to 8 seconds labeled "Time (seconds)". The title reads "heatmap-chromagram
+    · bokeh · pyplots.ai" in light gray text. A color bar on the right labeled "Energy"
+    shows the 0-1 scale. Four distinct chord regions are visible: C major (0-2s, with
+    bright C/E/G rows), G major (2-4s, bright G/B/D), A minor (4-6s, bright A/C/E),
+    and F major (6-8s, bright F/A/C). Harmonic overtones (fifths) appear as secondary
+    bright bands. Transitions between chords show smooth blending at boundaries. The
+    seamless image rendering has no gaps between cells.'
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set but colorbar labels and y-axis label appear
-          small relative to 4800x2700 canvas
+        comment: All font sizes explicitly set (title 32pt, labels 26pt, ticks 20pt),
+          all readable at full resolution
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text anywhere
+        comment: No overlapping text; pitch class labels well-spaced, time ticks uncrowded
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Heatmap cells visible but noticeable gaps between pitch class rows
+        comment: Heatmap cells clearly visible with strong color contrast via seamless
+          image glyph
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Magma is perceptually uniform and colorblind-safe
+        comment: Magma palette is perceptually uniform and colorblind-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Plot fills canvas well but colorbar is too narrow and labels cramped
+        comment: Plot fills ~75% of canvas; color bar Energy title slightly cramped
+          at right edge
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units
+        comment: Time (seconds) with units, Pitch Class descriptive
     design_excellence:
       score: 15
       max: 20
@@ -86,21 +88,22 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Strong design with custom magma palette and dark theme, clearly above
-          defaults
+        comment: Dark theme complementing magma colormap is intentional, strong design;
+          clearly above defaults
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: Grid/axis/tick lines removed, dark background, significant polish
+        comment: Grid lines, axis lines, tick marks, outline all removed; dark background
+          consistently applied
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: I-V-vi-IV chord progression creates clear musical narrative with
-          visible transitions
+        comment: Chord progression creates clear temporal narrative; harmonic fifths
+          visible as secondary bright bands
     spec_compliance:
       score: 15
       max: 15
@@ -110,48 +113,51 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct heatmap type for chromagram
+        comment: Correct heatmap visualization of chromagram data
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All 12 pitch classes, sequential colormap, colorbar, time axis, chord
-          patterns
+        comment: All 12 pitch classes, sequential colormap, colorbar, time axis in
+          seconds, fine resolution, realistic chord patterns
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=time, Y=pitch class, color=energy all correct
+        comment: X=time, Y=pitch class, color=energy; all correctly mapped
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, no legend needed
+        comment: Title format correct, colorbar labeled Energy
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows chord progressions, transitions, overtones, background noise
+        comment: Shows chord progressions, harmonic overtones, smooth transitions,
+          background noise, varying energy levels
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real-world MIR scenario with well-known chord progression
+        comment: C-G-Am-F is common pop chord progression with realistic harmonic
+          relationships
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Energy 0-1, 80 frames over 8 seconds, musically plausible
+        comment: Energy 0-1 normalized, 8 seconds duration, 80 time frames appropriate
+          for chromagram
     code_quality:
       score: 10
       max: 10
@@ -161,7 +167,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean linear flow with no functions or classes
+        comment: 'Linear flow: imports, data, plot, save; no functions or classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -179,15 +185,16 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Well-structured chord simulation with appropriate complexity
+        comment: Well-structured chord simulation; invisible rect for hover is legitimate
+          Bokeh pattern
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png and plot.html
+        comment: Saves as plot.png via export_png
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -195,14 +202,16 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of ColumnDataSource, rect glyph, LinearColorMapper, ColorBar
+        comment: Uses ColumnDataSource, figure, image glyph, ColorBar, LinearColorMapper,
+          FixedTicker, HoverTool
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: HoverTool, dual PNG/HTML export, ColumnDataSource data binding
-  verdict: REJECTED
+        comment: p.image() for seamless heatmap, invisible rect overlay for HoverTool,
+          dual PNG+HTML output
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -211,9 +220,10 @@ impl_tags:
   - html-export
   patterns:
   - data-generation
+  - matrix-construction
   - columndatasource
-  - iteration-over-groups
-  dataprep: []
+  dataprep:
+  - normalization
   styling:
   - custom-colormap
   - dark-theme
