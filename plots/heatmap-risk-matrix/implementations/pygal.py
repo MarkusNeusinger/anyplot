@@ -1,24 +1,21 @@
-""" pyplots.ai
+"""pyplots.ai
 heatmap-risk-matrix: Risk Assessment Matrix (Probability vs Impact)
 Library: pygal 3.1.0 | Python 3.14.3
 Quality: 82/100 | Created: 2026-03-17
 """
 
+import importlib
 import sys
 
 import numpy as np
 
 
-# Temporarily remove current directory from path to avoid name collision
-_cwd = sys.path[0] if sys.path[0] else "."
-if _cwd in sys.path:
-    sys.path.remove(_cwd)
-
-from pygal.graph.graph import Graph  # noqa: E402
-from pygal.style import Style  # noqa: E402
-
-
-sys.path.insert(0, _cwd)
+# Avoid name collision: this file is pygal.py but we need the pygal package
+_orig = sys.path.copy()
+sys.path = [p for p in sys.path if p not in ("", ".") and not p.endswith("/implementations")]
+Graph = importlib.import_module("pygal.graph.graph").Graph
+Style = importlib.import_module("pygal.style").Style
+sys.path = _orig
 
 
 # Risk matrix heatmap built on pygal's Graph base with tooltip support
@@ -48,6 +45,11 @@ class RiskMatrixHeatmap(Graph):
             return "High"
         return "Critical"
 
+    def _darken_color(self, hex_color, factor=0.3):
+        r, g, b = int(hex_color[1:3], 16), int(hex_color[3:5], 16), int(hex_color[5:7], 16)
+        r, g, b = int(r * (1 - factor)), int(g * (1 - factor)), int(b * (1 - factor))
+        return f"#{r:02x}{g:02x}{b:02x}"
+
     def _text_color(self, bg_color):
         r, g, b = int(bg_color[1:3], 16), int(bg_color[3:5], 16), int(bg_color[5:7], 16)
         brightness = (r * 299 + g * 587 + b * 114) / 1000
@@ -63,11 +65,11 @@ class RiskMatrixHeatmap(Graph):
         plot_width = self.view.width
         plot_height = self.view.height
 
-        # Layout margins - increased bottom for rotated labels
-        margin_left = 520
-        margin_bottom = 320
-        margin_top = 60
-        margin_right = 520
+        # Layout margins - tightened top/bottom for better canvas use
+        margin_left = 480
+        margin_bottom = 330
+        margin_top = 30
+        margin_right = 480
 
         avail_w = plot_width - margin_left - margin_right
         avail_h = plot_height - margin_bottom - margin_top
@@ -87,8 +89,8 @@ class RiskMatrixHeatmap(Graph):
         # Font sizes based on cell size
         score_font = int(cell_size * 0.24)
         zone_font = int(cell_size * 0.15)
-        marker_font = int(cell_size * 0.12)
-        marker_r = int(cell_size * 0.085)
+        marker_font = int(cell_size * 0.11)
+        marker_r = int(cell_size * 0.095)
         label_font = int(cell_size * 0.16)
         title_font = int(cell_size * 0.22)
         legend_font = int(cell_size * 0.15)
@@ -133,52 +135,75 @@ class RiskMatrixHeatmap(Graph):
                 zt.text = zone_label
 
         # --- Risk item markers ---
+        # Group items by cell to distribute positions within shared cells
         np.random.seed(42)
+        cell_items = {}
         for item in self.risk_items:
-            col_idx = item["impact"] - 1
-            row_display = n_rows - item["likelihood"]
-            color = item.get("color", "#306998")
+            key = (item["likelihood"], item["impact"])
+            cell_items.setdefault(key, []).append(item)
 
-            jitter_x = np.random.uniform(-cell_size * 0.22, cell_size * 0.22)
-            jitter_y = np.random.uniform(-cell_size * 0.06, cell_size * 0.06)
-
+        for (lik, imp), items in cell_items.items():
+            col_idx = imp - 1
+            row_display = n_rows - lik
             cell_x = x0 + col_idx * (cell_size + gap)
             cell_y = y0 + row_display * (cell_size + gap)
-            cx = cell_x + cell_size / 2 + jitter_x
-            cy = cell_y + cell_size * 0.76 + jitter_y
-            # Clamp marker within cell bounds
-            cx = max(cell_x + marker_r + 4, min(cx, cell_x + cell_size - marker_r - 4))
-            cy = max(cell_y + marker_r + 4, min(cy, cell_y + cell_size - marker_r - 4))
+            n_items = len(items)
 
-            # Marker group with tooltip
-            mg = self.svg.node(group, "g", class_="risk-marker")
-            circle = self.svg.node(mg, "circle", cx=cx, cy=cy, r=marker_r)
-            circle.set("fill", color)
-            circle.set("stroke", "#ffffff")
-            circle.set("stroke-width", "2.5")
-            circle.set("opacity", "0.92")
+            for idx, item in enumerate(items):
+                color = item.get("color", "#306998")
 
-            # Shadow for better visibility on any background
-            shadow = self.svg.node(mg, "text", x=cx, y=cy + marker_r + marker_font + 3)
-            shadow.set("text-anchor", "middle")
-            shadow.set("fill", "#ffffff")
-            shadow.set("style", f"font-size:{marker_font}px;font-weight:700;font-family:sans-serif")
-            shadow.set("stroke", "#ffffff")
-            shadow.set("stroke-width", "6")
-            shadow.set("paint-order", "stroke fill")
-            shadow.text = item["name"]
+                # Distribute items evenly within lower portion of cell
+                if n_items == 1:
+                    offset_x = 0
+                else:
+                    spread = cell_size * 0.5
+                    offset_x = -spread / 2 + idx * spread / (n_items - 1)
 
-            # Label text on top
-            lbl = self.svg.node(mg, "text", x=cx, y=cy + marker_r + marker_font + 3)
-            lbl.set("text-anchor", "middle")
-            lbl.set("fill", "#1a1a1a")
-            lbl.set("style", f"font-size:{marker_font}px;font-weight:700;font-family:sans-serif")
-            lbl.text = item["name"]
+                jitter_y = np.random.uniform(-cell_size * 0.04, cell_size * 0.04)
 
-            # SVG tooltip
-            tip = self.svg.node(mg, "title")
-            score = item["likelihood"] * item["impact"]
-            tip.text = f"{item['name']} — L:{item['likelihood']} × I:{item['impact']} = {score}"
+                cx = cell_x + cell_size / 2 + offset_x
+                cy = cell_y + cell_size * 0.74 + jitter_y
+                # Clamp marker within cell bounds with padding
+                pad = marker_r + 6
+                cx = max(cell_x + pad, min(cx, cell_x + cell_size - pad))
+                cy = max(cell_y + pad, min(cy, cell_y + cell_size - pad))
+
+                # Marker group with tooltip
+                mg = self.svg.node(group, "g", class_="risk-marker")
+
+                # Darker outline for contrast on same-hue backgrounds
+                outline_color = self._darken_color(color, 0.35)
+                circle = self.svg.node(mg, "circle", cx=cx, cy=cy, r=marker_r)
+                circle.set("fill", color)
+                circle.set("stroke", outline_color)
+                circle.set("stroke-width", "3")
+                circle.set("opacity", "0.95")
+
+                # Shadow for better visibility on any background
+                label_y = cy + marker_r + marker_font + 4
+                # Clamp label within cell
+                label_y = min(label_y, cell_y + cell_size - 4)
+
+                shadow = self.svg.node(mg, "text", x=cx, y=label_y)
+                shadow.set("text-anchor", "middle")
+                shadow.set("fill", "#ffffff")
+                shadow.set("style", f"font-size:{marker_font}px;font-weight:700;font-family:sans-serif")
+                shadow.set("stroke", "#ffffff")
+                shadow.set("stroke-width", "5")
+                shadow.set("paint-order", "stroke fill")
+                shadow.text = item["name"]
+
+                # Label text on top
+                lbl = self.svg.node(mg, "text", x=cx, y=label_y)
+                lbl.set("text-anchor", "middle")
+                lbl.set("fill", "#1a1a1a")
+                lbl.set("style", f"font-size:{marker_font}px;font-weight:700;font-family:sans-serif")
+                lbl.text = item["name"]
+
+                # SVG tooltip
+                tip = self.svg.node(mg, "title")
+                score = item["likelihood"] * item["impact"]
+                tip.text = f"{item['name']} — L:{lik} × I:{imp} = {score}"
 
         # --- Y-axis labels ---
         for i in range(n_rows):
@@ -206,16 +231,16 @@ class RiskMatrixHeatmap(Graph):
         # --- Axis titles ---
         # Y-axis title (rotated)
         mid_y = y0 + grid_h / 2
-        yt = self.svg.node(group, "text", x=x0 - 470, y=mid_y)
+        yt = self.svg.node(group, "text", x=x0 - 430, y=mid_y)
         yt.set("text-anchor", "middle")
         yt.set("fill", "#333333")
         yt.set("style", f"font-size:{title_font}px;font-weight:bold;font-family:sans-serif;letter-spacing:3px")
-        yt.set("transform", f"rotate(-90, {x0 - 470}, {mid_y})")
+        yt.set("transform", f"rotate(-90, {x0 - 430}, {mid_y})")
         yt.text = "LIKELIHOOD"
 
         # X-axis title
         mid_x = x0 + grid_w / 2
-        xt = self.svg.node(group, "text", x=mid_x, y=y0 + grid_h + 260)
+        xt = self.svg.node(group, "text", x=mid_x, y=y0 + grid_h + 310)
         xt.set("text-anchor", "middle")
         xt.set("fill", "#333333")
         xt.set("style", f"font-size:{title_font}px;font-weight:bold;font-family:sans-serif;letter-spacing:3px")
@@ -341,11 +366,11 @@ chart = RiskMatrixHeatmap(
     col_labels=impact_labels,
     zone_colors=zone_colors,
     show_legend=False,
-    margin=100,
-    margin_top=200,
-    margin_bottom=140,
-    margin_left=120,
-    margin_right=120,
+    margin=80,
+    margin_top=160,
+    margin_bottom=100,
+    margin_left=100,
+    margin_right=100,
     show_x_labels=False,
     show_y_labels=False,
     tooltip_border_radius=6,
