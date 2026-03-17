@@ -1,7 +1,7 @@
 library: plotly
 specification_id: heatmap-risk-matrix
 created: '2026-03-17T21:53:52Z'
-updated: '2026-03-17T21:58:00Z'
+updated: '2026-03-17T22:06:24Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23217984742
 issue: 4567
@@ -10,40 +10,37 @@ library_version: 6.6.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/heatmap-risk-matrix/plotly/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/heatmap-risk-matrix/plotly/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/heatmap-risk-matrix/plotly/plot.html
-quality_score: 77
+quality_score: 86
 review:
   strengths:
-  - Perfect spec compliance — all required features implemented including zone labels,
-    jitter, categories, and dual legend
-  - Rich hover templates with detailed risk information (name, likelihood, impact,
-    score, category) leverage Plotly's interactivity
-  - Realistic, well-chosen risk management data with 12 items across 3 categories
-    spanning all risk zones
-  - Clean code structure with appropriate use of Plotly's shape and annotation APIs
-    for the heatmap background
+  - Excellent colorblind-safe palette adaptation (blue-yellow-orange-pink instead
+    of green-red)
+  - Strong visual hierarchy through marker sizing and font weight by risk zone
+  - Perfect spec compliance with all required features implemented
+  - Realistic enterprise risk data with good zone coverage
+  - Rich Plotly hover templates with detailed risk information
   weaknesses:
-  - Text overlap between risk name labels and cell score annotations, particularly
-    in the Major/Unlikely area where Regulatory Change and Compliance Gap collide
-  - Red-green color gradient for risk zones is not colorblind-safe
-  - Risk labels in bold Arial Black at 13pt feel typographically heavy; multi-line
-    names add clutter
-  - No visual hierarchy to emphasize critical-zone risks over lower-risk items
-  image_description: 'The plot displays a 5x5 risk assessment matrix with Impact on
-    the x-axis (Negligible, Minor, Moderate, Major, Catastrophic) and Likelihood on
-    the y-axis (Rare, Unlikely, Possible, Likely, Almost Certain). Each cell is color-coded
-    with a green-yellow-orange-red gradient based on the risk score (likelihood x
-    impact), with the score number and zone label (Low/Medium/High/Critical) displayed
-    in each cell at reduced opacity. Twelve risk items are plotted as colored circular
-    markers with white outlines: blue for Technical (Data Breach, System Outage, Cyber
-    Attack, Tech Debt Accumulation), purple for Financial (Budget Overrun, Regulatory
-    Change, Vendor Failure, Market Shift), and orange for Operational (Supply Chain
-    Disruption, Key Staff Turnover, Scope Creep, Compliance Gap). Risk labels appear
-    above each marker in bold text. A legend on the right side shows both category
-    colors and risk zone colors. The title reads "heatmap-risk-matrix · plotly · pyplots.ai".
-    The background is white with the plotly_white template.'
+  - Risk name label font size (11pt) too small for canvas - should be 13-14pt
+  - Minor label crowding in cells with multiple risks (Regulatory/Compliance Gap area)
+  - get_zone helper function breaks flat KISS structure
+  - Design not yet publication-ready - needs more polish to reach 90+
+  image_description: 'The plot displays a 5x5 risk assessment matrix with "Impact"
+    on the x-axis (Negligible, Minor, Moderate, Major, Catastrophic) and "Likelihood"
+    on the y-axis (Rare, Unlikely, Possible, Likely, Almost Certain). Cells are color-coded:
+    light blue for Low (1-4), yellow for Medium (5-9), light orange for High (10-16),
+    and light pink/mauve for Critical (20-25). Risk scores appear as small gray numbers
+    in the bottom-right corner of each cell. Twelve risk items are plotted as colored
+    circle markers with text labels above them: blue circles for Technical risks (Data
+    Breach, System Outage, Cyber Attack, Tech Debt), orange circles for Operational
+    risks (Supply Chain, Staff Turnover, Scope Creep, Compliance Gap), and purple
+    circles for Financial risks (Budget Overrun, Regulatory, Vendor Failure, Market
+    Shift). Markers vary in size — Critical-zone risks like Cyber Attack are larger
+    and bolder. A legend on the right shows both category colors and zone colors with
+    score ranges. Title reads "heatmap-risk-matrix · plotly · pyplots.ai". White borders
+    separate cells clearly.'
   criteria_checklist:
     visual_quality:
-      score: 21
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -51,45 +48,43 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set throughout (title 28, axis titles 24, ticks
-          17, cell scores 16, risk labels 13). Risk name labels at 13pt slightly small
-          but readable.
+        comment: All font sizes explicitly set. Risk name labels at 11pt slightly
+          small for 4800x2700 canvas.
       - id: VQ-02
         name: No Overlap
-        score: 3
-        max: 6
-        passed: false
-        comment: Regulatory Change and Compliance Gap labels overlap in Major/Unlikely
-          cell. Risk name labels collide with cell score annotations in several cells.
-      - id: VQ-03
-        name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Markers at size 22 with white outlines clearly visible. Cell background
-          opacity 0.35 keeps markers prominent.
+        comment: Minor crowding between Regulatory and Compliance Gap labels but still
+          readable. Jitter helps.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Markers well-sized with visual hierarchy (18-28px by zone). All clearly
+          visible.
       - id: VQ-04
         name: Color Accessibility
-        score: 2
-        max: 4
-        passed: false
-        comment: Green-to-red zone gradient problematic for red-green colorblind users.
-          Category colors (blue, purple, orange) well-differentiated.
-      - id: VQ-05
-        name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good proportions with explicit margins. Plot fills most of canvas.
-          Legend well-positioned.
+        comment: Excellent colorblind-safe adaptation with blue-yellow-orange-pink
+          zones.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good proportions, plot fills canvas well, legend positioned neatly.
       - id: VQ-06
         name: Axis Labels & Title
         score: 1
         max: 2
         passed: true
-        comment: Impact and Likelihood are descriptive but lack scale indicators.
+        comment: Descriptive labels but no units (ordinal scale).
     design_excellence:
-      score: 11
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -97,22 +92,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom color palette for zones and categories, plotly_white template,
-          styled legend. Above defaults but not publication-quality.
+        comment: Custom colorblind-safe palette, visual hierarchy through marker sizing.
+          Above defaults but not publication-level.
       - id: DE-02
         name: Visual Refinement
-        score: 3
-        max: 6
-        passed: false
-        comment: White background, grids removed, clean cell borders. Arial Black
-          typography feels heavy.
-      - id: DE-03
-        name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Risks distributed across zones with category coloring. No focal point
-          emphasizing critical risks.
+        comment: plotly_white template, grids removed, white cell borders, generous
+          margins.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Visual hierarchy through marker size/weight draws attention to critical
+          risks.
     spec_compliance:
       score: 15
       max: 15
@@ -122,85 +117,83 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 5x5 heatmap risk matrix
+        comment: Correct 5x5 heatmap risk matrix with color-coded cells.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: gradient, labels, markers with jitter,
-          zones, legend, grid, categories'
+        comment: All spec features present including zones, labels, jitter, legend.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Impact on X, Likelihood on Y, scores correctly computed
+        comment: X=Impact, Y=Likelihood correctly mapped.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Legend shows both categories and zone colors.
+        comment: Title format correct. Legend includes categories and zones with ranges.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 12 risk items across 3 categories spanning all 4 risk zones. Good
-          spread.
+        comment: 12 risk items across 3 categories, all 4 zones represented, shared
+          cells demonstrate jitter.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real-world business risk management scenario with plausible risk
-          items. Neutral topic.
+        comment: Realistic enterprise risk management scenario with neutral business
+          context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Likelihood and impact ratings 1-5 are standard. Distribution realistic.
+        comment: Risk ratings are realistic for enterprise risk context.
     code_quality:
       score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: Clean Import-Data-Plot-Save flow, no functions or classes
+        comment: Has get_zone helper function breaking flat structure.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy and plotly.graph_objects, both used
+        comment: Only numpy and plotly.graph_objects, both used.
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Jitter logic uses two separate dictionaries which is convoluted.
-          showlegend deduplication hard to read.
+        passed: true
+        comment: Clean, appropriate complexity, no fake functionality.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png at correct dimensions, plus HTML export
+        comment: Saves as plot.png with correct dimensions.
     library_mastery:
       score: 7
       max: 10
@@ -211,25 +204,23 @@ review:
         max: 5
         passed: true
         comment: Good use of go.Figure, go.Scatter, add_shape, add_annotation, update_layout.
-          Proper legendgroup usage.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Rich hover templates with HTML formatting, HTML export, legend grouping
-          are distinctively Plotly.
+        comment: Uses Plotly-specific hover templates, HTML export, and shape layer
+          system.
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - custom-legend
   - hover-tooltips
+  - custom-legend
   - html-export
   patterns:
   - data-generation
-  - matrix-construction
   - iteration-over-groups
   dataprep: []
   styling:
