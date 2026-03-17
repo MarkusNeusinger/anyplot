@@ -1,7 +1,7 @@
 library: highcharts
 specification_id: scatter-constellation-diagram
 created: '2026-03-17T23:22:34Z'
-updated: '2026-03-17T23:26:52Z'
+updated: '2026-03-17T23:36:13Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23220948648
 issue: 4562
@@ -10,84 +10,80 @@ library_version: unknown
 preview_url: https://storage.googleapis.com/pyplots-images/plots/scatter-constellation-diagram/highcharts/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/scatter-constellation-diagram/highcharts/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/scatter-constellation-diagram/highcharts/plot.html
-quality_score: 80
+quality_score: 85
 review:
   strengths:
-  - Correct and complete 16-QAM constellation with all required elements (ideal points,
-    received symbols, decision boundaries, EVM)
-  - Good use of Highcharts renderer API for custom overlays (decision boundaries,
-    EVM label)
-  - Clean, well-structured code with proper seed for reproducibility
-  - Realistic telecommunications data with plausible SNR and EVM values
-  - Explicit font sizing throughout ensures readability at 4800x2700
+  - Perfect spec compliance with all required features implemented correctly
+  - Clean code structure with proper reproducibility and KISS pattern
+  - Good data storytelling through visual hierarchy of large red ideal points vs small
+    blue received symbols
+  - Effective use of Highcharts renderer for custom overlays (decision boundaries,
+    EVM annotation)
+  - Appropriate 3600x3600 square format for equal aspect ratio
   weaknesses:
-  - 'Equal aspect ratio not maintained: The 16:9 canvas (4800x2700) distorts the constellation
-    geometry — the spec explicitly requires equal aspect ratio'
-  - 'Received symbols too faint: Alpha 0.35 at radius 6 makes the received symbols
-    wash out, density information is lost'
-  - 'Legend positioning: The right-aligned vertical legend is slightly cramped and
-    the marker icon is very small'
-  image_description: The plot displays a 16-QAM constellation diagram on a white background.
-    The title reads "16-QAM Constellation · scatter-constellation-diagram · highcharts
-    · pyplots.ai" at the top. The x-axis is labeled "In-Phase (I)" and the y-axis
-    "Quadrature (Q)", both ranging from -5 to 5. Sixteen red diamond markers represent
-    the ideal constellation points arranged in a 4x4 grid at ±1, ±3 positions. Light
-    blue semi-transparent circular dots (~1000) represent received symbols scattered
-    around each ideal point due to Gaussian noise. Dashed gray decision boundary lines
-    appear at -2, 0, and 2 on both axes, dividing the plane into 16 decision regions.
-    An "EVM = 14.0%" annotation sits in the upper-left corner in a rounded white box
-    with a gray border. A legend on the right identifies "Received Symbols" (blue
-    circle) and "Ideal Points" (red diamond). The constellation geometry is visibly
-    distorted — the 4x4 grid appears wider than tall due to the 16:9 aspect ratio
-    (4800x2700), violating the spec's equal aspect ratio requirement.
+  - Gray outer background and heavy plot border detract from design elegance
+  - Color palette is functional but not optimally colorblind-safe (blue/red pairing)
+  - Decision boundaries use custom renderer instead of native Highcharts plotLines
+  - Marker sizes could be slightly larger for better visual impact at 3600px canvas
+  image_description: The plot displays a 16-QAM constellation diagram on a white plot
+    area with a light gray outer background. Sixteen clusters of semi-transparent
+    blue circular dots (received symbols, approximately 1000 total) are arranged in
+    a 4x4 grid at coordinates ±1 and ±3 on both axes. Red diamond markers denote the
+    16 ideal constellation points at the center of each cluster. Dashed gray decision
+    boundary lines are drawn at -2, 0, and +2 on both I and Q axes, clearly separating
+    the 16 symbol regions. The title reads "16-QAM Constellation · scatter-constellation-diagram
+    · highcharts · pyplots.ai" in bold at the top. The x-axis is labeled "In-Phase
+    (I)" and the y-axis "Quadrature (Q)", both ranging from -5 to +5 with tick marks
+    at every integer. An EVM annotation box in the upper-left corner displays "EVM
+    = 14.0%". A legend in the upper-right shows blue circle for "Received Symbols"
+    and red diamond for "Ideal Points". The plot uses a 1:1 square aspect ratio.
   criteria_checklist:
     visual_quality:
-      score: 24
+      score: 26
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 44px, axis labels 36px, tick
-          labels 24px, legend 28px, EVM 34px'
+        comment: All font sizes explicitly set (title 42px, axes 36px, ticks 24px,
+          legend 28px, EVM 34px). All text clearly readable.
       - id: VQ-02
         name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text elements. Legend and EVM annotation well-positioned.
+      - id: VQ-03
+        name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Generally clean but legend on right edge slightly cramped; received
-          symbols marker icon tiny relative to text
-      - id: VQ-03
-        name: Element Visibility
-        score: 4
-        max: 6
-        passed: true
-        comment: Ideal points clear but received symbols at alpha 0.35 and radius
-          6 are too faint, density hard to judge
+        comment: Received symbols (radius 9, alpha 0.5) appropriate for 1000 points.
+          Ideal diamonds clearly visible. Markers could be slightly larger for 3600px
+          canvas.
       - id: VQ-04
         name: Color Accessibility
         score: 3
         max: 4
         passed: true
-        comment: Blue/red distinguishable for most colorblind types but low alpha
-          reduces effective contrast
+        comment: Blue/red pairing is generally distinguishable but not optimally colorblind-safe.
       - id: VQ-05
         name: Layout & Canvas
-        score: 2
+        score: 3
         max: 4
         passed: true
-        comment: 16:9 format poor choice for equal aspect ratio plot; constellation
-          visibly stretched horizontally
+        comment: Square format appropriate for equal aspect ratio. Margins slightly
+          oversized.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: In-Phase (I) and Quadrature (Q) are standard descriptive labels
+        comment: In-Phase (I) and Quadrature (Q) are standard descriptive labels.
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -95,24 +91,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Intentional colors, custom sizing, EVM annotation box. Above defaults
-          but not publication-ready
+        comment: Custom palette, white plot area with gray surround, above defaults
+          but not publication-level.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Grid lines removed, clean background, custom axis colors. Decision
-          boundaries add structure
+        comment: Grid lines removed, clean plot border, but outer gray background
+          and heavy border add unnecessary chrome.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Good visual hierarchy between ideal and received. EVM annotation
-          provides quantitative context
+        comment: Strong visual hierarchy with ideal vs received symbols. EVM annotation
+          provides quantitative context.
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -120,26 +116,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct scatter plot / constellation diagram
+        comment: Correct scatter/constellation diagram.
       - id: SC-02
         name: Required Features
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: All features present except equal aspect ratio which is explicitly
-          required by spec but violated by 16:9 canvas
+        passed: true
+        comment: 'All spec features present: 16-QAM, ideal points, received symbols,
+          decision boundaries, EVM, equal aspect ratio.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: I and Q correctly mapped to x and y axes
+        comment: I/Q correctly mapped to x/y axes.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows correct format; legend labels clear and descriptive
+        comment: Title follows required format. Legend correctly labels both series.
     data_quality:
       score: 14
       max: 15
@@ -149,21 +145,21 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Shows ideal points, noisy received symbols, decision boundaries,
-          and EVM. Core features well covered
+        comment: Shows all 16 constellation points with noise scatter, decision boundaries,
+          and EVM.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 16-QAM at 20 dB SNR is a realistic telecommunications scenario
+        comment: 16-QAM with SNR=20dB and EVM=14% are realistic wireless communications
+          values.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Standard 16-QAM grid at +/-1, +/-3. SNR 20 dB with ~14% EVM is physically
-          plausible
+        comment: Standard 16-QAM levels at ±1, ±3 with appropriate ±5 axis range.
     code_quality:
       score: 10
       max: 10
@@ -173,31 +169,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean linear flow with no functions or classes
+        comment: 'Linear flow: imports, data, chart config, series, export.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: All imports used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, custom JS well-structured
+        comment: Clean, well-organized. Custom JS for decision boundaries is appropriate
+          Highcharts pattern.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png via Selenium
+        comment: Saves plot.png via Selenium. Also produces plot.html.
     library_mastery:
       score: 7
       max: 10
@@ -207,15 +204,15 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Proper use of highcharts-core wrapper, ScatterSeries, to_js_literal,
-          Selenium export
+        comment: Correctly uses highcharts-core Python API. Could use more Pythonic
+          configuration.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses Highcharts renderer API for custom drawing via addEvent, renderer.path,
-          renderer.label
+        comment: Uses Highcharts.addEvent and renderer API for custom overlays. Could
+          leverage native plotLines for decision boundaries.
   verdict: REJECTED
 impl_tags:
   dependencies:
@@ -229,3 +226,4 @@ impl_tags:
   dataprep: []
   styling:
   - alpha-blending
+  - edge-highlighting
