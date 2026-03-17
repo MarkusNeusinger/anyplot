@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 heatmap-risk-matrix: Risk Assessment Matrix (Probability vs Impact)
 Library: seaborn 0.13.2 | Python 3.14.3
 Quality: 88/100 | Created: 2026-03-17
@@ -40,35 +40,47 @@ risks = [
     {"name": "IP Theft", "likelihood": 1, "impact": 5, "category": "Technical"},
 ]
 
-# Perceptually-uniform colormap for accessibility (plasma-inspired risk gradient)
-cmap = LinearSegmentedColormap.from_list(
-    "risk_pu", ["#f0f9e8", "#bae4bc", "#f7c948", "#e8871e", "#b5122a", "#6e0025"], N=256
-)
+# Perceptually-uniform colormap: yellow-orange-red avoids green-red confusion
+cmap = LinearSegmentedColormap.from_list("risk_pu", ["#ffffcc", "#fed976", "#fd8d3c", "#e31a1c", "#800026"], N=256)
 
 # Seaborn style setup with custom palette
 sns.set_style("white")
-sns.set_context("talk", font_scale=1.0)
+sns.set_context("talk", rc={"font.size": 16, "axes.titlesize": 24, "axes.labelsize": 20})
 category_colors = sns.color_palette(["#306998", "#e8871e", "#7b4f9d", "#2ca02c"])
 
 # Plot with extra space on right for legend
 fig, ax = plt.subplots(figsize=(16, 9))
 fig.subplots_adjust(right=0.76)
 
-# Heatmap with seaborn - increased annotation visibility
+# Heatmap with seaborn - cell scores placed in bottom-right corner via manual annotation
 sns.heatmap(
     risk_scores,
-    annot=True,
-    fmt="d",
+    annot=False,
     cmap=cmap,
     vmin=1,
     vmax=25,
     linewidths=2.5,
     linecolor="white",
     cbar_kws={"shrink": 0.6, "label": "Risk Score", "pad": 0.02, "aspect": 20},
-    annot_kws={"size": 24, "weight": "bold", "color": "#2a2a2a", "alpha": 0.55},
     square=False,
     ax=ax,
 )
+
+# Place score numbers in bottom-right corner of each cell to avoid marker overlap
+for i in range(5):
+    for j in range(5):
+        ax.text(
+            j + 0.88,
+            i + 0.88,
+            str(risk_scores[i, j]),
+            ha="right",
+            va="bottom",
+            fontsize=18,
+            fontweight="bold",
+            color="#2a2a2a",
+            alpha=0.5,
+            zorder=2,
+        )
 
 # Category styling
 category_palette = dict(zip(["Technical", "Financial", "Operational", "Project"], category_colors, strict=True))
@@ -82,7 +94,7 @@ for risk in risks:
         cell_items[cell_key] = []
     cell_items[cell_key].append(risk)
 
-offsets_map = {1: [(0, 0)], 2: [(-0.25, -0.1), (0.25, -0.1)], 3: [(-0.3, -0.16), (0.3, -0.16), (0, 0.2)]}
+offsets_map = {1: [(0, 0)], 2: [(-0.30, -0.12), (0.30, -0.12)], 3: [(-0.32, -0.16), (0.32, -0.16), (0, 0.22)]}
 
 # Build positioned data
 plot_data = []
@@ -135,8 +147,8 @@ for _, row in critical_df.iterrows():
 
 # Add labels with larger font size for readability
 for _, row in df_risks.iterrows():
-    label_y_offset = 0.30 if row["score"] >= 12 else 0.26
-    fontsize = 11.5 if row["is_critical"] else 11
+    label_y_offset = 0.32 if row["score"] >= 12 else 0.28
+    fontsize = 13.5 if row["is_critical"] else 13
     ax.text(
         row["x"],
         row["y"] + label_y_offset,
@@ -188,10 +200,10 @@ legend_handles.append(plt.Line2D([0], [0], color="w", label=""))
 
 # Zone color patches using colors from the colormap
 zone_levels = [
-    ("Low (1–4)", "#f0f9e8"),
-    ("Medium (5–9)", "#bae4bc"),
-    ("High (10–16)", "#e8871e"),
-    ("Critical (20–25)", "#6e0025"),
+    ("Low (1–4)", "#ffffcc"),
+    ("Medium (5–9)", "#fed976"),
+    ("High (10–16)", "#e31a1c"),
+    ("Critical (20–25)", "#800026"),
 ]
 for label, color in zone_levels:
     legend_handles.append(mpatches.Patch(facecolor=color, edgecolor="#999999", linewidth=1, label=label))
