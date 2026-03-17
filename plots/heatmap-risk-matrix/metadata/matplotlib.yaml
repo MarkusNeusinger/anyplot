@@ -1,7 +1,7 @@
 library: matplotlib
 specification_id: heatmap-risk-matrix
 created: '2026-03-17T21:52:21Z'
-updated: '2026-03-17T22:15:16Z'
+updated: '2026-03-17T22:24:27Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23217984795
 issue: 4567
@@ -18,24 +18,27 @@ review:
   - Path effects on labels ensure readability over any background color
   - Zone boundary dashed lines effectively communicate risk severity thresholds
   - Comprehensive data with 14 well-chosen risk items spanning all zones and categories
+  - Dual legend (Category + Risk Level) provides complete visual decoding
   weaknesses:
   - Color gradient starts at light cream/yellow rather than green for lowest-risk
-    cells as specified
-  - Minor label crowding in the Possible/Likely rows where multiple risks cluster
+    cells as specified in the spec
+  - Minor label crowding where risk labels overlap with semi-transparent score numbers
   image_description: 'The plot displays a 5x5 risk assessment matrix with Likelihood
     (Rare to Almost Certain) on the y-axis and Impact (Negligible to Catastrophic)
     on the x-axis. Each cell is rendered as a rounded rectangle colored from light
-    cream/yellow (low scores like 1-2) through amber and orange to dark crimson (scores
-    20-25). Risk score numbers appear semi-transparently in each cell background.
+    cream/pale yellow (low scores like 1-2) through amber and orange to dark crimson
+    (scores 20-25). Risk score numbers appear semi-transparently in each cell background.
     White dashed diagonal lines demarcate zone boundaries (Low, Medium, High, Critical).
     Fourteen risk items are plotted as colored circle markers — dark teal for Technical
     (Data Breach, Server Outage, Cyber Attack, Power Failure), purple for Financial
     (Budget Overrun, Regulatory Change, Vendor Failure, Market Shift, Minor Delay),
     and green for Operational (Supply Chain Disruption, Key Staff Turnover, Scope
-    Creep, Deadline Slip, Equipment Wear). Marker sizes scale with risk score. Labels
-    have white stroke outlines for readability. Two legends sit to the right: Category
-    (marker colors) and Risk Level (zone color swatches). Title reads heatmap-risk-matrix
-    · matplotlib · pyplots.ai.'
+    Creep, Deadline Slip, Equipment Wear). Marker sizes scale with risk score, creating
+    visual hierarchy. Labels have white stroke outlines for readability over any background
+    color. Two legends sit to the right: Category (marker colors) and Risk Level (zone
+    color swatches with score ranges). Title reads heatmap-risk-matrix · matplotlib
+    · pyplots.ai. All spines are removed and tick marks hidden for a clean modern
+    appearance.'
   criteria_checklist:
     visual_quality:
       score: 28
@@ -53,8 +56,8 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Minor crowding between some labels but all readable thanks to white
-          stroke outlines
+        comment: Minor crowding between risk labels and background score numbers;
+          all readable thanks to white stroke path effects
       - id: VQ-03
         name: Element Visibility
         score: 6
@@ -67,20 +70,21 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Custom colormap avoids red-green ambiguity; category colors distinguishable
+        comment: Custom colormap avoids red-green ambiguity; category colors clearly
+          distinguishable
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Equal aspect on 16:9 figure creates some unused space but legends
-          fill right side
+        comment: Equal aspect ratio on 16:9 figure creates some unused vertical space
+          but legends fill right side
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with ordinal scale tick labels
+        comment: Descriptive axis labels with ordinal scale tick labels
     design_excellence:
       score: 15
       max: 20
@@ -90,15 +94,15 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom colormap, rounded rectangles, path effects, marker size hierarchy
-          - clearly above defaults
+        comment: Custom colormap, FancyBboxPatch rounded rectangles, path effects,
+          marker size hierarchy — clearly above defaults
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
         comment: All spines removed, tick marks hidden, rounded corners, white borders,
-          subtle score numbers
+          semi-transparent score numbers
       - id: DE-03
         name: Data Storytelling
         score: 4
@@ -151,7 +155,8 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Real-world enterprise risk management with plausible risk names
+        comment: Real-world enterprise risk management with plausible neutral risk
+          names
       - id: DQ-03
         name: Appropriate Scale
         score: 4
@@ -201,8 +206,8 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Axes methods throughout, proper figure/axes pattern, FancyBboxPatch
-          for rounded corners
+        comment: Axes methods throughout, FancyBboxPatch for rounded corners; slightly
+          non-standard for heatmaps but effective
       - id: LM-02
         name: Distinctive Features
         score: 3
