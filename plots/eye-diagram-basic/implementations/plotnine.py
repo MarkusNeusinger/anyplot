@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 eye-diagram-basic: Signal Integrity Eye Diagram
 Library: plotnine 0.15.3 | Python 3.14.3
 Quality: 84/100 | Created: 2026-03-17
@@ -8,14 +8,15 @@ import numpy as np
 import pandas as pd
 from plotnine import (
     aes,
+    after_stat,
     element_blank,
     element_line,
     element_rect,
     element_text,
-    geom_tile,
+    geom_bin2d,
     ggplot,
     labs,
-    scale_fill_gradientn,
+    scale_fill_cmap,
     scale_x_continuous,
     scale_y_continuous,
     theme,
@@ -51,12 +52,13 @@ for _ in range(n_traces):
     # Add noise
     signal += np.random.normal(0, noise_sigma, len(signal))
 
-    # Add jitter by slightly shifting time base per bit
+    # Add jitter: per-bit timing offset + per-sample dither to prevent bin aliasing
     jittered_t = t_full.copy()
     for b in range(n_bits):
         start = b * samples_per_ui
         end = (b + 1) * samples_per_ui
         jittered_t[start:end] += np.random.normal(0, jitter_sigma)
+    jittered_t += np.random.uniform(-0.5 / samples_per_ui, 0.5 / samples_per_ui, len(jittered_t))
 
     # Slice into 2-UI windows and overlay
     for b in range(n_bits - ui_window):
@@ -67,33 +69,16 @@ for _ in range(n_traces):
         all_time.extend(seg_t)
         all_voltage.extend(seg_v)
 
-all_time = np.array(all_time)
-all_voltage = np.array(all_voltage)
+df = pd.DataFrame({"time": np.array(all_time), "voltage": np.array(all_voltage)})
 
-# Bin into 2D histogram for density heatmap
-n_xbins = 200
-n_ybins = 120
-x_edges = np.linspace(0, ui_window, n_xbins + 1)
-y_edges = np.linspace(-0.3, 1.3, n_ybins + 1)
-hist, _, _ = np.histogram2d(all_time, all_voltage, bins=[x_edges, y_edges])
-
-x_centers = (x_edges[:-1] + x_edges[1:]) / 2
-y_centers = (y_edges[:-1] + y_edges[1:]) / 2
-xx, yy = np.meshgrid(x_centers, y_centers, indexing="ij")
-
-df = pd.DataFrame({"Time (UI)": xx.ravel(), "Voltage (V)": yy.ravel(), "Density": hist.ravel()})
-df = df[df["Density"] > 0]
-
-# Plot
-hot_colors = ["#0d0221", "#1b065e", "#3b185e", "#6b2d5b", "#c2185b", "#e65100", "#f9a825", "#fff176", "#fffde7"]
-
+# Plot — use geom_bin2d for native plotnine 2D binning and after_stat for density
 plot = (
-    ggplot(df, aes(x="Time (UI)", y="Voltage (V)", fill="Density"))
-    + geom_tile(aes(width=ui_window / n_xbins, height=1.6 / n_ybins))
-    + scale_fill_gradientn(colors=hot_colors, name="Trace\nDensity")
-    + scale_x_continuous(expand=(0, 0), breaks=[0, 0.5, 1.0, 1.5, 2.0])
-    + scale_y_continuous(expand=(0, 0), breaks=[0, 0.5, 1.0])
-    + labs(x="Time (UI)", y="Voltage (V)", title="eye-diagram-basic · plotnine · pyplots.ai")
+    ggplot(df, aes(x="time", y="voltage"))
+    + geom_bin2d(aes(fill=after_stat("count")), bins=(250, 150))
+    + scale_fill_cmap(cmap_name="inferno", name="Trace\nDensity")
+    + scale_x_continuous(expand=(0, 0), breaks=[0, 0.5, 1.0, 1.5, 2.0], name="Time (UI)")
+    + scale_y_continuous(expand=(0, 0), breaks=[0, 0.5, 1.0], name="Voltage (V)")
+    + labs(title="eye-diagram-basic · plotnine · pyplots.ai")
     + theme_minimal()
     + theme(
         figure_size=(16, 9),
@@ -101,11 +86,11 @@ plot = (
         panel_background=element_rect(fill="#0d0221"),
         text=element_text(size=14, color="#cccccc"),
         axis_title=element_text(size=20, color="#eeeeee"),
-        axis_text=element_text(size=16, color="#aaaaaa"),
+        axis_text=element_text(size=16, color="#bbbbbb"),
         plot_title=element_text(size=24, color="#eeeeee", weight="bold"),
         legend_text=element_text(size=14, color="#cccccc"),
         legend_title=element_text(size=16, color="#eeeeee"),
-        panel_grid_major=element_line(color="#2a1a3e", size=0.5),
+        panel_grid_major=element_line(color="#1a1035", size=0.3),
         panel_grid_minor=element_blank(),
         legend_background=element_rect(fill="#0d0221"),
     )
