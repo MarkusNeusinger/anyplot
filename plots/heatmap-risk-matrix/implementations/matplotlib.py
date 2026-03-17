@@ -1,10 +1,11 @@
-""" pyplots.ai
+"""pyplots.ai
 heatmap-risk-matrix: Risk Assessment Matrix (Probability vs Impact)
 Library: matplotlib 3.10.8 | Python 3.14.3
 Quality: 82/100 | Created: 2026-03-17
 """
 
 import matplotlib.patches as mpatches
+import matplotlib.patheffects as pe
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.colors import LinearSegmentedColormap
@@ -33,42 +34,78 @@ risks = [
     ("Deadline\nSlip", 5, 2, "Operational"),
 ]
 
-# Color map: green -> yellow -> orange -> red
-cmap = LinearSegmentedColormap.from_list("risk", ["#2ecc71", "#f1c40f", "#e67e22", "#e74c3c", "#c0392b"], N=256)
+# Colorblind-safe colormap: light yellow -> amber -> deep orange -> dark crimson
+cmap = LinearSegmentedColormap.from_list("risk_cb", ["#fef9e7", "#f9e154", "#e8882f", "#c0392b", "#7b241c"], N=256)
 
 # Plot
 fig, ax = plt.subplots(figsize=(16, 9))
 
+# Draw cells with rounded rectangles and score annotations
 for i in range(5):
     for j in range(5):
         score = risk_scores[i, j]
         color = cmap(score / 25.0)
         rect = mpatches.FancyBboxPatch(
-            (j, i), 1, 1, boxstyle="round,pad=0.02", facecolor=color, edgecolor="white", linewidth=2
+            (j, i), 1, 1, boxstyle="round,pad=0.02", facecolor=color, edgecolor="white", linewidth=2.5
         )
         ax.add_patch(rect)
-        ax.text(
+        score_text = ax.text(
             j + 0.5,
             i + 0.15,
             str(score),
             ha="center",
             va="center",
-            fontsize=14,
+            fontsize=16,
             fontweight="bold",
-            color="white" if score >= 10 else "#333333",
-            alpha=0.6,
+            color="white" if score >= 10 else "#444444",
+            alpha=0.55,
         )
+        score_text.set_path_effects([pe.withStroke(linewidth=1.5, foreground="white" if score < 10 else "#00000033")])
 
-# Plot risk items with jitter
-category_colors = {"Technical": "#1a5276", "Financial": "#4a235a", "Operational": "#0e6655"}
-jitter_offsets = np.random.uniform(-0.2, 0.2, (len(risks), 2))
+# Plot risk items with jitter and size proportional to risk score
+category_colors = {"Technical": "#1a5276", "Financial": "#6c3483", "Operational": "#0e6655"}
+jitter_offsets = np.random.uniform(-0.18, 0.18, (len(risks), 2))
+
+# Label offset directions to avoid overlap (manually tuned for crowded cells)
+# Format: (dx, dy, va) relative to marker position
+label_offsets = {}
+# Key Staff Turnover and Market Shift both at (3,3) - offset labels in different directions
+label_offsets["Key Staff\nTurnover"] = (0.0, -0.22, "top")
+label_offsets["Market\nShift"] = (0.0, 0.25, "bottom")
+# Supply Chain Disruption at (4,4) marker at ~(3.45, 3.66) - label below to stay in cell
+label_offsets["Supply Chain\nDisruption"] = (0.15, -0.22, "top")
+# Server Outage at (3,4) marker at ~(3.33, 2.67) - label below
+label_offsets["Server\nOutage"] = (0.15, -0.22, "top")
 
 for idx, (name, lik, imp, cat) in enumerate(risks):
     x = (imp - 1) + 0.5 + jitter_offsets[idx, 0]
     y = (lik - 1) + 0.5 + jitter_offsets[idx, 1]
     marker_color = category_colors[cat]
-    ax.plot(x, y, "o", markersize=14, color=marker_color, markeredgecolor="white", markeredgewidth=1.5, zorder=5)
-    ax.text(x, y + 0.25, name, ha="center", va="bottom", fontsize=9, fontweight="bold", color="#1a1a1a", zorder=6)
+
+    # Scale marker size by risk score for visual hierarchy
+    score = lik * imp
+    if score >= 20:
+        msize = 20
+    elif score >= 10:
+        msize = 17
+    elif score >= 5:
+        msize = 14
+    else:
+        msize = 11
+
+    ax.plot(x, y, "o", markersize=msize, color=marker_color, markeredgecolor="white", markeredgewidth=2, zorder=5)
+
+    # Position labels with custom offsets where needed
+    if name in label_offsets:
+        dx, dy, va = label_offsets[name]
+        lx, ly = x + dx, y + dy
+    else:
+        lx, ly, va = x, y + 0.27, "bottom"
+
+    label = ax.text(
+        lx, ly, name, ha="center", va=va, fontsize=12, fontweight="bold", color="#1a1a1a", zorder=6, linespacing=0.85
+    )
+    label.set_path_effects([pe.withStroke(linewidth=4, foreground="white")])
 
 # Style
 ax.set_xlim(0, 5)
