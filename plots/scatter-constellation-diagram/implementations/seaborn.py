@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 scatter-constellation-diagram: Digital Modulation Constellation Diagram
 Library: seaborn 0.13.2 | Python 3.14.3
-Quality: 81/100 | Created: 2026-03-17
+Quality: 91/100 | Created: 2026-03-17
 """
 
 import matplotlib.pyplot as plt
