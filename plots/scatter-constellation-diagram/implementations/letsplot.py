@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 scatter-constellation-diagram: Digital Modulation Constellation Diagram
 Library: letsplot 4.9.0 | Python 3.14.3
-Quality: 81/100 | Created: 2026-03-17
+Quality: 91/100 | Created: 2026-03-17
 """
 
 import numpy as np
