@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 lightcurve-transit: Astronomical Light Curve
 Library: plotly 6.6.0 | Python 3.14.3
 Quality: 87/100 | Created: 2026-03-18
@@ -50,12 +50,12 @@ fig.add_trace(
         y=flux,
         mode="markers",
         name="Observations",
-        marker={"size": 7, "color": "#306998", "opacity": 0.6, "line": {"width": 0.5, "color": "white"}},
+        marker={"size": 5, "color": "#306998", "opacity": 0.45, "line": {"width": 0.5, "color": "white"}},
         error_y={
             "type": "data",
             "array": flux_err,
             "visible": True,
-            "color": "rgba(48, 105, 152, 0.25)",
+            "color": "rgba(48, 105, 152, 0.20)",
             "thickness": 1.2,
             "width": 0,
         },
@@ -69,9 +69,50 @@ fig.add_trace(
         y=model_fine,
         mode="lines",
         name="Transit Model",
-        line={"color": "#E74C3C", "width": 3},
+        line={"color": "#E67E22", "width": 3},
         hovertemplate="Phase: %{x:.4f}<br>Model: %{y:.5f}<extra></extra>",
     )
+)
+
+# Reference line at baseline flux
+fig.add_hline(y=1.0, line_dash="dot", line_color="rgba(0,0,0,0.15)", line_width=1.5)
+
+# Transit depth annotation
+min_model = 1 - transit_depth
+fig.add_annotation(
+    x=transit_center + transit_duration + 0.025,
+    y=(1.0 + min_model) / 2,
+    text=f"Depth: {transit_depth * 100:.1f}%",
+    showarrow=False,
+    font={"size": 16, "color": "#555"},
+    bgcolor="rgba(255,255,255,0.85)",
+    borderpad=4,
+)
+
+# Bracket lines for transit depth
+fig.add_shape(
+    type="line",
+    x0=transit_center + transit_duration + 0.015,
+    x1=transit_center + transit_duration + 0.015,
+    y0=1.0,
+    y1=min_model,
+    line={"color": "#888", "width": 1.2, "dash": "solid"},
+)
+fig.add_shape(
+    type="line",
+    x0=transit_center + transit_duration + 0.010,
+    x1=transit_center + transit_duration + 0.020,
+    y0=1.0,
+    y1=1.0,
+    line={"color": "#888", "width": 1.2},
+)
+fig.add_shape(
+    type="line",
+    x0=transit_center + transit_duration + 0.010,
+    x1=transit_center + transit_duration + 0.020,
+    y0=min_model,
+    y1=min_model,
+    line={"color": "#888", "width": 1.2},
 )
 
 # Style
@@ -86,8 +127,7 @@ fig.update_layout(
         "title": {"text": "Orbital Phase", "font": {"size": 22}},
         "tickfont": {"size": 18},
         "showgrid": False,
-        "showline": True,
-        "linecolor": "#333",
+        "showline": False,
         "zeroline": False,
         "range": [-0.02, 1.02],
     },
@@ -97,8 +137,7 @@ fig.update_layout(
         "showgrid": True,
         "gridcolor": "rgba(0,0,0,0.08)",
         "gridwidth": 1,
-        "showline": True,
-        "linecolor": "#333",
+        "showline": False,
         "zeroline": False,
     },
     template="plotly_white",
