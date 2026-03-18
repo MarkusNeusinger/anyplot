@@ -1,7 +1,7 @@
 library: seaborn
 specification_id: curve-dose-response
 created: '2026-03-18T22:31:15Z'
-updated: '2026-03-18T22:35:46Z'
+updated: '2026-03-18T22:44:52Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23270129125
 issue: 4556
@@ -10,32 +10,37 @@ library_version: 0.13.2
 preview_url: https://storage.googleapis.com/pyplots-images/plots/curve-dose-response/seaborn/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/curve-dose-response/seaborn/plot_thumb.png
 preview_html: null
-quality_score: 82
+quality_score: 85
 review:
   strengths:
-  - Excellent spec compliance with all required features present (4PL fit, EC50 lines,
-    error bars, asymptotes, CI band, 2 compounds)
-  - Strong visual quality with explicitly set font sizes, colorblind-safe palette,
-    and clean layout
-  - Good data storytelling through compound comparison and EC50 reference lines
-  - Proper statistical implementation with Jacobian-based confidence intervals
+  - Full spec compliance with all required features (4PL fit, EC50 lines, error bars,
+    asymptotes, CI band, 2 compounds)
+  - Excellent data quality with real drug names (Imatinib, Erlotinib) and realistic
+    pharmacological parameters
+  - Clean visual presentation with despine, subtle grid, and colorblind-safe blue/orange
+    palette
+  - Proper 95% CI computation using Jacobian-based variance propagation
   weaknesses:
-  - 'Critical: Seaborn is not used at all - the implementation is pure matplotlib
-    with no sns.* plotting functions'
-  - Generic compound labels (Compound A/B) could be more domain-specific
+  - No EC50 value annotations to highlight the key pharmacological comparison and
+    strengthen data storytelling
+  - Marker size (s=120) slightly small for 16 data points — should be 180-200
+  - Heavy reliance on matplotlib for error bars, reference lines, and CI band — seaborn
+    capabilities underutilized
+  - Design is clean but not yet publication-quality — lacks refined typography or
+    background treatment
   image_description: The plot displays two sigmoidal dose-response curves on a logarithmic
-    x-axis (Concentration in M, ranging from ~10^-9 to ~10^-4) against Response (%)
-    on the y-axis (range -5 to 110). Compound A is rendered in steel blue (#306998)
-    and Compound B in warm orange (#D4763A). Both compounds show classic sigmoidal
-    behavior with data points (circles with white edge highlights) and error bars
-    overlaid on smooth fitted curves (linewidth 3). Dashed horizontal and vertical
-    reference lines mark the EC50 for each compound — Compound A around 3e-7 M, Compound
-    B around 1e-5 M. A light blue 95% confidence interval band surrounds Compound
-    A's fit curve. Faint horizontal asymptote lines appear at the top and bottom plateaus
-    for both compounds. Top and right spines are removed, a subtle y-axis grid is
-    present (alpha 0.2). Title reads "curve-dose-response · seaborn · pyplots.ai"
-    in 24pt. Legend in upper left lists fit curves, data series, and CI band with
-    no frame.
+    x-axis (Concentration in M) against Response (%) on the y-axis. Imatinib is shown
+    in dark blue (#306998) and Erlotinib in burnt orange (#D4763A). Both compounds
+    have fitted 4PL sigmoid curves with data points (filled circles with white edges)
+    and vertical error bars overlaid. Imatinib's curve rises steeply around 1e-7 M
+    with an EC50 near 3e-7 M, reaching ~95% response. Erlotinib's curve shifts right
+    with EC50 near 5e-6 M, reaching ~80% response. Dashed horizontal and vertical
+    reference lines in matching colors mark each EC50 intersection. A light blue shaded
+    95% confidence band surrounds the Imatinib fit. Faint dashed horizontal lines
+    mark top and bottom asymptotes for both compounds. The legend in the upper left
+    lists fit lines, data points, and CI band. Title reads "curve-dose-response ·
+    seaborn · pyplots.ai". Top and right spines are removed, with a subtle y-axis
+    grid at low opacity.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -47,39 +52,40 @@ review:
         max: 8
         passed: true
         comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt,
-          legend 14pt'
+          legend 14pt, plus set_context talk'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text, legend cleanly placed
+        comment: No overlapping text; legend in upper-left away from data
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Markers visible with white edges; could be slightly larger
+        comment: Markers s=120 visible with error bars but slightly undersized for
+          <30 data points
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Blue/orange colorblind-safe palette with good contrast
+        comment: Blue/orange palette is colorblind-safe with good contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 canvas well-utilized with tight_layout
+        comment: Good 16:9 proportions, tight_layout, canvas well utilized
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Concentration (M) and Response (%) - descriptive with units
+        comment: Concentration (M) and Response (%) with units
     design_excellence:
-      score: 13
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -87,20 +93,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom palette, white marker edges, above defaults but not exceptional
+        comment: Custom palette, white marker edges, clean typography — above defaults
+          but not publication-masterpiece
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Spines removed, subtle grid, frameless legend
+        comment: Despine, subtle y-grid alpha=0.2, good whitespace; could be more
+          refined
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Two compounds with different EC50 create comparison story; reference
-          lines highlight key metric
+        comment: EC50 lines and CI band create some hierarchy but no value annotations
+          for key insight
     spec_compliance:
       score: 15
       max: 15
@@ -110,28 +118,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct sigmoidal dose-response with 4PL fit on log x-axis
+        comment: Correct sigmoidal dose-response curves with 4PL logistic fit
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: log x-axis, 4PL fit, EC50 lines, error bars,
-          asymptotes, CI band, 2 compounds, legend'
+        comment: 'All spec features present: log x, 4PL fit, EC50 lines, error bars,
+          asymptotes, 2 compounds, legend, CI band'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Concentration on X (log scale), Response on Y
+        comment: Concentration on log x-axis, response on y-axis, all data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend labels clear and descriptive
+        comment: Title format correct, legend comprehensive with fit lines, data points,
+          CI
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -139,19 +148,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Two compounds with different EC50, Hill slopes, and asymptotes
+        comment: Two compounds with distinct EC50, Hill slopes, and asymptotes
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Real scientific scenario but generic compound names
+        comment: Real kinase inhibitor names, molar concentrations, percentage response
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Realistic concentration range and response values
+        comment: 1e-9 to 1e-4 M concentrations, 0-100% response realistic for pharmacology
     code_quality:
       score: 9
       max: 10
@@ -161,7 +170,8 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Has function definition required by curve_fit; otherwise linear flow
+        comment: Has logistic4pl function (needed for curve_fit) but adds structural
+          complexity
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -179,34 +189,38 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Clean implementation, appropriate complexity
+        comment: Clean, appropriate complexity for scientific visualization
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png, dpi=300, bbox_inches=tight
+        comment: Saves as plot.png with dpi=300
     library_mastery:
-      score: 2
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 1
+        score: 3
         max: 5
-        passed: false
-        comment: Seaborn not imported or used at all - pure matplotlib implementation
+        passed: true
+        comment: Uses sns.lineplot/scatterplot with hue, set_style/set_context/despine;
+          heavy matplotlib fallback
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 2
         max: 5
         passed: false
-        comment: No seaborn-distinctive features used
+        comment: set_context and despine are seaborn-specific but core logic is largely
+          matplotlib
   verdict: REJECTED
 impl_tags:
   dependencies:
   - scipy
-  techniques: []
+  techniques:
+  - custom-legend
+  - layer-composition
   patterns:
   - data-generation
   - iteration-over-groups
