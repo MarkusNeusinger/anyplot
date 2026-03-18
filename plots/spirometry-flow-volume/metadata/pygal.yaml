@@ -1,7 +1,7 @@
 library: pygal
 specification_id: spirometry-flow-volume
 created: '2026-03-18T22:18:08Z'
-updated: '2026-03-18T22:23:05Z'
+updated: '2026-03-18T22:31:37Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23269661064
 issue: 4557
@@ -10,33 +10,36 @@ library_version: 3.1.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/spirometry-flow-volume/pygal/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/spirometry-flow-volume/pygal/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/spirometry-flow-volume/pygal/plot.html
-quality_score: 83
+quality_score: 86
 review:
   strengths:
-  - Complete spec compliance with all required features (PEF annotation, clinical
-    values, predicted overlay, distinct styling)
-  - Realistic medical data with physiologically accurate values for a healthy adult
-  - Creative SVG post-processing to achieve dashed predicted lines not natively supported
-    per-series in pygal
-  - Clinical values box with rounded corners and semi-transparent background adds
-    professional context
-  - Interactive HTML output alongside PNG
+  - Comprehensive spec compliance with all required features including PEF annotation,
+    clinical values box, and predicted overlay
+  - Strong clinical data storytelling with the PEF focal point and values box creating
+    immediate medical context
+  - Custom color palette with measured blue, predicted gray, and accent red creates
+    a professional clinical aesthetic
+  - Sophisticated SVG post-processing demonstrates deep understanding of pygal SVG-based
+    architecture
   weaknesses:
-  - Y-axis range extends to 12 L/s leaving wasted space above the data (PEF ~9.5)
-  - SVG post-processing code is verbose and could be streamlined
-  - Four separate legend entries for measured/predicted x expiratory/inspiratory are
-    somewhat redundant
-  image_description: 'The plot displays a spirometry flow-volume loop on a white background
-    with the title "spirometry-flow-volume · pygal · pyplots.ai" at the top. The x-axis
-    is labeled "Volume (L)" (0.0–6.0 L) and the y-axis "Flow (L/s)" (−8.0 to 12.0
-    L/s). Two measured curves in blue (#306998) form the loop: the expiratory limb
-    rises sharply to a peak near 9.4 L/s then declines roughly linearly, while the
-    inspiratory limb forms a U-shaped curve reaching about −6 L/s below the zero line.
-    Two predicted normal curves are rendered as dashed gray lines, slightly larger
-    than the measured loop, providing a reference overlay. A red dot marks the PEF
-    point with a bold label "PEF = 9.4 L/s". In the upper-right corner, a rounded-corner
-    box displays clinical values: FEV1: 3.8 L (79% FVC), FVC: 4.8 L, PEF: 9.5 L/s.
-    The legend at the bottom lists five series: Measured (Expiratory), Measured (Inspiratory),
+  - Y-axis range (-8 to 11) is wider than data needs, creating wasted vertical space
+  - Helper function xy_data() breaks strict KISS structure
+  - SVG post-processing is extensive and complex, particularly the parent-finding
+    dict comprehension
+  - Grid lines could be more subtle or removed for cleaner appearance
+  image_description: 'The plot displays a spirometry flow-volume loop on a white/light
+    blue background. The title "spirometry-flow-volume · pygal · pyplots.ai" appears
+    at the top in dark text. The x-axis is labeled "Volume (L)" ranging from 0.0 L
+    to 5.0 L, and the y-axis is labeled "Flow (L/s)" ranging from -8.0 L/s to 10.0
+    L/s. Two flow-volume loops are visible: the measured loop in dark navy blue (solid
+    lines) shows the expiratory limb rising sharply to ~9.4 L/s PEF then declining
+    linearly, and the inspiratory limb forming a U-shaped curve reaching about -6
+    L/s. A predicted normal loop in gray with dashed lines extends slightly wider/higher.
+    A red dot marks PEF with a label "PEF = 9.4 L/s" in red text on a white background.
+    A clinical values box in the upper right has a blue accent bar at top, containing
+    "Clinical Values" header, "FEV1: 3.8 L (79% FVC)", "FVC: 4.8 L" in blue, and "PEF:
+    9.5 L/s" in bold red. Subtle horizontal grid lines appear on a #fafcfd plot background.
+    A legend at the bottom lists five series: Measured (Expiratory), Measured (Inspiratory),
     Predicted (Expiratory), Predicted (Inspiratory), and PEF.'
   criteria_checklist:
     visual_quality:
@@ -48,67 +51,67 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 48, labels 36, major labels
-          34, legend 30). All text readable at full resolution.
+        comment: Font sizes explicitly set (title=46, labels=34, major_labels=32,
+          legend=28). All text readable. Legend text slightly small relative to canvas.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements. PEF label, clinical values box, and
-          legend are well-positioned.
+        comment: No overlapping elements. PEF label, clinical values box, legend,
+          and axis labels all well separated.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Lines visible with appropriate stroke widths. Predicted dashed lines
-          could be slightly more prominent.
+        comment: Lines visible with stroke widths 5 (measured) and 4 (predicted).
+          PEF dot prominent. Slight differentiation issue between measured and predicted
+          at rendered resolution.
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Blue for measured, gray for predicted is colorblind-safe. Red PEF
-          marker provides strong contrast.
+        comment: Colorblind-safe palette. Differentiates by both color and dash pattern.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good proportions overall. Y-axis range extends to 12 L/s leaving
-          some unused space above PEF peak.
+        comment: Good canvas utilization but y-axis range (-8 to 11) wider than data
+          needs (~-6.5 to 9.5), wasting vertical space.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Both axes have descriptive labels with units.
+        comment: Volume (L) and Flow (L/s) — descriptive with units.
     design_excellence:
-      score: 12
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Custom color palette, consistent font family, clinical values box
-          with rounded corners. Above default but not publication-level.
+        comment: Strong design with intentional color palette, custom fonts, refined
+          clinical values box with shadow and accent bar. Clearly above defaults.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: White background, subtle dashed grid lines, only y-guides shown.
-          Some refinement but could go further.
+        comment: X guides hidden, Y guides with subtle dasharray, tinted plot background.
+          Clinical values box with rounded corners and shadow.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: PEF marker creates focal point. Clinical values box contextualizes
-          data. Measured vs predicted comparison tells diagnostic story.
+        comment: PEF annotation creates focal point. Clinical values box provides
+          immediate context. Measured vs predicted comparison tells diagnostic story.
     spec_compliance:
       score: 15
       max: 15
@@ -118,48 +121,53 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct XY plot showing flow-volume loop with both limbs.
+        comment: XY chart correctly used for flow-volume loop with both limbs.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All spec requirements met including PEF annotation, clinical values,
-          predicted overlay, distinct styling.
+        comment: 'All spec features present: PEF annotation, clinical values, dashed
+          predicted overlay, distinct styling, closed loop.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=Volume, Y=Flow correctly mapped. Axes show full data range.
+        comment: Volume on x-axis, Flow on y-axis. Both loops visible across full
+          range.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows exact format. Legend labels are descriptive.
+        comment: Title follows exact format. Legend labels descriptive and match data
+          series.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows both limbs, predicted overlay, PEF marker, and clinical values.
+        comment: Shows both limbs, measured vs predicted, PEF peak, clinical values
+          with FEV1/FVC ratio.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Physiologically accurate values for a healthy adult male.
+        comment: Realistic spirometry data for healthy adult male. FEV1/FVC ratio
+          of 79% clinically plausible.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Volume and flow ranges are physiologically plausible.
+        comment: FVC=4.8L, PEF=9.5 L/s, FEV1=3.8L — realistic values for healthy adult
+          male.
     code_quality:
       score: 8
       max: 10
@@ -169,32 +177,33 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Flat script structure. SVG post-processing section is extensive but
-          necessary.
+        comment: Follows overall structure but includes helper function xy_data()
+          breaking strict KISS.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42) set at top.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used.
+        comment: 'All imports used: xml.etree, cairosvg, numpy, pygal, Style.'
       - id: CQ-04
         name: Code Elegance
         score: 1
         max: 2
         passed: true
-        comment: SVG post-processing is verbose but functional. Could be more concise.
+        comment: Extensive SVG post-processing adds complexity. Dense parent-finding
+          dict comprehension.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png via cairosvg and plot.html via render_to_file.
+        comment: Saves as plot.png via cairosvg. Also saves interactive plot.html.
     library_mastery:
       score: 7
       max: 10
@@ -204,14 +213,15 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of pygal.XY, Style, dict-based data points, value formatters.
+        comment: Uses pygal.XY correctly with custom Style, labeled data points, tooltip
+          formatting, HTML export. Heavy SVG post-processing deducts slightly.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Leverages pygal SVG-native architecture for post-processing, interactive
-          HTML export, tooltip formatters.
+        comment: Leverages pygal SVG output for post-processing, tooltip system with
+          custom formatters, HTML export with interactive tooltips.
   verdict: REJECTED
 impl_tags:
   dependencies:
@@ -219,8 +229,10 @@ impl_tags:
   techniques:
   - annotations
   - html-export
+  - custom-legend
   patterns:
   - data-generation
   dataprep: []
   styling:
   - grid-styling
+  - edge-highlighting
