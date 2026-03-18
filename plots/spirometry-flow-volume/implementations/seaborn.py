@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 spirometry-flow-volume: Spirometry Flow-Volume Loop
 Library: seaborn 0.13.2 | Python 3.14.3
-Quality: 86/100 | Created: 2026-03-18
+Quality: 88/100 | Created: 2026-03-18
 """
 
 import matplotlib.pyplot as plt

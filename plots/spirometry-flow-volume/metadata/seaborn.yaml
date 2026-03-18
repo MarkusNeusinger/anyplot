@@ -1,7 +1,7 @@
 library: seaborn
 specification_id: spirometry-flow-volume
 created: '2026-03-18T22:18:54Z'
-updated: '2026-03-18T22:23:05Z'
+updated: '2026-03-18T22:37:17Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23269660602
 issue: 4557
@@ -10,101 +10,111 @@ library_version: 0.13.2
 preview_url: https://storage.googleapis.com/pyplots-images/plots/spirometry-flow-volume/seaborn/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/spirometry-flow-volume/seaborn/plot_thumb.png
 preview_html: null
-quality_score: 86
+quality_score: 88
 review:
   strengths:
-  - Perfect visual quality - all text legible, no overlaps, excellent color accessibility
-  - Clinically realistic data with meaningful measured-vs-predicted comparison showing
-    borderline obstruction
-  - Full spec compliance - all required features implemented (PEF annotation, clinical
-    values, predicted overlay, closed loop)
-  - Good visual hierarchy with clear focal point on PEF and foreground/background
-    differentiation
-  - Clean, well-structured code with appropriate mathematical modeling
+  - Excellent clinical data storytelling with flow deficit shading between measured
+    and predicted expiratory curves
+  - Clean PEF and FEV1 annotations with well-styled clinical values text box
+  - Proper flow-volume loop shape with distinct solid/dashed styling for measured
+    vs predicted
+  - Comprehensive explicit font sizing for all text elements
+  - Good use of seaborn lineplot with hue-based color grouping and DataFrame structure
   weaknesses:
-  - Seaborn used only for styling (set_context, set_style) - no seaborn plotting functions
-    used
-  - Design could be more sophisticated - color palette is simple, typography is standard
-  - No distinctive seaborn features leveraged - could be replicated in pure matplotlib
+  - PEF annotation label (9.5 L/s) does not match the actual plotted peak value (~8.7
+    L/s) due to mathematical formula producing a lower maximum
+  - Post-hoc dash style modification by iterating ax.lines is fragile and non-idiomatic
+  - Library mastery limited - heavy reliance on matplotlib for annotations and styling
+    beyond basic seaborn calls
   image_description: 'The plot shows a spirometry flow-volume loop on a clean white
-    grid background. Two loops are displayed: a solid blue "Measured" loop and a dashed
-    gray "Predicted Normal" loop. The expiratory limb (upper portion) rises sharply
-    from the origin to a Peak Expiratory Flow of approximately 8.6 L/s, marked with
-    a red dot and annotated "PEF = 9.5 L/s" in bold red text with an arrow. The expiratory
-    flow then declines roughly linearly to zero at ~4.8 L volume. The inspiratory
-    limb (lower portion) forms a symmetric U-shaped curve reaching about -5.5 L/s.
-    The predicted normal loop (dashed gray) is slightly larger, showing higher flows
-    and greater capacity (~5.2 L). A clinical values text box in the lower right corner
-    displays FVC = 4.8 L, FEV1 = 3.5 L, FEV1/FVC = 73%, PEF = 9.5 L/s on a light blue-gray
-    background with a blue border. Top and right spines are removed. Title reads "spirometry-flow-volume
-    · seaborn · pyplots.ai". Legend in upper right shows both series.'
+    background with subtle grid lines. The x-axis is labeled "Volume (L)" (0 to ~5.2)
+    and the y-axis "Flow (L/s)" (-6 to 10). The title reads "spirometry-flow-volume
+    · seaborn · pyplots.ai" in medium weight at the top. A solid blue (#306998) "Measured"
+    curve forms the flow-volume loop: the expiratory limb rises sharply from origin
+    to a peak around 8.5-9 L/s at ~0.3 L volume, then declines roughly linearly to
+    zero at ~4.8 L. The inspiratory limb curves below zero in a U-shape reaching about
+    -5.5 L/s. A dashed gray "Predicted Normal" loop is overlaid, slightly larger in
+    both expiratory peak (~10 L/s) and FVC (~5.2 L). A light red/pink shaded region
+    between the measured and predicted expiratory curves highlights the "Flow deficit."
+    The PEF point is marked with a red circle (s=300) and annotated "PEF = 9.5 L/s"
+    with a red arrow. An FEV1 point is marked with a blue diamond at volume 3.5 L
+    and annotated "FEV₁ = 3.5 L". A styled text box in the lower right displays clinical
+    values: FVC = 4.8 L, FEV₁ = 3.5 L, FEV₁/FVC = 73%, PEF = 9.5 L/s in monospace
+    font. Top and right spines are removed. Legend in upper right shows Measured,
+    Predicted Normal, and Flow deficit entries.'
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title=24, labels=20, ticks=16, annotations=16,
-          text box=16'
+        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt,
+          annotations 16/14pt, legend 15pt, text box 16pt. All readable at target
+          resolution.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: No overlapping text. Legend, annotations, and text box are well-positioned
+          in separate areas.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Lines well-sized, PEF marker clearly visible with white edge
+        comment: Lines at linewidth=3, PEF marker s=300, FEV1 marker s=200, all clearly
+          visible.
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Blue vs gray is colorblind-safe, red accent is distinct
+        comment: Blue/gray palette is colorblind-safe. Red used only for accent annotation,
+          not as sole distinguishing feature.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good 16:9 layout, plot fills canvas well
+        comment: 16:9 figure with tight_layout, good canvas utilization, balanced
+          margins.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Volume (L) and Flow (L/s) with units
+        comment: Volume (L) and Flow (L/s) - descriptive with units.
     design_excellence:
-      score: 13
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Above defaults with thoughtful colors and custom text box, but not
-          publication-masterpiece level
+        comment: Custom color palette, styled text box, flow deficit shading, intentional
+          hierarchy. Clearly above defaults.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Spines removed, subtle grid, zero-flow line, but not every detail
-          polished
+        comment: Spines removed via despine, subtle grid (alpha=0.15), whitegrid with
+          customization, styled text box. Good but not every detail polished.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Clear visual hierarchy with foreground/background differentiation
-          and PEF focal point
+        comment: Flow deficit shading immediately conveys clinical insight. PEF and
+          FEV1 annotations guide the viewer. Clinical values box provides diagnostic
+          context. Clear visual hierarchy.
     spec_compliance:
       score: 15
       max: 15
@@ -114,28 +124,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct flow-volume loop with expiratory and inspiratory limbs
+        comment: Correct flow-volume loop with expiratory and inspiratory limbs forming
+          characteristic shape.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: PEF annotation, clinical values, predicted
-          overlay, closed loop'
+        comment: 'All features present: PEF marked/annotated, FEV1/FVC/PEF values
+          in text box, dashed predicted normal overlay, distinct styling.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=Volume, Y=Flow correctly mapped
+        comment: X=Volume, Y=Flow correctly assigned. Axes show full data range.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format, clear legend labels
+        comment: Title format correct. Legend shows Measured, Predicted Normal, and
+          Flow deficit.
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -143,19 +155,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows both limbs, PEF, measured vs predicted comparison
+        comment: Shows expiratory limb with sharp PEF rise and decline, inspiratory
+          U-shape, predicted normal overlay, and clinical values indicating mild obstruction
+          (FEV1/FVC=73%).
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Clinically realistic spirometry values showing borderline obstruction
+        comment: Clinically realistic spirometry values for a patient with mild obstructive
+          pattern.
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: All values within realistic adult spirometry ranges
+        comment: Values are physiologically plausible but PEF annotation (9.5 L/s)
+          doesn't match the actual plotted peak (~8.7 L/s) due to the mathematical
+          formula producing a lower maximum than pef_measured.
     code_quality:
       score: 10
       max: 10
@@ -165,56 +182,64 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean linear structure, no functions or classes
+        comment: 'Clean linear structure: imports, data, plot, save. No functions
+          or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set at top.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: 'All imports used: plt, np, pd, sns.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, clean mathematical modeling
+        comment: Appropriate complexity for the visualization. Clean and readable.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300
+        comment: Saves as plot.png with dpi=300 and bbox_inches='tight'.
     library_mastery:
-      score: 3
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses sns.lineplot with hue, sns.scatterplot, set_context, set_style,
+          despine. But iterating ax.lines to modify dash style is a matplotlib workaround,
+          not seaborn-idiomatic.
+      - id: LM-02
+        name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Only uses sns.set_context/set_style for styling, all plotting via
-          raw matplotlib
-      - id: LM-02
-        name: Distinctive Features
-        score: 1
-        max: 5
-        passed: false
-        comment: No distinctive seaborn features, could be replicated in pure matplotlib
+        comment: Uses set_context, set_style, despine which are seaborn-specific but
+          basic. Most of the heavy lifting (annotations, text box, fill_between, axhline)
+          is pure matplotlib.
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
+  - custom-legend
   patterns:
   - data-generation
-  dataprep: []
+  - iteration-over-groups
+  dataprep:
+  - interpolation
   styling:
-  - grid-styling
+  - alpha-blending
   - edge-highlighting
+  - grid-styling
