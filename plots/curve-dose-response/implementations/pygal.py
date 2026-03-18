@@ -1,10 +1,8 @@
-""" pyplots.ai
+"""pyplots.ai
 curve-dose-response: Pharmacological Dose-Response Curve
 Library: pygal 3.1.0 | Python 3.14.3
 Quality: 78/100 | Created: 2026-03-18
 """
-
-import re
 
 import cairosvg
 import numpy as np
@@ -62,14 +60,14 @@ ci_upper = np.percentile(fit_ensemble, 97.5, axis=0)
 C_A = "#306998"
 C_B = "#E68A00"
 C_CI = "#89ABD0"
-C_ASYM = "#999999"
+C_REF = "#888888"
 
 custom_style = Style(
     background="white",
-    plot_background="#F5F5F0",
-    foreground="#333",
-    foreground_strong="#222",
-    foreground_subtle="#DDDDDD",
+    plot_background="#F8F6F0",
+    foreground="#2A2A2A",
+    foreground_strong="#1A1A1A",
+    foreground_subtle="#E0DEDA",
     colors=(
         C_A,
         C_B,  # fitted curves
@@ -79,16 +77,17 @@ custom_style = Style(
         C_CI,  # CI bounds
         C_A,
         C_B,  # EC50 ref lines
-        C_ASYM,  # asymptotes
+        C_REF,  # asymptotes
         C_A,
         C_B,  # error bars
     ),
-    title_font_size=38,
-    label_font_size=24,
-    major_label_font_size=22,
+    title_font_size=40,
+    label_font_size=26,
+    major_label_font_size=24,
     legend_font_size=22,
     value_font_size=16,
     stroke_width=3,
+    font_family="sans-serif",
 )
 
 chart = pygal.XY(
@@ -105,12 +104,17 @@ chart = pygal.XY(
     show_y_guides=True,
     legend_at_bottom=True,
     legend_at_bottom_columns=4,
+    legend_box_size=20,
     x_label_rotation=0,
     truncate_legend=-1,
-    range=(0, 100),
+    range=(0, 105),
+    allow_interruptions=True,
+    js=[],
+    print_values=False,
+    value_formatter=lambda x: f"{x:.1f}%",
 )
 
-# --- Fitted curves ---
+# --- Fitted curves (thick, solid) ---
 chart.add(
     f"Compound A (EC\u2085\u2080={ec50_a:.1e} M)",
     list(zip(log_smooth.tolist(), fit_a.tolist(), strict=True)),
@@ -154,7 +158,7 @@ chart.add(
     stroke_style={"width": 2, "dasharray": "8, 6", "linecap": "round"},
 )
 
-# --- EC50 reference lines ---
+# --- EC50 reference lines (using allow_interruptions for None breaks) ---
 chart.add(
     "EC\u2085\u2080 ref.",
     [(log_ec50_a, 0), (log_ec50_a, half_a), None, (log_smooth[0], half_a), (log_ec50_a, half_a)],
@@ -199,79 +203,11 @@ for label, resp, sem in [(None, response_a, response_a_sem), (None, response_b, 
     for i in range(len(log_conc)):
         x = log_conc[i]
         lo, hi = resp[i] - sem[i], resp[i] + sem[i]
-        pts.extend(
-            [
-                (x, lo),
-                (x, hi),
-                None,  # vertical stem
-                (x - cap, lo),
-                (x + cap, lo),
-                None,  # bottom cap
-                (x - cap, hi),
-                (x + cap, hi),
-                None,  # top cap
-            ]
-        )
+        pts.extend([(x, lo), (x, hi), None, (x - cap, lo), (x + cap, lo), None, (x - cap, hi), (x + cap, hi), None])
     chart.add(label, pts, stroke=True, show_dots=False, dots_size=0, stroke_style={"width": 2})
 
-# Render SVG, fix broken None-breaks by splitting continuous paths into
-# proper sub-paths with M (move-to) commands every 2 coordinate pairs
+# Render and save
 svg = chart.render(is_unicode=True)
-
-
-def fix_path_breaks(path_d, points_per_segment=2):
-    """Split a continuous path into segments of N coordinate pairs each."""
-    # Parse all coordinate pairs from path data
-    coords = re.findall(r"(-?[\d.]+)\s+(-?[\d.]+)", path_d)
-    if len(coords) <= points_per_segment:
-        return path_d
-    segments = []
-    for i in range(0, len(coords), points_per_segment):
-        chunk = coords[i : i + points_per_segment]
-        if len(chunk) == points_per_segment:
-            seg = f"M{chunk[0][0]} {chunk[0][1]} L{chunk[1][0]} {chunk[1][1]}"
-            segments.append(seg)
-    return " ".join(segments)
-
-
-# Fix paths for series that use None breaks (EC50 refs, asymptotes, error bars)
-# These are series 6-10 in the first set of <g class="series..."> groups
-series_to_fix = {"serie-6", "serie-7", "serie-8", "serie-9", "serie-10"}
-fixed_count = 0
-
-
-def fix_series_path(match):
-    global fixed_count
-    serie_class = re.search(r"serie-\d+", match.group(0))
-    if serie_class and serie_class.group() in series_to_fix:
-        path_match = re.search(r'd="([^"]+)"', match.group(0))
-        if path_match:
-            old_d = path_match.group(1)
-            new_d = fix_path_breaks(old_d)
-            if new_d != old_d:
-                fixed_count += 1
-                return match.group(0).replace(old_d, new_d)
-    return match.group(0)
-
-
-svg = re.sub(r'<g class="series serie-\d+ color-\d+">\s*<path[^/]*/>\s*</g>', fix_series_path, svg)
-
-
-# Also remove dot circles from non-data series (keep only serie-2, serie-3)
-def remove_non_data_dots(match):
-    content = match.group(0)
-    serie = re.search(r"serie-(\d+)", content)
-    if serie and serie.group(1) not in ("2", "3"):
-        # Remove all <g class="dots">...</g> within this group
-        content = re.sub(r'<g class="dots">.*?</g>', "", content, flags=re.DOTALL)
-    return content
-
-
-svg = re.sub(r'<g class="series serie-\d+ color-\d+">.*?</g>', remove_non_data_dots, svg, flags=re.DOTALL)
-
-# Write SVG for HTML output
 with open("plot.html", "w") as f:
     f.write(svg)
-
-# Convert to PNG
 cairosvg.svg2png(bytestring=svg.encode("utf-8"), write_to="plot.png", dpi=96)
