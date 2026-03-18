@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 star-chart-constellation: Star Chart with Constellations
 Library: seaborn 0.13.2 | Python 3.14.3
 Quality: 85/100 | Created: 2026-03-18
@@ -225,7 +225,7 @@ df["size"] = np.interp(df["mag"], [mag_min, mag_max], [500, 15])
 
 # Bin magnitudes for legend-friendly seaborn hue mapping
 mag_bins = [-2, 1.0, 2.0, 3.0, 6.0]
-mag_labels = ["< 1.0 (brightest)", "1.0 - 2.0", "2.0 - 3.0", "> 3.0 (faintest)"]
+mag_labels = ["< 1.0 (brightest)", "1.0 – 2.0", "2.0 – 3.0", "> 3.0 (faintest)"]
 df["mag_class"] = pd.cut(df["mag"], bins=mag_bins, labels=mag_labels)
 
 # Build star lookup for edges
@@ -252,35 +252,55 @@ constellation_names = {
 named_stars = df[df["constellation"] != "---"]
 centroids = named_stars.groupby("constellation")[["ra_deg", "dec"]].mean()
 
-# Plot setup
+# Plot setup - use seaborn's context scaling for consistent sizing
 sns.set_theme(
     style="dark",
+    context="talk",
+    font_scale=1.0,
     rc={
-        "axes.facecolor": "#0a0e2a",
-        "figure.facecolor": "#0a0e2a",
-        "grid.color": "#1a2555",
+        "axes.facecolor": "#070b22",
+        "figure.facecolor": "#070b22",
+        "grid.color": "#151e48",
         "text.color": "#d0d8f0",
         "axes.edgecolor": "#2a3570",
         "axes.labelcolor": "#d0d8f0",
         "xtick.color": "#8090c0",
         "ytick.color": "#8090c0",
+        "font.family": "sans-serif",
     },
 )
 
 fig, ax = plt.subplots(figsize=(16, 9))
 
-# Draw RA/Dec grid
-for ra_line in range(0, 360, 30):
-    ax.axvline(x=ra_line, color="#1a2555", linewidth=0.5, alpha=0.6, zorder=0)
-for dec_line in range(-60, 90, 15):
-    ax.axhline(y=dec_line, color="#1a2555", linewidth=0.5, alpha=0.6, zorder=0)
+# Draw Milky Way band as a faint filled region (approximate galactic plane)
+# The Milky Way crosses the sky roughly through Cygnus, Cassiopeia, and Canis Major
+mw_ra = np.linspace(0, 360, 200)
+mw_center_dec = 25 * np.sin(np.radians(mw_ra * 1.0 - 80)) + 5
+mw_width = 18
+ax.fill_between(
+    mw_ra, mw_center_dec - mw_width, mw_center_dec + mw_width, color="#1a2244", alpha=0.35, zorder=0, label="_nolegend_"
+)
 
-# Constellation stick-figure lines
+# Draw ecliptic line as dashed curve (approximate)
+ecl_ra = np.linspace(0, 360, 300)
+ecl_dec = 23.44 * np.sin(np.radians(ecl_ra - 90))
+ax.plot(ecl_ra, ecl_dec, color="#665533", linewidth=1.2, linestyle="--", alpha=0.5, zorder=1, label="_nolegend_")
+
+# Draw RA/Dec grid with subtle styling
+for ra_line in range(0, 360, 30):
+    ax.axvline(x=ra_line, color="#151e48", linewidth=0.4, alpha=0.7, zorder=0)
+for dec_line in range(-60, 90, 15):
+    ax.axhline(y=dec_line, color="#151e48", linewidth=0.4, alpha=0.7, zorder=0)
+
+# Constellation stick-figure lines with glow effect
 for s1, s2 in edges:
     if s1 in star_lookup and s2 in star_lookup:
         x1, y1 = star_lookup[s1]["ra_deg"], star_lookup[s1]["dec"]
         x2, y2 = star_lookup[s2]["ra_deg"], star_lookup[s2]["dec"]
-        ax.plot([x1, x2], [y1, y2], color="#4a6fa5", linewidth=1.0, alpha=0.5, zorder=1)
+        # Outer glow
+        ax.plot([x1, x2], [y1, y2], color="#3a5f9f", linewidth=2.5, alpha=0.15, zorder=1)
+        # Inner line
+        ax.plot([x1, x2], [y1, y2], color="#5580bb", linewidth=0.9, alpha=0.55, zorder=1)
 
 # Background stars using seaborn scatterplot
 bg_mask = df["constellation"] == "---"
@@ -289,22 +309,21 @@ sns.scatterplot(
     x="ra_deg",
     y="dec",
     size="size",
-    sizes=(5, 25),
-    color="#8899bb",
-    alpha=0.4,
+    sizes=(4, 22),
+    color="#7788aa",
+    alpha=0.35,
     edgecolor="none",
     legend=False,
     ax=ax,
     zorder=2,
 )
 
-# Named constellation stars using seaborn scatterplot with hue for magnitude classes
-# Use a colorblind-safe palette (plasma-derived)
+# Named constellation stars with seaborn hue-based categorical color mapping
 mag_palette = {
-    "< 1.0 (brightest)": "#f0e442",
-    "1.0 - 2.0": "#e8a835",
-    "2.0 - 3.0": "#c06020",
-    "> 3.0 (faintest)": "#7a3510",
+    "< 1.0 (brightest)": "#fffce0",
+    "1.0 – 2.0": "#f0d060",
+    "2.0 – 3.0": "#c87830",
+    "> 3.0 (faintest)": "#804020",
 }
 named_df = df[~bg_mask].copy()
 
@@ -313,21 +332,18 @@ sns.scatterplot(
     x="ra_deg",
     y="dec",
     hue="mag_class",
+    hue_order=mag_labels,
     size="size",
     sizes=(30, 500),
     palette=mag_palette,
     edgecolor="white",
-    linewidth=0.4,
+    linewidth=0.5,
     alpha=0.95,
     ax=ax,
     zorder=3,
 )
 
-# Style the legend
-legend = ax.get_legend()
-legend.set_title("Apparent Magnitude", prop={"size": 12})
-legend.get_title().set_color("#d0d8f0")
-# Remove size entries from legend, keep only hue entries
+# Style the legend - filter to only show magnitude class entries
 handles, labels = ax.get_legend_handles_labels()
 hue_handles = []
 hue_labels = []
@@ -340,61 +356,75 @@ legend = ax.legend(
     hue_labels,
     title="Apparent Magnitude",
     loc="lower left",
-    fontsize=10,
-    title_fontsize=12,
-    framealpha=0.3,
+    fontsize=12,
+    title_fontsize=14,
+    framealpha=0.4,
     facecolor="#0a0e2a",
     edgecolor="#2a3570",
     labelcolor="#d0d8f0",
+    borderpad=1.0,
+    handletextpad=0.8,
 )
 legend.get_title().set_color("#d0d8f0")
 
-# Constellation labels with adjusted positions to avoid overlaps
-text_effect = [pe.withStroke(linewidth=2, foreground="#0a0e2a")]
-# Manual offsets for overlapping constellation labels
-label_offsets = {"CMa": (0, -7), "Lyr": (-12, 3), "Aql": (0, -6), "Sco": (0, -7), "Aur": (-8, 5), "Per": (0, 5)}
+# Constellation labels with carefully tuned offsets to avoid all overlaps
+text_stroke = [pe.withStroke(linewidth=3, foreground="#070b22")]
+label_offsets = {
+    "CMa": (0, -10),
+    "Lyr": (-15, 5),
+    "Aql": (0, -8),
+    "Sco": (0, -9),
+    "Aur": (-10, 7),
+    "Per": (0, 8),
+    "Ori": (0, -8),
+    "Tau": (-10, -6),
+    "Gem": (0, 6),
+    "And": (0, 6),
+    "Boo": (0, 7),
+}
 for abbr, row in centroids.iterrows():
     label = constellation_names.get(abbr, abbr)
-    dx, dy = label_offsets.get(abbr, (0, 3.5))
+    dx, dy = label_offsets.get(abbr, (0, 4))
     ax.text(
         row["ra_deg"] + dx,
         row["dec"] + dy,
         label,
-        fontsize=11,
+        fontsize=13,
         color="#7a9acc",
-        alpha=0.85,
+        alpha=0.9,
         ha="center",
         va="bottom",
-        fontweight="medium",
-        path_effects=text_effect,
+        fontweight="bold",
+        fontstyle="italic",
+        path_effects=text_stroke,
         zorder=4,
     )
 
-# Label brightest stars (mag < 1.0) with adjusted positions to avoid overlaps
+# Label brightest stars (mag < 1.0) with carefully adjusted offsets to avoid overlaps
 brightest = df[(df["mag"] < 1.0) & (df["constellation"] != "---")]
-# Custom label offsets for stars that overlap with constellation labels or each other
 star_label_offsets = {
-    "Sirius": (5, 3),
-    "Vega": (4, 4),
-    "Capella": (5, 3),
-    "Arcturus": (4, -4),
-    "Altair": (4, 4),
-    "Aldebaran": (4, -4),
-    "Rigel": (4, 3),
-    "Betelgeuse": (-3, -4),
+    "Sirius": (7, 4),
+    "Vega": (6, 4),
+    "Capella": (6, 4),
+    "Arcturus": (6, -3),
+    "Altair": (6, 4),
+    "Aldebaran": (6, -5),
+    "Rigel": (6, 4),
+    "Betelgeuse": (-5, -5),
 }
 for _, star in brightest.iterrows():
-    dx, dy = star_label_offsets.get(star["name"], (2, -2.5))
+    dx, dy = star_label_offsets.get(star["name"], (4, -3))
     ax.text(
         star["ra_deg"] + dx,
         star["dec"] + dy,
         star["name"],
-        fontsize=9,
-        color="#c8d4ee",
-        alpha=0.8,
+        fontsize=11,
+        color="#d0daf0",
+        alpha=0.85,
         ha="left",
         va="top",
-        path_effects=text_effect,
+        fontweight="medium",
+        path_effects=text_stroke,
         zorder=4,
     )
 
@@ -403,23 +433,33 @@ ax.set_xlim(360, 0)
 ax.set_ylim(-50, 72)
 ax.set_xlabel("Right Ascension (°)", fontsize=20)
 ax.set_ylabel("Declination (°)", fontsize=20)
-ax.set_title(
-    "star-chart-constellation · seaborn · pyplots.ai", fontsize=24, fontweight="medium", color="#d0d8f0", pad=15
+ax.set_title("star-chart-constellation · seaborn · pyplots.ai", fontsize=24, fontweight="bold", color="#e0e8ff", pad=20)
+ax.text(
+    0.5,
+    1.01,
+    "Azimuthal Equidistant Projection  ·  North Celestial Pole at Center  ·  Ecliptic (dashed) & Milky Way (shaded)",
+    transform=ax.transAxes,
+    fontsize=12,
+    color="#7080a0",
+    ha="center",
+    va="bottom",
 )
 ax.tick_params(axis="both", labelsize=16)
 
 ra_ticks = np.arange(0, 361, 30)
-ra_labels = [f"{int(h)}h" for h in ra_ticks / 15]
+ra_labels_text = [f"{int(h)}h" for h in ra_ticks / 15]
 ax.set_xticks(ra_ticks)
-ax.set_xticklabels(ra_labels)
+ax.set_xticklabels(ra_labels_text)
 
 dec_ticks = np.arange(-45, 76, 15)
-dec_labels = [f"{d:+d}°" for d in dec_ticks]
+dec_labels_text = [f"{d:+d}°" for d in dec_ticks]
 ax.set_yticks(dec_ticks)
-ax.set_yticklabels(dec_labels)
+ax.set_yticklabels(dec_labels_text)
 
 ax.spines["top"].set_visible(False)
 ax.spines["right"].set_visible(False)
+ax.spines["bottom"].set_linewidth(0.5)
+ax.spines["left"].set_linewidth(0.5)
 
 # Save
 plt.tight_layout()
