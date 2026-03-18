@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 spirometry-flow-volume: Spirometry Flow-Volume Loop
 Library: highcharts unknown | Python 3.14.3
 Quality: 84/100 | Created: 2026-03-18
@@ -72,11 +72,12 @@ chart.options = HighchartsOptions()
 chart.options.chart = {
     "width": 4800,
     "height": 2700,
-    "backgroundColor": "#ffffff",
-    "marginBottom": 280,
-    "marginLeft": 280,
-    "marginRight": 200,
-    "marginTop": 280,
+    "backgroundColor": "#f8f9fa",
+    "marginBottom": 320,
+    "marginLeft": 300,
+    "marginRight": 220,
+    "marginTop": 260,
+    "style": {"fontFamily": "'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif"},
 }
 
 chart.options.title = {
@@ -86,48 +87,83 @@ chart.options.title = {
 
 chart.options.subtitle = {
     "text": "Measured vs Predicted Normal · FVC: 4.80 L · FEV1: 3.60 L · PEF: 9.50 L/s",
-    "style": {"fontSize": "36px", "color": "#666666"},
+    "style": {"fontSize": "36px", "color": "#555555"},
 }
 
 # X-axis
 chart.options.x_axis = {
-    "title": {"text": "Volume (L)", "style": {"fontSize": "44px"}, "margin": 25},
-    "labels": {"style": {"fontSize": "34px"}},
+    "title": {"text": "Volume (L)", "style": {"fontSize": "44px", "color": "#333333"}, "margin": 25},
+    "labels": {"style": {"fontSize": "34px", "color": "#444444"}},
     "gridLineWidth": 1,
-    "gridLineColor": "rgba(0, 0, 0, 0.06)",
+    "gridLineColor": "rgba(0, 0, 0, 0.07)",
+    "lineColor": "#cccccc",
+    "lineWidth": 2,
+    "tickColor": "#cccccc",
+    "tickWidth": 2,
     "min": -0.2,
-    "max": 5.6,
+    "max": 5.8,
     "tickInterval": 0.5,
-    "plotLines": [{"value": 0, "color": "rgba(0, 0, 0, 0.3)", "width": 2}],
+    "plotLines": [{"value": 0, "color": "rgba(0, 0, 0, 0.25)", "width": 2}],
 }
 
 # Y-axis
 chart.options.y_axis = {
-    "title": {"text": "Flow (L/s)", "style": {"fontSize": "44px"}},
-    "labels": {"style": {"fontSize": "34px"}},
+    "title": {"text": "Flow (L/s)", "style": {"fontSize": "44px", "color": "#333333"}},
+    "labels": {"style": {"fontSize": "34px", "color": "#444444"}},
     "gridLineWidth": 1,
-    "gridLineColor": "rgba(0, 0, 0, 0.06)",
+    "gridLineColor": "rgba(0, 0, 0, 0.07)",
+    "lineColor": "#cccccc",
+    "lineWidth": 2,
     "min": -8,
     "max": 12,
     "tickInterval": 2,
-    "plotLines": [{"value": 0, "color": "rgba(0, 0, 0, 0.4)", "width": 3, "zIndex": 3}],
+    "plotLines": [
+        {
+            "value": 0,
+            "color": "rgba(0, 0, 0, 0.35)",
+            "width": 3,
+            "zIndex": 3,
+            "label": {
+                "text": "Zero Flow",
+                "align": "right",
+                "style": {"fontSize": "28px", "color": "rgba(0, 0, 0, 0.3)", "fontStyle": "italic"},
+                "x": -15,
+                "y": -10,
+            },
+        }
+    ],
 }
 
 # Plot options
 chart.options.plot_options = {
-    "line": {"marker": {"enabled": False}, "lineWidth": 6, "states": {"hover": {"lineWidthPlus": 1}}},
-    "scatter": {"marker": {"radius": 16, "lineWidth": 3, "lineColor": "#ffffff"}},
+    "line": {
+        "marker": {"enabled": False},
+        "lineWidth": 6,
+        "states": {"hover": {"lineWidthPlus": 1}},
+        "shadow": {"color": "rgba(0,0,0,0.08)", "offsetX": 2, "offsetY": 2, "width": 4},
+    },
+    "scatter": {"marker": {"radius": 18, "lineWidth": 3, "lineColor": "#ffffff"}},
+    "series": {"animation": False},
 }
 
 chart.options.legend = {
     "enabled": True,
-    "itemStyle": {"fontSize": "36px"},
-    "symbolWidth": 60,
-    "y": 10,
-    "x": 0,
-    "align": "center",
-    "verticalAlign": "bottom",
-    "floating": False,
+    "itemStyle": {"fontSize": "34px", "color": "#333333", "fontWeight": "normal"},
+    "symbolWidth": 80,
+    "symbolHeight": 20,
+    "layout": "horizontal",
+    "align": "right",
+    "verticalAlign": "top",
+    "floating": True,
+    "x": -80,
+    "y": 60,
+    "backgroundColor": "rgba(255, 255, 255, 0.92)",
+    "borderColor": "#cccccc",
+    "borderWidth": 1,
+    "borderRadius": 8,
+    "padding": 20,
+    "itemMarginBottom": 6,
+    "shadow": True,
 }
 
 chart.options.credits = {"enabled": False}
@@ -143,7 +179,7 @@ chart.options.tooltip = {
 # Measured expiratory limb
 exp_series = LineSeries()
 exp_series.data = [[round(float(v), 3), round(float(f), 3)] for v, f in zip(vol_exp, flow_exp, strict=True)]
-exp_series.name = "Measured (Expiratory)"
+exp_series.name = "Measured"
 exp_series.color = "#306998"
 exp_series.line_width = 6
 chart.add_series(exp_series)
@@ -225,6 +261,28 @@ fev1_marker.color = "#2980b9"
 fev1_marker.marker = {"symbol": "diamond", "radius": 16, "fillColor": "#2980b9", "lineWidth": 3, "lineColor": "#ffffff"}
 fev1_marker.show_in_legend = False
 chart.add_series(fev1_marker)
+
+# FVC marker - at the end of expiratory limb where flow returns to zero
+fvc_marker = ScatterSeries()
+fvc_marker.data = [
+    {
+        "x": round(float(fvc), 3),
+        "y": 0,
+        "dataLabels": {
+            "enabled": True,
+            "format": f"FVC: {fvc:.2f} L",
+            "style": {"fontSize": "36px", "fontWeight": "bold", "color": "#27ae60"},
+            "x": -40,
+            "y": 40,
+            "verticalAlign": "top",
+        },
+    }
+]
+fvc_marker.name = "FVC"
+fvc_marker.color = "#27ae60"
+fvc_marker.marker = {"symbol": "square", "radius": 16, "fillColor": "#27ae60", "lineWidth": 3, "lineColor": "#ffffff"}
+fvc_marker.show_in_legend = False
+chart.add_series(fvc_marker)
 
 # Load Highcharts JS for inline embedding
 html_str = chart.to_js_literal()
