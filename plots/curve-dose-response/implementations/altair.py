@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 curve-dose-response: Pharmacological Dose-Response Curve
 Library: altair 6.0.0 | Python 3.14.3
 Quality: 88/100 | Created: 2026-03-18
@@ -111,13 +111,19 @@ df_ref = pd.DataFrame(ref_rows)
 # Plot
 color_scale = alt.Scale(domain=["Atorvastatin", "Simvastatin"], range=["#306998", "#E8792B"])
 
+# Interactive nearest-point selection for hover detail
+nearest = alt.selection_point(nearest=True, on="pointerover", fields=["log_conc"], empty=False)
+
+
 base_x = alt.X(
     "log_conc:Q",
     title="log₁₀ Concentration (M)",
     scale=alt.Scale(domain=[-9.5, -3.5]),
     axis=alt.Axis(values=list(range(-9, -3))),
 )
-base_y = alt.Y("response:Q", title="Response (%)", scale=alt.Scale(domain=[-5, 110]))
+base_y = alt.Y(
+    "response:Q", title="Response (%)", scale=alt.Scale(domain=[0, 105]), axis=alt.Axis(values=[0, 20, 40, 60, 80, 100])
+)
 
 # Confidence bands
 ci_band = (
@@ -152,17 +158,36 @@ error_bars = (
     )
 )
 
+# Transparent selection layer for nearest-point hover
+select_layer = (
+    alt.Chart(df)
+    .mark_point(size=300, opacity=0)
+    .encode(x=alt.X("log_conc:Q"), y=alt.Y("response:Q"))
+    .add_params(nearest)
+)
+
+# Vertical rule at hover position
+hover_rule = (
+    alt.Chart(df)
+    .mark_rule(strokeWidth=1.5, color="#999999", strokeDash=[3, 3])
+    .encode(x=alt.X("log_conc:Q", title=""))
+    .transform_filter(nearest)
+)
+
+# Data points — highlighted on hover with dynamic size
 data_points = (
     alt.Chart(df)
-    .mark_point(size=180, filled=True, stroke="white", strokeWidth=1.5)
+    .mark_point(filled=True, stroke="white", strokeWidth=1.5)
     .encode(
         x=base_x,
         y=base_y,
         color=alt.Color("compound:N", scale=color_scale, legend=None),
+        size=alt.condition(nearest, alt.value(300), alt.value(180)),
         tooltip=[
             alt.Tooltip("compound:N", title="Compound"),
-            alt.Tooltip("log_conc:Q", title="log₁₀ [C]", format=".1f"),
+            alt.Tooltip("log_conc:Q", title="log₁₀ [C]", format=".2f"),
             alt.Tooltip("response:Q", title="Response (%)", format=".1f"),
+            alt.Tooltip("sem:Q", title="SEM", format=".2f"),
         ],
     )
 )
@@ -217,16 +242,25 @@ chart = (
         + error_bars
         + data_points
         + ec50_labels
+        + select_layer
+        + hover_rule
     )
+    .resolve_scale(color="independent")
     .properties(
         width=1600,
         height=900,
-        title=alt.Title("curve-dose-response · altair · pyplots.ai", fontSize=28, anchor="start"),
+        title=alt.Title(
+            "curve-dose-response · altair · pyplots.ai",
+            subtitle="4-Parameter Logistic Fit with 95% Confidence Intervals",
+            fontSize=28,
+            subtitleFontSize=18,
+            subtitleColor="#666666",
+            anchor="start",
+        ),
     )
     .configure_axis(labelFontSize=18, titleFontSize=22, gridOpacity=0.12, domainWidth=0)
-    .configure_legend(titleFontSize=20, labelFontSize=18, symbolSize=200, orient="top-right")
+    .configure_legend(titleFontSize=20, labelFontSize=18, symbolSize=200, labelColor="#444444", titleColor="#333333")
     .configure_view(strokeWidth=0)
-    .interactive()
 )
 
 # Save
