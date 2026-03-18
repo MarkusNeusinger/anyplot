@@ -1,12 +1,11 @@
-""" pyplots.ai
+"""pyplots.ai
 eye-diagram-basic: Signal Integrity Eye Diagram
 Library: bokeh 3.9.0 | Python 3.14.3
-Quality: 87/100 | Updated: 2026-03-18
 """
 
 import numpy as np
 from bokeh.io import export_png, save
-from bokeh.models import BoxAnnotation, ColorBar, ColumnDataSource, Label, LinearColorMapper, Span
+from bokeh.models import BoxAnnotation, ColorBar, ColumnDataSource, Label, LinearColorMapper, NumeralTickFormatter, Span
 from bokeh.palettes import Inferno256
 from bokeh.plotting import figure
 from bokeh.resources import CDN
@@ -85,38 +84,29 @@ center_col = time_bins // 2
 center_slice = histogram[:, center_col]
 threshold = 0.3 * center_slice.max()
 
-# Find contiguous low-density region containing the midpoint voltage (~0.5V)
+# Find eye opening bounds using numpy indexing
 mid_idx = voltage_bins // 2
 low_mask = center_slice < threshold
 
-# Walk outward from midpoint to find eye opening bounds
-lower_eye_idx = mid_idx
-while lower_eye_idx > 0 and low_mask[lower_eye_idx]:
-    lower_eye_idx -= 1
-upper_eye_idx = mid_idx
-while upper_eye_idx < voltage_bins - 1 and low_mask[upper_eye_idx]:
-    upper_eye_idx += 1
-
-lower_eye = voltage_centers[lower_eye_idx]
-upper_eye = voltage_centers[upper_eye_idx]
+# Find contiguous low-density region around midpoint
+low_indices = np.where(low_mask)[0]
+eye_region = low_indices[(low_indices >= mid_idx - voltage_bins // 4) & (low_indices <= mid_idx + voltage_bins // 4)]
+lower_eye = voltage_centers[eye_region[0]] if len(eye_region) > 0 else voltage_centers[mid_idx - 10]
+upper_eye = voltage_centers[eye_region[-1]] if len(eye_region) > 0 else voltage_centers[mid_idx + 10]
 eye_height = upper_eye - lower_eye
 
 # Eye width: horizontal slice at midpoint voltage
-mid_v_idx = (lower_eye_idx + upper_eye_idx) // 2
+mid_v_idx = np.searchsorted(voltage_centers, (lower_eye + upper_eye) / 2)
 mid_slice = histogram[mid_v_idx, :]
 low_time_mask = mid_slice < threshold
 
-# Walk outward from time center to find contiguous opening
 center_time_idx = time_bins // 2
-left_idx = center_time_idx
-while left_idx > 0 and low_time_mask[left_idx]:
-    left_idx -= 1
-right_idx = center_time_idx
-while right_idx < time_bins - 1 and low_time_mask[right_idx]:
-    right_idx += 1
-
-eye_left = time_centers[left_idx]
-eye_right = time_centers[right_idx]
+low_time_indices = np.where(low_time_mask)[0]
+eye_time_region = low_time_indices[
+    (low_time_indices >= center_time_idx - time_bins // 4) & (low_time_indices <= center_time_idx + time_bins // 4)
+]
+eye_left = time_centers[eye_time_region[0]] if len(eye_time_region) > 0 else time_centers[center_time_idx - 20]
+eye_right = time_centers[eye_time_region[-1]] if len(eye_time_region) > 0 else time_centers[center_time_idx + 20]
 eye_width = eye_right - eye_left
 
 # Plot
@@ -128,20 +118,22 @@ p = figure(
     y_axis_label="Voltage (V)",
     x_range=(0, 2),
     y_range=(-0.3, 1.3),
-    min_border_right=280,
+    min_border_left=120,
+    min_border_right=160,
     min_border_top=60,
+    min_border_bottom=100,
 )
 
 color_mapper = LinearColorMapper(palette=Inferno256, low=0, high=float(histogram.max()))
 
 p.image(image=[histogram], x=0, y=-0.3, dw=2, dh=1.6, color_mapper=color_mapper)
 
-# Reference lines at 0V and 1V signal levels
+# Reference lines at 0V and 1V signal levels - brighter and more visible
 p.add_layout(
-    Span(location=0.0, dimension="width", line_color="#44aadd", line_width=3, line_alpha=0.5, line_dash="dashed")
+    Span(location=0.0, dimension="width", line_color="#66ccee", line_width=4, line_alpha=0.7, line_dash="dashed")
 )
 p.add_layout(
-    Span(location=1.0, dimension="width", line_color="#44aadd", line_width=3, line_alpha=0.5, line_dash="dashed")
+    Span(location=1.0, dimension="width", line_color="#66ccee", line_width=4, line_alpha=0.7, line_dash="dashed")
 )
 
 # Eye opening highlight box
@@ -151,89 +143,99 @@ p.add_layout(
         right=eye_right,
         bottom=lower_eye,
         top=upper_eye,
-        fill_color=None,
+        fill_color="#00ff88",
+        fill_alpha=0.04,
         line_color="#00ff88",
         line_width=3,
-        line_alpha=0.8,
+        line_alpha=0.9,
         line_dash="solid",
     )
 )
 
-# Eye height annotation (vertical line at center)
+# Eye height annotation (vertical line with end caps)
 eye_h_source = ColumnDataSource(data={"x": [1.0, 1.0], "y": [lower_eye, upper_eye]})
 p.line(x="x", y="y", source=eye_h_source, line_color="#00ff88", line_width=3, line_alpha=0.9)
+# End caps for eye height
+cap_w = 0.02
+for cap_y in [lower_eye, upper_eye]:
+    p.line(x=[1.0 - cap_w, 1.0 + cap_w], y=[cap_y, cap_y], line_color="#00ff88", line_width=3, line_alpha=0.9)
 
-# Eye width annotation (horizontal line at midpoint)
+# Eye width annotation (horizontal line with end caps)
 eye_mid_v = (upper_eye + lower_eye) / 2
 eye_w_source = ColumnDataSource(data={"x": [eye_left, eye_right], "y": [eye_mid_v, eye_mid_v]})
 p.line(x="x", y="y", source=eye_w_source, line_color="#00ff88", line_width=3, line_alpha=0.9)
+# End caps for eye width
+cap_h = 0.02
+for cap_x in [eye_left, eye_right]:
+    p.line(
+        x=[cap_x, cap_x], y=[eye_mid_v - cap_h, eye_mid_v + cap_h], line_color="#00ff88", line_width=3, line_alpha=0.9
+    )
 
 # Labels for eye measurements
 p.add_layout(
     Label(
-        x=1.03,
+        x=1.04,
         y=(upper_eye + lower_eye) / 2,
         text=f"Eye Height: {eye_height:.2f} V",
         text_color="#00ff88",
-        text_font_size="18pt",
+        text_font_size="20pt",
         text_font_style="bold",
         background_fill_color="#000000",
-        background_fill_alpha=0.8,
+        background_fill_alpha=0.85,
     )
 )
 p.add_layout(
     Label(
         x=(eye_left + eye_right) / 2,
-        y=lower_eye - 0.06,
+        y=lower_eye - 0.07,
         text=f"Eye Width: {eye_width:.2f} UI",
         text_color="#00ff88",
-        text_font_size="18pt",
+        text_font_size="20pt",
         text_font_style="bold",
         text_align="center",
         background_fill_color="#000000",
-        background_fill_alpha=0.8,
+        background_fill_alpha=0.85,
     )
 )
 
-# Signal level labels
+# Signal level labels - larger for readability
 p.add_layout(
     Label(
         x=0.05,
-        y=1.05,
+        y=1.08,
         text="Logic 1 (1.0 V)",
-        text_color="#44aadd",
-        text_font_size="16pt",
+        text_color="#66ccee",
+        text_font_size="20pt",
         text_font_style="bold",
-        text_alpha=0.7,
         background_fill_color="#000000",
-        background_fill_alpha=0.6,
+        background_fill_alpha=0.7,
     )
 )
 p.add_layout(
     Label(
         x=0.05,
-        y=-0.15,
+        y=-0.18,
         text="Logic 0 (0.0 V)",
-        text_color="#44aadd",
-        text_font_size="16pt",
+        text_color="#66ccee",
+        text_font_size="20pt",
         text_font_style="bold",
-        text_alpha=0.7,
         background_fill_color="#000000",
-        background_fill_alpha=0.6,
+        background_fill_alpha=0.7,
     )
 )
 
 color_bar = ColorBar(
     color_mapper=color_mapper,
-    title="Log Density",
+    title="Log₁₀ Density",
     title_text_font_size="18pt",
-    title_text_color="#333333",
+    title_text_color="#444444",
     title_standoff=20,
     label_standoff=16,
-    width=45,
+    width=50,
     location=(0, 0),
     major_label_text_font_size="16pt",
-    padding=40,
+    major_label_text_color="#444444",
+    padding=30,
 )
 p.add_layout(color_bar, "right")
 
@@ -245,19 +247,25 @@ p.yaxis.axis_label_text_font_size = "22pt"
 p.xaxis.major_label_text_font_size = "18pt"
 p.yaxis.major_label_text_font_size = "18pt"
 
+# Formatted tick labels
+p.xaxis.formatter = NumeralTickFormatter(format="0.0")
+p.yaxis.formatter = NumeralTickFormatter(format="0.0")
+
 # Remove grid lines for cleaner dark-background aesthetic
 p.xgrid.grid_line_alpha = 0
 p.ygrid.grid_line_alpha = 0
 
 p.background_fill_color = "#000000"
-p.border_fill_color = "#ffffff"
+p.border_fill_color = "#f8f8f8"
 
-p.xaxis.axis_line_color = "#666666"
-p.yaxis.axis_line_color = "#666666"
-p.xaxis.major_tick_line_color = "#666666"
-p.yaxis.major_tick_line_color = "#666666"
-p.xaxis.major_label_text_color = "#333333"
-p.yaxis.major_label_text_color = "#333333"
+p.xaxis.axis_line_color = "#555555"
+p.yaxis.axis_line_color = "#555555"
+p.xaxis.major_tick_line_color = "#555555"
+p.yaxis.major_tick_line_color = "#555555"
+p.xaxis.minor_tick_line_color = None
+p.yaxis.minor_tick_line_color = None
+p.xaxis.major_label_text_color = "#444444"
+p.yaxis.major_label_text_color = "#444444"
 p.xaxis.axis_label_text_color = "#333333"
 p.yaxis.axis_label_text_color = "#333333"
 p.title.text_color = "#333333"
