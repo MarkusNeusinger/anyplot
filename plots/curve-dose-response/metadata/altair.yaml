@@ -1,0 +1,237 @@
+library: altair
+specification_id: curve-dose-response
+created: '2026-03-18T22:31:38Z'
+updated: '2026-03-18T23:19:43Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23270128726
+issue: 4556
+python_version: 3.14.3
+library_version: 6.0.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/curve-dose-response/altair/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/curve-dose-response/altair/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/curve-dose-response/altair/plot.html
+quality_score: 91
+review:
+  strengths:
+  - 'Complete spec compliance: all required features (4PL fit, EC50 lines, asymptotes,
+    error bars, CI bands, 2 compounds) present and correct'
+  - Excellent data quality with real pharmacological compounds (Atorvastatin, Simvastatin)
+    and realistic parameter values
+  - 'Strong visual refinement: subtle grid (opacity=0.12), removed borders, clean
+    typography hierarchy with title/subtitle'
+  - Effective use of Altair interactivity (hover selection, tooltips, dynamic point
+    sizing)
+  - Proper 95% CI calculation via delta method with Jacobian — scientifically rigorous
+  weaknesses:
+  - Minor visual clutter in mid-response region where EC50 reference lines and labels
+    cluster together
+  - resolve_scale(color=independent) is a workaround rather than elegant multi-layer
+    color handling
+  image_description: 'The plot displays two sigmoidal dose-response curves for Atorvastatin
+    (blue, #306998) and Simvastatin (orange, #E8792B) against a clean white background
+    with very subtle gridlines. The x-axis is labeled "log₁₀ Concentration (M)" ranging
+    from -9.0 to -4.0, and the y-axis shows "Response (%)" from 0 to 100. Both compounds
+    have filled data points with SEM error bars overlaid on smooth 4PL fitted curves
+    with shaded 95% confidence interval bands. EC₅₀ reference lines (dashed vertical
+    and horizontal) mark the half-maximal response for each compound, with bold text
+    labels "EC₅₀ = 1.1e-07 M" (Atorvastatin) and "EC₅₀ = 2.9e-06 M" (Simvastatin).
+    Dashed horizontal asymptote lines mark the top and bottom fitted values for each
+    compound. The title "curve-dose-response · altair · pyplots.ai" appears top-left
+    with subtitle "4-Parameter Logistic Fit with 95% Confidence Intervals". A legend
+    in the top-right identifies the two compounds.'
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title=28, subtitle=18, axis titles=22,
+          tick labels=18, EC50 labels=16'
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Minor visual density where EC50 reference lines and labels cluster
+          in mid-response region
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Data points well-sized (180/300px), fitted lines strokeWidth=3, error
+          bars visible, CI bands at opacity=0.15
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue (#306998) and orange (#E8792B) are colorblind-safe with strong
+          contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills canvas well at 1600x900, balanced margins, legend in top-right
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: log10 Concentration (M) and Response (%) — descriptive with units
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom cohesive palette, intentional typography hierarchy, professional
+          appearance above defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Domain lines removed, subtle grid (opacity=0.12), view borders removed,
+          generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Two sigmoid curves with distinct EC50 values tell compound potency
+          comparison story with annotations and CI bands
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct sigmoidal dose-response curves with 4PL logistic fit
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: log x-axis, 4PL fit, EC50 lines, error
+          bars, asymptotes, 2 compounds, legend, CI bands'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=log10 concentration, Y=response (%). All data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches format, legend correctly labels Atorvastatin and Simvastatin
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Two compounds with different EC50, Hill slopes, and asymptotes. Full
+          sigmoidal range shown
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real statin drugs (Atorvastatin, Simvastatin) in pharmacological
+          dose-response context
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Concentrations 1e-9 to 1e-4 M realistic for in-vitro assays, response
+          0-100%
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Has logistic_4pl function (required for curve_fit) and fitting loop.
+          Necessary complexity.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: altair, numpy, pandas, scipy.optimize.curve_fit,
+          scipy.stats.t'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-structured, delta-method CI is sophisticated but appropriate.
+          Hover is legitimate Altair.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png and plot.html, current API usage
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Good declarative grammar: layer composition, encoding types, Scale/Title,
+          configure methods'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: selection_point with nearest hover, alt.condition for dynamic sizing,
+          native tooltips, HTML export
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - scipy
+  techniques:
+  - annotations
+  - layer-composition
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - regression
+  styling:
+  - alpha-blending
+  - grid-styling
