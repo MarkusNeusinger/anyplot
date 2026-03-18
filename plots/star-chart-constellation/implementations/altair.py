@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 star-chart-constellation: Star Chart with Constellations
 Library: altair 6.0.0 | Python 3.14.3
 Quality: 82/100 | Created: 2026-03-18
@@ -72,18 +72,24 @@ stars_data = [
     ("Altair", 19.85, 8.87, 0.76, "Aql"),
     ("Tarazed", 19.77, 10.61, 2.72, "Aql"),
     ("Alshain", 19.92, 6.41, 3.71, "Aql"),
-    # Scorpius
-    ("Antares", 16.49, -26.43, 1.09, "Sco"),
-    ("Shaula", 17.56, -37.10, 1.63, "Sco"),
-    ("Sargas", 17.62, -43.00, 1.87, "Sco"),
-    ("Dschubba", 16.01, -22.62, 2.32, "Sco"),
-    ("Acrab", 16.09, -19.81, 2.62, "Sco"),
-    # Canis Major
-    ("Sirius", 6.75, -16.72, -1.46, "CMa"),
-    ("Adhara", 6.98, -28.97, 1.50, "CMa"),
-    ("Wezen", 7.14, -26.39, 1.84, "CMa"),
-    ("Mirzam", 6.38, -17.96, 1.98, "CMa"),
-    ("Aludra", 7.40, -29.30, 2.45, "CMa"),
+    # Corona Borealis
+    ("Alphecca", 15.58, 26.71, 2.23, "CrB"),
+    ("Nusakan", 15.46, 29.11, 3.68, "CrB"),
+    ("Gamma CrB", 15.71, 26.30, 3.84, "CrB"),
+    ("Delta CrB", 15.83, 26.07, 4.63, "CrB"),
+    ("Epsilon CrB", 15.96, 26.88, 4.15, "CrB"),
+    # Hercules
+    ("Kornephoros", 16.50, 21.49, 2.77, "Her"),
+    ("Zeta Her", 16.69, 31.60, 2.81, "Her"),
+    ("Eta Her", 16.71, 38.92, 3.49, "Her"),
+    ("Pi Her", 17.25, 36.81, 3.16, "Her"),
+    ("Epsilon Her", 17.00, 30.93, 3.92, "Her"),
+    ("Delta Her", 17.25, 24.84, 3.14, "Her"),
+    # Draco
+    ("Eltanin", 17.94, 51.49, 2.23, "Dra"),
+    ("Rastaban", 17.51, 52.30, 2.79, "Dra"),
+    ("Grumium", 17.89, 56.87, 3.75, "Dra"),
+    ("Thuban", 14.07, 64.38, 3.65, "Dra"),
     # Perseus
     ("Mirfak", 3.41, 49.86, 1.80, "Per"),
     ("Algol", 3.14, 40.96, 2.12, "Per"),
@@ -98,7 +104,7 @@ stars_data = [
 # Background filler stars
 n_filler = 200
 filler_ra = np.random.uniform(0, 24, n_filler)
-filler_dec = np.random.uniform(-45, 70, n_filler)
+filler_dec = np.random.uniform(-20, 75, n_filler)
 filler_mag = np.random.uniform(3.5, 5.5, n_filler)
 
 stars = pd.DataFrame(stars_data, columns=["star_id", "ra", "dec", "magnitude", "constellation"])
@@ -113,12 +119,30 @@ filler = pd.DataFrame(
 )
 stars = pd.concat([stars, filler], ignore_index=True)
 
-# Convert RA to degrees for plotting (RA hours * 15 = degrees)
-stars["ra_deg"] = stars["ra"] * 15.0
+
+# Stereographic projection from north celestial pole
+def stereo_project(ra_hours, dec_deg):
+    """Project RA/Dec to x,y using stereographic projection centered on north pole."""
+    ra_rad = np.radians(ra_hours * 15.0)
+    dec_rad = np.radians(dec_deg)
+    r = np.cos(dec_rad) / (1.0 + np.sin(dec_rad))
+    x = r * np.sin(ra_rad)
+    y = -r * np.cos(ra_rad)
+    return x, y
+
+
+stars["proj_x"], stars["proj_y"] = stereo_project(stars["ra"].values, stars["dec"].values)
 
 # Invert magnitude for sizing: brighter stars get larger points
 mag_min, mag_max = stars["magnitude"].min(), stars["magnitude"].max()
 stars["size"] = ((mag_max - stars["magnitude"]) / (mag_max - mag_min)) * 450 + 20
+
+# Magnitude category for legend
+stars["mag_class"] = pd.cut(
+    stars["magnitude"],
+    bins=[-2, 1, 2.5, 4, 6],
+    labels=["mag < 1 (brightest)", "mag 1-2.5", "mag 2.5-4", "mag 4-6 (dimmest)"],
+)
 
 # Constellation line edges (pairs of star_id)
 edges_list = [
@@ -176,16 +200,23 @@ edges_list = [
     # Aquila
     ("Altair", "Tarazed"),
     ("Altair", "Alshain"),
-    # Scorpius
-    ("Antares", "Dschubba"),
-    ("Dschubba", "Acrab"),
-    ("Antares", "Shaula"),
-    ("Shaula", "Sargas"),
-    # Canis Major
-    ("Sirius", "Mirzam"),
-    ("Sirius", "Adhara"),
-    ("Adhara", "Wezen"),
-    ("Wezen", "Aludra"),
+    # Corona Borealis
+    ("Epsilon CrB", "Alphecca"),
+    ("Alphecca", "Nusakan"),
+    ("Alphecca", "Gamma CrB"),
+    ("Gamma CrB", "Delta CrB"),
+    ("Delta CrB", "Epsilon CrB"),
+    # Hercules (keystone)
+    ("Kornephoros", "Zeta Her"),
+    ("Zeta Her", "Eta Her"),
+    ("Eta Her", "Pi Her"),
+    ("Pi Her", "Epsilon Her"),
+    ("Epsilon Her", "Delta Her"),
+    ("Delta Her", "Kornephoros"),
+    # Draco
+    ("Eltanin", "Rastaban"),
+    ("Rastaban", "Grumium"),
+    ("Grumium", "Thuban"),
     # Perseus
     ("Mirfak", "Algol"),
     ("Mirfak", "Epsilon Per"),
@@ -195,24 +226,24 @@ edges_list = [
     ("Menkalinan", "Theta Aur"),
 ]
 
-# Build edge dataframe with coordinates
-star_lookup = stars.set_index("star_id")[["ra_deg", "dec"]].to_dict("index")
+# Build edge dataframe with projected coordinates
+star_lookup = stars.set_index("star_id")[["proj_x", "proj_y"]].to_dict("index")
 edge_rows = []
 for s1, s2 in edges_list:
     if s1 in star_lookup and s2 in star_lookup:
         edge_rows.append(
             {
-                "x": star_lookup[s1]["ra_deg"],
-                "y": star_lookup[s1]["dec"],
-                "x2": star_lookup[s2]["ra_deg"],
-                "y2": star_lookup[s2]["dec"],
+                "x": star_lookup[s1]["proj_x"],
+                "y": star_lookup[s1]["proj_y"],
+                "x2": star_lookup[s2]["proj_x"],
+                "y2": star_lookup[s2]["proj_y"],
             }
         )
 edges_df = pd.DataFrame(edge_rows)
 
-# Constellation label positions (centroid of named stars)
+# Constellation label positions (centroid of named stars in projected space)
 named_stars = stars[stars["constellation"] != "field"]
-label_df = named_stars.groupby("constellation").agg(ra_deg=("ra_deg", "mean"), dec=("dec", "mean")).reset_index()
+label_df = named_stars.groupby("constellation").agg(proj_x=("proj_x", "mean"), proj_y=("proj_y", "mean")).reset_index()
 constellation_names = {
     "Ori": "Orion",
     "UMa": "Ursa Major",
@@ -224,20 +255,92 @@ constellation_names = {
     "Tau": "Taurus",
     "Boo": "Boötes",
     "Aql": "Aquila",
-    "Sco": "Scorpius",
-    "CMa": "Canis Major",
+    "CrB": "Corona Bor.",
+    "Her": "Hercules",
+    "Dra": "Draco",
     "Per": "Perseus",
     "Aur": "Auriga",
 }
 label_df["name"] = label_df["constellation"].map(constellation_names)
 
-# Plot - Stars layer
+# Custom label offsets to reduce overlap
+label_offsets = {
+    "Cas": (0.0, -0.06),
+    "Per": (0.0, 0.05),
+    "Lyr": (-0.06, 0.0),
+    "Cyg": (0.04, 0.02),
+    "Aur": (0.04, 0.0),
+    "Aql": (-0.04, 0.0),
+}
+for abbr, (dx, dy) in label_offsets.items():
+    mask = label_df["constellation"] == abbr
+    label_df.loc[mask, "proj_x"] += dx
+    label_df.loc[mask, "proj_y"] += dy
+
+# Declination circles for the grid (projected as circles on the stereographic plane)
+dec_circles_data = []
+for dec_val in [0, 30, 60]:
+    theta = np.linspace(0, 2 * np.pi, 120)
+    dec_rad = np.radians(dec_val)
+    r = np.cos(dec_rad) / (1.0 + np.sin(dec_rad))
+    cx = r * np.sin(theta)
+    cy = -r * np.cos(theta)
+    for i in range(len(theta)):
+        dec_circles_data.append({"gx": cx[i], "gy": cy[i], "dec_label": f"{dec_val}°", "order": i})
+dec_circles_df = pd.DataFrame(dec_circles_data)
+
+# RA radial lines for grid
+ra_lines_data = []
+for ra_h in range(0, 24, 3):
+    ra_rad = np.radians(ra_h * 15.0)
+    r_inner = np.cos(np.radians(60)) / (1.0 + np.sin(np.radians(60)))
+    r_outer = np.cos(np.radians(-10)) / (1.0 + np.sin(np.radians(-10)))
+    ra_lines_data.append(
+        {
+            "x": r_inner * np.sin(ra_rad),
+            "y": -r_inner * np.cos(ra_rad),
+            "x2": r_outer * np.sin(ra_rad),
+            "y2": -r_outer * np.cos(ra_rad),
+        }
+    )
+ra_lines_df = pd.DataFrame(ra_lines_data)
+
+# Magnitude legend data (title at top, brightest first)
+legend_stars = pd.DataFrame(
+    [
+        {"lx": 0.88, "ly": -0.72, "lsize": 430, "label": "mag < 1"},
+        {"lx": 0.88, "ly": -0.80, "lsize": 240, "label": "mag 1-2.5"},
+        {"lx": 0.88, "ly": -0.88, "lsize": 100, "label": "mag 2.5-4"},
+        {"lx": 0.88, "ly": -0.96, "lsize": 30, "label": "mag 4-6"},
+    ]
+)
+
+# Boundary circle at dec=-10° to frame the projection
+boundary_theta = np.linspace(0, 2 * np.pi, 200)
+boundary_dec = np.radians(-10)
+boundary_r = np.cos(boundary_dec) / (1.0 + np.sin(boundary_dec))
+boundary_df = pd.DataFrame(
+    {"bx": boundary_r * np.sin(boundary_theta), "by": -boundary_r * np.cos(boundary_theta), "order": range(200)}
+)
+
+# Plot domain: set symmetric bounds for the circular projection
+plot_bound = 1.25
+
+# Stars layer
 star_points = (
     alt.Chart(stars)
     .mark_circle(opacity=0.9)
     .encode(
-        x=alt.X("ra_deg:Q", title="Right Ascension (°)", scale=alt.Scale(domain=[0, 360], reverse=True)),
-        y=alt.Y("dec:Q", title="Declination (°)", scale=alt.Scale(domain=[-50, 70])),
+        x=alt.X(
+            "proj_x:Q",
+            axis=alt.Axis(labels=False, ticks=False, domain=False, title=""),
+            scale=alt.Scale(domain=[-plot_bound, plot_bound]),
+        ),
+        y=alt.Y(
+            "proj_y:Q",
+            axis=alt.Axis(labels=False, ticks=False, domain=False, title=""),
+            scale=alt.Scale(domain=[-plot_bound, plot_bound]),
+        ),
         size=alt.Size("size:Q", legend=None, scale=alt.Scale(range=[8, 500])),
         color=alt.condition(alt.datum.magnitude < 2.0, alt.value("#FFFDE7"), alt.value("#B0BEC5")),
         tooltip=["star_id:N", "magnitude:Q", "constellation:N"],
@@ -247,43 +350,78 @@ star_points = (
 # Constellation lines layer
 lines = (
     alt.Chart(edges_df)
-    .mark_rule(strokeWidth=1.2, opacity=0.35)
+    .mark_rule(strokeWidth=1.5, opacity=0.55)
     .encode(x="x:Q", y="y:Q", x2="x2:Q", y2="y2:Q", color=alt.value("#5C9DC8"))
 )
 
 # Constellation labels layer
 labels = (
     alt.Chart(label_df)
-    .mark_text(fontSize=16, fontWeight="bold", dy=-18, opacity=0.7)
-    .encode(x="ra_deg:Q", y="dec:Q", text="name:N", color=alt.value("#80CBC4"))
+    .mark_text(fontSize=15, fontWeight="bold", dy=-20, opacity=0.85)
+    .encode(x="proj_x:Q", y="proj_y:Q", text="name:N", color=alt.value("#80CBC4"))
 )
 
-# RA grid lines
-ra_grid_values = list(range(0, 360, 30))
-ra_grid_df = pd.DataFrame({"ra_deg": ra_grid_values})
-ra_grid = (
-    alt.Chart(ra_grid_df)
-    .mark_rule(strokeDash=[4, 4], strokeWidth=0.5, opacity=0.15)
-    .encode(x="ra_deg:Q", color=alt.value("#546E7A"))
-)
-
-# Dec grid lines
-dec_grid_values = list(range(-30, 70, 15))
-dec_grid_df = pd.DataFrame({"dec": dec_grid_values})
+# Declination grid circles
 dec_grid = (
-    alt.Chart(dec_grid_df)
-    .mark_rule(strokeDash=[4, 4], strokeWidth=0.5, opacity=0.15)
-    .encode(y="dec:Q", color=alt.value("#546E7A"))
+    alt.Chart(dec_circles_df)
+    .mark_line(strokeDash=[4, 6], strokeWidth=0.6, opacity=0.2)
+    .encode(x="gx:Q", y="gy:Q", detail="dec_label:N", order="order:Q", color=alt.value("#546E7A"))
+)
+
+# RA radial grid lines
+ra_grid = (
+    alt.Chart(ra_lines_df)
+    .mark_rule(strokeDash=[4, 6], strokeWidth=0.6, opacity=0.2)
+    .encode(x="x:Q", y="y:Q", x2="x2:Q", y2="y2:Q", color=alt.value("#546E7A"))
+)
+
+# Magnitude legend - star markers
+legend_points = (
+    alt.Chart(legend_stars)
+    .mark_circle(opacity=0.9, color="#FFFDE7")
+    .encode(
+        x=alt.X("lx:Q", scale=alt.Scale(domain=[-plot_bound, plot_bound])),
+        y=alt.Y("ly:Q", scale=alt.Scale(domain=[-plot_bound, plot_bound])),
+        size=alt.Size("lsize:Q", legend=None, scale=alt.Scale(range=[8, 500])),
+    )
+)
+
+# Magnitude legend - text labels
+legend_text = (
+    alt.Chart(legend_stars)
+    .mark_text(fontSize=13, align="left", dx=18, opacity=0.7)
+    .encode(x="lx:Q", y="ly:Q", text="label:N", color=alt.value("#B0BEC5"))
+)
+
+# Legend title
+legend_title_df = pd.DataFrame([{"lx": 0.88, "ly": -0.62}])
+legend_title = (
+    alt.Chart(legend_title_df)
+    .mark_text(fontSize=14, fontWeight="bold", align="left", opacity=0.8)
+    .encode(x="lx:Q", y="ly:Q", text=alt.value("Magnitude"), color=alt.value("#80CBC4"))
+)
+
+# Boundary circle layer
+boundary = (
+    alt.Chart(boundary_df)
+    .mark_line(strokeWidth=1.0, opacity=0.3)
+    .encode(x="bx:Q", y="by:Q", order="order:Q", color=alt.value("#546E7A"))
 )
 
 # Combine all layers
 chart = (
-    (ra_grid + dec_grid + lines + star_points + labels)
+    (boundary + ra_grid + dec_grid + lines + star_points + labels + legend_points + legend_text + legend_title)
     .properties(
-        width=1600,
-        height=900,
+        width=1200,
+        height=1200,
         title=alt.Title(
-            text="star-chart-constellation · altair · pyplots.ai", fontSize=28, anchor="middle", color="#E0E0E0"
+            text="star-chart-constellation · altair · pyplots.ai",
+            subtitle="Stereographic Projection from North Celestial Pole",
+            fontSize=28,
+            subtitleFontSize=18,
+            anchor="middle",
+            color="#E0E0E0",
+            subtitleColor="#78909C",
         ),
     )
     .configure_view(fill="#0A1628", strokeWidth=0)
