@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 spirometry-flow-volume: Spirometry Flow-Volume Loop
 Library: highcharts unknown | Python 3.14.3
 Quality: 86/100 | Created: 2026-03-18
@@ -72,10 +72,15 @@ chart.options = HighchartsOptions()
 chart.options.chart = {
     "width": 4800,
     "height": 2700,
-    "backgroundColor": "#f8f9fa",
-    "marginBottom": 320,
+    "backgroundColor": {
+        "linearGradient": {"x1": 0, "y1": 0, "x2": 0, "y2": 1},
+        "stops": [[0, "#ffffff"], [1, "#f0f2f5"]],
+    },
+    "plotBackgroundColor": "rgba(255, 255, 255, 0.5)",
+    "plotBorderWidth": 0,
+    "marginBottom": 300,
     "marginLeft": 300,
-    "marginRight": 220,
+    "marginRight": 200,
     "marginTop": 260,
     "style": {"fontFamily": "'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif"},
 }
@@ -87,7 +92,7 @@ chart.options.title = {
 
 chart.options.subtitle = {
     "text": "Measured vs Predicted Normal · FVC: 4.80 L · FEV1: 3.60 L · PEF: 9.50 L/s",
-    "style": {"fontSize": "36px", "color": "#555555"},
+    "style": {"fontSize": "36px", "color": "#666666", "letterSpacing": "0.5px"},
 }
 
 # X-axis
@@ -95,15 +100,14 @@ chart.options.x_axis = {
     "title": {"text": "Volume (L)", "style": {"fontSize": "44px", "color": "#333333"}, "margin": 25},
     "labels": {"style": {"fontSize": "34px", "color": "#444444"}},
     "gridLineWidth": 1,
-    "gridLineColor": "rgba(0, 0, 0, 0.07)",
-    "lineColor": "#cccccc",
-    "lineWidth": 2,
-    "tickColor": "#cccccc",
-    "tickWidth": 2,
+    "gridLineColor": "rgba(0, 0, 0, 0.06)",
+    "gridLineDashStyle": "Dot",
+    "lineWidth": 0,
+    "tickWidth": 0,
     "min": -0.2,
-    "max": 5.8,
+    "max": 5.6,
     "tickInterval": 0.5,
-    "plotLines": [{"value": 0, "color": "rgba(0, 0, 0, 0.25)", "width": 2}],
+    "plotLines": [{"value": 0, "color": "rgba(0, 0, 0, 0.2)", "width": 1, "dashStyle": "Dot"}],
 }
 
 # Y-axis
@@ -111,24 +115,26 @@ chart.options.y_axis = {
     "title": {"text": "Flow (L/s)", "style": {"fontSize": "44px", "color": "#333333"}},
     "labels": {"style": {"fontSize": "34px", "color": "#444444"}},
     "gridLineWidth": 1,
-    "gridLineColor": "rgba(0, 0, 0, 0.07)",
-    "lineColor": "#cccccc",
-    "lineWidth": 2,
+    "gridLineColor": "rgba(0, 0, 0, 0.06)",
+    "gridLineDashStyle": "Dot",
+    "lineWidth": 0,
     "min": -8,
-    "max": 12,
+    "max": 11,
+    "endOnTick": False,
     "tickInterval": 2,
     "plotLines": [
         {
             "value": 0,
-            "color": "rgba(0, 0, 0, 0.35)",
+            "color": "rgba(0, 0, 0, 0.4)",
             "width": 3,
             "zIndex": 3,
+            "dashStyle": "ShortDash",
             "label": {
                 "text": "Zero Flow",
-                "align": "right",
-                "style": {"fontSize": "28px", "color": "rgba(0, 0, 0, 0.3)", "fontStyle": "italic"},
-                "x": -15,
-                "y": -10,
+                "align": "left",
+                "style": {"fontSize": "26px", "color": "rgba(0, 0, 0, 0.35)", "fontStyle": "italic"},
+                "x": 10,
+                "y": -12,
             },
         }
     ],
@@ -176,12 +182,14 @@ chart.options.tooltip = {
     "pointFormat": "Volume: <b>{point.x:.2f} L</b><br/>Flow: <b>{point.y:.2f} L/s</b>",
 }
 
-# Measured expiratory limb
+# Measured expiratory limb with zone coloring for flow intensity
 exp_series = LineSeries()
 exp_series.data = [[round(float(v), 3), round(float(f), 3)] for v, f in zip(vol_exp, flow_exp, strict=True)]
 exp_series.name = "Measured"
 exp_series.color = "#306998"
 exp_series.line_width = 6
+exp_series.zone_axis = "y"
+exp_series.zones = [{"value": 3, "color": "#4a86b8"}, {"value": 6, "color": "#306998"}, {"color": "#1a4971"}]
 chart.add_series(exp_series)
 
 # Measured inspiratory limb
@@ -228,15 +236,15 @@ pef_marker.data = [
         "dataLabels": {
             "enabled": True,
             "format": f"PEF: {pef_val} L/s",
-            "style": {"fontSize": "36px", "fontWeight": "bold", "color": "#c0392b"},
+            "style": {"fontSize": "36px", "fontWeight": "bold", "color": "#d35400"},
             "x": 30,
             "y": -35,
         },
     }
 ]
 pef_marker.name = "PEF"
-pef_marker.color = "#c0392b"
-pef_marker.marker = {"symbol": "circle", "radius": 16, "fillColor": "#c0392b", "lineWidth": 3, "lineColor": "#ffffff"}
+pef_marker.color = "#d35400"
+pef_marker.marker = {"symbol": "circle", "radius": 16, "fillColor": "#d35400", "lineWidth": 3, "lineColor": "#ffffff"}
 pef_marker.show_in_legend = False
 chart.add_series(pef_marker)
 
@@ -271,16 +279,16 @@ fvc_marker.data = [
         "dataLabels": {
             "enabled": True,
             "format": f"FVC: {fvc:.2f} L",
-            "style": {"fontSize": "36px", "fontWeight": "bold", "color": "#27ae60"},
-            "x": -40,
-            "y": 40,
+            "style": {"fontSize": "36px", "fontWeight": "bold", "color": "#16a085"},
+            "x": -60,
+            "y": 50,
             "verticalAlign": "top",
         },
     }
 ]
 fvc_marker.name = "FVC"
-fvc_marker.color = "#27ae60"
-fvc_marker.marker = {"symbol": "square", "radius": 16, "fillColor": "#27ae60", "lineWidth": 3, "lineColor": "#ffffff"}
+fvc_marker.color = "#16a085"
+fvc_marker.marker = {"symbol": "square", "radius": 16, "fillColor": "#16a085", "lineWidth": 3, "lineColor": "#ffffff"}
 fvc_marker.show_in_legend = False
 chart.add_series(fvc_marker)
 
