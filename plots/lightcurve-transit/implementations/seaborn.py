@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 lightcurve-transit: Astronomical Light Curve
 Library: seaborn 0.13.2 | Python 3.14.3
-Quality: 86/100 | Created: 2026-03-18
+Quality: 89/100 | Created: 2026-03-18
 """
 
 import matplotlib.pyplot as plt
