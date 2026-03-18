@@ -1,0 +1,225 @@
+library: plotly
+specification_id: lightcurve-transit
+created: '2026-03-18T21:18:45Z'
+updated: '2026-03-18T21:40:14Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23267445101
+issue: 4559
+python_version: 3.14.3
+library_version: 6.6.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/lightcurve-transit/plotly/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/lightcurve-transit/plotly/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/lightcurve-transit/plotly/plot.html
+quality_score: 92
+review:
+  strengths:
+  - Excellent scientific data storytelling with transit window shading, depth bracket
+    annotation, and T1/T4 contact markers
+  - Professional visual design with subtle grid, clean white background, and intentional
+    color palette
+  - Physically accurate limb-darkened transit model with realistic astronomical parameters
+  - Good use of Plotly-specific features (hovertemplates, vrect, spikes, HTML export)
+  - Perfect spec compliance with all required features implemented
+  weaknesses:
+  - Marker size could be slightly larger for better visibility at full resolution
+  - Could leverage more advanced Plotly features like range sliders for deeper library
+    mastery
+  image_description: 'The plot displays an exoplanet transit light curve on a clean
+    white background. Blue scatter points (#306998) with vertical error bars represent
+    500 photometric observations plotted against Orbital Phase (0-1) on the x-axis
+    and Relative Flux (~0.985-1.005) on the y-axis. An orange (#E67E22) transit model
+    curve overlays the data, showing a characteristic U-shaped dip centered at phase
+    0.5 with ~1% depth due to quadratic limb darkening. A subtle orange-tinted vertical
+    rectangle highlights the "Transit Window" region. A dotted horizontal reference
+    line at flux=1.0 marks the baseline. A "Depth: 1.0%" annotation with bracket lines
+    quantifies the transit depth. T1 and T4 contact markers label the ingress/egress
+    points. The legend in the bottom-left identifies "Observations" (blue dots) and
+    "Transit Model" (orange line). The title reads "Exoplanet Transit · lightcurve-transit
+    · plotly · pyplots.ai".'
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 28pt, axis labels 22pt, ticks
+          18pt, legend 18pt, annotations 13-16pt'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text elements anywhere
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: 500 points with marker size 7 and opacity 0.5 works well; markers
+          could be slightly larger
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue/orange palette is colorblind-safe with strong contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills canvas well with balanced margins, correct 4800x2700 output
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive labels; units not applicable for dimensionless quantities
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Strong design with custom palette, transit window shading, depth
+          bracket, contact markers
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle y-grid, no x-grid, no spines, dotted baseline, spike lines
+          configured
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear narrative with transit window, depth annotation, T1/T4 markers
+          guiding viewer
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct time-series scatter with model overlay, phase-folded
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Error bars, model curve, phase-folded, limb darkening, clean style
+          all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=phase, Y=relative flux, transit dip downward
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct title format and descriptive legend labels
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows transit dip with limb darkening, varying error bars, baseline
+          scatter
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real astronomical scenario with realistic parameters for space telescope
+          photometry
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Flux ~1.0, 1% depth, noise 0.0008-0.002 consistent with Kepler/TESS
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean linear flow with no functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set at start
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only numpy and plotly.graph_objects, both used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for limb-darkened transit model
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot.png at correct dimensions, also exports HTML
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of go.Figure, go.Scatter, add_vrect, add_hline, add_annotation,
+          add_shape, update_layout
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Hovertemplates, vrect, spike lines, HTML export with interactive
+          config
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling
+  - edge-highlighting
