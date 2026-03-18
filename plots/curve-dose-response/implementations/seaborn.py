@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 curve-dose-response: Pharmacological Dose-Response Curve
 Library: seaborn 0.13.2 | Python 3.14.3
-Quality: 87/100 | Created: 2026-03-18
+Quality: 92/100 | Created: 2026-03-18
 """
 
 import matplotlib.pyplot as plt

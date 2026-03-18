@@ -1,7 +1,7 @@
 library: seaborn
 specification_id: curve-dose-response
 created: '2026-03-18T22:31:15Z'
-updated: '2026-03-18T22:54:37Z'
+updated: '2026-03-18T23:03:25Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23270129125
 issue: 4556
@@ -10,36 +10,38 @@ library_version: 0.13.2
 preview_url: https://storage.googleapis.com/pyplots-images/plots/curve-dose-response/seaborn/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/curve-dose-response/seaborn/plot_thumb.png
 preview_html: null
-quality_score: 87
+quality_score: 92
 review:
   strengths:
-  - Excellent spec compliance — all required features implemented including 4PL fit,
-    EC50 markers, CI band, error bars, and asymptotes
-  - Realistic pharmacological context with actual drug names (Imatinib, Erlotinib)
-    and plausible concentration ranges
-  - Strong visual design with custom palette, despined axes, and clear visual hierarchy
-  - Proper statistical implementation of 95% CI using Jacobian-based propagation of
-    covariance
+  - 'Complete spec compliance: every required feature (4PL fit, EC50 lines, asymptotes,
+    CI band, error bars, 2 compounds) is implemented'
+  - Excellent data quality with real drug names (Imatinib, Erlotinib) and realistic
+    pharmacological parameters
+  - 'Strong visual refinement: despined axes, subtle grid, custom palette, white marker
+    edges'
+  - Clean, well-structured code with proper reproducibility seed
+  - Good visual hierarchy enabling immediate comparison of compound potencies
   weaknesses:
-  - Library mastery is limited — most complex elements (error bars, CI bands, reference
-    lines, custom legend) bypass seaborn entirely
-  - Marker size (s=120) is slightly small for the data density
-  - DataFrame construction is verbose with manual record-building loops
+  - Bootstrap-to-lineplot approach for CI is somewhat verbose; could be simplified
+  - Four asymptote lines (2 per compound) create minor visual clutter at the bottom
+    of the chart
+  - No EC50 value annotations on the plot to quantify the comparison
   image_description: The plot displays two sigmoidal dose-response curves on a logarithmic
-    x-axis (Concentration in M, ranging from ~3×10⁻¹⁰ to ~3×10⁻⁴) against Response
-    (%) on the y-axis (from -5 to 110). Imatinib is shown in deep blue (#306998) with
-    circle markers and a solid fitted curve, while Erlotinib is in burnt orange (#D4763A)
-    with square markers. Both compounds have SEM error bars at each concentration
-    point. A light blue 95% confidence interval band surrounds the Imatinib fitted
-    curve. Dashed horizontal and vertical reference lines mark the EC50 intersection
-    points for both compounds — Imatinib at ~0.30 µM and Erlotinib at ~5.5 µM. Faint
-    horizontal dashed lines indicate the top and bottom asymptotes for each compound.
-    The title reads "curve-dose-response · seaborn · pyplots.ai" in medium weight.
-    Top and right spines are removed, with a subtle y-axis grid. A clean legend in
-    the upper left distinguishes fit lines, data points, and the CI band.
+    x-axis (Concentration in M) versus Response (%) on the y-axis. Imatinib is shown
+    in dark blue (#306998) with circle markers and a light blue 95% CI shaded band
+    around its fitted curve. Erlotinib is shown in orange (#D4763A) with square markers.
+    Both compounds have error bars (SEM) at each data point. Dashed horizontal and
+    vertical reference lines mark the EC50/half-maximal response for each compound
+    — Imatinib's EC50 is around 3e-7 M (~48% response) and Erlotinib's around 5e-6
+    M (~45% response). Faint horizontal dashed lines indicate top and bottom asymptotes
+    for both compounds, with distinct dash patterns per compound. The title reads
+    "curve-dose-response · seaborn · pyplots.ai". Top and right spines are removed.
+    A subtle y-axis grid (alpha=0.2) provides reference. The legend in the upper left
+    lists fit lines, data markers, and CI band. The layout is clean with good canvas
+    utilization.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -48,40 +50,39 @@ review:
         max: 8
         passed: true
         comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt,
-          legend 14pt, plus set_context talk font_scale=1.1'
+          legend 14pt'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements. Legend clear of data.
+        comment: No text collisions, legend doesn't overlap data
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Markers s=120 visible but slightly small for <30 points. Error bars
-          and lines well-sized.
+        comment: Markers s=180 appropriate for 16 points, lines linewidth=3 visible
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Blue-orange palette is excellent for colorblind safety.
+        comment: Blue/orange colorblind-safe with strong luminance contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 figure with tight_layout, plot fills canvas well.
+        comment: 16:9 figsize with tight_layout, balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Concentration (M) and Response (%) are descriptive with units.
+        comment: Concentration (M) and Response (%) with units
     design_excellence:
-      score: 14
+      score: 15
       max: 20
       items:
       - id: DE-01
@@ -89,21 +90,22 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom palette, distinct markers, white edges, CI band transparency.
-          Above defaults with intentional hierarchy.
+        comment: Custom palette, white marker edges, different marker shapes, CI band
+          adds depth
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Despine, subtle y-axis grid alpha=0.2, white marker edges. Good refinement.
+        comment: Despined axes, subtle y-axis grid, good whitespace, minor clutter
+          from asymptote lines
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Two compounds with different EC50 values create comparison. Reference
-          lines highlight key metric. CI band adds statistical context.
+        comment: Two compounds with different potencies tell comparison story, EC50
+          lines guide viewer
     spec_compliance:
       score: 15
       max: 15
@@ -113,27 +115,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct sigmoidal dose-response curve with 4PL logistic fit.
+        comment: Correct sigmoidal dose-response curve with 4PL logistic fit
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: log x-axis, 4PL fit, EC50 lines, error
-          bars, asymptotes, 2 compounds, legend, CI band.'
+        comment: 'All features present: log x, 4PL fit, EC50 lines, error bars, asymptotes,
+          2 compounds, legend, CI band'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Concentration on x (log), response on y. Full range visible.
+        comment: X=concentration (log), Y=response (%). All data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows exact format. Legend distinguishes fit lines, data
-          points, and CI band.
+        comment: Title matches format, legend labels descriptive with compound names
     data_quality:
       score: 15
       max: 15
@@ -143,24 +144,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Both compounds with different EC50, Hill slopes, and asymptotes.
-          Full sigmoidal transition visible.
+        comment: Two compounds with different EC50, Hill slopes, and asymptotes
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real drug names (Imatinib, Erlotinib). Authentic pharmacological
-          context.
+        comment: Real drug names (Imatinib, Erlotinib), authentic pharmacological
+          context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Concentrations 1e-9 to 1e-4 M realistic. Response 0-100% standard.
-          EC50 values plausible.
+        comment: 1nM-100uM standard pharmacological range, response 0-100%
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -168,50 +167,50 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear flow. logistic4pl function unavoidable for curve_fit.
+        comment: Linear flow, function only for curve_fit requirement
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set at start.
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Verbose DataFrame construction with record-append loops.
+        passed: true
+        comment: Clean, appropriately complex, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png, dpi=300, bbox_inches=tight. No deprecated API.
+        comment: Saves plot.png, dpi=300, no deprecated API
     library_mastery:
-      score: 5
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
-        passed: false
-        comment: Uses seaborn axes-level functions with hue mapping but core complexity
-          relies on matplotlib.
+        passed: true
+        comment: Good use of sns.lineplot, scatterplot, set_theme, despine. Bootstrap-to-lineplot
+          slightly non-standard.
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: set_style, set_context, despine are seaborn-specific but deeper capabilities
-          not leveraged.
-  verdict: REJECTED
+        passed: true
+        comment: Seaborn errorbar aggregation for CI, style mapping for markers, set_theme.
+          Still relies on matplotlib for error bars and reference lines.
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - scipy
