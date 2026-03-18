@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 lightcurve-transit: Astronomical Light Curve
 Library: seaborn 0.13.2 | Python 3.14.3
 Quality: 86/100 | Created: 2026-03-18
@@ -31,48 +31,110 @@ model_flux = 1.0 - transit_depth * dip * limb
 # Observed flux with noise
 flux_err = np.random.uniform(0.0008, 0.0015, n_points)
 flux = model_flux + np.random.normal(0, 1, n_points) * flux_err
+residuals = flux - model_flux
 
-# Smooth model curve for overlay
+# Smooth model curve
 phase_model = np.linspace(0.0, 1.0, 2000)
 z_model = np.abs(phase_model - transit_center) / transit_width
 dip_model = np.where(z_model < 1.0, np.sqrt(np.clip(1.0 - z_model**2, 0, None)), 0.0)
 limb_model = 1.0 - u1 * (1 - dip_model) - u2 * (1 - dip_model) ** 2
 model_smooth = 1.0 - transit_depth * dip_model * limb_model
 
-df = pd.DataFrame({"phase": phase, "flux": flux, "flux_err": flux_err})
+df = pd.DataFrame({"phase": phase, "flux": flux, "flux_err": flux_err, "residuals": residuals})
+df_model = pd.DataFrame({"phase": phase_model, "flux": model_smooth})
 
-# Plot
-fig, ax = plt.subplots(figsize=(16, 9))
+# Seaborn styling
+sns.set_style("ticks", {"axes.grid": False})
+sns.set_context("talk", font_scale=1.05)
+palette = sns.color_palette("deep")
+data_color = palette[0]
+model_color = palette[3]
 
-ax.errorbar(
+# Plot — two-panel layout: light curve + residuals
+fig, (ax_main, ax_resid) = plt.subplots(
+    2, 1, figsize=(16, 9), height_ratios=[3, 1], sharex=True, gridspec_kw={"hspace": 0.05}
+)
+
+# Error bars on main panel
+ax_main.errorbar(
     df["phase"],
     df["flux"],
     yerr=df["flux_err"],
     fmt="none",
-    ecolor="#306998",
-    elinewidth=0.8,
-    alpha=0.35,
+    ecolor=data_color,
+    elinewidth=0.7,
+    alpha=0.25,
     capsize=0,
     zorder=1,
 )
 
+# Scatter using seaborn
 sns.scatterplot(
-    data=df, x="phase", y="flux", color="#306998", s=50, alpha=0.6, edgecolor="white", linewidth=0.4, ax=ax, zorder=2
+    data=df,
+    x="phase",
+    y="flux",
+    color=data_color,
+    s=35,
+    alpha=0.4,
+    edgecolor="white",
+    linewidth=0.3,
+    ax=ax_main,
+    zorder=2,
+    legend=False,
 )
 
-ax.plot(phase_model, model_smooth, color="#E34234", linewidth=2.5, zorder=3, label="Transit model")
+# Model curve using seaborn lineplot
+sns.lineplot(
+    data=df_model, x="phase", y="flux", color=model_color, linewidth=2.5, ax=ax_main, zorder=3, label="Transit model"
+)
 
-# Style
-ax.set_xlabel("Orbital Phase", fontsize=20)
-ax.set_ylabel("Relative Flux", fontsize=20)
-ax.set_title("lightcurve-transit · seaborn · pyplots.ai", fontsize=24, fontweight="medium")
-ax.tick_params(axis="both", labelsize=16)
-ax.spines["top"].set_visible(False)
-ax.spines["right"].set_visible(False)
-ax.yaxis.grid(True, alpha=0.2, linewidth=0.8)
-ax.legend(fontsize=16, frameon=False, loc="lower right")
+# Residuals panel using seaborn scatterplot
+sns.scatterplot(
+    data=df,
+    x="phase",
+    y="residuals",
+    color=data_color,
+    s=20,
+    alpha=0.35,
+    edgecolor="white",
+    linewidth=0.2,
+    ax=ax_resid,
+    legend=False,
+)
+ax_resid.axhline(0, color=model_color, linewidth=1.5, linestyle="--", alpha=0.6, zorder=3)
 
-ax.set_xlim(0.0, 1.0)
+# Transit depth annotation
+transit_min = model_smooth.min()
+ax_main.annotate(
+    f"Transit depth\n{transit_depth * 100:.1f}%",
+    xy=(transit_center, transit_min),
+    xytext=(transit_center + 0.12, transit_min - 0.001),
+    fontsize=14,
+    color=model_color,
+    fontweight="medium",
+    arrowprops={"arrowstyle": "->", "color": model_color, "lw": 1.5},
+    ha="left",
+    va="top",
+    zorder=5,
+)
 
-plt.tight_layout()
+# Styling — main panel
+ax_main.set_ylabel("Relative Flux", fontsize=20)
+ax_main.set_title("lightcurve-transit · seaborn · pyplots.ai", fontsize=24, fontweight="medium", pad=15)
+ax_main.tick_params(axis="both", labelsize=16)
+ax_main.tick_params(axis="x", labelbottom=False)
+ax_main.yaxis.grid(True, alpha=0.15, linewidth=0.6)
+ax_main.legend(fontsize=15, frameon=False, loc="lower right")
+
+# Styling — residuals panel
+ax_resid.set_xlabel("Orbital Phase", fontsize=20)
+ax_resid.set_ylabel("Residuals", fontsize=16)
+ax_resid.tick_params(axis="both", labelsize=16)
+ax_resid.yaxis.grid(True, alpha=0.15, linewidth=0.6)
+ax_resid.set_xlim(0.0, 1.0)
+
+# Despine using seaborn
+sns.despine(ax=ax_main)
+sns.despine(ax=ax_resid)
+
 plt.savefig("plot.png", dpi=300, bbox_inches="tight")
