@@ -1,7 +1,7 @@
 library: matplotlib
 specification_id: star-chart-constellation
 created: '2026-03-18T21:15:07Z'
-updated: '2026-03-18T21:18:48Z'
+updated: '2026-03-18T21:32:56Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23267218076
 issue: 4560
@@ -10,83 +10,84 @@ library_version: 3.10.8
 preview_url: https://storage.googleapis.com/pyplots-images/plots/star-chart-constellation/matplotlib/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/star-chart-constellation/matplotlib/plot_thumb.png
 preview_html: null
-quality_score: 78
+quality_score: 87
 review:
   strengths:
-  - Beautiful atmospheric dark-sky aesthetic with carefully chosen color palette (white-to-lavender
-    stars, muted blue lines)
-  - 'Comprehensive real astronomical data: 21 constellations, ~100 named stars with
-    accurate coordinates and magnitudes'
-  - Effective magnitude-to-size power-law mapping creates natural visual hierarchy
-  - Clean, well-organized code with elegant data structures
+  - Excellent astronomical data accuracy with real star names, positions, and magnitudes
+    across 21 constellations
+  - Beautiful dark theme with intentional color hierarchy (white to pale blue to gray
+    stars, golden ecliptic)
+  - Magnitude-to-size mapping with power-law scaling creates compelling visual hierarchy
+  - Smart label offset system with overlap avoidance logic
+  - Clean, well-organized code with comprehensive star catalog
   weaknesses:
-  - 'Font sizes below recommended minimums: axis labels 18pt (need >=20), ticks 14pt
-    (need >=16), star/constellation labels too small'
-  - Constellation label overlaps in crowded regions (Corona Borealis/Hercules/Bootes,
-    Taurus area)
-  - Uses flat equirectangular projection instead of stereographic/azimuthal equidistant
-    as spec requests
-  - Does not leverage matplotlib projection system for authentic sky representation
-  image_description: The plot displays a celestial star chart on a dark navy (#0A0A2A)
-    background. Stars are rendered as white/pale-blue dots with sizes proportional
-    to brightness (inverted magnitude mapping). 21 constellations are connected by
-    thin, semi-transparent muted blue stick-figure lines. Constellation names appear
-    in italic muted text below each group's centroid. The brightest stars (Sirius,
-    Vega, Betelgeuse, Rigel, Arcturus, Capella, Altair, Aldebaran, Spica) are individually
-    labeled. The x-axis shows Right Ascension from 24h to 0h (reversed, as is standard),
-    and the y-axis shows Declination from -40° to +60°. A dashed coordinate grid overlays
-    the chart. The title reads "star-chart-constellation · matplotlib · pyplots.ai".
-    Approximately 300 faint background stars add depth. The overall aesthetic is atmospheric
-    and evocative of a real night sky.
+  - Label overlap in crowded regions (Taurus/Gemini, Bootes/Hercules/Corona Borealis
+    areas)
+  - Star name annotations at 12pt could be slightly larger for improved readability
+  - Manual color assignment loop could use a colormap for smoother gradient
+  - Aitoff projection used instead of spec-suggested stereographic/azimuthal equidistant
+  image_description: The plot displays a celestial star chart on a deep navy (#0A0A2A)
+    background using an Aitoff all-sky projection. Stars are rendered as white-to-pale-blue
+    circles with sizes inversely proportional to apparent magnitude — the brightest
+    stars (Sirius, Vega, Arcturus) appear as large white dots while dimmer stars are
+    smaller and slightly blue-gray. Constellation stick-figure lines connect stars
+    in thin, semi-transparent blue-gray segments across 21 constellations. Constellation
+    names are displayed in italic gray text near each group's centroid. The 10 brightest
+    stars (mag < 1.0) are individually labeled in light text. A golden dashed ecliptic
+    line curves sinusoidally across the chart. The coordinate grid shows Right Ascension
+    in hours (0h-22h) along the x-axis and Declination in degrees (-75 to +75) along
+    the y-axis. The title "star-chart-constellation · matplotlib · pyplots.ai" is
+    centered at the top. An "Ecliptic" legend sits in the lower right corner. Bottom
+    annotation reads "Right Ascension (hours) — Aitoff Projection | Declination (°)".
   criteria_checklist:
     visual_quality:
-      score: 22
+      score: 26
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 5
+        score: 7
         max: 8
         passed: true
-        comment: Axis labels 18pt (need >=20), ticks 14pt (need >=16), star labels
-          9pt and constellation labels 10pt are small. Title 24pt correct.
+        comment: All font sizes explicitly set (title=24, bottom=20, ticks=16, constellation=13,
+          star names=12). Star name annotations at 12pt slightly below optimal.
       - id: VQ-02
         name: No Overlap
         score: 4
         max: 6
-        passed: false
-        comment: 'Constellation label overlaps: Corona Borealis/Hercules/Bootes area,
-          Taurus overlaps nearby star labels, Canis Major partially obscured.'
+        passed: true
+        comment: 'Some label overlap in crowded regions: Taurus/Aldebaran/Gemini area
+          congested, Bootes/Hercules/Corona Bor. crowd together.'
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Stars well-sized with effective magnitude-based scaling. Background
-          stars appropriately subtle.
+        comment: Star sizes well-adapted to magnitude. Background stars appropriately
+          subtle. Some mid-brightness stars could be slightly larger.
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Monochromatic white/pale-blue palette against dark background is
-          colorblind-safe with excellent contrast.
+        comment: White/pale-blue on dark navy excellent contrast. No red-green issues.
+          Ecliptic golden color distinct.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good use of 16:9 canvas. Some southern constellations feel crowded
-          near bottom edge.
+        comment: Aitoff projection fills canvas well with balanced margins at 16:9
+          aspect ratio.
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Right Ascension and Declination are descriptive but lack units in
-          label text (units only on ticks).
+        passed: true
+        comment: RA in hours, Dec in degrees, bottom annotation includes projection
+          type and units.
     design_excellence:
-      score: 14
+      score: 15
       max: 20
       items:
       - id: DE-01
@@ -94,77 +95,78 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: 'Strong design: atmospheric dark-sky background, magnitude-dependent
-          star colors, muted blue constellation lines, subdued italic names.'
+        comment: Custom dark astronomical theme with intentional color hierarchy.
+          Typography uses weight/style variation. Professional chart aesthetic.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Spines subtle but present, dashed grid unobtrusive, tick marks hidden.
-          Spines could be removed entirely.
+        comment: 'Dark background, subtle dashed grid, generous whitespace, edge highlighting
+          on stars. Minor: grid could be even more subtle.'
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Magnitude-based sizing creates natural visual hierarchy. Bright stars
-          and constellation lines guide the viewer.
+        comment: Magnitude-based sizing creates natural visual hierarchy. Constellation
+          lines connect narrative. Ecliptic provides context.
     spec_compliance:
-      score: 12
+      score: 14
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 3
+        score: 5
         max: 5
-        passed: false
-        comment: Star chart correct but uses flat equirectangular projection instead
-          of stereographic/azimuthal equidistant as spec requests.
+        passed: true
+        comment: Star chart with constellation stick-figure lines on sky projection.
       - id: SC-02
         name: Required Features
         score: 3
         max: 4
         passed: true
-        comment: 'Most features present: magnitude sizing, constellation lines, labels,
-          dark background, grid. Missing ecliptic line.'
+        comment: 'All features present. Minor: Aitoff used instead of spec-suggested
+          stereographic/azimuthal equidistant.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: RA/Dec correctly mapped. RA properly reversed (24h to 0h).
+        comment: RA/Dec correctly mapped. RA increases right-to-left. Magnitude correctly
+          inverted.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. No legend needed for this chart type.
+        comment: Title format correct. Ecliptic legend present with matching dark
+          styling.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 21 constellations, ~100 named stars, 300 background stars. Good magnitude
-          range from -1.46 to ~5.
+        comment: 21 constellations, ~100 named stars, 300 background stars, wide magnitude
+          range, diverse constellation shapes.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real star names, RA/Dec coordinates, and apparent magnitudes. Authentic
-          astronomical data.
+        comment: Real star catalog with accurate names, positions, magnitudes. IAU
+          constellation patterns. Neutral science domain.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'All values astronomically accurate: RA 0-24h, Dec -45 to +70, magnitudes
-          -1.46 to ~5.'
+        comment: Astronomically accurate coordinates and magnitudes. Realistic sky
+          coverage.
     code_quality:
       score: 10
       max: 10
@@ -174,7 +176,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports, data, plot, save. No functions or classes.'
+        comment: 'Flat script structure: imports, data, conversion, plotting, save.'
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -186,22 +188,21 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib.pyplot and numpy, both fully used.
+        comment: Only matplotlib.pyplot and numpy imported, both used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-organized star dictionary, clean edge list, elegant magnitude-to-size
-          mapping.
+        comment: Well-organized catalog and edge list. Pragmatic label offset approach.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png, dpi=300, bbox_inches=tight. No deprecated API.
+        comment: Saves as plot.png with dpi=300 and bbox_inches=tight. Current API.
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -209,15 +210,15 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Properly uses ax methods, fig/ax pattern, zorder layering, scatter
-          with per-point colors/sizes.
+        comment: Good use of axes-level methods, projection parameter, zorder layering.
+          Could use colormap instead of manual loop.
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Generic matplotlib usage. Could leverage projection system (aitoff,
-          mollweide) or custom transforms.
+        passed: true
+        comment: Uses matplotlib built-in Aitoff projection with automatic coordinate
+          grid. Could leverage PathEffects or custom transforms.
   verdict: REJECTED
 impl_tags:
   dependencies: []
