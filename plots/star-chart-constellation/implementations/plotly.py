@@ -1,7 +1,6 @@
-""" pyplots.ai
+"""pyplots.ai
 star-chart-constellation: Star Chart with Constellations
 Library: plotly 6.6.0 | Python 3.14.3
-Quality: 78/100 | Created: 2026-03-18
 """
 
 from collections import defaultdict
@@ -293,11 +292,10 @@ star_names = list(stars.keys())
 ra_deg = np.array([stars[s][0] * 15 for s in star_names])
 dec = np.array([stars[s][1] for s in star_names])
 mag = np.array([stars[s][2] for s in star_names])
-const = [stars[s][3] for s in star_names]
 
 # Map magnitude to marker size (brighter = larger)
-max_size = 22
-min_size = 3
+max_size = 24
+min_size = 4
 mag_min, mag_max = mag.min(), mag.max()
 sizes = max_size - (mag - mag_min) / (mag_max - mag_min) * (max_size - min_size)
 
@@ -332,23 +330,28 @@ fig.add_trace(
     )
 )
 
-# Constellation lines
+# Constellation lines - consolidated into single trace with None separators
+line_x = []
+line_y = []
 for s1, s2 in edges:
     if s1 in stars and s2 in stars:
         x1, x2 = stars[s1][0] * 15, stars[s2][0] * 15
         y1, y2 = stars[s1][1], stars[s2][1]
         if abs(x2 - x1) > 180:
             continue
-        fig.add_trace(
-            go.Scattergl(
-                x=[x1, x2],
-                y=[y1, y2],
-                mode="lines",
-                line={"color": "rgba(100,149,237,0.35)", "width": 1.5},
-                hoverinfo="skip",
-                showlegend=False,
-            )
-        )
+        line_x.extend([x1, x2, None])
+        line_y.extend([y1, y2, None])
+
+fig.add_trace(
+    go.Scattergl(
+        x=line_x,
+        y=line_y,
+        mode="lines",
+        line={"color": "rgba(100,149,237,0.6)", "width": 1.8},
+        hoverinfo="skip",
+        showlegend=False,
+    )
+)
 
 # Named stars
 fig.add_trace(
@@ -366,32 +369,54 @@ fig.add_trace(
     )
 )
 
-# Constellation labels at centroid of each group
+# Constellation labels at centroid of each group - using annotations for reliable rendering
 groups = defaultdict(list)
 for name in star_names:
     c = stars[name][3]
     groups[c].append((stars[name][0] * 15, stars[name][1]))
 
-label_x = []
-label_y = []
-label_text = []
+constellation_annotations = []
 for abbr, positions in groups.items():
     cx = np.mean([p[0] for p in positions])
-    cy = np.mean([p[1] for p in positions])
-    label_x.append(cx)
-    label_y.append(cy + 3.5)
-    label_text.append(constellation_names.get(abbr, abbr))
+    cy = np.mean([p[1] for p in positions]) + 4.0
+    constellation_annotations.append(
+        {
+            "x": cx,
+            "y": cy,
+            "text": constellation_names.get(abbr, abbr),
+            "showarrow": False,
+            "font": {"size": 14, "color": "rgba(160,195,255,0.92)", "family": "Arial"},
+            "yanchor": "bottom",
+        }
+    )
 
+# Bright star name annotations (mag < 0.5)
+for i, name in enumerate(star_names):
+    if mag[i] < 0.5:
+        constellation_annotations.append(
+            {
+                "x": ra_deg[i],
+                "y": dec[i] + 2.0,
+                "text": name,
+                "showarrow": False,
+                "font": {"size": 11, "color": "rgba(200,215,240,0.75)", "family": "Arial"},
+                "yanchor": "bottom",
+            }
+        )
+
+# Ecliptic line (approximate) as dashed curve
+ecliptic_ra = np.linspace(0, 360, 360)
+obliquity = 23.44
+ecliptic_dec = obliquity * np.sin(np.radians(ecliptic_ra))
 fig.add_trace(
     go.Scattergl(
-        x=label_x,
-        y=label_y,
-        mode="text",
-        text=label_text,
-        textfont={"size": 13, "color": "rgba(135,170,222,0.75)", "family": "Arial"},
-        textposition="top center",
+        x=ecliptic_ra,
+        y=ecliptic_dec,
+        mode="lines",
+        line={"color": "rgba(220,160,60,0.3)", "width": 1.2, "dash": "dash"},
         hoverinfo="skip",
         showlegend=False,
+        name="Ecliptic",
     )
 )
 
@@ -399,7 +424,7 @@ fig.add_trace(
 fig.update_layout(
     title={
         "text": "star-chart-constellation · plotly · pyplots.ai",
-        "font": {"size": 28, "color": "#A0B4D0", "family": "Arial"},
+        "font": {"size": 28, "color": "#C0D0E8", "family": "Arial"},
         "x": 0.5,
         "xanchor": "center",
         "y": 0.97,
@@ -407,30 +432,34 @@ fig.update_layout(
     plot_bgcolor="#0A0E1A",
     paper_bgcolor="#060A14",
     xaxis={
-        "title": {"text": "Right Ascension (°)", "font": {"size": 20, "color": "#7890A8"}},
+        "title": {"text": "Right Ascension", "font": {"size": 22, "color": "#7890A8"}},
         "tickfont": {"size": 16, "color": "#5A7090"},
         "range": [360, 0],
         "dtick": 30,
-        "gridcolor": "rgba(60,80,120,0.15)",
+        "gridcolor": "rgba(60,80,120,0.18)",
         "gridwidth": 1,
         "showgrid": True,
         "zeroline": False,
         "tickvals": [h * 15 for h in range(0, 25, 2)],
         "ticktext": [f"{h}h" for h in range(0, 25, 2)],
+        "linecolor": "rgba(60,80,120,0.3)",
     },
     yaxis={
-        "title": {"text": "Declination (°)", "font": {"size": 20, "color": "#7890A8"}},
+        "title": {"text": "Declination (°)", "font": {"size": 22, "color": "#7890A8"}},
         "tickfont": {"size": 16, "color": "#5A7090"},
         "range": [-75, 75],
         "dtick": 15,
-        "gridcolor": "rgba(60,80,120,0.15)",
+        "gridcolor": "rgba(60,80,120,0.18)",
         "gridwidth": 1,
         "showgrid": True,
         "zeroline": False,
+        "linecolor": "rgba(60,80,120,0.3)",
+        "ticksuffix": "°",
     },
     margin={"l": 80, "r": 40, "t": 70, "b": 70},
     width=1600,
     height=900,
+    annotations=constellation_annotations,
 )
 
 # Save
