@@ -1,7 +1,7 @@
 library: plotly
 specification_id: curve-dose-response
 created: '2026-03-18T22:31:28Z'
-updated: '2026-03-18T22:36:28Z'
+updated: '2026-03-18T22:47:37Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23270128810
 issue: 4556
@@ -13,32 +13,32 @@ preview_html: https://storage.googleapis.com/pyplots-images/plots/curve-dose-res
 quality_score: 88
 review:
   strengths:
-  - Perfect spec compliance with all required features (4PL fit, EC50 lines, CI band,
-    error bars, asymptotes)
-  - Excellent data quality with realistic pharmacological parameters and meaningful
-    compound differentiation
-  - Clean colorblind-safe blue/orange palette with good visual contrast
-  - Well-structured code with appropriate use of scipy for curve fitting
+  - Perfect spec compliance with all required features (4PL fit, EC50 lines, error
+    bars, CI band, asymptotes, 2 compounds)
+  - Strong colorblind-safe blue/orange palette with white marker edges
+  - Clean code structure with appropriate scipy curve fitting
+  - Good data storytelling through EC50 comparison and color-coded reference lines
   weaknesses:
-  - Design could be more sophisticated — clean but not publication-quality polish
-  - Legend order reversed (Compound B before Compound A)
-  - Asymptote lines only show Compound A values
+  - Design excellence not yet at publication level — needs more typographic and layout
+    polish
+  - Library mastery could be improved with more distinctive Plotly features like hovertemplate
+  - Some wasted canvas space at right edge
   image_description: The plot displays two sigmoidal dose-response curves on a white
-    background with the plotly_white template. The x-axis shows "Concentration (M)"
-    on a logarithmic scale ranging from ~5e-10 to ~2e-4 with SI-prefix tick labels
-    (1n, 10n, 100n, 1μ, 10μ, 100μ). The y-axis shows "Response (%)" from 0 to ~100.
-    Compound A is plotted in dark blue (#306998) and Compound B in orange (#E8793A).
-    Both curves show data points (filled circles with white edges, size 12) with vertical
-    SEM error bars overlaid on smooth fitted sigmoid lines (width 3.5). Dashed vertical
-    and horizontal reference lines in each compound's color mark the EC50 intersection
-    points (~9.8e-08 M for A, ~5.4e-07 M for B). Dotted gray horizontal lines indicate
-    the top (~100%) and bottom (~5%) asymptotes. A light blue translucent confidence
-    band surrounds Compound A's fitted curve. The legend in the upper left lists both
-    compounds with their EC50 values. Title reads "curve-dose-response · plotly ·
-    pyplots.ai" centered at top.
+    background. Compound A is rendered in deep blue (#306998) and Compound B in warm
+    orange (#E8793A). The x-axis shows "Concentration (M)" on a logarithmic scale
+    with SI-prefix tick labels (1n, 10n, 100n, 1μ, 10μ, 100μ), and the y-axis shows
+    "Response (%)" ranging from 0 to ~100. Both curves follow classic 4PL sigmoidal
+    shapes with data points (filled circles with white edge highlights) and error
+    bars (SEM). A light blue 95% CI confidence band surrounds Compound A's fitted
+    curve. Dashed vertical and horizontal reference lines in matching colors mark
+    the EC50 for each compound — blue at ~9.8e-08 M and orange at ~5.4e-07 M. Dotted
+    gray horizontal lines indicate the top and bottom asymptotes. EC50 values are
+    annotated below the plot area. The legend in the upper-left corner lists both
+    compounds with their fitted EC50 values. The title "curve-dose-response · plotly
+    · pyplots.ai" is centered at the top.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -46,63 +46,63 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title=28, axis labels=22, ticks=18,
-          legend=18'
+        comment: 'All font sizes explicitly set: title=28, labels=22, ticks=18, legend=18'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: No overlapping text elements; legend, annotations, and labels well-separated
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Markers visible but could be slightly larger for 16 data points
+        comment: Markers size=12 and line width=3.5 good; markers could be slightly
+          larger for sparse dataset
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Blue/orange colorblind-safe with excellent contrast
+        comment: Blue/orange palette is colorblind-safe with excellent contrast
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Good proportions, plot fills canvas well
+        comment: Good layout but some unused space at right edge
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive with units: Concentration (M), Response (%)'
+        comment: Concentration (M) and Response (%) both descriptive with units
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Custom palette, plotly_white, white marker edges — above defaults
-          but not publication-level
+        comment: Strong design with custom palette, white marker edges, CI band. Above
+          defaults but not publication-level
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: X-grid disabled, subtle y-grid, good whitespace, lighter asymptote
-          lines
+        comment: plotly_white template, x-grid removed, subtle y-grid at 8% opacity.
+          Good but could push further
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: EC50 reference lines create focal points, CI band adds depth, compounds
-          tell comparison story
+        comment: EC50 reference lines create clear compound comparison; viewer immediately
+          sees potency difference
     spec_compliance:
       score: 15
       max: 15
@@ -112,7 +112,7 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct sigmoidal dose-response with 4PL model
+        comment: Correct sigmoidal dose-response curve with 4PL logistic fit
       - id: SC-02
         name: Required Features
         score: 4
@@ -125,16 +125,16 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: X=concentration (log), Y=response (%). Correct mapping
+        comment: Concentration on x (log), Response on y, correct mapping
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend labels include compound names with EC50
-          values
+        comment: Title format correct; legend labels include compound names with fitted
+          EC50 values
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -142,29 +142,29 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Two compounds with different EC50, Hill slopes, and asymptotes
+        comment: Two compounds with distinct EC50s, Hill slopes, and asymptotes
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Realistic pharmacological data with molar concentrations
+        comment: Realistic pharmacological context but generic compound names
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Concentrations 1e-9 to 1e-4 M, EC50 in nM-μM range, response 0-100%
+        comment: nM-μM range realistic for drug assays
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Function definition needed for curve_fit but breaks pure KISS
+        comment: Flat structure with function only where required by curve_fit API
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -182,13 +182,13 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized, no over-engineering
+        comment: Clean, well-organized, appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png and plot.html, current API
+        comment: Saves as plot.png and plot.html
     library_mastery:
       score: 7
       max: 10
@@ -198,13 +198,14 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of go.Figure, add_trace, add_shape, update_layout
+        comment: Good graph_objects usage with add_trace, add_shape, update_layout
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses fill=tonexty for CI band, add_shape for references, HTML export
+        comment: Uses fill=tonexty for CI band, add_shape for reference lines, write_html
+          for interactivity
   verdict: REJECTED
 impl_tags:
   dependencies:
