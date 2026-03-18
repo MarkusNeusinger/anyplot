@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 curve-dose-response: Pharmacological Dose-Response Curve
 Library: highcharts unknown | Python 3.14.3
-Quality: 83/100 | Created: 2026-03-18
+Quality: 86/100 | Created: 2026-03-18
 """
 
 import tempfile

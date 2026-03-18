@@ -1,7 +1,7 @@
 library: highcharts
 specification_id: curve-dose-response
 created: '2026-03-18T22:36:01Z'
-updated: '2026-03-18T22:41:41Z'
+updated: '2026-03-18T22:56:02Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23270129364
 issue: 4556
@@ -10,38 +10,39 @@ library_version: unknown
 preview_url: https://storage.googleapis.com/pyplots-images/plots/curve-dose-response/highcharts/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/curve-dose-response/highcharts/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/curve-dose-response/highcharts/plot.html
-quality_score: 83
+quality_score: 86
 review:
   strengths:
-  - Perfect spec compliance — every required feature implemented (4PL fit, EC50 lines,
-    error bars, asymptotes, CI band, 2 compounds, legend)
-  - Excellent data quality with realistic pharmacological context and comprehensive
-    feature coverage
-  - Effective data storytelling through EC50 reference lines and informative subtitle
-    with potency metrics
-  - Good use of Highcharts-specific series types (arearange, errorbar, spline, plotLines)
-  - Custom superscript axis formatter adds scientific polish
+  - 'Complete spec compliance: all required features (4PL fit, EC50 markers, error
+    bars, CI band, asymptotes, 2 compounds) implemented correctly'
+  - Professional color scheme with blue/rose palette that is colorblind-friendly and
+    visually harmonious
+  - Excellent data storytelling through EC50 subtitle annotation, reference lines,
+    and asymptote markers
+  - Good use of Highcharts-specific features (plotLines, ErrorBarSeries with linked_to,
+    AreaRangeSeries)
   weaknesses:
-  - Does not use highcharts-core Python library — builds raw JSON config manually
-    instead of using the recommended Chart API
-  - Asymptote horizontal lines are too thin (width 1) and blend into the grid
-  - Default Highcharts frame/spines still visible — could be cleaner
-  - 95% CI band could be slightly more visible (opacity 0.18 is very subtle)
-  image_description: 'The plot displays two sigmoidal dose-response curves on a white
-    background. Compound A (dark blue, #306998) shows a steep sigmoid transitioning
-    around 10⁻⁷ M, while Compound B (pink/rose, #E85D75) has a shallower sigmoid transitioning
-    around 10⁻⁶ to 10⁻⁵ M. Both compounds have circular scatter markers with white
-    borders and vertical error bars (SEM). A light blue 95% CI shaded band surrounds
-    Compound A''s fitted curve. Vertical dashed lines mark EC₅₀ positions for both
-    compounds with rotated labels. Horizontal dotted lines mark half-maximal responses,
-    and thin dashed horizontal lines mark asymptotes for Compound A. The title reads
-    "curve-dose-response · highcharts · pyplots.ai" with a subtitle showing EC₅₀ values.
-    X-axis uses superscript notation (10⁻⁹ to 10⁻⁴) labeled "Concentration (M, log₁₀
-    scale)", Y-axis shows "Response (%)". Legend in the top-right corner lists all
-    series.'
+  - X-axis formatter injection via JS string replacement is fragile and hacky
+  - Bottom asymptote label is cramped in lower-left corner and hard to read
+  - Y-axis max of 106 creates unnecessary whitespace above data
+  - EC50 labels are rotated 90 degrees at top of vertical lines, less prominent than
+    ideal
+  image_description: The plot displays two pharmacological dose-response curves on
+    a light gray (#fafbfc) background. The x-axis shows concentration in molar units
+    on a log10 scale with Unicode superscript labels (10^-9 through 10^-4). The y-axis
+    shows Response (%) from 0 to 106. Compound A is rendered in steel blue (#306998)
+    with a sigmoidal spline fit, circular scatter markers with white borders, vertical
+    error bars, and a light blue 95% CI shaded band. Compound B is rendered in rose
+    (#D4526E) with the same marker/error bar treatment but no CI band. Vertical dashed
+    lines mark EC50 positions for both compounds with rotated labels at top. Horizontal
+    dotted lines indicate half-maximal response levels, and horizontal long-dash lines
+    mark the top and bottom asymptotes with text labels on the left. The title reads
+    "curve-dose-response · highcharts · pyplots.ai" with a subtitle showing EC50 values
+    (9.9e-08 M and 2.8e-06 M). A floating legend with shadow and rounded border sits
+    in the upper right with 5 entries.
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -49,68 +50,67 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 52px, axis titles 36px, tick
-          labels 28px). EC50 plotLine labels at 24px slightly small but readable.
+        comment: All font sizes explicitly set (title 52px, axes 36px, ticks 28px,
+          legend 26px). Asymptote labels at 22px slightly small.
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Generally clean layout. Minor crowding between EC50 vertical line
-          labels.
+        comment: Bottom asymptote label cramped in lower-left. EC50 rotated labels
+          close to chart edge.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Markers well-sized, lines thick. Asymptote lines too thin (width
-          1) and hard to distinguish from grid. CI band very subtle.
+        comment: Markers radius 13, line width 5, error bars and CI band all clearly
+          visible.
       - id: VQ-04
         name: Color Accessibility
-        score: 3
-        max: 4
-        passed: true
-        comment: Blue and pink distinguishable and reasonably colorblind-safe, but
-          not from an established colorblind-safe palette.
-      - id: VQ-05
-        name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions, nothing cut off. Plot fills canvas well with balanced
-          margins.
+        comment: Blue and rose palette is colorblind-friendly with good luminance
+          contrast.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good proportions overall. Y-axis extends to 106 creating slight excess
+          whitespace.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive with units: Concentration (M, log10 scale) and Response
-          (%).'
+        comment: Descriptive labels with units on both axes.
     design_excellence:
-      score: 12
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Custom two-color palette, clear typography hierarchy, professional
-          appearance. Above defaults but not publication-exceptional.
+        comment: Strong design with cohesive blue/rose palette, custom font stack,
+          refined legend with shadow.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Subtle grid, good spacing. Default Highcharts frame still visible.
-          Some refinement but not fully polished.
+        comment: Subtle grid, light background, generous spacing. Could lighten x-axis
+          gridlines further.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: EC50 reference lines create focal points, subtitle summarizes key
-          metrics, visual hierarchy guides the viewer.
+        comment: EC50 subtitle, reference lines, and asymptote markers guide viewer
+          to key insights.
     spec_compliance:
       score: 15
       max: 15
@@ -120,28 +120,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct sigmoidal dose-response curve with 4PL logistic fit.
+        comment: Correct sigmoidal dose-response curve with scatter overlay.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All required features present: log x-axis, 4PL fit, EC50 lines,
-          error bars, asymptotes, 2 compounds, legend, 95% CI band.'
+        comment: 'All spec features present: log x-axis, 4PL fit, EC50 markers, error
+          bars, asymptotes, 2 compounds, legend, CI band.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = log10 concentration, Y = response %. Correct mapping with full
-          data range visible.
+        comment: X = log10(concentration), Y = response %. All data visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows exact format. Legend labels descriptive and match data
-          series.
+        comment: Correct title format. Legend labels descriptive and matching.
     data_quality:
       score: 15
       max: 15
@@ -151,24 +149,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Two compounds with different EC50 and Hill slopes, error bars, CI
-          band. Comprehensive.
+        comment: Two compounds with different EC50, Hill slopes, and asymptotes show
+          full comparison capability.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic pharmacological context with plausible concentration ranges
-          and EC50 values. Neutral.
+        comment: Pharmacological dose-response with realistic concentration range
+          and plausible values.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Concentrations span 5 orders of magnitude, responses 0-100%. Sensible
-          for pharmacology.
+        comment: 5 orders of magnitude concentration range, 0-100% response, plausible
+          EC50 values.
     code_quality:
-      score: 9
+      score: 8
       max: 10
       items:
       - id: CQ-01
@@ -176,8 +174,8 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Defines four_pl function (necessary for scipy curve_fit) but breaks
-          pure flat structure.
+        comment: Defines four_pl function (required by curve_fit), otherwise flat
+          structure.
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -192,34 +190,34 @@ review:
         comment: All imports used.
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Clean, well-organized code. No fake UI.
+        passed: false
+        comment: JS string replacement hack for x-axis formatter is fragile.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png via Selenium screenshot.
+        comment: Saves plot.png via Selenium. Current API.
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 2
-        max: 5
-        passed: false
-        comment: Bypasses highcharts-core Python library entirely. Builds raw JSON
-          config instead of using Chart API as recommended.
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: 'Uses Highcharts-specific features: arearange for CI band, errorbar
-          series, plotLines, spline, custom JS formatter.'
+        comment: Proper use of typed series classes, HighchartsOptions, add_series.
+          JS string manipulation less idiomatic.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: plotLines on axes, ErrorBarSeries with linked_to, AreaRangeSeries
+          for CI band, floating legend with shadow.
   verdict: REJECTED
 impl_tags:
   dependencies:
@@ -228,12 +226,13 @@ impl_tags:
   techniques:
   - html-export
   - annotations
+  - custom-legend
   - layer-composition
   patterns:
   - data-generation
   dataprep:
   - regression
   styling:
-  - edge-highlighting
   - grid-styling
+  - edge-highlighting
   - alpha-blending
