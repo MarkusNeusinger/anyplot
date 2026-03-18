@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 star-chart-constellation: Star Chart with Constellations
 Library: altair 6.0.0 | Python 3.14.3
 Quality: 86/100 | Created: 2026-03-18
@@ -119,29 +119,20 @@ filler = pd.DataFrame(
 )
 stars = pd.concat([stars, filler], ignore_index=True)
 
-
-# Stereographic projection from north celestial pole
-def stereo_project(ra_hours, dec_deg):
-    """Project RA/Dec to x,y using stereographic projection centered on north pole."""
-    ra_rad = np.radians(ra_hours * 15.0)
-    dec_rad = np.radians(dec_deg)
-    r = np.cos(dec_rad) / (1.0 + np.sin(dec_rad))
-    x = r * np.sin(ra_rad)
-    y = -r * np.cos(ra_rad)
-    return x, y
-
-
-stars["proj_x"], stars["proj_y"] = stereo_project(stars["ra"].values, stars["dec"].values)
+# Stereographic projection from north celestial pole (inline, no helper function)
+ra_rad = np.radians(stars["ra"].values * 15.0)
+dec_rad = np.radians(stars["dec"].values)
+r = np.cos(dec_rad) / (1.0 + np.sin(dec_rad))
+stars["proj_x"] = r * np.sin(ra_rad)
+stars["proj_y"] = -r * np.cos(ra_rad)
 
 # Invert magnitude for sizing: brighter stars get larger points
 mag_min, mag_max = stars["magnitude"].min(), stars["magnitude"].max()
 stars["size"] = ((mag_max - stars["magnitude"]) / (mag_max - mag_min)) * 450 + 20
 
-# Magnitude category for legend
-stars["mag_class"] = pd.cut(
-    stars["magnitude"],
-    bins=[-2, 1, 2.5, 4, 6],
-    labels=["mag < 1 (brightest)", "mag 1-2.5", "mag 2.5-4", "mag 4-6 (dimmest)"],
+# Star color based on magnitude (warm tones for bright, cool for dim)
+stars["star_color"] = np.where(
+    stars["magnitude"] < 1.0, "#FFF8E1", np.where(stars["magnitude"] < 2.5, "#FFFDE7", "#90A4AE")
 )
 
 # Constellation line edges (pairs of star_id)
@@ -263,55 +254,97 @@ constellation_names = {
 }
 label_df["name"] = label_df["constellation"].map(constellation_names)
 
-# Custom label offsets to reduce overlap
+# Custom label offsets to eliminate overlap in crowded regions
 label_offsets = {
-    "Cas": (0.0, -0.06),
-    "Per": (0.0, 0.05),
-    "Lyr": (-0.06, 0.0),
-    "Cyg": (0.04, 0.02),
-    "Aur": (0.04, 0.0),
-    "Aql": (-0.04, 0.0),
+    "Cas": (0.06, -0.12),
+    "Per": (-0.06, 0.10),
+    "UMa": (0.16, -0.12),
+    "Lyr": (-0.14, -0.06),
+    "Cyg": (0.10, 0.06),
+    "Aur": (0.10, -0.06),
+    "Aql": (-0.12, 0.08),
+    "Her": (0.12, 0.14),
+    "CrB": (0.10, -0.12),
+    "Dra": (-0.10, -0.08),
+    "Boo": (-0.10, 0.08),
+    "Tau": (0.08, 0.10),
 }
 for abbr, (dx, dy) in label_offsets.items():
     mask = label_df["constellation"] == abbr
     label_df.loc[mask, "proj_x"] += dx
     label_df.loc[mask, "proj_y"] += dy
 
+# Highlight the Summer Triangle asterism (Vega, Deneb, Altair) as a storytelling focal point
+summer_triangle_stars = ["Vega", "Deneb", "Altair"]
+st_lookup = {s: star_lookup[s] for s in summer_triangle_stars}
+triangle_edges = pd.DataFrame(
+    [
+        {
+            "x": st_lookup["Vega"]["proj_x"],
+            "y": st_lookup["Vega"]["proj_y"],
+            "x2": st_lookup["Deneb"]["proj_x"],
+            "y2": st_lookup["Deneb"]["proj_y"],
+        },
+        {
+            "x": st_lookup["Deneb"]["proj_x"],
+            "y": st_lookup["Deneb"]["proj_y"],
+            "x2": st_lookup["Altair"]["proj_x"],
+            "y2": st_lookup["Altair"]["proj_y"],
+        },
+        {
+            "x": st_lookup["Altair"]["proj_x"],
+            "y": st_lookup["Altair"]["proj_y"],
+            "x2": st_lookup["Vega"]["proj_x"],
+            "y2": st_lookup["Vega"]["proj_y"],
+        },
+    ]
+)
+# Summer Triangle label at centroid
+st_cx = np.mean([st_lookup[s]["proj_x"] for s in summer_triangle_stars])
+st_cy = np.mean([st_lookup[s]["proj_y"] for s in summer_triangle_stars])
+st_label_df = pd.DataFrame([{"proj_x": st_cx, "proj_y": st_cy + 0.04}])
+
 # Declination circles for the grid (projected as circles on the stereographic plane)
 dec_circles_data = []
 for dec_val in [0, 30, 60]:
     theta = np.linspace(0, 2 * np.pi, 120)
-    dec_rad = np.radians(dec_val)
-    r = np.cos(dec_rad) / (1.0 + np.sin(dec_rad))
-    cx = r * np.sin(theta)
-    cy = -r * np.cos(theta)
+    dec_r = np.radians(dec_val)
+    circ_r = np.cos(dec_r) / (1.0 + np.sin(dec_r))
     for i in range(len(theta)):
-        dec_circles_data.append({"gx": cx[i], "gy": cy[i], "dec_label": f"{dec_val}°", "order": i})
+        dec_circles_data.append(
+            {"gx": circ_r * np.sin(theta[i]), "gy": -circ_r * np.cos(theta[i]), "dec_label": f"{dec_val}°", "order": i}
+        )
 dec_circles_df = pd.DataFrame(dec_circles_data)
 
 # RA radial lines for grid
 ra_lines_data = []
 for ra_h in range(0, 24, 3):
-    ra_rad = np.radians(ra_h * 15.0)
+    ra_angle = np.radians(ra_h * 15.0)
     r_inner = np.cos(np.radians(60)) / (1.0 + np.sin(np.radians(60)))
     r_outer = np.cos(np.radians(-10)) / (1.0 + np.sin(np.radians(-10)))
     ra_lines_data.append(
         {
-            "x": r_inner * np.sin(ra_rad),
-            "y": -r_inner * np.cos(ra_rad),
-            "x2": r_outer * np.sin(ra_rad),
-            "y2": -r_outer * np.cos(ra_rad),
+            "x": r_inner * np.sin(ra_angle),
+            "y": -r_inner * np.cos(ra_angle),
+            "x2": r_outer * np.sin(ra_angle),
+            "y2": -r_outer * np.cos(ra_angle),
+            "ra_label": f"{ra_h}h",
         }
     )
 ra_lines_df = pd.DataFrame(ra_lines_data)
 
-# Magnitude legend data (title at top, brightest first)
+# RA labels at the boundary
+ra_label_df = ra_lines_df.copy()
+ra_label_df["lx"] = ra_label_df["x2"] * 1.06
+ra_label_df["ly"] = ra_label_df["y2"] * 1.06
+
+# Magnitude legend data
 legend_stars = pd.DataFrame(
     [
-        {"lx": 0.88, "ly": -0.72, "lsize": 430, "label": "mag < 1"},
-        {"lx": 0.88, "ly": -0.80, "lsize": 240, "label": "mag 1-2.5"},
-        {"lx": 0.88, "ly": -0.88, "lsize": 100, "label": "mag 2.5-4"},
-        {"lx": 0.88, "ly": -0.96, "lsize": 30, "label": "mag 4-6"},
+        {"lx": 0.92, "ly": -0.72, "lsize": 430, "label": "mag < 1"},
+        {"lx": 0.92, "ly": -0.80, "lsize": 240, "label": "mag 1-2.5"},
+        {"lx": 0.92, "ly": -0.88, "lsize": 100, "label": "mag 2.5-4"},
+        {"lx": 0.92, "ly": -0.96, "lsize": 30, "label": "mag 4-6"},
     ]
 )
 
@@ -323,13 +356,16 @@ boundary_df = pd.DataFrame(
     {"bx": boundary_r * np.sin(boundary_theta), "by": -boundary_r * np.cos(boundary_theta), "order": range(200)}
 )
 
-# Plot domain: set symmetric bounds for the circular projection
-plot_bound = 1.25
+# Plot domain
+plot_bound = 1.22
 
-# Stars layer
+# Interactive selection for constellation highlighting
+highlight = alt.selection_point(fields=["constellation"], on="pointerover", empty=False)
+
+# Stars layer with interactive highlight
 star_points = (
     alt.Chart(stars)
-    .mark_circle(opacity=0.9)
+    .mark_circle()
     .encode(
         x=alt.X(
             "proj_x:Q",
@@ -342,37 +378,60 @@ star_points = (
             scale=alt.Scale(domain=[-plot_bound, plot_bound]),
         ),
         size=alt.Size("size:Q", legend=None, scale=alt.Scale(range=[8, 500])),
-        color=alt.condition(alt.datum.magnitude < 2.0, alt.value("#FFFDE7"), alt.value("#B0BEC5")),
-        tooltip=["star_id:N", "magnitude:Q", "constellation:N"],
+        color=alt.Color("star_color:N", legend=None, scale=None),
+        opacity=alt.condition(highlight, alt.value(1.0), alt.value(0.85)),
+        tooltip=["star_id:N", "magnitude:Q", "constellation:N", "ra:Q", "dec:Q"],
     )
+    .add_params(highlight)
 )
 
 # Constellation lines layer
 lines = (
     alt.Chart(edges_df)
-    .mark_rule(strokeWidth=1.5, opacity=0.55)
+    .mark_rule(strokeWidth=1.5, opacity=0.5)
     .encode(x="x:Q", y="y:Q", x2="x2:Q", y2="y2:Q", color=alt.value("#5C9DC8"))
+)
+
+# Summer Triangle highlight lines (dashed golden)
+triangle_lines = (
+    alt.Chart(triangle_edges)
+    .mark_rule(strokeWidth=1.2, strokeDash=[6, 4], opacity=0.6)
+    .encode(x="x:Q", y="y:Q", x2="x2:Q", y2="y2:Q", color=alt.value("#FFD54F"))
+)
+
+# Summer Triangle label
+triangle_label = (
+    alt.Chart(st_label_df)
+    .mark_text(fontSize=13, fontStyle="italic", opacity=0.7)
+    .encode(x="proj_x:Q", y="proj_y:Q", text=alt.value("Summer Triangle"), color=alt.value("#FFD54F"))
 )
 
 # Constellation labels layer
 labels = (
     alt.Chart(label_df)
-    .mark_text(fontSize=15, fontWeight="bold", dy=-20, opacity=0.85)
+    .mark_text(fontSize=15, fontWeight="bold", dy=-22, opacity=0.85)
     .encode(x="proj_x:Q", y="proj_y:Q", text="name:N", color=alt.value("#80CBC4"))
 )
 
 # Declination grid circles
 dec_grid = (
     alt.Chart(dec_circles_df)
-    .mark_line(strokeDash=[4, 6], strokeWidth=0.6, opacity=0.2)
+    .mark_line(strokeDash=[4, 6], strokeWidth=0.6, opacity=0.18)
     .encode(x="gx:Q", y="gy:Q", detail="dec_label:N", order="order:Q", color=alt.value("#546E7A"))
 )
 
 # RA radial grid lines
 ra_grid = (
     alt.Chart(ra_lines_df)
-    .mark_rule(strokeDash=[4, 6], strokeWidth=0.6, opacity=0.2)
+    .mark_rule(strokeDash=[4, 6], strokeWidth=0.6, opacity=0.18)
     .encode(x="x:Q", y="y:Q", x2="x2:Q", y2="y2:Q", color=alt.value("#546E7A"))
+)
+
+# RA hour labels around the boundary
+ra_labels = (
+    alt.Chart(ra_label_df)
+    .mark_text(fontSize=11, opacity=0.35)
+    .encode(x="lx:Q", y="ly:Q", text="ra_label:N", color=alt.value("#78909C"))
 )
 
 # Magnitude legend - star markers
@@ -394,7 +453,7 @@ legend_text = (
 )
 
 # Legend title
-legend_title_df = pd.DataFrame([{"lx": 0.88, "ly": -0.62}])
+legend_title_df = pd.DataFrame([{"lx": 0.92, "ly": -0.62}])
 legend_title = (
     alt.Chart(legend_title_df)
     .mark_text(fontSize=14, fontWeight="bold", align="left", opacity=0.8)
@@ -410,18 +469,32 @@ boundary = (
 
 # Combine all layers
 chart = (
-    (boundary + ra_grid + dec_grid + lines + star_points + labels + legend_points + legend_text + legend_title)
+    (
+        boundary
+        + ra_grid
+        + dec_grid
+        + ra_labels
+        + lines
+        + triangle_lines
+        + star_points
+        + labels
+        + triangle_label
+        + legend_points
+        + legend_text
+        + legend_title
+    )
     .properties(
         width=1200,
         height=1200,
         title=alt.Title(
             text="star-chart-constellation · altair · pyplots.ai",
-            subtitle="Stereographic Projection from North Celestial Pole",
+            subtitle="Stereographic Projection from North Celestial Pole  ·  Highlighting the Summer Triangle",
             fontSize=28,
-            subtitleFontSize=18,
+            subtitleFontSize=17,
             anchor="middle",
             color="#E0E0E0",
             subtitleColor="#78909C",
+            offset=12,
         ),
     )
     .configure_view(fill="#0A1628", strokeWidth=0)
