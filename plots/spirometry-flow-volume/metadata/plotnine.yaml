@@ -1,7 +1,7 @@
 library: plotnine
 specification_id: spirometry-flow-volume
 created: '2026-03-18T22:17:02Z'
-updated: '2026-03-18T22:37:59Z'
+updated: '2026-03-18T22:45:33Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23269661001
 issue: 4557
@@ -10,100 +10,104 @@ library_version: 0.15.3
 preview_url: https://storage.googleapis.com/pyplots-images/plots/spirometry-flow-volume/plotnine/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/spirometry-flow-volume/plotnine/plot_thumb.png
 preview_html: null
-quality_score: 86
+quality_score: 91
 review:
   strengths:
-  - Excellent spec compliance with all required features (PEF marker, clinical values,
-    predicted overlay, correct loop shapes)
-  - Realistic clinical data with plausible spirometry values representing mild obstruction
-  - Good visual storytelling with PEF focal point and clinical annotation providing
-    diagnostic context
-  - Clean color hierarchy with blue measured curve and gray predicted overlay
-  - Proper use of plotnine grammar of graphics with layered composition
+  - Excellent clinical storytelling through the deficit ribbon between measured and
+    predicted expiratory limbs
+  - PEF annotation with contrasting red color creates a clear focal point
+  - Clinical values (FVC, FEV1, PEF, FEV1/FVC) well-placed and informative
+  - Clean deterministic data generation producing realistic spirometry curves
+  - Professional color scheme with Python blue measured curve and muted gray predicted
+    overlay
   weaknesses:
-  - Helper function breaks KISS flat script structure
-  - PEF label placement slightly conflicts with predicted curve near peak
-  - Library mastery could leverage more plotnine-distinctive features
+  - Ribbon alpha (0.15) is slightly faint - could be marginally more visible
+  - Zero-flow reference line is very subtle and could be slightly more prominent as
+    a clinical reference
   image_description: 'The plot displays a spirometry flow-volume loop on a light gray
-    (#FAFBFC) background. Two curves are shown: a solid blue (#306998) "Measured"
-    loop and a dashed gray (#8C8C8C) "Predicted" loop. The expiratory limbs rise sharply
-    from the origin to Peak Expiratory Flow (~9.5 L/s for measured, ~10.5 L/s for
-    predicted) then decline linearly to FVC. The inspiratory limbs form symmetric
-    U-shaped curves below the zero-flow line, reaching about -6 L/s (measured) and
-    -6.8 L/s (predicted). A red dot marks PEF on the measured curve with a bold red
-    label "PEF = 9.5 L/s". A clinical text annotation in the lower-left displays FVC
-    = 4.8 L, FEV1 = 3.6 L, PEF = 9.5 L/s, FEV1/FVC = 75%. The title reads "spirometry-flow-volume
-    · plotnine · pyplots.ai" in bold dark text. Axes are labeled "Volume (L)" and
-    "Flow (L/s)" with a subtle gray grid. A boxed legend in the upper-right shows
-    "Curve" with Measured (solid) and Predicted (dashed) entries.'
+    (#FAFBFC) background. Two curves are shown: a solid blue ("Measured") loop and
+    a dashed gray ("Predicted") loop. The measured expiratory limb rises sharply from
+    the origin to Peak Expiratory Flow (PEF) at approximately 9.5 L/s around 1.2L
+    volume, then declines roughly linearly to meet the x-axis near 4.8L (FVC). The
+    inspiratory limb forms a symmetric U-shape dipping to about -6 L/s. The predicted
+    loop is larger, reaching ~10.5 L/s PEF and extending to ~5.2L FVC. A light blue
+    shaded ribbon between the measured and predicted expiratory limbs illustrates
+    the "Deficit vs Predicted." PEF is marked with a red dot and bold red label "PEF
+    = 9.5 L/s." Clinical values (FVC = 4.8 L, FEV1 = 3.6 L, PEF = 9.5 L/s, FEV1/FVC
+    = 75%) are annotated in the lower-left area. The legend is positioned in the upper-right
+    with a white background, showing Measured (solid blue), Predicted (dashed gray),
+    and Deficit vs Predicted (light blue fill). Axes are labeled "Volume (L)" and
+    "Flow (L/s)" with explicit tick marks. Title reads "spirometry-flow-volume · plotnine
+    · pyplots.ai" in bold.'
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Font sizes explicitly set for title (24), axes (20), ticks (16),
-          legend (14/16). Annotation text at size=13 slightly small.
+        comment: 'All font sizes explicitly set: title=24pt, axis_title=20pt, axis_text=16pt,
+          legend=14-16pt'
       - id: VQ-02
         name: No Overlap
-        score: 5
-        max: 6
-        passed: true
-        comment: PEF label slightly conflicts visually with predicted dashed curve
-          near peak area.
-      - id: VQ-03
-        name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Lines at size=2 clearly visible, PEF red dot prominent, loops well-differentiated.
+        comment: No overlapping text elements; PEF label nudged, clinical text in
+          clear area
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Lines size=2 visible, PEF point size=6 clear; ribbon at alpha=0.15
+          slightly faint
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Blue vs gray colorblind-safe, red accent provides strong contrast.
+        comment: Blue vs gray colorblind-safe; red PEF marker distinct
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good 16:9 proportions, plot fills canvas well, balanced margins.
+        comment: Good 16:9 layout with balanced margins and appropriate coord limits
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Volume (L) and Flow (L/s) descriptive with units.
+        comment: Volume (L) and Flow (L/s) descriptive with units
     design_excellence:
-      score: 13
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Custom palette with Python Blue, muted gray, red accent. Above defaults
-          but not publication masterpiece.
+        comment: Custom palette, styled legend, off-white background, bold red PEF
+          highlight; above defaults
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: theme_minimal removes spines, subtle grid with alpha, light background,
-          legend styling.
+        comment: theme_minimal, subtle grid, custom background; zero-line could be
+          more prominent
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: PEF focal point, clinical values provide context, measured vs predicted
-          tells clinical story.
+        comment: Deficit ribbon tells clinical story; PEF highlighted; clinical values
+          annotated; clear hierarchy
     spec_compliance:
       score: 15
       max: 15
@@ -113,26 +117,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct flow-volume loop with expiratory and inspiratory limbs.
+        comment: Correct flow-volume loop with expiratory and inspiratory limbs
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: PEF marked, clinical values annotated, predicted overlay, distinct
-          styling.
+        comment: 'All spec features present: PEF mark, clinical values, predicted
+          overlay, distinct styling'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Volume on x-axis, Flow on y-axis, full data range shown.
+        comment: X=Volume, Y=Flow correctly mapped with full range
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format and legend labels match data.
+        comment: Correct title format; legend labels clear and descriptive
     data_quality:
       score: 15
       max: 15
@@ -142,57 +146,55 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Both limbs, PEF, measured vs predicted, clinical values all shown.
+        comment: Both limbs, measured/predicted, PEF, clinical values, deficit ribbon
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic spirometry data with plausible clinical values for mild
-          obstruction.
+        comment: Clinically realistic spirometry parameters in healthcare context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: FVC=4.8L, FEV1=3.6L, PEF=9.5 L/s are realistic adult values.
+        comment: FVC=4.8L, FEV1=3.6L, PEF=9.5 L/s, FEV1/FVC=75% all clinically realistic
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Helper function _flow_volume_loop breaks flat Imports-Data-Plot-Save
-          structure.
+        passed: true
+        comment: Clean imports-data-plot-save structure, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic data generation.
+        comment: Fully deterministic data generation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used, no unused imports.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriate complexity, no fake UI.
+        comment: Appropriate complexity, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300, current API.
+        comment: Saves as plot.png with dpi=300, current API
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -200,16 +202,16 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good grammar of graphics layering with ggplot, aes, geom_path, scales,
-          theme.
+        comment: Good grammar of graphics composition with multiple geom layers, inherit_aes,
+          guide_legend ordering
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Combined scale legends and annotate layer are standard ggplot patterns,
-          not plotnine-distinctive.
-  verdict: REJECTED
+        passed: true
+        comment: geom_ribbon, scale_linetype_manual, guide_legend ordering, inherit_aes
+          pattern
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -218,7 +220,8 @@ impl_tags:
   - custom-legend
   patterns:
   - data-generation
-  dataprep: []
+  dataprep:
+  - interpolation
   styling:
   - alpha-blending
   - grid-styling
