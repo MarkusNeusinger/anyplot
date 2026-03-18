@@ -1,7 +1,6 @@
-""" pyplots.ai
+"""pyplots.ai
 curve-dose-response: Pharmacological Dose-Response Curve
 Library: plotnine 0.15.3 | Python 3.14.3
-Quality: 88/100 | Created: 2026-03-18
 """
 
 import numpy as np
@@ -10,6 +9,7 @@ from plotnine import (
     aes,
     element_blank,
     element_line,
+    element_rect,
     element_text,
     geom_errorbar,
     geom_hline,
@@ -17,6 +17,7 @@ from plotnine import (
     geom_point,
     geom_ribbon,
     geom_segment,
+    geom_text,
     ggplot,
     guide_legend,
     guides,
@@ -24,6 +25,7 @@ from plotnine import (
     scale_color_manual,
     scale_fill_manual,
     scale_x_log10,
+    scale_y_continuous,
     theme,
     theme_minimal,
 )
@@ -107,18 +109,35 @@ for compound, params in fit_params.items():
 
 df_ec50 = pd.DataFrame(ec50_rows)
 
+# EC50 annotation labels
+ec50_labels = []
+for _, row in df_ec50.iterrows():
+    ec50_val = row["ec50"]
+    exponent = int(np.floor(np.log10(ec50_val)))
+    mantissa = ec50_val / 10**exponent
+    label = f"EC₅₀ = {mantissa:.1f}×10⁻{abs(exponent)} M"
+    ec50_labels.append(
+        {
+            "concentration": ec50_val * 3.5,
+            "response": row["half_response"] + 5,
+            "label": label,
+            "compound": row["compound"],
+        }
+    )
+df_ec50_labels = pd.DataFrame(ec50_labels)
+
 # Plot
 plot = (
     ggplot()
-    + geom_ribbon(aes(x="concentration", ymin="ci_lower", ymax="ci_upper", fill="compound"), data=df_fit, alpha=0.15)
-    + geom_line(aes(x="concentration", y="fitted", color="compound"), data=df_fit, size=1.5)
+    + geom_ribbon(aes(x="concentration", ymin="ci_lower", ymax="ci_upper", fill="compound"), data=df_fit, alpha=0.18)
+    + geom_line(aes(x="concentration", y="fitted", color="compound"), data=df_fit, size=1.8)
     + geom_errorbar(
         aes(x="concentration", ymin="response - response_sem", ymax="response + response_sem", color="compound"),
         data=df,
         width=0.08,
         size=0.7,
     )
-    + geom_point(aes(x="concentration", y="response", color="compound"), data=df, size=4, fill="white", stroke=0.8)
+    + geom_point(aes(x="concentration", y="response", color="compound"), data=df, size=5, fill="white", stroke=1.0)
 )
 
 # EC50 reference lines
@@ -132,7 +151,7 @@ for _, row in df_ec50.iterrows():
             linetype="dashed",
             color=col,
             size=0.6,
-            alpha=0.6,
+            alpha=0.55,
         )
         + geom_segment(
             aes(x=1e-10, xend="ec50", y="half_response", yend="half_response"),
@@ -140,23 +159,33 @@ for _, row in df_ec50.iterrows():
             linetype="dashed",
             color=col,
             size=0.6,
-            alpha=0.6,
+            alpha=0.55,
         )
     )
+
+# EC50 value annotations
+plot = plot + geom_text(
+    aes(x="concentration", y="response", label="label", color="compound"),
+    data=df_ec50_labels,
+    size=11,
+    ha="left",
+    fontweight="bold",
+)
 
 # Top/bottom asymptote lines
 for _, row in df_ec50.iterrows():
     col = colors[row["compound"]]
     plot = (
         plot
-        + geom_hline(yintercept=row["top"], linetype="dotted", color=col, size=0.5, alpha=0.35)
-        + geom_hline(yintercept=row["bottom"], linetype="dotted", color=col, size=0.5, alpha=0.35)
+        + geom_hline(yintercept=row["top"], linetype="dotted", color=col, size=0.5, alpha=0.3)
+        + geom_hline(yintercept=row["bottom"], linetype="dotted", color=col, size=0.5, alpha=0.3)
     )
 
 # Style
 plot = (
     plot
-    + scale_x_log10(labels=lambda lst: [f"1e{int(np.log10(v))}" if v > 0 else "0" for v in lst])
+    + scale_x_log10(labels=lambda lst: [f"10⁻{abs(int(np.log10(v)))}" if v > 0 else "0" for v in lst])
+    + scale_y_continuous(breaks=range(0, 101, 20), limits=(-5, 110))
     + scale_color_manual(values=colors)
     + scale_fill_manual(values=colors)
     + labs(
@@ -166,21 +195,25 @@ plot = (
         color="Compound",
         fill="Compound",
     )
-    + guides(fill=guide_legend(title="Compound"))
+    + guides(color=guide_legend(override_aes={"size": 4}), fill=guide_legend(title="Compound"))
     + theme_minimal()
     + theme(
         figure_size=(16, 9),
-        text=element_text(size=14),
-        axis_title=element_text(size=20),
-        axis_text=element_text(size=16),
-        plot_title=element_text(size=24, weight="bold"),
-        legend_title=element_text(size=18),
+        text=element_text(size=14, color="#2a2a2a"),
+        axis_title=element_text(size=20, weight="bold"),
+        axis_text=element_text(size=16, color="#444444"),
+        plot_title=element_text(size=24, weight="bold", color="#1a1a1a"),
+        legend_title=element_text(size=18, weight="bold"),
         legend_text=element_text(size=16),
-        legend_position=(0.8, 0.25),
+        legend_position=(0.82, 0.22),
+        legend_background=element_rect(fill="white", alpha=0.8),
+        legend_key_size=20,
         panel_grid_major_x=element_blank(),
         panel_grid_minor=element_blank(),
-        panel_grid_major_y=element_line(color="#dddddd", size=0.5, alpha=0.3),
-        axis_line=element_line(color="#333333", size=0.5),
+        panel_grid_major_y=element_line(color="#e0e0e0", size=0.4),
+        axis_line=element_line(color="#333333", size=0.6),
+        plot_background=element_rect(fill="#fafafa", color="none"),
+        panel_background=element_rect(fill="#fafafa", color="none"),
     )
 )
 
