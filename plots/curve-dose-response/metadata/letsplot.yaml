@@ -1,0 +1,226 @@
+library: letsplot
+specification_id: curve-dose-response
+created: '2026-03-18T22:30:22Z'
+updated: '2026-03-18T22:43:15Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23270128970
+issue: 4556
+python_version: 3.14.3
+library_version: 4.9.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/curve-dose-response/letsplot/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/curve-dose-response/letsplot/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/curve-dose-response/letsplot/plot.html
+quality_score: 91
+review:
+  strengths:
+  - Excellent visual quality with all font sizes explicitly set and colorblind-safe
+    palette
+  - Complete spec compliance with 4PL fitting, EC50 annotations, CI band, error bars,
+    and dual compound comparison
+  - Strong design refinement with horizontal-only grid, clean spines, and well-positioned
+    legend
+  - Realistic pharmacological data with appropriate scales and meaningful differentiation
+    between compounds
+  - Good use of letsplot-specific features (layer_tooltips, HTML export)
+  weaknesses:
+  - Asymptote lines use dotted linetype instead of dashed as specified; only shown
+    for Compound A
+  - Could leverage more letsplot-distinctive features for higher library mastery
+  image_description: The plot displays two sigmoidal dose-response curves on a white
+    background. Compound A is shown in blue (#306998) and Compound B in orange (#E07A3A).
+    The x-axis is labeled "Concentration (M)" with logarithmic tick labels from 1e-9
+    to 1e-4. The y-axis is labeled "Response (%)". The title reads "curve-dose-response
+    · letsplot · pyplots.ai" in bold. Both compounds have filled circle data points
+    with error bars (SEM) overlaid on smooth fitted sigmoid curves. Compound A (blue)
+    transitions from ~5% response at low concentrations to ~97% at high concentrations
+    with EC50 = 9.1e-08 M annotated in italic blue text. Compound B (orange) transitions
+    from ~5% to ~83% with EC50 = 4.9e-06 M annotated in italic orange text. Dashed
+    horizontal and vertical reference lines mark both EC50 points. Dotted gray horizontal
+    lines indicate top and bottom asymptotes for Compound A. A light blue 95% confidence
+    band surrounds the Compound A fitted curve. The legend is positioned in the upper-left
+    corner. Horizontal-only subtle grid lines are present; the background is clean
+    white with left and bottom axis lines only.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title=24, axis_title=20, axis_text=16,
+          legend_text=16'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text, EC50 annotations well-positioned
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Data points size=5 with stroke, lines size=2.2, error bars visible
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue/orange colorblind-safe combination with strong contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good proportions at 1600x900 scaled 3x, balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive labels with units: Concentration (M), Response (%)'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom blue/orange palette, professional typography, clearly above
+          defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Horizontal-only subtle grid, clean spines, generous whitespace, legend
+          inside plot
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Two compounds with different potencies, EC50 annotations provide
+          quantitative insight
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct sigmoidal dose-response curves with 4PL model
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: All major features present; asymptote lines use dotted instead of
+          dashed, only for Compound A
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=log10(concentration), Y=response(%). Correct mapping
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct, legend labels match data
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Two compounds with different EC50, Hill slopes, and asymptotes
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Pharmacological dose-response with realistic molar concentrations
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 1e-9 to 1e-4 M range, 0-100% response, realistic EC50 values
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Flat structure: imports, data, plot, save'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: numpy, pandas, lets_plot, scipy'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for 4PL fitting with CI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot.png with ggsave(scale=3), also HTML export
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Proper ggplot grammar with layered geoms, aes, scale_manual, theme
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses layer_tooltips() and HTML export, distinctive to letsplot
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - scipy
+  techniques:
+  - annotations
+  - layer-composition
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  dataprep:
+  - regression
+  styling:
+  - alpha-blending
+  - grid-styling
