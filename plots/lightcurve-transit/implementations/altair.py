@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 lightcurve-transit: Astronomical Light Curve
 Library: altair 6.0.0 | Python 3.14.3
 Quality: 85/100 | Created: 2026-03-18
@@ -33,7 +33,7 @@ model_flux = 1.0 - transit_depth * box * limb
 flux_err = np.random.uniform(0.0008, 0.0018, n_points)
 flux = model_flux + np.random.normal(0, 1, n_points) * flux_err
 
-df = pd.DataFrame(
+df_obs = pd.DataFrame(
     {"phase": phase, "flux": flux, "flux_err": flux_err, "flux_upper": flux + flux_err, "flux_lower": flux - flux_err}
 )
 
@@ -45,17 +45,33 @@ mu_m = np.clip(1.0 - (dist_m / transit_width) ** 2, 0, 1)
 limb_m = 1.0 - limb_u1 * (1 - mu_m) - limb_u2 * (1 - mu_m) ** 2
 model_dense = 1.0 - transit_depth * box_m * limb_m
 
-df_model = pd.DataFrame({"phase": phase_model, "model_flux": model_dense})
+df_model = pd.DataFrame({"phase": phase_model, "flux": model_dense})
 
-# Plot
+# Combined legend data
+df_legend = pd.DataFrame(
+    {
+        "phase": [phase[0], phase_model[0]],
+        "flux": [flux[0], model_dense[0]],
+        "series": ["Observed Data", "Transit Model"],
+    }
+)
+
+# Color palette - colorblind-safe teal + amber
+color_obs = "#2A6B7C"
+color_model = "#D4820E"
+legend_scale = alt.Scale(domain=["Observed Data", "Transit Model"], range=[color_obs, color_model])
+
+# Scales and axes
 y_scale = alt.Scale(domain=[0.986, 1.006])
-y_axis = alt.Axis(labelFontSize=18, titleFontSize=22, grid=True, gridOpacity=0.2, gridDash=[4, 4], format=".3f")
-x_axis = alt.Axis(labelFontSize=18, titleFontSize=22)
+y_axis = alt.Axis(
+    labelFontSize=18, titleFontSize=22, grid=True, gridOpacity=0.15, gridDash=[4, 4], format=".3f", tickCount=6
+)
+x_axis = alt.Axis(labelFontSize=18, titleFontSize=22, grid=True, gridOpacity=0.1, gridDash=[4, 4], tickCount=10)
 
 # Error bars
 error_bars = (
-    alt.Chart(df)
-    .mark_rule(strokeWidth=1.2, opacity=0.3, color="#306998")
+    alt.Chart(df_obs)
+    .mark_rule(strokeWidth=1, opacity=0.2, color=color_obs)
     .encode(
         x=alt.X("phase:Q", title="Orbital Phase", axis=x_axis),
         y=alt.Y("flux_lower:Q", scale=y_scale),
@@ -65,11 +81,12 @@ error_bars = (
 
 # Data points
 points = (
-    alt.Chart(df)
-    .mark_circle(size=80, color="#306998", opacity=0.6, stroke="white", strokeWidth=0.5)
+    alt.Chart(df_obs)
+    .mark_circle(size=30, opacity=0.5, stroke="white", strokeWidth=0.3)
     .encode(
         x=alt.X("phase:Q", title="Orbital Phase", axis=x_axis),
         y=alt.Y("flux:Q", title="Relative Flux", scale=y_scale, axis=y_axis),
+        color=alt.value(color_obs),
         tooltip=[
             alt.Tooltip("phase:Q", title="Phase", format=".4f"),
             alt.Tooltip("flux:Q", title="Flux", format=".5f"),
@@ -81,17 +98,70 @@ points = (
 # Transit model curve
 model_line = (
     alt.Chart(df_model)
-    .mark_line(strokeWidth=3, color="#E8524A")
-    .encode(x=alt.X("phase:Q"), y=alt.Y("model_flux:Q", scale=y_scale))
+    .mark_line(strokeWidth=2.5, opacity=0.9)
+    .encode(x=alt.X("phase:Q"), y=alt.Y("flux:Q", scale=y_scale), color=alt.value(color_model))
+)
+
+# Legend via invisible scatter with both series
+legend_points = (
+    alt.Chart(df_legend)
+    .mark_point(size=0, filled=True, opacity=0)
+    .encode(
+        x=alt.X("phase:Q"),
+        y=alt.Y("flux:Q", scale=y_scale),
+        color=alt.Color(
+            "series:N",
+            scale=legend_scale,
+            legend=alt.Legend(
+                title=None,
+                orient="top-right",
+                labelFontSize=16,
+                symbolSize=160,
+                padding=14,
+                cornerRadius=4,
+                fillColor="rgba(255,255,255,0.9)",
+                strokeColor="rgba(0,0,0,0.1)",
+            ),
+        ),
+    )
+)
+
+# Nearest-point selection for interactive hover
+nearest = alt.selection_point(nearest=True, on="pointerover", fields=["phase"], empty=False)
+
+selectors = alt.Chart(df_obs).mark_point(size=1, opacity=0).encode(x="phase:Q", y="flux:Q").add_params(nearest)
+
+hover_rule = (
+    alt.Chart(df_obs)
+    .mark_rule(color="#888888", strokeWidth=1, strokeDash=[3, 3])
+    .encode(x="phase:Q")
+    .transform_filter(nearest)
+)
+
+hover_point = (
+    alt.Chart(df_obs)
+    .mark_circle(size=120, color=color_obs, stroke=color_obs, strokeWidth=2, opacity=1)
+    .encode(x="phase:Q", y="flux:Q")
+    .transform_filter(nearest)
 )
 
 # Layer and configure
 chart = (
-    alt.layer(error_bars, points, model_line)
+    alt.layer(error_bars, points, model_line, legend_points, selectors, hover_rule, hover_point)
     .properties(
         width=1600,
         height=900,
-        title=alt.Title("Exoplanet Transit · lightcurve-transit · altair · pyplots.ai", fontSize=28),
+        title=alt.Title(
+            "Exoplanet Transit · lightcurve-transit · altair · pyplots.ai",
+            fontSize=28,
+            fontWeight="bold",
+            subtitle="Phase-folded Kepler photometry with limb-darkened transit model",
+            subtitleFontSize=18,
+            subtitleColor="#666666",
+            subtitlePadding=6,
+            anchor="start",
+            offset=12,
+        ),
     )
     .configure_axis(labelFontSize=18, titleFontSize=22)
     .configure_view(strokeWidth=0)
