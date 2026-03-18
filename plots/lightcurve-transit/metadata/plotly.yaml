@@ -1,7 +1,7 @@
 library: plotly
 specification_id: lightcurve-transit
 created: '2026-03-18T21:18:45Z'
-updated: '2026-03-18T21:23:03Z'
+updated: '2026-03-18T21:33:12Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23267445101
 issue: 4559
@@ -10,36 +10,37 @@ library_version: 6.6.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/lightcurve-transit/plotly/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/lightcurve-transit/plotly/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/lightcurve-transit/plotly/plot.html
-quality_score: 87
+quality_score: 89
 review:
   strengths:
-  - Physically realistic transit model with quadratic limb darkening — scientifically
-    credible data
-  - 'Perfect spec compliance: all required features (error bars, model overlay, phase-folding)
-    are present'
-  - Clean, well-structured code following KISS principles with proper reproducibility
-  - Good visual storytelling with transit dip as natural focal point
+  - Excellent spec compliance — all required features (error bars, model overlay,
+    phase-folded, limb darkening) present and correct
+  - Strong data storytelling with transit depth annotation and bracket creating clear
+    focal point
+  - Clean well-structured code with appropriate scientific modeling complexity
+  - Good color choices and visual hierarchy between observations and model
+  - Proper use of Plotly-specific features (hovertemplate, HTML export, integrated
+    error_y)
   weaknesses:
-  - 'Color accessibility: red model line could be more colorblind-friendly (e.g.,
-    orange #E67E22 or dark gold)'
-  - 'Design could be elevated further: consider removing axis lines, adding subtle
-    annotation for transit depth'
-  - Marker sizing slightly large for 500 data points — reducing to size 5-6 with opacity
-    0.4-0.5 would better convey density
-  image_description: The plot displays a phase-folded exoplanet transit light curve
-    on a clean white background. Blue circular markers (#306998) with white edge lines
-    represent 500 photometric observations scattered around a relative flux baseline
-    of ~1.0, each with vertical light-blue error bars of varying length. A solid red
-    line (#E74C3C) traces the transit model, flat at flux=1.0 across most of the phase
-    range, with a smooth U-shaped dip centered at phase 0.5, reaching a minimum of
-    ~0.990. The x-axis is labeled "Orbital Phase" (0 to 1), the y-axis "Relative Flux"
-    (~0.985 to 1.005). The title reads "Exoplanet Transit · lightcurve-transit · plotly
-    · pyplots.ai". A legend in the bottom-left corner with a semi-transparent white
-    background shows "Observations" (blue dot) and "Transit Model" (red line). Subtle
-    horizontal grid lines appear on the y-axis only.
+  - Observation markers (size 5) slightly small for 500 data points; could be 6-7
+    for better visibility
+  - Error bars at 20% opacity are very subtle and hard to see outside transit region
+  - Design excellence could be elevated with more sophisticated typography or layout
+    refinements
+  image_description: 'The plot displays an exoplanet transit light curve on a clean
+    white background. Blue scatter markers (with white edge highlights, ~500 points
+    at 0.45 opacity) represent photometric observations distributed across orbital
+    phase 0.0-1.0 on the x-axis, with relative flux on the y-axis ranging from ~0.985
+    to ~1.005. Each observation has a subtle light-blue error bar. An orange transit
+    model line (width 3) shows a smooth U-shaped dip centered at phase 0.5, reaching
+    a minimum near flux 0.99. A dotted grey baseline reference line marks flux=1.0.
+    A "Depth: 1.0%" annotation with grey bracket lines indicates the transit depth.
+    The legend in the bottom-left corner labels "Observations" (blue markers) and
+    "Transit Model" (orange line). The title reads "Exoplanet Transit · lightcurve-transit
+    · plotly · pyplots.ai" centered at the top.'
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -47,8 +48,8 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 28pt, labels 22pt, ticks 18pt,
-          legend 18pt'
+        comment: 'All font sizes explicitly set: title 28pt, axis labels 22pt, ticks
+          18pt, legend 18pt, annotation 16pt'
       - id: VQ-02
         name: No Overlap
         score: 6
@@ -60,25 +61,26 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Markers visible but slightly large for 500 data points
+        comment: Markers size 5 slightly small for 500 points; error bars at 20% opacity
+          very subtle
       - id: VQ-04
         name: Color Accessibility
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Blue-red distinguishable for most colorblind types but red not optimal
+        comment: Blue and orange colorblind-safe with strong contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions, balanced margins, plot fills canvas well
+        comment: Good 16:9 proportions, balanced margins, plot fills canvas well
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels; both quantities are dimensionless
+        comment: Descriptive labels; phase is unitless and flux is normalized
     design_excellence:
       score: 13
       max: 20
@@ -88,19 +90,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Thoughtful colors and marker styling, above defaults but not exceptional
+        comment: Thoughtful color palette, bracket annotation, transparent error bars
+          — above defaults but not publication-in-Nature level
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Subtle y-grid, x-grid removed, clean template, good whitespace
+        comment: plotly_white template, no spines, subtle y-grid at 8% opacity, good
+          whitespace
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Transit dip creates natural focal point, model line guides the eye
+        comment: Transit dip is clear focal point, depth annotation guides viewer
+          to key measurement
     spec_compliance:
       score: 15
       max: 15
@@ -110,48 +115,49 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct scatter + line overlay for transit photometry
+        comment: Correct scatter + line overlay for light curve
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Error bars, model curve, phase-folded data, limb darkening all present
+        comment: 'All features present: error bars, model overlay, phase-folded, limb
+          darkening'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=orbital phase, Y=relative flux, correct mapping
+        comment: X=orbital phase, Y=relative flux, transit dip downward
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend labels match data
+        comment: Correct title format with descriptive prefix, clear legend labels
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
         comment: Shows transit dip with limb darkening, baseline scatter, varying
-          errors
+          error bars, model fit
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic exoplanet transit with physical limb darkening coefficients
+        comment: Exoplanet transit is a real, neutral scientific scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: ~1% depth, flux errors 0.0008-0.002, consistent with space photometry
+        comment: 1% depth, realistic flux errors, 500 phase-folded observations
     code_quality:
       score: 10
       max: 10
@@ -167,25 +173,25 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set at start
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy and plotly.graph_objects, both used
+        comment: Only numpy and plotly.graph_objects, both fully used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriate complexity
+        comment: Appropriate complexity for domain, clean limb darkening model
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with correct dimensions, also exports HTML
+        comment: Saves plot.png at 4800x2700, also exports HTML
     library_mastery:
       score: 7
       max: 10
@@ -195,17 +201,20 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Proper go.Figure with go.Scatter traces and update_layout pattern
+        comment: Good use of go.Figure, go.Scatter with error_y, add_hline, add_annotation,
+          add_shape, update_layout
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Hover templates, HTML export, error_y custom styling
+        comment: Uses hovertemplate, HTML export, integrated error_y, add_hline convenience
+          method
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
   - hover-tooltips
   - html-export
   patterns:
