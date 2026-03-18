@@ -1,6 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 eye-diagram-basic: Signal Integrity Eye Diagram
 Library: bokeh 3.9.0 | Python 3.14.3
+Quality: 91/100 | Updated: 2026-03-18
 """
 
 import numpy as np
