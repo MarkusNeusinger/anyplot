@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 spirometry-flow-volume: Spirometry Flow-Volume Loop
 Library: altair 6.0.0 | Python 3.14.3
 Quality: 85/100 | Created: 2026-03-18
@@ -15,45 +15,51 @@ np.random.seed(42)
 fvc_measured = 4.8
 fev1_measured = 3.2
 pef_measured = 9.5
-
 fvc_predicted = 5.2
 pef_predicted = 10.5
-
 n_points = 150
 
+# Measured expiratory limb: sharp rise to PEF then linear decline
+vol_exp = np.linspace(0, fvc_measured, n_points)
+pef_idx = int(n_points * 0.12)
+flow_rise = np.linspace(0, pef_measured, pef_idx + 1)
+vol_remaining = vol_exp[pef_idx:] - vol_exp[pef_idx]
+vol_range = fvc_measured - vol_exp[pef_idx]
+flow_decline = pef_measured * (1 - (vol_remaining / vol_range) ** 0.85)
+flow_exp = np.concatenate([flow_rise, flow_decline[1:]])
+flow_exp += np.random.normal(0, 0.015, len(flow_exp))  # subtle noise
+flow_exp = np.clip(flow_exp, 0, None)
+flow_exp[0] = 0
+flow_exp[-1] = 0
 
-def generate_loop(fvc, pef, insp_depth, add_noise=False):
-    """Generate expiratory + inspiratory limb data for a flow-volume loop."""
-    vol_exp = np.linspace(0, fvc, n_points)
-    pef_idx = int(n_points * 0.12)
-    flow_rise = np.linspace(0, pef, pef_idx + 1)
-    vol_remaining = vol_exp[pef_idx:] - vol_exp[pef_idx]
-    vol_range = fvc - vol_exp[pef_idx]
-    flow_decline = pef * (1 - (vol_remaining / vol_range) ** 0.85)
-    flow_exp = np.concatenate([flow_rise, flow_decline[1:]])
-    if add_noise:
-        flow_exp += np.random.normal(0, 0.03, len(flow_exp))
-    flow_exp = np.clip(flow_exp, 0, None)
-    flow_exp[0] = 0
-    flow_exp[-1] = 0
+# Measured inspiratory limb: symmetric U-shape
+vol_insp = np.linspace(fvc_measured, 0, n_points)
+t_insp = np.linspace(0, np.pi, n_points)
+flow_insp = -5.5 * np.sin(t_insp)
+flow_insp += np.random.normal(0, 0.015, len(flow_insp))
+flow_insp[0] = 0
+flow_insp[-1] = 0
 
-    vol_insp = np.linspace(fvc, 0, n_points)
-    t_insp = np.linspace(0, np.pi, n_points)
-    flow_insp = -insp_depth * np.sin(t_insp)
-    if add_noise:
-        flow_insp += np.random.normal(0, 0.03, len(flow_insp))
-    flow_insp[0] = 0
-    flow_insp[-1] = 0
+# Predicted expiratory limb
+vol_pred_exp = np.linspace(0, fvc_predicted, n_points)
+pred_pef_idx = int(n_points * 0.12)
+pred_flow_rise = np.linspace(0, pef_predicted, pred_pef_idx + 1)
+pred_vol_remaining = vol_pred_exp[pred_pef_idx:] - vol_pred_exp[pred_pef_idx]
+pred_vol_range = fvc_predicted - vol_pred_exp[pred_pef_idx]
+pred_flow_decline = pef_predicted * (1 - (pred_vol_remaining / pred_vol_range) ** 0.85)
+flow_pred_exp = np.concatenate([pred_flow_rise, pred_flow_decline[1:]])
+flow_pred_exp = np.clip(flow_pred_exp, 0, None)
+flow_pred_exp[0] = 0
+flow_pred_exp[-1] = 0
 
-    return vol_exp, flow_exp, vol_insp, flow_insp
+# Predicted inspiratory limb
+vol_pred_insp = np.linspace(fvc_predicted, 0, n_points)
+t_pred_insp = np.linspace(0, np.pi, n_points)
+flow_pred_insp = -6.2 * np.sin(t_pred_insp)
+flow_pred_insp[0] = 0
+flow_pred_insp[-1] = 0
 
-
-vol_exp, flow_exp, vol_insp, flow_insp = generate_loop(fvc_measured, pef_measured, 5.5, add_noise=True)
-vol_pred_exp, flow_pred_exp, vol_pred_insp, flow_pred_insp = generate_loop(
-    fvc_predicted, pef_predicted, 6.2, add_noise=False
-)
-
-# Combine into dataframes with curve type for legend
+# Combine into dataframes
 df_measured = pd.concat(
     [pd.DataFrame({"volume": vol_exp, "flow": flow_exp}), pd.DataFrame({"volume": vol_insp, "flow": flow_insp})],
     ignore_index=True,
@@ -71,7 +77,6 @@ df_predicted = pd.concat(
 df_predicted["curve"] = "Predicted"
 df_predicted["order"] = range(len(df_predicted))
 
-# Merge all curve data for unified legend encoding
 df_all = pd.concat([df_measured, df_predicted], ignore_index=True)
 
 # PEF annotation point
@@ -82,25 +87,30 @@ df_pef = pd.DataFrame({"volume": [pef_vol], "flow": [pef_flow], "label": [f"PEF 
 # Clinical values annotation
 df_clinical = pd.DataFrame(
     {
-        "volume": [5.5],
+        "volume": [4.2],
         "flow": [8.5],
         "label": [f"FVC = {fvc_measured:.1f} L\nFEV\u2081 = {fev1_measured:.1f} L\nPEF = {pef_flow:.1f} L/s"],
     }
 )
 
-# Plot - unified encoding for proper legend
-color_scale = alt.Scale(domain=["Measured", "Predicted"], range=["#306998", "#888888"])
+# FEV1 marker: vertical reference at 1-second volume (approx FEV1 volume)
+df_fev1_line = pd.DataFrame({"volume": [fev1_measured, fev1_measured], "flow": [-1.5, 8.0]})
+
+df_fev1_label = pd.DataFrame({"volume": [fev1_measured], "flow": [8.5], "label": ["FEV\u2081"]})
+
+# Color and dash scales for legend
+color_scale = alt.Scale(domain=["Measured", "Predicted"], range=["#306998", "#999999"])
 dash_scale = alt.Scale(domain=["Measured", "Predicted"], range=[[0], [8, 6]])
 
 # Nearest selection for interactive tooltip on hover (Altair-distinctive)
 nearest = alt.selection_point(nearest=True, on="pointerover", fields=["order"], empty=False)
 
-# Main curves with legend via color + strokeDash encoding
+# Main curves with legend
 curves = (
     alt.Chart(df_all)
     .mark_line(strokeWidth=2.5)
     .encode(
-        x=alt.X("volume:Q", title="Volume (L)", scale=alt.Scale(domain=[-0.3, 6.5])),
+        x=alt.X("volume:Q", title="Volume (L)", scale=alt.Scale(domain=[-0.3, 5.6])),
         y=alt.Y("flow:Q", title="Flow (L/s)", scale=alt.Scale(domain=[-8, 12])),
         order="order:Q",
         color=alt.Color(
@@ -144,7 +154,7 @@ hover_point = (
 )
 
 # PEF marker and label
-pef_point = alt.Chart(df_pef).mark_point(size=280, filled=True, color="#C0392B").encode(x="volume:Q", y="flow:Q")
+pef_point = alt.Chart(df_pef).mark_point(size=300, filled=True, color="#C0392B").encode(x="volume:Q", y="flow:Q")
 
 pef_label = (
     alt.Chart(df_pef)
@@ -152,36 +162,72 @@ pef_label = (
     .encode(x="volume:Q", y="flow:Q", text="label:N")
 )
 
+# FEV1 vertical reference line with label
+fev1_line = (
+    alt.Chart(df_fev1_line)
+    .mark_line(strokeWidth=1.5, strokeDash=[6, 4], color="#E67E22", opacity=0.7)
+    .encode(x="volume:Q", y="flow:Q")
+)
+
+fev1_label = (
+    alt.Chart(df_fev1_label)
+    .mark_text(fontSize=15, fontWeight="bold", color="#E67E22", dy=-8)
+    .encode(x="volume:Q", y="flow:Q", text="label:N")
+)
+
 # Clinical values text
 clinical_text = (
     alt.Chart(df_clinical)
-    .mark_text(align="left", fontSize=17, lineBreak="\n", lineHeight=22, color="#444444", fontWeight="bold")
+    .mark_text(align="left", fontSize=17, lineBreak="\n", lineHeight=22, color="#333333", fontWeight="bold")
     .encode(x="volume:Q", y="flow:Q", text="label:N")
 )
 
 # Zero flow reference line
-df_zero = pd.DataFrame({"volume": [-0.3, 6.5], "flow": [0, 0]})
+df_zero = pd.DataFrame({"volume": [-0.3, 5.6], "flow": [0, 0]})
 zero_line = (
     alt.Chart(df_zero).mark_line(strokeWidth=1, strokeDash=[4, 4], color="#bbbbbb").encode(x="volume:Q", y="flow:Q")
 )
 
+# Expiratory/Inspiratory region labels
+df_region_exp = pd.DataFrame({"volume": [0.2], "flow": [11.0], "label": ["Expiration"]})
+df_region_insp = pd.DataFrame({"volume": [0.2], "flow": [-7.0], "label": ["Inspiration"]})
+
+region_exp_label = (
+    alt.Chart(df_region_exp)
+    .mark_text(fontSize=14, color="#888888", fontStyle="italic", align="left")
+    .encode(x="volume:Q", y="flow:Q", text="label:N")
+)
+
+region_insp_label = (
+    alt.Chart(df_region_insp)
+    .mark_text(fontSize=14, color="#888888", fontStyle="italic", align="left")
+    .encode(x="volume:Q", y="flow:Q", text="label:N")
+)
+
 chart = (
-    (zero_line + curves + tooltip_points + hover_rule + hover_point + pef_point + pef_label + clinical_text)
+    (
+        zero_line
+        + curves
+        + tooltip_points
+        + hover_rule
+        + hover_point
+        + fev1_line
+        + fev1_label
+        + pef_point
+        + pef_label
+        + clinical_text
+        + region_exp_label
+        + region_insp_label
+    )
     .properties(
         width=1600,
         height=900,
-        title=alt.Title(
-            "spirometry-flow-volume · altair · pyplots.ai",
-            fontSize=28,
-            anchor="start",
-            color="#222222",
-            subtitleColor="#666666",
-        ),
+        title=alt.Title("spirometry-flow-volume · altair · pyplots.ai", fontSize=28, anchor="start", color="#222222"),
     )
     .configure_axis(
         labelFontSize=18,
         titleFontSize=22,
-        gridOpacity=0.15,
+        gridOpacity=0.12,
         gridColor="#cccccc",
         domainColor="#444444",
         tickColor="#888888",
