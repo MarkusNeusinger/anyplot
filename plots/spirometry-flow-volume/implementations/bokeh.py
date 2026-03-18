@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 spirometry-flow-volume: Spirometry Flow-Volume Loop
 Library: bokeh 3.9.0 | Python 3.14.3
 Quality: 89/100 | Created: 2026-03-18
@@ -88,15 +88,22 @@ p = figure(
     y_axis_label="Flow (L/s)",
 )
 
+# Filled patch between measured and predicted expiratory limbs to highlight diagnostic gap
+# Interpolate predicted flow at measured volume points for consistent comparison
+pred_exp_interp = np.interp(volume_exp, volume_pred_exp, flow_pred_exp)
+patch_vol = np.concatenate([volume_exp, volume_exp[::-1]])
+patch_flow = np.concatenate([flow_exp, pred_exp_interp[::-1]])
+p.patch(x=patch_vol, y=patch_flow, fill_color="#306998", fill_alpha=0.08, line_color=None)
+
 # Predicted loop (dashed, background)
 r_pred = p.line(
     x="volume",
     y="flow",
     source=source_predicted,
-    line_color="#999999",
-    line_width=4,
+    line_color="#777777",
+    line_width=4.5,
     line_dash="dashed",
-    line_alpha=0.7,
+    line_alpha=0.8,
 )
 
 # Measured loop (solid, foreground)
@@ -124,7 +131,7 @@ fev1_label = Label(
     x=fev1_measured,
     y=fev1_flow,
     text=f"FEV1 = {fev1_measured:.1f} L",
-    text_font_size="22pt",
+    text_font_size="24pt",
     text_color="#457b9d",
     text_font_style="bold",
     x_offset=20,
@@ -174,12 +181,10 @@ p.yaxis.axis_label_text_font_size = "32pt"
 p.xaxis.major_label_text_font_size = "26pt"
 p.yaxis.major_label_text_font_size = "26pt"
 
-# Grid
-p.xgrid.grid_line_alpha = 0.15
-p.ygrid.grid_line_alpha = 0.15
-p.xgrid.grid_line_dash = [4, 4]
+# Grid - only y-grid for flow reading axis, remove x-grid for cleaner look
+p.xgrid.grid_line_color = None
+p.ygrid.grid_line_alpha = 0.18
 p.ygrid.grid_line_dash = [4, 4]
-p.xgrid.grid_line_color = "#888888"
 p.ygrid.grid_line_color = "#888888"
 
 # Clean frame
