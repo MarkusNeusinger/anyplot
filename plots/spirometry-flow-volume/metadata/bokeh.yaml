@@ -1,7 +1,7 @@
 library: bokeh
 specification_id: spirometry-flow-volume
 created: '2026-03-18T22:17:09Z'
-updated: '2026-03-18T22:21:32Z'
+updated: '2026-03-18T22:28:37Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23269660922
 issue: 4557
@@ -10,80 +10,77 @@ library_version: 3.9.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/spirometry-flow-volume/bokeh/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/spirometry-flow-volume/bokeh/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/spirometry-flow-volume/bokeh/plot.html
-quality_score: 87
+quality_score: 89
 review:
   strengths:
-  - Perfect spec compliance with all required features (PEF annotation, FEV1/FVC values,
-    predicted overlay, closed loop)
-  - Clinically realistic spirometry data with medically plausible values (FVC=4.2L,
-    FEV1/FVC=79%)
-  - Clean well-structured code following KISS principles with good Bokeh ColumnDataSource
-    pattern
-  - Effective visual hierarchy between measured (prominent blue) and predicted (subtle
-    gray dashed) loops
+  - Perfect spec compliance with all required features (PEF annotation, clinical values,
+    predicted overlay, closed loop shape) implemented correctly
+  - Clinically realistic data with meaningful diagnostic context (FEV1/FVC ratio of
+    79%)
+  - Clean well-structured code following KISS principles with good use of Bokeh idioms
+  - Strong visual quality with all font sizes explicitly set and no overlap issues
   weaknesses:
-  - Color palette is functional but lacks refined harmony for publication quality
-  - Some annotation text appears small relative to the canvas despite explicit sizing
-  - Could leverage more distinctive Bokeh features like Band/VArea glyphs
-  image_description: 'The plot displays a spirometry flow-volume loop on a light gray
-    (#fafafa) background. A solid blue line (#306998) represents the measured flow-volume
-    loop: the expiratory limb rises sharply from the origin to a Peak Expiratory Flow
-    (PEF) of ~9.5 L/s (marked with a red dot and labeled "PEF = 9.5 L/s" in red text),
-    then declines roughly linearly to FVC at ~4.2 L. The inspiratory limb curves symmetrically
-    below the zero-flow line, reaching approximately -6.5 L/s, forming a closed loop.
-    A dashed gray line shows the predicted normal loop, slightly larger than the measured
-    loop. An FEV1 marker (blue dot) is placed at volume 3.3 L on the expiratory limb
-    with the label "FEV1 = 3.3 L". A clinical values text box near the bottom center
-    reads "FVC = 4.2 L | FEV1 = 3.3 L | FEV1/FVC = 79% | PEF = 9.5 L/s". A dotted
-    horizontal reference line marks zero flow. The legend in the top right distinguishes
-    "Measured" (solid) from "Predicted Normal" (dashed). The title "spirometry-flow-volume
-    · bokeh · pyplots.ai" appears at the top left. Axes are labeled "Volume (L)" and
-    "Flow (L/s)" with subtle dashed grid lines.'
+  - Design excellence could be elevated with filled patch between measured/predicted
+    curves and reduced grid noise
+  - FEV1 label appears relatively small compared to PEF label in rendered image
+  - Predicted loop could benefit from slightly more visual weight for easier comparison
+  image_description: The plot displays a spirometry flow-volume loop on a light gray
+    (#fafafa) background. A solid blue (#306998) measured loop shows the expiratory
+    limb rising sharply to PEF (~9.5 L/s) at approximately 0.5L volume, then declining
+    roughly linearly to FVC at ~4.2L. The inspiratory limb forms a symmetric U-shape
+    below the zero-flow line, reaching about -6.5 L/s. A dashed gray (#999999) predicted
+    normal loop is overlaid, slightly larger than the measured loop, indicating reduced
+    lung function. A red (#e63946) dot marks PEF with the label "PEF = 9.5 L/s" in
+    red bold text. A teal (#457b9d) dot marks FEV1 with the label "FEV1 = 3.3 L".
+    A clinical values text box in the lower portion reads "FVC = 4.2 L | FEV1 = 3.3
+    L | FEV1/FVC = 79% | PEF = 9.5 L/s". A dotted gray zero-flow reference line runs
+    horizontally. The legend in the top right distinguishes "Measured" (solid blue)
+    from "Predicted Normal" (dashed gray). Title reads "spirometry-flow-volume · bokeh
+    · pyplots.ai". Axes are labeled "Volume (L)" and "Flow (L/s)". Grid lines are
+    subtle dashed lines at low opacity.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 42pt, axis labels 32pt, ticks
-          26pt, annotations 22-24pt). Readable but annotations slightly small relative
-          to canvas.
+        comment: 'All font sizes explicitly set: title 42pt, axis labels 32pt, tick
+          labels 26pt, annotations 22-24pt'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements; all annotations well-positioned.
+        comment: All text elements well-separated with no collisions
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Measured line clearly visible (width=5). Predicted line slightly
-          faint (alpha=0.7) but distinguishable.
+        comment: Good line widths and marker sizes. Predicted loop could be slightly
+          more prominent
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Blue/gray/red palette is colorblind-safe with good contrast.
+        comment: Blue/gray/red palette is colorblind-safe with good contrast
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Plot fills canvas reasonably well. Some unused space in upper-right
-          quadrant.
+        comment: Plot fills canvas well with generous explicit margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Volume (L) and Flow (L/s) are descriptive with units.
+        comment: Volume (L) and Flow (L/s) - descriptive with units
     design_excellence:
       score: 13
       max: 20
@@ -93,22 +90,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom color scheme, light gray background, removed outline. Above
-          defaults but not publication-level.
+        comment: Custom color palette with intentional hierarchy, above defaults but
+          not publication-level
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Subtle grid, outline removed, toolbar hidden, background customized,
-          axis styling adjusted.
+        comment: Subtle grid, outline removed, toolbar hidden, custom axis styling.
+          Both grids still visible adds some noise
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: PEF highlighted as red focal point, clinical values annotated, measured
-          vs predicted hierarchy effective.
+        comment: Clear clinical narrative with measured vs predicted comparison. Red
+          PEF focal point. Clinical values text box adds context
     spec_compliance:
       score: 15
       max: 15
@@ -118,26 +115,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct flow-volume loop with expiratory and inspiratory limbs.
+        comment: Correct flow-volume loop with expiratory and inspiratory limbs
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
         comment: 'All spec features present: PEF annotation, clinical values, predicted
-          overlay, closed loop.'
+          overlay, closed loop'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Volume on x-axis, Flow on y-axis, all data visible.
+        comment: Volume on X, Flow on Y, all data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format and clear legend labels.
+        comment: Correct title format and accurate legend labels
     data_quality:
       score: 15
       max: 15
@@ -147,20 +144,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: expiratory/inspiratory limbs, PEF, FEV1, FVC,
-          predicted comparison.'
+        comment: Both limbs, PEF, FEV1, measured vs predicted comparison shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Clinically realistic spirometry data for pulmonary function testing.
+        comment: Real clinical spirometry scenario with physiologically accurate parameters
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: All values clinically plausible (FVC=4.2L, PEF=9.5 L/s, FEV1/FVC=79%).
+        comment: 'Clinically realistic values: FVC=4.2L, PEF=9.5 L/s, FEV1/FVC=79%'
     code_quality:
       score: 10
       max: 10
@@ -170,31 +166,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports-data-plot-save structure, no functions or classes.
+        comment: Clean Imports-Data-Plot-Save structure, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) is set.
+        comment: np.random.seed(42) set, deterministic data generation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used.
+        comment: All imports are used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized code with appropriate complexity.
+        comment: Clean, well-structured, appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html.
+        comment: Saves as plot.png via export_png, current Bokeh API
     library_mastery:
       score: 7
       max: 10
@@ -204,15 +200,14 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of ColumnDataSource, figure API, Label, Legend, LegendItem,
-          and model properties.
+        comment: Good use of ColumnDataSource, Legend, Label, HoverTool. Could use
+          Patch/Band glyphs
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses HoverTool, HTML export, and ColumnDataSource — distinctive Bokeh
-          features.
+        comment: HoverTool for interactive tooltips, HTML export alongside PNG
   verdict: REJECTED
 impl_tags:
   dependencies: []
@@ -227,4 +222,3 @@ impl_tags:
   dataprep: []
   styling:
   - grid-styling
-  - edge-highlighting
