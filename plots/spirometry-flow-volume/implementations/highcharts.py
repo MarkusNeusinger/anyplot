@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 spirometry-flow-volume: Spirometry Flow-Volume Loop
 Library: highcharts unknown | Python 3.14.3
-Quality: 84/100 | Created: 2026-03-18
+Quality: 86/100 | Created: 2026-03-18
 """
 
 import tempfile
