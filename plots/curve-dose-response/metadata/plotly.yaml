@@ -1,0 +1,237 @@
+library: plotly
+specification_id: curve-dose-response
+created: '2026-03-18T22:31:28Z'
+updated: '2026-03-18T22:57:07Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23270128810
+issue: 4556
+python_version: 3.14.3
+library_version: 6.6.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/curve-dose-response/plotly/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/curve-dose-response/plotly/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/curve-dose-response/plotly/plot.html
+quality_score: 91
+review:
+  strengths:
+  - All specification requirements fully implemented including CI band, EC50 reference
+    lines, asymptote markers, and error bars
+  - Strong visual design with custom color palette, styled annotations with arrows,
+    and clean layout
+  - Excellent data storytelling through EC50 annotations and dashed reference lines
+    that guide the viewer
+  - Clean well-structured code with appropriate use of scipy curve_fit
+  - Good use of Plotly-specific features (hovertemplates, HTML export, tonexty fill)
+  weaknesses:
+  - Compound A/B naming is standard but could use more specific fictional drug names
+    for richer context
+  - Could leverage more Plotly-distinctive features for higher library mastery score
+  image_description: 'The plot displays two sigmoidal dose-response curves on a clean
+    white background. Compound A is rendered in deep blue (#306998) and Compound B
+    in warm orange (#E8793A). The x-axis shows "Concentration (M)" on a logarithmic
+    scale with SI prefix notation (from ~5e-10 to 100 micromolar). The y-axis shows
+    "Response (%)" ranging from 0 to ~110. Both curves exhibit the classic 4PL sigmoid
+    shape — flat at low concentrations, rising steeply through the mid-range, and
+    plateauing at high concentrations. Large circular data points with white edge
+    borders are overlaid on the fitted curves, each with visible SEM error bars. Dashed
+    reference lines (vertical and horizontal) mark the EC50 for each compound, with
+    annotated labels featuring arrows pointing to the intersection points: EC50 =
+    9.85e-08 M for Compound A and EC50 = 5.43e-07 M for Compound B. Dotted gray horizontal
+    lines indicate the top (~100%) and bottom (~5%) asymptotes, labeled accordingly.
+    A subtle light blue 95% CI band surrounds the Compound A fitted curve. The legend
+    in the top-left corner lists both compounds with their EC50 values. The title
+    reads "curve-dose-response · plotly · pyplots.ai" centered at the top.'
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 28pt, axis labels 22pt, ticks
+          18pt, legend 16pt, annotations 14pt'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping elements. EC50 annotations offset vertically, legend
+          in top-left clear of data
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Markers size 14 with white edges, lines width 3.5, error bars thickness
+          2 — all prominent for 16 data points
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue/orange colorblind-safe combination with excellent contrast on
+          white
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 4800x2700 output with balanced margins, plot fills canvas well
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Concentration (M) and Response (%) both include units
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom palette, styled annotations with borders/arrows, white-edged
+          markers, clearly above defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: X-grid hidden, y-grid 0.06 opacity, light axis lines, clean white
+          background
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: EC50 annotations with arrows create focal points, dashed reference
+          lines guide viewer, two compounds tell comparison story
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct sigmoidal dose-response curve with 4PL logistic fit
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: log x-axis, 4PL fit, EC50 lines, error
+          bars, asymptotes, 2 compounds, legend, CI band'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=concentration (log), Y=response (%). Full data range shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct, legend labels include compound names with EC50
+          values
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Two compounds with different EC50s, Hill slopes, and asymptotes.
+          Error bars and CI band shown
+      - id: DQ-02
+        name: Realistic Context
+        score: 4
+        max: 5
+        passed: true
+        comment: Realistic pharma dose-response with proper concentration ranges.
+          Compound A/B names are standard but slightly generic
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: EC50 values ~1e-7 and ~5e-7 M are realistic for pharmacological compounds
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear flow with logistic_4pl function justified by scipy curve_fit
+          API requirement
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) ensures deterministic output
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: numpy, plotly.graph_objects, scipy.optimize.curve_fit — all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean loop over compounds avoids duplication. Appropriate complexity,
+          no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png via write_image() with correct dimensions
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of graph_objects API — correct choice over express for this
+          customization level
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Custom hovertemplates with HTML, fill=tonexty for CI band, HTML export
+          via write_html
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - scipy
+  techniques:
+  - annotations
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - regression
+  styling:
+  - edge-highlighting
+  - grid-styling
+  - alpha-blending
