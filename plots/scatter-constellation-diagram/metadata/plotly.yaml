@@ -1,0 +1,232 @@
+library: plotly
+specification_id: scatter-constellation-diagram
+created: '2026-03-17T23:24:17Z'
+updated: '2026-03-17T23:35:42Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23220948511
+issue: 4562
+python_version: 3.14.3
+library_version: 6.6.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/scatter-constellation-diagram/plotly/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/scatter-constellation-diagram/plotly/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/scatter-constellation-diagram/plotly/plot.html
+quality_score: 93
+review:
+  strengths:
+  - Excellent domain expertise with proper 16-QAM signal processing including AWGN,
+    phase offset, and EVM calculation
+  - Error magnitude color-coding adds genuine data storytelling beyond spec requirements
+  - Clean professional design with intentional color hierarchy (Viridis, orange ideal
+    markers, dark text) and refined visual details
+  - All spec requirements fully satisfied including EVM annotation, decision boundaries,
+    and equal aspect ratio
+  - Smart use of ScatterGL for performance and hover templates for interactivity
+  weaknesses:
+  - Minor intra-cluster marker overlap at current size/opacity settings (cosmetic,
+    acceptable for constellation diagrams)
+  image_description: The plot displays a 16-QAM constellation diagram on a square
+    canvas with a light gray background (#FAFBFC). Sixteen clusters of received symbols
+    (semi-transparent dots) are arranged in a 4×4 grid at ±1, ±3 positions on both
+    axes. The received symbols are color-coded by error magnitude using the Viridis
+    colorscale (dark purple for low error, yellow for high error), with a vertical
+    colorbar on the right side labeled "Error Magnitude" ranging from 0 to ~0.7. Ideal
+    constellation points are marked with orange X markers (hollow, with orange outlines).
+    Dashed gray decision boundary lines appear at ±2 on both axes. The title reads
+    "scatter-constellation-diagram · plotly · pyplots.ai" centered at the top. Axes
+    are labeled "In-Phase (I)" (x-axis) and "Quadrature (Q)" (y-axis) with tick marks
+    at integer intervals. An annotation box in the upper right displays "EVM = 13.2%"
+    with "SNR = 20 dB · Phase offset = 5°" beneath it, styled with a white background
+    and subtle border. A legend in the upper left identifies "Received symbols" and
+    "Ideal points". Zero lines are visible as subtle gray lines through the origin.
+    The phase offset creates a visible slight rotation of the clusters relative to
+    the ideal grid positions.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 28pt, axis labels 22pt, ticks
+          18pt, annotation 20pt, legend 18pt, colorbar title 16pt, colorbar ticks
+          14pt'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Legend, annotation, and colorbar well separated with no collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: 1200 points at size 9 with opacity 0.6; clusters distinct though
+          some intra-cluster overlap
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Viridis colorscale is colorblind-safe; orange ideal markers contrast
+          well
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square 1200x1200 layout perfect for constellation diagram with balanced
+          margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: In-Phase (I) and Quadrature (Q) are descriptive domain-specific labels
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Strong design with intentional color hierarchy, custom background,
+          styled annotation box
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Grid removed, plotly_white template, subtle zero lines, refined colorbar
+          positioning
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Error magnitude color-coding creates visual insight; EVM annotation
+          provides quantitative context
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct I/Q scatter constellation diagram
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec requirements met: 16-QAM, ideal markers, decision boundaries,
+          equal aspect ratio, EVM annotation'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: I/Q correctly mapped to x/y axes with symmetric range
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct title format and accurate legend labels
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows noise spreading, phase offset effects, varying error magnitudes,
+          all 16 QAM positions
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Authentic 16-QAM communications scenario with proper AWGN and phase
+          offset modeling
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Standard 16-QAM grid, realistic SNR and phase offset values
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean linear flow with no functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set at top
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only numpy and plotly.graph_objects, both fully used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean Pythonic code with appropriate domain complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with scale=3, also exports HTML
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of go.Figure, add_trace, add_shape, add_annotation, update_layout
+          with dict-style params
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: ScatterGL for WebGL rendering, custom hovertemplates, HTML export,
+          colorbar integration
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - annotations
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - custom-colormap
+  - alpha-blending
