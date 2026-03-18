@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 curve-dose-response: Pharmacological Dose-Response Curve
 Library: letsplot 4.9.0 | Python 3.14.3
 Quality: 86/100 | Created: 2026-03-18
@@ -64,11 +64,12 @@ df_points = pd.DataFrame(
     }
 )
 
-# Fitted curves DataFrame
+# Fitted curves DataFrame with concentration for tooltips
 df_fit = pd.DataFrame(
     {
         "log_conc": np.concatenate([np.log10(conc_smooth), np.log10(conc_smooth)]),
         "response": np.concatenate([fit_a, fit_b]),
+        "concentration": np.concatenate([conc_smooth, conc_smooth]),
         "compound": ["Compound A"] * len(conc_smooth) + ["Compound B"] * len(conc_smooth),
     }
 )
@@ -97,45 +98,102 @@ df_ec50_v = pd.DataFrame(
 top_asym_a = popt_a[1]
 bottom_asym_a = popt_a[0]
 
+# EC50 annotation labels
+ec50_label_a = f"EC₅₀ = {ec50_fit_a:.1e} M"
+ec50_label_b = f"EC₅₀ = {ec50_fit_b:.1e} M"
+
+df_ec50_labels = pd.DataFrame(
+    {
+        "log_conc": [np.log10(ec50_fit_a), np.log10(ec50_fit_b)],
+        "response": [half_response_a + 6, half_response_b + 6],
+        "label": [ec50_label_a, ec50_label_b],
+        "compound": ["Compound A", "Compound B"],
+    }
+)
+
 # Plot
 colors = ["#306998", "#E07A3A"]
 
 plot = (
     ggplot()
     # Confidence band for Compound A
-    + geom_ribbon(data=df_ci, mapping=aes(x="log_conc", ymin="ymin", ymax="ymax"), fill="#306998", alpha=0.15)
+    + geom_ribbon(data=df_ci, mapping=aes(x="log_conc", ymin="ymin", ymax="ymax"), fill="#306998", alpha=0.12)
     # Top and bottom asymptote lines
-    + geom_hline(yintercept=top_asym_a, linetype="dotted", color="#999999", size=0.8)
-    + geom_hline(yintercept=bottom_asym_a, linetype="dotted", color="#999999", size=0.8)
+    + geom_hline(yintercept=top_asym_a, linetype="dotted", color="#BBBBBB", size=0.7)
+    + geom_hline(yintercept=bottom_asym_a, linetype="dotted", color="#BBBBBB", size=0.7)
     # EC50 reference lines
-    + geom_line(data=df_ec50_h, mapping=aes(x="log_conc", y="response", color="compound"), linetype="dashed", size=0.8)
-    + geom_line(data=df_ec50_v, mapping=aes(x="log_conc", y="response", color="compound"), linetype="dashed", size=0.8)
-    # Fitted curves
-    + geom_line(data=df_fit, mapping=aes(x="log_conc", y="response", color="compound"), size=2)
+    + geom_line(
+        data=df_ec50_h,
+        mapping=aes(x="log_conc", y="response", color="compound"),
+        linetype="dashed",
+        size=0.7,
+        alpha=0.6,
+    )
+    + geom_line(
+        data=df_ec50_v,
+        mapping=aes(x="log_conc", y="response", color="compound"),
+        linetype="dashed",
+        size=0.7,
+        alpha=0.6,
+    )
+    # Fitted curves with tooltips for HTML export
+    + geom_line(
+        data=df_fit,
+        mapping=aes(x="log_conc", y="response", color="compound"),
+        size=2.2,
+        tooltips=layer_tooltips().line("@compound").line("Conc: @concentration").line("Response: @response"),
+    )
     # Error bars
     + geom_errorbar(
-        data=df_points, mapping=aes(x="log_conc", ymin="ymin", ymax="ymax", color="compound"), width=0.08, size=0.8
+        data=df_points, mapping=aes(x="log_conc", ymin="ymin", ymax="ymax", color="compound"), width=0.08, size=0.7
     )
-    # Data points
+    # Data points - filled markers for better visibility
     + geom_point(
         data=df_points,
-        mapping=aes(x="log_conc", y="response", color="compound"),
-        size=4,
+        mapping=aes(x="log_conc", y="response", color="compound", fill="compound"),
+        size=5,
         shape=21,
-        fill="white",
-        stroke=2,
+        stroke=1.5,
+        tooltips=layer_tooltips().line("@compound").line("Conc: @concentration").line("Response: @{response} ± @{sem}"),
+    )
+    # EC50 value annotations
+    + geom_text(
+        data=df_ec50_labels,
+        mapping=aes(x="log_conc", y="response", label="label", color="compound"),
+        size=11,
+        fontface="italic",
     )
     + scale_color_manual(values=colors)
+    + scale_fill_manual(values=colors)
     + scale_x_continuous(breaks=list(range(-9, -3)), labels=["1e-9", "1e-8", "1e-7", "1e-6", "1e-5", "1e-4"])
-    + labs(x="Concentration (M)", y="Response (%)", title="curve-dose-response · letsplot · pyplots.ai", color="")
-    + theme_minimal()
-    + theme(
-        axis_title=element_text(size=20),
-        axis_text=element_text(size=16),
-        plot_title=element_text(size=24),
-        legend_text=element_text(size=16),
-        legend_position=[0.85, 0.15],
+    + labs(
+        x="Concentration (M)", y="Response (%)", title="curve-dose-response · letsplot · pyplots.ai", color="", fill=""
     )
+    + theme(
+        # Typography
+        axis_title=element_text(size=20, color="#333333"),
+        axis_text=element_text(size=16, color="#555555"),
+        plot_title=element_text(size=24, color="#222222", face="bold"),
+        legend_text=element_text(size=16),
+        # Refined grid - horizontal only, subtle
+        panel_grid_major_x=element_blank(),
+        panel_grid_minor_x=element_blank(),
+        panel_grid_major_y=element_line(color="#E8E8E8", size=0.5),
+        panel_grid_minor_y=element_blank(),
+        # Clean panel background
+        panel_background=element_rect(fill="white", color="white"),
+        plot_background=element_rect(fill="white", color="white"),
+        # Axis lines - bottom and left only
+        axis_line_x=element_line(color="#AAAAAA", size=0.8),
+        axis_line_y=element_line(color="#AAAAAA", size=0.8),
+        axis_ticks=element_line(color="#AAAAAA", size=0.5),
+        # Legend inside plot, upper-left for balance
+        legend_position=[0.18, 0.88],
+        legend_background=element_rect(fill="white", color="white", size=0),
+        # Margins
+        plot_margin=[30, 30, 20, 20],
+    )
+    + guides(fill="none")
     + ggsize(1600, 900)
 )
 
