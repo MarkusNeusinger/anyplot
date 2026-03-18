@@ -1,0 +1,224 @@
+library: altair
+specification_id: lightcurve-transit
+created: '2026-03-18T21:20:36Z'
+updated: '2026-03-18T21:41:14Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23267445114
+issue: 4559
+python_version: 3.14.3
+library_version: 6.0.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/lightcurve-transit/altair/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/lightcurve-transit/altair/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/lightcurve-transit/altair/plot.html
+quality_score: 91
+review:
+  strengths:
+  - Excellent scientific data quality with realistic exoplanet transit parameters
+    (limb darkening, appropriate noise levels)
+  - Strong color palette choice (teal + amber) with good colorblind accessibility
+  - Clean visual design with subtle grid, removed view strokes, and professional typography
+  - Interactive features (hover, tooltips) leverage Altair strengths
+  - Well-structured code with clear data generation logic
+  weaknesses:
+  - Title format deviates slightly from spec by adding descriptive prefix
+  - Error bars are very faint (opacity=0.2) — borderline too subtle
+  image_description: The plot displays a phase-folded exoplanet transit light curve
+    on a clean white background. Teal/dark cyan (#2A6B7C) scatter points represent
+    ~500 observed data measurements with very subtle vertical error bars (light teal,
+    low opacity). An amber/orange (#D4820E) smooth model curve overlays the scatter
+    data, clearly showing the characteristic transit dip centered at orbital phase
+    0.5, dropping from normalized flux ~1.000 down to ~0.990 (~1% depth). The title
+    "Exoplanet Transit · lightcurve-transit · altair · pyplots.ai" is left-aligned
+    at top with subtitle "Phase-folded Kepler photometry with limb-darkened transit
+    model" in gray. X-axis labeled "Orbital Phase" (0.0–1.0), Y-axis labeled "Relative
+    Flux" (0.986–1.006, formatted to 3 decimal places). A legend in the top-right
+    corner identifies "Observed Data" (teal circle) and "Transit Model" (amber circle).
+    Gridlines are very subtle dashed lines. The layout is clean and well-proportioned.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 28pt, axis titles 22pt, tick
+          labels 18pt, legend 16pt, subtitle 18pt'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text elements, legend positioned away from data
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: 500 points with size=30, opacity=0.5 appropriate for density; error
+          bars intentionally subtle but borderline too faint
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Teal and amber colorblind-safe palette with strong contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 4800x2700px output, chart fills canvas well with balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive labels: Orbital Phase, Relative Flux'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom teal/amber palette, left-aligned title with subtitle, professional
+          typography hierarchy
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: View stroke removed, subtle dashed grid, clean white background,
+          good whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Transit dip is clear focal point, model curve guides viewer, subtitle
+          provides context
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct: scatter with model overlay, phase-folded'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Error bars, model curve, phase-folded data, scatter, clean scientific
+          style
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=phase (0-1), Y=relative flux, correct mapping
+      - id: SC-04
+        name: Title & Legend
+        score: 2
+        max: 3
+        passed: true
+        comment: Title adds descriptive prefix before required format; legend labels
+          clear and correct
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Transit dip, ingress/egress, baseline scatter, error bars, limb-darkened
+          model
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Realistic Kepler exoplanet transit photometry with plausible parameters
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Flux near 1.0, errors 0.0008-0.0018, phase 0-1, all physically plausible
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports, data, chart layers, save'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only altair, numpy, pandas — all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-organized code with established Altair patterns
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot.png and plot.html, current Altair API
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good declarative grammar with layered composition; invisible-point
+          legend slightly non-idiomatic
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Interactive hover selection, tooltips, HTML export, layered mark
+          composition
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - custom-legend
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling
+  - edge-highlighting

@@ -1,0 +1,228 @@
+library: pygal
+specification_id: lightcurve-transit
+created: '2026-03-18T21:19:22Z'
+updated: '2026-03-18T21:47:49Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23267445328
+issue: 4559
+python_version: 3.14.3
+library_version: 3.1.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/lightcurve-transit/pygal/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/lightcurve-transit/pygal/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/lightcurve-transit/pygal/plot.html
+quality_score: 82
+review:
+  strengths:
+  - Effective visual hierarchy with in-transit points (larger, purple) vs out-of-transit
+    (blue) immediately drawing attention to the transit dip
+  - Creative error bar workaround using plus-minus 1-sigma cap dots since pygal lacks
+    native error bar support
+  - Custom tooltips with phase and flux-error information leverage pygal interactive
+    SVG capabilities
+  - Realistic astronomical data with appropriate scales and noise characteristics
+  - Clean well-organized code with proper reproducibility seed
+  weaknesses:
+  - Error cap dots (gray) are too faint and hard to distinguish from grid/background
+  - Grid lines could be more subtle with lighter foreground_subtle color
+  - Error bar representation is not immediately obvious as error bars without the
+    legend explanation
+  image_description: 'The plot displays an astronomical light curve showing an exoplanet
+    transit event. The title "lightcurve-transit · pygal · pyplots.ai" is centered
+    at the top. The X-axis shows "Orbital Phase" ranging from 0.00 to 1.00, and the
+    Y-axis shows "Relative Flux" ranging from approximately 0.986 to 1.010. Four series
+    are plotted: (1) plus-minus 1-sigma Error caps shown as small gray dots representing
+    upper and lower error bounds, (2) Out-of-Transit data points as blue dots scattered
+    around flux=1.0, (3) In-Transit data points as larger purple dots clustered around
+    phase 0.5 where the transit dip occurs, and (4) a smooth orange Transit Model
+    curve showing the characteristic dip to approximately 0.990 at phase 0.5. The
+    plot has a white background with a light blue-gray plot area, subtle horizontal
+    y-axis grid lines, and a clean bottom legend with all four series. The transit
+    dip is clearly visible as the focal point of the visualization.'
+  criteria_checklist:
+    visual_quality:
+      score: 26
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title=56, label=42, major_label=40,
+          legend=36); text clearly readable
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text; legend at bottom is clean and well-spaced
+      - id: VQ-03
+        name: Element Visibility
+        score: 4
+        max: 6
+        passed: true
+        comment: In-transit and out-of-transit dots well-sized; error cap dots are
+          very faint gray and hard to distinguish
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Gray, blue, purple, orange palette is colorblind-safe with good contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Plot fills most of canvas well; slight excess right margin space
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Orbital Phase and Relative Flux are appropriate domain-specific labels
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Custom color palette with intentional series hierarchy; light plot
+          background adds polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: X-guides hidden, y-guides subtle, custom plot background; some refinement
+          visible
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy with in-transit emphasis; viewer immediately
+          understands transit event
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: XY scatter with model line overlay correctly represents light curve
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: Phase-folded data, model curve, error representation present; error
+          bars as cap dots is reasonable pygal workaround
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=orbital phase, Y=relative flux with transit dip downward as specified
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title follows exact format; legend labels are descriptive and accurate
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows transit dip, baseline scatter, error representation, and model
+          fit
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Simulated exoplanet transit with realistic 1% depth and appropriate
+          noise levels
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Flux values 0.986-1.010, 1% transit depth, phase 0-1 all realistic
+          for exoplanet photometry
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean linear flow: imports, data generation, style, chart, save'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set at the start
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only numpy, pygal, and Style imported; all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 1
+        max: 2
+        passed: true
+        comment: Error bar cap loop is verbose but necessary as pygal workaround
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png and plot.html; uses current pygal API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of pygal.XY with custom Style, dict-based data points with
+          label property for tooltips
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Leverages pygal tooltip system via label property, HTML export, bottom
+          legend layout
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - hover-tooltips
+  - html-export
+  - custom-legend
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - interpolation
+  styling:
+  - grid-styling
