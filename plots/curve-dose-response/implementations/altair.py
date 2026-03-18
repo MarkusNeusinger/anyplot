@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 curve-dose-response: Pharmacological Dose-Response Curve
 Library: altair 6.0.0 | Python 3.14.3
 Quality: 81/100 | Created: 2026-03-18
@@ -22,8 +22,8 @@ def logistic_4pl(x, bottom, top, ec50, hill):
 
 
 compound_params = {
-    "Compound A": {"bottom": 5, "top": 95, "ec50": 1e-7, "hill": 1.2},
-    "Compound B": {"bottom": 8, "top": 88, "ec50": 3e-6, "hill": 1.8},
+    "Atorvastatin": {"bottom": 5, "top": 95, "ec50": 1e-7, "hill": 1.2},
+    "Simvastatin": {"bottom": 8, "top": 88, "ec50": 3e-6, "hill": 1.8},
 }
 
 rows = []
@@ -92,6 +92,7 @@ for name, group in df.groupby("compound"):
 
     # EC50 reference lines
     half_response = (bottom_fit + top_fit) / 2
+    ec50_sci = f"{ec50_fit:.1e}"
     ref_rows.append(
         {
             "compound": name,
@@ -99,6 +100,7 @@ for name, group in df.groupby("compound"):
             "half_response": half_response,
             "bottom_fit": bottom_fit,
             "top_fit": top_fit,
+            "ec50_label": f"EC₅₀ = {ec50_sci} M",
         }
     )
 
@@ -107,9 +109,14 @@ df_ci = pd.DataFrame(ci_rows)
 df_ref = pd.DataFrame(ref_rows)
 
 # Plot
-color_scale = alt.Scale(domain=["Compound A", "Compound B"], range=["#306998", "#E8792B"])
+color_scale = alt.Scale(domain=["Atorvastatin", "Simvastatin"], range=["#306998", "#E8792B"])
 
-base_x = alt.X("log_conc:Q", title="log₁₀ Concentration (M)", scale=alt.Scale(domain=[-9.5, -3.5]))
+base_x = alt.X(
+    "log_conc:Q",
+    title="log₁₀ Concentration (M)",
+    scale=alt.Scale(domain=[-9.5, -3.5]),
+    axis=alt.Axis(values=list(range(-9, -3))),
+)
 base_y = alt.Y("response:Q", title="Response (%)", scale=alt.Scale(domain=[-5, 110]))
 
 # Confidence bands
@@ -186,15 +193,37 @@ asymptote_bottom = (
     .encode(y=alt.Y("bottom_fit:Q", title=""), color=alt.Color("compound:N", scale=color_scale, legend=None))
 )
 
+# EC50 value annotations
+ec50_labels = (
+    alt.Chart(df_ref)
+    .mark_text(fontSize=16, fontWeight="bold", align="left", dx=6, dy=-10)
+    .encode(
+        x=alt.X("ec50_log:Q"),
+        y=alt.Y("half_response:Q"),
+        text=alt.Text("ec50_label:N"),
+        color=alt.Color("compound:N", scale=color_scale, legend=None),
+    )
+)
+
 # Combine all layers
 chart = (
-    (ci_band + asymptote_top + asymptote_bottom + ec50_hlines + ec50_vlines + fitted_lines + error_bars + data_points)
+    (
+        ci_band
+        + asymptote_top
+        + asymptote_bottom
+        + ec50_hlines
+        + ec50_vlines
+        + fitted_lines
+        + error_bars
+        + data_points
+        + ec50_labels
+    )
     .properties(
         width=1600,
         height=900,
         title=alt.Title("curve-dose-response · altair · pyplots.ai", fontSize=28, anchor="start"),
     )
-    .configure_axis(labelFontSize=18, titleFontSize=22, gridOpacity=0.15)
+    .configure_axis(labelFontSize=18, titleFontSize=22, gridOpacity=0.12, domainWidth=0)
     .configure_legend(titleFontSize=20, labelFontSize=18, symbolSize=200, orient="top-right")
     .configure_view(strokeWidth=0)
     .interactive()
