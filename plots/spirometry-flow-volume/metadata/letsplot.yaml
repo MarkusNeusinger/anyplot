@@ -1,0 +1,237 @@
+library: letsplot
+specification_id: spirometry-flow-volume
+created: '2026-03-18T22:17:22Z'
+updated: '2026-03-18T22:49:31Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23269661047
+issue: 4557
+python_version: 3.14.3
+library_version: 4.9.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/spirometry-flow-volume/letsplot/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/spirometry-flow-volume/letsplot/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/spirometry-flow-volume/letsplot/plot.html
+quality_score: 90
+review:
+  strengths:
+  - Excellent clinical data storytelling with measured vs predicted overlay communicating
+    the obstructive pattern
+  - Professional color-coded annotation system (orange PEF, purple FEV1, gray clinical
+    summary) with styled label backgrounds
+  - All specification requirements fully met including PEF/FEV1/FVC annotations, predicted
+    normal dashed overlay, and closed loop shape
+  - Realistic spirometry data values representing a clinically meaningful mild obstructive
+    pattern
+  - Clean well-structured code with good use of lets-plot ggplot grammar and interactive
+    tooltips
+  weaknesses:
+  - Legend displays color swatches rather than line samples so solid vs dashed distinction
+    is not communicated in the legend
+  - Panel border/spines still visible - removing would improve visual refinement
+  - Predicted loop extends close to the right x-axis edge with minimal padding
+  image_description: 'The plot displays a spirometry flow-volume loop on a light off-white
+    (#FAFAFA) background. Two loops are visible: a measured patient loop (solid blue
+    #306998 line with light blue ribbon fill) and a predicted normal loop (dashed
+    gray #9CA3AF line with light gray ribbon fill). The measured expiratory limb rises
+    sharply from 0 to PEF at ~8.5 L/s near volume 0.3 L, then declines roughly linearly
+    to FVC at 4.2 L. The inspiratory limb forms a symmetric U-shaped curve dipping
+    to about -6 L/s. The predicted normal loop is larger, extending to ~4.8 L volume
+    and ~10.2 L/s PEF. An orange (#D97706) circle marks PEF with an amber-background
+    label "PEF: 8.5 L/s". A purple (#7C3AED) diamond marks FEV1 on the expiratory
+    curve with a purple label on a light purple background. A clinical summary bar
+    at top center shows FEV1, FVC, PEF, and FEV1/FVC ratio in a gray box. A red-bordered
+    box at the bottom shows the clinical diagnosis of mild obstructive pattern. A
+    horizontal gray zero-flow reference line separates expiratory and inspiratory
+    regions. The legend in the upper right shows "Measured" (blue) and "Predicted
+    Normal" (gray). X-axis: "Volume (L)", Y-axis: "Flow (L/s)". Title: "spirometry-flow-volume
+    · letsplot · pyplots.ai" in bold dark text.'
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 24pt, axis titles 20pt, axis
+          text 16pt, legend 15pt, annotations 11-12pt'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: All text labels well-separated with no collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Measured line size=2.0, predicted size=1.2, markers size 7-8, ribbon
+          fills enhance visibility
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue, gray, orange, purple are all colorblind-safe with good luminance
+          contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good layout but predicted loop extends close to right x-axis edge
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Volume (L) and Flow (L/s) descriptive with units
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Strong design with intentional color coding, styled label backgrounds,
+          ribbon fills, off-white background
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: X-grid removed, subtle y-grid, custom background, generous margins.
+          Panel border still present
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Good clinical narrative with measured vs predicted overlay, color-coded
+          annotations, clinical summary and diagnostic interpretation
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct flow-volume loop with expiratory and inspiratory limbs
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: PEF annotation, clinical values, predicted
+          overlay, distinct styling'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Volume on x-axis, flow on y-axis, correct orientation
+      - id: SC-04
+        name: Title & Legend
+        score: 2
+        max: 3
+        passed: true
+        comment: Title format correct. Legend shows color swatches instead of line
+          samples with linetype distinction
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all aspects: both limbs, PEF, FEV1, measured vs predicted,
+          clinical values, diagnostic interpretation'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Realistic spirometry data with clinically meaningful mild obstructive
+          pattern
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: FVC 4.2L, PEF 8.5 L/s, predicted FVC 4.8L, PEF 10.2 L/s all within
+          realistic clinical ranges
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean linear structure with no functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set at top
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only numpy, pandas, lets_plot imported and all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-organized code with logical sections, appropriate complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with ggsave at scale=3, also generates HTML
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Good ggplot grammar usage: geom layers, aes mappings, scale_color_manual,
+          geom_ribbon, guide_legend with override_aes'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses layer_tooltips() with fluent API for interactive hover info
+          and HTML export - distinctive to lets-plot
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  dataprep:
+  - interpolation
+  styling:
+  - alpha-blending
+  - grid-styling
