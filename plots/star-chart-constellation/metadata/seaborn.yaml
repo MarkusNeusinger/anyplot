@@ -1,7 +1,7 @@
 library: seaborn
 specification_id: star-chart-constellation
 created: '2026-03-18T21:14:23Z'
-updated: '2026-03-18T21:19:05Z'
+updated: '2026-03-18T21:31:30Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23267218317
 issue: 4560
@@ -10,39 +10,36 @@ library_version: 0.13.2
 preview_url: https://storage.googleapis.com/pyplots-images/plots/star-chart-constellation/seaborn/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/star-chart-constellation/seaborn/plot_thumb.png
 preview_html: null
-quality_score: 78
+quality_score: 85
 review:
   strengths:
-  - 'Excellent thematic design: dark navy background with coordinated color scheme
-    perfectly suits a star chart'
-  - 'Outstanding data quality: real star names, coordinates, and magnitudes for 15
-    constellations'
-  - Good visual hierarchy through magnitude-to-size mapping and selective labeling
-    of brightest stars
-  - Clean, well-structured code with proper reproducibility (seed set)
-  - Path effects on text labels ensure readability against the dark background
+  - Excellent dark-sky aesthetic with custom navy theme and yellow-to-brown star colors
+  - Rich, realistic astronomical data with 15 constellations and accurate star positions
+  - Good visual hierarchy through magnitude-based sizing and selective labeling of
+    brightest stars
+  - Path effects on text ensure readability against the dark background
+  - Clean legend with only magnitude classes (size entries properly filtered out)
   weaknesses:
-  - 'Minimal seaborn usage: only sns.set_theme() is used; all plotting is pure matplotlib.
-    Must use seaborn plotting functions'
-  - No colorbar or legend showing the magnitude-to-color/size relationship
-  - Some label overlaps in dense regions (Canis Major/Sirius, Lyra/Vega)
-  - YlOrBr_r is not a colorblind-safe colormap
-  image_description: The plot displays a star chart on a deep navy (#0a0e2a) background.
-    Stars are plotted by Right Ascension (x-axis, reversed from 24h to 0h) and Declination
-    (y-axis, -45° to +75°). Named constellation stars are colored using a YlOrBr_r
-    colormap — brighter stars (lower magnitude) appear as lighter yellow/white and
-    are larger, while dimmer stars are darker orange/brown and smaller. Approximately
-    200 faint gray background stars are scattered across the chart. Blue-gray constellation
-    stick-figure lines connect stars within 15 constellations (Orion, Ursa Major,
+  - Axis label Right Ascension (°) is inconsistent with hour-based tick labels
+  - Missing stereographic or azimuthal equidistant projection as specified
+  - Minor label overlaps between Capella/Auriga and Orion/Betelgeuse
+  image_description: 'The plot displays a star chart on a deep navy background (#0a0e2a).
+    Stars are plotted with Right Ascension on the x-axis (24h to 0h, reversed) and
+    Declination on the y-axis (-45° to +75°). Stars are color-coded by apparent magnitude
+    using a yellow-to-brown palette: bright yellow for the brightest (< 1.0), golden
+    for 1.0-2.0, darker orange for 2.0-3.0, and brownish for faintest (> 3.0). Star
+    sizes are inversely proportional to magnitude (brighter = larger). Thin semi-transparent
+    blue lines connect stars to form 15 constellation stick figures (Orion, Ursa Major,
     Cassiopeia, Leo, Cygnus, Gemini, Taurus, Lyra, Aquila, Scorpius, Boötes, Perseus,
-    Auriga, Canis Major, Andromeda). Constellation names appear in blue text near
-    each group's centroid. The brightest stars (mag < 1.0) — Sirius, Rigel, Betelgeuse,
-    Vega, Capella, Arcturus, Altair, Aldebaran — are individually labeled. Subtle
-    dark blue grid lines mark RA/Dec intervals. Top and right spines are removed.
-    The title reads "star-chart-constellation · seaborn · pyplots.ai".
+    Auriga, Canis Major, Andromeda). Constellation names are labeled in blue-gray
+    near their centroids. The brightest stars (Sirius, Vega, Capella, Arcturus, Altair,
+    Aldebaran, Rigel, Betelgeuse, Antares) are individually labeled. ~200 faint background
+    stars in muted blue-gray fill the sky. A legend in the lower left shows the four
+    magnitude classes. Subtle grid lines mark RA/Dec intervals. The title reads "star-chart-constellation
+    · seaborn · pyplots.ai". Top and right spines are removed.'
   criteria_checklist:
     visual_quality:
-      score: 24
+      score: 25
       max: 30
       items:
       - id: VQ-01
@@ -50,44 +47,44 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title 24pt, labels 20pt, ticks 16pt explicitly set. Constellation
-          labels (11pt) and star name labels (8pt) somewhat small.
+        comment: Font sizes explicitly set (title 24, labels 20, ticks 16). Star name
+          labels at fontsize=9 are small but readable with path effects.
       - id: VQ-02
         name: No Overlap
         score: 4
         max: 6
-        passed: false
-        comment: 'Label overlaps: Canis Major/Sirius, Lyra/Vega, some constellation
-          labels overlap star markers.'
+        passed: true
+        comment: 'Minor overlaps: Capella/Auriga labels collide; Orion/Betelgeuse
+          are very close.'
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Good magnitude-to-size mapping. Some smallest background stars barely
-          visible.
+        comment: Star sizes well-differentiated by magnitude. Background stars appropriately
+          faint.
       - id: VQ-04
         name: Color Accessibility
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: YlOrBr_r on dark background has decent contrast but is not a standard
-          colorblind-safe palette.
+        comment: Yellow-to-brown palette is colorblind-safe. Excellent contrast against
+          dark background.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good canvas utilization with 16:9 aspect ratio. Slight imbalance
-          in lower-left.
+        comment: Good 16:9 proportions, chart fills canvas well, nothing cut off.
       - id: VQ-06
         name: Axis Labels & Title
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Right Ascension and Declination with degree units.
+        passed: false
+        comment: X-axis label says Right Ascension (°) but tick labels show hours
+          (0h, 2h). Inconsistent units.
     design_excellence:
-      score: 14
+      score: 15
       max: 20
       items:
       - id: DE-01
@@ -95,52 +92,52 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Dark navy theme excellent for star chart. Coordinated color scheme,
-          YlOrBr_r colormap, path effects on text.
+        comment: Custom dark navy theme with intentional yellow-to-brown magnitude
+          palette. Professional astronomy aesthetic.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Top/right spines removed, subtle custom grid, coordinated dark theme
-          colors.
+        comment: Spines removed, subtle grid, path effects, custom legend styling
+          with transparency.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Magnitude-to-size mapping creates visual hierarchy. Brightest stars
-          labeled. Constellation lines guide viewer.
+        comment: Brightest stars labeled in yellow create focal points. Magnitude
+          sizing creates visual hierarchy.
     spec_compliance:
-      score: 12
+      score: 13
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 4
+        score: 3
         max: 5
-        passed: true
-        comment: Correct star chart with constellation lines. Flat RA/Dec projection
-          instead of stereographic.
+        passed: false
+        comment: Star chart correct but missing stereographic/azimuthal projection.
+          Uses flat Cartesian instead.
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: Missing colorbar/legend for magnitude-to-color/size mapping.
+        passed: true
+        comment: 'All required features present: stars, constellation lines, magnitude
+          sizing, dark background, grid, labels.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: RA correctly reversed on x-axis, Dec on y-axis, hour labels properly
-          formatted.
+        comment: RA/Dec correctly mapped, magnitude inverted for sizing.
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Title format correct. No legend or colorbar for magnitude mapping.
+        passed: true
+        comment: Title follows exact format. Legend shows magnitude classes clearly.
     data_quality:
       score: 15
       max: 15
@@ -150,22 +147,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 15 constellations, ~80 named stars, ~200 background stars. Excellent
-          magnitude range and sky coverage.
+        comment: 15 constellations, ~70 named stars, ~200 background stars. Wide variety.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real astronomical data with actual star names, IAU abbreviations,
-          and approximate real coordinates.
+        comment: Real star positions and magnitudes. Standard IAU constellation patterns.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: RA 0-24h, Dec realistic range, magnitudes -1.46 to ~5.5. All astronomically
-          realistic.
+        comment: ~270 total stars within spec range. Realistic magnitude range.
     code_quality:
       score: 10
       max: 10
@@ -175,64 +169,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, plot, save. No functions or classes.'
+        comment: Flat script with no functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set before random background star generation.
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: matplotlib.patheffects, plt, np, pd, sns.'
+        comment: All imports used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized code with appropriate complexity.
+        comment: Appropriate complexity, clean data organization.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300 and bbox_inches tight. Current API.
+        comment: Saves as plot.png at 300 dpi. Current API.
     library_mastery:
-      score: 3
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 2
+        score: 4
         max: 5
-        passed: false
-        comment: Only sns.set_theme() for styling. All plotting uses matplotlib ax.scatter/ax.plot/ax.text
-          directly.
+        passed: true
+        comment: Uses sns.scatterplot with hue/size, sns.set_theme with rc params.
+          Axes-level API.
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 3
         max: 5
-        passed: false
-        comment: No distinctive seaborn features. set_theme() with rc dict is the
-          sole seaborn contribution.
+        passed: true
+        comment: Leverages seaborn hue-based categorical coloring with custom palette
+          and sns.set_theme for comprehensive theming.
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - manual-ticks
-  - layer-composition
+  - custom-legend
   patterns:
   - data-generation
   - iteration-over-groups
-  - explicit-figure
   dataprep:
-  - normalization
+  - binning
   styling:
   - dark-theme
-  - custom-colormap
   - alpha-blending
   - edge-highlighting
