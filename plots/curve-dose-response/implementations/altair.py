@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 curve-dose-response: Pharmacological Dose-Response Curve
 Library: altair 6.0.0 | Python 3.14.3
-Quality: 88/100 | Created: 2026-03-18
+Quality: 91/100 | Created: 2026-03-18
 """
 
 import altair as alt
