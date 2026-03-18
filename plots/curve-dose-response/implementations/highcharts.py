@@ -1,16 +1,21 @@
-""" pyplots.ai
+"""pyplots.ai
 curve-dose-response: Pharmacological Dose-Response Curve
 Library: highcharts unknown | Python 3.14.3
 Quality: 83/100 | Created: 2026-03-18
 """
 
-import json
 import tempfile
 import time
 import urllib.request
 from pathlib import Path
 
 import numpy as np
+from highcharts_core.chart import Chart
+from highcharts_core.options import HighchartsOptions
+from highcharts_core.options.series.area import AreaRangeSeries
+from highcharts_core.options.series.boxplot import ErrorBarSeries
+from highcharts_core.options.series.scatter import ScatterSeries
+from highcharts_core.options.series.spline import SplineSeries
 from scipy.optimize import curve_fit
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -60,187 +65,243 @@ ec50_b = 10 ** popt_b[2]
 half_response_a = popt_a[0] + (popt_a[1] - popt_a[0]) / 2
 half_response_b = popt_b[0] + (popt_b[1] - popt_b[0]) / 2
 
-# Prepare series data as JSON
-ci_band_data = [
-    [float(x), float(lo), float(hi)] for x, lo, hi in zip(log_conc_smooth, ci_lower_a, ci_upper_a, strict=False)
-]
-fit_a_data = [[float(x), float(y)] for x, y in zip(log_conc_smooth, fit_a, strict=False)]
-fit_b_data = [[float(x), float(y)] for x, y in zip(log_conc_smooth, fit_b, strict=False)]
-scatter_a_data = [[float(lc), float(r)] for lc, r in zip(log_conc, response_a, strict=False)]
-scatter_b_data = [[float(lc), float(r)] for lc, r in zip(log_conc, response_b, strict=False)]
+# Create chart using highcharts-core API
+chart = Chart(container="container")
+chart.options = HighchartsOptions()
 
-# Error bar data for Compound A (scatter with low/high)
-errorbar_a_data = [
-    [float(lc), float(r - s), float(r + s)] for lc, r, s in zip(log_conc, response_a, sem_a, strict=False)
-]
-errorbar_b_data = [
-    [float(lc), float(r - s), float(r + s)] for lc, r, s in zip(log_conc, response_b, sem_b, strict=False)
-]
+# Chart configuration - clean frame with no border
+chart.options.chart = {
+    "width": 4800,
+    "height": 2700,
+    "backgroundColor": "#fafbfc",
+    "borderWidth": 0,
+    "spacingTop": 80,
+    "spacingBottom": 100,
+    "spacingLeft": 60,
+    "spacingRight": 60,
+    "style": {"fontFamily": "'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif"},
+}
 
-# Build Highcharts config as dict (bypass Python library validation issues)
-config = {
-    "chart": {
-        "width": 4800,
-        "height": 2700,
-        "backgroundColor": "#ffffff",
-        "spacingTop": 80,
-        "spacingBottom": 100,
-        "spacingLeft": 40,
-        "spacingRight": 40,
-    },
+# Title and subtitle
+chart.options.title = {
+    "text": "curve-dose-response \u00b7 highcharts \u00b7 pyplots.ai",
+    "style": {"fontSize": "52px", "fontWeight": "700", "color": "#1a1a2e"},
+}
+chart.options.subtitle = {
+    "text": f"EC\u2085\u2080: Compound A = {ec50_a:.1e} M  \u2502  Compound B = {ec50_b:.1e} M",
+    "style": {"fontSize": "34px", "color": "#555555", "fontWeight": "400"},
+}
+
+# X-axis with plotLines for EC50 markers
+chart.options.x_axis = {
     "title": {
-        "text": "curve-dose-response \u00b7 highcharts \u00b7 pyplots.ai",
-        "style": {"fontSize": "52px", "fontWeight": "bold"},
+        "text": "Concentration (M, log\u2081\u2080 scale)",
+        "style": {"fontSize": "36px", "fontWeight": "600", "color": "#333333"},
+        "margin": 24,
     },
-    "subtitle": {
-        "text": f"EC\u2085\u2080: Compound A = {ec50_a:.1e} M  |  Compound B = {ec50_b:.1e} M",
-        "style": {"fontSize": "34px", "color": "#666666"},
-    },
-    "xAxis": {
-        "title": {
-            "text": "Concentration (M, log\u2081\u2080 scale)",
-            "style": {"fontSize": "36px", "fontWeight": "bold"},
-            "margin": 20,
-        },
-        "labels": {"style": {"fontSize": "28px"}},
-        "min": float(np.log10(5e-10)),
-        "max": float(np.log10(2e-4)),
-        "tickInterval": 1,
-        "gridLineWidth": 1,
-        "gridLineColor": "#f0f0f0",
-        "plotLines": [
-            {
-                "value": float(popt_a[2]),
-                "color": "#306998",
-                "width": 3,
-                "dashStyle": "Dash",
-                "zIndex": 3,
-                "label": {
-                    "text": "EC\u2085\u2080 A",
-                    "style": {"fontSize": "24px", "color": "#306998", "fontWeight": "bold"},
-                    "rotation": 90,
-                    "y": 30,
-                },
-            },
-            {
-                "value": float(popt_b[2]),
-                "color": "#E85D75",
-                "width": 3,
-                "dashStyle": "Dash",
-                "zIndex": 3,
-                "label": {
-                    "text": "EC\u2085\u2080 B",
-                    "style": {"fontSize": "24px", "color": "#E85D75", "fontWeight": "bold"},
-                    "rotation": 90,
-                    "y": 30,
-                },
-            },
-        ],
-    },
-    "yAxis": {
-        "title": {"text": "Response (%)", "style": {"fontSize": "36px", "fontWeight": "bold"}, "margin": 20},
-        "labels": {"style": {"fontSize": "28px"}},
-        "min": 0,
-        "max": 105,
-        "gridLineWidth": 1,
-        "gridLineColor": "#f0f0f0",
-        "plotLines": [
-            {"value": float(half_response_a), "color": "#306998", "width": 2, "dashStyle": "Dot", "zIndex": 2},
-            {"value": float(half_response_b), "color": "#E85D75", "width": 2, "dashStyle": "Dot", "zIndex": 2},
-            {"value": float(popt_a[1]), "color": "#306998", "width": 1, "dashStyle": "LongDash", "zIndex": 1},
-            {"value": float(popt_a[0]), "color": "#306998", "width": 1, "dashStyle": "LongDash", "zIndex": 1},
-        ],
-    },
-    "legend": {
-        "enabled": True,
-        "align": "right",
-        "verticalAlign": "top",
-        "layout": "vertical",
-        "x": -20,
-        "y": 100,
-        "itemStyle": {"fontSize": "26px", "fontWeight": "normal"},
-        "symbolWidth": 40,
-        "symbolHeight": 16,
-        "itemMarginBottom": 12,
-        "backgroundColor": "rgba(255,255,255,0.9)",
-        "borderWidth": 1,
-        "borderColor": "#e0e0e0",
-        "padding": 16,
-    },
-    "tooltip": {"style": {"fontSize": "22px"}},
-    "plotOptions": {
-        "spline": {"lineWidth": 5, "marker": {"enabled": False}, "states": {"hover": {"lineWidth": 6}}},
-        "scatter": {"marker": {"radius": 12, "lineWidth": 2, "lineColor": "#ffffff"}},
-        "arearange": {"lineWidth": 0, "marker": {"enabled": False}, "enableMouseTracking": False},
-        "errorbar": {"lineWidth": 3, "color": "inherit"},
-    },
-    "credits": {"enabled": False},
-    "series": [
+    "labels": {"style": {"fontSize": "28px", "color": "#444444"}},
+    "min": float(np.log10(5e-10)),
+    "max": float(np.log10(2e-4)),
+    "tickInterval": 1,
+    "gridLineWidth": 1,
+    "gridLineColor": "#e8e8e8",
+    "lineColor": "#cccccc",
+    "lineWidth": 1,
+    "tickColor": "#cccccc",
+    "plotLines": [
         {
-            "type": "arearange",
-            "name": "95% CI (Compound A)",
-            "data": ci_band_data,
-            "color": "rgba(48, 105, 152, 0.18)",
-            "fillOpacity": 0.18,
-            "zIndex": 0,
-        },
-        {
-            "type": "spline",
-            "name": "Compound A (fit)",
-            "data": fit_a_data,
+            "value": float(popt_a[2]),
             "color": "#306998",
-            "lineWidth": 5,
-            "zIndex": 2,
-        },
-        {
-            "type": "spline",
-            "name": "Compound B (fit)",
-            "data": fit_b_data,
-            "color": "#E85D75",
-            "lineWidth": 5,
-            "zIndex": 2,
-        },
-        {
-            "type": "scatter",
-            "name": "Compound A (data)",
-            "data": scatter_a_data,
-            "color": "#306998",
-            "marker": {"symbol": "circle", "radius": 12, "lineWidth": 2, "lineColor": "#ffffff"},
+            "width": 3,
+            "dashStyle": "Dash",
             "zIndex": 3,
+            "label": {
+                "text": "EC\u2085\u2080 A",
+                "style": {"fontSize": "26px", "color": "#306998", "fontWeight": "bold"},
+                "rotation": 90,
+                "y": 30,
+            },
         },
         {
-            "type": "errorbar",
-            "name": "SEM (Compound A)",
-            "data": errorbar_a_data,
-            "color": "#306998",
-            "linkedTo": ":previous",
-            "showInLegend": False,
-            "zIndex": 1,
-        },
-        {
-            "type": "scatter",
-            "name": "Compound B (data)",
-            "data": scatter_b_data,
-            "color": "#E85D75",
-            "marker": {"symbol": "circle", "radius": 12, "lineWidth": 2, "lineColor": "#ffffff"},
+            "value": float(popt_b[2]),
+            "color": "#D4526E",
+            "width": 3,
+            "dashStyle": "Dash",
             "zIndex": 3,
-        },
-        {
-            "type": "errorbar",
-            "name": "SEM (Compound B)",
-            "data": errorbar_b_data,
-            "color": "#E85D75",
-            "linkedTo": ":previous",
-            "showInLegend": False,
-            "zIndex": 1,
+            "label": {
+                "text": "EC\u2085\u2080 B",
+                "style": {"fontSize": "26px", "color": "#D4526E", "fontWeight": "bold"},
+                "rotation": 90,
+                "y": 30,
+            },
         },
     ],
 }
 
-config_json = json.dumps(config)
+# Y-axis with half-maximal and asymptote plotLines
+chart.options.y_axis = {
+    "title": {
+        "text": "Response (%)",
+        "style": {"fontSize": "36px", "fontWeight": "600", "color": "#333333"},
+        "margin": 24,
+    },
+    "labels": {"style": {"fontSize": "28px", "color": "#444444"}},
+    "min": 0,
+    "max": 105,
+    "gridLineWidth": 1,
+    "gridLineColor": "#e8e8e8",
+    "lineColor": "#cccccc",
+    "lineWidth": 1,
+    "plotLines": [
+        {"value": float(half_response_a), "color": "#306998", "width": 2, "dashStyle": "Dot", "zIndex": 2},
+        {"value": float(half_response_b), "color": "#D4526E", "width": 2, "dashStyle": "Dot", "zIndex": 2},
+        {
+            "value": float(popt_a[1]),
+            "color": "rgba(48, 105, 152, 0.5)",
+            "width": 3,
+            "dashStyle": "LongDash",
+            "zIndex": 1,
+            "label": {
+                "text": "Top asymptote",
+                "align": "left",
+                "style": {"fontSize": "22px", "color": "rgba(48, 105, 152, 0.65)"},
+                "x": 10,
+            },
+        },
+        {
+            "value": float(popt_a[0]),
+            "color": "rgba(48, 105, 152, 0.5)",
+            "width": 3,
+            "dashStyle": "LongDash",
+            "zIndex": 1,
+            "label": {
+                "text": "Bottom asymptote",
+                "align": "left",
+                "style": {"fontSize": "22px", "color": "rgba(48, 105, 152, 0.65)"},
+                "x": 10,
+            },
+        },
+    ],
+}
 
-# X-axis formatter for scientific notation (injected as raw JS)
-x_formatter = """function() {
+# Legend
+chart.options.legend = {
+    "enabled": True,
+    "align": "right",
+    "verticalAlign": "top",
+    "layout": "vertical",
+    "floating": True,
+    "x": -30,
+    "y": 80,
+    "itemStyle": {"fontSize": "26px", "fontWeight": "normal", "color": "#333333"},
+    "symbolWidth": 40,
+    "symbolHeight": 16,
+    "itemMarginBottom": 12,
+    "backgroundColor": "rgba(255, 255, 255, 0.95)",
+    "borderWidth": 1,
+    "borderColor": "#dddddd",
+    "borderRadius": 6,
+    "padding": 18,
+    "shadow": {"enabled": True, "color": "rgba(0, 0, 0, 0.06)", "offsetX": 2, "offsetY": 2, "width": 4},
+}
+
+# Plot options
+chart.options.plot_options = {
+    "spline": {"lineWidth": 5, "marker": {"enabled": False}, "states": {"hover": {"lineWidth": 6}}},
+    "scatter": {"marker": {"radius": 12, "lineWidth": 2, "lineColor": "#ffffff"}},
+    "arearange": {"lineWidth": 0, "marker": {"enabled": False}, "enableMouseTracking": False},
+    "errorbar": {"lineWidth": 3, "color": "inherit", "stemWidth": 3, "whiskerWidth": 3, "whiskerLength": "40%"},
+}
+
+chart.options.credits = {"enabled": False}
+chart.options.tooltip = {"style": {"fontSize": "22px"}}
+
+# --- Series using highcharts-core API ---
+
+# 95% CI band for Compound A
+ci_band_data = [
+    [float(x), float(lo), float(hi)] for x, lo, hi in zip(log_conc_smooth, ci_lower_a, ci_upper_a, strict=False)
+]
+ci_series = AreaRangeSeries()
+ci_series.data = ci_band_data
+ci_series.name = "95% CI (Compound A)"
+ci_series.color = "rgba(48, 105, 152, 0.30)"
+ci_series.fill_opacity = 0.30
+ci_series.z_index = 0
+chart.add_series(ci_series)
+
+# Compound A fitted curve
+fit_a_data = [[float(x), float(y)] for x, y in zip(log_conc_smooth, fit_a, strict=False)]
+fit_a_series = SplineSeries()
+fit_a_series.data = fit_a_data
+fit_a_series.name = "Compound A (4PL fit)"
+fit_a_series.color = "#306998"
+fit_a_series.line_width = 5
+fit_a_series.z_index = 2
+chart.add_series(fit_a_series)
+
+# Compound B fitted curve
+fit_b_data = [[float(x), float(y)] for x, y in zip(log_conc_smooth, fit_b, strict=False)]
+fit_b_series = SplineSeries()
+fit_b_series.data = fit_b_data
+fit_b_series.name = "Compound B (4PL fit)"
+fit_b_series.color = "#D4526E"
+fit_b_series.line_width = 5
+fit_b_series.z_index = 2
+chart.add_series(fit_b_series)
+
+# Compound A scatter data
+scatter_a_data = [[float(lc), float(r)] for lc, r in zip(log_conc, response_a, strict=False)]
+scatter_a_series = ScatterSeries()
+scatter_a_series.data = scatter_a_data
+scatter_a_series.name = "Compound A (data)"
+scatter_a_series.color = "#306998"
+scatter_a_series.marker = {"symbol": "circle", "radius": 13, "lineWidth": 3, "lineColor": "#ffffff"}
+scatter_a_series.z_index = 3
+chart.add_series(scatter_a_series)
+
+# Compound A error bars
+errorbar_a_data = [
+    [float(lc), float(r - s), float(r + s)] for lc, r, s in zip(log_conc, response_a, sem_a, strict=False)
+]
+eb_a_series = ErrorBarSeries()
+eb_a_series.data = errorbar_a_data
+eb_a_series.name = "SEM (Compound A)"
+eb_a_series.color = "#306998"
+eb_a_series.linked_to = ":previous"
+eb_a_series.show_in_legend = False
+eb_a_series.z_index = 1
+chart.add_series(eb_a_series)
+
+# Compound B scatter data
+scatter_b_data = [[float(lc), float(r)] for lc, r in zip(log_conc, response_b, strict=False)]
+scatter_b_series = ScatterSeries()
+scatter_b_series.data = scatter_b_data
+scatter_b_series.name = "Compound B (data)"
+scatter_b_series.color = "#D4526E"
+scatter_b_series.marker = {"symbol": "circle", "radius": 13, "lineWidth": 3, "lineColor": "#ffffff"}
+scatter_b_series.z_index = 3
+chart.add_series(scatter_b_series)
+
+# Compound B error bars
+errorbar_b_data = [
+    [float(lc), float(r - s), float(r + s)] for lc, r, s in zip(log_conc, response_b, sem_b, strict=False)
+]
+eb_b_series = ErrorBarSeries()
+eb_b_series.data = errorbar_b_data
+eb_b_series.name = "SEM (Compound B)"
+eb_b_series.color = "#D4526E"
+eb_b_series.linked_to = ":previous"
+eb_b_series.show_in_legend = False
+eb_b_series.z_index = 1
+chart.add_series(eb_b_series)
+
+# Generate JS literal from Chart API, then inject custom x-axis formatter
+html_str = chart.to_js_literal()
+
+# Inject scientific superscript formatter into xAxis labels only (not yAxis)
+# Find xAxis section and replace only the first occurrence of the labels pattern
+x_formatter_fn = """formatter: function() {
     var exp = Math.round(this.value);
     var supers = '\\u2070\\u00b9\\u00b2\\u00b3\\u2074\\u2075\\u2076\\u2077\\u2078\\u2079';
     var s = '10\\u207b';
@@ -248,7 +309,12 @@ x_formatter = """function() {
     if (abs_exp >= 10) { s += supers.charAt(Math.floor(abs_exp / 10)); }
     s += supers.charAt(abs_exp % 10);
     return s;
-}"""
+},
+  style"""
+# Target only the xAxis labels by using the unique xAxis context (tickColor follows only in xAxis)
+target = "labels: {\n  style: {'fontSize': '28px', 'color': '#444444'}\n},\n  max: -"
+replacement = "labels: {\n  " + x_formatter_fn + ": {'fontSize': '28px', 'color': '#444444'}\n},\n  max: -"
+html_str = html_str.replace(target, replacement, 1)
 
 # Download Highcharts JS and highcharts-more (for arearange/errorbar)
 highcharts_url = "https://cdn.jsdelivr.net/npm/highcharts@11/highcharts.js"
@@ -261,7 +327,7 @@ hcm_req = urllib.request.Request(highcharts_more_url, headers={"User-Agent": "Mo
 with urllib.request.urlopen(hcm_req, timeout=30) as resp:
     highcharts_more_js = resp.read().decode("utf-8")
 
-# Build HTML with inline JS config
+# Build HTML with inline scripts and Chart API-generated config
 html_content = f"""<!DOCTYPE html>
 <html>
 <head>
@@ -271,13 +337,7 @@ html_content = f"""<!DOCTYPE html>
 </head>
 <body style="margin:0;">
     <div id="container" style="width: 4800px; height: 2700px;"></div>
-    <script>
-    document.addEventListener('DOMContentLoaded', function() {{
-        var config = {config_json};
-        config.xAxis.labels.formatter = {x_formatter};
-        Highcharts.chart('container', config);
-    }});
-    </script>
+    <script>{html_str}</script>
 </body>
 </html>"""
 
