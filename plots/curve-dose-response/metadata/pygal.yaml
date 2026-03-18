@@ -1,0 +1,224 @@
+library: pygal
+specification_id: curve-dose-response
+created: '2026-03-18T22:36:44Z'
+updated: '2026-03-18T23:23:26Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23270128955
+issue: 4556
+python_version: 3.14.3
+library_version: 3.1.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/curve-dose-response/pygal/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/curve-dose-response/pygal/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/curve-dose-response/pygal/plot.html
+quality_score: 85
+review:
+  strengths:
+  - Complete spec compliance — all required features implemented including 4PL fit,
+    EC50 references, error bars, CI, and asymptotes
+  - Effective colorblind-safe blue/orange palette with warm off-white background
+  - Creative use of pygal allow_interruptions for multi-segment reference lines
+  - Strong data storytelling with EC50 values embedded in legend labels
+  weaknesses:
+  - Visual clutter from overlapping dashed lines (asymptotes, CI bounds, EC50 refs
+    all compete for attention)
+  - Design polish not quite at publication level — reference line density reduces
+    clarity
+  image_description: The plot displays two sigmoidal dose-response curves on an XY
+    chart with a warm off-white (#F8F6F0) plot background. The x-axis shows "log10
+    Concentration (M)" ranging from approximately -9.5 to -3.5, and the y-axis shows
+    "Response (%)" from 0% to ~105%. Compound A is rendered in steel blue (#306998)
+    and Compound B in amber/orange (#E68A00). Both fitted curves are thick solid lines
+    showing clear sigmoidal shapes with different inflection points — Compound A shifts
+    left (more potent, EC50 ~ 1.0e-07 M) while Compound B shifts right (EC50 ~ 9.7e-07
+    M). Data points with vertical error bars (SEM) with caps are overlaid on the curves.
+    Dashed light-blue lines show the 95% CI bounds around Compound A's fit. Dashed
+    reference lines mark EC50 positions (vertical from x-axis to half-max, horizontal
+    from y-axis to the curve) for both compounds. Thin dashed horizontal lines mark
+    top and bottom asymptotes for both compounds. The title reads "curve-dose-response
+    · pygal · pyplots.ai". The legend at the bottom lists all series with descriptive
+    labels including EC50 values.
+  criteria_checklist:
+    visual_quality:
+      score: 26
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title=40, labels=26, ticks=24, legend=22);
+          all readable
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: No text overlap; some visual clutter from overlapping dashed reference
+          lines
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Fitted curves thick (width=7); data dots well-sized; asymptote lines
+          somewhat thin
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue/orange colorblind-safe pair with strong contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good canvas utilization; legend at bottom adds slight bottom-heaviness
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive labels with units on both axes
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Custom palette, warm background, explicit typography; above defaults
+          but not publication-level
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Subtle y-guides, varied dash patterns; some visual noise from dense
+          reference lines
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: EC50 values in legend, reference lines guide viewer, line weight
+          hierarchy
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct sigmoidal dose-response XY chart
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec requirements met: 4PL fit, EC50 refs, error bars, CI, asymptotes,
+          2 compounds'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = log10(concentration), Y = response (%)
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct title format; descriptive legend labels with EC50 values
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Two compounds with different potencies, Hill slopes, and asymptotes
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Pharmacological dose-response with realistic molar concentrations
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 1e-9 to 1e-4 M range, 0-100% response
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear flow; four_pl function required by curve_fit
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-organized; error bar loop appropriately complex
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot.png via cairosvg
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of pygal.XY, Style, stroke_style, legend_at_bottom_columns
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: allow_interruptions, stroke_style dicts, value_formatter, SVG-native
+          rendering
+  verdict: REJECTED
+impl_tags:
+  dependencies:
+  - scipy
+  - cairosvg
+  techniques:
+  - custom-legend
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - regression
+  styling:
+  - grid-styling
