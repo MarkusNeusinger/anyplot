@@ -1,7 +1,7 @@
 library: highcharts
 specification_id: spirometry-flow-volume
 created: '2026-03-18T22:22:37Z'
-updated: '2026-03-18T22:35:37Z'
+updated: '2026-03-18T22:44:23Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23269661111
 issue: 4557
@@ -10,110 +10,103 @@ library_version: unknown
 preview_url: https://storage.googleapis.com/pyplots-images/plots/spirometry-flow-volume/highcharts/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/spirometry-flow-volume/highcharts/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/spirometry-flow-volume/highcharts/plot.html
-quality_score: 86
+quality_score: 90
 review:
   strengths:
-  - Excellent spec compliance with all required features perfectly implemented including
-    PEF/FEV1/FVC annotations, predicted normal overlay, and closed loop shape
-  - Clinically realistic data with appropriate physiological values and meaningful
-    measured vs predicted comparison
-  - Good visual hierarchy with color-coded clinical markers using distinct shapes
-  - Informative subtitle providing clinical context values
-  - Subtle grid and light background create a clean professional appearance
+  - Excellent spec compliance with all clinical markers (PEF, FEV1, FVC) clearly annotated
+  - Zone coloring on the expiratory limb adds visual depth and is a distinctive Highcharts
+    feature
+  - Professional gradient background and shadow effects elevate the design
+  - Realistic spirometry data with physiologically accurate values
+  - Clean code structure with good reproducibility
   weaknesses:
-  - Zero Flow label partially clips at right margin edge and crowds with FVC label
-  - Y-axis extends to 12 when max data is ~10.8 wasting vertical space
-  - Red/green marker colors for PEF/FVC not ideal for colorblind accessibility
-  - LineSeries imported from wrong submodule (area instead of line)
-  - Axis lines and tick marks add visual weight that could be reduced
-  image_description: 'The plot displays a spirometry flow-volume loop on a light gray
-    (#f8f9fa) background. The title "spirometry-flow-volume · highcharts · pyplots.ai"
-    appears at top center in bold, with a subtitle showing "Measured vs Predicted
-    Normal · FVC: 4.80 L · FEV1: 3.60 L · PEF: 9.50 L/s". The measured loop is drawn
-    as a solid blue (#306998) line — the expiratory limb rises sharply from origin
-    to PEF (~9.5 L/s) then declines roughly linearly to FVC (4.8 L), while the inspiratory
-    limb forms a symmetric U-shaped curve below zero reaching ~-6 L/s. A dashed gray
-    predicted normal loop overlays for comparison, slightly larger. Three annotated
-    markers are present: a red circle at PEF labeled "PEF: 9.5 L/s", a blue diamond
-    at FEV1 labeled "FEV1: 3.6 L", and a green square at FVC labeled "FVC: 4.80 L".
-    The x-axis is "Volume (L)" (0-5.5), y-axis is "Flow (L/s)" (-8 to 12). A legend
-    in the top-right shows "Measured" (solid blue) and "Predicted Normal" (dashed
-    gray). A subtle "Zero Flow" italic label appears near the right edge of the zero
-    line. Grid lines are very subtle.'
+  - Slight excess whitespace on the right side of the canvas beyond the data range
+  - LineSeries imported from area module rather than line module (minor)
+  image_description: 'The plot displays a spirometry flow-volume loop rendered in
+    Highcharts. The title reads "spirometry-flow-volume · highcharts · pyplots.ai"
+    in bold at the top, with a subtitle showing "Measured vs Predicted Normal · FVC:
+    4.80 L · FEV1: 3.60 L · PEF: 9.50 L/s" in gray. The X-axis is labeled "Volume
+    (L)" ranging from 0 to 5.5, and the Y-axis is labeled "Flow (L/s)" ranging from
+    -8 to 10. The measured loop is drawn as a solid blue line (#306998) with zone
+    coloring that darkens at higher flow values — the expiratory limb rises sharply
+    to a peak near 9.5 L/s then declines roughly linearly, while the inspiratory limb
+    forms a smooth U-shaped curve reaching about -6 L/s below the zero flow line.
+    A dashed gray predicted normal loop overlays the measured loop, showing slightly
+    larger values (predicted PEF ~10.8). Three annotated markers highlight key clinical
+    values: an orange circle at PEF (9.5 L/s), a blue diamond at FEV1 (3.6 L), and
+    a teal square at FVC (4.80 L). A "Zero Flow" label sits on a dashed horizontal
+    reference line. The legend in the upper right distinguishes "Measured" (solid
+    blue) and "Predicted Normal" (dashed gray). The background has a subtle white-to-light-gray
+    gradient. Dot-style grid lines are faint. Overall the layout is clean, professional,
+    and well-proportioned.'
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (56px title, 44px axis, 34px ticks,
-          36px data labels). Clearly readable. Minor: data label sizes could be more
-          differentiated from axis labels.'
+        comment: 'All font sizes explicitly set: title 56px, axis titles 44px, tick
+          labels 34px, data labels 36px'
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Generally clean. FVC label in close proximity to Zero Flow italic
-          text near right edge, slight visual crowding.
+        comment: No text collisions. PEF, FEV1, FVC labels well-positioned with offsets
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Lines at width 6 clearly visible, markers at radius 16-18 prominent,
-          dashed predicted line easily distinguishable.
+        comment: Line width 6 for measured, 4 for predicted. Marker radius 16-18.
+          Well adapted
       - id: VQ-04
         name: Color Accessibility
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Blue/gray distinction is colorblind-safe. Red PEF and green FVC markers
-          could be problematic for red-green colorblind users, though distinct shapes
-          mitigate.
+        comment: Blue vs gray colorblind-safe. Orange, blue, teal markers have good
+          contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good proportions. Y-axis extends to 12 when max data is ~10.8, wasting
-          space. Zero Flow label partially clips at right margin.
+        comment: Good canvas utilization, slight excess space on right side
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Volume (L) and Flow (L/s) — descriptive with proper units.
+        comment: Volume (L) and Flow (L/s) with proper units
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Custom palette, custom font family, line shadows, rounded legend
-          with shadow. Above defaults but not publication-level.
+        comment: Gradient background, zone coloring, shadow effects, custom palette.
+          Above defaults
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Subtle grid (rgba 0.07), light background, plotLines for zero reference.
-          Axis lines and ticks still visible adding weight.
+        comment: Dot grid, axes removed, shadow legend, generous margins
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: PEF is clear focal point in red, clinical annotations guide viewer,
-          subtitle provides context. Measured vs predicted comparison tells diagnostic
-          story.
+        comment: 'Clear hierarchy: bold measured vs subtle predicted. PEF focal point.
+          Clinical subtitle'
     spec_compliance:
       score: 15
       max: 15
@@ -123,29 +116,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct flow-volume loop with expiratory and inspiratory limbs forming
-          closed shape.
+        comment: Correct flow-volume loop with expiratory and inspiratory limbs
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: PEF/FEV1/FVC annotations, predicted normal
-          overlay, distinct solid/dashed styling, closed loop.'
+        comment: PEF, FEV1, FVC annotated. Predicted overlay. Distinct styling. Closed
+          loop
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=Volume (L), Y=Flow (L/s) correctly mapped. Axes show full data
-          range.
+        comment: Volume on X, Flow on Y, all data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows exact format. Legend correctly labels Measured and
-          Predicted Normal.
+        comment: Correct title format and legend labels
     data_quality:
       score: 15
       max: 15
@@ -155,21 +145,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows both limbs, sharp PEF rise, linear decline, symmetric inspiratory
-          curve, predicted overlay, all three clinical markers.
+        comment: Both limbs, PEF rise, linear decline, U-shaped inspiration, predicted
+          overlay, all markers
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Clinically realistic: FVC 4.80L, FEV1 3.60L (ratio ~75%), PEF 9.50
-          L/s — consistent with normal adult male.'
+        comment: Real-world pulmonary function test, neutral medical context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: All values within clinically appropriate ranges for human spirometry.
+        comment: FVC=4.8L, PEF=9.5 L/s, FEV1=3.6L — realistic adult spirometry values
     code_quality:
       score: 10
       max: 10
@@ -179,34 +168,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data generation, chart config, series, export.
-          No functions or classes.'
+        comment: 'Flat script: imports, data, chart config, series, export'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set at beginning.
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used. LineSeries from area submodule works but is non-standard.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriately complex. Realistic physiological data modeling.
-          No fake UI.
+        comment: Clean, well-organized, no over-engineering
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png via container screenshot and interactive plot.html.
-          Current API.
+        comment: Saves plot.png and plot.html, current API
     library_mastery:
       score: 7
       max: 10
@@ -216,27 +202,26 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Good highcharts-core API usage: Chart, HighchartsOptions, series
-          types, data labels, plot lines, dash styles. Minor: LineSeries from wrong
-          submodule.'
+        comment: Proper HighchartsOptions, series patterns, inline JS for export
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses plotLines for zero flow reference with label, dataLabels on
-          scatter points, line shadows, tooltip formatting, interactive HTML export.
-  verdict: REJECTED
+        comment: Zone coloring, plotLines with labels, dataLabels, gradient background,
+          shadow, HTML export
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
   techniques:
   - annotations
+  - hover-tooltips
   - html-export
-  - custom-legend
   patterns:
   - data-generation
   dataprep: []
   styling:
+  - gradient-fill
   - grid-styling
   - edge-highlighting
