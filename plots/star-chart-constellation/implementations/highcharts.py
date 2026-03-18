@@ -1,9 +1,10 @@
-""" pyplots.ai
+"""pyplots.ai
 star-chart-constellation: Star Chart with Constellations
 Library: highcharts unknown | Python 3.14.3
 Quality: 86/100 | Created: 2026-03-18
 """
 
+import math
 import tempfile
 import time
 import urllib.request
@@ -18,10 +19,24 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
 
-# Data — bright stars with constellation lines for a northern hemisphere star chart
 np.random.seed(42)
 
-# Real star data: (name, RA hours, Dec degrees, apparent magnitude, constellation)
+
+# --- Azimuthal equidistant projection centered on north celestial pole ---
+def project(ra_deg, dec_deg):
+    """Project RA/Dec to x,y using azimuthal equidistant from north pole.
+
+    r = 90 - dec (angular distance from pole in degrees)
+    Oriented so RA=0h is at top, RA increases clockwise (sky-view convention).
+    """
+    ra_rad = np.radians(ra_deg)
+    r = 90.0 - dec_deg
+    x = r * np.sin(ra_rad)
+    y = r * np.cos(ra_rad)
+    return x, y
+
+
+# --- Star catalog: (name, RA hours, Dec degrees, apparent magnitude, constellation) ---
 star_catalog = [
     # Orion
     ("Betelgeuse", 5.92, 7.41, 0.42, "Ori"),
@@ -112,7 +127,6 @@ star_catalog = [
     ("Almach", 2.06, 42.33, 2.17, "And"),
 ]
 
-# Constellation edges (pairs of star names)
 constellation_edges = [
     # Orion
     ("Betelgeuse", "Bellatrix"),
@@ -194,27 +208,24 @@ constellation_edges = [
     ("Mirach", "Almach"),
 ]
 
-# Convert RA (hours) to degrees for plotting
+# Project star positions
 star_names = [s[0] for s in star_catalog]
 ra_hours = np.array([s[1] for s in star_catalog])
 dec_deg = np.array([s[2] for s in star_catalog])
 magnitudes = np.array([s[3] for s in star_catalog])
 constellations = [s[4] for s in star_catalog]
 
-ra_deg = ra_hours * 15.0  # Convert RA hours to degrees
+ra_deg = ra_hours * 15.0
+proj_x, proj_y = project(ra_deg, dec_deg)
 
-# Map magnitude to marker radius: brighter (lower mag) = larger
+# Magnitude to marker radius (brighter = larger)
 mag_min, mag_max = magnitudes.min(), magnitudes.max()
-radius_min, radius_max = 4, 28
+radius_min, radius_max = 5, 30
 star_radii = radius_min + (radius_max - radius_min) * (1 - (magnitudes - mag_min) / (mag_max - mag_min))
-
-# Map magnitude to opacity: brighter stars more opaque
 star_opacity = 0.5 + 0.5 * (1 - (magnitudes - mag_min) / (mag_max - mag_min))
 
-# Build star lookup for constellation lines
 star_lookup = {s[0]: i for i, s in enumerate(star_catalog)}
 
-# Constellation full names
 constellation_names = {
     "Ori": "Orion",
     "UMa": "Ursa Major",
@@ -233,105 +244,77 @@ constellation_names = {
     "And": "Andromeda",
 }
 
-# Constellation colors — subtle palette for lines and labels
+# Colorblind-safe palette: maximise hue diversity, avoid similar warm tones
 constellation_colors = {
-    "Ori": "#6EC6FF",
-    "UMa": "#FFD54F",
-    "Cas": "#CE93D8",
-    "Leo": "#FFB74D",
-    "Cyg": "#81C784",
-    "Lyr": "#4FC3F7",
-    "Gem": "#AED581",
-    "Tau": "#FF8A65",
-    "Sco": "#EF5350",
-    "Boo": "#FFAB91",
-    "Aql": "#80DEEA",
-    "CMa": "#90CAF9",
-    "Aur": "#FFF176",
-    "Per": "#B39DDB",
-    "And": "#F48FB1",
+    "Ori": "#6EC6FF",  # sky blue
+    "UMa": "#FFD54F",  # gold
+    "Cas": "#CE93D8",  # orchid purple
+    "Leo": "#FF8A65",  # coral orange
+    "Cyg": "#66BB6A",  # green
+    "Lyr": "#26C6DA",  # teal cyan
+    "Gem": "#C5E1A5",  # lime
+    "Tau": "#FFCC80",  # light amber
+    "Sco": "#EF5350",  # red
+    "Boo": "#80CBC4",  # teal (was salmon — now distinct from red/orange)
+    "Aql": "#42A5F5",  # medium blue
+    "CMa": "#B3E5FC",  # ice blue
+    "Aur": "#FFF176",  # lemon yellow
+    "Per": "#B39DDB",  # lavender
+    "And": "#F48FB1",  # pink
 }
 
-# Create chart
+# Chart boundary radius (dec = -50 → r = 140)
+R_BOUNDARY = 140
+AXIS_RANGE = 155  # Axis range with margin for labels
+
+# --- Build chart ---
 chart = Chart(container="container")
 chart.options = HighchartsOptions()
 
 chart.options.chart = {
     "type": "scatter",
-    "width": 4800,
-    "height": 2700,
+    "width": 3600,
+    "height": 3600,
     "backgroundColor": "#0a0e1a",
     "style": {"fontFamily": "'Segoe UI', Helvetica, Arial, sans-serif"},
-    "marginTop": 140,
-    "marginBottom": 200,
-    "marginLeft": 180,
-    "marginRight": 100,
+    "marginTop": 160,
+    "marginBottom": 80,
+    "marginLeft": 80,
+    "marginRight": 80,
     "plotBackgroundColor": {
-        "linearGradient": {"x1": 0, "y1": 0, "x2": 0, "y2": 1},
-        "stops": [[0, "#070b15"], [0.5, "#0d1326"], [1, "#0a0f1e"]],
+        "radialGradient": {"cx": 0.5, "cy": 0.5, "r": 0.5},
+        "stops": [[0, "#0d1326"], [0.7, "#080c1a"], [1, "#050810"]],
     },
 }
 
 chart.options.title = {
     "text": "star-chart-constellation · highcharts · pyplots.ai",
-    "style": {"fontSize": "56px", "fontWeight": "600", "color": "#c8d6e5", "letterSpacing": "1px"},
-    "margin": 40,
+    "style": {"fontSize": "52px", "fontWeight": "600", "color": "#c8d6e5", "letterSpacing": "1px"},
+    "margin": 20,
 }
 
 chart.options.subtitle = {
-    "text": "Northern & Southern Hemisphere — 15 Constellations, 70+ Stars to mag 3.7",
-    "style": {"fontSize": "34px", "color": "#576574", "fontWeight": "400"},
+    "text": (
+        "Azimuthal Equidistant Projection — North Celestial Pole at Center<br>15 Constellations · 70+ Stars to mag 3.7"
+    ),
+    "style": {"fontSize": "30px", "color": "#576574", "fontWeight": "400"},
+    "useHTML": True,
 }
 
-# X-axis: Right Ascension (reversed to match sky convention)
-chart.options.x_axis = {
-    "title": {
-        "text": "Right Ascension (°)",
-        "style": {"fontSize": "36px", "color": "#8395a7", "fontWeight": "500"},
-        "margin": 20,
-    },
-    "labels": {"style": {"fontSize": "28px", "color": "#576574"}, "format": "{value}°"},
-    "reversed": True,
-    "min": -10,
-    "max": 370,
-    "tickInterval": 30,
-    "gridLineWidth": 1,
-    "gridLineColor": "rgba(99, 128, 160, 0.12)",
-    "gridLineDashStyle": "Dot",
-    "lineColor": "rgba(99, 128, 160, 0.3)",
-    "lineWidth": 1,
-    "tickColor": "rgba(99, 128, 160, 0.3)",
-}
+# Axes: hidden but used for coordinate positioning
+chart.options.x_axis = {"min": -AXIS_RANGE, "max": AXIS_RANGE, "visible": False, "gridLineWidth": 0}
 
-# Y-axis: Declination
-chart.options.y_axis = {
-    "title": {
-        "text": "Declination (°)",
-        "style": {"fontSize": "36px", "color": "#8395a7", "fontWeight": "500"},
-        "margin": 20,
-    },
-    "labels": {"style": {"fontSize": "28px", "color": "#576574"}, "format": "{value}°"},
-    "min": -50,
-    "max": 70,
-    "tickInterval": 10,
-    "gridLineWidth": 1,
-    "gridLineColor": "rgba(99, 128, 160, 0.12)",
-    "gridLineDashStyle": "Dot",
-    "lineColor": "rgba(99, 128, 160, 0.3)",
-    "lineWidth": 1,
-    "tickColor": "rgba(99, 128, 160, 0.3)",
-}
+chart.options.y_axis = {"min": -AXIS_RANGE, "max": AXIS_RANGE, "visible": False, "gridLineWidth": 0}
 
 chart.options.legend = {"enabled": False}
 chart.options.credits = {"enabled": False}
-
 chart.options.tooltip = {
     "headerFormat": "",
     "pointFormat": (
         '<span style="font-size:22px;color:{point.color}">★</span> '
         '<span style="font-size:24px;color:#c8d6e5">'
         "<b>{point.name}</b><br/>"
-        "RA: {point.x:.1f}° · Dec: {point.y:.1f}°<br/>"
+        "RA: {point.raStr} · Dec: {point.decStr}<br/>"
         "Magnitude: {point.mag:.2f}</span>"
     ),
     "backgroundColor": "rgba(10, 14, 26, 0.92)",
@@ -341,23 +324,135 @@ chart.options.tooltip = {
     "style": {"fontSize": "24px", "color": "#c8d6e5"},
 }
 
-# Add constellation line series (one per constellation for coloring)
-added_constellations = set()
+# --- Declination grid circles ---
+grid_color = "rgba(99, 128, 160, 0.15)"
+for dec_val in [-30, 0, 30, 60]:
+    r = 90.0 - dec_val
+    pts = []
+    for angle in np.linspace(0, 2 * math.pi, 200):
+        pts.append([round(r * math.sin(angle), 2), round(r * math.cos(angle), 2)])
+    pts.append(pts[0])  # close circle
+    grid_circle = SplineSeries()
+    grid_circle.data = pts
+    grid_circle.color = grid_color
+    grid_circle.line_width = 1
+    grid_circle.dash_style = "Dot"
+    grid_circle.marker = {"enabled": False}
+    grid_circle.enable_mouse_tracking = False
+    grid_circle.show_in_legend = False
+    grid_circle.z_index = 0
+    chart.add_series(grid_circle)
+
+# --- RA grid lines (every 3 hours = 45°) ---
+for ra_h in range(0, 24, 3):
+    ra_rad = math.radians(ra_h * 15)
+    r_inner = 0
+    r_outer = R_BOUNDARY
+    line = SplineSeries()
+    line.data = [
+        [round(r_inner * math.sin(ra_rad), 2), round(r_inner * math.cos(ra_rad), 2)],
+        [round(r_outer * math.sin(ra_rad), 2), round(r_outer * math.cos(ra_rad), 2)],
+    ]
+    line.color = grid_color
+    line.line_width = 1
+    line.dash_style = "Dot"
+    line.marker = {"enabled": False}
+    line.enable_mouse_tracking = False
+    line.show_in_legend = False
+    line.z_index = 0
+    chart.add_series(line)
+
+# --- Circular sky boundary ---
+boundary_pts = []
+for angle in np.linspace(0, 2 * math.pi, 360):
+    boundary_pts.append([round(R_BOUNDARY * math.sin(angle), 2), round(R_BOUNDARY * math.cos(angle), 2)])
+boundary_pts.append(boundary_pts[0])
+boundary = SplineSeries()
+boundary.data = boundary_pts
+boundary.color = "rgba(99, 128, 160, 0.4)"
+boundary.line_width = 2
+boundary.marker = {"enabled": False}
+boundary.enable_mouse_tracking = False
+boundary.show_in_legend = False
+boundary.z_index = 1
+chart.add_series(boundary)
+
+# --- Grid labels: RA hours at boundary edge ---
+ra_label_data = []
+label_r = R_BOUNDARY + 8
+for ra_h in range(0, 24, 3):
+    ra_rad = math.radians(ra_h * 15)
+    lx = round(label_r * math.sin(ra_rad), 2)
+    ly = round(label_r * math.cos(ra_rad), 2)
+    ra_label_data.append(
+        {
+            "x": lx,
+            "y": ly,
+            "name": f"{ra_h}h",
+            "dataLabels": {
+                "enabled": True,
+                "format": f"{ra_h}h",
+                "style": {"fontSize": "24px", "color": "#576574", "textOutline": "2px #0a0e1a", "fontWeight": "500"},
+                "y": 0,
+            },
+            "marker": {"radius": 0, "states": {"hover": {"enabled": False}}},
+        }
+    )
+
+ra_labels = ScatterSeries()
+ra_labels.data = ra_label_data
+ra_labels.name = "RA Labels"
+ra_labels.color = "rgba(0,0,0,0)"
+ra_labels.enable_mouse_tracking = False
+ra_labels.show_in_legend = False
+ra_labels.z_index = 5
+ra_labels.marker = {"radius": 0}
+chart.add_series(ra_labels)
+
+# --- Grid labels: Declination along RA=0h line (top) ---
+dec_label_data = []
+for dec_val in [-30, 0, 30, 60]:
+    r = 90.0 - dec_val
+    dec_label_data.append(
+        {
+            "x": 5,
+            "y": r,
+            "name": f"{dec_val:+d}°",
+            "dataLabels": {
+                "enabled": True,
+                "format": f"{dec_val:+d}°",
+                "align": "left",
+                "style": {"fontSize": "22px", "color": "#576574", "textOutline": "2px #0a0e1a", "fontWeight": "400"},
+                "x": 8,
+                "y": -4,
+            },
+            "marker": {"radius": 0, "states": {"hover": {"enabled": False}}},
+        }
+    )
+
+dec_labels = ScatterSeries()
+dec_labels.data = dec_label_data
+dec_labels.name = "Dec Labels"
+dec_labels.color = "rgba(0,0,0,0)"
+dec_labels.enable_mouse_tracking = False
+dec_labels.show_in_legend = False
+dec_labels.z_index = 5
+dec_labels.marker = {"radius": 0}
+chart.add_series(dec_labels)
+
+# --- Constellation lines ---
 for abbr in constellation_colors:
     edges_for_const = [
         (s1, s2)
         for s1, s2 in constellation_edges
         if star_catalog[star_lookup[s1]][4] == abbr or star_catalog[star_lookup[s2]][4] == abbr
     ]
-    if not edges_for_const:
-        continue
-
     for s1, s2 in edges_for_const:
         i1, i2 = star_lookup[s1], star_lookup[s2]
         line = SplineSeries()
-        line.data = [[float(ra_deg[i1]), float(dec_deg[i1])], [float(ra_deg[i2]), float(dec_deg[i2])]]
+        line.data = [[float(proj_x[i1]), float(proj_y[i1])], [float(proj_x[i2]), float(proj_y[i2])]]
         line.color = constellation_colors[abbr]
-        line.opacity = 0.35
+        line.opacity = 0.4
         line.line_width = 2
         line.marker = {"enabled": False}
         line.enable_mouse_tracking = False
@@ -365,15 +460,20 @@ for abbr in constellation_colors:
         line.z_index = 1
         chart.add_series(line)
 
-# Add star scatter series — individual points with custom radius via data point config
+# --- Star scatter points ---
 star_data_points = []
 for i in range(len(star_catalog)):
+    ra_h_val = ra_hours[i]
+    ra_str = f"{int(ra_h_val)}h{int((ra_h_val % 1) * 60):02d}m"
+    dec_str = f"{dec_deg[i]:+.1f}°"
     star_data_points.append(
         {
-            "x": float(ra_deg[i]),
-            "y": float(dec_deg[i]),
+            "x": float(proj_x[i]),
+            "y": float(proj_y[i]),
             "name": star_names[i],
             "mag": float(magnitudes[i]),
+            "raStr": ra_str,
+            "decStr": dec_str,
             "marker": {
                 "radius": float(star_radii[i]),
                 "fillColor": {
@@ -397,18 +497,31 @@ stars_series.z_index = 3
 stars_series.marker = {"symbol": "circle", "lineWidth": 0}
 chart.add_series(stars_series)
 
-# Add constellation name labels as a separate scatter series with data labels
-label_data = []
-for abbr, full_name in constellation_names.items():
+# --- Constellation name labels ---
+# Pre-compute centroids, then adjust overlapping ones
+label_positions = {}
+for abbr in constellation_names:
     const_stars = [i for i, s in enumerate(star_catalog) if s[4] == abbr]
     if not const_stars:
         continue
-    centroid_ra = float(np.mean([ra_deg[i] for i in const_stars]))
-    centroid_dec = float(np.mean([dec_deg[i] for i in const_stars]))
+    cx = float(np.mean([proj_x[i] for i in const_stars]))
+    cy = float(np.mean([proj_y[i] for i in const_stars]))
+    label_positions[abbr] = (cx, cy)
+
+# Offset Lyra label to avoid Cygnus overlap — shift down-left
+if "Lyr" in label_positions:
+    lx, ly = label_positions["Lyr"]
+    label_positions["Lyr"] = (lx - 6, ly - 8)
+
+label_data = []
+for abbr, full_name in constellation_names.items():
+    if abbr not in label_positions:
+        continue
+    cx, cy = label_positions[abbr]
     label_data.append(
         {
-            "x": centroid_ra,
-            "y": centroid_dec,
+            "x": cx,
+            "y": cy,
             "name": full_name,
             "dataLabels": {
                 "enabled": True,
@@ -436,23 +549,30 @@ label_series.z_index = 4
 label_series.marker = {"radius": 0}
 chart.add_series(label_series)
 
-# Add faint background stars for atmosphere
+# --- Background stars for atmosphere ---
 np.random.seed(99)
-n_bg_stars = 300
-bg_ra = np.random.uniform(0, 360, n_bg_stars)
-bg_dec = np.random.uniform(-50, 70, n_bg_stars)
+n_bg_stars = 400
+bg_ra_h = np.random.uniform(0, 24, n_bg_stars)
+bg_dec = np.random.uniform(-50, 90, n_bg_stars)
 bg_mag = np.random.uniform(4.0, 6.5, n_bg_stars)
 bg_radius = 1 + (6.5 - bg_mag) / 2.5
 
+bg_ra_deg = bg_ra_h * 15.0
+bg_px, bg_py = project(bg_ra_deg, bg_dec)
+
+# Filter to within boundary circle
+mask = np.sqrt(bg_px**2 + bg_py**2) <= R_BOUNDARY
+bg_px, bg_py, bg_mag, bg_radius = bg_px[mask], bg_py[mask], bg_mag[mask], bg_radius[mask]
+
 bg_data = []
-for i in range(n_bg_stars):
+for i in range(len(bg_px)):
     bg_data.append(
         {
-            "x": float(bg_ra[i]),
-            "y": float(bg_dec[i]),
+            "x": float(bg_px[i]),
+            "y": float(bg_py[i]),
             "marker": {
                 "radius": float(bg_radius[i]),
-                "fillColor": f"rgba(180, 200, 220, {0.15 + 0.15 * (6.5 - float(bg_mag[i])) / 2.5:.2f})",
+                "fillColor": (f"rgba(180, 200, 220, {0.12 + 0.15 * (6.5 - float(bg_mag[i])) / 2.5:.2f})"),
                 "lineWidth": 0,
             },
         }
@@ -468,7 +588,58 @@ bg_series.z_index = 0
 bg_series.marker = {"symbol": "circle", "lineWidth": 0}
 chart.add_series(bg_series)
 
-# Download Highcharts JS with fallback CDN
+# --- Ecliptic line (dashed, approximate) ---
+# The ecliptic has dec ≈ 23.4° * sin(RA - 90°) roughly
+ecliptic_pts = []
+for ra_d in np.linspace(0, 360, 300):
+    ecl_dec = 23.44 * math.sin(math.radians(ra_d - 90))
+    ex, ey = project(np.array([ra_d]), np.array([ecl_dec]))
+    r = math.sqrt(float(ex[0]) ** 2 + float(ey[0]) ** 2)
+    if r <= R_BOUNDARY:
+        ecliptic_pts.append([round(float(ex[0]), 2), round(float(ey[0]), 2)])
+
+ecliptic = SplineSeries()
+ecliptic.data = ecliptic_pts
+ecliptic.color = "rgba(255, 183, 77, 0.35)"
+ecliptic.line_width = 2
+ecliptic.dash_style = "LongDash"
+ecliptic.marker = {"enabled": False}
+ecliptic.enable_mouse_tracking = False
+ecliptic.show_in_legend = False
+ecliptic.z_index = 1
+chart.add_series(ecliptic)
+
+# --- Ecliptic label ---
+ecl_label_ra = 270
+ecl_label_dec = 23.44 * math.sin(math.radians(ecl_label_ra - 90))
+elx, ely = project(np.array([ecl_label_ra]), np.array([ecl_label_dec]))
+ecl_label = ScatterSeries()
+ecl_label.data = [
+    {
+        "x": float(elx[0]),
+        "y": float(ely[0]),
+        "dataLabels": {
+            "enabled": True,
+            "format": "Ecliptic",
+            "style": {
+                "fontSize": "20px",
+                "color": "rgba(255, 183, 77, 0.6)",
+                "textOutline": "2px #0a0e1a",
+                "fontStyle": "italic",
+            },
+            "y": -16,
+        },
+        "marker": {"radius": 0, "states": {"hover": {"enabled": False}}},
+    }
+]
+ecl_label.color = "rgba(0,0,0,0)"
+ecl_label.enable_mouse_tracking = False
+ecl_label.show_in_legend = False
+ecl_label.z_index = 5
+ecl_label.marker = {"radius": 0}
+chart.add_series(ecl_label)
+
+# --- Download Highcharts JS ---
 js_urls = [("https://code.highcharts.com/highcharts.js", "https://cdn.jsdelivr.net/npm/highcharts@11/highcharts.js")]
 js_parts = []
 for primary, fallback in js_urls:
@@ -491,7 +662,7 @@ html_content = f"""<!DOCTYPE html>
     <script>{highcharts_js}</script>
 </head>
 <body style="margin:0; background:#0a0e1a;">
-    <div id="container" style="width: 4800px; height: 2700px;"></div>
+    <div id="container" style="width: 3600px; height: 3600px;"></div>
     <script>{html_str}</script>
 </body>
 </html>"""
@@ -506,7 +677,7 @@ chrome_options.add_argument("--headless")
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
 chrome_options.add_argument("--disable-gpu")
-chrome_options.add_argument("--window-size=4800,2700")
+chrome_options.add_argument("--window-size=3600,3600")
 
 driver = webdriver.Chrome(options=chrome_options)
 driver.get(f"file://{temp_path}")
@@ -527,7 +698,7 @@ with open("plot.html", "w", encoding="utf-8") as f:
     <script src="https://code.highcharts.com/highcharts.js"></script>
 </head>
 <body style="margin:0; background:#0a0e1a;">
-    <div id="container" style="width: 100%; height: 100vh;"></div>
+    <div id="container" style="width: 100vmin; height: 100vmin; margin: auto;"></div>
     <script>{html_str}</script>
 </body>
 </html>"""
