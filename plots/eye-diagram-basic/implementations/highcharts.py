@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 eye-diagram-basic: Signal Integrity Eye Diagram
 Library: highcharts unknown | Python 3.14.3
 Quality: 89/100 | Created: 2026-03-17
@@ -34,29 +34,22 @@ n_voltage_bins = 120
 n_time_bins = 200
 voltage_range = (-0.3, 1.3)
 
-density = np.zeros((n_voltage_bins, n_time_bins))
+all_times = []
+all_voltages = []
 
 for _ in range(n_traces):
-    # Random 4-bit sequence (need bits before and after the 2-UI window for transitions)
     bits = np.random.randint(0, 2, size=6)
 
     # Build voltage waveform with smooth transitions (raised cosine)
     signal = np.zeros(total_samples)
-    rise_time = int(samples_per_ui * 0.25)
 
     for sample_idx in range(total_samples):
         ui_pos = sample_idx / samples_per_ui
-        bit_idx = int(ui_pos) + 2  # offset into bits array
-        bit_idx = min(bit_idx, len(bits) - 1)
-
-        # Position within current bit period
+        bit_idx = min(int(ui_pos) + 2, len(bits) - 1)
         frac = ui_pos - int(ui_pos)
-
-        # Current and previous bit for transition
         current_bit = bits[bit_idx]
         prev_bit = bits[max(bit_idx - 1, 0)]
 
-        # Raised cosine transition at the start of each bit period
         transition_width = 0.2
         if frac < transition_width and prev_bit != current_bit:
             alpha = 0.5 * (1 - np.cos(np.pi * frac / transition_width))
@@ -64,33 +57,63 @@ for _ in range(n_traces):
         else:
             signal[sample_idx] = current_bit
 
-    # Apply jitter (shift time axis slightly)
     jitter = np.random.normal(0, jitter_sigma)
     jittered_time = time_norm + jitter
-
-    # Add Gaussian noise
     signal += np.random.normal(0, noise_sigma, total_samples)
 
-    # Bin into density histogram
-    for s_idx in range(total_samples):
-        t = jittered_time[s_idx]
-        v = signal[s_idx]
-        t_bin = int((t / n_ui) * (n_time_bins - 1))
-        v_bin = int((v - voltage_range[0]) / (voltage_range[1] - voltage_range[0]) * (n_voltage_bins - 1))
-        if 0 <= t_bin < n_time_bins and 0 <= v_bin < n_voltage_bins:
-            density[v_bin, t_bin] += 1
+    all_times.append(jittered_time)
+    all_voltages.append(signal)
 
-# Normalize density to 0-1
-max_density = density.max()
-density_norm = density / max_density
+# Use np.histogram2d for efficient density binning
+all_times_flat = np.concatenate(all_times)
+all_voltages_flat = np.concatenate(all_voltages)
+
+density, _, _ = np.histogram2d(
+    all_voltages_flat,
+    all_times_flat,
+    bins=[n_voltage_bins, n_time_bins],
+    range=[[voltage_range[0], voltage_range[1]], [0, n_ui]],
+)
+density_norm = density / density.max()
 
 # Build heatmap data [x_index, y_index, value] - only non-zero cells
-heatmap_data = []
-for y_idx in range(n_voltage_bins):
-    for x_idx in range(n_time_bins):
-        val = density_norm[y_idx, x_idx]
-        if val > 0.001:
-            heatmap_data.append([x_idx, y_idx, round(float(val), 4)])
+nonzero = np.argwhere(density_norm > 0.001)
+heatmap_data = [[int(x), int(y), round(float(density_norm[y, x]), 4)] for y, x in nonzero]
+
+# Compute eye metrics for annotations
+# Eye center is at 0.5 UI (middle of the first unit interval, where the eye opens)
+eye_center_x = n_time_bins // 4  # 0.5 UI = quarter of the 2-UI window
+v_mid_bin = int((0.5 - voltage_range[0]) / (voltage_range[1] - voltage_range[0]) * (n_voltage_bins - 1))
+v_step = (voltage_range[1] - voltage_range[0]) / n_voltage_bins
+t_step = n_ui / n_time_bins
+
+# Eye height: vertical gap in density at center time slice
+center_col = density_norm[:, eye_center_x]
+eye_bottom = eye_top = v_mid_bin
+for i in range(v_mid_bin, 0, -1):
+    if center_col[i] > 0.08:
+        eye_bottom = i + 1
+        break
+for i in range(v_mid_bin, n_voltage_bins):
+    if center_col[i] > 0.08:
+        eye_top = i - 1
+        break
+eye_height_v = (eye_top - eye_bottom) * v_step
+
+# Eye width: horizontal span of opening at mid-voltage
+mid_row = density_norm[v_mid_bin, :]
+# Find contiguous low-density region around eye_center_x
+eye_left = eye_center_x
+eye_right = eye_center_x
+for i in range(eye_center_x, 0, -1):
+    if mid_row[i] > 0.08:
+        eye_left = i + 1
+        break
+for i in range(eye_center_x, n_time_bins):
+    if mid_row[i] > 0.08:
+        eye_right = i - 1
+        break
+eye_width_ui = (eye_right - eye_left) * t_step
 
 # Axis labels
 time_categories = [f"{t:.2f}" if i % 25 == 0 else "" for i, t in enumerate(np.linspace(0, 2, n_time_bins))]
@@ -108,7 +131,7 @@ chart.options.chart = {
     "backgroundColor": "#0a0a14",
     "marginTop": 160,
     "marginBottom": 220,
-    "marginRight": 340,
+    "marginRight": 280,
     "marginLeft": 220,
     "style": {"fontFamily": "'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif"},
 }
@@ -134,11 +157,25 @@ chart.options.x_axis = {
         "style": {"fontSize": "34px", "fontWeight": "600", "color": "#c0c0d0"},
         "margin": 28,
     },
-    "labels": {"style": {"fontSize": "28px", "color": "#8e8ea8"}, "step": 1, "y": 40},
+    "labels": {"style": {"fontSize": "28px", "color": "#8e8ea8"}, "step": 1, "y": 40, "rotation": 0},
     "lineWidth": 0,
     "tickLength": 0,
     "gridLineWidth": 0,
-    "plotLines": [{"value": ui_boundary, "color": "rgba(255,255,255,0.2)", "width": 2, "dashStyle": "Dash"}],
+    "plotLines": [
+        {
+            "value": ui_boundary,
+            "color": "rgba(255,255,255,0.25)",
+            "width": 3,
+            "dashStyle": "Dash",
+            "label": {
+                "text": "1.0 UI",
+                "style": {"color": "rgba(255,255,255,0.5)", "fontSize": "22px"},
+                "align": "left",
+                "x": 8,
+                "y": 20,
+            },
+        }
+    ],
 }
 
 # Voltage axis - mark 0V and 1V levels
@@ -157,8 +194,30 @@ chart.options.y_axis = {
     "lineWidth": 0,
     "gridLineWidth": 0,
     "plotLines": [
-        {"value": level_0_bin, "color": "rgba(255,255,255,0.15)", "width": 2, "dashStyle": "Dot"},
-        {"value": level_1_bin, "color": "rgba(255,255,255,0.15)", "width": 2, "dashStyle": "Dot"},
+        {
+            "value": level_0_bin,
+            "color": "rgba(255,255,255,0.2)",
+            "width": 2,
+            "dashStyle": "Dot",
+            "label": {
+                "text": "0 V",
+                "style": {"color": "rgba(255,255,255,0.45)", "fontSize": "20px"},
+                "align": "right",
+                "x": -8,
+            },
+        },
+        {
+            "value": level_1_bin,
+            "color": "rgba(255,255,255,0.2)",
+            "width": 2,
+            "dashStyle": "Dot",
+            "label": {
+                "text": "1 V",
+                "style": {"color": "rgba(255,255,255,0.45)", "fontSize": "20px"},
+                "align": "right",
+                "x": -8,
+            },
+        },
     ],
 }
 
@@ -187,10 +246,10 @@ chart.options.legend = {
     "layout": "vertical",
     "verticalAlign": "middle",
     "symbolHeight": 900,
-    "symbolWidth": 32,
+    "symbolWidth": 28,
     "itemStyle": {"fontSize": "22px", "color": "#c0c0d0"},
-    "x": -40,
-    "margin": 30,
+    "x": -20,
+    "margin": 20,
 }
 
 chart.options.tooltip = {
@@ -203,6 +262,31 @@ chart.options.credits = {"enabled": False}
 
 chart.options.plot_options = {"heatmap": {"colsize": 1, "rowsize": 1, "borderWidth": 0}}
 
+# Annotations using Highcharts annotations API for eye measurements
+chart.options.annotations = [
+    {
+        "draggable": "",
+        "labelOptions": {
+            "backgroundColor": "rgba(10, 10, 20, 0.85)",
+            "borderColor": "rgba(255, 255, 255, 0.3)",
+            "borderWidth": 2,
+            "borderRadius": 8,
+            "style": {"color": "#e0e0e0", "fontSize": "26px", "fontWeight": "600"},
+            "padding": 14,
+        },
+        "labels": [
+            {
+                "point": {"x": eye_center_x, "y": v_mid_bin - 8, "xAxis": 0, "yAxis": 0},
+                "text": f"Eye Height: {eye_height_v:.3f} V",
+            },
+            {
+                "point": {"x": eye_center_x + 10, "y": v_mid_bin + 8, "xAxis": 0, "yAxis": 0},
+                "text": f"Eye Width: {eye_width_ui:.3f} UI",
+            },
+        ],
+    }
+]
+
 # Add heatmap series
 series = HeatmapSeries()
 series.name = "Eye Diagram"
@@ -212,10 +296,14 @@ series.data_labels = {"enabled": False}
 
 chart.add_series(series)
 
-# Download Highcharts JS and heatmap module
+# Download Highcharts JS, heatmap module, and annotations module
 js_urls = [
     ("https://code.highcharts.com/highcharts.js", "https://cdn.jsdelivr.net/npm/highcharts@11/highcharts.js"),
     ("https://code.highcharts.com/modules/heatmap.js", "https://cdn.jsdelivr.net/npm/highcharts@11/modules/heatmap.js"),
+    (
+        "https://code.highcharts.com/modules/annotations.js",
+        "https://cdn.jsdelivr.net/npm/highcharts@11/modules/annotations.js",
+    ),
 ]
 js_parts = []
 for primary, fallback in js_urls:
