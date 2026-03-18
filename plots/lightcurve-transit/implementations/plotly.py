@@ -1,7 +1,7 @@
-""" pyplots.ai
+"""pyplots.ai
 lightcurve-transit: Astronomical Light Curve
 Library: plotly 6.6.0 | Python 3.14.3
-Quality: 89/100 | Created: 2026-03-18
+Created: 2026-03-18
 """
 
 import numpy as np
@@ -50,13 +50,13 @@ fig.add_trace(
         y=flux,
         mode="markers",
         name="Observations",
-        marker={"size": 5, "color": "#306998", "opacity": 0.45, "line": {"width": 0.5, "color": "white"}},
+        marker={"size": 7, "color": "#306998", "opacity": 0.5, "line": {"width": 0.5, "color": "white"}},
         error_y={
             "type": "data",
             "array": flux_err,
             "visible": True,
-            "color": "rgba(48, 105, 152, 0.20)",
-            "thickness": 1.2,
+            "color": "rgba(48, 105, 152, 0.35)",
+            "thickness": 1.5,
             "width": 0,
         },
         hovertemplate="Phase: %{x:.4f}<br>Flux: %{y:.5f}<extra></extra>",
@@ -72,6 +72,17 @@ fig.add_trace(
         line={"color": "#E67E22", "width": 3},
         hovertemplate="Phase: %{x:.4f}<br>Model: %{y:.5f}<extra></extra>",
     )
+)
+
+# Highlight transit region with subtle shading
+fig.add_vrect(
+    x0=transit_center - transit_duration,
+    x1=transit_center + transit_duration,
+    fillcolor="rgba(230, 126, 34, 0.06)",
+    line_width=0,
+    annotation_text="Transit Window",
+    annotation_position="top",
+    annotation_font={"size": 13, "color": "rgba(0,0,0,0.35)"},
 )
 
 # Reference line at baseline flux
@@ -130,16 +141,26 @@ fig.update_layout(
         "showline": False,
         "zeroline": False,
         "range": [-0.02, 1.02],
+        "spikemode": "across",
+        "spikethickness": 1,
+        "spikecolor": "rgba(0,0,0,0.15)",
+        "spikedash": "dot",
     },
     yaxis={
         "title": {"text": "Relative Flux", "font": {"size": 22}},
         "tickfont": {"size": 18},
         "showgrid": True,
-        "gridcolor": "rgba(0,0,0,0.08)",
+        "gridcolor": "rgba(0,0,0,0.06)",
         "gridwidth": 1,
         "showline": False,
         "zeroline": False,
+        "spikemode": "across",
+        "spikethickness": 1,
+        "spikecolor": "rgba(0,0,0,0.15)",
+        "spikedash": "dot",
     },
+    hoverdistance=20,
+    hovermode="closest",
     template="plotly_white",
     legend={
         "font": {"size": 18},
@@ -156,6 +177,10 @@ fig.update_layout(
     margin={"l": 80, "r": 40, "t": 80, "b": 80},
 )
 
+# Ingress/egress contact markers
+for label, xpos in [("T₁", transit_center - transit_duration), ("T₄", transit_center + transit_duration)]:
+    fig.add_annotation(x=xpos, y=min_model - 0.0015, text=label, showarrow=False, font={"size": 14, "color": "#888"})
+
 # Save
 fig.write_image("plot.png", width=1600, height=900, scale=3)
-fig.write_html("plot.html", include_plotlyjs="cdn")
+fig.write_html("plot.html", include_plotlyjs="cdn", config={"displayModeBar": True, "scrollZoom": True})
