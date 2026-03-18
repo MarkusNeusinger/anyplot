@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 curve-dose-response: Pharmacological Dose-Response Curve
 Library: bokeh 3.9.0 | Python 3.14.3
 Quality: 85/100 | Created: 2026-03-18
@@ -70,6 +70,7 @@ p = figure(
     x_axis_type="log",
     x_range=(3e-10, 3e-4),
     y_range=(-5, 110),
+    toolbar_location=None,
 )
 
 # Confidence band for Compound A
@@ -136,25 +137,23 @@ scatter_b = p.scatter(
     "conc", "response", source=pts_source_b, size=18, color=colors_b, line_color="white", line_width=2
 )
 
-# EC50 reference lines - Compound A
+# EC50 reference lines - Compound A (local segments, not full-width)
 ec50_vline_a = Span(
     location=ec50_a, dimension="height", line_color=colors_a, line_width=3, line_dash="dashed", line_alpha=0.5
 )
-ec50_hline_a = Span(
-    location=half_response_a, dimension="width", line_color=colors_a, line_width=3, line_dash="dashed", line_alpha=0.5
-)
 p.add_layout(ec50_vline_a)
-p.add_layout(ec50_hline_a)
+# Horizontal line from y-axis to EC50 (local segment)
+ec50_hline_src_a = ColumnDataSource(data={"x": [3e-10, ec50_a], "y": [half_response_a, half_response_a]})
+p.line("x", "y", source=ec50_hline_src_a, line_color=colors_a, line_width=3, line_dash="dashed", line_alpha=0.5)
 
-# EC50 reference lines - Compound B
+# EC50 reference lines - Compound B (local segments, not full-width)
 ec50_vline_b = Span(
     location=ec50_b, dimension="height", line_color=colors_b, line_width=3, line_dash="dashed", line_alpha=0.5
 )
-ec50_hline_b = Span(
-    location=half_response_b, dimension="width", line_color=colors_b, line_width=3, line_dash="dashed", line_alpha=0.5
-)
 p.add_layout(ec50_vline_b)
-p.add_layout(ec50_hline_b)
+# Horizontal line from y-axis to EC50 (local segment)
+ec50_hline_src_b = ColumnDataSource(data={"x": [3e-10, ec50_b], "y": [half_response_b, half_response_b]})
+p.line("x", "y", source=ec50_hline_src_b, line_color=colors_b, line_width=3, line_dash="dashed", line_alpha=0.5)
 
 # Top and bottom asymptote dashed lines
 top_asymptote = Span(
@@ -166,12 +165,34 @@ bottom_asymptote = Span(
 p.add_layout(top_asymptote)
 p.add_layout(bottom_asymptote)
 
+# Asymptote labels
+top_asym_label = Label(
+    x=2e-4,
+    y=popt_a[1] + 2,
+    text=f"Top ({popt_a[1]:.0f}%)",
+    text_font_size="20pt",
+    text_color="#777777",
+    text_font_style="italic",
+    text_align="right",
+)
+bottom_asym_label = Label(
+    x=2e-4,
+    y=popt_a[0] + 2,
+    text=f"Bottom ({popt_a[0]:.0f}%)",
+    text_font_size="20pt",
+    text_color="#777777",
+    text_font_style="italic",
+    text_align="right",
+)
+p.add_layout(top_asym_label)
+p.add_layout(bottom_asym_label)
+
 # EC50 annotations
 ec50_a_label = Label(
     x=ec50_a * 2,
     y=half_response_a + 5,
     text=f"EC₅₀ = {ec50_a:.1e} M",
-    text_font_size="22pt",
+    text_font_size="24pt",
     text_color=colors_a,
     text_font_style="bold",
 )
@@ -179,7 +200,7 @@ ec50_b_label = Label(
     x=ec50_b * 2,
     y=half_response_b + 5,
     text=f"EC₅₀ = {ec50_b:.1e} M",
-    text_font_size="22pt",
+    text_font_size="24pt",
     text_color=colors_b,
     text_font_style="bold",
 )
@@ -219,6 +240,22 @@ p.ygrid.grid_line_dash = "dashed"
 p.background_fill_color = "#FAFAFA"
 p.border_fill_color = "#FFFFFF"
 p.outline_line_color = None
+
+# Refined axis styling
+p.xaxis.axis_line_color = "#555555"
+p.yaxis.axis_line_color = "#555555"
+p.xaxis.axis_line_width = 2
+p.yaxis.axis_line_width = 2
+p.xaxis.major_tick_line_color = "#555555"
+p.yaxis.major_tick_line_color = "#555555"
+p.xaxis.minor_tick_line_color = None
+p.yaxis.minor_tick_line_color = None
+p.xaxis.major_tick_out = 8
+p.yaxis.major_tick_out = 8
+p.xaxis.major_tick_in = 0
+p.yaxis.major_tick_in = 0
+p.xaxis.axis_label_text_font_style = "bold"
+p.yaxis.axis_label_text_font_style = "bold"
 
 # Save
 export_png(p, filename="plot.png")
