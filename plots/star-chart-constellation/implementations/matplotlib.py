@@ -1,11 +1,13 @@
-""" pyplots.ai
+"""pyplots.ai
 star-chart-constellation: Star Chart with Constellations
 Library: matplotlib 3.10.8 | Python 3.14.3
 Quality: 87/100 | Created: 2026-03-18
 """
 
+import matplotlib.patheffects as pe
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.colors import LinearSegmentedColormap
 
 
 np.random.seed(42)
@@ -296,24 +298,19 @@ bg_lat = bg_dec_deg * np.pi / 180.0
 
 # Size mapping: brighter stars (lower mag) get larger points
 max_mag = 6.5
-min_size = 8
-max_size = 350
-star_sizes = max_size * ((max_mag - star_mag) / (max_mag - (-1.5))) ** 1.5 + min_size
-bg_sizes = max_size * ((max_mag - bg_mag) / (max_mag - (-1.5))) ** 1.5 + min_size
+min_mag = -1.5
+min_size = 10
+max_size = 420
+star_sizes = max_size * ((max_mag - star_mag) / (max_mag - min_mag)) ** 1.5 + min_size
+bg_sizes = max_size * ((max_mag - bg_mag) / (max_mag - min_mag)) ** 1.5 + min_size
 
-# Color mapping by magnitude
-star_colors = []
-for m in star_mag:
-    if m < 0.5:
-        star_colors.append("#FFFFFF")
-    elif m < 1.5:
-        star_colors.append("#F0F0FF")
-    elif m < 2.5:
-        star_colors.append("#D8D8F0")
-    elif m < 3.5:
-        star_colors.append("#B8B8D8")
-    else:
-        star_colors.append("#9898C0")
+# Color mapping by magnitude using a custom colormap (warm white to cool blue-gray)
+star_cmap = LinearSegmentedColormap.from_list(
+    "star_temp", ["#FFFFFF", "#E8E8FF", "#C8C8F0", "#A0A0D0", "#8888B8"], N=256
+)
+# Normalize magnitude to [0, 1] range for colormap (bright=0, dim=1)
+star_color_norm = np.clip((star_mag - min_mag) / (max_mag - min_mag), 0, 1)
+star_colors = star_cmap(star_color_norm)
 
 # Create figure using matplotlib's Aitoff projection
 fig = plt.figure(figsize=(16, 9), facecolor="#0A0A2A")
@@ -334,8 +331,29 @@ for s1, s2 in edges:
             continue
         ax.plot([lon1, lon2], [lat1, lat2], color="#3A5A8C", linewidth=1.4, alpha=0.55, zorder=2)
 
-# Plot named stars
-ax.scatter(star_lon, star_lat, s=star_sizes, c=star_colors, alpha=0.9, edgecolors="white", linewidth=0.3, zorder=3)
+# Plot named stars with subtle glow effect using PathEffects
+ax.scatter(
+    star_lon,
+    star_lat,
+    s=star_sizes,
+    c=star_colors,
+    alpha=0.92,
+    edgecolors="white",
+    linewidth=0.3,
+    zorder=3,
+    path_effects=[pe.withSimplePatchShadow(offset=(0, 0), shadow_rgbFace="#4060A0", alpha=0.25, rho=0.4)],
+)
+# Extra glow layer for brightest stars (mag < 1.0)
+bright_mask = star_mag < 1.0
+ax.scatter(
+    star_lon[bright_mask],
+    star_lat[bright_mask],
+    s=star_sizes[bright_mask] * 2.5,
+    c="#4060B0",
+    alpha=0.08,
+    edgecolors="none",
+    zorder=2,
+)
 
 # Draw ecliptic (obliquity ~23.44 degrees)
 ecl_lon_range = np.linspace(-np.pi, np.pi, 500)
@@ -348,32 +366,33 @@ ax.plot(
 
 # Label brightest stars (mag < 1.0) with smart offsets
 bright_offsets = {
-    "Sirius": (12, -14),
-    "Vega": (10, 10),
-    "Arcturus": (10, -14),
-    "Capella": (-50, 8),
-    "Rigel": (10, -14),
-    "Betelgeuse": (10, 10),
-    "Altair": (10, -14),
-    "Aldebaran": (-55, -10),
-    "Spica": (10, -14),
-    "Pollux": (10, 10),
+    "Sirius": (14, 12),
+    "Vega": (12, 12),
+    "Arcturus": (12, -16),
+    "Capella": (-58, 10),
+    "Rigel": (12, -16),
+    "Betelgeuse": (12, 12),
+    "Altair": (12, -16),
+    "Aldebaran": (-62, -12),
+    "Spica": (-50, -14),
+    "Pollux": (12, 12),
 }
 for name, (ra, dec, mag, _) in stars.items():
     if mag < 1.0:
         lon = -((ra - 12.0) * np.pi / 12.0)
         lat = dec * np.pi / 180.0
-        offset = bright_offsets.get(name, (10, 8))
+        offset = bright_offsets.get(name, (12, 10))
         ax.annotate(
             name,
             (lon, lat),
-            fontsize=12,
+            fontsize=14,
             color="#C8C8E0",
-            alpha=0.85,
+            alpha=0.88,
             xytext=offset,
             textcoords="offset points",
             fontweight="light",
             zorder=5,
+            path_effects=[pe.withStroke(linewidth=3, foreground="#0A0A2A", alpha=0.7)],
         )
 
 # Constellation name labels at centroid with overlap avoidance
@@ -401,20 +420,25 @@ constellation_names = {
     "Sgr": "Sagittarius",
 }
 
-# Manual offsets (in radians) for crowded regions
+# Manual offsets (in radians) for crowded regions — tuned to avoid overlap
 label_offsets_rad = {
-    "CrB": (0.0, -0.15),
-    "Her": (0.12, 0.12),
-    "Boo": (-0.12, -0.14),
-    "Lyr": (-0.08, -0.12),
-    "Tau": (0.12, 0.05),
-    "CMa": (0.0, 0.12),
-    "Dra": (0.0, 0.08),
-    "Cyg": (0.08, 0.10),
-    "Aql": (0.0, -0.12),
-    "Sco": (-0.25, 0.08),
-    "Sgr": (0.25, 0.0),
-    "Vir": (0.0, -0.14),
+    "CrB": (0.0, -0.18),
+    "Her": (0.15, 0.15),
+    "Boo": (-0.15, -0.18),
+    "Lyr": (-0.12, -0.15),
+    "Tau": (0.18, 0.12),
+    "Gem": (-0.08, 0.15),
+    "CMa": (-0.15, 0.18),
+    "Dra": (0.0, 0.10),
+    "Cyg": (0.10, 0.12),
+    "Aql": (0.0, -0.15),
+    "Sco": (-0.28, 0.10),
+    "Sgr": (0.28, 0.0),
+    "Vir": (0.15, -0.20),
+    "And": (0.0, 0.12),
+    "Per": (0.0, -0.12),
+    "Ori": (0.08, -0.22),
+    "Leo": (0.0, -0.10),
 }
 
 placed_labels = []
@@ -431,10 +455,13 @@ for abbr, full_name in constellation_names.items():
     cx += dx
     cy += dy
 
-    # Nudge away from previously placed labels to reduce overlap
-    for px, py in placed_labels:
-        if abs(cx - px) < 0.20 and abs(cy - py) < 0.10:
-            cy -= 0.12
+    # Iterative nudge away from previously placed labels
+    for _ in range(3):
+        for px, py in placed_labels:
+            if abs(cx - px) < 0.22 and abs(cy - py) < 0.12:
+                cy -= 0.13
+                break
+        else:
             break
 
     placed_labels.append((cx, cy))
@@ -450,10 +477,11 @@ for abbr, full_name in constellation_names.items():
         fontstyle="italic",
         fontweight="medium",
         zorder=4,
+        path_effects=[pe.withStroke(linewidth=4, foreground="#0A0A2A", alpha=0.6)],
     )
 
 # Style the Aitoff grid
-ax.grid(True, color="#1A2A4A", linewidth=0.5, alpha=0.5, linestyle="--")
+ax.grid(True, color="#152040", linewidth=0.4, alpha=0.35, linestyle=(0, (5, 8)))
 ax.tick_params(axis="both", colors="#4A5A7A", labelsize=16, length=0, labelcolor="#6A7A9A")
 
 # Customize RA tick labels to show hours
