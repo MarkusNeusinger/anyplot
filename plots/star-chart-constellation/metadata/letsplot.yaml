@@ -1,7 +1,7 @@
 library: letsplot
 specification_id: star-chart-constellation
 created: '2026-03-18T21:14:13Z'
-updated: '2026-03-18T21:18:22Z'
+updated: '2026-03-18T21:27:30Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23267218105
 issue: 4560
@@ -10,36 +10,36 @@ library_version: 4.9.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/star-chart-constellation/letsplot/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/star-chart-constellation/letsplot/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/star-chart-constellation/letsplot/plot.html
-quality_score: 80
+quality_score: 84
 review:
   strengths:
-  - Excellent dark-sky aesthetic with thematic color scheme (warm stars on dark navy)
-  - Real astronomical data with accurate star positions and magnitudes
-  - Clean, well-structured code with good data organization
-  - Good magnitude-to-size mapping creating natural visual hierarchy
-  - 13 constellation patterns with proper stick-figure connections
+  - Excellent dark-sky aesthetic with thoughtful color palette (yellow-to-gray star
+    colors based on magnitude)
+  - Real astronomical data with accurate star positions and magnitudes for 13 constellations
+  - Custom magnitude legend built into the plot for reference
+  - Good use of lets-plot interactive tooltips for star identification
+  - Well-organized constellation line data with per-label offset adjustments
   weaknesses:
-  - Axis title says Right Ascension (degrees) but ticks show hours - contradictory
-    units label
-  - Constellation labels overlap with stars and lines due to centroid placement without
-    offset
-  - Coordinate grid is nearly invisible at alpha=0.4 with dark color
-  - No magnitude legend to help viewers interpret star sizes
-  image_description: 'The plot displays a star chart on a dark navy (#0a0e1a) background.
-    Stars are represented as circles with sizes proportional to brightness (brighter
-    stars are larger). Star colors range from pale yellow/cream (brightest, e.g.,
-    Sirius, Vega) to light gray (faintest background stars). Constellation stick-figure
-    lines are drawn in semi-transparent light blue connecting notable stars. Thirteen
-    constellations are labeled in italic light blue text near their centroids: Cassiopeia,
-    Ursa Major, Perseus, Taurus, Gemini, Orion, Canis Major, Leo, Bootes, Scorpius,
-    Cygnus, Lyra, and Aquila. The x-axis shows Right Ascension labeled in hours (0h-22h)
-    with the axis title "Right Ascension (degrees)". The y-axis shows Declination
-    from -30 to 60 degrees. Approximately 150 faint gray background stars are scattered
-    across the field. The title reads "star-chart-constellation · lets-plot · pyplots.ai"
-    in bold light blue-gray text.'
+  - Several constellation labels overlap with stars or lines (Bootes, Scorpius, Gemini)
+  - Manual magnitude legend placed inside the data area causes visual clutter in the
+    lower-right
+  - Constellation label font size (12) is slightly small relative to the canvas size
+  - Flat Cartesian projection rather than a more natural sky projection
+  image_description: 'The plot displays a star chart on a dark navy (#0a0e1a) background
+    mimicking the night sky. Stars are rendered as circles with sizes proportional
+    to brightness (inverted magnitude) — the brightest star Sirius appears as the
+    largest pale-yellow dot near Canis Major. 13 constellations are plotted with stick-figure
+    lines in semi-transparent blue connecting named stars: Orion, Ursa Major, Cassiopeia,
+    Leo, Cygnus, Scorpius, Gemini, Lyra, Aquila, Canis Major, Taurus, Bootes, and
+    Perseus. Constellation names are labeled in italic light-blue text. The x-axis
+    shows Right Ascension (0h–22h), the y-axis shows Declination (-30° to 60°). A
+    subtle blue coordinate grid overlays the chart. ~150 gray background stars are
+    scattered across the field. A custom magnitude legend in the lower-right shows
+    circle sizes for mag 0 through mag 5. The title reads "star-chart-constellation
+    · lets-plot · pyplots.ai" in bold light text.'
   criteria_checklist:
     visual_quality:
-      score: 23
+      score: 25
       max: 30
       items:
       - id: VQ-01
@@ -47,39 +47,42 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title=24, axis_title=20, axis_text=16 explicitly set. Constellation
-          labels at size=11 slightly small.
+        comment: All font sizes explicitly set. Constellation label size=12 slightly
+          small but readable.
       - id: VQ-02
         name: No Overlap
         score: 4
         max: 6
         passed: false
-        comment: Constellation labels overlap with star points and lines at centroid
-          positions.
+        comment: Bootes, Scorpius, Gemini labels overlap with stars/lines. Magnitude
+          legend encroaches on data area.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Good size variation. Background stars appropriately subdued.
+        comment: Good magnitude-to-size mapping. Background stars could be slightly
+          more visible.
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Luminance-based color scheme is universally accessible on dark background.
+        comment: Dark background with white/yellow stars and blue accents. Excellent
+          contrast.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good canvas utilization. Coordinate grid almost invisible.
+        comment: Good canvas utilization. Magnitude legend overlaps data region.
       - id: VQ-06
         name: Axis Labels & Title
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: Axis title says degrees but ticks show hours. Contradictory units.
+        passed: true
+        comment: Right Ascension (hours) and Declination (degrees) — descriptive with
+          units.
     design_excellence:
       score: 14
       max: 20
@@ -89,51 +92,52 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Strong thematic design with dark sky background and warm star colors
-          by magnitude.
+        comment: Strong design with dark sky background, custom star color palette,
+          blue constellation accents.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Panel grid removed, custom coordinate grid, dark background, refined
-          axis styling.
+        comment: Custom subtle grid, dark theme, intentional color palette. Some label
+          overlap reduces polish.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Magnitude-to-size mapping creates natural hierarchy. Constellation
-          patterns guide the viewer.
+        comment: Magnitude-size mapping creates visual hierarchy. Constellation lines
+          guide the viewer.
     spec_compliance:
-      score: 13
+      score: 14
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Correct scatter-based star chart with constellation network lines.
+        comment: Star chart with constellation lines correct. Flat projection instead
+          of stereographic.
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: All major features present. No stereographic projection (flat Cartesian
-          used).
+        comment: 'All required features present: magnitude mapping, constellation
+          lines/labels, dark background, coordinate grid.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: RA and Dec correctly mapped. RA converted from hours to degrees internally.
+        comment: RA on x-axis, Dec on y-axis, correctly mapped.
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Title format correct. No magnitude legend/size key.
+        comment: Title format correct. Custom magnitude legend present.
     data_quality:
       score: 14
       max: 15
@@ -143,20 +147,20 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: 13 constellations, 60+ named stars, 150 background stars. Good variety.
+        comment: 13 constellations, ~60 named stars, 150 background stars. Good variety
+          of shapes.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real star names with approximate real coordinates and magnitudes.
+        comment: Real star names with accurate approximate RA/Dec and magnitudes.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Magnitudes -1.46 to 5.0, RA 0-24h, Dec -45 to +70. Astronomically
-          accurate.
+        comment: RA 0-24h, Dec -45 to +70, magnitudes -1.46 to 5.0 — all realistic.
     code_quality:
       score: 10
       max: 10
@@ -166,33 +170,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean linear flow with no functions or classes.
+        comment: 'Linear flow: imports, data, edges, grid, plot, save.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set before background star generation.
+        comment: np.random.seed(42) set for background stars.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy, pandas, and lets_plot imported.
+        comment: numpy, pandas, lets_plot — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-organized data structures and clean edge-building logic.
+        comment: Clean, appropriate complexity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png with scale=3 and plot.html. Current API.
+        comment: Saves as plot.png with ggsave(scale=3).
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -200,23 +204,25 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Good ggplot grammar: layered geoms, scale_identity, theme customization,
-          ggsize.'
+        comment: Good ggplot2-style layered grammar with identity scales and comprehensive
+          theming.
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Standard ggplot approach replicable in plotnine. No lets-plot-specific
-          interactive features.
+        passed: true
+        comment: Uses layer_tooltips() for interactive hover and HTML export — distinctive
+          lets-plot features.
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
   - annotations
-  - manual-ticks
+  - hover-tooltips
   - html-export
+  - manual-ticks
+  - custom-legend
   patterns:
   - data-generation
   - iteration-over-groups
@@ -225,4 +231,3 @@ impl_tags:
   styling:
   - dark-theme
   - alpha-blending
-  - grid-styling
