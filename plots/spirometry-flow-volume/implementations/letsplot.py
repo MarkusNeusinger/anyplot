@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 spirometry-flow-volume: Spirometry Flow-Volume Loop
 Library: letsplot 4.9.0 | Python 3.14.3
 Quality: 88/100 | Created: 2026-03-18
@@ -131,54 +131,54 @@ plot = (
     + geom_ribbon(aes(x="volume", ymin="ymin", ymax="ymax"), data=df_ribbon_predicted, fill="#D4D4D4", alpha=0.3)
     # Filled measured loop area
     + geom_ribbon(aes(x="volume", ymin="ymin", ymax="ymax"), data=df_ribbon_measured, fill="#306998", alpha=0.15)
-    # Predicted loop lines (dashed)
+    # Predicted loop lines (dashed) - use color aes for natural legend
     + geom_line(
-        aes(x="volume", y="flow"),
+        aes(x="volume", y="flow", color="curve"),
         data=df_predicted[df_predicted["curve"] == "Predicted Normal"].iloc[:n_pred_exp],
-        color="#9CA3AF",
         size=1.2,
         linetype="dashed",
+        show_legend=True,
     )
     + geom_line(
-        aes(x="volume", y="flow"),
+        aes(x="volume", y="flow", color="curve"),
         data=df_predicted[df_predicted["curve"] == "Predicted Normal"].iloc[n_pred_exp:],
-        color="#9CA3AF",
         size=1.2,
         linetype="dashed",
+        show_legend=False,
     )
-    # Measured loop lines with tooltips
+    # Measured loop lines with tooltips - use color aes for natural legend
     + geom_line(
-        aes(x="volume", y="flow"),
+        aes(x="volume", y="flow", color="curve"),
         data=df_measured_exp_tt,
-        color="#306998",
         size=2.0,
+        show_legend=True,
         tooltips=layer_tooltips().title("Expiratory Limb").line("Volume|@vol_label").line("Flow|@flow_label"),
     )
     + geom_line(
-        aes(x="volume", y="flow"),
+        aes(x="volume", y="flow", color="curve"),
         data=df_measured_insp_tt,
-        color="#306998",
         size=2.0,
+        show_legend=False,
         tooltips=layer_tooltips().title("Inspiratory Limb").line("Volume|@vol_label").line("Flow|@flow_label"),
     )
-    # FEV1 marker on curve
-    + geom_point(aes(x="volume", y="flow"), data=df_fev1, color="#059669", size=7, shape=18)
+    # FEV1 marker on curve (purple - colorblind-safe)
+    + geom_point(aes(x="volume", y="flow"), data=df_fev1, color="#7C3AED", size=7, shape=18)
     + geom_label(
         aes(x="volume", y="flow", label="label"),
         data=pd.DataFrame(
             {"volume": [fev1 + 0.15], "flow": [fev1_flow + 0.6], "label": [f"FEV\u2081 at {fev1:.1f} L"]}
         ),
         size=11,
-        color="#059669",
-        fill="#F0FDF4",
+        color="#7C3AED",
+        fill="#F5F3FF",
         label_padding=0.3,
         hjust=0,
     )
-    # PEF marker
+    # PEF marker (amber - colorblind-safe)
     + geom_point(
         aes(x="volume", y="flow"),
         data=df_pef,
-        color="#dc2626",
+        color="#D97706",
         size=8,
         shape=16,
         tooltips=layer_tooltips()
@@ -190,8 +190,8 @@ plot = (
         aes(x="volume", y="flow", label="label"),
         data=pd.DataFrame({"volume": [pef_volume + 0.2], "flow": [pef + 0.5], "label": [f"PEF: {pef} L/s"]}),
         size=12,
-        color="#dc2626",
-        fill="#FEF2F2",
+        color="#D97706",
+        fill="#FFFBEB",
         label_padding=0.3,
         hjust=0,
     )
@@ -207,20 +207,14 @@ plot = (
     )
     # Zero flow reference line
     + geom_hline(yintercept=0, color="#6B7280", size=0.6, linetype="solid")
-    # Manual legend via invisible points mapped to color aesthetic
-    + geom_point(
-        aes(x="volume", y="flow", color="curve"),
-        data=pd.DataFrame({"volume": [0.0, 0.0], "flow": [-999, -999], "curve": ["Measured", "Predicted Normal"]}),
-        size=0,
-    )
     + scale_color_manual(values={"Measured": "#306998", "Predicted Normal": "#9CA3AF"}, name="")
     + guides(color=guide_legend(override_aes={"size": 5}))
     # Labels and sizing
     + labs(x="Volume (L)", y="Flow (L/s)", title="spirometry-flow-volume \u00b7 letsplot \u00b7 pyplots.ai")
     + ggsize(1600, 900)
-    + coord_cartesian(ylim=[-8, 12])
+    + coord_cartesian(ylim=[-8, 11])
     + scale_x_continuous(expand=[0.02, 0])
-    + scale_y_continuous(breaks=list(range(-8, 13, 2)))
+    + scale_y_continuous(breaks=list(range(-8, 12, 2)))
     + theme(
         plot_title=element_text(size=24, face="bold", color="#1F2937"),
         axis_title=element_text(size=20, color="#374151"),
