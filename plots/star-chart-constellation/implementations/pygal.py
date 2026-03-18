@@ -1,11 +1,11 @@
-""" pyplots.ai
+"""pyplots.ai
 star-chart-constellation: Star Chart with Constellations
 Library: pygal 3.1.0 | Python 3.14.3
 Quality: 82/100 | Created: 2026-03-18
 """
 
 import math
-import re
+import xml.etree.ElementTree as ET
 
 import cairosvg
 import numpy as np
@@ -78,11 +78,26 @@ constellations = {
     "Canis Minor": [("Procyon", 7.66, 5.22, 0.34), ("Gomeisa", 7.45, 8.29, 2.89)],
 }
 
+# Manual label offsets (RA_offset, Dec_offset) to avoid overlapping stars
+label_offsets = {
+    "Orion": (0.6, 5.0),
+    "Canis Major": (0.7, 3.5),
+    "Canis Minor": (0.5, 3.0),
+    "Gemini": (0.0, 4.0),
+    "Taurus": (-0.5, 4.0),
+    "Leo": (0.0, -5.0),
+    "Ursa Major": (0.0, -4.0),
+    "Auriga": (0.0, 4.0),
+}
+
 # Compute constellation centroids for labeling
 centroids = {}
 for cname, star_list in constellations.items():
     unique = {(ra, dec) for _, ra, dec, _ in star_list}
-    centroids[cname] = (sum(ra for ra, _ in unique) / len(unique), sum(dec for _, dec in unique) / len(unique))
+    ra_c = sum(ra for ra, _ in unique) / len(unique)
+    dec_c = sum(dec for _, dec in unique) / len(unique)
+    dr, dd = label_offsets.get(cname, (0, 3))
+    centroids[cname] = (ra_c + dr, dec_c + dd)
 
 # Collect unique constellation stars for scatter plot
 seen_stars = set()
@@ -94,11 +109,11 @@ for cname, star_list in constellations.items():
             seen_stars.add(key)
             all_stars.append((name, ra, dec, mag, cname))
 
-# Background field stars
+# Background field stars (mag 3.5-5.0 per spec threshold)
 n_bg = 100
 bg_ra = np.random.uniform(3.0, 14.5, n_bg)
 bg_dec = np.random.uniform(-35, 68, n_bg)
-bg_mag = np.random.uniform(3.5, 5.5, n_bg)
+bg_mag = np.random.uniform(3.5, 5.0, n_bg)
 for i in range(n_bg):
     all_stars.append((f"HD {10000 + i}", bg_ra[i], bg_dec[i], bg_mag[i], None))
 
@@ -107,7 +122,7 @@ tiers = [
     ("\u2605 Mag < 1 (brightest)", lambda m: m < 1.0, 32),
     ("\u2605 Mag 1\u20132", lambda m: 1.0 <= m < 2.0, 22),
     ("\u2605 Mag 2\u20133", lambda m: 2.0 <= m < 3.0, 14),
-    ("\u2605 Mag 3\u20135.5 (faintest)", lambda m: m >= 3.0, 6),
+    ("\u2605 Mag 3\u20135 (faintest)", lambda m: m >= 3.0, 6),
 ]
 
 tier_data = {t[0]: [] for t in tiers}
@@ -135,9 +150,9 @@ for ra_h in np.linspace(3.0, 14.5, 50):
     dec_ecl = obliquity * math.sin(ecl_lon_rad)
     ecliptic_points.append({"value": (ra_h, dec_ecl), "label": f"Ecliptic ({ra_h:.1f}h, {dec_ecl:.1f}\u00b0)"})
 
-# Style — dark night sky with very subtle grid and distinct tier colors
+# Style — dark night sky with subtle grid and brighter constellation lines
 n_series_const = len(constellations)
-line_color = "#1e3a6a"
+line_color = "#3366aa"
 ecliptic_color = "#cc6633"
 custom_style = Style(
     background="#04041a",
@@ -146,7 +161,7 @@ custom_style = Style(
     foreground_strong="#aabbdd",
     foreground_subtle="#0c1228",
     colors=((line_color,) * n_series_const + (ecliptic_color,) + ("#ffffff", "#ffd700", "#6eb5ff", "#556677")),
-    opacity=0.80,
+    opacity=0.85,
     opacity_hover=1.0,
     title_font_size=34,
     label_font_size=20,
@@ -159,7 +174,7 @@ custom_style = Style(
     major_label_font_family="Trebuchet MS, Helvetica, sans-serif",
     legend_font_family="Trebuchet MS, Helvetica, sans-serif",
     value_font_family="Trebuchet MS, Helvetica, sans-serif",
-    stroke_width=1.5,
+    stroke_width=2.0,
 )
 
 # Chart configuration
@@ -202,47 +217,45 @@ chart.add("Ecliptic", ecliptic_points, dots_size=0)
 for tname, _, size in tiers:
     chart.add(tname, tier_data[tname], dots_size=size, stroke=False)
 
-# Render SVG and add constellation name labels via SVG post-processing
+# Render SVG and add constellation name labels via XML post-processing
 svg_bytes = chart.render()
-svg_str = svg_bytes.decode("utf-8")
+tree = ET.fromstring(svg_bytes)
+ns = {"svg": "http://www.w3.org/2000/svg"}
 
-# Extract all circles with their radius to find brightest stars (r=32)
-circle_pattern = re.compile(r'<circle[^>]*cx="([\d.]+)"[^>]*cy="([\d.]+)"[^>]*r="32"')
-bright_circles = [(float(m[0]), float(m[1])) for m in circle_pattern.findall(svg_str)]
-
-# Bright stars in data order (order they appear in all_stars)
+# Find two reference circles (brightest stars, r=32) to build coordinate mapping
 bright_stars_data = [(ra, dec) for _, ra, dec, mag, _ in all_stars if mag < 1.0]
+circles = tree.findall(".//svg:circle", ns)
+ref_circles = [(float(c.get("cx")), float(c.get("cy"))) for c in circles if c.get("r") == "32"]
 
-# Match data points to SVG circles: pygal renders dots in the order they appear in the series
-# The brightest tier series is added after constellation lines and ecliptic
-# Its dots appear in data order, so bright_circles[i] corresponds to bright_stars_data[i]
-if len(bright_circles) >= 2 and len(bright_stars_data) >= 2:
-    # Use first two bright stars as reference points for coordinate mapping
+if len(ref_circles) >= 2 and len(bright_stars_data) >= 2:
     ra1, dec1 = bright_stars_data[0]
     ra2, dec2 = bright_stars_data[1]
-    sx1, sy1 = bright_circles[0]
-    sx2, sy2 = bright_circles[1]
+    sx1, sy1 = ref_circles[0]
+    sx2, sy2 = ref_circles[1]
     # Linear mapping: svg_x = a * ra + b, svg_y = c * dec + d
     a = (sx1 - sx2) / (ra1 - ra2)
     b = sx1 - a * ra1
     c = (sy1 - sy2) / (dec1 - dec2)
     d = sy1 - c * dec1
 
-    # Inject constellation name labels as SVG text elements
-    label_elements = []
+    # Insert constellation name labels as SVG text elements
+    label_group = ET.SubElement(tree, "g")
+    label_group.set("class", "constellation-labels")
     for cname, (cx, cy) in centroids.items():
         svg_x = a * cx + b
-        svg_y = c * (cy + 4) + d  # offset above centroid
-        label_elements.append(
-            f'<text x="{svg_x:.1f}" y="{svg_y:.1f}" '
-            f'font-family="Trebuchet MS, Helvetica, sans-serif" '
-            f'font-size="22" fill="#99aacc" fill-opacity="0.9" '
-            f'text-anchor="middle" font-style="italic">{cname}</text>'
-        )
+        svg_y = c * cy + d
+        text_el = ET.SubElement(label_group, "text")
+        text_el.set("x", f"{svg_x:.1f}")
+        text_el.set("y", f"{svg_y:.1f}")
+        text_el.set("font-family", "Trebuchet MS, Helvetica, sans-serif")
+        text_el.set("font-size", "24")
+        text_el.set("fill", "#99aacc")
+        text_el.set("fill-opacity", "0.9")
+        text_el.set("text-anchor", "middle")
+        text_el.set("font-style", "italic")
+        text_el.text = cname
 
-    # Insert labels before the closing </svg> tag
-    label_group = '<g class="constellation-labels">' + "".join(label_elements) + "</g>"
-    svg_str = svg_str.replace("</svg>", label_group + "</svg>")
+svg_str = ET.tostring(tree, encoding="unicode")
 
 # Save HTML (SVG) version
 with open("plot.html", "w") as f:
