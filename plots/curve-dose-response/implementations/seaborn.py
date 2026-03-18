@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 curve-dose-response: Pharmacological Dose-Response Curve
 Library: seaborn 0.13.2 | Python 3.14.3
 Quality: 87/100 | Created: 2026-03-18
@@ -11,7 +11,6 @@ import seaborn as sns
 from matplotlib.lines import Line2D
 from matplotlib.patches import Patch
 from scipy.optimize import curve_fit
-from scipy.stats import t as t_dist
 
 
 # Data
@@ -38,19 +37,18 @@ sem_b = np.random.uniform(2, 5, len(concentrations))
 response_a = response_a_true + np.random.normal(0, 2, len(concentrations))
 response_b = response_b_true + np.random.normal(0, 2, len(concentrations))
 
-# Build DataFrames for seaborn
-records = []
-for i in range(len(concentrations)):
-    records.append(
-        {"concentration": concentrations[i], "response": response_a[i], "sem": sem_a[i], "compound": "Imatinib"}
-    )
-    records.append(
-        {"concentration": concentrations[i], "response": response_b[i], "sem": sem_b[i], "compound": "Erlotinib"}
-    )
-df = pd.DataFrame(records)
+# Build DataFrame using vectorized concat
+df = pd.concat(
+    [
+        pd.DataFrame({"concentration": concentrations, "response": response_a, "sem": sem_a, "compound": "Imatinib"}),
+        pd.DataFrame({"concentration": concentrations, "response": response_b, "sem": sem_b, "compound": "Erlotinib"}),
+    ],
+    ignore_index=True,
+)
 
 # Fit 4PL models
-palette = {"Imatinib": "#306998", "Erlotinib": "#D4763A"}
+palette = sns.color_palette(["#306998", "#D4763A"])
+palette_dict = {"Imatinib": "#306998", "Erlotinib": "#D4763A"}
 fit_params = {}
 fit_cov = {}
 
@@ -58,48 +56,67 @@ for compound in ["Imatinib", "Erlotinib"]:
     mask = df["compound"] == compound
     x_data = df.loc[mask, "concentration"].values
     y_data = df.loc[mask, "response"].values
-    p0 = [5, 90, 1e-6, 1.0]
-    popt, pcov = curve_fit(logistic4pl, x_data, y_data, p0=p0, maxfev=10000)
+    popt, pcov = curve_fit(logistic4pl, x_data, y_data, p0=[5, 90, 1e-6, 1.0], maxfev=10000)
     fit_params[compound] = popt
     fit_cov[compound] = pcov
 
-x_fit = np.logspace(-9.5, -3.5, 300)
+x_fit = np.logspace(-9.5, -3.5, 200)
 
-# Build fitted curve DataFrame for seaborn lineplot
-fit_records = []
+# Generate bootstrap samples for seaborn's native CI band
+n_boot = 100
+boot_frames = []
 for compound in ["Imatinib", "Erlotinib"]:
     popt = fit_params[compound]
-    y_fit = logistic4pl(x_fit, *popt)
-    for xi, yi in zip(x_fit, y_fit, strict=False):
-        fit_records.append({"concentration": xi, "response": yi, "compound": compound})
-df_fit = pd.DataFrame(fit_records)
+    pcov = fit_cov[compound]
+    param_samples = np.random.multivariate_normal(popt, pcov, size=n_boot)
+    for k in range(n_boot):
+        y_boot = logistic4pl(x_fit, *param_samples[k])
+        boot_frames.append(
+            pd.DataFrame({"concentration": x_fit, "response": y_boot, "compound": compound, "boot_id": k})
+        )
+df_boot = pd.concat(boot_frames, ignore_index=True)
 
 # Plot
-sns.set_style("ticks")
-sns.set_context("talk", font_scale=1.1)
+sns.set_theme(style="ticks", context="talk", font_scale=1.1, palette=palette)
 fig, ax = plt.subplots(figsize=(16, 9))
 
-# Fitted curves via seaborn lineplot
+# Fitted curves with native seaborn CI bands via bootstrap samples
 sns.lineplot(
-    data=df_fit,
+    data=df_boot[df_boot["compound"] == "Imatinib"],
     x="concentration",
     y="response",
-    hue="compound",
-    palette=palette,
+    color=palette_dict["Imatinib"],
     linewidth=3,
-    legend=False,
+    errorbar=("pi", 95),
+    n_boot=0,
+    estimator="mean",
     ax=ax,
     zorder=4,
+    label="_nolegend_",
+)
+sns.lineplot(
+    data=df_boot[df_boot["compound"] == "Erlotinib"],
+    x="concentration",
+    y="response",
+    color=palette_dict["Erlotinib"],
+    linewidth=3,
+    errorbar=None,
+    estimator="mean",
+    ax=ax,
+    zorder=4,
+    label="_nolegend_",
 )
 
-# Data points via seaborn scatterplot
+# Data points via seaborn scatterplot with style mapping
 sns.scatterplot(
     data=df,
     x="concentration",
     y="response",
     hue="compound",
-    palette=palette,
-    s=120,
+    style="compound",
+    markers={"Imatinib": "o", "Erlotinib": "s"},
+    palette=palette_dict,
+    s=180,
     edgecolor="white",
     linewidth=1.5,
     zorder=5,
@@ -107,7 +124,7 @@ sns.scatterplot(
     legend=True,
 )
 
-# Error bars (matplotlib needed for yerr support)
+# Error bars (seaborn scatterplot doesn't support yerr natively)
 for compound in ["Imatinib", "Erlotinib"]:
     sub = df[df["compound"] == compound]
     ax.errorbar(
@@ -115,7 +132,7 @@ for compound in ["Imatinib", "Erlotinib"]:
         sub["response"],
         yerr=sub["sem"],
         fmt="none",
-        ecolor=palette[compound],
+        ecolor=palette_dict[compound],
         capsize=5,
         capthick=2,
         elinewidth=2,
@@ -126,58 +143,26 @@ for compound in ["Imatinib", "Erlotinib"]:
 # EC50 reference lines
 for compound in ["Imatinib", "Erlotinib"]:
     popt = fit_params[compound]
-    ec50_val = popt[2]
-    half_response = popt[0] + (popt[1] - popt[0]) / 2
+    ec50_val, half_resp = popt[2], popt[0] + (popt[1] - popt[0]) / 2
     ax.hlines(
-        half_response,
+        half_resp,
         x_fit[0],
         ec50_val,
-        colors=palette[compound],
+        colors=palette_dict[compound],
         linestyles="dashed",
         linewidth=1.5,
         alpha=0.6,
         zorder=3,
     )
     ax.vlines(
-        ec50_val, -5, half_response, colors=palette[compound], linestyles="dashed", linewidth=1.5, alpha=0.6, zorder=3
+        ec50_val, -5, half_resp, colors=palette_dict[compound], linestyles="dashed", linewidth=1.5, alpha=0.6, zorder=3
     )
-
-# 95% Confidence band for Imatinib
-popt_a = fit_params["Imatinib"]
-pcov_a = fit_cov["Imatinib"]
-n_data = len(concentrations)
-n_params = len(popt_a)
-dof = max(n_data - n_params, 1)
-t_val = t_dist.ppf(0.975, dof)
-
-jacobian = np.zeros((len(x_fit), n_params))
-delta = 1e-8
-for j in range(n_params):
-    params_up = popt_a.copy()
-    params_up[j] += delta
-    params_down = popt_a.copy()
-    params_down[j] -= delta
-    jacobian[:, j] = (logistic4pl(x_fit, *params_up) - logistic4pl(x_fit, *params_down)) / (2 * delta)
-
-pred_var = np.array([jacobian[i] @ pcov_a @ jacobian[i] for i in range(len(x_fit))])
-pred_se = np.sqrt(np.maximum(pred_var, 0))
-y_fit_a = logistic4pl(x_fit, *popt_a)
-
-ax.fill_between(
-    x_fit,
-    y_fit_a - t_val * pred_se,
-    y_fit_a + t_val * pred_se,
-    color=palette["Imatinib"],
-    alpha=0.15,
-    zorder=2,
-    label="95% CI (Imatinib)",
-)
 
 # Asymptote lines
 for compound, style in [("Imatinib", (5, 5)), ("Erlotinib", (2, 4))]:
     popt = fit_params[compound]
-    ax.axhline(popt[0], color=palette[compound], linestyle=(0, style), linewidth=1, alpha=0.35, zorder=1)
-    ax.axhline(popt[1], color=palette[compound], linestyle=(0, style), linewidth=1, alpha=0.35, zorder=1)
+    ax.axhline(popt[0], color=palette_dict[compound], linestyle=(0, style), linewidth=1, alpha=0.35, zorder=1)
+    ax.axhline(popt[1], color=palette_dict[compound], linestyle=(0, style), linewidth=1, alpha=0.35, zorder=1)
 
 # Style
 ax.set_xscale("log")
@@ -189,32 +174,31 @@ sns.despine(ax=ax)
 ax.yaxis.grid(True, alpha=0.2, linewidth=0.8)
 ax.set_ylim(-5, 110)
 
-# Update legend with fit lines and CI
-handles, labels = ax.get_legend_handles_labels()
+# Custom legend
 custom_handles = [
-    Line2D([0], [0], color=palette["Imatinib"], linewidth=3, label="Imatinib (fit)"),
-    Line2D([0], [0], color=palette["Erlotinib"], linewidth=3, label="Erlotinib (fit)"),
+    Line2D([0], [0], color=palette_dict["Imatinib"], linewidth=3, label="Imatinib (fit)"),
+    Line2D([0], [0], color=palette_dict["Erlotinib"], linewidth=3, label="Erlotinib (fit)"),
     Line2D(
         [0],
         [0],
         marker="o",
         color="w",
-        markerfacecolor=palette["Imatinib"],
-        markersize=10,
+        markerfacecolor=palette_dict["Imatinib"],
+        markersize=12,
         markeredgecolor="white",
         label="Imatinib (data)",
     ),
     Line2D(
         [0],
         [0],
-        marker="o",
+        marker="s",
         color="w",
-        markerfacecolor=palette["Erlotinib"],
-        markersize=10,
+        markerfacecolor=palette_dict["Erlotinib"],
+        markersize=12,
         markeredgecolor="white",
         label="Erlotinib (data)",
     ),
-    Patch(facecolor=palette["Imatinib"], alpha=0.15, label="95% CI (Imatinib)"),
+    Patch(facecolor=palette_dict["Imatinib"], alpha=0.3, label="95% CI (Imatinib)"),
 ]
 ax.legend(handles=custom_handles, fontsize=14, frameon=False, loc="upper left")
 
