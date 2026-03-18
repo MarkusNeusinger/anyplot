@@ -1,0 +1,235 @@
+library: highcharts
+specification_id: lightcurve-transit
+created: '2026-03-18T21:20:11Z'
+updated: '2026-03-18T22:01:05Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23267445561
+issue: 4559
+python_version: 3.14.3
+library_version: unknown
+preview_url: https://storage.googleapis.com/pyplots-images/plots/lightcurve-transit/highcharts/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/lightcurve-transit/highcharts/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/lightcurve-transit/highcharts/plot.html
+quality_score: 90
+review:
+  strengths:
+  - Excellent data storytelling with transit window highlight, baseline reference,
+    and depth annotation creating clear visual narrative
+  - Professional scientific aesthetic with cohesive blue/red palette and refined grid/spine
+    treatment
+  - Strong use of distinctive Highcharts features (AreaRange, plotBands, plotLines,
+    Annotations, tooltips)
+  - Perfect spec compliance with all required features present
+  - Realistic domain-appropriate simulated data
+  weaknesses:
+  - 'Minor: red model line color could be swapped for a more universally colorblind-safe
+    alternative'
+  - 'Minor: some scatter point density in transit region creates slight visual crowding'
+  image_description: 'The plot displays a phase-folded exoplanet transit light curve
+    on a light gray (#fafbfc) background. The title "lightcurve-transit · highcharts
+    · pyplots.ai" is prominently displayed at top with a subtitle "Phase-folded exoplanet
+    transit with quadratic limb darkening model." The x-axis shows "Orbital Phase"
+    from 0 to 1, and the y-axis shows "Relative Flux" ranging from ~0.983 to ~1.012.
+    Blue semi-transparent scatter points (400 data points) represent observed flux
+    measurements, scattered around a baseline of 1.0 with noise. A red model curve
+    shows the transit shape — flat near 1.0 outside the transit, with a sharp symmetric
+    dip centered at phase 0.5 reaching down to ~0.990. A light blue/gray area-range
+    band surrounds the scatter data showing measurement error. A faint pink/red vertical
+    band marks the "Transit Window" region around the transit center. An annotation
+    box with red border reads "Transit depth: 9984 ppm" positioned at the bottom of
+    the dip. A dashed horizontal line marks "Baseline flux = 1.0" at the right edge.
+    The legend in the top-right corner lists Measurement Error, Observed Flux, and
+    Transit Model. The y-axis has subtle dotted gridlines.'
+  criteria_checklist:
+    visual_quality:
+      score: 26
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (64px title, 44px axis titles, 34px
+          ticks). Secondary labels deliberately faint but readable.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or data elements. Legend floats cleanly in top-right.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: 400 points at radius 8 with alpha 0.55 appropriate for density. Slight
+          crowding in transit region.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 3
+        max: 4
+        passed: true
+        comment: Blue/red distinguishable. Red could be problematic for protanopia
+          but shape difference aids discrimination.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Explicit margins create good proportions. Chart fills most of the
+          4800x2700 canvas.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Orbital Phase and Relative Flux are standard astronomical terms with
+          implicit dimensionless units.
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom cohesive palette, intentional typography with letter-spacing,
+          professional scientific aesthetic above defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Dotted y-only grid at 6% opacity, clean spines, plotBands/plotLines,
+          generous whitespace. Highly polished.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear focal point via transit dip, transit window band, baseline
+          reference, and depth annotation.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Scatter + line overlay correct for astronomical light curve.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Error band, model curve, phase-folded data, clean minimal style all
+          present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=phase (0-1), Y=flux. Transit dip downward as specified.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format. Legend labels descriptive and match
+          data.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows transit dip, noise, error bands, model fit, in/out-of-transit
+          behavior.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Simulated exoplanet transit with ~1% depth, quadratic limb darkening.
+          Realistic for Kepler/TESS.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Flux 0.983-1.012, transit depth ~1%, errors 0.001-0.003. Physically
+          realistic.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports, data, chart config, series, export. No functions/classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set at top.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-structured. Appropriate complexity for the visualization.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot.png via container screenshot and plot.html. Current API.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Typed Python API with ScatterSeries, LineSeries, AreaRangeSeries,
+          Annotation.from_dict.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: AreaRangeSeries, plotBands, plotLines, Annotations, rich HTML tooltips,
+          crosshairs, HTML export.
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - annotations
+  - hover-tooltips
+  - html-export
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling
