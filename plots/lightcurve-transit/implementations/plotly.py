@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 lightcurve-transit: Astronomical Light Curve
 Library: plotly 6.6.0 | Python 3.14.3
-Created: 2026-03-18
+Quality: 92/100 | Created: 2026-03-18
 """
 
 import numpy as np
