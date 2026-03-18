@@ -1,7 +1,7 @@
 library: altair
 specification_id: lightcurve-transit
 created: '2026-03-18T21:20:36Z'
-updated: '2026-03-18T21:24:24Z'
+updated: '2026-03-18T21:33:03Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23267445114
 issue: 4559
@@ -10,36 +10,38 @@ library_version: 6.0.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/lightcurve-transit/altair/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/lightcurve-transit/altair/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/lightcurve-transit/altair/plot.html
-quality_score: 85
+quality_score: 88
 review:
   strengths:
-  - Excellent data quality with realistic exoplanet transit parameters and limb-darkened
-    model
-  - 'All spec features implemented: error bars, model overlay, phase-folded data,
-    clean style'
-  - Clean, well-structured code with proper reproducibility
-  - Effective use of Altair layer composition for combining error bars, points, and
-    model line
-  - Visual refinement with subtle dashed grid and removed view borders
+  - Excellent scientific data quality with realistic exoplanet transit parameters
+    and limb darkening model
+  - Strong use of Altair-specific interactivity (hover selection, transform_filter,
+    tooltips)
+  - Clean colorblind-safe teal/amber palette with good contrast between data and model
+  - Subtitle adds valuable scientific context to the visualization
+  - Error bars properly convey measurement uncertainty as required by spec
   weaknesses:
-  - No legend to distinguish observed data points from the model curve
-  - Color palette could be more sophisticated for higher aesthetic impact
-  - Point size slightly large for 500 data points, creating visual density in baseline
-    region
-  - Design could be elevated with more typographic refinement
+  - Title format has extra Exoplanet Transit prefix before spec-id — should be lightcurve-transit
+    · altair · pyplots.ai
+  - Error bars (500 individual rules) create visual noise that detracts from overall
+    cleanliness
+  - Design could be pushed further toward publication quality with more refined polish
   image_description: The plot displays a phase-folded exoplanet transit light curve
-    on a white background. Blue scatter points (#306998) with semi-transparent vertical
-    light-blue error bars span orbital phase 0.00-1.00 on the x-axis and relative
-    flux 0.986-1.006 on the y-axis. A red (#E8524A) model curve overlays the data,
-    showing a clear ~1% transit dip centered at phase 0.5, dropping to ~0.990 with
-    smooth ingress/egress. The title reads "Exoplanet Transit · lightcurve-transit
-    · altair · pyplots.ai" at the top. Axes are labeled "Orbital Phase" and "Relative
-    Flux" with tick values formatted to 3 decimal places on the y-axis. The grid is
-    subtle with dashed lines at low opacity. View borders (spines) are removed. Points
-    have white stroke edges. The transit feature is the clear focal point of the visualization.
+    on a clean white background. Teal/dark cyan (#2A6B7C) circular markers represent
+    500 observed data points scattered across orbital phase 0.0–1.0 on the x-axis,
+    with relative flux on the y-axis ranging from ~0.986 to ~1.005. Light teal vertical
+    error bar rules (opacity 0.2) extend from each point. An amber/orange (#D4820E)
+    smooth model curve overlays the data, showing a flat baseline at flux ~1.000 with
+    a sharp transit dip centered at phase 0.5, reaching down to ~0.990. The transit
+    shape shows clear ingress/egress with limb-darkening effects. A styled legend
+    in the top-right corner with a white semi-transparent background identifies "Observed
+    Data" (teal circle) and "Transit Model" (amber circle). The title reads "Exoplanet
+    Transit · lightcurve-transit · altair · pyplots.ai" in bold 28pt with a gray subtitle
+    "Phase-folded Kepler photometry with limb-darkened transit model". Grid lines
+    are subtle dashed lines at low opacity. View borders are removed.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -47,60 +49,65 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title 28, labels 22, ticks 18). All readable.
+        comment: All font sizes explicitly set (title 28, axes 22, ticks 18, legend
+          16). Subtitle at 18pt adequate but on smaller side.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data elements
+        comment: No overlapping text elements. Legend positioned cleanly in top-right.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Points visible but slightly large for 500 data points
+        comment: 500 points with size=30 and opacity=0.5 appropriate for density.
+          Error bars at opacity=0.2 create some visual clutter.
       - id: VQ-04
         name: Color Accessibility
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Blue vs red is distinguishable but not optimal for all color vision
-          deficiencies
+        comment: Teal and amber are colorblind-safe with strong luminance contrast.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good 16:9 proportions, plot fills canvas well
+        comment: 1600x900 at scale_factor=3 produces 4800x2700. Plot fills canvas
+          well.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels appropriate for dimensionless quantities
+        comment: Orbital Phase and Relative Flux are descriptive for dimensionless
+          quantities.
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Well-configured default, not publication-ready design
+        passed: true
+        comment: Custom teal/amber palette, styled legend with semi-transparent background.
+          Above defaults but not publication-level.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Subtle dashed grid, removed view borders, good whitespace
+        comment: View strokes removed, grid subtle. Error bars add visual noise.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Red model curve creates visual hierarchy highlighting transit dip
+        comment: Transit dip is clear focal point. Amber model curve draws eye to
+          transit event. Subtitle provides context.
     spec_compliance:
       score: 14
       max: 15
@@ -110,25 +117,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct scatter + error bars + model overlay
+        comment: Correct scatter with error bars plus smooth line overlay for phase-folded
+          light curve.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All spec features present
+        comment: Error bars, model curve, phase-folded, flux not magnitude, clean
+          minimal style all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=phase, Y=flux, correct mapping
+        comment: X = orbital phase (0-1), Y = relative flux. Correct mapping.
       - id: SC-04
         name: Title & Legend
         score: 2
         max: 3
-        passed: false
-        comment: Title format correct but no legend for observed data vs model
+        passed: true
+        comment: Title has extra Exoplanet Transit prefix before spec-id. Legend labels
+          correct.
     data_quality:
       score: 15
       max: 15
@@ -138,19 +148,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows transit dip, error bars, model fit, phase-folded scatter
+        comment: Shows transit dip, ingress/egress, limb darkening, baseline scatter,
+          uncertainties.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic exoplanet transit with limb darkening
+        comment: Realistic Kepler-like exoplanet transit. Science domain, neutral.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Flux ~1.0, depth ~0.01, errors ~0.001 - realistic for space photometry
+        comment: ~1% transit depth, realistic flux errors, proper phase range.
     code_quality:
       score: 10
       max: 10
@@ -160,33 +171,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean linear flow
+        comment: 'Flat structure: imports, data generation, chart layers, compose,
+          save.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: All three imports (altair, numpy, pandas) are used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean implementation with appropriate complexity
+        comment: Clean, appropriate complexity. Invisible-points legend is a known
+          Altair pattern.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png and plot.html, current API
+        comment: Saves as plot.png and plot.html. Current Altair API.
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -194,18 +207,21 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of alt.layer, declarative encoding, typed fields
+        comment: Good declarative grammar with layered composition, proper encoding
+          types, scale/axis config.
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Tooltips, HTML export, declarative layer composition
+        comment: Uses selection_point for hover, transform_filter, tooltips with formatting,
+          HTML export.
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
+  - custom-legend
   - hover-tooltips
   - html-export
   patterns:
