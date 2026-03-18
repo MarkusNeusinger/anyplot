@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 star-chart-constellation: Star Chart with Constellations
 Library: matplotlib 3.10.8 | Python 3.14.3
-Quality: 87/100 | Created: 2026-03-18
+Quality: 90/100 | Created: 2026-03-18
 """
 
 import matplotlib.patheffects as pe
