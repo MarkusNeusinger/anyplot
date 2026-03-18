@@ -1,7 +1,7 @@
 library: pygal
 specification_id: lightcurve-transit
 created: '2026-03-18T21:19:22Z'
-updated: '2026-03-18T21:32:25Z'
+updated: '2026-03-18T21:40:14Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23267445328
 issue: 4559
@@ -10,35 +10,37 @@ library_version: 3.1.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/lightcurve-transit/pygal/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/lightcurve-transit/pygal/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/lightcurve-transit/pygal/plot.html
-quality_score: 80
+quality_score: 83
 review:
   strengths:
-  - Excellent data storytelling with in-transit vs out-of-transit separation using
-    size and color differentiation
-  - Realistic astronomical data with appropriate scale and context for Kepler/TESS-like
-    photometry
-  - 'Good use of pygal-specific features: custom tooltips via dict format, HTML export,
-    legend_at_bottom_columns'
-  - Clean KISS code structure with proper random seed for reproducibility
-  - Custom Style with intentional color choices and explicit font sizing
+  - Effective data storytelling with in-transit/out-of-transit color and size differentiation
+    creating a clear focal point
+  - Realistic astronomical data with appropriate transit parameters and noise levels
+  - Clean, well-organized code with creative workaround for pygal lack of native error
+    bars
+  - Good use of pygal-specific tooltip customization with formatted labels
+  - Custom color palette with good colorblind accessibility
   weaknesses:
-  - Error bar rendering creates messy zigzag pattern instead of clean vertical bars
-    due to connected line segments
-  - Red in-transit dots and orange model line are somewhat similar in hue
-  - Some wasted vertical space in the layout above the data
-  image_description: 'The plot displays an XY scatter chart on a light gray (#FAFAFA)
-    background with the title "lightcurve-transit · pygal · pyplots.ai" at top. The
-    x-axis shows "Orbital Phase" (0.00–1.00) and the y-axis shows "Relative Flux"
-    (~0.984–1.012). Four series are shown: (1) gray "1σ Error Bars" rendered as connected
-    vertical line segments creating a zigzag pattern across the plot, (2) blue "Out-of-Transit"
-    scatter dots spread across all phases near flux ~1.0, (3) red "In-Transit" scatter
-    dots clustered around phase 0.4–0.6 showing a downward dip, and (4) an orange
-    "Transit Model" smooth curve with a Gaussian-like dip centered at phase 0.5 reaching
-    down to ~0.990. The legend is positioned at the bottom in a single row with 4
-    columns. The transit dip is clearly visible as the focal point of the visualization.'
+  - Error bars represented as tiny dots are nearly invisible and do not convey measurement
+    precision as the spec requires
+  - In-transit classification is too broad, causing baseline-flux points to appear
+    as in-transit
+  - Some wasted canvas space with generous margins
+  image_description: 'The plot displays a phase-folded exoplanet transit lightcurve
+    on a light gray (#FAFAFA) background. The title "lightcurve-transit · pygal ·
+    pyplots.ai" appears at the top. The X-axis is labeled "Orbital Phase" (0.00–1.00)
+    and the Y-axis "Relative Flux" (approximately 0.986–1.010). Four series are shown:
+    (1) tiny light gray dots representing ±1σ error bounds, barely visible in the
+    background; (2) blue dots for out-of-transit data points scattered around flux
+    ~1.0; (3) larger magenta/purple dots for in-transit data, concentrated around
+    phase 0.35–0.65; (4) an orange smooth curve showing the transit model with a clear
+    Gaussian-like dip centered at phase 0.5, reaching a minimum around 0.990. The
+    legend is displayed at the bottom in four columns. Subtle horizontal grid lines
+    are visible. The transit dip is the clear visual focal point, with the in-transit
+    points being larger and distinctly colored from the out-of-transit baseline scatter.'
   criteria_checklist:
     visual_quality:
-      score: 24
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -46,43 +48,42 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'Font sizes explicitly set (title=56, label=40, legend=34). All text
-          readable, minor: tick labels slightly small at rendered resolution.'
+        comment: Font sizes explicitly set (title=56, label=40, major_label=38, legend=34).
+          All text readable. Legend text slightly small.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text. Legend at bottom in 4 columns is clean.
+        comment: No overlapping text or data elements. Legend at bottom does not interfere.
       - id: VQ-03
         name: Element Visibility
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Error bars rendered as connected zigzag line pattern rather than
-          clean vertical bars. Creates significant visual clutter across the entire
-          plot.
+        passed: true
+        comment: Data points well-sized. Error cap dots (size=2) extremely subtle
+          and barely visible.
       - id: VQ-04
         name: Color Accessibility
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 'Blue/red/orange/gray palette generally distinguishable. Minor concern:
-          red in-transit dots and orange model line somewhat close in hue.'
+        comment: Blue, magenta, orange, gray palette is colorblind-safe with good
+          contrast.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good proportions, plot fills reasonable area. Some unused vertical
-          space above data.
+        comment: Plot fills most of canvas. Some wasted space at bottom with legend
+          and margins.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Orbital Phase and Relative Flux are descriptive and appropriate for
-          dimensionless scientific quantities.
+        comment: Orbital Phase and Relative Flux are descriptive. Dimensionless quantities
+          need no units.
     design_excellence:
       score: 12
       max: 20
@@ -92,26 +93,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom color palette with intentional series differentiation, light
-          gray background, custom font sizes. Above defaults but not publication-ready
-          due to error bar clutter.
+        comment: Custom color palette, custom background, intentional font hierarchy.
+          Above defaults but not publication-grade.
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: X-guides disabled, y-guides only, custom background, legend at bottom.
-          Some refinement visible beyond defaults.
+        comment: X-guides hidden, y-guides subtle, custom background. Some refinement
+          beyond defaults.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Strong visual hierarchy: in-transit points in red with larger dot
-          size (8 vs 5), model overlay in orange, out-of-transit in blue. Transit
-          dip is immediately visible as focal point.'
+        comment: Clear visual hierarchy with in-transit points larger and distinctly
+          colored. Transit dip is focal point.
     spec_compliance:
-      score: 14
+      score: 13
       max: 15
       items:
       - id: SC-01
@@ -119,29 +118,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: XY scatter with smooth model overlay — correct for lightcurve transit
-          plot.
+        comment: XY scatter with model line overlay — correct for lightcurve transit.
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 2
         max: 4
-        passed: true
-        comment: Error bars present but visually poor, model curve overlay, phase-folded
-          data, in-transit/out-of-transit distinction.
+        passed: false
+        comment: Error bars as tiny dots are nearly invisible and do not convey measurement
+          precision as spec requires.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=orbital phase (0-1), Y=relative flux. Correct mapping with transit
-          dip going downward.
+        comment: X=orbital phase, Y=relative flux. Axes display all data correctly.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows exact format. Legend labels are descriptive and match
-          data series.
+        comment: Title matches required format. Legend labels are descriptive and
+          accurate.
     data_quality:
       score: 14
       max: 15
@@ -151,24 +148,23 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Shows transit dip, out-of-transit baseline, measurement noise, error
-          bars, and model fit.
+        comment: Shows transit dip, baseline scatter, model fit, error indication.
+          In-transit classification overly broad.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Simulated exoplanet transit with ~1% depth. Realistic astronomical
-          context with proper phase-folding.
+        comment: Simulated exoplanet transit with realistic parameters and noise levels.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Normalized flux near 1.0, ~1% transit depth, realistic error bars
-          (0.0015-0.003). Appropriate for Kepler/TESS-like photometry.
+        comment: Flux ~1.0, transit depth ~0.01, noise ~0.002 — realistic for space-based
+          photometry.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -176,32 +172,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports-data-plot-save flow with no functions or classes.
+        comment: 'Flat structure: imports, data, plot, save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42) set at the top.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: numpy, pygal, Style.'
+        comment: numpy, pygal, Style — all used.
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Error bar construction loop is verbose and the connected line segment
-          approach doesn't produce clean visual results in pygal.
+        passed: true
+        comment: Clean code with creative error bar workaround for pygal limitations.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html correctly.
+        comment: Saves as plot.png and plot.html. Current API.
     library_mastery:
       score: 7
       max: 10
@@ -211,26 +206,25 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of pygal.XY with Style configuration, chart.add() with stroke/show_dots/dots_size
-          options.
+        comment: Good use of pygal.XY, Style class, chart.add() with stroke/dots params,
+          custom tooltips.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: 'Uses pygal-specific features: custom tooltip labels via dict format,
-          tooltip_border_radius, legend_at_bottom_columns, HTML export alongside PNG.'
+        comment: Custom tooltips with label dicts, HTML export alongside PNG, tooltip
+          styling.
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
   - hover-tooltips
   - html-export
-  - custom-legend
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep:
   - interpolation
   styling:
-  - grid-styling
+  - alpha-blending
