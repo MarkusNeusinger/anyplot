@@ -1,7 +1,7 @@
 library: plotly
 specification_id: spirometry-flow-volume
 created: '2026-03-18T22:17:07Z'
-updated: '2026-03-18T22:21:00Z'
+updated: '2026-03-18T22:29:50Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23269660786
 issue: 4557
@@ -10,33 +10,35 @@ library_version: 6.6.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/spirometry-flow-volume/plotly/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/spirometry-flow-volume/plotly/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/spirometry-flow-volume/plotly/plot.html
-quality_score: 89
+quality_score: 90
 review:
   strengths:
-  - Excellent spec compliance with all required features present and well-executed
-  - Realistic clinical data showing mild obstruction (FEV1/FVC 74%) with appropriate
-    predicted normal comparison
-  - Strong visual quality with all font sizes explicitly set, no overlap, and clean
-    layout
-  - Good data storytelling through measured vs predicted overlay and clinical annotation
-    box
+  - 'Excellent data storytelling: shaded Flow Deficit area immediately communicates
+    clinical insight of mild obstruction'
+  - Professional clinical annotation box with styled header and key spirometry values
+  - 'Strong visual hierarchy: thick dark measured curve vs thin dotted gray predicted
+    makes comparison effortless'
+  - Complete spec compliance with PEF marker, FEV1 reference line, and all clinical
+    values annotated
+  - Clean well-organized code with appropriate Plotly Graph Objects usage
   weaknesses:
-  - Design could be more polished — limited to plotly_white template defaults with
-    minimal additional refinement
-  - Grid styling could be more refined (e.g., y-axis only grid, or dotted style)
-  - No fill or shading between measured and predicted curves to emphasize the difference
-  image_description: 'The plot displays a spirometry flow-volume loop on a white background.
-    Two curves are shown: a solid dark blue (#306998) measured loop and a dashed gray
-    (#B0BEC5) predicted normal loop. The expiratory limb (upper portion) of the measured
-    curve rises sharply from the origin to approximately 8 L/s, then declines roughly
-    linearly to FVC at ~4.2 L. The inspiratory limb (lower portion) forms a symmetric
-    U-shape reaching about -5.5 L/s. The predicted normal loop is larger, with PEF
-    reaching ~10 L/s and FVC ~4.8 L. A red dot marks PEF at 8.5 L/s with a red text
-    label. A bordered annotation box in the upper right displays clinical values:
-    FEV1: 3.1 L, FVC: 4.2 L, FEV1/FVC: 74%, PEF: 8.5 L/s. The title reads "spirometry-flow-volume
-    · plotly · pyplots.ai". X-axis is "Volume (L)", Y-axis is "Flow (L/s)". Legend
-    in the bottom left shows "Predicted Normal" (dashed gray) and "Measured" (solid
-    blue). A subtle horizontal line marks zero flow.'
+  - PEF diamond marker sits slightly above actual curve peak due to mathematical model
+    not reaching exact PEF value
+  - Predicted loop uses dotted line instead of dashed as specified in spec
+  image_description: 'The plot displays a spirometry flow-volume loop on a clean white
+    background. A thick dark navy blue solid line shows the measured flow-volume loop
+    — the expiratory limb rises sharply toward PEF then declines roughly linearly,
+    while the inspiratory limb forms a symmetric U-shape reaching about -5.5 L/s.
+    A gray dotted line shows the predicted normal loop, which is larger in both volume
+    and flow. A light salmon/pink shaded area fills the gap between the predicted
+    and measured expiratory curves, labeled "Flow Deficit" in the legend. A red diamond
+    marker with white edge highlights the PEF point, connected by an arrow to an annotation
+    box reading "PEF = 8.5 L/s". A vertical dash-dot line at volume 3.1 L marks FEV1
+    with a label below. An annotation box in the upper right displays "Spirometry
+    Results" with FEV1: 3.1 L, FVC: 4.2 L, FEV1/FVC: 74%, PEF: 8.5 L/s. Legend in
+    the bottom-left shows Measured, Predicted Normal, and Flow Deficit. Title reads
+    "spirometry-flow-volume · plotly · pyplots.ai". Axes labeled "Volume (L)" and
+    "Flow (L/s)".'
   criteria_checklist:
     visual_quality:
       score: 30
@@ -48,65 +50,65 @@ review:
         max: 8
         passed: true
         comment: 'All font sizes explicitly set: title 28pt, axis labels 22pt, ticks
-          18pt, annotation 18pt, legend 18pt, PEF label 18pt'
+          18pt, annotations 15-17pt'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements. PEF label, clinical box, and legend well-positioned
+        comment: No overlapping elements anywhere
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 'Line widths well-adapted: measured 4px, predicted 3px. PEF marker
-          visible with white border'
+        comment: Measured line width 4, predicted 2.5, PEF diamond size 18 with white
+          edge. All clearly visible
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Blue vs gray vs red provides excellent contrast, colorblind-safe
+        comment: Navy vs gray vs red reinforced by line style differences. Colorblind-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills canvas well with balanced margins
+        comment: Good proportions, plot fills ~65% of canvas, balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Volume (L) and Flow (L/s) descriptive with units
+        comment: Volume (L) and Flow (L/s) - descriptive with units
     design_excellence:
-      score: 12
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Clean plotly_white with intentional colors and professional clinical
-          annotation box. Above defaults but not publication-level
+        comment: Custom palette, styled annotation box, shaded deficit area, diamond
+          marker. Above defaults with intentional hierarchy
       - id: DE-02
         name: Visual Refinement
-        score: 3
-        max: 6
-        passed: true
-        comment: plotly_white baseline, subtle grid, zero-flow reference line. Some
-          refinement but not extensively polished
-      - id: DE-03
-        name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Measured vs predicted overlay tells clinical story. PEF annotation
-          and clinical values box guide the viewer
+        comment: plotly_white template, x grid removed, y grid subtle dotted, outside
+          ticks, generous margins
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Shaded Flow Deficit area communicates clinical story. PEF highlighted.
+          FEV1 reference. Clinical summary box
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -114,29 +116,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct flow-volume loop with both limbs forming closed shape
+        comment: Correct flow-volume loop with expiratory and inspiratory limbs
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: 'All spec features present: PEF annotation, clinical values, predicted
-          overlay, closed loop, distinct styling'
+        comment: 'All key features present. Minor: dotted instead of dashed for predicted,
+          PEF marker slightly above curve'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=Volume, Y=Flow correctly mapped with appropriate axis ranges
+        comment: Volume on X, Flow on Y, correct mapping
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend labels Predicted Normal and Measured
-          are descriptive
+        comment: Title format correct. Legend labels clear and descriptive
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -144,20 +145,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows both limbs, measured vs predicted, PEF, clinical values, mild
-          obstruction pattern
+        comment: Both limbs, predicted vs measured, PEF, FEV1, FVC, FEV1/FVC ratio
+          showing mild obstruction
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real spirometry test with clinically realistic mild obstructive pattern
+        comment: Real spirometry scenario for patient with mild obstruction. Neutral
+          medical context
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: FVC 4.2L, PEF 8.5 L/s, FEV1 3.1L are clinically realistic values
+        comment: 'Clinically realistic values. Minor: mathematical model peak slightly
+          below stated PEF causing marker gap'
     code_quality:
       score: 10
       max: 10
@@ -167,7 +170,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear flow with no functions or classes
+        comment: 'Clean linear flow: imports, data, plot, save. No functions or classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -185,13 +188,13 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Clean mathematical modeling, no over-engineering
+        comment: Well-organized, elegant interpolation for shaded deficit area
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with correct dimensions plus HTML export
+        comment: Saves plot.png at 4800x2700. Current API
     library_mastery:
       score: 7
       max: 10
@@ -201,14 +204,14 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of go.Figure, go.Scatter, add_annotation, add_hline, hovertemplate
+        comment: Fluent GO usage with add_trace, add_annotation, add_shape, hovertemplate
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses hovertemplate, HTML export, paper-referenced annotations
-  verdict: REJECTED
+        comment: fill=toself, hovertemplate, hoverlabel, spline, legendrank, write_html
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -217,6 +220,8 @@ impl_tags:
   - html-export
   patterns:
   - data-generation
-  dataprep: []
+  dataprep:
+  - interpolation
   styling:
   - grid-styling
+  - alpha-blending
