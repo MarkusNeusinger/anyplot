@@ -1,7 +1,6 @@
-""" pyplots.ai
+"""pyplots.ai
 lightcurve-transit: Astronomical Light Curve
 Library: seaborn 0.13.2 | Python 3.14.3
-Quality: 89/100 | Created: 2026-03-18
 """
 
 import matplotlib.pyplot as plt
@@ -43,12 +42,15 @@ model_smooth = 1.0 - transit_depth * dip_model * limb_model
 df = pd.DataFrame({"phase": phase, "flux": flux, "flux_err": flux_err, "residuals": residuals})
 df_model = pd.DataFrame({"phase": phase_model, "flux": model_smooth})
 
+# Custom palette: Python Blue primary + complementary amber for model
+data_color = "#306998"
+model_color = "#C8702A"
+custom_palette = sns.color_palette([data_color, model_color])
+sns.set_palette(custom_palette)
+
 # Seaborn styling
 sns.set_style("ticks", {"axes.grid": False})
 sns.set_context("talk", font_scale=1.05)
-palette = sns.color_palette("deep")
-data_color = palette[0]
-model_color = palette[3]
 
 # Plot — two-panel layout: light curve + residuals
 fig, (ax_main, ax_resid) = plt.subplots(
@@ -62,8 +64,8 @@ ax_main.errorbar(
     yerr=df["flux_err"],
     fmt="none",
     ecolor=data_color,
-    elinewidth=0.7,
-    alpha=0.25,
+    elinewidth=0.9,
+    alpha=0.35,
     capsize=0,
     zorder=1,
 )
@@ -75,7 +77,7 @@ sns.scatterplot(
     y="flux",
     color=data_color,
     s=35,
-    alpha=0.4,
+    alpha=0.45,
     edgecolor="white",
     linewidth=0.3,
     ax=ax_main,
@@ -95,13 +97,16 @@ sns.scatterplot(
     y="residuals",
     color=data_color,
     s=20,
-    alpha=0.35,
+    alpha=0.4,
     edgecolor="white",
     linewidth=0.2,
     ax=ax_resid,
     legend=False,
 )
 ax_resid.axhline(0, color=model_color, linewidth=1.5, linestyle="--", alpha=0.6, zorder=3)
+
+# Seaborn rugplot on residuals to show density distribution
+sns.rugplot(data=df, y="residuals", color=data_color, alpha=0.1, height=0.015, ax=ax_resid)
 
 # Transit depth annotation
 transit_min = model_smooth.min()
