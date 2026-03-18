@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 star-chart-constellation: Star Chart with Constellations
 Library: bokeh 3.9.0 | Python 3.14.3
-Quality: 87/100 | Repair: 3/3 | Created: 2026-03-18
+Quality: 87/100 | Created: 2026-03-18
 """
 
 import numpy as np
