@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 star-chart-constellation: Star Chart with Constellations
 Library: plotnine 0.15.3 | Python 3.14.3
 Quality: 85/100 | Created: 2026-03-18
@@ -93,6 +93,61 @@ stars_raw = [
     ("Elnath", 5.44, 28.61, 1.65, "Tau"),
     ("Alcyone", 3.79, 24.11, 2.87, "Tau"),
     ("Tianguan", 5.63, 21.14, 3.00, "Tau"),
+    # Canis Major
+    ("Sirius", 6.75, -16.72, -1.46, "CMa"),
+    ("Adhara", 6.98, -28.97, 1.50, "CMa"),
+    ("Wezen", 7.14, -26.39, 1.84, "CMa"),
+    ("Mirzam", 6.38, -17.96, 1.98, "CMa"),
+    ("Aludra", 7.40, -29.30, 2.45, "CMa"),
+    # Perseus
+    ("Mirfak", 3.41, 49.86, 1.79, "Per"),
+    ("Algol", 3.14, 40.96, 2.12, "Per"),
+    ("Zeta Per", 3.90, 31.88, 2.85, "Per"),
+    ("Epsilon Per", 3.96, 40.01, 2.89, "Per"),
+    ("Delta Per", 3.72, 47.79, 3.01, "Per"),
+    # Andromeda
+    ("Alpheratz", 0.14, 29.09, 2.06, "And"),
+    ("Mirach", 1.16, 35.62, 2.05, "And"),
+    ("Almach", 2.06, 42.33, 2.17, "And"),
+    # Bootes
+    ("Arcturus", 14.26, 19.18, -0.05, "Boo"),
+    ("Izar", 14.75, 27.07, 2.70, "Boo"),
+    ("Muphrid", 13.91, 18.40, 2.68, "Boo"),
+    ("Nekkar", 15.03, 40.39, 3.58, "Boo"),
+    # Sagittarius (teapot asterism)
+    ("Kaus Australis", 18.40, -34.38, 1.85, "Sgr"),
+    ("Nunki", 18.92, -26.30, 2.02, "Sgr"),
+    ("Ascella", 19.04, -29.88, 2.59, "Sgr"),
+    ("Kaus Media", 18.35, -29.83, 2.70, "Sgr"),
+    ("Kaus Borealis", 18.47, -25.42, 2.81, "Sgr"),
+    # Auriga
+    ("Capella", 5.27, 46.00, 0.08, "Aur"),
+    ("Menkalinan", 5.99, 44.95, 1.90, "Aur"),
+    ("Theta Aur", 5.99, 37.21, 2.62, "Aur"),
+    ("Iota Aur", 4.95, 33.17, 2.69, "Aur"),
+    # Corona Borealis
+    ("Alphecca", 15.58, 26.71, 2.23, "CrB"),
+    ("Nusakan", 15.46, 29.11, 3.68, "CrB"),
+    ("Gamma CrB", 15.71, 26.30, 3.84, "CrB"),
+    # Canis Minor
+    ("Procyon", 7.66, 5.22, 0.34, "CMi"),
+    ("Gomeisa", 7.45, 8.29, 2.90, "CMi"),
+    # Pegasus (Great Square)
+    ("Markab", 23.08, 15.21, 2.49, "Peg"),
+    ("Scheat", 23.06, 28.08, 2.42, "Peg"),
+    ("Algenib", 0.22, 15.19, 2.83, "Peg"),
+    # Virgo
+    ("Spica", 13.42, -11.16, 0.97, "Vir"),
+    ("Porrima", 12.69, -1.45, 2.74, "Vir"),
+    ("Vindemiatrix", 13.04, 10.96, 2.83, "Vir"),
+    # Ursa Minor
+    ("Polaris", 2.53, 89.26, 1.98, "UMi"),
+    ("Kochab", 14.85, 74.16, 2.08, "UMi"),
+    ("Pherkad", 15.35, 71.83, 3.00, "UMi"),
+    # Draco
+    ("Eltanin", 17.94, 51.49, 2.23, "Dra"),
+    ("Rastaban", 17.51, 52.30, 2.79, "Dra"),
+    ("Thuban", 14.07, 64.38, 3.65, "Dra"),
 ]
 
 # Constellation edges (pairs of star names)
@@ -154,6 +209,53 @@ edges_raw = [
     ("Aldebaran", "Elnath"),
     ("Aldebaran", "Alcyone"),
     ("Elnath", "Tianguan"),
+    # Canis Major
+    ("Sirius", "Mirzam"),
+    ("Sirius", "Adhara"),
+    ("Adhara", "Wezen"),
+    ("Wezen", "Aludra"),
+    # Perseus
+    ("Mirfak", "Delta Per"),
+    ("Mirfak", "Epsilon Per"),
+    ("Epsilon Per", "Zeta Per"),
+    ("Mirfak", "Algol"),
+    # Andromeda
+    ("Alpheratz", "Mirach"),
+    ("Mirach", "Almach"),
+    # Bootes
+    ("Arcturus", "Izar"),
+    ("Arcturus", "Muphrid"),
+    ("Izar", "Nekkar"),
+    # Sagittarius
+    ("Kaus Australis", "Kaus Media"),
+    ("Kaus Media", "Kaus Borealis"),
+    ("Kaus Borealis", "Nunki"),
+    ("Nunki", "Ascella"),
+    ("Ascella", "Kaus Australis"),
+    # Auriga
+    ("Capella", "Menkalinan"),
+    ("Menkalinan", "Theta Aur"),
+    ("Theta Aur", "Iota Aur"),
+    ("Iota Aur", "Capella"),
+    # Corona Borealis
+    ("Nusakan", "Alphecca"),
+    ("Alphecca", "Gamma CrB"),
+    # Canis Minor
+    ("Procyon", "Gomeisa"),
+    # Pegasus
+    ("Markab", "Scheat"),
+    ("Markab", "Algenib"),
+    ("Scheat", "Alpheratz"),
+    ("Algenib", "Alpheratz"),
+    # Virgo
+    ("Spica", "Porrima"),
+    ("Porrima", "Vindemiatrix"),
+    # Ursa Minor
+    ("Polaris", "Kochab"),
+    ("Kochab", "Pherkad"),
+    # Draco
+    ("Eltanin", "Rastaban"),
+    ("Rastaban", "Thuban"),
 ]
 
 # Add fainter background stars
@@ -192,18 +294,18 @@ proj_x = -proj_x
 
 # Size mapping: brighter stars (lower mag) get larger points
 max_mag = 5.5
-min_mag = -0.5
+min_mag = -1.5
 star_sizes = np.clip((max_mag - magnitudes) / (max_mag - min_mag), 0.05, 1.0)
-star_sizes = star_sizes**1.5 * 8.0 + 0.3
+star_sizes = star_sizes**1.5 * 10.0 + 0.4
 
 # Star colors based on magnitude (brighter = more yellow-white, dimmer = blueish-white)
 star_colors = []
 for mag in magnitudes:
-    if mag < 1.0:
+    if mag < 0.5:
         star_colors.append("#FFFDE7")
-    elif mag < 2.0:
+    elif mag < 1.5:
         star_colors.append("#FFF9C4")
-    elif mag < 3.0:
+    elif mag < 2.5:
         star_colors.append("#E8EAF6")
     else:
         star_colors.append("#B0BEC5")
@@ -239,7 +341,7 @@ for s1, s2 in edges_raw:
 
 df_edges = pd.DataFrame(edge_data)
 
-# Constellation labels at centroid of each group with manual nudge for overlaps
+# Constellation labels at centroid of each group with manual nudges
 named_stars = df_stars[df_stars["constellation"] != "bg"].copy()
 constellation_names = {
     "Ori": "ORION",
@@ -252,20 +354,45 @@ constellation_names = {
     "Lyr": "LYRA",
     "Aql": "AQUILA",
     "Tau": "TAURUS",
+    "CMa": "CANIS MAJOR",
+    "Per": "PERSEUS",
+    "And": "ANDROMEDA",
+    "Boo": "BOÖTES",
+    "Sgr": "SAGITTARIUS",
+    "Aur": "AURIGA",
+    "CrB": "COR. BOREALIS",
+    "CMi": "CANIS MINOR",
+    "Peg": "PEGASUS",
+    "Vir": "VIRGO",
+    "UMi": "URSA MINOR",
+    "Dra": "DRACO",
 }
-# Manual nudges to prevent label overlap (dx, dy)
+# Manual nudges (dx, dy) to prevent label overlap
 label_nudge = {
-    "Cyg": (0.25, 0.15),  # Push CYGNUS right and up to avoid LYRA
-    "Lyr": (-0.25, -0.05),  # Push LYRA left and slightly down
-    "UMa": (0.0, 0.05),  # Nudge URSA MAJOR up slightly
-    "Gem": (0.0, -0.05),  # Nudge GEMINI down slightly
+    "Cyg": (0.30, 0.15),
+    "Lyr": (-0.30, -0.10),
+    "UMa": (0.0, 0.15),
+    "Gem": (0.15, -0.10),
+    "Aql": (0.25, 0.0),
+    "CMi": (-0.30, 0.0),
+    "CrB": (0.0, 0.10),
+    "And": (0.0, -0.10),
+    "Per": (0.20, 0.10),
+    "Boo": (-0.20, 0.0),
+    "Vir": (0.0, -0.10),
+    "Dra": (-0.30, -0.10),
+    "UMi": (0.20, 0.10),
+    "Peg": (0.0, -0.08),
+    "Ori": (0.15, 0.0),
+    "Tau": (0.0, 0.10),
+    "Aur": (0.20, 0.10),
 }
 label_data = []
 for abbr, full_name in constellation_names.items():
     group = named_stars[named_stars["constellation"] == abbr]
     if len(group) > 0:
         dx, dy = label_nudge.get(abbr, (0.0, 0.0))
-        label_data.append({"x": group["x"].mean() + dx, "y": group["y"].min() - 0.15 + dy, "label": full_name})
+        label_data.append({"x": group["x"].mean() + dx, "y": group["y"].min() - 0.18 + dy, "label": full_name})
 
 df_labels = pd.DataFrame(label_data)
 
@@ -308,46 +435,46 @@ df_ra_grid = pd.DataFrame(ra_grid_segs) if ra_grid_segs else pd.DataFrame(column
 # Combine all grid segments
 df_all_grid = pd.concat([df_grid, df_ra_grid], ignore_index=True)
 
-# RA tick labels at Dec=0° ring endpoints
+# RA tick labels at Dec=-10° for better separation from constellation names
 ra_tick_labels = []
 for ra_h in range(0, 24, 3):
     ra_g = np.radians(ra_h * 15.0)
-    dec_g = np.radians(0)
+    dec_g = np.radians(-10)
     cos_c_t = np.sin(dec0) * np.sin(dec_g) + np.cos(dec0) * np.cos(dec_g) * np.cos(ra_g - ra0)
     k_t = 2.0 / (1.0 + cos_c_t)
     tx = -k_t * np.cos(dec_g) * np.sin(ra_g - ra0)
     ty = k_t * (np.cos(dec0) * np.sin(dec_g) - np.sin(dec0) * np.cos(dec_g) * np.cos(ra_g - ra0))
-    if np.sqrt(tx**2 + ty**2) < radius_limit - 0.1:
-        ra_tick_labels.append({"x": tx, "y": ty - 0.12, "label": f"{ra_h}h"})
+    if np.sqrt(tx**2 + ty**2) < radius_limit - 0.15:
+        ra_tick_labels.append({"x": tx, "y": ty - 0.15, "label": f"{ra_h}h"})
 
 df_ra_ticks = pd.DataFrame(ra_tick_labels)
 
-# Dec tick labels along RA=0h meridian
+# Dec tick labels along RA=3h meridian (offset from 0h to avoid overlaps)
 dec_tick_labels = []
 for dec_val in [0, 20, 40, 60]:
-    ra_g = np.radians(0)
+    ra_g = np.radians(3 * 15.0)
     dec_g = np.radians(dec_val)
     cos_c_t = np.sin(dec0) * np.sin(dec_g) + np.cos(dec0) * np.cos(dec_g) * np.cos(ra_g - ra0)
     k_t = 2.0 / (1.0 + cos_c_t)
     tx = -k_t * np.cos(dec_g) * np.sin(ra_g - ra0)
     ty = k_t * (np.cos(dec0) * np.sin(dec_g) - np.sin(dec0) * np.cos(dec_g) * np.cos(ra_g - ra0))
-    if np.sqrt(tx**2 + ty**2) < radius_limit - 0.1:
-        dec_tick_labels.append({"x": tx + 0.12, "y": ty, "label": f"{dec_val}°"})
+    if np.sqrt(tx**2 + ty**2) < radius_limit - 0.15:
+        dec_tick_labels.append({"x": tx + 0.15, "y": ty, "label": f"{dec_val}°"})
 
 df_dec_ticks = pd.DataFrame(dec_tick_labels)
 
-# Magnitude legend data (sample stars at key magnitudes)
+# Magnitude legend data
 legend_mags = [0.0, 1.0, 2.0, 3.0, 4.0, 5.0]
-legend_x_base = radius_limit - 0.3
-legend_y_base = -radius_limit + 1.2
+legend_x_base = radius_limit - 0.5
+legend_y_base = -radius_limit + 1.4
 legend_stars = []
 legend_labels_list = []
 for i, lm in enumerate(legend_mags):
-    ly = legend_y_base + i * 0.28
-    lsize = np.clip((max_mag - lm) / (max_mag - min_mag), 0.05, 1.0) ** 1.5 * 8.0 + 0.3
-    lcolor = "#FFFDE7" if lm < 1 else "#FFF9C4" if lm < 2 else "#E8EAF6" if lm < 3 else "#B0BEC5"
+    ly = legend_y_base + i * 0.32
+    lsize = np.clip((max_mag - lm) / (max_mag - min_mag), 0.05, 1.0) ** 1.5 * 10.0 + 0.4
+    lcolor = "#FFFDE7" if lm < 0.5 else "#FFF9C4" if lm < 1.5 else "#E8EAF6" if lm < 2.5 else "#B0BEC5"
     legend_stars.append({"x": legend_x_base, "y": ly, "size": lsize, "color": lcolor})
-    legend_labels_list.append({"x": legend_x_base + 0.22, "y": ly, "label": f"mag {lm:.0f}"})
+    legend_labels_list.append({"x": legend_x_base + 0.28, "y": ly, "label": f"mag {lm:.0f}"})
 
 df_legend_stars = pd.DataFrame(legend_stars)
 df_legend_labels = pd.DataFrame(legend_labels_list)
@@ -355,42 +482,48 @@ df_legend_labels = pd.DataFrame(legend_labels_list)
 # Plot
 plot = (
     ggplot()
+    # Coordinate grid (very subtle)
     + geom_segment(
         data=df_all_grid, mapping=aes(x="x", y="y", xend="xend", yend="yend"), color="#1a2744", size=0.3, alpha=0.5
     )
+    # Constellation stick-figure lines
     + geom_segment(
-        data=df_edges, mapping=aes(x="x", y="y", xend="xend", yend="yend"), color="#4a6fa5", size=0.7, alpha=0.6
+        data=df_edges, mapping=aes(x="x", y="y", xend="xend", yend="yend"), color="#5580b0", size=0.9, alpha=0.65
     )
+    # Stars
     + geom_point(data=df_stars, mapping=aes(x="x", y="y", size="size", color="color", alpha="alpha"))
     + scale_size_identity()
     + scale_color_identity()
     + scale_alpha_identity()
+    # Constellation names
     + geom_text(
         data=df_labels,
         mapping=aes(x="x", y="y", label="label"),
         color="#7a9cca",
-        size=12,
+        size=14,
         alpha=0.85,
         fontstyle="italic",
     )
     # RA tick labels
-    + geom_text(data=df_ra_ticks, mapping=aes(x="x", y="y", label="label"), color="#5a7a9a", size=10, alpha=0.8)
+    + geom_text(data=df_ra_ticks, mapping=aes(x="x", y="y", label="label"), color="#5a7a9a", size=12, alpha=0.8)
     # Dec tick labels
     + geom_text(
-        data=df_dec_ticks, mapping=aes(x="x", y="y", label="label"), color="#5a7a9a", size=10, alpha=0.8, ha="left"
+        data=df_dec_ticks, mapping=aes(x="x", y="y", label="label"), color="#5a7a9a", size=12, alpha=0.8, ha="left"
     )
-    # Magnitude legend
+    # Magnitude legend points
     + geom_point(data=df_legend_stars, mapping=aes(x="x", y="y", size="size", color="color"), alpha=0.9)
+    # Magnitude legend labels
     + geom_text(
-        data=df_legend_labels, mapping=aes(x="x", y="y", label="label"), color="#8899bb", size=9, ha="left", alpha=0.85
+        data=df_legend_labels, mapping=aes(x="x", y="y", label="label"), color="#8899bb", size=11, ha="left", alpha=0.85
     )
+    # Magnitude legend title
     + annotate(
         "text",
         x=legend_x_base,
-        y=legend_y_base - 0.25,
+        y=legend_y_base - 0.28,
         label="Magnitude",
         color="#99aabb",
-        size=10,
+        size=12,
         ha="center",
         fontweight="bold",
     )
@@ -401,7 +534,7 @@ plot = (
         y=-radius_limit + 0.05,
         label="star-chart-constellation · plotnine · pyplots.ai",
         color="#8899aa",
-        size=14,
+        size=16,
         ha="center",
     )
     + coord_fixed(ratio=1)
@@ -413,7 +546,7 @@ plot = (
         figure_size=(12, 12),
         plot_background=element_rect(fill="#060d1f", color="#060d1f"),
         panel_background=element_rect(fill="#060d1f", color="#060d1f"),
-        text=element_text(color="#aabbcc", size=14),
+        text=element_text(color="#aabbcc", size=16),
         axis_text=element_blank(),
         axis_ticks=element_blank(),
         plot_margin=0.02,
