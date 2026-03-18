@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 lightcurve-transit: Astronomical Light Curve
 Library: letsplot 4.9.0 | Python 3.14.3
-Quality: 85/100 | Created: 2026-03-18
+Quality: 86/100 | Created: 2026-03-18
 """
 
 import numpy as np
