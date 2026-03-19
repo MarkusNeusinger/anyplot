@@ -1,7 +1,7 @@
 library: altair
 specification_id: line-growth-percentile
 created: '2026-03-19T19:54:02Z'
-updated: '2026-03-19T19:58:06Z'
+updated: '2026-03-19T20:04:39Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23313901673
 issue: 4555
@@ -10,32 +10,32 @@ library_version: 6.0.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/line-growth-percentile/altair/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/line-growth-percentile/altair/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/line-growth-percentile/altair/plot.html
-quality_score: 87
+quality_score: 89
 review:
   strengths:
-  - Excellent spec compliance — all required features present and correctly implemented
-  - Realistic WHO-style data with appropriate clinical context
-  - Clear visual hierarchy with patient trajectory as focal point against population
-    bands
-  - Clean, well-structured code with good separation of layers
-  - Effective use of Altair Y2 encoding for area bands
+  - Excellent spec compliance with all 7 percentile bands, P50 emphasis, right-margin
+    labels, gender-appropriate colors, and patient overlay
+  - Strong design with graduated blue band opacities creating a professional clinical
+    chart aesthetic
+  - Realistic WHO-approximated data with appropriate growth curve shapes
+  - Good use of Altair layer composition for building complex multi-layer chart
+  - Clean well-structured code with appropriate complexity
   weaknesses:
-  - Percentile label font size (14pt) is slightly small — increase to 16pt+
-  - Outer percentile lines (P3, P97) at 0.4 opacity are too faint
-  - Title includes extra descriptive prefix before the standard format
-  - Design could be elevated with more typographic refinement and subtle background
-    treatment
-  image_description: The plot displays a pediatric growth chart for boys' weight-for-age
-    from 0-36 months. Blue graduated bands represent percentile ranges (P3 through
-    P97), with darker blue opacity near the center (P25-P75) and lighter toward the
-    extremes (P3-P10, P90-P97). A thicker blue line emphasizes the P50 median. Percentile
-    labels (P3, P10, P25, P50, P75, P90, P97) appear in bold blue text on the right
-    margin. An individual patient's growth trajectory is plotted as a red line with
-    red circular markers (white stroke), tracking roughly between the 50th-75th percentile
-    range from birth (~3.5 kg) to 36 months (~15.6 kg). The x-axis reads "Age (months)"
-    ranging 0-38, the y-axis reads "Weight (kg)" ranging 0-18. The title reads "Boys
-    Weight-for-Age · line-growth-percentile · altair · pyplots.ai". Grid lines are
-    removed, the view frame is clean with no border stroke.
+  - Right-margin percentile labels slightly crowded in P25/P50/P75 cluster
+  - Band opacity transitions too subtle (0.12 to 0.25 range)
+  - Uses Python loops for band/line creation instead of more idiomatic Altair transforms
+  image_description: The plot displays a pediatric growth chart with WHO-style percentile
+    bands in graduated blue tones on a light blue-gray background. The x-axis shows
+    "Age (months)" from 0 to 38, and the y-axis shows "Weight (kg)" from 0 to 18.
+    Seven percentile curves (P3, P10, P25, P50, P75, P90, P97) are rendered as blue
+    filled bands between adjacent curves, with darker opacity near the center (P25-P75)
+    and lighter at the extremes. The P50 median line is visually emphasized with a
+    thicker stroke. Percentile labels appear in bold blue text on the right margin.
+    An individual patient trajectory is overlaid in coral/red with connected circle
+    markers (white-stroked), tracking from birth (~3.5 kg) to 36 months (~15.6 kg),
+    consistently above the 50th percentile around the 60th-75th range. The title reads
+    "line-growth-percentile · altair · pyplots.ai" with subtitle "Boys Weight-for-Age
+    (0–36 months)". Y-axis has subtle dashed grid lines; x-axis grid is disabled.
   criteria_checklist:
     visual_quality:
       score: 28
@@ -43,71 +43,70 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Title 28pt, axis titles 22pt, ticks 18pt explicitly set. Percentile
-          labels at 14pt slightly below 16pt guideline.
+        comment: 'All font sizes explicitly set: title=28pt, subtitle=18pt, axis titles=22pt,
+          tick labels=18pt, percentile labels=16pt bold'
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No overlapping text. Percentile labels well-spaced on right margin.
+        comment: Percentile labels on right margin slightly crowded in P25/P50/P75
+          cluster but all readable
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Patient markers and bands clearly visible. Outer percentile lines
-          (P3, P97) at 0.4 opacity are somewhat faint.
+        comment: Bands, lines, and patient markers visible. Band opacity differences
+          could be more distinct
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Blue-red distinction is colorblind-safe. Good contrast between population
-          data and patient trajectory.
+        comment: Blue bands vs coral/red patient line are colorblind-distinguishable
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills canvas well with balanced margins. Domain extended to
-          38 for right-margin labels.
+        comment: Chart fills canvas well with balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Age (months) and Weight (kg) both include units.
+        comment: Age (months) and Weight (kg) - descriptive with units
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Cohesive blue palette with graduated opacity, red accent, white stroke
-          on markers. Above defaults but not publication-level.
+        comment: Strong design with graduated blue bands, coral patient trajectory,
+          subtle background tint, custom grid styling
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Grid removed, view stroke removed, graduated opacity on bands. Could
-          benefit from more whitespace refinement.
+        comment: View stroke removed, background tinted, x-grid disabled, y-grid dashed
+          with reduced opacity
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Clear hierarchy: bands as background, patient trajectory as focal
-          point. Viewer immediately understands growth context.'
+        comment: Clear visual hierarchy with blue reference bands vs red patient line
+          creating immediate focal point
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -115,28 +114,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct growth chart with percentile bands and individual patient
-          overlay.
+        comment: Correct growth chart with percentile curves and patient overlay
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: graduated bands, emphasized P50, blue
-          tones, right-margin labels, connected markers.'
+        comment: 'All features present: 7 percentile bands, P50 emphasized, blue tones,
+          right-margin labels, patient overlay'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=age months, Y=weight kg, all data visible.
+        comment: X=age_months, Y=weight correctly assigned
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Title adds 'Boys Weight-for-Age' prefix before standard format. Percentile
-          labels serve as effective legend.
+        passed: true
+        comment: Title format correct, right-margin percentile labels serve as legend
     data_quality:
       score: 15
       max: 15
@@ -146,21 +143,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All 7 percentile curves, graduated bands, 12 patient measurements
-          spanning full age range.
+        comment: Shows all 7 percentile bands and patient data tracking above median
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: WHO-style weight-for-age for boys 0-36 months. Neutral clinical context.
+        comment: WHO-style boys weight-for-age 0-36 months - classic clinical scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Birth weight ~3.3 kg, 36-month ~14-15 kg — realistic WHO-standard
-          values.
+        comment: Birth weight ~3.3 kg, 36-month ~15 kg, realistic for WHO standards
     code_quality:
       score: 10
       max: 10
@@ -170,31 +165,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports, data, layers, compose, save.'
+        comment: Imports, Data, Plot, Save structure with no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set, data is deterministic.
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: altair, numpy, pandas all used.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-structured iteration for bands and lines, appropriate complexity.
+        comment: Clean, appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png and plot.html, current API.
+        comment: Saves plot.png and plot.html, current API
     library_mastery:
       score: 7
       max: 10
@@ -204,15 +199,14 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of alt.layer(), mark types, Y2 encoding, configure methods.
-          The .encode() after layer() is slightly unusual.
+        comment: Good use of alt.layer, multiple marks, configure methods. Could use
+          transform_fold for more declarative approach
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses alt.Y2 for area bands, alt.layer() composition, tooltips, .interactive()
-          for HTML. Could leverage selections/conditions.
+        comment: Uses tooltips, .interactive(), HTML export - distinctive Altair features
   verdict: REJECTED
 impl_tags:
   dependencies: []
@@ -227,4 +221,5 @@ impl_tags:
   dataprep: []
   styling:
   - alpha-blending
+  - grid-styling
   - edge-highlighting
