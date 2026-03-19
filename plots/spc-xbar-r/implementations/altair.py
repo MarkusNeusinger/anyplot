@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 spc-xbar-r: Statistical Process Control Chart (X-bar/R)
 Library: altair 6.0.0 | Python 3.14.3
 Quality: 83/100 | Created: 2026-03-19
@@ -77,22 +77,42 @@ df_range["out_of_control"] = (df_range["value"] > r_ucl) | (df_range["value"] < 
 # Colors
 blue = "#306998"
 red = "#D62728"
-warn_color = "#E8A838"
+warn_color = "#C07820"  # Darker amber for better accessibility
+
+# Shared x-axis domain to avoid extending beyond data
+x_domain = [0, n_samples + 1]
+
+
+def make_limit_labels(values, labels, colors, chart_height_range):
+    """Resolve overlapping labels by nudging vertically when too close."""
+    min_gap = (chart_height_range[1] - chart_height_range[0]) * 0.06
+    # Sort by value
+    items = sorted(zip(values, labels, colors, strict=True), key=lambda t: t[0])
+    adjusted = []
+    for val, lbl, col in items:
+        y = val
+        for prev_y, _, _ in adjusted:
+            if abs(y - prev_y) < min_gap:
+                y = prev_y + min_gap
+        adjusted.append((y, lbl, col))
+    return adjusted
+
 
 # --- X-bar Chart ---
-xbar_x = alt.X("sample:Q", axis=alt.Axis(title="", labelFontSize=16, titleFontSize=20, tickMinStep=1))
+xbar_x = alt.X(
+    "sample:Q",
+    scale=alt.Scale(domain=x_domain, nice=False),
+    axis=alt.Axis(title="", labelFontSize=16, titleFontSize=20, tickMinStep=1, grid=False),
+)
+
+xbar_y_axis = alt.Axis(
+    title="X̄  (mm)", labelFontSize=16, titleFontSize=20, gridColor="#E8E8E8", gridDash=[2, 4], gridOpacity=0.5
+)
 
 xbar_line = (
     alt.Chart(df_xbar)
     .mark_line(color=blue, strokeWidth=2)
-    .encode(
-        x=xbar_x,
-        y=alt.Y(
-            "value:Q",
-            scale=alt.Scale(zero=False),
-            axis=alt.Axis(title="X-bar (mm)", labelFontSize=16, titleFontSize=20),
-        ),
-    )
+    .encode(x=xbar_x, y=alt.Y("value:Q", scale=alt.Scale(zero=False), axis=xbar_y_axis))
 )
 
 xbar_points_normal = (
@@ -101,7 +121,7 @@ xbar_points_normal = (
     .encode(
         x="sample:Q",
         y="value:Q",
-        tooltip=[alt.Tooltip("sample:Q", title="Sample"), alt.Tooltip("value:Q", title="X-bar", format=".4f")],
+        tooltip=[alt.Tooltip("sample:Q", title="Sample"), alt.Tooltip("value:Q", title="X̄", format=".4f")],
     )
 )
 
@@ -111,45 +131,51 @@ xbar_points_ooc = (
     .encode(
         x="sample:Q",
         y="value:Q",
-        tooltip=[alt.Tooltip("sample:Q", title="Sample"), alt.Tooltip("value:Q", title="X-bar (OOC)", format=".4f")],
+        tooltip=[alt.Tooltip("sample:Q", title="Sample"), alt.Tooltip("value:Q", title="X̄ (OOC)", format=".4f")],
     )
 )
 
 # Limit lines for X-bar
 xbar_ucl_rule = alt.Chart(df_xbar).mark_rule(color=red, strokeDash=[8, 4], strokeWidth=2).encode(y="ucl:Q")
-
 xbar_lcl_rule = alt.Chart(df_xbar).mark_rule(color=red, strokeDash=[8, 4], strokeWidth=2).encode(y="lcl:Q")
-
 xbar_center_rule = alt.Chart(df_xbar).mark_rule(color="#333333", strokeWidth=2).encode(y="center:Q")
 
 xbar_uwarn_rule = (
     alt.Chart(df_xbar)
-    .mark_rule(color=warn_color, strokeDash=[4, 4], strokeWidth=1.5, opacity=0.7)
+    .mark_rule(color=warn_color, strokeDash=[4, 4], strokeWidth=1.5, opacity=0.8)
     .encode(y="upper_warn:Q")
 )
-
 xbar_lwarn_rule = (
     alt.Chart(df_xbar)
-    .mark_rule(color=warn_color, strokeDash=[4, 4], strokeWidth=1.5, opacity=0.7)
+    .mark_rule(color=warn_color, strokeDash=[4, 4], strokeWidth=1.5, opacity=0.8)
     .encode(y="lower_warn:Q")
 )
 
-# Label data for X-bar limits
-label_color_scale = alt.Scale(
-    domain=["UCL", "LCL", "CL", "+2σ", "-2σ"], range=[red, red, "#333333", warn_color, warn_color]
+# Resolve overlapping labels for X-bar chart
+xbar_y_range = (min(df_xbar["value"].min(), xbar_lcl), max(df_xbar["value"].max(), xbar_ucl))
+xbar_label_items = make_limit_labels(
+    [xbar_lcl, xbar_lower_warn, xbar_bar, xbar_upper_warn, xbar_ucl],
+    ["LCL", "−2σ", "CL", "+2σ", "UCL"],
+    [red, warn_color, "#333333", warn_color, red],
+    xbar_y_range,
 )
 
 xbar_labels_data = pd.DataFrame(
     {
-        "sample": [n_samples + 0.5] * 5,
-        "y": [xbar_ucl, xbar_lcl, xbar_bar, xbar_upper_warn, xbar_lower_warn],
-        "label": ["UCL", "LCL", "CL", "+2σ", "-2σ"],
+        "sample": [2] * len(xbar_label_items),
+        "y": [item[0] for item in xbar_label_items],
+        "label": [item[1] for item in xbar_label_items],
+        "color": [item[2] for item in xbar_label_items],
     }
+)
+
+label_color_scale = alt.Scale(
+    domain=["UCL", "LCL", "CL", "+2σ", "−2σ"], range=[red, red, "#333333", warn_color, warn_color]
 )
 
 xbar_labels = (
     alt.Chart(xbar_labels_data)
-    .mark_text(align="left", dx=5, fontSize=14, fontWeight="bold")
+    .mark_text(align="left", dx=5, dy=-10, fontSize=14, fontWeight="bold")
     .encode(x="sample:Q", y="y:Q", text="label:N", color=alt.Color("label:N", scale=label_color_scale, legend=None))
 )
 
@@ -166,19 +192,20 @@ xbar_chart = (
 ).properties(width=1600, height=400)
 
 # --- R Chart ---
-r_x = alt.X("sample:Q", axis=alt.Axis(title="Sample Number", labelFontSize=16, titleFontSize=20, tickMinStep=1))
+r_x = alt.X(
+    "sample:Q",
+    scale=alt.Scale(domain=x_domain, nice=False),
+    axis=alt.Axis(title="Sample Number", labelFontSize=16, titleFontSize=20, tickMinStep=1, grid=False),
+)
+
+r_y_axis = alt.Axis(
+    title="Range R (mm)", labelFontSize=16, titleFontSize=20, gridColor="#E8E8E8", gridDash=[2, 4], gridOpacity=0.5
+)
 
 r_line = (
     alt.Chart(df_range)
     .mark_line(color=blue, strokeWidth=2)
-    .encode(
-        x=r_x,
-        y=alt.Y(
-            "value:Q",
-            scale=alt.Scale(zero=False),
-            axis=alt.Axis(title="Range R (mm)", labelFontSize=16, titleFontSize=20),
-        ),
-    )
+    .encode(x=r_x, y=alt.Y("value:Q", scale=alt.Scale(zero=False), axis=r_y_axis))
 )
 
 r_points_normal = (
@@ -203,35 +230,41 @@ r_points_ooc = (
 
 # Limit lines for R chart
 r_ucl_rule = alt.Chart(df_range).mark_rule(color=red, strokeDash=[8, 4], strokeWidth=2).encode(y="ucl:Q")
-
 r_lcl_rule = alt.Chart(df_range).mark_rule(color=red, strokeDash=[4, 4], strokeWidth=1.5, opacity=0.5).encode(y="lcl:Q")
-
 r_center_rule = alt.Chart(df_range).mark_rule(color="#333333", strokeWidth=2).encode(y="center:Q")
 
 r_uwarn_rule = (
     alt.Chart(df_range)
-    .mark_rule(color=warn_color, strokeDash=[4, 4], strokeWidth=1.5, opacity=0.7)
+    .mark_rule(color=warn_color, strokeDash=[4, 4], strokeWidth=1.5, opacity=0.8)
     .encode(y="upper_warn:Q")
 )
-
 r_lwarn_rule = (
     alt.Chart(df_range)
-    .mark_rule(color=warn_color, strokeDash=[4, 4], strokeWidth=1.5, opacity=0.7)
+    .mark_rule(color=warn_color, strokeDash=[4, 4], strokeWidth=1.5, opacity=0.8)
     .encode(y="lower_warn:Q")
 )
 
-# Label data for R limits
+# Resolve overlapping labels for R chart
+r_y_range = (min(df_range["value"].min(), r_lcl), max(df_range["value"].max(), r_ucl))
+r_label_items = make_limit_labels(
+    [r_lcl, r_lower_warn, r_bar, r_upper_warn, r_ucl],
+    ["LCL", "−2σ", "CL", "+2σ", "UCL"],
+    [red, warn_color, "#333333", warn_color, red],
+    r_y_range,
+)
+
 r_labels_data = pd.DataFrame(
     {
-        "sample": [n_samples + 0.5] * 5,
-        "y": [r_ucl, r_lcl, r_bar, r_upper_warn, r_lower_warn],
-        "label": ["UCL", "LCL", "CL", "+2σ", "-2σ"],
+        "sample": [2] * len(r_label_items),
+        "y": [item[0] for item in r_label_items],
+        "label": [item[1] for item in r_label_items],
+        "color": [item[2] for item in r_label_items],
     }
 )
 
 r_labels = (
     alt.Chart(r_labels_data)
-    .mark_text(align="left", dx=5, fontSize=14, fontWeight="bold")
+    .mark_text(align="left", dx=5, dy=-10, fontSize=14, fontWeight="bold")
     .encode(x="sample:Q", y="y:Q", text="label:N", color=alt.Color("label:N", scale=label_color_scale, legend=None))
 )
 
@@ -249,7 +282,9 @@ r_chart = (
 
 # Combine vertically
 combined = alt.vconcat(xbar_chart, r_chart, spacing=20).properties(
-    title=alt.Title("CNC Shaft Diameter Monitoring · spc-xbar-r · altair · pyplots.ai", fontSize=28, anchor="middle")
+    title=alt.Title(
+        "CNC Shaft Diameter Monitoring · spc-xbar-r · altair · pyplots.ai", fontSize=28, anchor="middle", offset=15
+    )
 )
 
 chart = combined.configure_axis(labelFontSize=16, titleFontSize=20).configure_view(strokeWidth=0)
