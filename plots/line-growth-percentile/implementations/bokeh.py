@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 line-growth-percentile: Pediatric Growth Chart with Percentile Curves
 Library: bokeh 3.9.0 | Python 3.14.3
-Quality: 84/100 | Created: 2026-03-19
+Quality: 90/100 | Created: 2026-03-19
 """
 
 import numpy as np
