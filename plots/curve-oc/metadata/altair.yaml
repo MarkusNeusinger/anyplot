@@ -1,7 +1,7 @@
 library: altair
 specification_id: curve-oc
 created: '2026-03-19T20:35:59Z'
-updated: '2026-03-19T20:39:42Z'
+updated: '2026-03-19T20:48:22Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23315609091
 issue: 4553
@@ -10,37 +10,36 @@ library_version: 6.0.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/curve-oc/altair/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/curve-oc/altair/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/curve-oc/altair/plot.html
-quality_score: 85
+quality_score: 88
 review:
   strengths:
-  - 'Excellent spec compliance with all required features: multiple OC curves, AQL/LTPD
-    references, risk annotations'
-  - Strong use of Altair interactive features (hover tooltips, selection, conditional
-    encoding)
-  - Clean visual design with subtle grid, removed spines, and good typography hierarchy
-  - Mathematically correct binomial CDF calculations with realistic quality control
-    parameters
-  - Good data storytelling through risk annotations that guide the viewer
+  - Excellent spec compliance with all required features (AQL/LTPD, risk annotations,
+    multiple plans)
+  - 'Strong interactive features: hover tooltips, vertical rule, highlighted points'
+  - Good color accessibility with dual encoding (color + dash pattern)
+  - Clean visual styling with subtle grid and removed spines
+  - Descriptive plan labels (lenient, moderate, strict) aid interpretation
   weaknesses:
-  - Legend is not visible in the rendered PNG, making curve identification impossible
-    without interaction
-  - The three sampling plans have similar c/n ratios producing relatively similar
-    curves — more contrast would improve feature coverage
-  - Risk annotation text at 14pt could be larger for better readability
+  - Beta risk label near bottom overlaps/crowds x-axis tick labels at 10%
+  - Manual in-chart legend construction is verbose (~50 lines)
+  - Design could push further toward publication quality with more refined typography
+    hierarchy
   image_description: 'The plot displays three Operating Characteristic (OC) curves
-    on a landscape canvas. The title "curve-oc · altair · pyplots.ai" appears top-left
-    with subtitle "Acceptance Sampling Plans — Producer''s & Consumer''s Risk" in
-    gray. Three S-shaped curves decline from left to right: blue (n=50, c=1), orange
-    (n=100, c=2), and green (n=150, c=3). The x-axis shows "Fraction Defective (p)"
-    from 0% to 20% and the y-axis shows "Probability of Acceptance P(a)" from 0.00
-    to 1.00. Two vertical dashed reference lines mark AQL at 2% (blue label) and LTPD
-    at 10% (red label). Risk annotations appear as dark dots on the n=100,c=2 curve
-    with labels "α = 32.3% (Producer''s Risk)" near AQL and "β = 0.2% (Consumer''s
-    Risk)" near LTPD. The legend for the three sampling plans is not visible in the
-    rendered image. Grid lines are very subtle, and the chart has no border or spines.'
+    on a clean white background. The title "curve-oc · altair · pyplots.ai" is top-left
+    with subtitle "Acceptance Sampling Plans — Producer''s & Consumer''s Risk". The
+    x-axis shows "Fraction Defective (p)" from 0% to 20% with percentage formatting,
+    and the y-axis shows "Probability of Acceptance P(a)" from 0.00 to 1.00. Three
+    S-shaped curves are plotted: a solid blue line for n=50, c=1 (lenient), a dashed
+    orange line for n=100, c=3 (moderate), and a dotted purple line for n=200, c=2
+    (strict). Vertical dashed reference lines mark AQL at 2% (blue) and LTPD at 10%
+    (red) with bold labels above. Dark points with white stroke mark risk values on
+    the n=100, c=3 curve: "α = 14.1% (Producer''s Risk)" near AQL and "β = 0.8% (Consumer''s
+    Risk)" near LTPD. A manually constructed legend box with light background and
+    rounded corners sits in the upper-right chart area. Grid lines are very subtle,
+    spines are removed, and the overall look is clean and professional.'
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -48,42 +47,44 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title 28, subtitle 18, axis 22, ticks
-          18). Risk annotations at 14pt slightly small.
+        comment: All font sizes explicitly set (title 28, subtitle 18, axis titles
+          22, ticks 18, annotations 17, legend 16-17). All readable; legend text slightly
+          small but legible.
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Minor crowding of alpha risk label near AQL line and converging curves.
+        comment: Minor crowding of beta risk label near x-axis tick labels at 10%
+          mark. All other text well-separated.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Lines with strokeWidth=3 clearly visible and well-differentiated.
-          Risk points prominent.
+        comment: Lines at strokeWidth=3 with distinct dash patterns. Risk points at
+          size=300 with white stroke are prominent.
       - id: VQ-04
         name: Color Accessibility
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Blue/orange/green distinguishable but green and blue converge at
-          endpoints.
+        comment: Blue/orange/purple palette is colorblind-safe, further distinguished
+          by solid/dashed/dotted line patterns.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions at 1600x900, balanced margins, plot fills canvas
-          well.
+        comment: 1600x900 chart fills canvas well with balanced margins. Legend positioned
+          efficiently in upper-right.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with notation: Fraction Defective (p) and Probability
-          of Acceptance P(a).'
+        comment: 'Descriptive axis labels with notation: Fraction Defective (p) and
+          Probability of Acceptance P(a).'
     design_excellence:
       score: 13
       max: 20
@@ -93,24 +94,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom color scale, good typography hierarchy, styled reference lines.
-          Above defaults but not publication-level.
+        comment: Custom cohesive palette, dash patterns for dual encoding, professional
+          subtitle. Above defaults but not publication-flagship.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Subtle grid (0.15 opacity), removed spines/borders, clean axes. Good
-          refinement.
+        comment: Grid opacity 0.15, spines removed, clean whitespace, rounded-corner
+          legend box.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: AQL/LTPD references and risk annotations create clear narrative about
-          producer vs consumer risk.
+        comment: Plan labels (lenient/moderate/strict) guide interpretation. AQL/LTPD
+          lines with risk annotations create focal points.
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -118,67 +119,69 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct OC curves showing acceptance probability vs fraction defective.
+        comment: Correct OC curve showing probability of acceptance vs fraction defective.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Multiple sampling plans, AQL/LTPD references, risk annotations all
-          present.
+        comment: 'All features: multiple OC curves, AQL/LTPD reference lines, risk
+          annotations, smooth lines, 0-0.20 range.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=fraction defective, Y=probability of acceptance. Correct with appropriate
-          ranges.
+        comment: X = fraction defective, Y = probability of acceptance. Full range
+          shown.
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Title format correct. Legend not visible in rendered PNG output.
+        passed: true
+        comment: Title matches required format. Legend labels correctly identify each
+          plan with descriptive qualifiers.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Three plans show discrimination differences. Could benefit from more
-          varied c/n ratios.
+        comment: Three plans with varied n/c ratios show distinct curve shapes from
+          lenient to strict discrimination.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Quality control acceptance sampling is a real-world industrial scenario.
+        comment: Real-world quality control with industry-standard AQL=2% and LTPD=10%.
+          Neutral domain.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: AQL 2%, LTPD 10%, sample sizes 50-150 are realistic industrial values.
+        comment: Realistic sample sizes (50, 100, 200), sensible acceptance numbers
+          (1-3), standard AQL/LTPD values.
     code_quality:
       score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Defines binom_cdf helper function, slight deviation from flat KISS
-          structure.
+        passed: true
+        comment: Imports -> data -> plot -> save flow. No functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic data from binomial CDF calculations.
+        comment: Fully deterministic binomial calculations with no randomness.
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -187,17 +190,17 @@ review:
         comment: 'All imports used: math.comb, altair, numpy, pandas.'
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Clean, well-organized. Interactive hover features legitimate for
-          Altair.
+        passed: false
+        comment: Manual in-chart legend construction is verbose (~50 lines with loops).
+          Functional but could be leaner.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html, uses current Altair API.
+        comment: Saves as plot.png and plot.html. Current Altair API.
     library_mastery:
       score: 8
       max: 10
@@ -207,23 +210,25 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Good declarative grammar: layered composition, encoding types, Scale/Axis,
-          configure_* methods.'
+        comment: 'Good declarative grammar usage: encoding channels, marks, layer
+          composition. Manual legend bypasses built-in system.'
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Interactive selection, conditional encoding, hover tooltips, layered
-          composition distinctive to Altair.
+        comment: 'Altair-specific interactivity: selection_point with nearest hover,
+          transform_filter, tooltips, hover rule + highlight pattern.'
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - layer-composition
+  - custom-legend
   - hover-tooltips
+  - layer-composition
   - html-export
+  - manual-ticks
   patterns:
   - data-generation
   - iteration-over-groups
