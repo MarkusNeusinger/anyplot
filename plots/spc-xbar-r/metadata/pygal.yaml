@@ -1,7 +1,7 @@
 library: pygal
 specification_id: spc-xbar-r
 created: '2026-03-19T21:49:31Z'
-updated: '2026-03-19T22:13:06Z'
+updated: '2026-03-19T22:21:16Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23318370480
 issue: 4551
@@ -13,33 +13,34 @@ preview_html: https://storage.googleapis.com/pyplots-images/plots/spc-xbar-r/pyg
 quality_score: 83
 review:
   strengths:
-  - Full spec compliance with all SPC features (UCL, LCL, CL, warning limits, OOC
-    detection using A2/D3/D4 constants)
-  - Realistic CNC machining data context with plausible measurement values
-  - Effective visual hierarchy with red OOC markers at larger size creating immediate
-    focal points
-  - 'Good pygal-specific techniques: per-point color/size styling, dual-chart compositing
-    via PIL'
+  - 'Perfect spec compliance: all required SPC features implemented (UCL/LCL, center
+    line, warning limits, OOC highlighting, A2/D3/D4 constants)'
+  - Excellent data quality with realistic CNC shaft diameter scenario and well-placed
+    out-of-control points
+  - Good use of pygal-specific features (per-point styling, stroke dasharray, custom
+    Style)
+  - Clean, well-structured code with appropriate complexity for dual-chart compositing
+  - Custom color palette and beige background provide visual distinction from defaults
   weaknesses:
-  - Normal data point dots (8px) slightly small relative to 4800px canvas
-  - Warning limit lines do not contrast strongly enough against beige background
-  - HTML generation code adds unnecessary complexity for PNG output task
-  - Y-axis grid lines could be more subtle to separate from control limit lines
-  image_description: 'The plot displays two vertically stacked Statistical Process
-    Control charts for CNC shaft diameter measurements. The top X-bar chart shows
-    sample means (y-axis "X̄ (mm)" ranging ~24.94–25.08) plotted as a blue line with
-    dots across 30 samples. Three out-of-control points are highlighted with larger
-    red markers at approximately samples 8, 19, and 25. Horizontal reference lines
-    include a solid dark center line (CL ~25.00), dashed gray UCL/LCL lines, and lighter
-    dashed orange/yellow warning limits (±2σ). The bottom R chart shows sample ranges
-    (y-axis "R (mm)" ranging 0–0.11) with the same blue line/dot style. Both charts
-    share a warm beige plot background (#F4F3EE) on a white canvas. The x-axis is
-    labeled "Sample Number" with ticks at 1, 5, 10, 15, 20, 25, 30. A shared legend
-    at the bottom identifies: Sample Mean/Range, Out of Control, Center Line (CL),
-    UCL/LCL (±3σ), and Warning (±2σ). The title reads "spc-xbar-r · pygal · pyplots.ai".'
+  - X-bar chart legend second row partially cut off due to margin_bottom=20 being
+    too tight
+  - Orange warning lines and red UCL/LCL lines are somewhat similar in hue, reducing
+    distinctiveness
+  - Design polish could be improved with more visual refinement
+  image_description: 'The plot displays two vertically stacked SPC charts for CNC
+    shaft diameter measurements. The X-bar chart (top) shows 30 sample means connected
+    by a blue line with blue dots, centered around 25.000 mm. A solid dark center
+    line sits at CL=25.001, with red dashed UCL (~25.027) and LCL (~24.975) lines,
+    and orange dashed ±2σ warning limits. Three out-of-control points are highlighted
+    in red: sample 8 (high, ~25.052), sample 19 (low, ~24.928), and sample 25 (high,
+    ~25.080). The R chart (bottom) shows sample ranges with blue line/dots, a red
+    solid center line at CL=0.046, dark dashed UCL at 0.098, red dashed LCL at 0.000,
+    and a blue dashed +2σ warning line. Both charts have a beige plot background on
+    white, with legends at bottom. A subtle gray divider separates the two charts.
+    Title reads "spc-xbar-r · pygal · pyplots.ai".'
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 24
       max: 30
       items:
       - id: VQ-01
@@ -47,40 +48,41 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title=48, labels=28, legend=24); all readable,
-          4-decimal y-tick labels slightly dense
+        comment: Font sizes explicitly set (title=48, label=28, legend=24). All text
+          readable, X-bar legend second row slightly small.
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 4
         max: 6
-        passed: true
-        comment: No overlapping text; x-labels well spaced at intervals of 5
+        passed: false
+        comment: X-bar chart legend second row partially cut off due to tight margin_bottom=20.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: OOC markers enlarged (14px); normal dots (8px) slightly small for
-          4800px canvas
+        comment: Data points well-sized (dots_size=12/14 for OOC). Control lines distinguishable
+          with different dash patterns.
       - id: VQ-04
         name: Color Accessibility
         score: 3
         max: 4
         passed: true
-        comment: Blue/red scheme distinguishable for most colorblind types; warning
-          line contrast could be stronger
+        comment: Blue/red distinction is colorblind-friendly. Orange warning vs red
+          UCL lines somewhat similar.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good dual-chart stacking; slight excess whitespace below legend
+        comment: Good vertical stacking with divider. X-bar bottom margin too tight,
+          crowding legend.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive with units: X-bar (mm), R (mm), Sample Number'
+        comment: X-bar (mm), R (mm), Sample Number — descriptive with units.
     design_excellence:
       score: 12
       max: 20
@@ -90,22 +92,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom warm palette with intentional color coding; beige plot background
-          elevates beyond defaults
+        comment: Custom beige plot background, intentional color palette, custom typography.
+          Above defaults but not publication-ready.
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Custom plot background, x-guides disabled, subtle y-guides; some
-          refinement but grid could be more polished
+        comment: Custom plot background, no x-guides, subtle grid color. Some refinement
+          visible.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: OOC points highlighted with color AND size creating focal points;
-          control zones provide visual hierarchy
+        comment: OOC points highlighted in red with larger markers, control limits
+          labeled with values. Clear visual hierarchy.
     spec_compliance:
       score: 15
       max: 15
@@ -115,52 +117,53 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: X-bar on top, R on bottom, vertically stacked pair'
+        comment: X-bar on top, R chart on bottom, vertically stacked pair sharing
+          x-axis.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All present: dashed UCL/LCL, solid CL, OOC highlighting, warning
-          limits, A2/D3/D4 constants'
+        comment: 'All features present: UCL/LCL dashed and labeled, center line solid,
+          OOC highlighted, warning limits, A2/D3/D4 constants.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Sample IDs on x-axis, means/ranges on y-axis, all data visible
+        comment: X-axis = sample number, Y-axes correctly show X-bar and R values.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend labels descriptive with numeric values
+        comment: Title format correct. Legend labels descriptive with computed CL/UCL/LCL
+          values.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Three distinct OOC events in X-bar; R chart shows natural variation
-          but no R-chart OOC points
+        comment: Shows OOC above UCL and below LCL. R chart shows natural variability.
+          Both demonstrate SPC detection.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: CNC shaft diameter measurements with 25.00 mm target — excellent
-          manufacturing scenario
+        comment: CNC shaft diameter measurements — realistic manufacturing QC scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Target 25.00 mm with sigma=0.02 mm realistic for precision machining
+        comment: Target 25.00mm with 0.02mm process std — realistic for CNC machining.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -168,31 +171,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, chart creation, compositing, save'
+        comment: Clean imports → data → plot → save structure, no functions/classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: All imports used.
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: HTML generation adds complexity beyond required plot.png output
+        passed: true
+        comment: Clean, appropriate complexity for dual-chart compositing.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with 300 DPI
+        comment: Saves as plot.png with 300 DPI.
     library_mastery:
       score: 7
       max: 10
@@ -202,26 +205,26 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Good pygal patterns: XY chart, Style class, per-point styling with
-          color/dots_size override'
+        comment: Good use of pygal.XY with custom Style, per-point styling, stroke_style
+          dasharray.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Per-point styling, HTML interactive SVG export, legend_at_bottom_columns
-          layout
+        comment: 'Uses pygal-specific features: per-point color/size dicts, stroke_style
+          dasharray, legend_at_bottom_columns, SVG→PNG via cairosvg.'
   verdict: REJECTED
 impl_tags:
   dependencies:
-  - pillow
   - cairosvg
+  - pillow
   techniques:
   - subplots
   - custom-legend
-  - html-export
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep: []
   styling:
   - grid-styling
