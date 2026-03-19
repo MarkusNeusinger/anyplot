@@ -1,7 +1,7 @@
 library: bokeh
 specification_id: histogram-capability
 created: '2026-03-19T21:44:22Z'
-updated: '2026-03-19T21:48:00Z'
+updated: '2026-03-19T21:58:22Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23318228449
 issue: 4552
@@ -10,30 +10,33 @@ library_version: 3.9.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/histogram-capability/bokeh/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/histogram-capability/bokeh/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/histogram-capability/bokeh/plot.html
-quality_score: 83
+quality_score: 85
 review:
   strengths:
-  - Perfect spec compliance - all required features present with correct Cp/Cpk calculations
-  - Realistic manufacturing data with appropriate scale values
-  - Clean well-structured code with good use of ColumnDataSource
-  - Interactive features (HoverTool, hover highlighting) showcase Bokeh strengths
-  - 'Good visual refinement: subtle grid, muted axis lines, clean frame'
+  - Full spec compliance with all required features (histogram, normal curve, LSL/USL,
+    target, Cp/Cpk)
+  - Excellent use of Bokeh-specific features (HoverTool, interactive hover highlighting,
+    dual HTML+PNG export)
+  - Clean, well-structured code with appropriate complexity
+  - Realistic manufacturing data context with correct capability calculations
+  - Good visual refinement (subtle grid, clean frame, intentional typography)
   weaknesses:
-  - Red-green color scheme for LSL/USL vs Target lines is not colorblind-safe
-  - LSL/USL lines at very edges of plot, partially cut off
-  - Normal curve uses same blue as histogram bars, lacks visual distinction
-  - No visual emphasis on spec zone between LSL and USL
-  - Mean line thin and hard to distinguish
-  image_description: The plot displays a histogram of 200 shaft diameter measurements
-    (mm) in steel-blue (#306998) bars with white edges, overlaid with a fitted normal
-    distribution curve in the same blue color. Red dashed vertical lines mark LSL
-    (9.95) and USL (10.05) at the far left and right edges of the data range. A green
-    dashed vertical line marks the target value (10.00) near the center. A purple
-    dashed line shows the mean (~10.0015). The title reads "histogram-capability ·
-    bokeh · pyplots.ai". A legend in the top-right lists all five elements (Normal
-    Fit, LSL, USL, Target, Mean). A bold text annotation in the upper-left shows "Cp
-    = 1.49 | Cpk = 1.45 | N = 200". X-axis labeled "Shaft Diameter (mm)", Y-axis labeled
-    "Frequency". Y-axis-only subtle grid, clean white background with muted axis lines.
+  - Red and green used together for LSL/USL and Target lines — not colorblind-safe
+  - Target (10.00) and Mean (10.0015) lines nearly overlap, hard to distinguish
+  - Background has a gray-blue tint instead of clean white
+  - Color palette uses 4+ distinct hues without cohesion — could be more harmonious
+  image_description: The plot shows a process capability histogram with steel blue
+    bars representing 200 shaft diameter measurements (mm) on the x-axis ranging from
+    approximately 9.94 to 10.06. The y-axis shows frequency from 0 to 35. An orange
+    normal distribution curve is overlaid on the histogram. Red dashed vertical lines
+    mark LSL (9.95) and USL (10.05) at the edges of the data range. A blue dashed
+    vertical line marks the Target (10.00), and a purple dotted line marks the Mean
+    (10.0015) — these two lines are extremely close together near the center. The
+    annotation "Cp = 1.49 | Cpk = 1.45 | N = 200" appears in the upper left area.
+    A legend in the upper right identifies all line types with their values. The background
+    has a light gray-blue tint rather than pure white. The data distribution is roughly
+    bell-shaped, centered near the target value, and well within the specification
+    limits, indicating a capable process.
   criteria_checklist:
     visual_quality:
       score: 25
@@ -44,43 +47,43 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 38pt, axis labels 28pt, ticks
-          22pt, legend 22pt, annotation 26pt). Legend entries slightly small at rendered
-          resolution.
+        comment: All font sizes explicitly set (title 38pt, labels 28pt, ticks 22pt,
+          legend 22pt). Legend text appears slightly small relative to large canvas.
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No overlapping text or elements anywhere.
+        comment: Target (10.00) and Mean (10.0015) lines nearly overlap visually despite
+          different colors.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Bars well-sized, lines visible. Mean line (purple, 3px) hard to distinguish
-          from normal curve.
+        comment: All elements visible. Target/mean line proximity reduces distinguishability.
       - id: VQ-04
         name: Color Accessibility
-        score: 2
+        score: 3
         max: 4
-        passed: false
-        comment: Red-green color pairing for LSL/USL vs Target lines is not colorblind-safe.
+        passed: true
+        comment: Red and green used together for LSL/USL and Target — problematic
+          for red-green colorblind viewers.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good layout overall. LSL/USL lines at very edges of plot, USL nearly
-          cut off.
+        comment: Good canvas utilization with explicit margins. Background has gray-blue
+          tint instead of white.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Shaft Diameter (mm) with units, Frequency appropriate.
+        comment: Shaft Diameter (mm) with units, Frequency is descriptive.
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -88,22 +91,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Thoughtful color scheme, custom typography hierarchy, styled legend.
-          Above default but not publication-level.
+        comment: Thoughtful color palette, custom typography, hover effects. Above
+          defaults but not publication-level.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: X-grid removed, y-grid subtle, outline removed, minor ticks hidden,
-          muted axis lines.
+        comment: X-grid hidden, y-grid subtle, outline removed, minor ticks removed,
+          clean frame.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Cp/Cpk annotation and spec limit lines create some narrative but
-          no emphasis on spec zone or key insight.
+        passed: true
+        comment: Cp/Cpk annotation contextualizes data, spec limits frame the histogram
+          for capability assessment.
     spec_compliance:
       score: 15
       max: 15
@@ -114,26 +117,26 @@ review:
         max: 5
         passed: true
         comment: 'Correct: histogram with normal distribution overlay and specification
-          limits.'
+          limit lines.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: histogram, normal fit, LSL/USL, target, Cp/Cpk
-          annotations, plus mean line.'
+        comment: 'All required features present: histogram, normal fit, LSL/USL, target,
+          Cp/Cpk.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=measurements, Y=frequency. Axes show full data range.
+        comment: X = measurements, Y = frequency. Full data range shown.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Legend labels match data with values.
+        comment: Title format correct. Legend labels identify all elements with values.
     data_quality:
       score: 14
       max: 15
@@ -144,21 +147,19 @@ review:
         max: 6
         passed: true
         comment: Shows histogram, normal fit, spec limits, capability indices. Process
-          could be slightly off-center to better differentiate Cp from Cpk.
+          is very capable — borderline case would demonstrate more.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Shaft diameter measurements in manufacturing - real, neutral, comprehensible
-          scenario.
+        comment: Shaft diameter manufacturing — real-world, neutral engineering scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 10mm shaft with ±0.05mm tolerance, sigma≈0.012mm - realistic precision
-          manufacturing values.
+        comment: 200 measurements, realistic precision machining values.
     code_quality:
       score: 10
       max: 10
@@ -168,8 +169,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports, data, stats, plot, save. No functions
-          or classes.'
+        comment: 'Flat structure: imports, data, stats, plot, save.'
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -187,15 +187,15 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriate complexity. HoverTool is legitimate Bokeh interactivity.
+        comment: Clean, appropriate complexity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png via export_png, also saves HTML.
+        comment: Saves as plot.png and plot.html.
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -203,15 +203,15 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses ColumnDataSource, figure, quad, HoverTool, Label, Legend/LegendItem.
-          Could use Span model for vertical lines.
+        comment: Good ColumnDataSource, Legend, Label usage. Could use Span model
+          for reference lines.
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: HoverTool with custom tooltips, hover_fill_color for interactive
-          highlighting, dual HTML+PNG output.
+        comment: HoverTool with tooltips, hover_fill_color, dual HTML+PNG export —
+          distinctive Bokeh features.
   verdict: REJECTED
 impl_tags:
   dependencies:
