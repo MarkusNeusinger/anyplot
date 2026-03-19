@@ -1,0 +1,234 @@
+library: pygal
+specification_id: spc-xbar-r
+created: '2026-03-19T21:49:31Z'
+updated: '2026-03-19T22:28:55Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23318370480
+issue: 4551
+python_version: 3.14.3
+library_version: 3.1.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/spc-xbar-r/pygal/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/spc-xbar-r/pygal/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/spc-xbar-r/pygal/plot.html
+quality_score: 84
+review:
+  strengths:
+  - Excellent spec compliance with all SPC features implemented correctly using proper
+    control chart constants (A2, D3, D4)
+  - Realistic CNC shaft diameter manufacturing data with meaningful OOC scenarios
+    (tool wear, recalibration overshoot, material batch change)
+  - Thoughtful visual hierarchy with red OOC highlights and differentiated line styles
+    (solid, dashed, dot-dash)
+  - Clean well-structured code with proper pygal SVG-to-PNG compositing workaround
+    for subplot support
+  - Custom color palette with warm background and intentional typography hierarchy
+  weaknesses:
+  - Red color reuse for both OOC points and UCL/LCL lines reduces visual clarity for
+    colorblind users
+  - Design excellence above defaults but not yet publication-ready level
+  - X-bar legend slightly crowded with 7 entries
+  image_description: 'The plot displays a vertically stacked pair of Statistical Process
+    Control charts for CNC shaft diameter measurements. The top chart (X-bar) shows
+    sample means plotted around 25.000 mm with blue connected dots on a warm off-white
+    background (#FAFAF8). Three out-of-control points are highlighted in red with
+    slightly larger markers: sample 8 (upward shift ~25.043), sample 19 (downward
+    shift ~24.930), and sample 25 (upward shift ~25.080). Horizontal reference lines
+    include a dark solid center line (CL = 25.001), red dashed UCL (25.027) and LCL
+    (24.974), and purple dot-dash warning limits at plus/minus 2 sigma. The bottom
+    chart (R chart) shows sample ranges in the same blue style, with a solid center
+    line (CL = 0.046), dashed UCL (0.098), LCL at 0.000, and a +2 sigma warning line.
+    A subtle gray divider separates the two charts. Both charts share x-axis sample
+    numbers 1-30. Legends are displayed at the bottom of each chart with labeled entries
+    for all series.'
+  criteria_checklist:
+    visual_quality:
+      score: 25
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Font sizes explicitly set (title=52, label=30, legend=26). All text
+          readable. Legend text slightly small relative to chart area.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: No significant overlap. X-bar legend with 7 items slightly crowded
+          but readable.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Dots size 12, OOC dots size 14. Visible but could be slightly larger
+          at this canvas size.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 3
+        max: 4
+        passed: true
+        comment: Blue/red distinction works but red used for both OOC points and control
+          limit lines could confuse colorblind users.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good stacked layout at 4800x2700. Charts fill most of canvas with
+          balanced margins.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: X-bar (mm), R (mm), Sample Number — all descriptive with units.
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Custom palette, warm background, custom font family. Above defaults
+          but not publication-ready.
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Subtle grid color, x-guides disabled, custom margins. Some refinement
+          beyond defaults.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: OOC points highlighted in red with larger markers creating visual
+          hierarchy. Viewer immediately sees process instability.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: X-bar on top, R on bottom, vertically stacked pair sharing x-axis.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features: dashed UCL/LCL, solid CL, OOC highlights, warning
+          limits, 3 OOC points, standard constants.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = sample number, Y = X-bar/R values. All data visible with appropriate
+          padding.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct. Legend labels include series names with computed
+          values.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: OOC in both directions, varied ranges, in-control and out-of-control
+          states demonstrated.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: CNC shaft diameter at 25mm target. Real-world manufacturing scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 25mm diameter with 0.02mm std dev realistic for CNC machining.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports, constants, data, charts, render, composite,
+          save.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) ensures deterministic output.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: io, cairosvg, numpy, pygal, PIL, pygal.style.Style.'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-organized. Necessary repetition between X-bar and R chart.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with 300 DPI. Current API.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of pygal.XY, custom Style, per-point dicts, stroke_style
+          with dasharray.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Per-point styling dicts, SVG-native rendering with cairosvg compositing,
+          stroke_style dasharray patterns.
+  verdict: REJECTED
+impl_tags:
+  dependencies:
+  - pillow
+  - cairosvg
+  techniques:
+  - custom-legend
+  - subplots
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - grid-styling
