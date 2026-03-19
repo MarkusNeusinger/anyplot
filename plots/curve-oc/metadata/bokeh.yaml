@@ -1,0 +1,234 @@
+library: bokeh
+specification_id: curve-oc
+created: '2026-03-19T20:37:46Z'
+updated: '2026-03-19T20:51:31Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23315608750
+issue: 4553
+python_version: 3.14.3
+library_version: 3.9.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/curve-oc/bokeh/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/curve-oc/bokeh/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/curve-oc/bokeh/plot.html
+quality_score: 90
+review:
+  strengths:
+  - Excellent spec compliance with all required features including AQL/LTPD lines,
+    alpha/beta risk annotations, and 3 sampling plans
+  - Strong data storytelling with shaded risk zones and labeled risk points
+  - Well-refined visual design with removed axis lines, subtle grid, custom background,
+    and polished legend
+  - Colorblind-safe palette with additional line dash differentiation
+  - Dual output (PNG + HTML) leveraging Bokeh interactive capability
+  weaknesses:
+  - Minor text congestion near top-left where curves converge and producer risk annotation
+    overlaps
+  - Rejectable Quality zone label is extremely faint (alpha=0.35), nearly invisible
+  - Some dead space in x>0.08 region where all curves flatten to near zero
+  image_description: 'The plot displays three Operating Characteristic (OC) curves
+    on a light gray (#F8F9FA) background. The title "curve-oc · bokeh · pyplots.ai"
+    appears in dark blue bold text at the top left. The x-axis is labeled "Fraction
+    Defective (p)" ranging from 0 to ~0.125, and the y-axis "Probability of Acceptance
+    P(a)" from 0 to 1. Three curves are plotted: a solid blue line (n=50, c=1), a
+    dashed amber/orange line (n=100, c=2), and a dot-dash purple line (n=150, c=3).
+    A white-background legend in the top right identifies all three plans. Two vertical
+    dashed gray reference lines mark AQL=1% and LTPD=8%. A light blue shaded region
+    appears left of AQL (producer''s risk zone) and a light red shaded region appears
+    right of LTPD with faint italic "Rejectable Quality" text. Diamond markers in
+    amber highlight producer''s risk (α=0.079) at AQL and consumer''s risk (β=0.011)
+    at LTPD on the n=100 curve, with bold labeled annotations. Grid lines are subtle
+    dashed gray at low alpha. Axis lines and tick marks are removed for a clean look.'
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 36pt, labels 26pt, ticks 20pt,
+          annotations 20-22pt, legend 22pt). Minor deduction for slightly small annotation
+          text relative to canvas.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Mostly clean. Producer's risk label near curve convergence area causes
+          slight visual congestion.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Lines at width 5 clearly visible, distinct dash patterns provide
+          additional differentiation, diamond markers at size 24 are prominent.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue, amber, purple palette is colorblind-safe with good contrast
+          against light background.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good proportions at 4800x2700. Some dead space in x>0.08 region where
+          curves flatten, though reasonable for showing full range.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive labels with parameter notation: Fraction Defective (p)
+          and Probability of Acceptance P(a).'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Strong design with custom colorblind-safe palette, intentional color
+          hierarchy, styled legend, custom backgrounds. Clearly above defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Axis lines and ticks removed, subtle dashed grid at 0.12 alpha, custom
+          background colors, outline removed. Well-polished.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Effective storytelling through shaded risk zones, labeled alpha/beta
+          risk points with diamond markers, zone labels, AQL/LTPD reference lines.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct OC curves using binomial CDF.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: AQL/LTPD lines, risk annotations, 3 sampling
+          plans, smooth lines, reasonable x-axis range.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=fraction defective, Y=probability of acceptance. Correct mapping.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format. Legend labels correctly identify sampling
+          plans.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Three sampling plans with varying n and c, showing discrimination
+          power differences across full acceptance probability range.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Quality control acceptance sampling with realistic manufacturing
+          parameters.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Fraction defective 0-0.125 realistic for manufacturing. Risk values
+          mathematically correct.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports, data, plot, style, save. No functions or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic binomial CDF computation, no randomness.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, readable code with appropriate complexity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png via export_png. Current Bokeh API.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses ColumnDataSource, Span, BoxAnnotation, Label, Legend with LegendItem
+          — all proper Bokeh patterns.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: BoxAnnotation for shaded zones, Span for reference lines, dual PNG+HTML
+          output are Bokeh-distinctive features.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  - columndatasource
+  dataprep: []
+  styling:
+  - grid-styling

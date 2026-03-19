@@ -1,0 +1,234 @@
+library: plotly
+specification_id: curve-oc
+created: '2026-03-19T20:36:21Z'
+updated: '2026-03-19T21:00:20Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23315608595
+issue: 4553
+python_version: 3.14.3
+library_version: 6.6.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/curve-oc/plotly/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/curve-oc/plotly/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/curve-oc/plotly/plot.html
+quality_score: 90
+review:
+  strengths:
+  - 'Excellent spec compliance with all required features: multiple OC curves, AQL/LTPD
+    reference lines, producer and consumer risk annotations with shaded regions'
+  - Strong data storytelling through shaded risk regions and labeled diamond markers
+    that guide the viewer
+  - Clean deterministic code using scipy binomial CDF for mathematically correct calculations
+  - Good use of Plotly-specific features (hover templates, spike lines, HTML export)
+  - Professional visual design with custom palette, subtle gridlines, and refined
+    typography
+  weaknesses:
+  - Green and orange curves overlap significantly in the mid-range, slightly reducing
+    visual distinguishability
+  - Color accessibility could be marginally improved for deuteranopia with more contrasting
+    hues between orange and green
+  image_description: 'The plot displays three Operating Characteristic (OC) curves
+    for single-sample acceptance sampling plans. The title reads "curve-oc · plotly
+    · pyplots.ai" with a subtitle "Single-Sample Acceptance Sampling — How Sample
+    Size Affects Lot Discrimination". Three smooth S-shaped curves are shown: n=50,
+    c=1 (dark blue), n=100, c=2 (orange), and n=150, c=3 (green), all descending from
+    probability ~1.0 at fraction defective 0 toward 0 as defective fraction increases.
+    Two vertical dashed gray lines mark AQL=0.02 and LTPD=0.08. A light blue shaded
+    region between the first OC curve and y=1 near AQL illustrates producer''s risk
+    (alpha=0.264), while a light pink shaded region between the OC curve and y=0 beyond
+    LTPD illustrates consumer''s risk (beta=0.083). Blue and purple diamond markers
+    with white borders annotate the alpha and beta risk values respectively. The legend
+    titled "Sampling Plans" is positioned in the upper right with a subtle border.
+    The x-axis is labeled "Fraction Defective (p)" (0.00-0.20) and the y-axis "Probability
+    of Acceptance" (0-1.0). The background is clean white with subtle y-axis gridlines
+    only.'
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 28pt, axis labels 22pt, ticks
+          18pt, annotations 15pt, legend 15pt'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text elements. AQL/LTPD labels well separated, legend
+          doesn't obstruct data
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Lines width 3.5 clearly visible. Diamond markers size 16 stand out.
+          Green and orange curves run close together in mid-range
+      - id: VQ-04
+        name: Color Accessibility
+        score: 3
+        max: 4
+        passed: true
+        comment: Blue/orange/green reasonably colorblind-safe. Orange and green may
+          be slightly difficult for some deuteranopia cases
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good canvas utilization with balanced margins. Plot fills space well
+          at 1600x900 scale=3
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive labels with variable notation: Fraction Defective (p),
+          Probability of Acceptance'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom palette, diamond markers with white borders, styled legend,
+          shaded risk regions. Clearly above defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: X-axis grid removed, y-axis grid very subtle, plotly_white template,
+          light axis lines
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Shaded risk regions and diamond markers create focal points. Three
+          curves show discrimination comparison clearly
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct OC curves showing probability of acceptance vs fraction defective
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: multiple OC curves, AQL/LTPD lines, producer/consumer
+          risk with shaded regions'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct X/Y mapping with appropriate x-axis range 0-0.20
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct. Legend labels match sampling plan data
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Three sampling plans with varying n and c. Both risks visualized.
+          S-shaped curves show characteristic OC behavior
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Quality inspection / acceptance sampling is a genuine industrial
+          application. Neutral topic
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Standard industry values: AQL=0.02, LTPD=0.08. Realistic sample
+          sizes. Correct binomial CDF'
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean Imports-Data-Compute-Plot-Save structure. No functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic using binomial CDF calculations
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: numpy, plotly.graph_objects, scipy.stats.binom'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-organized, clean loop over sampling plans, appropriate complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot.png with correct dimensions. Also exports HTML
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of go.Scatter, fill=toself, add_shape, add_annotation, update_layout
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Hover templates, spikemode, hovermode x unified, HTML export are
+          distinctive Plotly features
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - scipy
+  techniques:
+  - annotations
+  - hover-tooltips
+  - html-export
+  patterns:
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling

@@ -1,0 +1,224 @@
+library: altair
+specification_id: curve-oc
+created: '2026-03-19T20:35:59Z'
+updated: '2026-03-19T20:56:52Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23315609091
+issue: 4553
+python_version: 3.14.3
+library_version: 6.0.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/curve-oc/altair/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/curve-oc/altair/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/curve-oc/altair/plot.html
+quality_score: 94
+review:
+  strengths:
+  - Excellent spec compliance with all required features (AQL, LTPD, risk annotations,
+    multiple plans)
+  - Strong data storytelling through shaded risk regions, reference lines, and labeled
+    risk points
+  - Professional visual polish with custom palette, styled legend, subtle grid, and
+    removed spines
+  - Effective use of Altair interactive capabilities (hover tooltips, selection-based
+    highlighting)
+  - Clean, well-structured code with deterministic binomial computation
+  weaknesses:
+  - 'Minor: x-axis extends to 20% where all curves are at zero from ~12% onward, creating
+    some unused space (though spec-compliant)'
+  image_description: 'The plot displays three Operating Characteristic (OC) curves
+    on a clean white canvas. The x-axis shows "Fraction Defective (p)" from 0% to
+    20%, and the y-axis shows "Probability of Acceptance P(a)" from 0.00 to 1.00.
+    Three sampling plans are plotted: a solid blue line for n=50, c=1 (lenient), an
+    orange dashed line for n=100, c=3 (moderate), and a purple dotted line for n=200,
+    c=2 (strict). Two vertical dashed reference lines mark AQL at 2% (blue) and LTPD
+    at 10% (red/pink), with labels above. Very subtle shaded regions highlight the
+    AQL zone (light blue, left) and LTPD zone (light pink, right). Two annotated risk
+    points on the n=100 curve show α = 14.1% (Producer''s Risk) at AQL and β = 0.8%
+    (Consumer''s Risk) at LTPD. A styled legend box with rounded corners sits in the
+    top-right corner. The title reads "curve-oc · altair · pyplots.ai" with subtitle
+    "Acceptance Sampling Plans — Producer''s & Consumer''s Risk".'
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 28pt, subtitle 18pt, axis titles
+          22pt, ticks 18pt, legend 16-17pt, annotations 17-18pt'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text. Risk labels offset with dx/dy to avoid collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Lines at strokeWidth=3 with distinct dash patterns. Risk points size=300
+          clearly visible
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue/orange/purple palette is colorblind-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good proportions but right ~35% of plot shows all curves at zero
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive labels with notation: Fraction Defective (p), Probability
+          of Acceptance P(a)'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom palette, styled legend with background/border/rounded corners,
+          intentional hierarchy
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: View stroke removed, axis domain hidden, subtle grid opacity 0.12,
+          custom colors
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Shaded risk regions, AQL/LTPD reference lines, risk annotations create
+          clear narrative
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct OC curves using binomial CDF
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec requirements met: multiple plans, AQL/LTPD, risk annotations'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=fraction_defective, Y=probability_acceptance correctly mapped
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct, legend labels match sampling plans
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Three plans with varied n/c ratios demonstrating different discrimination
+          levels
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Standard quality control scenario with real-world terminology
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Realistic sample sizes and standard AQL/LTPD values
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean Imports-Data-Plot-Save flow, no functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic binomial computation
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: math.comb, altair, numpy, pandas'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for multi-layer interactive chart
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with scale_factor=3.0 and plot.html
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert use of declarative grammar, encoding channels, layer composition
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: selection_point, transform_filter, tooltip encoding, HTML export
+          - Altair-distinctive
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - grid-styling
