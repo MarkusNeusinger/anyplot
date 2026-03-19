@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 spc-xbar-r: Statistical Process Control Chart (X-bar/R)
 Library: pygal 3.1.0 | Python 3.14.3
 Quality: 83/100 | Created: 2026-03-19
@@ -59,26 +59,26 @@ C_NORMAL = "#306998"
 C_OOC = "#C0392B"
 C_CL = "#1A1A2E"
 C_UCL_LCL = "#E74C3C"
-C_WARN = "#D35400"
-PLOT_BG = "#F4F3EE"
-GRID_COLOR = "#E8E5E0"
+C_WARN = "#7D3C98"
+PLOT_BG = "#FAFAF8"
+GRID_COLOR = "#ECEAE5"
 
 custom_style = Style(
     background="white",
     plot_background=PLOT_BG,
-    foreground="#333333",
+    foreground="#2C3E50",
     foreground_strong="#1A1A2E",
     foreground_subtle=GRID_COLOR,
     colors=(C_NORMAL, C_OOC, C_CL, C_UCL_LCL, C_UCL_LCL, C_WARN, C_WARN),
-    title_font_size=48,
-    label_font_size=28,
-    major_label_font_size=28,
-    legend_font_size=24,
+    title_font_size=52,
+    label_font_size=30,
+    major_label_font_size=30,
+    legend_font_size=26,
     value_font_size=18,
     stroke_width=3,
-    font_family="sans-serif",
+    font_family="'Helvetica Neue', 'Segoe UI', sans-serif",
     tooltip_font_size=22,
-    opacity=0.9,
+    opacity=0.85,
     opacity_hover=1.0,
 )
 
@@ -88,20 +88,20 @@ x_labels = [str(i) if i % 5 == 0 or i == 1 else "" for i in sample_ids]
 # Common chart config
 common_config = {
     "width": 4800,
-    "height": 1300,
+    "height": 1400,
     "style": custom_style,
     "show_y_guides": True,
     "show_x_guides": False,
-    "margin": 25,
-    "margin_left": 140,
-    "margin_right": 100,
+    "margin": 30,
+    "margin_left": 150,
+    "margin_right": 110,
     "spacing": 20,
     "truncate_label": -1,
     "truncate_legend": -1,
     "print_values": False,
     "show_minor_x_labels": True,
     "legend_at_bottom": True,
-    "legend_at_bottom_columns": 4,
+    "legend_at_bottom_columns": 7,
     "legend_box_size": 20,
     "js": [],
     "explicit_size": True,
@@ -119,8 +119,8 @@ xbar_chart = pygal.XY(
     title="spc-xbar-r \u00b7 pygal \u00b7 pyplots.ai",
     x_title="",
     y_title="\u0058\u0304 (mm)",
-    margin_bottom=20,
-    margin_top=40,
+    margin_bottom=100,
+    margin_top=50,
     range=(xbar_y_min - xbar_y_pad, xbar_y_max + xbar_y_pad),
     xrange=(0, n_samples + 1),
     show_legend=True,
@@ -171,13 +171,13 @@ xbar_chart.add(
     "+2\u03c3 Warning",
     [(0.5, xbar_uw), (n_samples + 0.5, xbar_uw)],
     show_dots=False,
-    stroke_style={"width": 3, "dasharray": "10, 6", "linecap": "round"},
+    stroke_style={"width": 2.5, "dasharray": "8, 5, 3, 5", "linecap": "round"},
 )
 xbar_chart.add(
     "-2\u03c3 Warning",
     [(0.5, xbar_lw), (n_samples + 0.5, xbar_lw)],
     show_dots=False,
-    stroke_style={"width": 3, "dasharray": "10, 6", "linecap": "round"},
+    stroke_style={"width": 2.5, "dasharray": "8, 5, 3, 5", "linecap": "round"},
 )
 
 # --- R Chart ---
@@ -243,23 +243,23 @@ r_chart.add(
     "+2\u03c3 Warning",
     [(0.5, r_uw), (n_samples + 0.5, r_uw)],
     show_dots=False,
-    stroke_style={"width": 3, "dasharray": "10, 6", "linecap": "round"},
+    stroke_style={"width": 2.5, "dasharray": "8, 5, 3, 5", "linecap": "round"},
 )
 
 # Render and compose
 png_images = []
 for chart in [xbar_chart, r_chart]:
     svg_bytes = chart.render()
-    png_images.append(cairosvg.svg2png(bytestring=svg_bytes, output_width=4800, output_height=1300))
+    png_images.append(cairosvg.svg2png(bytestring=svg_bytes, output_width=4800, output_height=1400))
 
 xbar_img = Image.open(io.BytesIO(png_images[0]))
 r_img = Image.open(io.BytesIO(png_images[1]))
 combined = Image.new("RGB", (4800, 2700), "white")
-combined.paste(xbar_img, (0, 50))
-combined.paste(r_img, (0, 1350))
+combined.paste(xbar_img, (0, 0))
+combined.paste(r_img, (0, 1300))
 
 # Subtle divider
 draw = ImageDraw.Draw(combined)
-draw.line([(140, 1350), (4700, 1350)], fill="#DEE2E6", width=2)
+draw.line([(150, 1300), (4690, 1300)], fill="#D5D5D5", width=2)
 
 combined.save("plot.png", dpi=(300, 300))
