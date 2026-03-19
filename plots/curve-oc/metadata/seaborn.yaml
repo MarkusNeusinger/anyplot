@@ -1,7 +1,7 @@
 library: seaborn
 specification_id: curve-oc
 created: '2026-03-19T20:39:18Z'
-updated: '2026-03-19T20:54:56Z'
+updated: '2026-03-19T21:03:36Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23315608616
 issue: 4553
@@ -13,28 +13,28 @@ preview_html: null
 quality_score: 89
 review:
   strengths:
-  - Perfect spec compliance with all required features (OC curves, AQL/LTPD, risk
-    annotations)
+  - Perfect spec compliance with all required features (AQL/LTPD lines, risk annotations,
+    multiple sampling plans)
   - Excellent visual quality with all font sizes explicitly set and no overlap issues
-  - Professional design with custom palette, clean spines, and informative annotations
-  - Deterministic, clean code with appropriate structure
+  - Strong data storytelling through risk annotations with arrows guiding the viewer
+  - Clean deterministic code with appropriate use of scipy for binomial CDF
+  - Professional custom color palette that is colorblind-safe
   weaknesses:
-  - Seaborn is used minimally — only sns.lineplot, with all other work done in pure
+  - Library mastery is low — seaborn is used only for sns.lineplot; most work is pure
     matplotlib
-  - No distinctive seaborn features leveraged (e.g., DataFrame-based API, seaborn
-    themes, statistical estimation)
+  - Right portion of x-axis (0.125-0.200) shows flat curves at zero, creating some
+    visual dead space
   image_description: 'The plot displays three Operating Characteristic (OC) curves
-    on a clean white background with a 16:9 aspect ratio. The x-axis shows "Fraction
-    Defective (p)" ranging from 0.000 to 0.200, and the y-axis shows "Probability
-    of Acceptance P(a)" from 0.0 to 1.0. Three S-shaped curves are plotted: n=50,
-    c=1 in dark blue (#306998), n=80, c=2 in orange (#E6894A), and n=100, c=2 in green
-    (#5BA67D), each with thick lines (linewidth=3). Two vertical dashed gray lines
-    mark AQL=0.02 and LTPD=0.10 with labels at the top. Orange markers highlight the
-    producer''s risk (α=0.216) and consumer''s risk (β=0.011) for the n=80, c=2 plan,
-    with arrow annotations pointing to each. The title reads "curve-oc · seaborn ·
-    pyplots.ai" in medium weight. A frameless legend titled "Sampling Plan" sits in
-    the upper right. Top and right spines are removed, and a subtle y-axis grid (alpha=0.2)
-    is visible.'
+    on a white background with a 16:9 aspect ratio. Three smooth S-shaped curves descend
+    from left (P(a)≈1.0) to right (P(a)≈0.0): a blue line for n=50, c=1; an orange
+    line for n=80, c=2; and a green line for n=100, c=2. Two dashed gray vertical
+    reference lines mark AQL=0.02 and LTPD=0.1, with labels at the top. Orange dots
+    on the n=80, c=2 curve mark the producer''s risk (α=0.216) at AQL and consumer''s
+    risk (β=0.011) at LTPD, each with arrow annotations. The title reads "curve-oc
+    · seaborn · pyplots.ai" in medium weight. A frameless legend titled "Sampling
+    Plan" sits in the upper right. Top and right spines are removed, with a subtle
+    y-axis grid (alpha=0.2). X-axis labeled "Fraction Defective (p)" ranges 0–0.20;
+    Y-axis labeled "Probability of Acceptance P(a)" ranges 0–1.05.'
   criteria_checklist:
     visual_quality:
       score: 30
@@ -52,25 +52,26 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All text elements well-separated, no collisions
+        comment: No overlapping elements; labels, annotations, and legend well-separated
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Lines thick at linewidth=3, markers visible at markersize=10
+        comment: Lines at linewidth=3 clearly visible; risk markers at markersize=10
+          prominent
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Blue/orange/green palette is colorblind-safe with strong contrast
+        comment: Custom colorblind-safe palette with good luminance contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good 16:9 proportions, plot fills canvas well
+        comment: Good canvas utilization with 16:9 figure and balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -87,22 +88,21 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom cohesive palette, professional annotations with arrows, clean
-          typography
+        comment: Custom harmonious palette, intentional typography hierarchy, professional
+          annotations
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: Top/right spines removed, subtle y-grid, frameless legend, generous
-          whitespace
+        comment: Spines removed, subtle y-grid, frameless legend, generous whitespace
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Risk annotations and AQL/LTPD reference lines guide the viewer to
-          key insights
+        comment: Risk annotations guide viewer to key decision points; reference lines
+          provide context
     spec_compliance:
       score: 15
       max: 15
@@ -118,20 +118,20 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: multiple curves, AQL/LTPD lines, risk
-          annotations, binomial CDF'
+        comment: 'All spec features present: binomial CDF, AQL/LTPD lines, risk annotations,
+          multiple plans'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=fraction defective, Y=probability of acceptance, correct mapping
+        comment: X=fraction defective, Y=probability of acceptance, correctly mapped
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend with Sampling Plan title and accurate
+        comment: Title format correct; legend titled Sampling Plan with descriptive
           labels
     data_quality:
       score: 15
@@ -142,20 +142,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Three plans with different n and c values demonstrate discrimination
-          power differences
+        comment: Three curves with varying n and c show S-shape, discrimination differences,
+          and both risk regions
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Acceptance sampling is a real-world quality inspection scenario
+        comment: Acceptance sampling is a real-world quality engineering context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: AQL=0.02 and LTPD=0.10 are realistic thresholds
+        comment: Standard industry values for sample sizes, acceptance numbers, AQL,
+          and LTPD
     code_quality:
       score: 10
       max: 10
@@ -165,31 +166,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports-data-plot-style-save flow, no functions or classes
+        comment: Clean imports-data-plot-save flow, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic using binomial CDF
+        comment: Fully deterministic binomial CDF computation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: 'All imports used: matplotlib, numpy, seaborn, scipy.stats.binom'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized, appropriate complexity
+        comment: Clean, appropriate complexity with well-structured loop over plans
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300
+        comment: Saves as plot.png with dpi=300 and bbox_inches=tight
     library_mastery:
       score: 4
       max: 10
@@ -198,14 +199,16 @@ review:
         name: Idiomatic Usage
         score: 3
         max: 5
-        passed: false
-        comment: Uses sns.lineplot correctly but most work is pure matplotlib
+        passed: true
+        comment: Uses sns.lineplot axes-level API correctly but most styling is pure
+          matplotlib
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
         passed: false
-        comment: Generic usage; sns.lineplot could be trivially replaced with plt.plot
+        comment: Only uses sns.lineplot; no seaborn-specific features like built-in
+          themes or DataFrame-based hue plotting
   verdict: REJECTED
 impl_tags:
   dependencies:
