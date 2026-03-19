@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 curve-oc: Operating Characteristic (OC) Curve
 Library: plotly 6.6.0 | Python 3.14.3
 Quality: 85/100 | Created: 2026-03-19
@@ -32,6 +32,7 @@ for plan in sampling_plans:
 # Plot
 fig = go.Figure()
 
+# OC curves
 for i, plan in enumerate(sampling_plans):
     label = plan["label"]
     fig.add_trace(
@@ -45,69 +46,93 @@ for i, plan in enumerate(sampling_plans):
         )
     )
 
-# AQL vertical reference line
-fig.add_shape(type="line", x0=aql, x1=aql, y0=0, y1=1, line={"color": "#888888", "width": 1.5, "dash": "dash"})
-fig.add_annotation(x=aql, y=1.04, text="<b>AQL = 0.02</b>", showarrow=False, font={"size": 14, "color": "#555555"})
-
-# LTPD vertical reference line
-fig.add_shape(type="line", x0=ltpd, x1=ltpd, y0=0, y1=1, line={"color": "#888888", "width": 1.5, "dash": "dash"})
-fig.add_annotation(x=ltpd, y=1.04, text="<b>LTPD = 0.08</b>", showarrow=False, font={"size": 14, "color": "#555555"})
-
-# Producer's risk (alpha) at AQL for first plan
+# Producer's risk (alpha) shaded region: fill from OC curve up to y=1 at AQL
+# Use the first plan for risk calculations
 alpha_plan = sampling_plans[0]
 prob_accept_aql = binom.cdf(alpha_plan["c"], alpha_plan["n"], aql)
 alpha = 1 - prob_accept_aql
 
+# Shaded region for producer's risk (area between P(accept) and 1.0 near AQL)
+p_region_x = fraction_defective[fraction_defective <= aql]
+p_region_oc = binom.cdf(alpha_plan["c"], alpha_plan["n"], p_region_x)
+fig.add_trace(
+    go.Scatter(
+        x=np.concatenate([p_region_x, p_region_x[::-1]]),
+        y=np.concatenate([p_region_oc, np.ones(len(p_region_x))]),
+        fill="toself",
+        fillcolor="rgba(48, 105, 152, 0.15)",
+        line={"width": 0},
+        name=f"Producer's risk α = {alpha:.3f}",
+        hoverinfo="skip",
+        showlegend=True,
+    )
+)
+
+# Consumer's risk (beta) shaded region: fill from 0 up to OC curve at LTPD
+beta = binom.cdf(alpha_plan["c"], alpha_plan["n"], ltpd)
+
+c_region_x = fraction_defective[fraction_defective >= ltpd]
+c_region_oc = binom.cdf(alpha_plan["c"], alpha_plan["n"], c_region_x)
+fig.add_trace(
+    go.Scatter(
+        x=np.concatenate([c_region_x, c_region_x[::-1]]),
+        y=np.concatenate([np.zeros(len(c_region_x)), c_region_oc[::-1]]),
+        fill="toself",
+        fillcolor="rgba(155, 44, 138, 0.15)",
+        line={"width": 0},
+        name=f"Consumer's risk β = {beta:.3f}",
+        hoverinfo="skip",
+        showlegend=True,
+    )
+)
+
+# Producer's risk diamond marker at AQL
 fig.add_trace(
     go.Scatter(
         x=[aql],
         y=[prob_accept_aql],
-        mode="markers",
+        mode="markers+text",
         marker={"size": 16, "color": colors[0], "symbol": "diamond", "line": {"color": "white", "width": 2}},
-        name=f"Producer's risk \u03b1 = {alpha:.3f}",
+        text=[f"α={alpha:.3f}"],
+        textposition="bottom right",
+        textfont={"size": 14, "color": colors[0], "family": "Arial Black"},
+        showlegend=False,
         hovertemplate=(
-            f"<b>Producer's Risk (\u03b1)</b><br>"
+            f"<b>Producer's Risk (α)</b><br>"
             f"At AQL = {aql}<br>"
             f"P(accept) = {prob_accept_aql:.3f}<br>"
-            f"\u03b1 = {alpha:.3f}<extra></extra>"
+            f"α = {alpha:.3f}<extra></extra>"
         ),
     )
 )
 
-# Consumer's risk (beta) at LTPD for first plan
-beta = binom.cdf(alpha_plan["c"], alpha_plan["n"], ltpd)
-
+# Consumer's risk diamond marker at LTPD - use purple to distinguish from orange curve
 fig.add_trace(
     go.Scatter(
         x=[ltpd],
         y=[beta],
-        mode="markers",
-        marker={"size": 16, "color": "#D64545", "symbol": "diamond", "line": {"color": "white", "width": 2}},
-        name=f"Consumer's risk \u03b2 = {beta:.3f}",
-        hovertemplate=(f"<b>Consumer's Risk (\u03b2)</b><br>At LTPD = {ltpd}<br>P(accept) = {beta:.3f}<extra></extra>"),
+        mode="markers+text",
+        marker={"size": 16, "color": "#9B2C8A", "symbol": "diamond", "line": {"color": "white", "width": 2}},
+        text=[f"β={beta:.3f}"],
+        textposition="top right",
+        textfont={"size": 14, "color": "#9B2C8A", "family": "Arial Black"},
+        showlegend=False,
+        hovertemplate=(f"<b>Consumer's Risk (β)</b><br>At LTPD = {ltpd}<br>P(accept) = {beta:.3f}<extra></extra>"),
     )
 )
 
-# Shaded region for producer's risk
-fig.add_shape(
-    type="rect",
-    x0=aql,
-    x1=aql + 0.003,
-    y0=prob_accept_aql,
-    y1=1,
-    fillcolor="rgba(48, 105, 152, 0.12)",
-    line={"width": 0},
-)
+# AQL vertical reference line
+fig.add_shape(type="line", x0=aql, x1=aql, y0=0, y1=1, line={"color": "#888888", "width": 1.5, "dash": "dash"})
+fig.add_annotation(x=aql, y=1.05, text="<b>AQL = 0.02</b>", showarrow=False, font={"size": 15, "color": "#34495e"})
 
-# Shaded region for consumer's risk
-fig.add_shape(
-    type="rect", x0=ltpd - 0.003, x1=ltpd, y0=0, y1=beta, fillcolor="rgba(214, 69, 69, 0.12)", line={"width": 0}
-)
+# LTPD vertical reference line
+fig.add_shape(type="line", x0=ltpd, x1=ltpd, y0=0, y1=1, line={"color": "#888888", "width": 1.5, "dash": "dash"})
+fig.add_annotation(x=ltpd, y=1.05, text="<b>LTPD = 0.08</b>", showarrow=False, font={"size": 15, "color": "#34495e"})
 
 # Style
 fig.update_layout(
     title={
-        "text": "curve-oc \u00b7 plotly \u00b7 pyplots.ai",
+        "text": "curve-oc · plotly · pyplots.ai",
         "font": {"size": 28, "color": "#2c3e50", "family": "Arial, Helvetica, sans-serif"},
         "x": 0.5,
         "y": 0.96,
@@ -122,6 +147,10 @@ fig.update_layout(
         "range": [0, 0.20],
         "dtick": 0.02,
         "tickformat": ".2f",
+        "spikemode": "across",
+        "spikethickness": 1,
+        "spikecolor": "#aaa",
+        "spikedash": "dot",
     },
     yaxis={
         "title": {"text": "Probability of Acceptance", "font": {"size": 22, "color": "#34495e"}},
@@ -129,12 +158,16 @@ fig.update_layout(
         "showgrid": True,
         "gridcolor": "rgba(0,0,0,0.06)",
         "gridwidth": 0.5,
-        "range": [-0.02, 1.08],
+        "range": [-0.02, 1.10],
         "zeroline": False,
         "showline": True,
         "linewidth": 1.5,
         "linecolor": "#ccc",
         "dtick": 0.2,
+        "spikemode": "across",
+        "spikethickness": 1,
+        "spikecolor": "#aaa",
+        "spikedash": "dot",
     },
     template="plotly_white",
     legend={
@@ -146,6 +179,7 @@ fig.update_layout(
         "bordercolor": "rgba(0,0,0,0.1)",
         "borderwidth": 1,
     },
+    hovermode="x unified",
     plot_bgcolor="white",
     paper_bgcolor="white",
     margin={"l": 80, "r": 40, "t": 70, "b": 70},
@@ -155,4 +189,4 @@ fig.update_layout(
 
 # Save
 fig.write_image("plot.png", width=1600, height=900, scale=3)
-fig.write_html("plot.html")
+fig.write_html("plot.html", include_plotlyjs="cdn")
