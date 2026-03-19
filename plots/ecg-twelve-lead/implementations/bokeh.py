@@ -1,6 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 ecg-twelve-lead: ECG/EKG 12-Lead Waveform Display
 Library: bokeh 3.9.0 | Python 3.14.3
+Quality: 90/100 | Created: 2026-03-19
 """
 
 import numpy as np
