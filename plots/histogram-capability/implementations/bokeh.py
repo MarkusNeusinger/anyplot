@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 histogram-capability: Process Capability Plot with Specification Limits
 Library: bokeh 3.9.0 | Python 3.14.3
 Quality: 85/100 | Created: 2026-03-19
@@ -6,7 +6,7 @@ Quality: 85/100 | Created: 2026-03-19
 
 import numpy as np
 from bokeh.io import export_png, output_file, save
-from bokeh.models import ColumnDataSource, HoverTool, Label, Legend, LegendItem
+from bokeh.models import ColumnDataSource, HoverTool, Label, Legend, LegendItem, Span
 from bokeh.plotting import figure
 from scipy import stats
 
@@ -16,7 +16,7 @@ np.random.seed(42)
 lsl = 9.95
 usl = 10.05
 target = 10.00
-measurements = np.random.normal(loc=10.002, scale=0.012, size=200)
+measurements = np.random.normal(loc=10.005, scale=0.012, size=200)
 
 # Statistics
 mean_val = np.mean(measurements)
@@ -42,8 +42,8 @@ source = ColumnDataSource(
     }
 )
 
-# Normal distribution curve
-x_curve = np.linspace(measurements.min() - 0.01, measurements.max() + 0.01, 300)
+# Normal distribution curve - extend to cover spec limits
+x_curve = np.linspace(min(lsl - 0.01, measurements.min() - 0.01), max(usl + 0.01, measurements.max() + 0.01), 300)
 bin_width = edges[1] - edges[0]
 y_curve = stats.norm.pdf(x_curve, mean_val, sigma) * len(measurements) * bin_width
 curve_source = ColumnDataSource(data={"x": x_curve, "y": y_curve})
@@ -81,28 +81,30 @@ p.add_tools(hover)
 # Normal distribution curve
 curve_line = p.line(x="x", y="y", source=curve_source, line_color="#306998", line_width=4, line_alpha=0.9)
 
-# Specification limit lines
-lsl_line = p.line(
-    x=[lsl, lsl], y=[0, max_count * 1.15], line_color="#C0392B", line_width=4, line_dash=[12, 6], line_alpha=0.9
-)
-usl_line = p.line(
-    x=[usl, usl], y=[0, max_count * 1.15], line_color="#C0392B", line_width=4, line_dash=[12, 6], line_alpha=0.9
-)
+# Specification limit lines using Span (idiomatic Bokeh for reference lines)
+lsl_span = Span(location=lsl, dimension="height", line_color="#C0392B", line_width=4, line_dash=[12, 6], line_alpha=0.9)
+usl_span = Span(location=usl, dimension="height", line_color="#C0392B", line_width=4, line_dash=[12, 6], line_alpha=0.9)
+p.add_layout(lsl_span)
+p.add_layout(usl_span)
 
-# Target line
-target_line = p.line(
-    x=[target, target], y=[0, max_count * 1.15], line_color="#27AE60", line_width=4, line_dash=[12, 6], line_alpha=0.9
+# Target line - using teal (colorblind-safe, avoids red-green pairing)
+target_span = Span(
+    location=target, dimension="height", line_color="#17BECF", line_width=4, line_dash=[12, 6], line_alpha=0.9
 )
+p.add_layout(target_span)
 
 # Mean line
-mean_line = p.line(
-    x=[mean_val, mean_val],
-    y=[0, max_count * 1.15],
-    line_color="#8E44AD",
-    line_width=3,
-    line_dash=[6, 4],
-    line_alpha=0.8,
+mean_span = Span(
+    location=mean_val, dimension="height", line_color="#7B4F9D", line_width=3, line_dash=[6, 4], line_alpha=0.85
 )
+p.add_layout(mean_span)
+
+# Off-screen renderers for legend entries (Span doesn't support legend directly)
+_off = -999
+lsl_line = p.line(x=[_off, _off], y=[_off, _off], line_color="#C0392B", line_width=4, line_dash=[12, 6])
+usl_line = p.line(x=[_off, _off], y=[_off, _off], line_color="#C0392B", line_width=4, line_dash=[12, 6])
+target_line = p.line(x=[_off, _off], y=[_off, _off], line_color="#17BECF", line_width=4, line_dash=[12, 6])
+mean_line = p.line(x=[_off, _off], y=[_off, _off], line_color="#7B4F9D", line_width=3, line_dash=[6, 4])
 
 # Legend
 legend = Legend(
@@ -130,8 +132,8 @@ p.add_layout(legend, "center")
 # Capability indices annotation
 cap_text = f"Cp = {cp:.2f}  |  Cpk = {cpk:.2f}  |  N = {len(measurements)}"
 cap_label = Label(
-    x=lsl - 0.003,
-    y=max_count * 1.08,
+    x=lsl + 0.002,
+    y=max_count * 1.12,
     text=cap_text,
     text_font_size="26pt",
     text_color="#222222",
@@ -171,7 +173,9 @@ p.yaxis.minor_tick_line_color = None
 p.xaxis.major_tick_line_color = "#AAAAAA"
 p.yaxis.major_tick_line_color = "#AAAAAA"
 
-# Y-axis range
+# Axis ranges - ensure LSL/USL are visible with margin
+p.x_range.start = lsl - 0.015
+p.x_range.end = usl + 0.015
 p.y_range.start = 0
 p.y_range.end = max_count * 1.25
 
