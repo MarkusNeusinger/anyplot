@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 spc-xbar-r: Statistical Process Control Chart (X-bar/R)
 Library: bokeh 3.9.0 | Python 3.14.3
 Quality: 83/100 | Created: 2026-03-19
@@ -7,7 +7,7 @@ Quality: 83/100 | Created: 2026-03-19
 import numpy as np
 from bokeh.io import export_png, output_file, save
 from bokeh.layouts import column
-from bokeh.models import BoxAnnotation, ColumnDataSource, HoverTool, Label, Range1d, Span
+from bokeh.models import BoxAnnotation, ColumnDataSource, HoverTool, Label, Legend, LegendItem, Range1d, Span
 from bokeh.plotting import figure
 
 
@@ -77,7 +77,7 @@ source_r_line = ColumnDataSource(data={"x": sample_ids, "y": sample_ranges})
 hover_xbar = HoverTool(
     tooltips=[
         ("Sample", "@x"),
-        ("X̄", "@y{0.000} mm"),
+        ("X\u0304", "@y{0.000} mm"),
         ("Status", "@status"),
         ("UCL", f"{ucl_xbar:.3f}"),
         ("CL", f"{x_bar_bar:.3f}"),
@@ -93,71 +93,99 @@ hover_r = HoverTool(
         ("Range", "@y{0.000} mm"),
         ("Status", "@status"),
         ("UCL", f"{ucl_r:.3f}"),
-        ("R̄", f"{r_bar:.3f}"),
+        ("R\u0304", f"{r_bar:.3f}"),
     ],
     mode="mouse",
 )
 
+# Color palette - colorblind-safe
+CLR_DATA = "#306998"
+CLR_OOC = "#C0392B"
+CLR_CENTER = "#2C3E50"
+CLR_WARNING = "#8E44AD"
+CLR_ZONE_C = "#306998"
+CLR_ZONE_B = "#8E44AD"
+CLR_BG = "#F7F9FB"
+
 # X-bar chart (top)
-x_range = Range1d(start=-0.5, end=n_samples + 3.5)
+x_range = Range1d(start=-0.5, end=n_samples + 4.5)
 p_xbar = figure(
     width=4800,
     height=1350,
-    title="spc-xbar-r · bokeh · pyplots.ai",
+    title="spc-xbar-r \u00b7 bokeh \u00b7 pyplots.ai",
     x_range=x_range,
     x_axis_label=None,
-    y_axis_label="X̄ (Sample Mean, mm)",
-    tools="pan,wheel_zoom,box_zoom,reset,save",
-    toolbar_location="above",
+    y_axis_label="X\u0304 (Sample Mean, mm)",
+    toolbar_location=None,
 )
 p_xbar.add_tools(hover_xbar)
 
-# Zone bands using BoxAnnotation for X-bar chart
-xbar_zone_c = BoxAnnotation(bottom=lwl_xbar, top=uwl_xbar, fill_color="#27AE60", fill_alpha=0.06)
-xbar_zone_b_upper = BoxAnnotation(bottom=uwl_xbar, top=ucl_xbar, fill_color="#F39C12", fill_alpha=0.08)
-xbar_zone_b_lower = BoxAnnotation(bottom=lcl_xbar, top=lwl_xbar, fill_color="#F39C12", fill_alpha=0.08)
+# Zone bands - colorblind-safe blue/purple tones
+xbar_zone_c = BoxAnnotation(bottom=lwl_xbar, top=uwl_xbar, fill_color=CLR_ZONE_C, fill_alpha=0.05)
+xbar_zone_b_upper = BoxAnnotation(bottom=uwl_xbar, top=ucl_xbar, fill_color=CLR_ZONE_B, fill_alpha=0.06)
+xbar_zone_b_lower = BoxAnnotation(bottom=lcl_xbar, top=lwl_xbar, fill_color=CLR_ZONE_B, fill_alpha=0.06)
 p_xbar.add_layout(xbar_zone_c)
 p_xbar.add_layout(xbar_zone_b_upper)
 p_xbar.add_layout(xbar_zone_b_lower)
 
 # Data line and points
-p_xbar.line("x", "y", source=source_xbar_line, line_width=2.5, line_color="#306998", line_alpha=0.5)
-r_ok = p_xbar.scatter("x", "y", source=source_xbar_ok, size=13, color="#306998", alpha=0.9)
-r_ooc = p_xbar.scatter(
-    "x", "y", source=source_xbar_ooc, size=20, color="#C0392B", marker="diamond", line_color="white", line_width=2
+p_xbar.line("x", "y", source=source_xbar_line, line_width=2.5, line_color=CLR_DATA, line_alpha=0.7)
+r_ok_xbar = p_xbar.scatter("x", "y", source=source_xbar_ok, size=13, color=CLR_DATA, alpha=0.9)
+r_ooc_xbar = p_xbar.scatter(
+    "x", "y", source=source_xbar_ooc, size=20, color=CLR_OOC, marker="diamond", line_color="white", line_width=2
 )
 
-# Control limits
-p_xbar.add_layout(Span(location=ucl_xbar, dimension="width", line_color="#C0392B", line_dash="dashed", line_width=3))
-p_xbar.add_layout(Span(location=lcl_xbar, dimension="width", line_color="#C0392B", line_dash="dashed", line_width=3))
-p_xbar.add_layout(Span(location=x_bar_bar, dimension="width", line_color="#2C3E50", line_width=3))
-p_xbar.add_layout(Span(location=uwl_xbar, dimension="width", line_color="#E67E22", line_dash="dotted", line_width=2))
-p_xbar.add_layout(Span(location=lwl_xbar, dimension="width", line_color="#E67E22", line_dash="dotted", line_width=2))
+# Legend for X-bar chart
+legend_xbar = Legend(
+    items=[
+        LegendItem(label="In Control", renderers=[r_ok_xbar]),
+        LegendItem(label="Out of Control", renderers=[r_ooc_xbar]),
+    ],
+    location="top_left",
+    label_text_font_size="16pt",
+    border_line_color=None,
+    background_fill_alpha=0.7,
+    background_fill_color="white",
+    padding=12,
+    spacing=8,
+)
+p_xbar.add_layout(legend_xbar)
 
-# Labels for control limits (positioned on right side past data)
-label_props = {"text_font_size": "18pt", "text_alpha": 0.9, "text_font_style": "bold"}
-label_x = n_samples + 0.8
-p_xbar.add_layout(Label(x=label_x, y=ucl_xbar, text="UCL", text_color="#C0392B", **label_props))
-p_xbar.add_layout(Label(x=label_x, y=lcl_xbar, text="LCL", text_color="#C0392B", **label_props))
-p_xbar.add_layout(Label(x=label_x, y=x_bar_bar, text="X̄̄", text_color="#2C3E50", **label_props))
-p_xbar.add_layout(Label(x=label_x, y=uwl_xbar, text="+2σ", text_color="#E67E22", **label_props))
-p_xbar.add_layout(Label(x=label_x, y=lwl_xbar, text="−2σ", text_color="#E67E22", **label_props))
+# Control limits
+p_xbar.add_layout(Span(location=ucl_xbar, dimension="width", line_color=CLR_OOC, line_dash="dashed", line_width=3))
+p_xbar.add_layout(Span(location=lcl_xbar, dimension="width", line_color=CLR_OOC, line_dash="dashed", line_width=3))
+p_xbar.add_layout(Span(location=x_bar_bar, dimension="width", line_color=CLR_CENTER, line_width=3))
+p_xbar.add_layout(Span(location=uwl_xbar, dimension="width", line_color=CLR_WARNING, line_dash="dotted", line_width=2))
+p_xbar.add_layout(Span(location=lwl_xbar, dimension="width", line_color=CLR_WARNING, line_dash="dotted", line_width=2))
+
+# Labels - combined to avoid crowding
+label_props = {"text_font_size": "16pt", "text_alpha": 0.85, "text_font_style": "bold"}
+label_x = n_samples + 1.2
+p_xbar.add_layout(Label(x=label_x, y=ucl_xbar, text=f"UCL ({ucl_xbar:.3f})", text_color=CLR_OOC, **label_props))
+p_xbar.add_layout(Label(x=label_x, y=lcl_xbar, text=f"LCL ({lcl_xbar:.3f})", text_color=CLR_OOC, **label_props))
+p_xbar.add_layout(
+    Label(x=label_x, y=x_bar_bar, text=f"X\u0304 = {x_bar_bar:.3f}", text_color=CLR_CENTER, **label_props)
+)
+p_xbar.add_layout(Label(x=label_x, y=uwl_xbar, text="+2\u03c3", text_color=CLR_WARNING, **label_props))
+p_xbar.add_layout(Label(x=label_x, y=lwl_xbar, text="\u22122\u03c3", text_color=CLR_WARNING, **label_props))
 
 # Style X-bar chart
 p_xbar.title.text_font_size = "36pt"
-p_xbar.title.text_color = "#2C3E50"
+p_xbar.title.text_color = CLR_CENTER
+p_xbar.title.text_font_style = "bold"
 p_xbar.yaxis.axis_label_text_font_size = "22pt"
 p_xbar.yaxis.major_label_text_font_size = "18pt"
 p_xbar.xaxis.visible = False
-p_xbar.xgrid.grid_line_alpha = 0.12
-p_xbar.ygrid.grid_line_alpha = 0.12
+p_xbar.xgrid.grid_line_alpha = 0.1
+p_xbar.ygrid.grid_line_alpha = 0.1
 p_xbar.xgrid.grid_line_dash = [4, 4]
 p_xbar.ygrid.grid_line_dash = [4, 4]
-p_xbar.min_border_left = 130
-p_xbar.min_border_right = 160
+p_xbar.min_border_left = 140
+p_xbar.min_border_right = 220
 p_xbar.min_border_top = 80
 p_xbar.outline_line_color = None
-p_xbar.background_fill_color = "#FAFBFC"
+p_xbar.background_fill_color = CLR_BG
+p_xbar.border_fill_color = "white"
 
 # R chart (bottom)
 p_r = figure(
@@ -166,52 +194,67 @@ p_r = figure(
     x_range=p_xbar.x_range,
     x_axis_label="Sample Number",
     y_axis_label="R (Sample Range, mm)",
-    tools="pan,wheel_zoom,box_zoom,reset,save",
-    toolbar_location="above",
+    toolbar_location=None,
 )
 p_r.add_tools(hover_r)
 
-# Zone bands using BoxAnnotation for R chart
-r_zone_c = BoxAnnotation(bottom=lwl_r, top=uwl_r, fill_color="#27AE60", fill_alpha=0.06)
-r_zone_b_upper = BoxAnnotation(bottom=uwl_r, top=ucl_r, fill_color="#F39C12", fill_alpha=0.08)
-r_zone_b_lower = BoxAnnotation(bottom=lcl_r, top=lwl_r, fill_color="#F39C12", fill_alpha=0.08)
+# Zone bands for R chart
+r_zone_c = BoxAnnotation(bottom=lwl_r, top=uwl_r, fill_color=CLR_ZONE_C, fill_alpha=0.05)
+r_zone_b_upper = BoxAnnotation(bottom=uwl_r, top=ucl_r, fill_color=CLR_ZONE_B, fill_alpha=0.06)
+r_zone_b_lower = BoxAnnotation(bottom=lcl_r, top=lwl_r, fill_color=CLR_ZONE_B, fill_alpha=0.06)
 p_r.add_layout(r_zone_c)
 p_r.add_layout(r_zone_b_upper)
 p_r.add_layout(r_zone_b_lower)
 
 # Data line and points
-p_r.line("x", "y", source=source_r_line, line_width=2.5, line_color="#306998", line_alpha=0.5)
-p_r.scatter("x", "y", source=source_r_ok, size=13, color="#306998", alpha=0.9)
-p_r.scatter("x", "y", source=source_r_ooc, size=20, color="#C0392B", marker="diamond", line_color="white", line_width=2)
+p_r.line("x", "y", source=source_r_line, line_width=2.5, line_color=CLR_DATA, line_alpha=0.7)
+r_ok_r = p_r.scatter("x", "y", source=source_r_ok, size=13, color=CLR_DATA, alpha=0.9)
+r_ooc_r = p_r.scatter(
+    "x", "y", source=source_r_ooc, size=20, color=CLR_OOC, marker="diamond", line_color="white", line_width=2
+)
+
+# Legend for R chart
+legend_r = Legend(
+    items=[LegendItem(label="In Control", renderers=[r_ok_r]), LegendItem(label="Out of Control", renderers=[r_ooc_r])],
+    location="top_left",
+    label_text_font_size="16pt",
+    border_line_color=None,
+    background_fill_alpha=0.7,
+    background_fill_color="white",
+    padding=12,
+    spacing=8,
+)
+p_r.add_layout(legend_r)
 
 # Control limits for R chart
-p_r.add_layout(Span(location=ucl_r, dimension="width", line_color="#C0392B", line_dash="dashed", line_width=3))
-p_r.add_layout(Span(location=lcl_r, dimension="width", line_color="#C0392B", line_dash="dashed", line_width=3))
-p_r.add_layout(Span(location=r_bar, dimension="width", line_color="#2C3E50", line_width=3))
-p_r.add_layout(Span(location=uwl_r, dimension="width", line_color="#E67E22", line_dash="dotted", line_width=2))
-p_r.add_layout(Span(location=lwl_r, dimension="width", line_color="#E67E22", line_dash="dotted", line_width=2))
+p_r.add_layout(Span(location=ucl_r, dimension="width", line_color=CLR_OOC, line_dash="dashed", line_width=3))
+p_r.add_layout(Span(location=lcl_r, dimension="width", line_color=CLR_OOC, line_dash="dashed", line_width=3))
+p_r.add_layout(Span(location=r_bar, dimension="width", line_color=CLR_CENTER, line_width=3))
+p_r.add_layout(Span(location=uwl_r, dimension="width", line_color=CLR_WARNING, line_dash="dotted", line_width=2))
+p_r.add_layout(Span(location=lwl_r, dimension="width", line_color=CLR_WARNING, line_dash="dotted", line_width=2))
 
 # Labels for R chart limits
-p_r.add_layout(Label(x=label_x, y=ucl_r, text="UCL", text_color="#C0392B", **label_props))
-p_r.add_layout(Label(x=label_x, y=lcl_r, text="LCL", text_color="#C0392B", **label_props))
-p_r.add_layout(Label(x=label_x, y=r_bar, text="R̄", text_color="#2C3E50", **label_props))
-p_r.add_layout(Label(x=label_x, y=uwl_r, text="+2σ", text_color="#E67E22", **label_props))
-p_r.add_layout(Label(x=label_x, y=lwl_r, text="−2σ", text_color="#E67E22", **label_props))
+p_r.add_layout(Label(x=label_x, y=ucl_r, text=f"UCL ({ucl_r:.3f})", text_color=CLR_OOC, **label_props))
+p_r.add_layout(Label(x=label_x, y=lcl_r, text=f"LCL ({lcl_r:.3f})", text_color=CLR_OOC, **label_props))
+p_r.add_layout(Label(x=label_x, y=r_bar, text=f"R\u0304 = {r_bar:.3f}", text_color=CLR_CENTER, **label_props))
+p_r.add_layout(Label(x=label_x, y=uwl_r, text="+2\u03c3", text_color=CLR_WARNING, **label_props))
+p_r.add_layout(Label(x=label_x, y=lwl_r, text="\u22122\u03c3", text_color=CLR_WARNING, **label_props))
 
 # Style R chart
 p_r.xaxis.axis_label_text_font_size = "22pt"
 p_r.yaxis.axis_label_text_font_size = "22pt"
 p_r.xaxis.major_label_text_font_size = "18pt"
 p_r.yaxis.major_label_text_font_size = "18pt"
-p_r.xgrid.grid_line_alpha = 0.12
-p_r.ygrid.grid_line_alpha = 0.12
+p_r.xgrid.grid_line_alpha = 0.1
+p_r.ygrid.grid_line_alpha = 0.1
 p_r.xgrid.grid_line_dash = [4, 4]
 p_r.ygrid.grid_line_dash = [4, 4]
-p_r.min_border_left = 130
-p_r.min_border_right = 160
+p_r.min_border_left = 140
+p_r.min_border_right = 220
 p_r.min_border_bottom = 80
 p_r.outline_line_color = None
-p_r.background_fill_color = "#FAFBFC"
+p_r.background_fill_color = CLR_BG
+p_r.border_fill_color = "white"
 
 # Layout
 layout = column(p_xbar, p_r, spacing=10)
