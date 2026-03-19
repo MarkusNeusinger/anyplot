@@ -1,0 +1,223 @@
+library: bokeh
+specification_id: histogram-capability
+created: '2026-03-19T21:44:22Z'
+updated: '2026-03-19T22:06:42Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23318228449
+issue: 4552
+python_version: 3.14.3
+library_version: 3.9.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/histogram-capability/bokeh/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/histogram-capability/bokeh/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/histogram-capability/bokeh/plot.html
+quality_score: 90
+review:
+  strengths:
+  - Excellent spec compliance with all required features plus mean line bonus
+  - Strong colorblind-safe color choices avoiding red-green pairing
+  - Good use of Bokeh-specific interactive features (HoverTool, hover highlighting)
+  - Clean well-structured code with proper KISS pattern
+  - Effective data storytelling through capability metrics annotation
+  weaknesses:
+  - Some empty space at x-range edges could be tightened
+  - Could demonstrate a more interesting capability scenario with Cpk closer to 1.0
+  image_description: The plot displays a histogram of 200 shaft diameter measurements
+    (mm) in steel blue (#306998) bars with white edges, overlaid with a fitted normal
+    distribution curve in matching blue. Vertical dashed lines mark LSL (9.95, red),
+    USL (10.05, red), Target (10.00, teal/cyan), and Mean (10.0045, purple). The title
+    reads "histogram-capability · bokeh · pyplots.ai" in bold at the top. A legend
+    in the top-right identifies all reference lines with their values. An annotation
+    in the upper-left shows "Cp = 1.49 | Cpk = 1.36 | N = 200". The x-axis is labeled
+    "Shaft Diameter (mm)" and y-axis "Frequency". The background is white with subtle
+    y-axis-only grid lines. The distribution is well within spec limits, centered
+    slightly above target.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 38pt, axis labels 28pt, tick
+          labels 22pt, annotation 26pt, legend 22pt'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text elements. Legend and annotation well-positioned
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Bars clearly visible with good contrast. Some bins narrow but readable
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Colorblind-safe palette avoiding red-green pairing. Teal target,
+          purple mean
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good layout but some empty space at x-range edges beyond data
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Shaft Diameter (mm) with units, Frequency is standard
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Strong design with cohesive palette, clean typography, above defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: X-grid removed, subtle y-grid, outline removed, minor ticks hidden,
+          generous margins
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Capability indices provide quantitative context, reference lines
+          create visual boundaries
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct histogram with normal distribution overlay and spec limits
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: histogram, normal curve, LSL/USL, target,
+          Cp/Cpk annotation, plus mean line'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=measurement values, Y=frequency, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct title format, legend labels include values
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows normal shape, data within limits, Cp>1, slight mean shift.
+          Could show more edge cases
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Shaft diameter measurements in mm - realistic manufacturing QC scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Realistic tolerances for precision machining
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean imports-data-plot-save flow, no functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-organized. Off-screen renderers for legend are necessary
+          Bokeh idiom
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png via export_png, current API
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses ColumnDataSource, figure, quad, Span, Label, Legend/LegendItem,
+          HoverTool - idiomatic patterns
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: HoverTool with tooltips, hover_fill_color highlighting, Span for
+          reference lines, dual HTML+PNG export
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - scipy
+  techniques:
+  - annotations
+  - hover-tooltips
+  - custom-legend
+  - html-export
+  patterns:
+  - data-generation
+  - columndatasource
+  dataprep:
+  - binning
+  styling:
+  - alpha-blending
+  - edge-highlighting
+  - grid-styling
