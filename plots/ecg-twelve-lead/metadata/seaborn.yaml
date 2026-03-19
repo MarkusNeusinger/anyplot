@@ -1,7 +1,7 @@
 library: seaborn
 specification_id: ecg-twelve-lead
 created: '2026-03-19T20:06:51Z'
-updated: '2026-03-19T20:28:47Z'
+updated: '2026-03-19T20:39:57Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23314441477
 issue: 4554
@@ -10,35 +10,34 @@ library_version: 0.13.2
 preview_url: https://storage.googleapis.com/pyplots-images/plots/ecg-twelve-lead/seaborn/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/ecg-twelve-lead/seaborn/plot_thumb.png
 preview_html: null
-quality_score: 87
+quality_score: 90
 review:
   strengths:
-  - Excellent domain-specific design faithfully replicating clinical ECG paper appearance
-    with custom colors, major/minor grid, and calibration marker
-  - Perfect spec compliance with all 12 leads correctly arranged in clinical 3x4 format
-    with rhythm strip
-  - Realistic synthetic ECG data with physiologically accurate morphology differences
-    across leads including R-wave progression and aVR inversion
-  - Clean visual execution with no overlap, good contrast, and appropriate canvas
-    utilization
+  - Authentic clinical ECG paper aesthetic with faithful grid styling (major/minor
+    lines, salmon paper color)
+  - 'Complete spec compliance: all 12 leads, calibration marker, rhythm strip, correct
+    arrangement'
+  - Realistic synthetic ECG data with appropriate morphological variation across all
+    leads
+  - Clean well-structured code with elegant Gaussian wave model
+  - Good use of seaborn FacetGrid for multi-panel clinical layout
   weaknesses:
-  - Library mastery is limited - seaborn used mostly as thin wrapper over matplotlib
-    rather than leveraging distinctive features
-  - Helper function style_ecg_axis deviates from KISS structure requirement
-  - Small text elements (calibration label, footer) could be larger for better readability
-    at full resolution
-  image_description: 'The plot displays a 12-lead ECG waveform on a warm pinkish-peach
-    ECG paper background (#FFF5F0). The layout is a 4x4 grid: the top three rows show
-    the standard 12 leads arranged in clinical 3x4 format (I, aVR, V1, V4 / II, aVL,
-    V2, V5 / III, aVF, V3, V6), and the bottom row shows a continuous Lead II rhythm
-    strip spanning all four columns. Each lead is labeled in bold dark text in the
-    upper-left corner. The ECG grid uses light pink minor gridlines and bolder pink/coral
-    major gridlines, faithfully mimicking real ECG paper. Waveforms are drawn in dark
-    navy (#1A1A2E) with clear P-QRS-T morphology. A 1mV calibration pulse appears
-    in the upper-left panel. The title "ecg-twelve-lead · seaborn · pyplots.ai" is
-    centered at the top. A footer reads "25 mm/s | 10 mm/mV" in the lower-right. R-wave
-    progression is visible across precordial leads (V1 deep S-wave transitioning to
-    tall R-waves in V4-V5). Lead aVR shows expected inverted morphology.'
+  - Rhythm strip slightly cramped vertically compared to main panels
+  - Calibration marker text positioning could be refined to avoid proximity to signal
+    trace
+  image_description: The plot displays a 12-lead ECG in the standard clinical 3x4
+    grid layout on a light salmon/pink ECG paper background (#FFF5F0). The top row
+    shows leads I, aVR, V1, V4; the middle row shows II, aVL, V2, V5; the bottom row
+    shows III, aVF, V3, V6. Each panel contains dark navy (#1A1A2E) signal traces
+    showing realistic P-QRS-T wave complexes with appropriate morphological variation
+    across leads (e.g., inverted deflections in aVR, deep S-waves in V1, progressive
+    R-wave growth across precordial leads). Major grid lines are bold pink/salmon,
+    minor grid lines are lighter pink — faithfully mimicking real ECG paper. A 1mV
+    calibration pulse is drawn in the Lead I panel. A full-length Lead II rhythm strip
+    spans the entire bottom of the figure. The title "ecg-twelve-lead · seaborn ·
+    pyplots.ai" appears at top, and "25 mm/s | 10 mm/mV" scale notation at bottom
+    right. Each lead is clearly labeled in bold text with a semi-transparent background
+    box.
   criteria_checklist:
     visual_quality:
       score: 28
@@ -49,42 +48,40 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'Title 24pt, lead labels 20pt, context talk with font_scale=1.1.
-          Minor: calibration and footer text at 12pt are small.'
+        comment: Font sizes explicitly set throughout (title 24pt, labels 20pt, ticks
+          16pt). Calibration text slightly crowded near signal.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements; clean separation between all leads
-          and labels.
+        comment: No text collisions. Lead labels positioned with background boxes.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: ECG traces clearly visible with dark navy on light background. linewidth=1.2
-          adequate but could be slightly bolder.
+        comment: Dark navy signal on light background with excellent contrast. All
+          waveform features clearly distinguishable.
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Dark navy on light peach provides excellent contrast. No colorblind
-          issues.
+        comment: Single dark signal color on light background. No colorblind concerns.
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: 4x4 grid fills canvas well with tight spacing. Good proportions.
+        comment: Good 3x4 grid fills canvas well. Rhythm strip slightly cramped vertically.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Axis labels appropriately hidden for ECG. Scale info in footer with
-          units. Lead labels present.
+        comment: Axis labels appropriately hidden for clinical ECG. Scale notation
+          in footer provides units.
     design_excellence:
       score: 15
       max: 20
@@ -94,22 +91,22 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: 'Strong domain-specific design: custom ECG paper color palette, calibration
-          marker, clinical layout. Clearly above defaults.'
+        comment: Domain-authentic ECG paper aesthetic with custom color palette. Clearly
+          above library defaults.
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: Major/minor grid lines mimic ECG paper. Spines colored to match.
-          Tick labels removed. Clean spacing.
+        comment: Major/minor grid lines replicate ECG paper. Hidden ticks, subtle
+          spines, background boxes on labels.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Clinical 3x4 arrangement guides viewer through standard ECG reading
-          order. R-wave progression and aVR inversion tell coherent cardiac story.
+        comment: Morphological variation across leads tells clinical story of normal
+          sinus rhythm with R-wave progression.
     spec_compliance:
       score: 15
       max: 15
@@ -119,26 +116,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct multi-channel ECG display with 12 leads in grid format.
+        comment: Correct 12-lead ECG in standard clinical 3x4 grid layout.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: 3x4 grid, rhythm strip, ECG paper grid,
-          calibration pulse, scale notation, lead labels, realistic P-QRS-T.'
+        comment: 'All features present: grid layout, ECG paper background, calibration
+          pulse, rhythm strip, lead labels, scale notation.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Time on X, voltage on Y. Appropriate ranges per lead.
+        comment: Time on X, voltage on Y. All 12 leads show appropriate data.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title in correct format. No legend needed for single-signal panels.
+        comment: Title format correct. No legend needed for single signal color.
     data_quality:
       score: 15
       max: 15
@@ -148,39 +145,39 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All 12 leads with distinct morphologies. R-wave progression visible.
-          aVR correctly inverted. Multiple beat cycles.
+        comment: All 12 leads with distinct morphologies. R-wave progression, inverted
+          aVR, multiple beats per strip.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Medical ECG with normal sinus rhythm at 72 bpm. Neutral educational
-          context.
+        comment: Medical ECG context. Normal sinus rhythm at 72 bpm. Neutral educational
+          scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: QRS 0.3-1.2 mV, P-waves 0.1-0.2 mV, T-waves 0.1-0.35 mV. Heart rate
-          72 bpm normal.
+        comment: Amplitudes within realistic clinical ranges. Heart rate 72 bpm is
+          normal resting rate.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Mostly linear but defines style_ecg_axis helper function. Practical
-          but deviates from pure KISS.
+        comment: 'Linear flow: imports, style, data generation, plot, save. No functions
+          or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set before data generation.
+        comment: np.random.seed(42) set for noise generation.
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -193,44 +190,44 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized. No fake UI. Helper function justified by 16
-          call sites.
+        comment: Elegant Gaussian wave model. Clean dictionary-based lead configurations.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png at dpi=300 with bbox_inches=tight.
+        comment: Saves as plot.png with dpi=300 and bbox_inches='tight'. No deprecated
+          API.
     library_mastery:
-      score: 5
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of sns.relplot with FacetGrid, sns.set_theme/set_context,
+          sns.lineplot. Heavy matplotlib customization necessary but reduces idiomatic
+          score.
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses sns.set_theme(), sns.set_context(), sns.lineplot() with DataFrames.
-          Correct but doesn't leverage statistical or faceting capabilities.
-      - id: LM-02
-        name: Distinctive Features
-        score: 2
-        max: 5
-        passed: false
-        comment: sns.set_theme() with rc overrides and sns.set_context() are seaborn-distinctive
-          but core plotting is essentially matplotlib-level.
-  verdict: REJECTED
+        comment: FacetGrid via relplot is distinctive seaborn feature. sns.set_context
+          for scaling is seaborn-specific.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - subplots
+  - faceting
   - annotations
   - manual-ticks
+  - subplots
   patterns:
   - data-generation
   - iteration-over-groups
-  - explicit-figure
   dataprep: []
   styling:
   - grid-styling
-  - alpha-blending
