@@ -1,7 +1,7 @@
 library: matplotlib
 specification_id: histogram-capability
 created: '2026-03-19T21:43:42Z'
-updated: '2026-03-19T21:55:53Z'
+updated: '2026-03-19T22:04:02Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23318228450
 issue: 4552
@@ -10,36 +10,34 @@ library_version: 3.10.8
 preview_url: https://storage.googleapis.com/pyplots-images/plots/histogram-capability/matplotlib/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/histogram-capability/matplotlib/plot_thumb.png
 preview_html: null
-quality_score: 89
+quality_score: 92
 review:
   strengths:
-  - Excellent visual quality with all font sizes explicitly set and no overlap issues
-  - Full spec compliance with all required features present and correctly implemented
-  - Rejection region shading using fill_between is a thoughtful touch that adds meaning
-  - Clean well-structured code with appropriate complexity and linear KISS flow
-  - Realistic manufacturing context with sensible shaft diameter values and tolerances
+  - Cohesive steel-blue color palette with warm accents creates a professional unified
+    look
+  - Mean shifted from target demonstrates Cp vs Cpk distinction - excellent data storytelling
+  - Path effects on normal curve and bar edges add visual depth without clutter
+  - Rejection region shading under tails communicates defect risk zones effectively
+  - CAPABLE verdict with conditional coloring provides immediate quality assessment
+  - Stats box with monospace font is clean and readable
   weaknesses:
-  - Design not yet publication-ready — needs more refined typography or color harmony
-    to push DE-01 above 5
-  - Process data almost perfectly centered (Cp≈Cpk) missing opportunity to demonstrate
-    Cp vs Cpk distinction
-  - CAPABLE verdict text in annotation box may not be fully visible
-  image_description: The plot displays a histogram of 200 shaft diameter measurements
-    (mm) using steel-blue bars with white edges, overlaid with a dark navy fitted
-    normal distribution curve. Red dashed vertical lines mark LSL (9.95) and USL (10.05)
-    at the far left and right edges of the plot. A blue dash-dot line marks the target
-    value (10.0) and an orange solid line marks the sample mean (9.9994), both near
-    the center. Faint red-shaded rejection regions appear beyond the spec limits under
-    the normal curve. A monospace annotation box in the upper right shows Cp=1.19,
-    Cpk=1.18, σ=0.0140, and n=200. The legend in the upper left identifies all four
-    vertical lines with their values. Top and right spines are removed, with a subtle
-    y-axis grid (alpha=0.2). The title reads "histogram-capability · matplotlib ·
-    pyplots.ai". The x-axis is labeled "Shaft Diameter (mm)" and y-axis "Density".
-    The histogram shows a roughly normal distribution centered near 10.00mm, well
-    within the specification limits.
+  - Minor empty space on canvas edges due to spec limits being far from data distribution
+  image_description: 'The plot displays a process capability histogram of 200 shaft
+    diameter measurements (mm) using steel-blue bars with white edges against a light
+    #fafafa background. A dark navy fitted normal distribution curve overlays the
+    histogram with a white stroke path effect for depth. Red dashed vertical lines
+    mark LSL (9.95) on the left and USL (10.05) on the right. A blue dash-dot line
+    marks the Target (10.0) and an orange solid line marks the Mean (10.0074). Subtle
+    red-shaded rejection regions appear under the curve tails beyond the spec limits.
+    A monospace stats box in the upper right displays Cp=1.28, Cpk=1.09, σ=0.0130,
+    n=200 with a rounded border. Below it, a bold green "CAPABLE" verdict is shown.
+    The legend in the upper left lists all four vertical lines. Top and right spines
+    are removed, left/bottom spines are light gray. A subtle y-axis grid (alpha=0.15)
+    provides reference. X-axis uses 3-decimal formatting. Title reads "histogram-capability
+    · matplotlib · pyplots.ai".'
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -48,61 +46,64 @@ review:
         max: 8
         passed: true
         comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt,
-          legend 16pt, annotation 18pt'
+          legend 16pt, stats box 18pt'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements; legend and annotation box well separated
+        comment: Legend in upper left, stats box in upper right, no text collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 25 bins well-proportioned, curve linewidth=3, vertical lines linewidth=2.5
+        comment: 25 bins well-sized for 200 points, curve linewidth=3.5, vertical
+          lines linewidth=2.5
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Avoids red-green pairing; uses red, blue, orange distinction
+        comment: All elements distinguishable by both color and line style
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Good 16:9 proportions with tight_layout
+        comment: Good 16:9 layout but some empty space at edges due to spec limits
+          far from data
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Shaft Diameter (mm) with units, Density descriptive
+        comment: Shaft Diameter (mm) with units, Density is descriptive
     design_excellence:
-      score: 13
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Custom palette, styled annotation box, rejection regions; above defaults
-          but not publication-grade
+        comment: Cohesive steel-blue palette, path effects, monospace stats box, conditional
+          verdict coloring
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Spines removed, subtle grid, white bar edges, clean annotation box
+        comment: Spines removed, subtle grid, custom tick colors, fafafa background,
+          generous padding
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Capability narrative via Cp/Cpk annotation, spec limits, rejection
-          regions, mean vs target
+        comment: Shifted mean demonstrates Cp vs Cpk, CAPABLE verdict, rejection regions,
+          clear visual hierarchy
     spec_compliance:
       score: 15
       max: 15
@@ -112,48 +113,51 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct histogram with normal curve overlay and specification limits
+        comment: Histogram with fitted normal curve overlay and specification limits
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: histogram, normal curve, LSL/USL, target,
-          mean, Cp/Cpk'
+        comment: 'All required features present plus bonus: mean line, rejection regions,
+          verdict'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=measurements, Y=density, all data visible
+        comment: X=measurement values, Y=density, axes show full range including spec
+          limits
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format, legend labels with values
+        comment: Title format correct, legend labels with values match data
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Good coverage but near-perfect centering misses Cp vs Cpk distinction
+        comment: 200 measurements, bell curve, shifted mean showing Cp≠Cpk, capable
+          process
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real manufacturing scenario with shaft diameter tolerances
+        comment: Shaft diameter manufacturing, mm units, ±0.05mm tolerance
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Realistic values for precision machining
+        comment: 10mm shaft, σ=0.013mm, Cp=1.28, Cpk=1.09 — realistic for precision
+          machining
     code_quality:
       score: 10
       max: 10
@@ -163,7 +167,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, calculations, plot, style, save'
+        comment: Linear flow, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -175,19 +179,19 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: matplotlib, numpy, scipy.stats'
+        comment: 'All imports used: pyplot, patheffects, ticker, numpy, scipy.stats'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriate complexity with rejection region shading
+        comment: Clean, well-organized, appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300, current API
+        comment: Saves as plot.png with dpi=300, no deprecated API
     library_mastery:
       score: 7
       max: 10
@@ -197,23 +201,26 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Consistently uses ax-based API, proper subplots pattern
+        comment: Proper ax methods, fill_between with where, ticker formatting, spine
+          customization
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: fill_between with where parameter, transAxes transform, zorder layering
-  verdict: REJECTED
+        comment: patheffects for depth, fill_between with boolean where, FormatStrFormatter
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - scipy
   techniques:
   - annotations
+  - manual-ticks
   patterns:
   - data-generation
   - explicit-figure
-  dataprep: []
+  dataprep:
+  - binning
   styling:
   - alpha-blending
   - edge-highlighting
