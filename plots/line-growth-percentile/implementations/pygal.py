@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 line-growth-percentile: Pediatric Growth Chart with Percentile Curves
-Library: pygal | Python 3.13
-Quality: pending | Created: 2026-03-19
+Library: pygal 3.1.0 | Python 3.14.3
+Quality: 77/100 | Created: 2026-03-19
 """
 
 import numpy as np
