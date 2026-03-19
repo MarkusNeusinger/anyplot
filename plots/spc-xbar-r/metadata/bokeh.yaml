@@ -1,7 +1,7 @@
 library: bokeh
 specification_id: spc-xbar-r
 created: '2026-03-19T21:47:58Z'
-updated: '2026-03-19T21:52:10Z'
+updated: '2026-03-19T22:05:13Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23318370396
 issue: 4551
@@ -10,101 +10,106 @@ library_version: 3.9.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/spc-xbar-r/bokeh/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/spc-xbar-r/bokeh/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/spc-xbar-r/bokeh/plot.html
-quality_score: 79
+quality_score: 84
 review:
   strengths:
-  - 'Perfect spec compliance: all required SPC elements present (UCL/LCL, center line,
-    warning limits, OOC highlighting, standard constants)'
-  - Excellent data quality with realistic CNC machining context and appropriate process
-    shift injections
-  - Clean, well-structured code with proper use of Bokeh idioms (ColumnDataSource,
-    Span, Label)
-  - Effective OOC highlighting with both color AND shape differentiation (red diamonds
-    vs blue circles)
+  - Perfect spec compliance with all required SPC features (control limits, warning
+    limits, OOC highlighting, standard constants)
+  - Excellent realistic data context (CNC shaft diameter measurements)
+  - Clean, well-structured code with good KISS adherence
+  - Effective data storytelling through OOC point highlighting with contrasting color
+    and marker shape
+  - Zone bands provide excellent visual context for control chart interpretation
   weaknesses:
-  - Right-side control limit labels (UCL, LCL, +2σ, -2σ) are too small and overlap
-    each other, especially in the R chart
-  - Design is functional but utilitarian - lacks the polish needed for publication
-    quality
-  - No background color zones between control limits that would enhance data storytelling
-  image_description: The plot displays two vertically stacked Bokeh charts for SPC
-    X-bar/R analysis of CNC shaft diameter measurements. The top chart shows sample
-    means (X-bar) ranging from ~24.85 to ~25.20 mm across 30 samples, with blue circular
-    markers connected by a light blue line. Three red diamond markers indicate out-of-control
-    points at approximately samples 9 (above UCL), 18 (below LCL), and 25 (above UCL).
-    Horizontal lines show UCL and LCL (red dashed), center line X-bar-bar (black solid),
-    and ±2σ warning limits (orange dotted). The bottom R chart shows sample ranges
-    from ~0.02 to ~0.22 mm with the same styling conventions. Right-side labels (UCL,
-    LCL, X-bar-bar, R-bar, +2σ, −2σ) appear small and crowded at the chart edges.
-    The title "spc-xbar-r · bokeh · pyplots.ai" appears in the top left. Overall the
-    layout is functional with good use of the vertical space, but right-side labels
-    are hard to read and the design is utilitarian rather than polished.
+  - Missing HoverTool — Bokeh signature interactive feature would add significant
+    value to SPC charts
+  - No explicit BoxAnnotation for zone fills
+  - Annotation label font size (16pt) could be slightly larger for better readability
+  - R chart lacks out-of-control points, limiting feature demonstration
+  image_description: The plot displays two vertically stacked SPC control charts sharing
+    the same x-axis (Sample Number 1-30). The top chart is the X-bar chart with y-axis
+    "X̄ (Sample Mean, mm)" centered around 25.0mm, and the bottom chart is the R chart
+    with y-axis "R (Sample Range, mm)". Both charts feature colored zone bands — light
+    green/teal for the normal zone (between center line and ±2σ) and light peach/orange
+    for the warning zones (between ±2σ and UCL/LCL). The title "spc-xbar-r · bokeh
+    · pyplots.ai" appears at the top left. Data points are shown as blue circles connected
+    by blue lines. Three out-of-control points in the X-bar chart are highlighted
+    with red diamond markers at approximately samples 9 (above UCL), 18 (below LCL),
+    and 25 (above UCL). Red dashed UCL/LCL lines, a solid dark center line, and orange
+    dotted ±2σ warning lines are labeled on the left side of each chart. The R chart
+    shows range variation around ~0.12mm with no out-of-control points. Subtle grid
+    lines and clean styling with removed outlines give the chart a professional appearance.
   criteria_checklist:
     visual_quality:
-      score: 23
+      score: 25
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set but right-side control limit labels at
-          16pt are small for the canvas
+        comment: All font sizes explicitly set (title 36pt, labels 22pt, ticks 18pt,
+          annotations 16pt). Annotation labels slightly small.
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Right-side labels in R chart (UCL, +2σ, R̄) overlap; similarly crowded
-          in X-bar chart
+        comment: Most text well-positioned. Minor potential overlap between control
+          limit labels and Bokeh toolbar icons.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Data points well-sized, OOC diamond markers distinctive and clear
+        comment: Markers well-sized for 30 data points. OOC points clearly distinguished
+          with red diamond markers and white edge.
       - id: VQ-04
         name: Color Accessibility
         score: 3
         max: 4
         passed: true
-        comment: Blue/red/orange scheme works; OOC distinguished by both color and
-          shape
+        comment: Blue/red/orange scheme with diamond shape as secondary cue. Generally
+          accessible but could be improved.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good vertical stacking; right margin labels extend awkwardly
+        comment: Good canvas utilization with two stacked charts. Generous borders.
+          Some right margin imbalance.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units on all axes
+        comment: Descriptive labels with units on all axes.
     design_excellence:
-      score: 10
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: true
-        comment: Intentional color coding; looks like a well-configured default
+        comment: Cohesive color palette, zone bands, custom diamond markers. Above
+          defaults but not publication-ready.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Subtle grid, outline removed, shared x-axis; spines still present
+        comment: Subtle grid, outline removed, hidden x-axis on top chart, generous
+          borders. Good refinement.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: OOC points create focal points; dual chart layout tells the SPC story
+        comment: OOC points create clear focal points. Three distinct process shifts
+          tell a story of instability.
     spec_compliance:
       score: 15
       max: 15
@@ -114,26 +119,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct X-bar and R chart stacked vertically sharing x-axis
+        comment: Correct X-bar/R chart pair, vertically stacked, sharing x-axis.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: UCL/LCL, center line, warning limits, OOC
-          highlighting, standard constants'
+        comment: 'All required features present: UCL/LCL, center line, OOC highlighting,
+          warning limits, standard constants.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = sample number, Y = means/ranges; axes correct
+        comment: Correct X=sample number, Y=sample mean/range mapping.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; no legend needed for this chart type
+        comment: Title follows format. Control limit labels serve as legend for SPC
+          charts.
     data_quality:
       score: 14
       max: 15
@@ -143,20 +149,21 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Shows in-control and OOC points above UCL and below LCL; could benefit
-          from richer coverage
+        comment: Shows OOC points above and below in X-bar chart. R chart lacks OOC
+          points.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: CNC shaft diameter measurements - realistic manufacturing scenario
+        comment: CNC shaft diameter measurements at 25mm target with subgroups of
+          5.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 25mm nominal, sub-mm ranges, appropriate process variation
+        comment: Realistic values for precision CNC machining.
     code_quality:
       score: 10
       max: 10
@@ -166,31 +173,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean linear flow, no functions/classes
+        comment: 'Linear flow: imports, data, plot, save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: All imports used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriate complexity
+        comment: Clean, well-organized with shared label_props dict.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png via export_png; current API
+        comment: Saves as plot.png via export_png and plot.html. Current API.
     library_mastery:
       score: 7
       max: 10
@@ -201,25 +208,25 @@ review:
         max: 5
         passed: true
         comment: Good use of ColumnDataSource, Span, Label, column layout, shared
-          x_range
+          x_range.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses Span, shared x_range, interactive tools, dual HTML+PNG export
+        comment: Bokeh-specific Span, Label, column layout, interactive tools, dual
+          export. Missing HoverTool.
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - subplots
   - html-export
   patterns:
   - data-generation
   - columndatasource
   dataprep: []
   styling:
-  - alpha-blending
   - grid-styling
+  - alpha-blending
   - edge-highlighting
