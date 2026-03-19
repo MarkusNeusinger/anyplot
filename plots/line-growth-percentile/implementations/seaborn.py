@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 line-growth-percentile: Pediatric Growth Chart with Percentile Curves
 Library: seaborn 0.13.2 | Python 3.14.3
 Quality: 89/100 | Created: 2026-03-19
@@ -17,12 +17,16 @@ sns.set_theme(
 )
 sns.set_context("talk", font_scale=1.1, rc={"lines.linewidth": 2.0})
 
-# Data — WHO-style weight-for-age reference for boys, 0-36 months
+# Data — WHO weight-for-age reference for boys, 0-36 months (realistic values)
 np.random.seed(42)
 
 age_months = np.arange(0, 37, 1)
-median_weight = 3.3 + 0.8 * age_months - 0.008 * age_months**2 + 0.00005 * age_months**3
-sd = 0.4 + 0.04 * age_months
+
+# Approximate WHO P50 weight-for-age boys via interpolation of reference points
+who_ref_ages = np.array([0, 1, 2, 3, 4, 5, 6, 9, 12, 15, 18, 24, 30, 36])
+who_ref_p50 = np.array([3.3, 4.5, 5.6, 6.4, 7.0, 7.5, 7.9, 9.2, 9.6, 10.3, 11.0, 12.2, 13.3, 14.3])
+median_weight = np.interp(age_months, who_ref_ages, who_ref_p50)
+sd = 0.4 + 0.028 * age_months
 
 # Z-scores for standard normal percentiles
 percentile_z = {"P3": -1.8808, "P10": -1.2816, "P25": -0.6745, "P50": 0.0, "P75": 0.6745, "P90": 1.2816, "P97": 1.8808}
@@ -38,7 +42,7 @@ percentile_df = pd.DataFrame(records)
 
 # Individual patient data — boy with gradual drift below P25
 patient_ages = np.array([0, 1, 2, 4, 6, 9, 12, 15, 18, 24, 30, 36])
-patient_weights = np.array([3.5, 4.3, 5.4, 7.0, 8.1, 9.2, 10.1, 10.9, 11.5, 12.8, 14.0, 15.2])
+patient_weights = np.array([3.5, 4.4, 5.4, 6.8, 7.6, 8.8, 9.1, 9.7, 10.2, 11.2, 12.0, 12.5])
 patient_df = pd.DataFrame({"Age (months)": patient_ages, "Weight (kg)": patient_weights})
 
 # Generate graduated blue palette using seaborn's color utilities
@@ -108,7 +112,7 @@ for label, values in percentiles.items():
         age_months[-1] + 0.8,
         values[-1],
         label,
-        fontsize=14,
+        fontsize=16,
         fontweight="bold" if label == "P50" else "normal",
         color="#08306b" if label == "P50" else "#2171b5",
         va="center",
