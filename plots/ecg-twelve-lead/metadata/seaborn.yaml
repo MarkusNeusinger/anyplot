@@ -1,0 +1,233 @@
+library: seaborn
+specification_id: ecg-twelve-lead
+created: '2026-03-19T20:06:51Z'
+updated: '2026-03-19T20:39:57Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23314441477
+issue: 4554
+python_version: 3.14.3
+library_version: 0.13.2
+preview_url: https://storage.googleapis.com/pyplots-images/plots/ecg-twelve-lead/seaborn/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/ecg-twelve-lead/seaborn/plot_thumb.png
+preview_html: null
+quality_score: 90
+review:
+  strengths:
+  - Authentic clinical ECG paper aesthetic with faithful grid styling (major/minor
+    lines, salmon paper color)
+  - 'Complete spec compliance: all 12 leads, calibration marker, rhythm strip, correct
+    arrangement'
+  - Realistic synthetic ECG data with appropriate morphological variation across all
+    leads
+  - Clean well-structured code with elegant Gaussian wave model
+  - Good use of seaborn FacetGrid for multi-panel clinical layout
+  weaknesses:
+  - Rhythm strip slightly cramped vertically compared to main panels
+  - Calibration marker text positioning could be refined to avoid proximity to signal
+    trace
+  image_description: The plot displays a 12-lead ECG in the standard clinical 3x4
+    grid layout on a light salmon/pink ECG paper background (#FFF5F0). The top row
+    shows leads I, aVR, V1, V4; the middle row shows II, aVL, V2, V5; the bottom row
+    shows III, aVF, V3, V6. Each panel contains dark navy (#1A1A2E) signal traces
+    showing realistic P-QRS-T wave complexes with appropriate morphological variation
+    across leads (e.g., inverted deflections in aVR, deep S-waves in V1, progressive
+    R-wave growth across precordial leads). Major grid lines are bold pink/salmon,
+    minor grid lines are lighter pink — faithfully mimicking real ECG paper. A 1mV
+    calibration pulse is drawn in the Lead I panel. A full-length Lead II rhythm strip
+    spans the entire bottom of the figure. The title "ecg-twelve-lead · seaborn ·
+    pyplots.ai" appears at top, and "25 mm/s | 10 mm/mV" scale notation at bottom
+    right. Each lead is clearly labeled in bold text with a semi-transparent background
+    box.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Font sizes explicitly set throughout (title 24pt, labels 20pt, ticks
+          16pt). Calibration text slightly crowded near signal.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text collisions. Lead labels positioned with background boxes.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Dark navy signal on light background with excellent contrast. All
+          waveform features clearly distinguishable.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Single dark signal color on light background. No colorblind concerns.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good 3x4 grid fills canvas well. Rhythm strip slightly cramped vertically.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Axis labels appropriately hidden for clinical ECG. Scale notation
+          in footer provides units.
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Domain-authentic ECG paper aesthetic with custom color palette. Clearly
+          above library defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Major/minor grid lines replicate ECG paper. Hidden ticks, subtle
+          spines, background boxes on labels.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Morphological variation across leads tells clinical story of normal
+          sinus rhythm with R-wave progression.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct 12-lead ECG in standard clinical 3x4 grid layout.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: grid layout, ECG paper background, calibration
+          pulse, rhythm strip, lead labels, scale notation.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Time on X, voltage on Y. All 12 leads show appropriate data.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct. No legend needed for single signal color.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All 12 leads with distinct morphologies. R-wave progression, inverted
+          aVR, multiple beats per strip.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Medical ECG context. Normal sinus rhythm at 72 bpm. Neutral educational
+          scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Amplitudes within realistic clinical ranges. Heart rate 72 bpm is
+          normal resting rate.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports, style, data generation, plot, save. No functions
+          or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set for noise generation.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: matplotlib.pyplot, matplotlib.ticker, numpy, pandas,
+          seaborn.'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Elegant Gaussian wave model. Clean dictionary-based lead configurations.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with dpi=300 and bbox_inches='tight'. No deprecated
+          API.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of sns.relplot with FacetGrid, sns.set_theme/set_context,
+          sns.lineplot. Heavy matplotlib customization necessary but reduces idiomatic
+          score.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: FacetGrid via relplot is distinctive seaborn feature. sns.set_context
+          for scaling is seaborn-specific.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - faceting
+  - annotations
+  - manual-ticks
+  - subplots
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - grid-styling
