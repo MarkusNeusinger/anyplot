@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 ecg-twelve-lead: ECG/EKG 12-Lead Waveform Display
 Library: plotnine 0.15.3 | Python 3.14.3
 Quality: 86/100 | Created: 2026-03-19
@@ -40,34 +40,30 @@ def _gauss(t_arr, center, width, amplitude):
     return amplitude * np.exp(-((t_arr - center) ** 2) / (2 * width**2))
 
 
-def _ecg_beat(t_arr, bc, hri):
-    p = _gauss(t_arr, bc - 0.16 * hri, 0.025, 0.15)
+def _ecg_beat(t_arr, bc, hri, p_amp=0.15, p_width=0.025, t_amp=0.30, t_width=0.04):
+    p = _gauss(t_arr, bc - 0.16 * hri, p_width, p_amp)
     q = _gauss(t_arr, bc - 0.04 * hri, 0.007, -0.12)
     r = _gauss(t_arr, bc, 0.007, 1.2)
     s = _gauss(t_arr, bc + 0.025 * hri, 0.007, -0.20)
     st = _gauss(t_arr, bc + 0.08 * hri, 0.02, 0.03)
-    tw = _gauss(t_arr, bc + 0.22 * hri, 0.04, 0.30)
+    tw = _gauss(t_arr, bc + 0.22 * hri, t_width, t_amp)
     return p + q + r + s + st + tw
 
 
-base_signal = np.zeros_like(t)
-for bc in beat_centers:
-    base_signal += _ecg_beat(t, bc, hr_interval)
-
-# Lead-specific morphology transforms
+# Lead-specific morphology: (scale, p_amp, p_width, t_amp, t_width)
 lead_params = {
-    "I": 0.55,
-    "II": 1.0,
-    "III": 0.45,
-    "aVR": -0.65,
-    "aVL": 0.25,
-    "aVF": 0.70,
-    "V1": -0.75,
-    "V2": -0.40,
-    "V3": 0.35,
-    "V4": 0.95,
-    "V5": 0.70,
-    "V6": 0.50,
+    "I": (0.55, 0.12, 0.025, 0.25, 0.04),
+    "II": (1.0, 0.18, 0.028, 0.35, 0.045),
+    "III": (0.45, 0.08, 0.022, 0.18, 0.038),
+    "aVR": (-0.65, -0.10, 0.024, -0.22, 0.042),
+    "aVL": (0.25, 0.06, 0.020, 0.10, 0.035),
+    "aVF": (0.70, 0.14, 0.026, 0.28, 0.042),
+    "V1": (-0.75, 0.08, 0.020, -0.18, 0.038),
+    "V2": (-0.40, 0.10, 0.022, 0.12, 0.040),
+    "V3": (0.35, 0.12, 0.024, 0.22, 0.042),
+    "V4": (0.95, 0.15, 0.026, 0.32, 0.044),
+    "V5": (0.70, 0.13, 0.025, 0.28, 0.043),
+    "V6": (0.50, 0.11, 0.024, 0.22, 0.040),
 }
 
 # Standard clinical 3×4 grid order (3 rows, 4 columns)
@@ -76,8 +72,11 @@ grid_order = ["I", "aVR", "V1", "V4", "II", "aVL", "V2", "V5", "III", "aVF", "V3
 
 frames = []
 for lead_name in grid_order:
-    scale = lead_params[lead_name]
-    signal = base_signal * scale + np.random.normal(0, 0.008, n_samples)
+    scale, p_a, p_w, t_a, t_w = lead_params[lead_name]
+    signal = np.zeros_like(t)
+    for bc in beat_centers:
+        signal += scale * _ecg_beat(t, bc, hr_interval, p_amp=p_a, p_width=p_w, t_amp=t_a, t_width=t_w)
+    signal += np.random.normal(0, 0.008, n_samples)
     frames.append(pd.DataFrame({"time": t, "voltage": signal, "lead": lead_name}))
 
 df = pd.concat(frames, ignore_index=True)
@@ -117,16 +116,16 @@ signal_color = "#1a1a2e"
 
 x_major = np.arange(0, duration + 0.01, 0.5).tolist()
 x_minor = np.arange(0, duration + 0.01, 0.1).tolist()
-y_major = np.arange(-2.0, 2.1, 0.5).tolist()
-y_minor = np.arange(-2.0, 2.1, 0.1).tolist()
+y_major = np.arange(-1.5, 1.6, 1.0).tolist()
+y_minor = np.arange(-1.5, 1.6, 0.5).tolist()
 
 plot = (
     ggplot(df, aes(x="time", y="voltage"))
     + geom_line(color=signal_color, size=0.7)
     + geom_line(aes(x="time", y="voltage"), data=cal_df, color=signal_color, size=0.9)
-    + geom_text(aes(label="label"), data=label_df, size=13, ha="left", va="top", fontweight="bold", color="#333333")
-    + geom_text(aes(label="label"), data=cal_label_df, size=9, ha="center", va="top", color="#333333")
-    + facet_wrap("lead", ncol=4, scales="free_y")
+    + geom_text(aes(label="label"), data=label_df, size=15, ha="left", va="top", fontweight="bold", color="#333333")
+    + geom_text(aes(label="label"), data=cal_label_df, size=12, ha="center", va="top", color="#333333")
+    + facet_wrap("lead", ncol=4)
     + scale_x_continuous(breaks=x_major, minor_breaks=x_minor, limits=(0, duration), expand=(0.01, 0.01))
     + scale_y_continuous(breaks=y_major, minor_breaks=y_minor, limits=(-1.6, 1.6), expand=(0, 0))
     + labs(title="ecg-twelve-lead · plotnine · pyplots.ai", x="Time (s)", y="Voltage (mV)")
