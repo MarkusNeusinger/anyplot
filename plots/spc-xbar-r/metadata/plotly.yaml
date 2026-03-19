@@ -1,0 +1,231 @@
+library: plotly
+specification_id: spc-xbar-r
+created: '2026-03-19T21:47:12Z'
+updated: '2026-03-19T22:09:52Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23318370223
+issue: 4551
+python_version: 3.14.3
+library_version: 6.6.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/spc-xbar-r/plotly/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/spc-xbar-r/plotly/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/spc-xbar-r/plotly/plot.html
+quality_score: 92
+review:
+  strengths:
+  - Excellent data storytelling with OOC annotations, summary box, and zone shading
+    creating clear visual hierarchy
+  - Full spec compliance including all control limits, warning limits, and standard
+    SPC constants (A2, D3, D4)
+  - Professional color palette with colorblind-safe choices and shape differentiation
+    for OOC points
+  - 'Distinctive Plotly features: spike lines for cross-chart comparison, interactive
+    HTML export, custom hover templates'
+  - Clean KISS code structure with loop-based zone shading to avoid repetition
+  weaknesses:
+  - Data markers (size 10) could be slightly larger for optimal visibility at full
+    resolution
+  - LM-01 could be higher with more idiomatic use of Plotly high-level patterns
+  image_description: 'The plot displays two vertically stacked control charts for
+    CNC Shaft Diameter Monitoring. The top X̄ Chart shows sample means as a blue line
+    with circular markers connected across 30 samples. Three out-of-control points
+    (#8, #19, #25) are highlighted as large red diamond markers with labeled annotations.
+    UCL and LCL are shown as dark red dashed horizontal lines, the center line (CL)
+    as a solid dark green line, and warning limits as orange dotted lines. Subtle
+    zone shading (light red/orange bands) marks the risk zones near the control limits.
+    A summary annotation box in the bottom-right of the X̄ chart reads "⚠ 3 OOC signals
+    detected" with sample numbers and process statistics. The bottom R Chart shows
+    sample ranges with the same control limit styling. The x-axis (Sample Number)
+    is shared between charts. Y-axes display "Sample Mean (mm)" and "Sample Range
+    (mm)" respectively. The title "CNC Shaft Diameter Monitoring" appears top-left
+    with subtitle "spc-xbar-r · plotly · pyplots.ai | n=5 per subgroup, A₂=0.577,
+    D₃=0, D₄=2.114". Background is light gray (#FAFAFA) with white plot areas. A legend
+    identifies X̄ and Out of Control series.'
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 26pt, axis labels 22pt, ticks
+          18pt, subplot titles 18pt, annotations 13-14pt'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text. Annotations well-placed with directional arrows
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Markers size 10, OOC 16, lines 2.5 width. Visible but data markers
+          could be slightly larger
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Colorblind-safe palette with shape differentiation for OOC points
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Two stacked charts fill canvas well with balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive labels with units: Sample Mean (mm), Sample Range (mm)'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Custom palette, zone shading, styled annotations, professional summary
+          callout, #FAFAFA background'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: plotly_white template, subtle grid at 6% opacity, styled legend with
+          border
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: OOC annotations, summary box with statistics, zone shading creates
+          visual risk hierarchy
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: X-bar chart on top, R chart on bottom, vertically stacked with shared
+          x-axis
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features: UCL/LCL dashed, CL solid, OOC highlighted, warning
+          limits, SPC constants'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = sample number, Y = means/ranges correctly mapped
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Subtitle includes spc-xbar-r · plotly · pyplots.ai, legend labels
+          accurate
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: OOC points above and below center line, normal variation, both charts
+          demonstrate detection
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: CNC shaft diameter machining - realistic, neutral manufacturing scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Process mean 25.0mm, std 0.05mm - realistic for precision CNC machining
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports, constants, data, calculations, plotting, save'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All three imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-organized with loop-based zone shading
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot.png at 4800x2700, current API
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses make_subplots, go.Scatter, add_hline, add_shape, add_annotation
+          idiomatically
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Spike lines for cross-chart comparison, HTML export with config,
+          hovertemplate
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - subplots
+  - annotations
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - grid-styling
+  - edge-highlighting

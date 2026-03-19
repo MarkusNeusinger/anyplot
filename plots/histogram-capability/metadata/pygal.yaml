@@ -1,0 +1,238 @@
+library: pygal
+specification_id: histogram-capability
+created: '2026-03-19T21:44:26Z'
+updated: '2026-03-19T22:20:36Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23318228545
+issue: 4552
+python_version: 3.14.3
+library_version: 3.1.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/histogram-capability/pygal/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/histogram-capability/pygal/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/histogram-capability/pygal/plot.html
+quality_score: 82
+review:
+  strengths:
+  - 'Perfect code quality: clean KISS structure, reproducible seed, elegant workarounds
+    for pygal limitations'
+  - Strong data quality with realistic manufacturing context (shaft diameter measurements)
+  - 'Good use of pygal-specific features: CSS overrides for spine removal, inline
+    styling, native Histogram format'
+  - 'Comprehensive feature set: histogram, normal fit, LSL/USL, target, mean, Cp/Cpk
+    all present'
+  - Custom style with explicit font sizes, custom font family, and intentional color
+    palette
+  weaknesses:
+  - LSL/USL specification limit lines render as tall pink bars at plot edges, looking
+    like decorative borders rather than meaningful reference lines
+  - Normal distribution curve appears as stepped bars rather than a smooth curve (pygal
+    limitation)
+  - Mean line (gray) is hard to distinguish from target line (teal) at this scale
+  - Title is right-aligned rather than centered, creating slight visual imbalance
+  image_description: The plot displays a process capability histogram rendered with
+    pygal. Blue histogram bars represent 200 shaft diameter measurements (mm) distributed
+    in a bell-curve shape centered near 10.002. A lavender/purple normal distribution
+    fit is overlaid as many thin histogram bars creating a bell-curve envelope shape.
+    Two tall pink/salmon vertical bars at the extreme left and right edges of the
+    plot mark LSL (9.95) and USL (10.05) — these visually resemble border decorations
+    rather than distinct specification limit lines. A thin teal vertical line marks
+    the Target (10.00) at center, and a thin gray vertical line marks the Mean (10.002).
+    The title at top right reads "histogram-capability · pygal · pyplots.ai | Cp =
+    1.49 · Cpk = 1.45". X-axis is labeled "Shaft Diameter (mm)" ranging from 9.950
+    to 10.050. Y-axis is labeled "Frequency" ranging from 0 to 40. A six-entry legend
+    at the bottom identifies Measurements, Normal fit, LSL (9.95), USL (10.05), Target
+    (10.00), and Mean (10.002). Background is clean white with subtle horizontal grid
+    lines and axis spines removed via CSS.
+  criteria_checklist:
+    visual_quality:
+      score: 25
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set (title=64, label=44, major_label=40,
+          legend=38, value=28). All text clearly readable. Minor: title right-aligned.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text collisions. Legend entries well-spaced. X-axis labels clear.
+      - id: VQ-03
+        name: Element Visibility
+        score: 4
+        max: 6
+        passed: false
+        comment: LSL/USL rendered as tall wide pink bars at extreme edges — read as
+          border decorations. Mean line hard to distinguish.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 3
+        max: 4
+        passed: true
+        comment: Blue, purple, pink, teal, gray mostly distinguishable. Purple/blue
+          overlap could challenge some colorblind types.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Plot fills good portion of canvas. Title right-alignment creates
+          slight imbalance.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Shaft Diameter (mm) with units, Frequency — descriptive and appropriate.
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Custom color palette, custom font family, CSS overrides for spine
+          removal. Goes beyond defaults. Pink LSL/USL bars reduce polish.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: CSS removes axis spines and axis lines, y-guides only, white background,
+          custom fonts.
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Cp/Cpk in title tells capability story. LSL/USL rendering as border-like
+          bars diminishes narrative clarity.
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Histogram with normal distribution overlay — correct chart type.
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: All features present. Normal curve is stepped bars (pygal limitation).
+          Cp/Cpk in title rather than separate annotations.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X-axis correctly maps shaft diameter, Y-axis maps frequency.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct with Cp/Cpk. Legend labels descriptive with
+          actual values.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Comprehensive coverage: histogram, normal fit, spec limits, target,
+          mean, Cp/Cpk. Process is quite capable — a less ideal process would be more
+          diagnostic.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Shaft diameter measurements in mm for manufacturing quality control.
+          Real-world engineering scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 200 measurements, 0.1mm tolerance on 10mm shaft. Realistic for precision
+          machining.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean linear flow: imports, data, statistics, style, chart, series,
+          save.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) ensures deterministic output.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: numpy, pygal, Style, scipy.stats — all used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-organized, creative workarounds for pygal limitations. No fake
+          functionality.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png via render_to_png(). Current API.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses pygal.Histogram with native (height, start, end) format, custom
+          Style, proper chart config.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: CSS override system, HTML export alongside PNG, native Histogram
+          tuple format.
+  verdict: REJECTED
+impl_tags:
+  dependencies:
+  - scipy
+  techniques:
+  - html-export
+  patterns:
+  - data-generation
+  dataprep:
+  - binning
+  styling:
+  - grid-styling
+  - alpha-blending
