@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 ecg-twelve-lead: ECG/EKG 12-Lead Waveform Display
 Library: altair 6.0.0 | Python 3.14.3
-Quality: 86/100 | Created: 2026-03-19
+Quality: 92/100 | Created: 2026-03-19
 """
 
 import altair as alt
