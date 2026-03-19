@@ -1,7 +1,7 @@
 library: plotly
 specification_id: curve-oc
 created: '2026-03-19T20:36:21Z'
-updated: '2026-03-19T20:40:30Z'
+updated: '2026-03-19T20:50:29Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23315608595
 issue: 4553
@@ -10,31 +10,33 @@ library_version: 6.6.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/curve-oc/plotly/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/curve-oc/plotly/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/curve-oc/plotly/plot.html
-quality_score: 85
+quality_score: 87
 review:
   strengths:
-  - 'Full spec compliance with all required features: multiple OC curves, AQL/LTPD
-    lines, both risk annotations'
-  - Excellent data quality with realistic quality control scenario and well-chosen
-    sampling plans
-  - Clean, deterministic code with proper KISS structure
-  - Good design foundation with custom palette and subtle grid styling
+  - Perfect spec compliance with all required OC curve features including risk regions,
+    reference lines, and risk markers
+  - Excellent data quality with realistic industrial quality inspection context and
+    appropriate parameter values
+  - Clean deterministic code using scipy binomial CDF for mathematically correct OC
+    curve computation
+  - Effective data storytelling through shaded risk regions and diamond markers guiding
+    the viewer to key insights
   weaknesses:
-  - Shaded risk regions are nearly invisible (only 0.003 wide rectangles) — should
-    use fill between curve and axis or wider shading
-  - Consumer risk diamond color (#D64545) is too similar to the orange curve (#E8793A)
-  - Could leverage more Plotly-distinctive features (fill traces, spike lines)
-  - Legend mixes line traces and marker annotations — could be cleaner
-  image_description: 'The plot displays three Operating Characteristic (OC) curves
-    on a white background. Three S-shaped descending curves represent sampling plans:
-    n=50 c=1 (blue), n=100 c=2 (orange), and n=150 c=3 (green). Two vertical dashed
-    gray lines mark AQL=0.02 and LTPD=0.08, with bold annotations above the plot area.
-    A blue diamond marker at AQL indicates producer''s risk α=0.264, and a red diamond
-    marker at LTPD indicates consumer''s risk β=0.083. Very narrow shaded rectangles
-    appear near both reference lines. The x-axis reads "Fraction Defective (p)" ranging
-    0.00–0.20, and the y-axis reads "Probability of Acceptance" ranging 0–1. A legend
-    in the upper right lists all five trace entries. Title: "curve-oc · plotly · pyplots.ai".
-    Subtle y-axis grid lines on white background.'
+  - Risk annotation labels at font size 14 are slightly small for the canvas
+  - Shaded risk regions at 0.15 opacity are very subtle
+  - Minor crowding near AQL where diamond marker, alpha label, and dashed line converge
+  - Design could be elevated with more typographic hierarchy
+  image_description: The plot displays three Operating Characteristic (OC) curves
+    for different single-sample acceptance sampling plans (n=50 c=1 in dark blue,
+    n=100 c=2 in orange, n=150 c=3 in green). The x-axis shows "Fraction Defective
+    (p)" ranging from 0.00 to 0.20 with 0.02 increments, and the y-axis shows "Probability
+    of Acceptance" from 0 to 1. Two vertical dashed gray reference lines mark AQL=0.02
+    and LTPD=0.08 with bold annotations above. A light blue shaded region near AQL
+    represents producer's risk (α=0.264), and a light pink/purple shaded region beyond
+    LTPD represents consumer's risk (β=0.083). Diamond markers with white borders
+    highlight the risk values at each reference point. The legend is positioned in
+    the upper right with a subtle border. The background is white with a subtle y-axis
+    grid. The title reads "curve-oc · plotly · pyplots.ai" centered at the top.
   criteria_checklist:
     visual_quality:
       score: 27
@@ -42,43 +44,44 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 28pt, axis labels 22pt, ticks
-          18pt, legend 15pt'
+        comment: All major font sizes explicitly set (title 28, labels 22, ticks 18).
+          Risk annotation labels at font 14 slightly small.
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: All text readable with no collisions
+        comment: Minor crowding near AQL where diamond, alpha label, and dashed line
+          converge.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Lines 3.5 width excellent but shaded risk regions barely perceptible
-          at 0.003 width
+        comment: Lines at width 3.5 clearly visible, diamonds prominent. Shaded risk
+          regions at 0.15 opacity are quite subtle.
       - id: VQ-04
         name: Color Accessibility
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Blue/orange/green colorblind-safe but red diamond too close to orange
-          curve
+        comment: Blue/orange/green palette is colorblind-safe with good luminance
+          contrast.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills canvas well with balanced margins
+        comment: Good canvas utilization at 1600x900 with balanced margins.
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with notation but no units (acceptable for probabilities)
+        comment: Descriptive labels with variable notation.
     design_excellence:
       score: 13
       max: 20
@@ -88,21 +91,21 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom palette, clean template, intentional hierarchy. Above defaults
-          but not publication-level
+        comment: Custom palette, clean typography, above defaults but not publication-level.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Subtle y-grid, no x-grid, clean line borders, generous whitespace
+        comment: X grid removed, subtle y grid, clean background, spike modes. Good
+          refinement.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Diamond markers and shaded regions create visual hierarchy showing
-          risk tradeoffs
+        comment: Shaded risk regions and diamond markers create focal points. Reference
+          lines guide viewer.
     spec_compliance:
       score: 15
       max: 15
@@ -112,26 +115,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct OC curve line chart
+        comment: Correct OC curves using binomial CDF.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: multiple curves, AQL/LTPD lines, both risk
-          annotations, shaded regions'
+        comment: 'All required features present: multiple curves, AQL/LTPD, risk annotations,
+          shaded regions.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=fraction defective [0,0.20], Y=probability acceptance [0,1]
+        comment: Correct x/y mapping.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend labels match sampling plans
+        comment: Correct title format, legend labels match data.
     data_quality:
       score: 15
       max: 15
@@ -141,21 +144,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Three sampling plans showing discrimination differences, both risk
-          types annotated
+        comment: Shows 3 sampling plans, both risk types, discrimination power differences.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Quality control acceptance sampling, neutral engineering domain
+        comment: Real-world quality inspection scenario with standard industry values.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: AQL=0.02, LTPD=0.08, sample sizes 50/100/150 realistic for industrial
-          inspection
+        comment: Realistic fraction defective range and sampling parameters.
     code_quality:
       score: 10
       max: 10
@@ -165,49 +166,48 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports, data, compute, plot, style, save'
+        comment: Clean imports-data-compute-plot-style-save structure.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic with binomial CDF
+        comment: Fully deterministic using binomial CDF.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: numpy, plotly.graph_objects, scipy.stats.binom'
+        comment: All imports used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriate complexity, no fake elements
+        comment: Clean, well-organized code.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png at 1600x900 scale=3, also writes plot.html
+        comment: Saves plot.png and plot.html, current API.
     library_mastery:
-      score: 5
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good Graph Objects API usage with add_trace, add_shape, add_annotation.
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Correct go.Figure/go.Scatter usage but doesn't leverage higher-level
-          patterns
-      - id: LM-02
-        name: Distinctive Features
-        score: 2
-        max: 5
-        passed: false
-        comment: Hover templates and HTML export are Plotly-distinctive but could
-          use fill traces, spike lines
+        comment: 'Plotly-specific: hovertemplate, spike modes, unified hovermode,
+          fill=toself, HTML export.'
   verdict: REJECTED
 impl_tags:
   dependencies:
@@ -221,5 +221,5 @@ impl_tags:
   - iteration-over-groups
   dataprep: []
   styling:
-  - grid-styling
   - alpha-blending
+  - grid-styling
