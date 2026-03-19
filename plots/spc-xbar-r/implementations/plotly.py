@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 spc-xbar-r: Statistical Process Control Chart (X-bar/R)
 Library: plotly 6.6.0 | Python 3.14.3
 Quality: 89/100 | Created: 2026-03-19
@@ -52,6 +52,8 @@ sample_ids = np.arange(1, n_samples + 1)
 # Identify out-of-control points
 ooc_xbar = (sample_means > ucl_xbar) | (sample_means < lcl_xbar)
 ooc_r = (sample_ranges > ucl_r) | (sample_ranges < lcl_r)
+n_ooc = int(ooc_xbar.sum() + ooc_r.sum())
+ooc_samples = ", ".join(f"#{s}" for s in sample_ids[ooc_xbar])
 
 # Colorblind-safe palette
 BLUE = "#306998"
@@ -61,7 +63,6 @@ WARN_COLOR = "#E65100"
 OOC_COLOR = "#C62828"
 ZONE_A = "rgba(198, 40, 40, 0.06)"
 ZONE_B = "rgba(230, 81, 0, 0.05)"
-ZONE_C = "rgba(27, 94, 32, 0.04)"
 
 # Plot
 fig = make_subplots(
@@ -73,34 +74,45 @@ fig = make_subplots(
     row_heights=[0.55, 0.45],
 )
 
+# Zone shading — X-bar chart
+for y0, y1, color in [
+    (upper_warn_xbar, ucl_xbar, ZONE_A),
+    (lcl_xbar, lower_warn_xbar, ZONE_A),
+    (x_bar_bar + (upper_warn_xbar - x_bar_bar) / 2, upper_warn_xbar, ZONE_B),
+    (lower_warn_xbar, x_bar_bar - (x_bar_bar - lower_warn_xbar) / 2, ZONE_B),
+]:
+    fig.add_shape(
+        type="rect",
+        x0=0.5,
+        x1=n_samples + 0.5,
+        y0=min(y0, y1),
+        y1=max(y0, y1),
+        fillcolor=color,
+        line={"width": 0},
+        layer="below",
+        xref="x",
+        yref="y",
+    )
 
-def add_zone_shading(fig, cl, ucl, lcl, warn_upper, warn_lower, row):
-    """Add zone shading bands (A, B, C) for visual hierarchy."""
-    xref = "x" if row == 1 else "x2"
-    yref = "y" if row == 1 else "y2"
-    zones = [
-        (ucl, warn_upper, ZONE_A),
-        (warn_lower, lcl, ZONE_A),
-        (warn_upper, cl + (warn_upper - cl) / 2, ZONE_B),
-        (cl - (cl - warn_lower) / 2, warn_lower, ZONE_B),
-    ]
-    for y1, y0, color in zones:
-        fig.add_shape(
-            type="rect",
-            x0=0.5,
-            x1=n_samples + 0.5,
-            y0=min(y0, y1),
-            y1=max(y0, y1),
-            fillcolor=color,
-            line={"width": 0},
-            layer="below",
-            xref=xref,
-            yref=yref,
-        )
-
-
-add_zone_shading(fig, x_bar_bar, ucl_xbar, lcl_xbar, upper_warn_xbar, lower_warn_xbar, row=1)
-add_zone_shading(fig, r_bar, ucl_r, lcl_r, upper_warn_r, lower_warn_r, row=2)
+# Zone shading — R chart
+for y0, y1, color in [
+    (upper_warn_r, ucl_r, ZONE_A),
+    (lcl_r, lower_warn_r, ZONE_A),
+    (r_bar + (upper_warn_r - r_bar) / 2, upper_warn_r, ZONE_B),
+    (lower_warn_r, r_bar - (r_bar - lower_warn_r) / 2, ZONE_B),
+]:
+    fig.add_shape(
+        type="rect",
+        x0=0.5,
+        x1=n_samples + 0.5,
+        y0=min(y0, y1),
+        y1=max(y0, y1),
+        fillcolor=color,
+        line={"width": 0},
+        layer="below",
+        xref="x2",
+        yref="y2",
+    )
 
 # --- X-bar Chart ---
 fig.add_trace(
@@ -250,6 +262,27 @@ for y_val, label, color in [(ucl_r, "UCL", LIMIT_COLOR), (lcl_r, "LCL", LIMIT_CO
         xshift=8,
     )
 
+# Process summary annotation (data storytelling)
+fig.add_annotation(
+    text=(
+        f"<b>⚠ {n_ooc} OOC signal{'s' if n_ooc != 1 else ''} detected</b><br>"
+        f"<span style='font-size:12px'>Samples {ooc_samples}<br>"
+        f"X\u0304\u0304 = {x_bar_bar:.3f} mm · R\u0304 = {r_bar:.3f} mm</span>"
+    ),
+    xref="x domain",
+    yref="y domain",
+    x=0.98,
+    y=0.02,
+    xanchor="right",
+    yanchor="bottom",
+    font={"size": 14, "color": "#333"},
+    bgcolor="rgba(255, 248, 225, 0.95)",
+    bordercolor=WARN_COLOR,
+    borderwidth=1.5,
+    borderpad=8,
+    showarrow=False,
+)
+
 # Style
 fig.update_layout(
     title={
@@ -281,11 +314,26 @@ fig.update_layout(
 fig.update_annotations(font={"size": 18}, selector={"text": "<b>X\u0304 Chart</b>  · Sample Means"})
 fig.update_annotations(font={"size": 18}, selector={"text": "<b>R Chart</b>  · Sample Ranges"})
 
+# Spike lines for cross-chart sample comparison (distinctive Plotly feature)
 fig.update_xaxes(
     title={"text": "Sample Number", "font": {"size": 22}},
     tickfont={"size": 18},
     gridcolor="rgba(0,0,0,0.06)",
+    spikemode="across",
+    spikethickness=1,
+    spikecolor="#999",
+    spikedash="dot",
     row=2,
+    col=1,
+)
+fig.update_xaxes(
+    tickfont={"size": 18},
+    gridcolor="rgba(0,0,0,0.06)",
+    spikemode="across",
+    spikethickness=1,
+    spikecolor="#999",
+    spikedash="dot",
+    row=1,
     col=1,
 )
 fig.update_yaxes(
@@ -302,8 +350,7 @@ fig.update_yaxes(
     row=2,
     col=1,
 )
-fig.update_xaxes(tickfont={"size": 18}, gridcolor="rgba(0,0,0,0.06)", row=1, col=1)
 
 # Save
 fig.write_image("plot.png", width=1600, height=900, scale=3)
-fig.write_html("plot.html")
+fig.write_html("plot.html", config={"displayModeBar": True, "scrollZoom": True})
