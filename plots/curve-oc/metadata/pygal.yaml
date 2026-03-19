@@ -1,7 +1,7 @@
 library: pygal
 specification_id: curve-oc
 created: '2026-03-19T20:35:47Z'
-updated: '2026-03-19T20:47:24Z'
+updated: '2026-03-19T20:54:38Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23315608920
 issue: 4553
@@ -10,36 +10,32 @@ library_version: 3.1.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/curve-oc/pygal/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/curve-oc/pygal/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/curve-oc/pygal/plot.html
-quality_score: 84
+quality_score: 87
 review:
   strengths:
-  - Perfect spec compliance with all required OC curve features implemented correctly
-  - Excellent data quality with realistic QC parameters and comprehensive 4-plan comparison
-  - Clean deterministic code with inline binomial computation avoiding unnecessary
-    scipy dependency
-  - Good use of pygal-specific interpolation modes and per-series stroke styling
-  - AQL/LTPD reference lines and risk markers create clear visual narrative for quality
-    control
+  - Full spec compliance with all required features (AQL, LTPD, risk points, multiple
+    plans)
+  - Thoughtful colorblind-safe palette with warm background creating visual polish
+  - Effective visual hierarchy separating OC curves from reference elements
+  - Mathematically correct binomial OC curve calculations
+  - Clean, well-structured code with good comments
   weaknesses:
-  - Blue/green color pair may challenge colorblind users — swap green for a more distinct
-    color
-  - Legend crowded with 8 entries including long risk labels
-  - Design polish below publication-quality threshold — needs stronger typographic
-    hierarchy and color refinement
-  image_description: 'The plot displays four Operating Characteristic curves on an
-    off-white (#F7F7F2) plot background with white outer background. The x-axis shows
-    "Fraction Defective (p)" ranging from 0% to 15% and the y-axis shows "Probability
-    of Acceptance P(accept)" from 0.00 to 1.00. Four smooth S-shaped (inverted) curves
-    are drawn with thick strokes: n=50 c=1 (steel blue), n=50 c=2 (orange), n=100
-    c=2 (green), n=100 c=3 (purple). Two vertical dashed gray lines mark AQL at 1%
-    and LTPD at 8%. Two red dots mark the producer''s risk (alpha approximately 0.079)
-    at AQL and consumer''s risk (beta approximately 0.011) at LTPD for the n=100 c=2
-    plan. Subtle y-axis grid lines are present; x-guides are hidden. A bottom legend
-    with 8 entries in 2 rows of 4 columns identifies all series including the four
-    OC curves, two reference lines, and two risk points.'
+  - Legend text slightly small for canvas size and cramped with 8 entries
+  - Some wasted canvas space in the lower-right quadrant
+  image_description: 'The plot displays four Operating Characteristic (OC) curves
+    on a warm cream/beige background (#F4F3EE). The title "curve-oc · pygal · pyplots.ai"
+    appears at the top in dark text. The x-axis shows "Fraction Defective (p)" ranging
+    from 0% to 15%, and the y-axis shows "Probability of Acceptance P(accept)" from
+    0.00 to 1.00. Four smooth S-shaped declining curves represent different sampling
+    plans: n=50,c=1 (steel blue), n=50,c=2 (orange/amber), n=100,c=2 (teal/cyan),
+    n=100,c=3 (muted purple). Two dashed gray vertical reference lines mark AQL at
+    1% and LTPD at 8%. A dark red dot at AQL marks the producer''s risk α=7.9%, and
+    another at LTPD marks consumer''s risk β=1.1%. The legend at the bottom lists
+    all 8 series in two rows across 4 columns. Y-axis grid lines are subtle dotted
+    lines. Curves are thick and smooth with rounded line caps.'
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 26
       max: 30
       items:
       - id: VQ-01
@@ -47,68 +43,62 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title=42, label=26, major_label=24, legend=24).
-          All readable at full resolution.
+        comment: Font sizes explicitly set. Legend text slightly small relative to
+          canvas.
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Legend has 8 items across 2 rows with long labels; slightly crowded
-          but readable.
+        comment: No significant overlap. Legend rows slightly cramped with 8 entries.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: OC curve strokes are thick (width=7) and clearly distinguishable.
-          Risk dots visible but could be more prominent.
+        comment: Curves prominent with stroke_width=8. Risk dots clearly visible.
       - id: VQ-04
         name: Color Accessibility
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Blue and green curves could be confused by deuteranopia users. Orange
-          and purple well-differentiated.
+        comment: 'Colorblind-safe palette: steel blue, orange, teal, purple.'
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good proportions overall. Right portion has mostly flat near-zero
-          curves creating some empty visual space.
+        comment: Plot fills most of canvas. Some unused space in lower-right.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with notation: Fraction Defective (p) and Probability
-          of Acceptance P(accept).'
+        comment: Descriptive labels with variable notation.
     design_excellence:
-      score: 12
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Custom palette with intentional color choices, off-white plot background.
-          Above defaults but not publication-level.
+        comment: Custom palette, warm background, intentional font hierarchy. Above
+          defaults.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Y-guides only, custom foreground_subtle, off-white background. Could
-          benefit from further refinement.
+        comment: X guides hidden, subtle Y guides, warm background tones provide polish.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: AQL/LTPD reference lines with labeled risk points create clear narrative
-          about QC decision boundaries.
+        comment: 'Effective visual hierarchy: thick curves dominate, dashed references
+          subordinate, risk points draw attention.'
     spec_compliance:
       score: 15
       max: 15
@@ -118,27 +108,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct XY line chart showing OC curves with smooth interpolation.
+        comment: Correct OC curves using XY chart with smooth interpolation.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec requirements met: multiple OC curves, AQL/LTPD lines, risk
-          markers, binomial CDF.'
+        comment: 'All features present: multiple plans, AQL/LTPD lines, alpha/beta
+          risk points.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = fraction defective, Y = probability of acceptance. X-range 0-15%
-          per spec.
+        comment: X=fraction defective, Y=probability of acceptance. Range 0-0.15 per
+          spec.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches format. Legend labels correctly identify all series.
+        comment: Title format correct. Legend labels match data series.
     data_quality:
       score: 15
       max: 15
@@ -148,21 +138,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Four plans with varying n and c show how both parameters affect discrimination.
+        comment: Four plans with varying n and c. Risk points annotated. AQL and LTPD
+          marked.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Acceptance sampling is a real-world quality engineering scenario
-          with standard industry values.
+        comment: Real engineering domain with standard textbook values.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sample sizes and acceptance numbers are realistic for manufacturing
-          QC.
+        comment: Sensible ranges. Binomial calculations mathematically correct.
     code_quality:
       score: 10
       max: 10
@@ -172,31 +161,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports-data-chart-render flow with no functions or classes.
+        comment: Clean linear flow. No functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic binomial calculations, no randomness.
+        comment: Fully deterministic binomial calculations.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: math.comb, cairosvg, numpy, pygal, Style.'
+        comment: All imports used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized. Inline binomial avoids unnecessary scipy dependency.
+        comment: Clean, Pythonic code with good comprehension usage.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png via cairosvg; also saves plot.html.
+        comment: Saves plot.png via cairosvg. Current API.
     library_mastery:
       score: 7
       max: 10
@@ -206,15 +195,15 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of pygal XY chart, custom Style, hermite interpolation,
-          per-series stroke_style, formatters.
+        comment: Good use of pygal.XY with custom Style, per-series stroke_style,
+          interpolation, formatters.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Leverages pygal-specific interpolation modes, allow_interruptions,
-          SVG-native rendering.
+        comment: Hermite interpolation with cardinal type, SVG-native rendering, per-series
+          stroke_style, allow_interruptions.
   verdict: REJECTED
 impl_tags:
   dependencies:
@@ -225,7 +214,6 @@ impl_tags:
   patterns:
   - data-generation
   - iteration-over-groups
-  dataprep:
-  - binning
+  dataprep: []
   styling:
   - grid-styling
