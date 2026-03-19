@@ -1,7 +1,6 @@
-""" pyplots.ai
+"""pyplots.ai
 spc-xbar-r: Statistical Process Control Chart (X-bar/R)
-Library: highcharts unknown | Python 3.14.3
-Quality: 86/100 | Created: 2026-03-19
+Library: highcharts | Python 3.14.3
 """
 
 import json
@@ -11,6 +10,10 @@ import urllib.request
 from pathlib import Path
 
 import numpy as np
+from highcharts_core.chart import Chart
+from highcharts_core.options import HighchartsOptions
+from highcharts_core.options.series.area import LineSeries
+from highcharts_core.options.series.scatter import ScatterSeries
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
@@ -27,7 +30,6 @@ process_std = 0.010  # mm
 A2 = 0.577
 D3 = 0.0
 D4 = 2.114
-d2 = 2.326
 
 # Generate subgroup measurements
 measurements = np.random.normal(target_diameter, process_std, (n_samples, subgroup_size))
@@ -47,360 +49,221 @@ r_bar = sample_ranges.mean()
 
 xbar_ucl = x_bar_bar + A2 * r_bar
 xbar_lcl = x_bar_bar - A2 * r_bar
-xbar_uwl = x_bar_bar + (2 / 3) * A2 * r_bar  # Warning at ±2 sigma
+xbar_uwl = x_bar_bar + (2 / 3) * A2 * r_bar
 xbar_lwl = x_bar_bar - (2 / 3) * A2 * r_bar
 
 r_ucl = D4 * r_bar
-r_lcl = D3 * r_bar  # 0 for n=5
+r_lcl = D3 * r_bar
 r_uwl = r_bar + (2 / 3) * (r_ucl - r_bar)
 
-# Identify out-of-control points
+# Separate out-of-control and normal points
 xbar_ooc = []
-xbar_normal = []
+xbar_all = []
 for i in range(n_samples):
-    point = [i + 1, round(float(sample_means[i]), 4)]
+    val = round(float(sample_means[i]), 4)
+    xbar_all.append([i + 1, val])
     if sample_means[i] > xbar_ucl or sample_means[i] < xbar_lcl:
-        xbar_ooc.append(point)
-    else:
-        xbar_normal.append(point)
+        xbar_ooc.append([i + 1, val])
 
 r_ooc = []
-r_normal = []
+r_all = []
 for i in range(n_samples):
-    point = [i + 1, round(float(sample_ranges[i]), 4)]
+    val = round(float(sample_ranges[i]), 4)
+    r_all.append([i + 1, val])
     if sample_ranges[i] > r_ucl or sample_ranges[i] < r_lcl:
-        r_ooc.append(point)
-    else:
-        r_normal.append(point)
+        r_ooc.append([i + 1, val])
 
-# All points for the connecting line
-xbar_all = [[i + 1, round(float(sample_means[i]), 4)] for i in range(n_samples)]
-r_all = [[i + 1, round(float(sample_ranges[i]), 4)] for i in range(n_samples)]
+sample_cats = [str(i + 1) for i in range(n_samples)]
 
-# Convert to JSON
-xbar_all_json = json.dumps(xbar_all)
-xbar_ooc_json = json.dumps(xbar_ooc)
-r_all_json = json.dumps(r_all)
-r_ooc_json = json.dumps(r_ooc)
+# Colors - refined palette with better accessibility
+BLUE = "#2563EB"
+RED = "#DC2626"
+AMBER = "#D97706"
+TEAL = "#0D9488"
+DARK = "#1E293B"
+GRID = "rgba(148, 163, 184, 0.12)"
 
-sample_labels = json.dumps([str(i + 1) for i in range(n_samples)])
+# Build series using highcharts_core Python API
+xbar_line = LineSeries()
+xbar_line.data = xbar_all
+xbar_line.name = "X\u0304 (Sample Mean)"
+xbar_line.x_axis = 0
+xbar_line.y_axis = 0
+xbar_line.color = BLUE
+xbar_line.marker = {"fillColor": BLUE, "lineColor": "#ffffff", "lineWidth": 2, "radius": 7}
+xbar_line.show_in_legend = True
 
-# Chart
-chart_js = f"""
-Highcharts.chart('container', {{
-    chart: {{
-        width: 4800,
-        height: 2700,
-        backgroundColor: '#ffffff',
-        spacingTop: 40,
-        spacingBottom: 160,
-        spacingLeft: 100,
-        spacingRight: 100,
-        marginBottom: 280,
-        style: {{
-            fontFamily: 'Arial, sans-serif'
-        }}
-    }},
+xbar_scatter = ScatterSeries()
+xbar_scatter.data = xbar_ooc
+xbar_scatter.name = "Out of Control"
+xbar_scatter.x_axis = 0
+xbar_scatter.y_axis = 0
+xbar_scatter.color = RED
+xbar_scatter.marker = {"radius": 13, "symbol": "diamond", "fillColor": RED, "lineColor": "#ffffff", "lineWidth": 3}
+xbar_scatter.show_in_legend = True
 
-    title: {{
-        text: 'CNC Shaft Diameter Monitoring \\u00b7 spc-xbar-r \\u00b7 highcharts \\u00b7 pyplots.ai',
-        style: {{
-            fontSize: '44px',
-            fontWeight: 'bold'
-        }}
-    }},
+r_line = LineSeries()
+r_line.data = r_all
+r_line.name = "R (Sample Range)"
+r_line.x_axis = 1
+r_line.y_axis = 1
+r_line.color = BLUE
+r_line.marker = {"fillColor": BLUE, "lineColor": "#ffffff", "lineWidth": 2, "radius": 7}
+r_line.show_in_legend = True
 
-    credits: {{
-        enabled: false
-    }},
+# Build chart with Python API and extract series config
+chart = Chart(container="container")
+chart.options = HighchartsOptions()
+chart.add_series(xbar_line)
+chart.add_series(xbar_scatter)
+chart.add_series(r_line)
+if r_ooc:
+    r_scatter = ScatterSeries()
+    r_scatter.data = r_ooc
+    r_scatter.name = "Out of Control (R)"
+    r_scatter.x_axis = 1
+    r_scatter.y_axis = 1
+    r_scatter.color = RED
+    r_scatter.marker = {"radius": 13, "symbol": "diamond", "fillColor": RED, "lineColor": "#ffffff", "lineWidth": 3}
+    r_scatter.show_in_legend = False
+    chart.add_series(r_scatter)
 
-    legend: {{
-        enabled: true,
-        itemStyle: {{
-            fontSize: '24px'
-        }},
-        symbolRadius: 6,
-        symbolWidth: 24,
-        verticalAlign: 'top',
-        y: 60
-    }},
+# Extract series from Python API as dicts
+series_dicts = []
+for s in chart.options.series:
+    series_dicts.append(s.to_dict())
 
-    xAxis: [{{
-        categories: {sample_labels},
-        visible: false,
-        lineWidth: 0,
-        min: 0,
-        max: {n_samples - 1}
-    }}, {{
-        categories: {sample_labels},
-        title: {{
-            text: 'Sample Number',
-            style: {{
-                fontSize: '28px',
-                fontWeight: 'bold'
-            }},
-            y: 30
-        }},
-        labels: {{
-            style: {{
-                fontSize: '24px'
-            }},
-            y: 35,
-            step: 1
-        }},
-        lineWidth: 2,
-        lineColor: '#333333',
-        tickWidth: 2,
-        offset: 0,
-        min: 0,
-        max: {n_samples - 1}
-    }}],
 
-    yAxis: [{{
-        title: {{
-            text: 'X\\u0304 (Sample Mean, mm)',
-            style: {{
-                fontSize: '26px',
-                fontWeight: 'bold'
-            }}
-        }},
-        labels: {{
-            style: {{
-                fontSize: '22px'
-            }},
-            format: '{{value:.3f}}'
-        }},
-        height: '38%',
-        top: '8%',
-        offset: 0,
-        lineWidth: 2,
-        lineColor: '#333333',
-        gridLineWidth: 1,
-        gridLineColor: 'rgba(0, 0, 0, 0.08)',
-        plotLines: [{{
-            value: {round(float(x_bar_bar), 4)},
-            color: '#306998',
-            width: 3,
-            zIndex: 3,
-            label: {{
-                text: 'CL = {x_bar_bar:.4f}',
-                align: 'right',
-                style: {{ fontSize: '20px', color: '#306998', fontWeight: 'bold' }},
-                x: -10,
-                y: -8
-            }}
-        }}, {{
-            value: {round(float(xbar_ucl), 4)},
-            color: '#D32F2F',
-            width: 3,
-            dashStyle: 'Dash',
-            zIndex: 3,
-            label: {{
-                text: 'UCL = {xbar_ucl:.4f}',
-                align: 'right',
-                style: {{ fontSize: '20px', color: '#D32F2F', fontWeight: 'bold' }},
-                x: -10,
-                y: -8
-            }}
-        }}, {{
-            value: {round(float(xbar_lcl), 4)},
-            color: '#D32F2F',
-            width: 3,
-            dashStyle: 'Dash',
-            zIndex: 3,
-            label: {{
-                text: 'LCL = {xbar_lcl:.4f}',
-                align: 'right',
-                style: {{ fontSize: '20px', color: '#D32F2F', fontWeight: 'bold' }},
-                x: -10,
-                y: 24
-            }}
-        }}, {{
-            value: {round(float(xbar_uwl), 4)},
-            color: '#FF9800',
-            width: 2,
-            dashStyle: 'ShortDot',
-            zIndex: 2,
-            label: {{
-                text: 'UWL',
-                align: 'left',
-                style: {{ fontSize: '18px', color: '#FF9800' }},
-                x: 10,
-                y: -6
-            }}
-        }}, {{
-            value: {round(float(xbar_lwl), 4)},
-            color: '#FF9800',
-            width: 2,
-            dashStyle: 'ShortDot',
-            zIndex: 2,
-            label: {{
-                text: 'LWL',
-                align: 'left',
-                style: {{ fontSize: '18px', color: '#FF9800' }},
-                x: 10,
-                y: -10
-            }}
-        }}]
-    }}, {{
-        title: {{
-            text: 'R (Sample Range, mm)',
-            style: {{
-                fontSize: '26px',
-                fontWeight: 'bold'
-            }}
-        }},
-        labels: {{
-            style: {{
-                fontSize: '22px'
-            }},
-            format: '{{value:.3f}}'
-        }},
-        height: '38%',
-        top: '53%',
-        offset: 0,
-        lineWidth: 2,
-        lineColor: '#333333',
-        gridLineWidth: 1,
-        gridLineColor: 'rgba(0, 0, 0, 0.08)',
-        min: 0,
-        max: {round(float(r_ucl * 1.15), 4)},
-        plotLines: [{{
-            value: {round(float(r_bar), 4)},
-            color: '#306998',
-            width: 3,
-            zIndex: 3,
-            label: {{
-                text: 'CL = {r_bar:.4f}',
-                align: 'right',
-                style: {{ fontSize: '20px', color: '#306998', fontWeight: 'bold' }},
-                x: -10,
-                y: -8
-            }}
-        }}, {{
-            value: {round(float(r_ucl), 4)},
-            color: '#D32F2F',
-            width: 3,
-            dashStyle: 'Dash',
-            zIndex: 3,
-            label: {{
-                text: 'UCL = {r_ucl:.4f}',
-                align: 'right',
-                style: {{ fontSize: '20px', color: '#D32F2F', fontWeight: 'bold' }},
-                x: -10,
-                y: -8
-            }}
-        }}, {{
-            value: {round(float(r_uwl), 4)},
-            color: '#FF9800',
-            width: 2,
-            dashStyle: 'ShortDot',
-            zIndex: 2,
-            label: {{
-                text: 'UWL',
-                align: 'left',
-                style: {{ fontSize: '18px', color: '#FF9800' }},
-                x: 10,
-                y: -6
-            }}
-        }}]
-    }}],
+# Plot lines helper
+def make_plot_line(value, color, label_text, width=3, dash=None, align="right", y_off=-8):
+    pl = {
+        "value": round(float(value), 4),
+        "color": color,
+        "width": width,
+        "zIndex": 3,
+        "label": {
+            "text": label_text,
+            "align": align,
+            "style": {"fontSize": "20px", "fontWeight": "bold", "color": color},
+            "x": -15 if align == "right" else 12,
+            "y": y_off,
+        },
+    }
+    if dash:
+        pl["dashStyle"] = dash
+    return pl
 
-    tooltip: {{
-        shared: false,
-        style: {{
-            fontSize: '20px'
-        }},
-        valueDecimals: 4,
-        valueSuffix: ' mm'
-    }},
 
-    plotOptions: {{
-        line: {{
-            lineWidth: 3,
-            marker: {{
-                enabled: true,
-                radius: 7,
-                symbol: 'circle'
-            }},
-            states: {{
-                hover: {{
-                    lineWidthPlus: 1
-                }}
-            }}
-        }},
-        scatter: {{
-            marker: {{
-                radius: 12,
-                symbol: 'circle',
-                lineWidth: 3,
-                lineColor: '#D32F2F'
-            }},
-            zIndex: 10
-        }}
-    }},
+# Full chart config dict with proper JSON serialization
+chart_config = {
+    "chart": {
+        "width": 4800,
+        "height": 2700,
+        "backgroundColor": "#FAFBFC",
+        "spacing": [30, 200, 180, 80],
+        "style": {"fontFamily": "Segoe UI, Helvetica Neue, Arial, sans-serif"},
+    },
+    "title": {
+        "text": "CNC Shaft Diameter Monitoring \u00b7 spc-xbar-r \u00b7 highcharts \u00b7 pyplots.ai",
+        "style": {"fontSize": "42px", "fontWeight": "600", "color": DARK},
+        "margin": 30,
+    },
+    "credits": {"enabled": False},
+    "legend": {
+        "enabled": True,
+        "itemStyle": {"fontSize": "22px", "fontWeight": "normal", "color": DARK},
+        "symbolRadius": 6,
+        "symbolWidth": 20,
+        "verticalAlign": "top",
+        "y": 55,
+        "itemDistance": 40,
+    },
+    "xAxis": [
+        {"categories": sample_cats, "visible": False, "lineWidth": 0, "min": 0, "max": n_samples - 1},
+        {
+            "categories": sample_cats,
+            "title": {
+                "text": "Sample Number",
+                "style": {"fontSize": "26px", "fontWeight": "600", "color": DARK},
+                "y": 20,
+            },
+            "labels": {"style": {"fontSize": "22px", "color": "#475569"}, "y": 28, "step": 1},
+            "lineWidth": 2,
+            "lineColor": DARK,
+            "tickWidth": 2,
+            "tickColor": DARK,
+            "min": 0,
+            "max": n_samples - 1,
+        },
+    ],
+    "yAxis": [
+        {
+            "title": {
+                "text": "X\u0304 (Sample Mean, mm)",
+                "style": {"fontSize": "26px", "fontWeight": "600", "color": DARK},
+            },
+            "labels": {"style": {"fontSize": "20px", "color": "#475569"}, "format": "{value:.3f}"},
+            "height": "36%",
+            "top": "6%",
+            "offset": 0,
+            "lineWidth": 2,
+            "lineColor": DARK,
+            "gridLineWidth": 1,
+            "gridLineColor": GRID,
+            "plotLines": [
+                make_plot_line(x_bar_bar, TEAL, f"CL = {x_bar_bar:.4f}"),
+                make_plot_line(xbar_ucl, RED, f"UCL = {xbar_ucl:.4f}", dash="Dash"),
+                make_plot_line(xbar_lcl, RED, f"LCL = {xbar_lcl:.4f}", dash="Dash", y_off=22),
+                make_plot_line(xbar_uwl, AMBER, "UWL", width=2, dash="ShortDot", align="left", y_off=-6),
+                make_plot_line(xbar_lwl, AMBER, "LWL", width=2, dash="ShortDot", align="left", y_off=-6),
+            ],
+        },
+        {
+            "title": {
+                "text": "R (Sample Range, mm)",
+                "style": {"fontSize": "26px", "fontWeight": "600", "color": DARK},
+            },
+            "labels": {"style": {"fontSize": "20px", "color": "#475569"}, "format": "{value:.3f}"},
+            "height": "36%",
+            "top": "50%",
+            "offset": 0,
+            "lineWidth": 2,
+            "lineColor": DARK,
+            "gridLineWidth": 1,
+            "gridLineColor": GRID,
+            "min": 0,
+            "max": round(float(r_ucl * 1.15), 4),
+            "plotLines": [
+                make_plot_line(r_bar, TEAL, f"CL = {r_bar:.4f}"),
+                make_plot_line(r_ucl, RED, f"UCL = {r_ucl:.4f}", dash="Dash"),
+                make_plot_line(r_uwl, AMBER, "UWL", width=2, dash="ShortDot", align="left", y_off=-6),
+            ],
+        },
+    ],
+    "tooltip": {
+        "shared": False,
+        "style": {"fontSize": "20px"},
+        "valueDecimals": 4,
+        "valueSuffix": " mm",
+        "backgroundColor": "rgba(255,255,255,0.96)",
+        "borderColor": "#CBD5E1",
+        "borderRadius": 8,
+    },
+    "plotOptions": {
+        "line": {
+            "lineWidth": 3,
+            "marker": {"enabled": True, "radius": 7, "symbol": "circle"},
+            "states": {"hover": {"lineWidthPlus": 1}},
+        },
+        "scatter": {
+            "marker": {"radius": 13, "symbol": "diamond", "lineWidth": 3, "lineColor": "#ffffff"},
+            "zIndex": 10,
+        },
+    },
+    "series": series_dicts,
+}
 
-    series: [{{
-        type: 'line',
-        name: 'X\\u0304 (Sample Mean)',
-        data: {xbar_all_json},
-        color: '#306998',
-        xAxis: 0,
-        yAxis: 0,
-        marker: {{
-            fillColor: '#306998',
-            lineColor: '#ffffff',
-            lineWidth: 2,
-            radius: 7
-        }},
-        showInLegend: true
-    }}, {{
-        type: 'scatter',
-        name: 'Out of Control',
-        data: {xbar_ooc_json},
-        color: '#D32F2F',
-        xAxis: 0,
-        yAxis: 0,
-        marker: {{
-            radius: 12,
-            symbol: 'circle',
-            fillColor: '#D32F2F',
-            lineColor: '#ffffff',
-            lineWidth: 3
-        }},
-        showInLegend: true
-    }}, {{
-        type: 'line',
-        name: 'R (Sample Range)',
-        data: {r_all_json},
-        color: '#306998',
-        xAxis: 1,
-        yAxis: 1,
-        marker: {{
-            fillColor: '#306998',
-            lineColor: '#ffffff',
-            lineWidth: 2,
-            radius: 7
-        }},
-        showInLegend: true
-    }}, {{
-        type: 'scatter',
-        name: 'Out of Control (R)',
-        data: {r_ooc_json},
-        color: '#D32F2F',
-        xAxis: 1,
-        yAxis: 1,
-        marker: {{
-            radius: 12,
-            symbol: 'circle',
-            fillColor: '#D32F2F',
-            lineColor: '#ffffff',
-            lineWidth: 3
-        }},
-        showInLegend: false
-    }}]
-}});
-"""
+chart_json = json.dumps(chart_config)
 
 # Download Highcharts JS
 cdn_urls = ["https://code.highcharts.com/highcharts.js", "https://cdn.jsdelivr.net/npm/highcharts@11/highcharts.js"]
@@ -416,17 +279,19 @@ for url in cdn_urls:
 if not highcharts_js:
     raise RuntimeError("Failed to download Highcharts JS from all CDN sources")
 
-# Generate HTML with inline scripts
+# Build HTML with inline scripts
 html_content = f"""<!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
     <script>{highcharts_js}</script>
 </head>
-<body style="margin:0; padding:0;">
+<body style="margin:0; padding:0; background:#FAFBFC;">
     <div id="container" style="width: 4800px; height: 2700px;"></div>
     <script>
-    {chart_js}
+    document.addEventListener('DOMContentLoaded', function() {{
+        Highcharts.chart('container', {chart_json});
+    }});
     </script>
 </body>
 </html>"""
