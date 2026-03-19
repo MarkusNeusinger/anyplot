@@ -1,7 +1,7 @@
 library: altair
 specification_id: histogram-capability
 created: '2026-03-19T21:47:40Z'
-updated: '2026-03-19T21:52:39Z'
+updated: '2026-03-19T22:02:59Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23318228617
 issue: 4552
@@ -10,33 +10,33 @@ library_version: 6.0.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/histogram-capability/altair/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/histogram-capability/altair/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/histogram-capability/altair/plot.html
-quality_score: 83
+quality_score: 89
 review:
   strengths:
-  - Perfect spec compliance - all required features (histogram, normal curve, LSL/USL,
-    target, Cp/Cpk) present and correct
-  - Excellent code quality with clean KISS structure and proper reproducibility
-  - Realistic engineering context with sensible shaft diameter data and tolerances
-  - Good use of Altair declarative layering to compose histogram + curve + rules +
-    annotations
+  - Excellent colorblind-safe palette (orange/purple instead of red/green)
+  - Background shading zones for in-spec/out-of-spec create strong visual storytelling
+  - CAPABLE/NOT CAPABLE verdict with dynamic color adds clear data narrative
+  - Pre-binned histogram with mark_rect avoids Altair histogram-layer scale conflicts
+  - Full spec compliance with all required features present and correctly implemented
   weaknesses:
-  - Red-green color scheme for specification lines is problematic for colorblind users
-  - Design could be more polished - lacks refinement needed for publication quality
-  - Data storytelling present but could be stronger with better visual hierarchy
-  image_description: The plot displays a histogram of 200 shaft diameter measurements
-    (mm) using blue bars (#306998) with white edge strokes. A dark blue normal distribution
-    curve (#1F4E79) is overlaid on the histogram. Two red dashed vertical lines mark
-    the Lower Specification Limit (LSL = 9.95) and Upper Specification Limit (USL
-    = 10.05), with bold red text labels at the top of the chart. A green dashed vertical
-    line marks the Target value (10.00) with a green label. In the upper-right area,
-    bold dark gray text displays "Cp = 1.49 | Cpk = 1.45". The title reads "histogram-capability
-    · altair · pyplots.ai" in bold at the top. The x-axis is labeled "Shaft Diameter
-    (mm)" and y-axis "Frequency". The distribution is roughly bell-shaped, centered
-    near 10.002, with data well within the spec limits. Background is white with no
-    grid lines and no view border.
+  - Mean label x̄=10.002 at fontSize=14 is below the 16pt minimum and rendered in
+    light gray italic, making it hard to read
+  - Could push Library Mastery higher by leveraging more Altair-distinctive features
+  image_description: 'The plot displays a histogram of 200 shaft diameter measurements
+    (mm) rendered as blue rectangular bars with white edges and rounded top corners.
+    A dark blue fitted normal distribution curve overlays the histogram. Two orange
+    dashed vertical lines mark the Lower Specification Limit (LSL = 9.950, left) and
+    Upper Specification Limit (USL = 10.050, right), with bold orange labels at the
+    top. A purple dashed vertical line marks the Target value (10.000) with a purple
+    label. Background shading distinguishes in-spec (light green) from out-of-spec
+    (light peach) zones. The upper right displays "Cp = 1.49  Cpk = 1.45" in bold
+    dark text with "CAPABLE" in green below. A gray dashed mean indicator line with
+    italic "x̄=10.002" label appears near the bottom. The title reads "histogram-capability
+    · altair · pyplots.ai" with a subtitle showing n=200, σ=0.0112 mm, process centered
+    at 10.002 mm. X-axis: "Shaft Diameter (mm)", Y-axis: "Frequency".'
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -44,34 +44,36 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title=28, axis=22, ticks=18, annotations=16-20).
-          Spec line labels slightly small at 16pt.
+        comment: All major text sizes explicitly set (title 28pt, axis titles 22pt,
+          ticks 18pt, annotations 17-21pt). Mean label at 14pt is below the 16pt minimum.
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: USL label close to right canvas edge, minor clipping risk.
+        comment: 'Minor issue: mean label in light gray italic is partially hard to
+          distinguish against background zone. No other overlap.'
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All elements clearly visible. Bars at opacity 0.8, curve and rules
-          at strokeWidth=3.
+        comment: Histogram bars well-sized with good opacity, normal curve clear,
+          spec lines bold and distinct.
       - id: VQ-04
         name: Color Accessibility
-        score: 2
-        max: 4
-        passed: false
-        comment: Red-green color pair for LSL/USL vs Target lines is colorblind-problematic.
-      - id: VQ-05
-        name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good proportions, plot fills canvas well. USL label slightly near
-          right edge.
+        comment: 'Excellent colorblind-safe palette: orange for LSL/USL, purple for
+          target, avoiding red-green entirely.'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills canvas well, balanced margins, background zones extend
+          edge-to-edge.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -79,30 +81,30 @@ review:
         passed: true
         comment: Shaft Diameter (mm) with units, Frequency is descriptive.
     design_excellence:
-      score: 12
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Thoughtful palette, grid removed, view border removed. Above defaults
-          but not publication-level.
+        comment: Custom palette, background shading zones, rounded bar corners, white
+          stroke separators, thoughtful typography hierarchy.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Grid disabled, view strokeWidth=0, white bar edge highlighting. Some
-          refinement visible.
+        comment: Grid disabled, view stroke removed, subtle axis colors, white bar
+          edges.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Capability indices and colored spec lines create some narrative.
-          Above basic but lacks strong visual hierarchy.
+        passed: true
+        comment: Background zones create visual narrative, CAPABLE verdict provides
+          conclusion, subtitle adds context.
     spec_compliance:
       score: 15
       max: 15
@@ -119,20 +121,20 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: histogram, normal curve, LSL/USL, target,
-          Cp/Cpk.'
+        comment: 'All features present: histogram, fitted normal curve, LSL/USL lines,
+          target line, Cp/Cpk annotations, mean indicator.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=measurement, Y=frequency. Correct mapping.
+        comment: X-axis maps to shaft diameter, Y-axis to frequency. All data visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. No legend needed for this plot type.
+        comment: Title format correct. No legend needed — all elements directly labeled.
     data_quality:
       score: 14
       max: 15
@@ -142,22 +144,21 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Shows histogram, normal overlay, spec limits, capability indices.
-          Data uniformly capable with no measurements near limits.
+        comment: Shows distribution shape, spec limits, capability indices, mean offset.
+          Process slightly off-center showing realistic bias.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Real engineering context: shaft diameter manufacturing with realistic
-          tolerances.'
+        comment: Shaft diameter manufacturing with realistic tolerances. Neutral engineering
+          domain.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: LSL=9.95, USL=10.05, target=10.00, sigma~0.012 are realistic machining
-          tolerances.
+        comment: 'Realistic values: 10mm shaft, ±0.05mm tolerance, σ=0.012mm, Cp=1.49/Cpk=1.45.'
     code_quality:
       score: 10
       max: 10
@@ -167,7 +168,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports, data, computation, plot layers, combine, save structure.
+        comment: Clean imports → data → plot layers → combine → save. No functions
+          or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -179,19 +181,19 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports used (altair, numpy, pandas, scipy.stats).
+        comment: 'All imports used: altair, numpy, pandas, scipy.stats.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriate complexity for Altair declarative approach.
+        comment: Well-organized layer composition, appropriate complexity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png and plot.html, current API.
+        comment: Saves as plot.png and plot.html. Current API.
     library_mastery:
       score: 7
       max: 10
@@ -201,15 +203,15 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of declarative grammar, layered composition, bin transform,
-          encoding channels.
+        comment: Good declarative layer composition with alt.layer(). Pre-binning
+          with mark_rect is idiomatic for shared-scale histograms.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses layer composition, bin transform, mark_rule, mark_text with
-          positional encoding, HTML export.
+        comment: Uses tooltips, HTML export, alt.value() pixel positioning, mark_rect
+          cornerRadius, configure_view.
   verdict: REJECTED
 impl_tags:
   dependencies:
@@ -217,6 +219,7 @@ impl_tags:
   techniques:
   - annotations
   - layer-composition
+  - hover-tooltips
   - html-export
   patterns:
   - data-generation
