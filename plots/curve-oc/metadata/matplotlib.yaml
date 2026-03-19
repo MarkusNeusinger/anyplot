@@ -1,0 +1,222 @@
+library: matplotlib
+specification_id: curve-oc
+created: '2026-03-19T20:39:38Z'
+updated: '2026-03-19T20:50:10Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23315608654
+issue: 4553
+python_version: 3.14.3
+library_version: 3.10.8
+preview_url: https://storage.googleapis.com/pyplots-images/plots/curve-oc/matplotlib/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/curve-oc/matplotlib/plot_thumb.png
+preview_html: null
+quality_score: 91
+review:
+  strengths:
+  - 'Excellent spec compliance: all required features implemented including binomial
+    CDF, AQL/LTPD markers, risk annotations, and multiple sampling plans'
+  - Strong data storytelling with shaded risk regions and alpha/beta annotations that
+    immediately communicate quality inspection concepts
+  - Clean deterministic code with elegant binomial computation using numpy broadcasting
+  - Cohesive custom color palette (blue/gold/mauve) that is colorblind-safe
+  weaknesses:
+  - Legend font size at 14pt instead of recommended 16pt
+  - Consumer risk shading region is very faint (alpha=0.12) and barely distinguishable
+  image_description: 'The plot displays three Operating Characteristic (OC) curves
+    on a clean white background. The title reads "curve-oc · matplotlib · pyplots.ai"
+    at the top. The x-axis shows "Fraction Defective (p)" from 0% to 14% with 2% intervals,
+    and the y-axis shows "Probability of Acceptance P(accept)" from 0% to 100%. Three
+    S-shaped curves descend from near 100% at p=0: blue (n=50, c=1), gold/amber (n=80,
+    c=2), and dark mauve (n=100, c=2). Two vertical dashed gray lines mark AQL at
+    2% and LTPD at 10%. A light blue shaded region to the left of AQL represents Producer''s
+    risk (α), and a faint red/pink shaded region to the right of LTPD represents Consumer''s
+    risk (β). A blue dot at the AQL intersection of the first curve has an arrow annotation
+    "α = 0.26", and a red dot at the LTPD intersection has an arrow annotation "β
+    = 0.03". The legend in the upper right lists all three sampling plans and both
+    risk regions. Top and right spines are removed with a subtle y-axis grid.'
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 24, labels 20, ticks 16, legend
+          14, annotations 14). Legend at 14pt instead of recommended 16pt.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text. Annotations, AQL/LTPD labels, and legend well-separated.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Lines at linewidth=3 clearly visible. Annotation markers at size
+          10.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue/gold/mauve palette is colorblind-safe with good contrast.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good 16:9 layout with tight_layout, balanced margins.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive labels with parameter notation.
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom cohesive palette, explicit typography, professional look.
+          Above defaults but not FiveThirtyEight-level.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines removed, subtle y-axis grid, percentage formatters, clean
+          whitespace.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Shaded risk regions, alpha/beta annotations with arrows, AQL/LTPD
+          markers create clear storytelling.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct OC curves.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features: binomial CDF, AQL/LTPD lines, risk annotations, 3
+          sampling plans, smooth curves.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=fraction defective, Y=probability of acceptance. Correct.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct. Legend labels match sampling plan parameters.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Three sampling plans with varying n and c. Both risk regions demonstrated.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Quality inspection / acceptance sampling is a real-world industrial
+          scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: AQL=0.02, LTPD=0.10, n=50/80/100 are standard realistic values.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean imports-data-plot-save structure. No functions or classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic binomial calculation.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic. Elegant binomial computation with numpy broadcasting.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with dpi=300.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of Axes methods, fill_between, axvline, annotate, FuncFormatter,
+          MultipleLocator.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: fill_between for risk regions, FuncFormatter for percentages, annotate
+          with arrowprops are matplotlib-distinctive.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - manual-ticks
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - binning
+  styling:
+  - alpha-blending
+  - grid-styling
