@@ -1,10 +1,11 @@
-""" pyplots.ai
+"""pyplots.ai
 ecg-twelve-lead: ECG/EKG 12-Lead Waveform Display
 Library: matplotlib 3.10.8 | Python 3.14.3
 Quality: 88/100 | Created: 2026-03-19
 """
 
 import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
 import numpy as np
 
 
@@ -78,95 +79,100 @@ grid_layout = [["I", "aVR", "V1", "V4"], ["II", "aVL", "V2", "V5"], ["III", "aVF
 ecg_bg = "#FFF5EE"
 fig = plt.figure(figsize=(16, 10))
 fig.patch.set_facecolor("white")
-gs = fig.add_gridspec(4, 4, hspace=0.05, wspace=0.05, left=0.04, right=0.98, top=0.92, bottom=0.04)
+gs = fig.add_gridspec(4, 4, hspace=0.08, wspace=0.08, left=0.04, right=0.98, top=0.91, bottom=0.04)
 
-fine_grid_x = np.arange(0, duration + 0.04, 0.04)
-fine_grid_y = np.arange(-2, 2.1, 0.1)
-bold_grid_x = np.arange(0, duration + 0.2, 0.2)
-bold_grid_y = np.arange(-2, 2.1, 0.5)
+
+def setup_ecg_grid(ax, x_min, x_max, y_min=-1.5, y_max=1.8):
+    """Configure ECG paper grid using matplotlib's native tick/grid system."""
+    ax.set_facecolor(ecg_bg)
+    ax.set_xlim(x_min, x_max)
+    ax.set_ylim(y_min, y_max)
+
+    # Major grid: bold lines at 5mm intervals (0.2s horizontal, 0.5mV vertical)
+    ax.xaxis.set_major_locator(ticker.MultipleLocator(0.2))
+    ax.yaxis.set_major_locator(ticker.MultipleLocator(0.5))
+
+    # Minor grid: fine lines at 1mm intervals (0.04s horizontal, 0.1mV vertical)
+    ax.xaxis.set_minor_locator(ticker.MultipleLocator(0.04))
+    ax.yaxis.set_minor_locator(ticker.MultipleLocator(0.1))
+
+    ax.grid(which="minor", color="#F5C4B8", linewidth=0.3, alpha=0.6)
+    ax.grid(which="major", color="#E8A090", linewidth=0.7, alpha=0.7)
+
+    ax.set_xticklabels([])
+    ax.set_yticklabels([])
+    ax.tick_params(axis="both", length=0)
+
+    for spine in ax.spines.values():
+        spine.set_linewidth(0.5)
+        spine.set_color("#CCBBBB")
+
 
 for row_idx, row_leads in enumerate(grid_layout):
     for col_idx, lead_name in enumerate(row_leads):
         ax = fig.add_subplot(gs[row_idx, col_idx])
-        ax.set_facecolor(ecg_bg)
-
-        # ECG paper grid
-        for xv in fine_grid_x:
-            ax.axvline(x=xv, color="#F5C4B8", linewidth=0.3, alpha=0.6)
-        for yv in fine_grid_y:
-            ax.axhline(y=yv, color="#F5C4B8", linewidth=0.3, alpha=0.6)
-        for xv in bold_grid_x:
-            ax.axvline(x=xv, color="#E8A090", linewidth=0.7, alpha=0.7)
-        for yv in bold_grid_y:
-            ax.axhline(y=yv, color="#E8A090", linewidth=0.7, alpha=0.7)
+        setup_ecg_grid(ax, 0, duration)
 
         ax.plot(t, leads[lead_name], color="#1a1a1a", linewidth=1.2)
 
         ax.text(
             0.03,
-            0.92,
+            0.93,
             lead_name,
             transform=ax.transAxes,
-            fontsize=14,
+            fontsize=20,
             fontweight="bold",
-            color="#333333",
+            color="#222222",
             va="top",
-            bbox={"boxstyle": "square,pad=0.15", "facecolor": ecg_bg, "edgecolor": "none"},
+            bbox={"boxstyle": "square,pad=0.15", "facecolor": ecg_bg, "edgecolor": "none", "alpha": 0.9},
         )
-
-        ax.set_xlim(0, duration)
-        ax.set_ylim(-1.5, 1.8)
-        ax.set_xticks([])
-        ax.set_yticks([])
-        for spine in ax.spines.values():
-            spine.set_linewidth(0.5)
-            spine.set_color("#CCBBBB")
 
 # Rhythm strip (Lead II, full width)
 ax_rhythm = fig.add_subplot(gs[3, :])
-ax_rhythm.set_facecolor(ecg_bg)
-
-fine_grid_x_long = np.arange(0, 10.0 + 0.04, 0.04)
-bold_grid_x_long = np.arange(0, 10.0 + 0.2, 0.2)
-
-for xv in fine_grid_x_long:
-    ax_rhythm.axvline(x=xv, color="#F5C4B8", linewidth=0.3, alpha=0.6)
-for yv in fine_grid_y:
-    ax_rhythm.axhline(y=yv, color="#F5C4B8", linewidth=0.3, alpha=0.6)
-for xv in bold_grid_x_long:
-    ax_rhythm.axvline(x=xv, color="#E8A090", linewidth=0.7, alpha=0.7)
-for yv in bold_grid_y:
-    ax_rhythm.axhline(y=yv, color="#E8A090", linewidth=0.7, alpha=0.7)
+setup_ecg_grid(ax_rhythm, 0, 10.0)
 
 ax_rhythm.plot(t_long, signal_long, color="#1a1a1a", linewidth=1.2)
 
 ax_rhythm.text(
     0.003,
-    0.92,
+    0.93,
     "II (rhythm)",
     transform=ax_rhythm.transAxes,
-    fontsize=14,
+    fontsize=20,
     fontweight="bold",
-    color="#333333",
+    color="#222222",
     va="top",
-    bbox={"boxstyle": "square,pad=0.15", "facecolor": ecg_bg, "edgecolor": "none"},
+    bbox={"boxstyle": "square,pad=0.15", "facecolor": ecg_bg, "edgecolor": "none", "alpha": 0.9},
 )
 
-ax_rhythm.set_xlim(0, 10.0)
-ax_rhythm.set_ylim(-1.5, 1.8)
-ax_rhythm.set_xticks([])
-ax_rhythm.set_yticks([])
-for spine in ax_rhythm.spines.values():
-    spine.set_linewidth(0.5)
-    spine.set_color("#CCBBBB")
-
 # Calibration marker: 1mV pulse
-ax_rhythm.plot([0, 0, 0.2, 0.2], [-1.2, -0.2, -0.2, -1.2], color="#1a1a1a", linewidth=1.5)
-ax_rhythm.text(0.1, -0.05, "1 mV", fontsize=9, ha="center", color="#555555")
+ax_rhythm.plot([0, 0, 0.2, 0.2], [-1.2, -0.2, -0.2, -1.2], color="#1a1a1a", linewidth=1.8)
+ax_rhythm.text(0.1, -0.0, "1 mV", fontsize=16, ha="center", color="#444444", fontweight="medium")
 
-# Style
-fig.suptitle("ecg-twelve-lead · matplotlib · pyplots.ai", fontsize=20, fontweight="medium", y=0.97, color="#333333")
-fig.text(0.98, 0.97, "25 mm/s  ·  10 mm/mV  ·  Normal Sinus Rhythm", fontsize=11, ha="right", va="top", color="#888888")
+# Heart rate annotation on rhythm strip
+ax_rhythm.text(
+    0.997,
+    0.93,
+    "HR: ~75 bpm",
+    transform=ax_rhythm.transAxes,
+    fontsize=16,
+    ha="right",
+    va="top",
+    color="#666666",
+    fontstyle="italic",
+)
+
+# Title and metadata
+fig.suptitle(
+    "ecg-twelve-lead · matplotlib · pyplots.ai",
+    fontsize=24,
+    fontweight="medium",
+    x=0.04,
+    y=0.97,
+    ha="left",
+    color="#333333",
+)
+fig.text(0.98, 0.97, "25 mm/s  ·  10 mm/mV  ·  Normal Sinus Rhythm", fontsize=16, ha="right", va="top", color="#888888")
 
 # Save
 plt.savefig("plot.png", dpi=300, bbox_inches="tight", facecolor="white")
