@@ -1,11 +1,10 @@
-""" pyplots.ai
+"""pyplots.ai
 spc-xbar-r: Statistical Process Control Chart (X-bar/R)
 Library: pygal 3.1.0 | Python 3.14.3
 Quality: 83/100 | Created: 2026-03-19
 """
 
 import io
-import xml.etree.ElementTree as ET
 
 import cairosvg
 import numpy as np
@@ -60,10 +59,9 @@ C_NORMAL = "#306998"
 C_OOC = "#C0392B"
 C_CL = "#1A1A2E"
 C_UCL_LCL = "#E74C3C"
-C_WARN = "#F39C12"
-BG = "#FAFAFA"
+C_WARN = "#D35400"
 PLOT_BG = "#F4F3EE"
-GRID_COLOR = "#E0DDD8"
+GRID_COLOR = "#E8E5E0"
 
 custom_style = Style(
     background="white",
@@ -107,13 +105,15 @@ common_config = {
     "legend_box_size": 20,
     "js": [],
     "explicit_size": True,
-    "dots_size": 8,
+    "dots_size": 12,
     "stroke_style": {"width": 4, "linecap": "round", "linejoin": "round"},
 }
 
 
 # --- X-bar Chart ---
-xbar_y_pad = (xbar_ucl - xbar_lcl) * 0.3
+xbar_y_min = min(sample_means.min(), xbar_lcl)
+xbar_y_max = max(sample_means.max(), xbar_ucl)
+xbar_y_pad = (xbar_y_max - xbar_y_min) * 0.15
 xbar_chart = pygal.XY(
     **common_config,
     title="spc-xbar-r \u00b7 pygal \u00b7 pyplots.ai",
@@ -121,10 +121,10 @@ xbar_chart = pygal.XY(
     y_title="\u0058\u0304 (mm)",
     margin_bottom=20,
     margin_top=40,
-    range=(xbar_lcl - xbar_y_pad, xbar_ucl + xbar_y_pad),
+    range=(xbar_y_min - xbar_y_pad, xbar_y_max + xbar_y_pad),
     xrange=(0, n_samples + 1),
     show_legend=True,
-    value_formatter=lambda y: f"{y:.4f}" if isinstance(y, (int, float)) else str(y),
+    value_formatter=lambda y: f"{y:.3f}" if isinstance(y, (int, float)) else str(y),
 )
 xbar_chart.x_labels = [float(i) for i in sample_ids]
 xbar_chart.x_label_rotation = 0
@@ -146,7 +146,7 @@ xbar_chart.add("Out of Control", ooc_xbar_pts, stroke=False, show_dots=True, dot
 
 # Center line
 xbar_chart.add(
-    f"CL = {x_bar_bar:.4f}",
+    f"CL = {x_bar_bar:.3f}",
     [(0.5, x_bar_bar), (n_samples + 0.5, x_bar_bar)],
     show_dots=False,
     stroke_style={"width": 4, "linecap": "round"},
@@ -154,13 +154,13 @@ xbar_chart.add(
 
 # UCL and LCL
 xbar_chart.add(
-    f"UCL = {xbar_ucl:.4f}",
+    f"UCL = {xbar_ucl:.3f}",
     [(0.5, xbar_ucl), (n_samples + 0.5, xbar_ucl)],
     show_dots=False,
     stroke_style={"width": 3, "dasharray": "16, 8", "linecap": "round"},
 )
 xbar_chart.add(
-    f"LCL = {xbar_lcl:.4f}",
+    f"LCL = {xbar_lcl:.3f}",
     [(0.5, xbar_lcl), (n_samples + 0.5, xbar_lcl)],
     show_dots=False,
     stroke_style={"width": 3, "dasharray": "16, 8", "linecap": "round"},
@@ -171,17 +171,18 @@ xbar_chart.add(
     "+2\u03c3 Warning",
     [(0.5, xbar_uw), (n_samples + 0.5, xbar_uw)],
     show_dots=False,
-    stroke_style={"width": 2, "dasharray": "8, 6", "linecap": "round"},
+    stroke_style={"width": 3, "dasharray": "10, 6", "linecap": "round"},
 )
 xbar_chart.add(
     "-2\u03c3 Warning",
     [(0.5, xbar_lw), (n_samples + 0.5, xbar_lw)],
     show_dots=False,
-    stroke_style={"width": 2, "dasharray": "8, 6", "linecap": "round"},
+    stroke_style={"width": 3, "dasharray": "10, 6", "linecap": "round"},
 )
 
 # --- R Chart ---
-r_y_pad = (r_ucl - r_lcl) * 0.3
+r_y_max = max(sample_ranges.max(), r_ucl)
+r_y_pad = r_y_max * 0.15
 r_chart = pygal.XY(
     **common_config,
     title="",
@@ -189,10 +190,10 @@ r_chart = pygal.XY(
     y_title="R (mm)",
     margin_bottom=80,
     margin_top=10,
-    range=(max(0, r_lcl - r_y_pad), r_ucl + r_y_pad),
+    range=(0, r_y_max + r_y_pad),
     xrange=(0, n_samples + 1),
     show_legend=True,
-    value_formatter=lambda y: f"{y:.4f}" if isinstance(y, (int, float)) else str(y),
+    value_formatter=lambda y: f"{y:.3f}" if isinstance(y, (int, float)) else str(y),
 )
 r_chart.x_labels = [float(i) for i in sample_ids]
 r_chart.x_label_rotation = 0
@@ -215,7 +216,7 @@ if ooc_r_pts:
 
 # R center line
 r_chart.add(
-    f"CL = {r_bar:.4f}",
+    f"CL = {r_bar:.3f}",
     [(0.5, r_bar), (n_samples + 0.5, r_bar)],
     show_dots=False,
     stroke_style={"width": 4, "linecap": "round"},
@@ -223,7 +224,7 @@ r_chart.add(
 
 # R UCL
 r_chart.add(
-    f"UCL = {r_ucl:.4f}",
+    f"UCL = {r_ucl:.3f}",
     [(0.5, r_ucl), (n_samples + 0.5, r_ucl)],
     show_dots=False,
     stroke_style={"width": 3, "dasharray": "16, 8", "linecap": "round"},
@@ -231,7 +232,7 @@ r_chart.add(
 
 # R LCL (D3=0 for n=5, so LCL = 0)
 r_chart.add(
-    f"LCL = {r_lcl:.4f}",
+    f"LCL = {r_lcl:.3f}",
     [(0.5, r_lcl), (n_samples + 0.5, r_lcl)],
     show_dots=False,
     stroke_style={"width": 3, "dasharray": "16, 8", "linecap": "round"},
@@ -242,14 +243,10 @@ r_chart.add(
     "+2\u03c3 Warning",
     [(0.5, r_uw), (n_samples + 0.5, r_uw)],
     show_dots=False,
-    stroke_style={"width": 2, "dasharray": "8, 6", "linecap": "round"},
+    stroke_style={"width": 3, "dasharray": "10, 6", "linecap": "round"},
 )
 
 # Render and compose
-ns = "http://www.w3.org/2000/svg"
-ET.register_namespace("", ns)
-ET.register_namespace("xlink", "http://www.w3.org/1999/xlink")
-
 png_images = []
 for chart in [xbar_chart, r_chart]:
     svg_bytes = chart.render()
@@ -266,24 +263,3 @@ draw = ImageDraw.Draw(combined)
 draw.line([(140, 1350), (4700, 1350)], fill="#DEE2E6", width=2)
 
 combined.save("plot.png", dpi=(300, 300))
-
-# HTML version
-xbar_svg = xbar_chart.render(is_unicode=True).replace('<?xml version="1.0" encoding="utf-8"?>', "")
-r_svg = r_chart.render(is_unicode=True).replace('<?xml version="1.0" encoding="utf-8"?>', "")
-
-html_content = (
-    "<!DOCTYPE html>\n<html>\n<head>\n"
-    "    <title>spc-xbar-r \u00b7 pygal \u00b7 pyplots.ai</title>\n"
-    "    <style>\n"
-    "        body { font-family: sans-serif; background: white; margin: 0; padding: 20px; }\n"
-    "        .container { max-width: 1200px; margin: 0 auto; }\n"
-    "        .chart { width: 100%; margin: 10px 0; }\n"
-    "    </style>\n</head>\n<body>\n"
-    "    <div class='container'>\n"
-    f"        <div class='chart'>{xbar_svg}</div>\n"
-    f"        <div class='chart'>{r_svg}</div>\n"
-    "    </div>\n</body>\n</html>"
-)
-
-with open("plot.html", "w") as f:
-    f.write(html_content)
