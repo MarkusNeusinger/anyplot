@@ -1,0 +1,230 @@
+library: letsplot
+specification_id: line-growth-percentile
+created: '2026-03-19T19:54:15Z'
+updated: '2026-03-19T20:14:54Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23313901486
+issue: 4555
+python_version: 3.14.3
+library_version: 4.9.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/line-growth-percentile/letsplot/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/line-growth-percentile/letsplot/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/line-growth-percentile/letsplot/plot.html
+quality_score: 90
+review:
+  strengths:
+  - Excellent graduated blue palette with intentional color hierarchy matching clinical
+    chart conventions
+  - Patient trajectory tells a compelling growth faltering/catch-up story with strong
+    visual contrast
+  - All spec features fully implemented including right-margin percentile labels
+  - Realistic WHO-approximated data with clinically plausible patient measurements
+  - Clean well-structured code with appropriate use of lets-plot tooltips
+  weaknesses:
+  - Individual percentile curve lines are quite faint (size=0.5, alpha=0.5) reducing
+    visual clarity of band boundaries
+  - Could push design further with additional typographic refinement or subtle background
+    color
+  image_description: The plot displays a pediatric growth chart for boys' weight-for-age
+    from 0 to 36 months. Seven percentile curves (P3, P10, P25, P50, P75, P90, P97)
+    are rendered as graduated blue-toned bands — darker steel-blue at the extremes
+    (P3-P10, P90-P97), medium blue for the middle bands (P10-P25, P75-P90), and light
+    blue for the inner band (P25-P75). The 50th percentile is emphasized as a thicker
+    dark blue line. A red patient trajectory with white-filled circular markers (red
+    stroke) is overlaid, showing 12 data points from birth to 36 months. The patient
+    starts near the 50th percentile, dips below it during months 9-24 (growth faltering),
+    then recovers back to approximately the P50 line by 36 months. Percentile labels
+    (P3 through P97) appear on the right margin in gray text. The title reads "Boys
+    Weight-for-Age · line-growth-percentile · letsplot · pyplots.ai" in bold. X-axis
+    shows "Age (months)" with ticks at 0, 6, 12, 18, 24, 30, 36. Y-axis shows "Weight
+    (kg)" from 1.0 to 17.0. Subtle horizontal gridlines are present; vertical gridlines
+    are removed. The layout is clean with generous margins.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title=24pt, axis_title=20pt, axis_text=16pt.
+          Perfectly readable.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Percentile labels well-spaced on right margin. No text collisions.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Patient markers and P50 line clear. Percentile curve lines slightly
+          faint at size=0.5, alpha=0.5.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue bands with red patient line. Excellent contrast, colorblind-safe.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good proportions with custom margins. Right margin accommodates labels.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Age (months) and Weight (kg) — descriptive with units.
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom graduated blue palette, contrasting red patient line, white-filled
+          markers. Clearly above defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: X-grid removed, subtle y-grid, theme_minimal, custom margins. Good
+          refinement.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Growth faltering/catch-up story visible. Red vs blue creates strong
+          visual hierarchy.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct: percentile bands with patient overlay.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: All 7 percentile bands, graduated color, emphasized P50, patient
+          markers, right-margin labels, blue tones.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=age months, Y=weight kg. Full data range shown.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct with descriptive prefix. Legend hidden for single
+          patient.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All 7 percentile bands, patient trajectory with growth faltering
+          then catch-up, full 0-36 month range.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: WHO-approximated weight-for-age for boys. Real clinical scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Birth weight ~3.5kg, 36-month ~15.2kg. Closely approximates WHO standards.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean linear flow: imports, data, plot, save.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only numpy, pandas, lets_plot. All used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity. Tooltips are native lets-plot features, not
+          fake UI.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: ggsave with scale=3. Current API.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Good ggplot grammar usage: geom_ribbon, geom_line, geom_point, geom_text,
+          scale formatting, coord_cartesian.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses layer_tooltips() with structured content — distinctive to lets-plot.
+          Also HTML export.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  dataprep:
+  - interpolation
+  styling:
+  - alpha-blending
+  - grid-styling
