@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 histogram-capability: Process Capability Plot with Specification Limits
-Library: pygal | Python 3.13
-Quality: pending | Created: 2026-03-19
+Library: pygal 3.1.0 | Python 3.14.3
+Quality: 81/100 | Created: 2026-03-19
 """
 
 import numpy as np
