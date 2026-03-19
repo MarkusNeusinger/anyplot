@@ -1,7 +1,7 @@
 library: plotly
 specification_id: line-growth-percentile
 created: '2026-03-19T19:53:01Z'
-updated: '2026-03-19T19:57:24Z'
+updated: '2026-03-19T20:06:09Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23313901208
 issue: 4555
@@ -10,80 +10,83 @@ library_version: 6.6.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/line-growth-percentile/plotly/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/line-growth-percentile/plotly/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/line-growth-percentile/plotly/plot.html
-quality_score: 82
+quality_score: 85
 review:
   strengths:
-  - Excellent spec compliance with all required features implemented correctly
-  - Thoughtful graduated blue color palette with intentional opacity levels
-  - Clean well-structured code with good data organization
-  - Realistic clinical data that tells a meaningful growth deceleration story
-  - Good use of plotly_white template and subtle gridlines
+  - Excellent visual hierarchy with graduated opacity bands creating a professional
+    clinical chart appearance
+  - Smart percentile label spacing algorithm prevents overlap on the right margin
+  - Strong data storytelling with patient trajectory and annotation callout
+  - Dual PNG+HTML output leverages Plotly interactive capabilities
+  - Clean well-organized code with idiomatic Plotly patterns (tonexty stacking, customdata
+    hovers)
   weaknesses:
-  - Percentile annotation font size (14pt) too small relative to axis labels
-  - Right-margin percentile labels crowded for lower percentiles
-  - Red patient color deviates from library guide convention
-  - Generic polygon-fill approach instead of Plotly-idiomatic fill=tonexty
-  - No distinctive Plotly features like custom hovertemplate
-  image_description: The plot displays a pediatric growth chart for Weight-for-Age
-    Boys (0-36 months). Six graduated blue percentile bands span from P3 to P97, with
-    darker blue at the extremes (P3-P10, P90-P97) and lighter blue near the median
-    (P25-P50, P50-P75). The P50 median line is drawn thicker and darker blue, visually
-    emphasized. Seven percentile labels (P3, P10, P25, P50, P75, P90, P97) appear
-    on the right margin, with P50 in bold. A red patient trajectory line with white-bordered
-    circular markers is overlaid, showing 12 well-child visit measurements from birth
-    (~3.5 kg) to 36 months (~15.5 kg). The patient starts near the 50th percentile
-    and gradually tracks toward the 25th percentile by 36 months. The title reads
-    "Weight-for-Age Boys (0-36 months) · line-growth-percentile · plotly · pyplots.ai".
-    X-axis shows "Age (months)" in 3-month intervals, Y-axis shows "Weight (kg)".
-    Background is white with subtle gray gridlines. A legend box in the upper-left
-    identifies "Patient (Boy)" in red.
+  - 'Critical data inconsistency: Patient at 15.5 kg at 36 months is ~2 kg below P3
+    (17.49 kg) yet annotated as ~25th percentile'
+  - Patient data described as healthy boy but trajectory shows severe growth faltering
+    below 3rd percentile by 36 months
+  - Inner percentile bands (P25-P50, P50-P75) are very faint and hard to distinguish
+  image_description: The plot displays a pediatric growth chart titled "Weight-for-Age
+    Boys (0–36 months) · line-growth-percentile · plotly · pyplots.ai". Seven percentile
+    curves (P3 through P97) are rendered as graduated blue-toned filled bands — darker
+    at the extremes (P3-P10, P90-P97) and lighter near the median (P25-P50, P50-P75).
+    The P50 median line is visually emphasized with a thicker, darker blue stroke.
+    Percentile labels (P3, P10, P25, P50, P75, P90, P97) appear on the right margin,
+    with P50 in bold. A teal-colored patient trajectory line with circular markers
+    (white-bordered) is overlaid, showing a child's weight from birth (~3.5 kg) to
+    36 months (~15.5 kg). The patient line starts near the 50th percentile and progressively
+    falls below all percentile bands by 36 months. An annotation box near the end
+    reads "~25th percentile at 36 months" with an arrow pointing to the last data
+    point. The x-axis shows "Age (months)" from 0 to 39, y-axis shows "Weight (kg)"
+    from 0 to ~24. Background is light blue-gray with subtle gridlines. A legend in
+    the top-left shows "Patient (Boy)".
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title=28, labels=22, ticks=18). Percentile
-          annotation font at 14pt slightly small.
+        comment: 'All font sizes explicitly set: title 28pt, axis labels 22pt, ticks
+          18pt, annotations 15-19pt'
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Generally clean but P3/P10/P25 labels on right margin are close together.
+        comment: Smart label spacing logic prevents percentile label crowding, no
+          text collisions
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Patient markers and percentile bands clearly visible. Band boundary
-          lines could be more distinct.
+        comment: Patient markers visible with white border, but inner percentile bands
+          very faint at 0.16 opacity
       - id: VQ-04
         name: Color Accessibility
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Blue-red distinguishable for colorblind. Subtle blue band boundaries
-          may be hard to distinguish.
+        comment: Blue-toned bands with teal patient line, colorblind-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good canvas utilization. X-axis extends to 39 for right-margin labels
-          creating some empty space.
+        comment: Good layout but x-axis extends to 39 beyond data range for label
+          placement
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Age (months) and Weight (kg) - descriptive with units.
+        comment: Age (months) and Weight (kg) - descriptive with units
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -91,22 +94,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Thoughtful graduated blue palette with intentional opacity. Above
-          defaults but not publication-level.
+        comment: Graduated opacity bands, custom teal contrast, plotly_white template.
+          Above defaults but not publication-level
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: plotly_white removes chrome. Subtle gridlines. Good whitespace. Margin
-          labels are a nice touch.
+        comment: plotly_white removes chrome, subtle grid at 0.2 alpha, custom background,
+          styled annotation
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Patient trajectory tells a clinical story of growth deceleration.
-          P50 emphasis guides interpretation.
+        comment: 'Strong hierarchy: subtle bands to emphasized P50 to contrasting
+          patient trajectory to annotation callout'
     spec_compliance:
       score: 14
       max: 15
@@ -116,30 +119,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: percentile growth chart with filled bands and patient data
-          overlay.'
+        comment: Correct line chart with percentile band fills and patient overlay
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: 'All spec features present: 7 percentile bands, P50 emphasized, blue
-          tones, right-margin labels, patient overlay.'
+        comment: All features present but annotation claims ~25th percentile when
+          patient is below P3
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=age months, Y=weight kg. Correct mapping with appropriate ranges.
+        comment: X=age months, Y=weight kg, correct mapping
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Title includes required format with descriptive prefix. Legend correctly
-          shows Patient (Boy).
+        comment: Title follows format with descriptive prefix, legend shows Patient
+          (Boy)
     data_quality:
-      score: 14
+      score: 12
       max: 15
       items:
       - id: DQ-01
@@ -147,22 +149,22 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Shows all 7 percentile curves, graduated bands, patient trajectory.
-          Could show more dramatic variation.
+        comment: Shows all 7 percentile bands and patient trajectory with variation,
+          but annotation misrepresents position
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: WHO weight-for-age for boys 0-36 months. Realistic clinical scenario
-          with neutral medical context.
+        comment: WHO-style weight-for-age boys 0-36 months, clinically plausible neutral
+          scenario
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 2
         max: 4
-        passed: true
-        comment: Birth weight ~3.3 kg, 36-month weight ~15.5 kg. Realistic values
-          matching WHO reference ranges.
+        passed: false
+        comment: Patient 15.5kg at 36mo is below P3 (17.49kg), annotated as ~25th
+          percentile - significant inconsistency
     code_quality:
       score: 10
       max: 10
@@ -172,34 +174,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, plot, layout, save. No functions or
-          classes.'
+        comment: Clean imports-data-plot-save flow, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set. Data generation is deterministic.
+        comment: np.random.seed(42) set, data is deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy and plotly.graph_objects imported, both used.
+        comment: Only numpy and plotly.graph_objects, both used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean loops for bands and lines, well-organized data structures.
+        comment: Clean iteration, smart label spacing, well-organized color arrays
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with correct dimensions (1600x900, scale=3).
+        comment: Saves plot.png at 1600x900 scale=3 plus HTML export
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -207,20 +208,21 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of go.Figure/go.Scatter, fill=toself, add_annotation. Could
-          use fill=tonexty for cleaner stacking.
+        comment: Good use of tonexty fill stacking, customdata with hovertemplate,
+          add_annotation
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: HTML export and hovermode show awareness of Plotly strengths but
-          static output doesnt showcase them.
+        passed: true
+        comment: Customdata+hovertemplate, spline shape, HTML export with interactive
+          config
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
+  - hover-tooltips
   - html-export
   patterns:
   - data-generation
@@ -228,5 +230,6 @@ impl_tags:
   dataprep: []
   styling:
   - alpha-blending
+  - gradient-fill
   - grid-styling
   - edge-highlighting
