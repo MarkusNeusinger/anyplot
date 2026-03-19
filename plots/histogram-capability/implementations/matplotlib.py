@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 histogram-capability: Process Capability Plot with Specification Limits
 Library: matplotlib 3.10.8 | Python 3.14.3
-Quality: 84/100 | Created: 2026-03-19
+Quality: 89/100 | Created: 2026-03-19
 """
 
 import matplotlib.pyplot as plt
