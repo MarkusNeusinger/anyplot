@@ -1,7 +1,7 @@
 """ pyplots.ai
 spc-xbar-r: Statistical Process Control Chart (X-bar/R)
 Library: seaborn 0.13.2 | Python 3.14.3
-Quality: 86/100 | Created: 2026-03-19
+Quality: 89/100 | Created: 2026-03-19
 """
 
 import matplotlib.pyplot as plt

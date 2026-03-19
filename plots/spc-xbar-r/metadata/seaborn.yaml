@@ -1,7 +1,7 @@
 library: seaborn
 specification_id: spc-xbar-r
 created: '2026-03-19T21:46:31Z'
-updated: '2026-03-19T21:50:00Z'
+updated: '2026-03-19T21:57:52Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23318370089
 issue: 4551
@@ -10,34 +10,32 @@ library_version: 0.13.2
 preview_url: https://storage.googleapis.com/pyplots-images/plots/spc-xbar-r/seaborn/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/spc-xbar-r/seaborn/plot_thumb.png
 preview_html: null
-quality_score: 86
+quality_score: 89
 review:
   strengths:
-  - Perfect spec compliance with all required SPC features (UCL/LCL, CL, warning limits,
-    OOC highlighting, dual panels, A2/D3/D4 constants)
-  - Excellent data quality with realistic CNC machining scenario and appropriate out-of-control
-    injection
-  - Good visual hierarchy with red OOC markers creating clear focal points
-  - Clean well-structured code with proper reproducibility
+  - Perfect spec compliance with all required SPC features (control limits, warning
+    limits, OOC highlighting, standard constants)
+  - Excellent realistic data context (CNC shaft diameter manufacturing)
+  - Strong visual design with custom palette, shaded control zones, and removed spines
+  - Clean, well-structured code with proper reproducibility
   weaknesses:
-  - Seaborn usage is superficial - only sns.lineplot() is called while all styling
-    annotations control lines and OOC highlighting are pure matplotlib
-  - Design could be further polished with fill_between for control limit zones and
-    more refined typography
-  image_description: The plot displays a two-panel vertically stacked SPC chart (X-bar
-    and R) sharing a common x-axis. The top panel (X-bar Chart) shows 30 sample means
-    connected by a blue line with circle markers against a white background. Three
-    out-of-control points (samples ~8, ~19, ~25) are highlighted with large red circles.
-    A teal/green solid center line sits at ~25.0005 mm, red dashed UCL/LCL lines bound
-    the control region, and faint yellow dotted plus/minus 2-sigma warning limits
-    are visible. The bottom panel (R Chart) shows sample ranges with blue square markers,
-    similarly with teal CL, red dashed UCL/LCL, and yellow warning limits. No out-of-control
-    points appear in the R chart. Top/right spines are removed on both panels. Subtle
-    y-axis grid lines are present. Title reads "spc-xbar-r · seaborn · pyplots.ai".
-    Axis labels include units (mm).
+  - Seaborn is underutilized — most of the visualization is matplotlib with sns.lineplot
+    as a thin wrapper
+  - No seaborn-distinctive features leveraged (set_context, color_palette, set_style)
+  image_description: The plot displays a two-panel SPC chart. The top panel is an
+    X̄ Chart showing sample means (blue line with circular markers) for 30 CNC shaft
+    diameter samples around a 25.00 mm target. Three out-of-control points are highlighted
+    with large red circles (samples ~8, ~19, and ~25). A solid teal center line (CL
+    = 25.0005) runs horizontally, with red dashed UCL (25.0407) and LCL (24.9604)
+    lines, and yellow dotted ±2σ warning limits. A light teal shaded band fills between
+    the warning limits. The bottom panel is an R Chart with square markers showing
+    sample ranges, with the same control limit structure (CL = 0.0696, UCL = 0.1472,
+    LCL = 0.0000). Top/right spines are removed on both panels, subtle y-axis grid
+    lines are present, and legends with numeric values appear in the upper right of
+    each panel. The title reads "spc-xbar-r · seaborn · pyplots.ai" in medium weight.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -52,27 +50,25 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All text fully readable, no collisions
+        comment: No overlapping text; legends well-positioned
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Line markers adequate for 30 points; OOC markers stand out well;
-          regular markers could be slightly more prominent
+        comment: Markers and OOC highlights well-adapted for 30 data points
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Custom palette with blue, teal, red, yellow - distinguishable and
-          colorblind-safe
+        comment: Custom palette avoids red-green confusion; good contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Two-panel layout fills canvas well, shared x-axis, balanced margins
+        comment: Two panels fill canvas well with shared x-axis
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -80,30 +76,29 @@ review:
         passed: true
         comment: Descriptive labels with units (mm)
     design_excellence:
-      score: 13
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Custom color palette, intentional hierarchy with chart labels, above
-          defaults but not publication-level
+        comment: Custom 4-color palette, shaded control zones, professional typography,
+          removed spines
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Spines removed, subtle grid, generous spacing, white edge on OOC
-          markers
+        comment: Spines removed, subtle y-axis grid, generous whitespace, legend framealpha
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: OOC points create clear focal points via red highlighting and larger
-          markers
+        comment: OOC points highlighted in red create clear focal points; dual-chart
+          layout tells SPC story
     spec_compliance:
       score: 15
       max: 15
@@ -113,26 +108,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct X-bar/R control chart with vertically stacked panels
+        comment: Correct X-bar on top, R chart on bottom, vertically stacked with
+          shared x-axis
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: UCL/LCL dashed, CL solid, warning limits,
-          OOC highlighted, A2/D3/D4 constants'
+        comment: 'All features present: UCL/LCL dashed, CL solid, OOC highlighted,
+          warning limits, standard constants'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = sample number, Y = mean/range, all data visible
+        comment: X = sample number, Y = sample mean/range; axes show all data
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend shows all control limits with values
+        comment: Title format correct; legend labels show CL, UCL, LCL, ±2σ with values
     data_quality:
       score: 15
       max: 15
@@ -142,20 +138,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows in-control and out-of-control behavior, both charts, 3 OOC
-          points
+        comment: Shows in-control and out-of-control points, both charts, 3 OOC violations
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: CNC shaft diameter measurements - realistic manufacturing scenario
+        comment: CNC shaft diameter measurements, target 25.00 mm
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values realistic for precision machining (25mm +/- fractions)
+        comment: 25 mm shaft with ±0.03 mm variation realistic for CNC machining
     code_quality:
       score: 10
       max: 10
@@ -165,7 +160,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, constants, data, control limits, plot, save'
+        comment: Clean imports → data → plot → save structure
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -177,19 +172,19 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All three imports used
+        comment: Only plt, np, sns — all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriate complexity for dual-chart SPC
+        comment: Appropriate complexity, no over-engineering
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300 and bbox_inches=tight
+        comment: Saves as plot.png with dpi=300, bbox_inches=tight
     library_mastery:
       score: 4
       max: 10
@@ -199,15 +194,15 @@ review:
         score: 3
         max: 5
         passed: false
-        comment: Uses sns.lineplot() but most work is pure matplotlib - correct but
-          minimal seaborn usage
+        comment: Uses sns.lineplot axes-level API but most work done with matplotlib
+          directly
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
         passed: false
-        comment: No seaborn-specific features leveraged; lineplot calls could be plt.plot()
-          with minimal changes
+        comment: Generic usage — sns.lineplot is thin wrapper; no seaborn-distinctive
+          features
   verdict: REJECTED
 impl_tags:
   dependencies: []
