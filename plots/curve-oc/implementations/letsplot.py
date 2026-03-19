@@ -1,7 +1,7 @@
 """ pyplots.ai
 curve-oc: Operating Characteristic (OC) Curve
 Library: letsplot 4.9.0 | Python 3.14.3
-Quality: 87/100 | Created: 2026-03-19
+Quality: 86/100 | Created: 2026-03-19
 """
 
 import numpy as np
