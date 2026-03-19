@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 curve-oc: Operating Characteristic (OC) Curve
 Library: pygal 3.1.0 | Python 3.14.3
 Quality: 87/100 | Created: 2026-03-19
@@ -33,7 +33,7 @@ pa_at_aql = float(sum(comb(100, k) * aql**k * (1 - aql) ** (100 - k) for k in ra
 alpha = 1 - pa_at_aql
 beta = float(sum(comb(100, k) * ltpd**k * (1 - ltpd) ** (100 - k) for k in range(3)))
 
-# Colorblind-safe palette — blue, orange, teal, purple avoid deuteranopia confusion
+# Colorblind-safe palette — steel blue, orange, teal, purple avoid deuteranopia confusion
 C_PLAN1 = "#306998"  # Steel blue (Python blue)
 C_PLAN2 = "#E68A00"  # Warm orange
 C_PLAN3 = "#17BECF"  # Teal — distinct from blue under colorblindness
@@ -48,13 +48,16 @@ custom_style = Style(
     foreground_strong="#1A1A1A",
     foreground_subtle="#DAD8D2",
     colors=(C_PLAN1, C_PLAN2, C_PLAN3, C_PLAN4, C_REF, C_REF, C_RISK, C_RISK),
-    title_font_size=46,
-    label_font_size=28,
-    major_label_font_size=26,
-    legend_font_size=22,
-    value_font_size=16,
+    title_font_size=48,
+    label_font_size=30,
+    major_label_font_size=28,
+    legend_font_size=26,
+    value_font_size=18,
     stroke_width=3,
     font_family="sans-serif",
+    tooltip_font_size=24,
+    opacity=0.85,
+    opacity_hover=1.0,
 )
 
 chart = pygal.XY(
@@ -71,8 +74,8 @@ chart = pygal.XY(
     show_x_guides=False,
     show_y_guides=True,
     legend_at_bottom=True,
-    legend_at_bottom_columns=4,
-    legend_box_size=20,
+    legend_at_bottom_columns=3,
+    legend_box_size=24,
     truncate_legend=-1,
     interpolate="hermite",
     interpolation_parameters={"type": "cardinal", "c": 0.75},
@@ -83,24 +86,38 @@ chart = pygal.XY(
     allow_interruptions=True,
     x_labels=[0, 0.01, 0.02, 0.04, 0.06, 0.08, 0.10, 0.12, 0.15],
     y_labels=[0, 0.2, 0.4, 0.6, 0.8, 1.0],
+    y_labels_major_count=3,
+    show_minor_y_labels=True,
     js=[],
     print_values=False,
     margin_top=40,
-    margin_bottom=60,
+    margin_bottom=80,
+    margin_left=60,
     spacing=20,
+    tooltip_fancy_mode=True,
+    tooltip_border_radius=6,
+    explicit_size=True,
 )
 
-# OC curves — primary visual elements with prominent strokes
+# OC curves — reference plan (n=100, c=2) drawn thickest for visual hierarchy
+ref_plan = "n=100, c=2"
 for _n, _c, label in plans:
     curve_data = list(zip(fraction_defective.tolist(), oc_curves[label].tolist(), strict=True))
-    chart.add(label, curve_data, show_dots=False, stroke_style={"width": 8, "linecap": "round", "linejoin": "round"})
+    width = 12 if label == ref_plan else 6
+    chart.add(
+        label,
+        curve_data,
+        show_dots=False,
+        stroke_style={"width": width, "linecap": "round", "linejoin": "round"},
+        formatter=lambda v: f"P(accept)={v[1]:.3f}" if isinstance(v, (list, tuple)) else f"{v:.3f}",
+    )
 
 # AQL vertical reference line — thin dashed, subordinate to curves
 chart.add(
     f"AQL ({aql:.0%})",
     [(aql, 0), (aql, 1.05)],
     show_dots=False,
-    stroke_style={"width": 3, "dasharray": "12, 8", "linecap": "round"},
+    stroke_style={"width": 3, "dasharray": "14, 8", "linecap": "round"},
 )
 
 # LTPD vertical reference line
@@ -108,16 +125,30 @@ chart.add(
     f"LTPD ({ltpd:.0%})",
     [(ltpd, 0), (ltpd, 1.05)],
     show_dots=False,
-    stroke_style={"width": 3, "dasharray": "12, 8", "linecap": "round"},
+    stroke_style={"width": 3, "dasharray": "14, 8", "linecap": "round"},
 )
 
 # Producer's risk point (alpha at AQL for n=100, c=2)
-chart.add(f"\u03b1={alpha:.1%}", [(aql, pa_at_aql)], stroke=False, show_dots=True, dots_size=20)
+chart.add(
+    f"\u03b1={alpha:.1%} (producer risk)",
+    [(aql, pa_at_aql)],
+    stroke=False,
+    show_dots=True,
+    dots_size=22,
+    formatter=lambda v: f"\u03b1={1 - v[1]:.1%}" if isinstance(v, (list, tuple)) else f"{v:.3f}",
+)
 
 # Consumer's risk point (beta at LTPD for n=100, c=2)
-chart.add(f"\u03b2={beta:.1%}", [(ltpd, beta)], stroke=False, show_dots=True, dots_size=20)
+chart.add(
+    f"\u03b2={beta:.1%} (consumer risk)",
+    [(ltpd, beta)],
+    stroke=False,
+    show_dots=True,
+    dots_size=22,
+    formatter=lambda v: f"\u03b2={v[1]:.1%}" if isinstance(v, (list, tuple)) else f"{v:.3f}",
+)
 
-# Render
+# Render SVG natively, convert to PNG via cairosvg
 svg = chart.render(is_unicode=True)
 with open("plot.html", "w") as f:
     f.write(svg)
