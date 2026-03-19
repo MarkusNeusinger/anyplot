@@ -1,0 +1,238 @@
+library: letsplot
+specification_id: histogram-capability
+created: '2026-03-19T21:43:56Z'
+updated: '2026-03-19T22:33:13Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23318228728
+issue: 4552
+python_version: 3.14.3
+library_version: 4.9.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/histogram-capability/letsplot/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/histogram-capability/letsplot/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/histogram-capability/letsplot/plot.html
+quality_score: 85
+review:
+  strengths:
+  - Full spec compliance with all required features (histogram, normal curve, LSL/USL/target
+    lines, Cp/Cpk annotations)
+  - Strong data storytelling with prominent capability indices and clear visual hierarchy
+  - Colorblind-safe color scheme with intentional distinction between spec limits
+    (orange) and target (teal)
+  - Clean, well-structured code with correct statistical calculations (Cp, Cpk formulas)
+  - Interactive tooltips via layer_tooltips() showcase letsplot distinctive capabilities
+  weaknesses:
+  - Annotation font sizes (11-13) noticeably smaller than axis text (16), reducing
+    visual consistency
+  - X-axis limits asymmetric (lsl-0.012 vs usl+0.018), creating slightly unbalanced
+    margins
+  - Target label positioned near curve peak creates minor visual clutter
+  image_description: The plot displays a histogram of 200 shaft diameter measurements
+    (mm) using semi-transparent blue bars (#306998) with white edges, overlaid with
+    a fitted normal distribution curve rendered as a blue outlined area with light
+    fill. Two orange (#E67E22) dashed vertical lines mark the Lower Specification
+    Limit (LSL = 9.950) and Upper Specification Limit (USL = 10.050), with bold orange
+    labels positioned outside the histogram range. A teal (#1A7A6D) dashed vertical
+    line marks the Target value (10.000) with a label. Prominent bold dark text displays
+    "Cp = 1.49 | Cpk = 1.45" in the upper-left quadrant, with smaller gray text below
+    showing "Mean = 10.0015 mm | Std = 0.0112 mm". The title reads "histogram-capability
+    · letsplot · pyplots.ai" in bold with a descriptive gray subtitle. X-axis is "Shaft
+    Diameter (mm)" with 3-decimal formatting, Y-axis is "Frequency" with integer formatting.
+    Only horizontal y-grid lines are visible on a white background. The distribution
+    is well-centered within specification limits, clearly showing a capable process.
+  criteria_checklist:
+    visual_quality:
+      score: 26
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Font sizes explicitly set (title=24, subtitle=16, axis_title=20,
+          axis_text=16, annotations=11-13). Annotation text slightly smaller than
+          axis text.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Minor overlap: target label near curve peak, stats text crosses
+          curve line. All text readable.'
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Histogram bars visible with alpha=0.7 and white edges. Normal curve
+          and spec lines prominent at size=1.5.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Orange for limits and teal for target are colorblind-safe. Good contrast
+          against white background.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good layout with ~60% canvas utilization. Asymmetric x-axis limits
+          create slightly unbalanced margins.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Shaft Diameter (mm) with units, Frequency is descriptive.
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Custom color palette, intentional text hierarchy, thoughtful subtitle.
+          Above defaults but not publication-ready.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: theme_minimal with x-grid removed, subtle y-grid, white background,
+          y-axis expand for breathing room.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Strong visual hierarchy: Cp/Cpk prominent, spec limits frame data,
+          color coding distinguishes elements.'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct histogram with normal curve overlay and specification limit
+          lines.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: histogram, normal curve, LSL/USL/target lines,
+          Cp/Cpk annotations.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=measurements, Y=frequency. Axes show full data range plus spec
+          limits.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct. No legend needed; spec lines labeled directly.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows distribution, spec limits, fitted curve, capability indices.
+          Could show slightly off-center process for more interest.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Shaft diameter measurements - classic neutral Six Sigma manufacturing
+          scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: LSL=9.95, USL=10.05, target=10.00 mm with std~0.012 - realistic for
+          precision machining.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean imports-data-plot-save structure. No functions or classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used. scipy.stats for norm.pdf.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity. Correct histogram-to-PDF scaling.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with scale=3 and plot.html. Current API.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good ggplot grammar with layered geoms, proper aes mappings, inherit_aes=False,
+          scale format parameters.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses layer_tooltips() with format strings (letsplot-distinctive).
+          HTML export. Scale expand parameter.
+  verdict: REJECTED
+impl_tags:
+  dependencies:
+  - scipy
+  techniques:
+  - annotations
+  - layer-composition
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  dataprep:
+  - binning
+  styling:
+  - alpha-blending
+  - grid-styling
+  - edge-highlighting
