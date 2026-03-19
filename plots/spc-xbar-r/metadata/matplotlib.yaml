@@ -1,0 +1,221 @@
+library: matplotlib
+specification_id: spc-xbar-r
+created: '2026-03-19T21:47:08Z'
+updated: '2026-03-19T21:58:32Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23318369851
+issue: 4551
+python_version: 3.14.3
+library_version: 3.10.8
+preview_url: https://storage.googleapis.com/pyplots-images/plots/spc-xbar-r/matplotlib/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/spc-xbar-r/matplotlib/plot_thumb.png
+preview_html: null
+quality_score: 90
+review:
+  strengths:
+  - Zone shading (green/yellow/red) creates immediately intuitive SPC visual narrative
+  - All spec requirements fully implemented with correct SPC constants (A2, D3, D4)
+  - Realistic CNC machining context with appropriate scale and variation
+  - Clean visual hierarchy with OOC points standing out through size and color contrast
+  - Professional typography with all font sizes explicitly configured
+  weaknesses:
+  - Helper function add_zone_shading() violates KISS no-functions rule
+  - Zone shading colors (red-green-yellow) could be more colorblind-friendly
+  image_description: The plot displays a vertically stacked pair of SPC charts sharing
+    the same x-axis (Sample Number 1-30). The top chart (X-bar) shows sample means
+    of CNC shaft diameter measurements in mm, ranging from ~24.80 to 25.20. Blue circular
+    markers connected by lines trace the sample means. Three out-of-control points
+    are highlighted with larger red circles at approximately samples 8 (high), 19
+    (low), and 25 (high). Red dashed UCL and LCL lines bound the process, with yellow/orange
+    dotted warning limits at ±2 sigma. A solid gray center line is labeled "CL = 25.002".
+    Zone shading in green (±1 sigma), yellow (±2 sigma), and light red (±3 sigma)
+    provides visual context. The bottom chart (R chart) shows sample ranges in mm
+    with blue square markers. Red dashed UCL, gray center line "CL = 0.116", and dotted
+    warning limits are present. No out-of-control points appear in the R chart. Title
+    reads "spc-xbar-r · matplotlib · pyplots.ai". Background is light gray, top/right
+    spines removed, subtle y-axis grid.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title=24, labels=20, ticks=16, legend=16,
+          annotations=14'
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Minor crowding of right-side control limit labels near y-axis tick
+          labels
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Markers well-sized, OOC points prominent at s=280, line width=2.5
+      - id: VQ-04
+        name: Color Accessibility
+        score: 3
+        max: 4
+        passed: true
+        comment: Blue vs red distinguishable, zone colors use red-green-yellow at
+          low alpha
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 16x9 figure with 3:2 height ratio, good canvas utilization
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive labels with units: Sample Mean X-bar (mm), Sample Range
+          R (mm)'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom palette, zone shading, white-edge markers, custom background
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines removed, subtle grid alpha=0.15, custom background, good whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Zone shading creates SPC narrative, OOC points as clear focal points
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct X-bar/R stacked chart pair
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: UCL/LCL, center line, OOC, warning limits,
+          constants'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=sample number, Y=means/ranges, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct, legend labels clear and accurate
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows in-control and OOC, high and low deviations, both charts, all
+          sigma zones
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: CNC shaft diameter measurements, real manufacturing QC scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 25.0mm target, 0.05mm std, n=5 subgroups, 30 samples - realistic
+          for precision machining
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Helper function add_zone_shading() defined, violates no-functions
+          rule
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: matplotlib.pyplot, matplotlib.ticker, numpy'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-organized, proper R chart limit clamping at 0
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png, dpi=300, bbox_inches=tight, no deprecated API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good axes methods, subplots with sharex and gridspec_kw, proper marker
+          styling
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: axhspan for zone shading, gridspec_kw height ratios, FormatStrFormatter
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - subplots
+  - annotations
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - edge-highlighting
+  - grid-styling
+  - alpha-blending
