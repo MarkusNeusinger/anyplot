@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 spc-xbar-r: Statistical Process Control Chart (X-bar/R)
 Library: highcharts unknown | Python 3.14.3
 Quality: 81/100 | Created: 2026-03-19
@@ -93,9 +93,10 @@ Highcharts.chart('container', {{
         height: 2700,
         backgroundColor: '#ffffff',
         spacingTop: 40,
-        spacingBottom: 80,
-        spacingLeft: 60,
-        spacingRight: 60,
+        spacingBottom: 160,
+        spacingLeft: 100,
+        spacingRight: 100,
+        marginBottom: 280,
         style: {{
             fontFamily: 'Arial, sans-serif'
         }}
@@ -120,13 +121,16 @@ Highcharts.chart('container', {{
         }},
         symbolRadius: 6,
         symbolWidth: 24,
-        y: 20
+        verticalAlign: 'top',
+        y: 60
     }},
 
     xAxis: [{{
         categories: {sample_labels},
         visible: false,
-        lineWidth: 0
+        lineWidth: 0,
+        min: 0,
+        max: {n_samples - 1}
     }}, {{
         categories: {sample_labels},
         title: {{
@@ -135,18 +139,21 @@ Highcharts.chart('container', {{
                 fontSize: '28px',
                 fontWeight: 'bold'
             }},
-            y: 20
+            y: 30
         }},
         labels: {{
             style: {{
-                fontSize: '22px'
+                fontSize: '24px'
             }},
-            y: 30
+            y: 35,
+            step: 1
         }},
         lineWidth: 2,
         lineColor: '#333333',
-        tickWidth: 0,
-        offset: 0
+        tickWidth: 2,
+        offset: 0,
+        min: 0,
+        max: {n_samples - 1}
     }}],
 
     yAxis: [{{
@@ -163,8 +170,8 @@ Highcharts.chart('container', {{
             }},
             format: '{{value:.3f}}'
         }},
-        height: '42%',
-        top: '5%',
+        height: '38%',
+        top: '8%',
         offset: 0,
         lineWidth: 2,
         lineColor: '#333333',
@@ -206,7 +213,7 @@ Highcharts.chart('container', {{
                 align: 'right',
                 style: {{ fontSize: '20px', color: '#D32F2F', fontWeight: 'bold' }},
                 x: -10,
-                y: 16
+                y: 24
             }}
         }}, {{
             value: {round(float(xbar_uwl), 4)},
@@ -232,7 +239,7 @@ Highcharts.chart('container', {{
                 align: 'left',
                 style: {{ fontSize: '18px', color: '#FF9800' }},
                 x: 10,
-                y: 16
+                y: -10
             }}
         }}]
     }}, {{
@@ -249,8 +256,8 @@ Highcharts.chart('container', {{
             }},
             format: '{{value:.3f}}'
         }},
-        height: '42%',
-        top: '55%',
+        height: '38%',
+        top: '53%',
         offset: 0,
         lineWidth: 2,
         lineColor: '#333333',
