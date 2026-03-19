@@ -1,7 +1,7 @@
 library: plotnine
 specification_id: ecg-twelve-lead
 created: '2026-03-19T20:07:21Z'
-updated: '2026-03-19T20:26:55Z'
+updated: '2026-03-19T20:37:19Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23314441277
 issue: 4554
@@ -10,35 +10,34 @@ library_version: 0.15.3
 preview_url: https://storage.googleapis.com/pyplots-images/plots/ecg-twelve-lead/plotnine/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/ecg-twelve-lead/plotnine/plot_thumb.png
 preview_html: null
-quality_score: 89
+quality_score: 90
 review:
   strengths:
-  - Excellent domain-specific design mimicking real ECG paper with custom colors and
-    grid styling
-  - Clinically accurate 3x4 lead arrangement with physiologically realistic waveform
-    morphology
-  - Clean use of plotnine facet_wrap for multi-panel layout with custom in-panel labels
-  - Calibration pulse adds clinical authenticity
-  - Perfect data quality with realistic amplitudes and heart rate
+  - Excellent domain-specific ECG paper styling with authentic color palette (peach
+    background, coral/salmon grid lines)
+  - Clinically accurate lead morphologies with appropriate per-lead parameter variations
+  - Clean 3x4 clinical grid layout using facet_wrap with proper lead ordering
+  - 1mV calibration pulse adds professional medical authenticity
+  - Comprehensive theme customization replacing default strip text with custom bold
+    lead labels
   weaknesses:
-  - Helper functions deviate from KISS structure (though justified by ECG math complexity)
-  - Grid intervals do not precisely match standard ECG paper (0.04s/0.2s at 25mm/s)
-    - uses 0.1s/0.5s instead
-  - Could push design excellence further with reduced y-axis label clutter across
-    facets
-  image_description: 'The plot displays a 3x4 grid of 12 standard ECG leads arranged
-    in clinical format: Row 1 (I, aVR, V1, V4), Row 2 (II, aVL, V2, V5), Row 3 (III,
-    aVF, V3, V6). Each panel has a light peach/seashell ECG paper background (#FFF5EE)
-    with pink-red major grid lines (0.5s intervals) and lighter minor grid lines (0.1s
-    intervals). The ECG signal is drawn in dark navy (#1a1a2e). Each lead is labeled
-    in bold black text at the top-left of its panel. Lead I contains a 1mV calibration
-    pulse (vertical step from 0 to 1mV) with a "1 mV" label below it. The title "ecg-twelve-lead
-    · plotnine · pyplots.ai" appears centered at the top in bold 24pt text. X-axis
-    shows "Time (s)" from 0.0 to 2.5, Y-axis shows "Voltage (mV)" from -1.5 to 1.5.
-    Each lead displays distinct P-QRS-T morphology: Lead II shows the tallest R-waves,
-    aVR is inverted as expected, aVL shows minimal amplitude, and precordial leads
-    show appropriate R-wave progression from V1 to V4. The layout fills the 16:9 canvas
-    well with balanced spacing.'
+  - Helper functions add minor complexity to code structure (though justified for
+    ECG signal generation)
+  - Low-amplitude leads (aVL) could be slightly more visible with thicker line weight
+  - Panel spacing could be marginally increased between rows for better visual breathing
+    room
+  image_description: 'The plot displays a 12-lead ECG in the standard clinical 3x4
+    grid layout. Row 1: I, aVR, V1, V4; Row 2: II, aVL, V2, V5; Row 3: III, aVF, V3,
+    V6. Each facet has a warm peach/salmon ECG paper background (#FFF5EE) with darker
+    coral major grid lines and lighter salmon minor grid lines. Signal traces are
+    rendered in dark navy (#1a1a2e) with clear P-QRS-T wave complexes. Lead labels
+    appear in bold at the top-left of each panel. A 1mV calibration pulse (vertical
+    bar with horizontal return) is visible in the Lead I panel with a "1 mV" annotation
+    below. The title reads "ecg-twelve-lead · plotnine · pyplots.ai" in bold at the
+    top. X-axis shows "Time (s)" from 0.0 to 2.5, Y-axis shows "Voltage (mV)" from
+    -1.5 to 1.5. Lead morphologies are clinically distinct: aVR is inverted, Lead
+    II has the tallest QRS, V1 shows dominant S-wave, and V4-V6 show progressive R-wave
+    dominance.'
   criteria_checklist:
     visual_quality:
       score: 29
@@ -49,42 +48,39 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title=24pt, axis_title=20pt, axis_text=16pt,
-          base=16pt, geom_text=15/12'
+        comment: 'All font sizes explicitly set: title 24pt, axis titles 20pt, x-tick
+          16pt, y-tick 14pt, lead labels size=15'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text. Lead labels well-positioned at top-left of each
-          facet
+        comment: No overlapping text elements anywhere
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Signal lines visible at size=0.7. Low-amplitude leads (aVL) have
-          small waveforms relative to y-axis range
+        comment: Signals visible but low-amplitude leads (aVL) could benefit from
+          slightly thicker lines
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Single dark navy signal on light peach background. Excellent contrast,
-          no colorblind issues
+        comment: Monochrome signal on light background, fully colorblind-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 canvas fully utilized by 3x4 faceted grid with balanced panel
-          spacing
+        comment: 16:9 with 3x4 grid fills canvas well, balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Time (s) and Voltage (mV) with appropriate units
+        comment: Time (s) and Voltage (mV) with proper units
     design_excellence:
       score: 15
       max: 20
@@ -94,24 +90,24 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: 'Strong domain-specific design: custom ECG paper color, red/pink
-          grid lines, dark navy signal. Above defaults'
+        comment: Domain-specific ECG paper styling with custom color palette, professional
+          medical look
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: Ticks removed, strip backgrounds hidden, custom grid styling. Minor
-          y-axis label repetition adds visual noise
+        comment: Strip backgrounds removed, custom labels, ticks removed, major/minor
+          grid distinction
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Clinical 3x4 layout immediately recognizable. Lead-specific morphology
-          and calibration pulse tell an authentic cardiac story
+        comment: Clinical layout creates natural hierarchy, R-wave progression visible
+          across precordial leads
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -119,26 +115,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct multi-channel line plot in standard 3x4 clinical grid layout
+        comment: Correct multi-channel ECG line plot in standard 3x4 clinical grid
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: All major features present. Grid intervals approximate (0.1s/0.5s)
-          rather than standard ECG paper (0.04s/0.2s)
+        comment: 'All features: 12 leads, clinical order, ECG paper grid, calibration
+          pulse, lead labels'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Time on x-axis, voltage on y-axis, correct mapping for all 12 leads
+        comment: Time on x, voltage on y, correct ranges
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. No legend needed for single-series ECG
+        comment: Correct title format, no legend needed
     data_quality:
       score: 15
       max: 15
@@ -148,22 +144,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All 12 leads with distinct morphology: positive, inverted, low amplitude,
-          precordial progression'
+        comment: All 12 leads with distinct P-QRS-T morphology and lead-specific characteristics
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Medical ECG domain, neutral and universally relevant. Normal sinus
-          rhythm at 72 bpm
+        comment: Realistic normal sinus rhythm at 72 bpm, medical/healthcare context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: QRS 0.5-1.2mV, P-waves 0.08-0.18mV, T-waves 0.1-0.35mV — all physiologically
-          normal
+        comment: Physiologically realistic amplitudes and heart rate
     code_quality:
       score: 9
       max: 10
@@ -173,27 +166,26 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Helper functions for ECG math deviate from strict KISS, though justified
-          by complexity
+        comment: Helper functions for ECG generation deviate from pure KISS but are
+          justified
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set at top
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used, no unused imports
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean and well-organized. Lead parameters dictionary is elegant.
-          No fake UI
+        comment: Well-structured, appropriate complexity for domain
       - id: CQ-05
         name: Output & API
         score: 1
@@ -209,15 +201,15 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Good grammar-of-graphics pattern: ggplot + aes + geom_line + facet_wrap
-          + scale + theme. Data in proper long format'
+        comment: 'Good grammar of graphics usage: ggplot pipeline, facet_wrap, layered
+          geoms, Categorical ordering'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: facet_wrap with ordered categorical, layer composition with multiple
-          geom layers. Somewhat generic in advanced plotnine features
+        comment: facet_wrap for clinical grid, extensive theme system, layered data
+          frames with inherit_aes=False
   verdict: APPROVED
 impl_tags:
   dependencies: []
