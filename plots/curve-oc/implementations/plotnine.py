@@ -1,7 +1,7 @@
 """ pyplots.ai
 curve-oc: Operating Characteristic (OC) Curve
 Library: plotnine 0.15.3 | Python 3.14.3
-Quality: 88/100 | Created: 2026-03-19
+Quality: 89/100 | Created: 2026-03-19
 """
 
 import numpy as np

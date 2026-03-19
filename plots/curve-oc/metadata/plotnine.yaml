@@ -1,7 +1,7 @@
 library: plotnine
 specification_id: curve-oc
 created: '2026-03-19T20:37:44Z'
-updated: '2026-03-19T20:42:15Z'
+updated: '2026-03-19T20:51:16Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23315608678
 issue: 4553
@@ -10,34 +10,33 @@ library_version: 0.15.3
 preview_url: https://storage.googleapis.com/pyplots-images/plots/curve-oc/plotnine/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/curve-oc/plotnine/plot_thumb.png
 preview_html: null
-quality_score: 88
+quality_score: 89
 review:
   strengths:
-  - Excellent spec compliance with all required features (AQL, LTPD, alpha, beta,
-    multiple curves) present and correctly computed
-  - Strong data storytelling with annotated risk points and reference lines that guide
-    viewer interpretation
-  - Clean well-structured code with deterministic binomial CDF calculations
-  - Good visual refinement with selective grid removal, custom background, and embedded
-    legend
+  - Perfect spec compliance with all required features (AQL, LTPD, risk annotations,
+    multiple plans)
+  - Excellent data quality with realistic quality engineering context
+  - Clean, deterministic code with proper KISS structure
+  - Good visual hierarchy through risk point highlighting and reference line annotations
+  - Professional typography with intentional font size hierarchy
   weaknesses:
-  - Color palette could be more colorblind-safe (green-orange distinction is marginal
-    for deuteranopia)
-  - Library mastery is generic and does not leverage distinctive plotnine features
-  - Design sophistication could be elevated to publication quality with more refined
-    palette and shaded regions
-  image_description: 'The plot displays three S-shaped Operating Characteristic (OC)
-    curves on a light gray (#fafafa) background. The x-axis shows "Fraction Defective
-    (p)" ranging from 0% to 20%, and the y-axis shows "Probability of Acceptance P(a)"
-    from 0.0 to 1.0. Three sampling plans are plotted: n=50 c=1 (blue #306998), n=100
-    c=2 (orange #E0652B), and n=150 c=3 (green #2CA02C). All three curves start near
-    1.0 at 0% defective and decline in S-shaped fashion toward 0. Two dashed gray
-    vertical reference lines mark AQL (~1%) and LTPD (~8%), with italic labels. Two
-    open circle markers on the n=100 c=2 curve highlight the producer''s risk (α=0.08
-    at AQL) and consumer''s risk (β=0.01 at LTPD), with bold orange annotations. The
-    legend is positioned in the upper-right area with a semi-transparent white background.
-    Only subtle horizontal y-axis grid lines are shown; x-axis grid is removed. The
-    title reads "curve-oc · plotnine · pyplots.ai" in bold at the top.'
+  - Color palette could be more colorblind-friendly (replace green with a more distinguishable
+    alternative)
+  - Library mastery could be stronger by leveraging more distinctive plotnine/ggplot2
+    features like geom_ribbon or annotate rect for shading risk regions
+  - Visual refinement could be polished further (lighter axis lines, more whitespace
+    tuning)
+  image_description: 'The plot displays three S-shaped Operating Characteristic curves
+    on a light gray (#fafafa) background. The x-axis shows "Fraction Defective (p)"
+    from 0% to 20%, and the y-axis shows "Probability of Acceptance P(a)" from 0.0
+    to ~1.05. Three sampling plans are plotted: n=50,c=1 (dark blue), n=100,c=2 (orange),
+    and n=150,c=3 (purple/green). Two dashed gray vertical reference lines mark AQL
+    at 1% and LTPD at 8%, with italic labels. Two open circle markers on the n=100,c=2
+    curve highlight producer''s risk (α=0.08) near AQL and consumer''s risk (β=0.01)
+    near LTPD, with bold orange annotations. The legend titled "Sampling Plan" sits
+    in the upper-right area with a semi-transparent white background. Only horizontal
+    grid lines are visible (subtle gray). The title "curve-oc · plotnine · pyplots.ai"
+    appears at the top in bold.'
   criteria_checklist:
     visual_quality:
       score: 29
@@ -48,64 +47,65 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 24pt, axis titles 20pt bold,
-          axis text 16pt, legend text 16pt'
+        comment: 'All font sizes explicitly set: title 24pt, axis titles 20pt, axis
+          text 16pt, legend title 18pt, legend text 16pt'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All text well-positioned with no collisions
+        comment: No overlapping text, annotations positioned with offsets
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Lines size=2 alpha=0.9 clearly visible, risk points size=6 with stroke
-          stand out
+        comment: Lines size=2 alpha=0.9, risk points size=6 with white fill and stroke
       - id: VQ-04
         name: Color Accessibility
         score: 3
         max: 4
         passed: true
-        comment: Blue/orange distinguishable but green-orange may be hard for deuteranopia
+        comment: Blue/orange/green reasonably distinguishable but green may cause
+          mild confusion for deuteranopic viewers
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good 16:9 proportions, plot fills canvas well
+        comment: 16:9 aspect ratio, plot fills canvas well with balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with variable notation
+        comment: 'Descriptive labels with notation: Fraction Defective (p), Probability
+          of Acceptance P(a)'
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Custom palette, bold typography hierarchy, annotated risk points.
-          Above defaults but not publication-ready
+        comment: Custom color palette, intentional typography hierarchy, warm background,
+          styled legend
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Selective grid removal, subtle y-grid, axis lines, custom background,
-          legend transparency
+        comment: Removed x-grid and minor grid, subtle y-grid, custom background.
+          Axis lines add some visual weight
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: AQL/LTPD reference lines and risk annotations create clear narrative
-          guiding viewer interpretation
+        comment: Risk annotations and AQL/LTPD reference lines guide viewer. Clear
+          focal point on reference curve
     spec_compliance:
       score: 15
       max: 15
@@ -115,26 +115,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct OC curve showing acceptance probability vs fraction defective
+        comment: Correct OC curves showing P(acceptance) vs fraction defective
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Binomial CDF, AQL/LTPD lines, alpha/beta risk annotations, 3 sampling
-          plans
+        comment: Multiple plans, AQL/LTPD annotations, producer's and consumer's risk
+          markers
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=fraction defective 0-20%, Y=acceptance probability 0-1.0
+        comment: Correct mapping, x-range 0-0.20 as spec recommends
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches format, legend labels match sampling plan data
+        comment: Title format correct, legend Sampling Plan with matching labels
     data_quality:
       score: 15
       max: 15
@@ -144,22 +144,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Three plans with different n/c showing discrimination differences,
-          both risk types annotated
+        comment: Three plans showing discrimination power, risk points, S-shape behavior
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real-world quality control scenario with standard industrial AQL/LTPD
-          values
+        comment: Quality control acceptance sampling is a real industrial application
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Realistic sampling parameters n=50/100/150, c=1/2/3, practical 0-20%
-          range
+        comment: Realistic sampling plan values and standard AQL/LTPD
     code_quality:
       score: 10
       max: 10
@@ -169,25 +166,25 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports-Data-Plot-Save structure, no functions or classes
+        comment: Clean imports, data, plot, save structure
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic binomial CDF calculations
+        comment: Fully deterministic with scipy.stats.binom.cdf
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used, no unused imports
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriate complexity
+        comment: Clean, Pythonic, appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
@@ -203,15 +200,15 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good grammar of graphics layering, pd.Categorical for ordering, guide_legend
-          with override_aes
+        comment: Good grammar-of-graphics composition with layered geoms and proper
+          aes mapping
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Generic grammar of graphics patterns, could leverage stat_function
-          or after_stat
+        comment: Uses guide_legend override_aes and theme customization but fairly
+          standard. Could leverage geom_ribbon or annotate rect
   verdict: REJECTED
 impl_tags:
   dependencies:
