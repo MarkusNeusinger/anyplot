@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 line-growth-percentile: Pediatric Growth Chart with Percentile Curves
 Library: plotly 6.6.0 | Python 3.14.3
 Quality: 85/100 | Created: 2026-03-19
@@ -26,14 +26,14 @@ percentile_97 = median + 1.881 * sd
 
 # Individual patient data - a healthy boy tracked at well-child visits
 patient_ages = np.array([0, 1, 2, 4, 6, 9, 12, 15, 18, 24, 30, 36])
-patient_weights = np.array([3.5, 4.6, 5.8, 7.2, 8.1, 9.3, 10.2, 11.0, 11.8, 13.0, 14.2, 15.5])
+patient_weights = np.array([3.5, 4.1, 4.8, 6.1, 7.2, 8.8, 10.3, 11.7, 13.0, 15.6, 17.7, 19.4])
 
 # Colors - graduated blue tones for boys chart
 band_fills = [
     "rgba(30, 80, 140, 0.28)",  # P3-P10 (darker edge)
     "rgba(50, 110, 170, 0.22)",  # P10-P25
-    "rgba(80, 145, 210, 0.16)",  # P25-P50
-    "rgba(80, 145, 210, 0.16)",  # P50-P75
+    "rgba(80, 145, 210, 0.20)",  # P25-P50
+    "rgba(80, 145, 210, 0.20)",  # P50-P75
     "rgba(50, 110, 170, 0.22)",  # P75-P90
     "rgba(30, 80, 140, 0.28)",  # P90-P97 (darker edge)
 ]
