@@ -1,7 +1,7 @@
 library: highcharts
 specification_id: histogram-capability
 created: '2026-03-19T21:49:22Z'
-updated: '2026-03-19T21:53:18Z'
+updated: '2026-03-19T22:01:38Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23318228739
 issue: 4552
@@ -10,33 +10,34 @@ library_version: unknown
 preview_url: https://storage.googleapis.com/pyplots-images/plots/histogram-capability/highcharts/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/histogram-capability/highcharts/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/histogram-capability/highcharts/plot.html
-quality_score: 84
+quality_score: 86
 review:
   strengths:
-  - Excellent use of Highcharts plotLines for LSL/USL/Target/Mean reference lines
-    with styled labels
-  - All font sizes explicitly set for high-resolution rendering at 4800x2700
-  - Capability indices (Cp, Cpk) prominently displayed in subtitle with full statistical
-    context
-  - Clean well-structured code with proper Selenium export pattern
-  - Realistic manufacturing scenario with appropriate data values
+  - 'Perfect spec compliance with all required features: histogram, normal curve,
+    LSL/USL/target lines, Cp/Cpk values'
+  - Excellent data storytelling through subtitle with statistical summary and visual
+    spec limit framing
+  - Strong use of Highcharts plotLines for reference lines with styled inline labels
+  - Realistic manufacturing quality engineering context with plausible data
+  - Clean well-structured code with proper seed and all imports used
   weaknesses:
-  - Legend is not visible in the rendered plot despite being configured in code
-  - Red-green color combination for LSL/USL vs Target lines is not colorblind-optimal
-  - Target and Mean labels positioned very close together risking overlap
-  - Design could be more polished with more refined grid and background
-  - No out-of-spec data points shown to better demonstrate analytical purpose
-  image_description: The plot displays a histogram of 200 shaft diameter measurements
-    in dark blue (#306998) column bars on a light gray (#fafbfc) background. An orange
-    (#e67e22) spline curve represents the fitted normal distribution overlaid on the
-    histogram. Red dashed vertical lines mark LSL = 9.95 (left edge) and USL = 10.05
-    (right edge). A green dotted vertical line marks Target = 10.0 near the center,
-    and a blue dashed line marks Mean = 10.0015. The title reads "Shaft Diameter Process
-    Capability · histogram-capability · highcharts · pyplots.ai" with a subtitle showing
-    n = 200, Cp = 1.49, Cpk = 1.45, Mean = 10.0015 mm, σ = 0.0112 mm. The x-axis is
-    labeled "Shaft Diameter (mm)" and the y-axis "Frequency". The distribution is
-    roughly bell-shaped centered near 10.00 mm, with most data between 9.97 and 10.03
-    mm, well within spec limits. The legend is not visibly rendered in the screenshot.
+  - Target and Mean labels crowd each other since values are nearly identical (10.0
+    vs 10.0015)
+  - Y-axis integer ticks from 0-32 create visual clutter
+  - Design is competent but not publication-ready — standard bar color, all spines
+    present
+  image_description: 'The plot displays a histogram of 200 shaft diameter measurements
+    (mm) using blue column bars on a light gray (#f8f9fb) background. An orange fitted
+    normal distribution curve overlays the histogram. Four vertical reference lines
+    are drawn: red dashed LSL=9.95 (far left), red dashed USL=10.05 (far right), purple
+    dotted Target=10.0 (center), and blue long-dashed Mean=10.0015 (slightly right
+    of center). The title reads "Shaft Diameter Process Capability · histogram-capability
+    · highcharts · pyplots.ai" in bold dark text. A subtitle displays n=200, Cp=1.49,
+    Cpk=1.45, Mean=10.0015 mm, σ=0.0112 mm. A legend in the top-right corner shows
+    "Measurement Distribution" (blue dot) and "Fitted Normal Curve" (orange line).
+    X-axis is labeled "Shaft Diameter (mm)" and Y-axis "Frequency" with integer ticks
+    from 0 to 32. The distribution is roughly bell-shaped and centered near the target,
+    with most data falling well within the specification limits.'
   criteria_checklist:
     visual_quality:
       score: 27
@@ -44,44 +45,44 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 56px, subtitle 38px, axis titles
-          44px, tick labels 32-36px, plot line labels 30-34px'
+        comment: All font sizes explicitly set (title 56px, subtitle 38px, axis titles
+          44px, tick labels 32-36px). Y-axis ticks at every integer from 0-32 create
+          slight visual density.
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Target and Mean labels very close together, minor risk of overlap
+        comment: Target=10.0 and Mean=10.0015 labels crowded since values nearly coincide;
+          vertically offset but still tight.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Histogram bars clearly visible with good width and dark border, normal
-          curve prominent
+        comment: Histogram bars clearly visible with border styling, normal curve
+          prominent at lineWidth 5, all reference lines distinct.
       - id: VQ-04
         name: Color Accessibility
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Red-green color pairing for LSL/USL vs Target not optimal for colorblind
-          users
+        comment: Red, purple, blue, orange — all well-differentiated, colorblind-safe.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good canvas usage but some wasted horizontal space at edges where
-          LSL/USL lines extend beyond data
+        comment: Good canvas utilization with appropriate margins.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Shaft Diameter (mm) with units and Frequency are descriptive
+        comment: Shaft Diameter (mm) with units, Frequency is appropriate.
     design_excellence:
       score: 12
       max: 20
@@ -91,24 +92,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom background, intentional font family, thoughtful color scheme
-          above defaults but not publication-level
+        comment: Custom color palette, light gray background, styled subtitle. Above
+          defaults but not publication-ready.
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Dotted grid lines and custom margins show some refinement, but grid
-          could be more subtle
+        comment: Grid lines customized, legend styled, but all spines remain and dense
+          y-axis ticks add clutter.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Subtitle communicates capability story, color-coded reference lines
-          create visual hierarchy
+        comment: 'Good visual hierarchy: spec limit lines frame distribution, subtitle
+          communicates capability story.'
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -116,51 +117,50 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: histogram with overlaid normal distribution curve and specification
-          limit lines'
+        comment: Correct histogram with fitted normal distribution overlay.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All present: histogram, normal curve, LSL/USL, target, mean, Cp/Cpk
-          annotations'
+        comment: 'All required features present: histogram, normal curve, LSL/USL
+          lines, target line, Cp/Cpk annotations.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=measurement values, Y=frequency, correct mapping
+        comment: X-axis shows shaft diameter, Y-axis shows frequency, all data visible.
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Title format correct but legend not visible in rendered screenshot
+        passed: true
+        comment: Title format correct, legend labels descriptive.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows all major features but all data within spec limits — out-of-spec
-          points would better demonstrate purpose
+        comment: Shows bell-shaped distribution, off-center mean, spec limits, capability
+          indices.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Shaft diameter measurements for manufacturing QC, real-world neutral
-          scenario
+        comment: Shaft diameter manufacturing — authentic quality engineering scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 10mm shaft with ±0.05mm tolerance is realistic for precision machining
+        comment: 200 measurements, realistic spec limits and capability indices for
+          precision machining.
     code_quality:
       score: 10
       max: 10
@@ -170,31 +170,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, calculations, chart config, export'
+        comment: Linear flow, no functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: All imports used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean well-organized code with appropriate complexity
+        comment: Clean, well-organized, appropriate complexity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png via Selenium, also saves plot.html
+        comment: Saves as plot.png and plot.html, uses current API.
     library_mastery:
       score: 7
       max: 10
@@ -204,22 +204,20 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of Chart, HighchartsOptions, plotLines for reference lines.
-          Could use Highcharts histogram module
+        comment: Good use of HighchartsOptions, ColumnSeries, SplineSeries, idiomatic
+          plotLines for reference lines.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: plotLines with labels is a distinctive Highcharts feature, HTML export
-          leverages interactivity
+        comment: plotLines with styled inline labels is a distinctive Highcharts feature.
   verdict: REJECTED
 impl_tags:
   dependencies:
   - scipy
   - selenium
   techniques:
-  - annotations
   - html-export
   patterns:
   - data-generation
