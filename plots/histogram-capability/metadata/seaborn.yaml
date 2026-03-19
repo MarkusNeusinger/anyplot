@@ -1,0 +1,224 @@
+library: seaborn
+specification_id: histogram-capability
+created: '2026-03-19T21:44:15Z'
+updated: '2026-03-19T21:56:27Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23318228473
+issue: 4552
+python_version: 3.14.3
+library_version: 0.13.2
+preview_url: https://storage.googleapis.com/pyplots-images/plots/histogram-capability/seaborn/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/histogram-capability/seaborn/plot_thumb.png
+preview_html: null
+quality_score: 91
+review:
+  strengths:
+  - Excellent visual design with intentional color palette and color-coded capability
+    annotations
+  - Shaded out-of-spec zones add depth and immediately draw attention to specification
+    limits
+  - Color-coded capability status (Adequate in orange) creates clear data storytelling
+  - All font sizes explicitly set for high-resolution output
+  - Clean well-structured code with appropriate use of seaborn integrated KDE
+  weaknesses:
+  - Uses KDE overlay instead of a fitted normal distribution curve as specified (spec
+    explicitly requests normal fit using sample mean and standard deviation)
+  image_description: The plot displays a histogram of 200 shaft diameter measurements
+    (mm) using blue bars (#306998) with white edge coloring, overlaid with a dark
+    blue KDE curve. Two orange dashed vertical lines mark the Lower Specification
+    Limit (LSL = 9.95) and Upper Specification Limit (USL = 10.05). A teal dash-dot
+    vertical line marks the target value (10.0). Light orange shaded regions highlight
+    areas outside specification limits on both sides. A white annotation box with
+    orange border in the upper right displays Cp = 1.19, Cpk = 1.18, μ = 9.9994, σ
+    = 0.0140. Below the box, the word "Adequate" appears in orange, indicating the
+    process capability status. The legend in the upper left lists KDE Fit, LSL, USL,
+    and Target. The title reads "histogram-capability · seaborn · pyplots.ai". X-axis
+    is labeled "Shaft Diameter (mm)", Y-axis is labeled "Density". Top and right spines
+    are removed. The grid is subtle with low alpha. The layout is well-proportioned
+    at 16:9.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 24pt, axis labels 20pt, ticks
+          16pt, annotation 18pt, legend 16pt'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text elements. Legend and annotation box well-separated
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Histogram bars well-sized with 25 bins, KDE line thick, specification
+          lines prominent
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Colorblind-safe palette with blue, orange, teal distinguished by
+          color and line style
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 16:9 figsize with tight_layout, plot fills canvas well
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Shaft Diameter (mm) includes units, Density is appropriate
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Strong design with intentional color palette, color-coded annotations,
+          and shaded zones
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines removed, subtle grid, white edge highlights on bars, generous
+          whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Color-coded capability status, shaded out-of-spec zones, annotation
+          box provides immediate context
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct: histogram with distribution curve overlay and specification
+          lines'
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: All features present but uses KDE instead of fitted normal distribution
+          as specified
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X-axis shows measurements, Y-axis shows density, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct title format and descriptive legend labels
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows histogram, KDE fit, spec limits, target, Cp/Cpk. Adequate capability
+          scenario is interesting
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Shaft diameter manufacturing QC - classic neutral real-world application
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Realistic values for precision machining tolerances
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean linear flow: imports, data, calculations, plot, style, save'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set at start
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Three imports, all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, clean Pythonic code
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with dpi=300 and bbox_inches=tight
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of axes-level API with sns.histplot and explicit ax parameter
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Leverages seaborn integrated kde=True with line_kws customization
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  - explicit-figure
+  dataprep:
+  - kde
+  styling:
+  - alpha-blending
+  - edge-highlighting
+  - grid-styling
