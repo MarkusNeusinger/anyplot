@@ -1,0 +1,237 @@
+library: highcharts
+specification_id: line-growth-percentile
+created: '2026-03-19T19:53:43Z'
+updated: '2026-03-19T20:08:32Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23313901195
+issue: 4555
+python_version: 3.14.3
+library_version: unknown
+preview_url: https://storage.googleapis.com/pyplots-images/plots/line-growth-percentile/highcharts/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/line-growth-percentile/highcharts/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/line-growth-percentile/highcharts/plot.html
+quality_score: 91
+review:
+  strengths:
+  - Excellent clinical realism with WHO-style percentile data and plausible patient
+    trajectory
+  - Strong visual hierarchy with orange patient line against blue percentile bands
+  - Professional typography with custom font family and explicit sizing throughout
+  - Graduated band transparency creates natural visual depth
+  - Effective use of Highcharts arearange for percentile bands and data label filters
+    for right-margin annotations
+  - Birth annotation adds narrative context to the patient growth story
+  weaknesses:
+  - Normal Range plotBand label is very faint and oddly positioned at a fixed y-range
+    at the top of the chart
+  - Right-margin percentile labels slightly crowded where curves converge
+  - 36 mo patient data label may be partially clipped at the chart right boundary
+  image_description: The plot displays a pediatric growth chart for boys' weight-for-age
+    from birth to 36 months. Five graduated blue percentile bands span from P3 to
+    P97, with darker blue at the extremes (P3-P10, P90-P97) and lighter blue near
+    the median (P25-P75). Individual percentile lines are drawn with distinct dash
+    styles - the P50 median is a thick solid dark blue line, while others use dashed/dotted
+    styles with lower opacity. Percentile labels (P3, P10, P25, P50, P75, P90, P97)
+    appear at the right margin with staggered offsets. An orange/red patient trajectory
+    is overlaid as a smooth spline with filled circular markers (white border), tracking
+    near the P25-P40 range. A "Birth / 3.3 kg" annotation appears at the first data
+    point. The title reads "Boys Weight-for-Age - line-growth-percentile - highcharts
+    - pyplots.ai" with a subtitle "WHO Growth Standards, Birth to 36 Months". X-axis
+    shows "Age (months)" 0-36, Y-axis shows "Weight (kg)" 0-24. A floating legend
+    in the top-right shows "50th Percentile (Median)" and "Patient (Boy, Age 0-36m)".
+    Background is a soft off-white with subtle dotted grid lines.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 46px, axis titles 34px, tick
+          labels 26px, data labels 22-24px'
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Minor crowding of percentile labels at right margin where curves
+          converge; 36mo label may be clipped
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Patient markers radius 11, line width 5, median width 6 all clearly
+          visible with good graduated band opacity
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue percentile tones vs orange patient data provides excellent colorblind-safe
+          contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good explicit margins but Normal Range plotBand label is faint and
+          oddly positioned at fixed y-range
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Age (months) and Weight (kg) - descriptive with units
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom blue palette with graduated transparency, professional typography,
+          subtle background and legend shadow
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle dotted grid at 0.05 opacity, custom axis colors, legend with
+          shadow and rounded corners
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Strong visual hierarchy with patient trajectory as focal point, birth
+          annotation anchors narrative, graduated bands guide viewer
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct WHO-style growth chart with percentile curves and patient
+          overlay
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: All 7 percentiles, filled bands, graduated colors, emphasized P50,
+          blue for boys, right-margin labels, patient overlay
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=age months, Y=weight kg, correct assignment
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title includes spec-id/library/pyplots.ai, legend labels match data
+          series
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All 7 percentile curves, 5 graduated bands, patient trajectory with
+          annotations
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: WHO-style weight-for-age for boys 0-36 months, standard clinical
+          scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Birth weight 3.3 kg, 36-month weight 19.0 kg, clinically plausible
+          values
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports, data, chart config, series, export'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-organized with data structures for band colors and percentile
+          styles
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png via Selenium, current highcharts_core API
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: HighchartsOptions with dict config, inline CDN embedding for headless
+          Chrome
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: arearange series, dataLabels.filter, zIndex layering, series shadow,
+          mixed series types
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - annotations
+  - layer-composition
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling
