@@ -1,0 +1,227 @@
+library: matplotlib
+specification_id: ecg-twelve-lead
+created: '2026-03-19T20:07:16Z'
+updated: '2026-03-19T20:19:10Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23314441130
+issue: 4554
+python_version: 3.14.3
+library_version: 3.10.8
+preview_url: https://storage.googleapis.com/pyplots-images/plots/ecg-twelve-lead/matplotlib/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/ecg-twelve-lead/matplotlib/plot_thumb.png
+preview_html: null
+quality_score: 90
+review:
+  strengths:
+  - Exceptionally faithful recreation of clinical ECG paper with custom color scheme
+    and dual-weight grid
+  - Complete spec compliance — all 12 leads, rhythm strip, calibration marker, correct
+    clinical layout
+  - Realistic lead-specific morphology with appropriate inversions and amplitude scaling
+  - Professional typography and metadata annotations (HR, scale, rhythm label)
+  weaknesses:
+  - Helper function setup_ecg_grid() slightly violates KISS principle
+  - Trace linewidth (1.2) is thinner than matplotlib guidelines recommend, though
+    medically appropriate
+  image_description: 'The plot displays a 12-lead ECG in the standard clinical 3x4
+    grid layout on a warm pink/peach ECG paper background (#FFF5EE). Each panel shows
+    realistic P-QRS-T waveform complexes with dark traces (near-black #1a1a1a) on
+    a dual-weight grid: fine pink lines at 1mm intervals and bolder salmon lines at
+    5mm intervals. The 12 leads are arranged as columns (I, aVR, V1, V4), (II, aVL,
+    V2, V5), (III, aVF, V3, V6) with bold lead labels in the upper-left of each panel.
+    A full-width Lead II rhythm strip spans the bottom row showing 10 seconds of continuous
+    recording with a 1mV calibration pulse in the lower-left corner and "HR: ~75 bpm"
+    in italic on the right. The title "ecg-twelve-lead · matplotlib · pyplots.ai"
+    sits top-left, with "25 mm/s · 10 mm/mV · Normal Sinus Rhythm" top-right. Lead-specific
+    morphology is visible: aVR and V1 show inverted complexes, precordial leads V1-V6
+    show progressive R-wave amplitude increase.'
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 24pt, labels 20pt, annotations
+          16pt). Calibration text positioning could be slightly more prominent.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text elements anywhere.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: ECG traces clearly visible. Linewidth 1.2 is thin per matplotlib
+          guidelines but medically appropriate.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Dark traces on light pink background provide excellent contrast.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Excellent canvas utilization with tight balanced margins.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Scale information in header, calibration marker for voltage. Standard
+          ECG labeling convention.
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: Publication-quality medical visualization with custom ECG paper color
+          scheme and intentional typographic hierarchy.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle spines, dual-level grid system, hidden tick labels, clean
+          panel separations.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Normal sinus rhythm with lead-specific morphology tells a clear medical
+          story. HR annotation and scale indicators provide clinical context.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct multi-channel ECG waveform display.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: 3x4 grid, rhythm strip, ECG paper grid,
+          calibration pulse, lead labels, synthetic P-QRS-T data.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Time on X, voltage on Y. Correct mapping.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct. No legend needed for this plot type.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All 12 leads with lead-specific morphological differences, rhythm
+          strip, calibration marker.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Medical ECG context, realistic and neutral. Normal sinus rhythm at
+          ~75 bpm.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Realistic amplitude ranges for all wave components. Standard paper
+          speed and gain.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Helper function setup_ecg_grid() violates strict KISS but pragmatic
+          for 13 subplots.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: plt, ticker, np.'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-structured. Appropriate complexity. No fake UI.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with dpi=300, bbox_inches='tight'. Current API.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of GridSpec, MultipleLocator, dual grid system, transAxes
+          positioning.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: GridSpec row spanning, MultipleLocator, dual major/minor grid styling
+          are matplotlib-distinctive patterns.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - subplots
+  - annotations
+  - manual-ticks
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - grid-styling
+  - edge-highlighting
