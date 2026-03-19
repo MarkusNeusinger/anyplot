@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 spc-xbar-r: Statistical Process Control Chart (X-bar/R)
 Library: plotnine 0.15.3 | Python 3.14.3
 Quality: 84/100 | Created: 2026-03-19
@@ -16,6 +16,7 @@ from plotnine import (
     geom_hline,
     geom_line,
     geom_point,
+    geom_text,
     ggplot,
     labs,
     scale_color_identity,
@@ -70,31 +71,39 @@ sample_ids = np.arange(1, n_samples + 1)
 xbar_ooc = (sample_means > xbar_ucl) | (sample_means < xbar_lcl)
 r_ooc = (sample_ranges > r_ucl) | (sample_ranges < r_lcl)
 
-xbar_df = pd.DataFrame({"sample": sample_ids, "value": sample_means, "chart": "X̄ Chart (Sample Mean)", "ooc": xbar_ooc})
+xbar_df = pd.DataFrame(
+    {"sample": sample_ids, "value": sample_means, "chart": "X̄ Chart · Sample Mean (mm)", "ooc": xbar_ooc}
+)
 
-r_df = pd.DataFrame({"sample": sample_ids, "value": sample_ranges, "chart": "R Chart (Sample Range)", "ooc": r_ooc})
+r_df = pd.DataFrame(
+    {"sample": sample_ids, "value": sample_ranges, "chart": "R Chart · Sample Range (mm)", "ooc": r_ooc}
+)
 
 df = pd.concat([xbar_df, r_df], ignore_index=True)
-df["color"] = np.where(df["ooc"], "#D62728", "#306998")
-df["point_size"] = np.where(df["ooc"], 5, 3)
+df["color"] = np.where(df["ooc"], "#C44E52", "#306998")
+df["point_size"] = np.where(df["ooc"], 5.5, 3)
 df["point_shape"] = np.where(df["ooc"], "D", "o")
 
-chart_order = ["X̄ Chart (Sample Mean)", "R Chart (Sample Range)"]
+chart_order = ["X̄ Chart · Sample Mean (mm)", "R Chart · Sample Range (mm)"]
 df["chart"] = pd.Categorical(df["chart"], categories=chart_order, ordered=True)
 
-# Control limit lines for each chart
+# Control limit lines for each chart — colorblind-safe palette
+cl_color = "#4C72B0"  # Steel blue for center line
+limit_color = "#C44E52"  # Muted red for UCL/LCL
+warn_color = "#DD8452"  # Amber for warning limits
+
 limit_lines = pd.DataFrame(
     [
-        {"chart": "X̄ Chart (Sample Mean)", "yintercept": xbar_ucl, "ltype": "UCL", "color": "#D62728"},
-        {"chart": "X̄ Chart (Sample Mean)", "yintercept": xbar_lcl, "ltype": "LCL", "color": "#D62728"},
-        {"chart": "X̄ Chart (Sample Mean)", "yintercept": xbar_bar, "ltype": "CL", "color": "#2CA02C"},
-        {"chart": "X̄ Chart (Sample Mean)", "yintercept": xbar_uwl, "ltype": "UWL", "color": "#FF7F0E"},
-        {"chart": "X̄ Chart (Sample Mean)", "yintercept": xbar_lwl, "ltype": "LWL", "color": "#FF7F0E"},
-        {"chart": "R Chart (Sample Range)", "yintercept": r_ucl, "ltype": "UCL", "color": "#D62728"},
-        {"chart": "R Chart (Sample Range)", "yintercept": r_lcl, "ltype": "LCL", "color": "#D62728"},
-        {"chart": "R Chart (Sample Range)", "yintercept": r_bar, "ltype": "CL", "color": "#2CA02C"},
-        {"chart": "R Chart (Sample Range)", "yintercept": r_uwl, "ltype": "UWL", "color": "#FF7F0E"},
-        {"chart": "R Chart (Sample Range)", "yintercept": r_lwl, "ltype": "LWL", "color": "#FF7F0E"},
+        {"chart": "X̄ Chart · Sample Mean (mm)", "yintercept": xbar_ucl, "ltype": "UCL", "color": limit_color},
+        {"chart": "X̄ Chart · Sample Mean (mm)", "yintercept": xbar_lcl, "ltype": "LCL", "color": limit_color},
+        {"chart": "X̄ Chart · Sample Mean (mm)", "yintercept": xbar_bar, "ltype": "CL", "color": cl_color},
+        {"chart": "X̄ Chart · Sample Mean (mm)", "yintercept": xbar_uwl, "ltype": "UWL", "color": warn_color},
+        {"chart": "X̄ Chart · Sample Mean (mm)", "yintercept": xbar_lwl, "ltype": "LWL", "color": warn_color},
+        {"chart": "R Chart · Sample Range (mm)", "yintercept": r_ucl, "ltype": "UCL", "color": limit_color},
+        {"chart": "R Chart · Sample Range (mm)", "yintercept": r_lcl, "ltype": "LCL", "color": limit_color},
+        {"chart": "R Chart · Sample Range (mm)", "yintercept": r_bar, "ltype": "CL", "color": cl_color},
+        {"chart": "R Chart · Sample Range (mm)", "yintercept": r_uwl, "ltype": "UWL", "color": warn_color},
+        {"chart": "R Chart · Sample Range (mm)", "yintercept": r_lwl, "ltype": "LWL", "color": warn_color},
     ]
 )
 limit_lines["chart"] = pd.Categorical(limit_lines["chart"], categories=chart_order, ordered=True)
@@ -102,6 +111,11 @@ limit_lines["chart"] = pd.Categorical(limit_lines["chart"], categories=chart_ord
 cl_lines = limit_lines[limit_lines["ltype"] == "CL"]
 ucl_lcl_lines = limit_lines[limit_lines["ltype"].isin(["UCL", "LCL"])]
 warn_lines = limit_lines[limit_lines["ltype"].isin(["UWL", "LWL"])]
+
+# Labels for control limit lines positioned at right edge
+label_df = limit_lines.copy()
+label_df["sample"] = n_samples + 0.8
+label_df = label_df[label_df["yintercept"] > 0].copy()
 
 # Plot
 plot = (
@@ -111,19 +125,30 @@ plot = (
     + geom_hline(aes(yintercept="yintercept", color="color"), data=warn_lines, size=0.7, linetype="dotted", alpha=0.7)
     + geom_line(color="#306998", size=1.2, alpha=0.6)
     + geom_point(aes(color="color", size="point_size", shape="point_shape"), stroke=0.8)
+    + geom_text(
+        aes(x="sample", y="yintercept", label="ltype", color="color"),
+        data=label_df,
+        size=9,
+        ha="left",
+        fontweight="bold",
+    )
     + scale_color_identity()
     + scale_size_identity()
     + scale_shape_identity()
-    + scale_x_continuous(breaks=range(1, n_samples + 1, 2))
+    + scale_x_continuous(breaks=range(1, n_samples + 1, 2), limits=(0.5, n_samples + 2.5))
     + facet_wrap("chart", ncol=1, scales="free_y")
-    + labs(x="Sample Number", y="Value", title="CNC Shaft Diameter Monitoring · spc-xbar-r · plotnine · pyplots.ai")
+    + labs(
+        x="Sample Number",
+        y="Measurement (mm)",
+        title="CNC Shaft Diameter Monitoring · spc-xbar-r · plotnine · pyplots.ai",
+    )
     + theme_minimal()
     + theme(
         figure_size=(16, 12),
         text=element_text(size=14, color="#2a2a2a"),
         axis_title=element_text(size=20, weight="bold"),
         axis_text=element_text(size=16, color="#444444"),
-        plot_title=element_text(size=22, weight="bold", color="#1a1a1a"),
+        plot_title=element_text(size=24, weight="bold", color="#1a1a1a"),
         strip_text=element_text(size=18, weight="bold", color="#1a1a1a"),
         panel_grid_major_x=element_blank(),
         panel_grid_minor=element_blank(),
@@ -132,7 +157,7 @@ plot = (
         axis_line=element_line(color="#333333", size=0.6),
         plot_background=element_rect(fill="#fafafa", color="none"),
         panel_background=element_rect(fill="#fafafa", color="none"),
-        strip_background=element_rect(fill="#eeeeee", color="none"),
+        strip_background=element_rect(fill="#e8e8e8", color="#cccccc", size=0.3),
     )
 )
 
