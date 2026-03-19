@@ -1,7 +1,7 @@
 """ pyplots.ai
 spc-xbar-r: Statistical Process Control Chart (X-bar/R)
 Library: highcharts unknown | Python 3.14.3
-Quality: 79/100 | Created: 2026-03-19
+Quality: 81/100 | Created: 2026-03-19
 """
 
 import json
