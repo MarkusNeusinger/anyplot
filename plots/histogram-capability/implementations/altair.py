@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 histogram-capability: Process Capability Plot with Specification Limits
 Library: altair 6.0.0 | Python 3.14.3
 Quality: 89/100 | Created: 2026-03-19
@@ -44,6 +44,9 @@ curve_df = pd.DataFrame({"diameter": x_curve, "density": y_curve})
 # Shared x-axis scale
 x_scale = alt.Scale(domain=[lsl - 0.012, usl + 0.012])
 
+# Interactive selection for histogram bars (hover highlight in HTML)
+hover = alt.selection_point(on="pointerover", nearest=True, empty=False)
+
 # Background shaded zones (in-spec / out-of-spec)
 zone_df = pd.DataFrame(
     {"x": [lsl - 0.012, lsl, usl], "x2": [lsl, usl, usl + 0.012], "fill": ["#FDE8E0", "#E6F0E6", "#FDE8E0"]}
@@ -54,22 +57,23 @@ zones = (
     .encode(x=alt.X("x:Q", scale=x_scale), x2="x2:Q", color=alt.Color("fill:N", scale=None))
 )
 
-# Histogram using pre-binned data (rect marks)
+# Histogram using pre-binned data (rect marks) with conditional hover highlight
 histogram = (
     alt.Chart(hist_df)
-    .mark_rect(
-        color=COLOR_BAR, opacity=0.82, stroke="white", strokeWidth=0.8, cornerRadiusTopLeft=2, cornerRadiusTopRight=2
-    )
+    .mark_rect(stroke="white", strokeWidth=0.8, cornerRadiusTopLeft=2, cornerRadiusTopRight=2)
     .encode(
         x=alt.X("bin_start:Q", title="Shaft Diameter (mm)", scale=x_scale),
         x2="bin_end:Q",
         y=alt.Y("count:Q", title="Frequency"),
+        opacity=alt.condition(hover, alt.value(1.0), alt.value(0.82)),
+        color=alt.condition(hover, alt.value("#1F4E79"), alt.value(COLOR_BAR)),
         tooltip=[
             alt.Tooltip("bin_start:Q", title="Bin start", format=".3f"),
             alt.Tooltip("bin_end:Q", title="Bin end", format=".3f"),
             alt.Tooltip("count:Q", title="Count"),
         ],
     )
+    .add_params(hover)
 )
 
 # Normal curve overlay
@@ -143,7 +147,7 @@ mean_rule = (
 )
 mean_label = (
     alt.Chart(mean_df)
-    .mark_text(align="center", baseline="top", dy=5, fontSize=14, fontStyle="italic", color="#666666")
+    .mark_text(align="center", baseline="top", dy=5, fontSize=17, fontWeight="bold", color="#444444")
     .encode(x=alt.X("value:Q", scale=x_scale), y=alt.value(870), text="label:N")
 )
 
@@ -187,6 +191,7 @@ chart = (
         tickColor="#999999",
     )
     .configure_view(strokeWidth=0)
+    .configure_legend(disable=True)
 )
 
 # Save
