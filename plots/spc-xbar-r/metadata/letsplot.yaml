@@ -1,7 +1,7 @@
 library: letsplot
 specification_id: spc-xbar-r
 created: '2026-03-19T21:47:50Z'
-updated: '2026-03-19T21:52:37Z'
+updated: '2026-03-19T22:14:35Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23318370463
 issue: 4551
@@ -10,35 +10,37 @@ library_version: 4.9.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/spc-xbar-r/letsplot/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/spc-xbar-r/letsplot/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/spc-xbar-r/letsplot/plot.html
-quality_score: 84
+quality_score: 88
 review:
   strengths:
-  - Full spec compliance with all required SPC chart features (UCL/LCL, warning limits,
-    OOC highlighting, standard constants)
-  - Strong data storytelling with clear visual distinction between in-control and
-    out-of-control points
-  - Realistic manufacturing context with appropriate scales
-  - Clean, well-structured code with proper reproducibility
-  - Good use of gggrid for panel layout
+  - Full spec compliance with all required SPC features including warning limits and
+    standard constants
+  - Excellent data storytelling through red OOC highlights creating immediate focal
+    points
+  - Dual PNG + HTML export leveraging lets-plot interactive tooltip capabilities
+  - Clean professional color scheme with intentional hierarchy (muted limits vs bold
+    data)
+  - Proper label nudging to prevent overlap in the limit labels
   weaknesses:
-  - Limit labels (UCL/UWL and LWL/LCL) overlap on the right side of the X-bar chart
-    due to close y-values
-  - Color palette uses red and green for limit lines which could be improved for accessibility
-  - Library mastery could be enhanced with more lets-plot-specific features
+  - Axis line spines still visible on all four sides — removing top/right spines would
+    elevate visual refinement
+  - Limit labels (UCL/UWL, LWL/LCL) are close together despite nudging
+  - R chart missing LCL label text (line drawn at y=0 but no label)
   image_description: The plot displays two vertically stacked SPC charts for CNC shaft
-    diameter measurements (30 samples). The top X-bar chart shows sample means connected
-    by a blue line with white-filled circle markers. Three out-of-control points are
-    highlighted as large solid red circles at approximately samples 8 (high spike
-    to ~25.1), 19 (low dip to ~24.83), and 25 (high spike to ~25.12). Red dashed UCL/LCL
-    lines, orange dotted UWL/LWL warning lines, and a green solid center line (CL
-    at ~25.0) are visible. Limit labels (UCL, UWL, CL, LWL, LCL) are positioned on
-    the right edge. The bottom R chart shows sample ranges with the same styling conventions
-    — blue line with circle markers, red dashed UCL/LCL, orange dotted UWL, and green
-    solid R-bar center line. Title reads "spc-xbar-r · letsplot · pyplots.ai" in bold
-    black at the top. White background with subtle horizontal grid lines.
+    diameter measurements. The top chart (X-bar) shows sample means in mm (y-axis
+    ~24.8–25.15) plotted against sample numbers 1–30 on the x-axis. A blue line with
+    open circle markers connects in-control points, while three out-of-control points
+    (samples ~8, ~19, ~25) are highlighted as solid red filled circles. Horizontal
+    reference lines include dashed gray UCL and LCL, dotted lighter gray UWL and LWL,
+    and a solid gray center line (CL), all labeled on the right margin. The bottom
+    chart (R) shows sample ranges (0–0.25 mm) with the same blue line-and-marker styling.
+    Dashed gray UCL and LCL lines appear with a dotted UWL line; the center line is
+    labeled R-bar. No out-of-control points appear in the R chart. The title reads
+    "spc-xbar-r · letsplot · pyplots.ai" in bold at the top. Background is clean white
+    with subtle horizontal gridlines on y-axes only.
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 26
       max: 30
       items:
       - id: VQ-01
@@ -46,67 +48,66 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title 24, labels 20, ticks 16). Limit
-          labels at size=11 slightly small.
+        comment: All font sizes explicitly set (title=24, axis=20, ticks=16). Limit
+          labels at size=13 slightly small.
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: UCL/UWL and LWL/LCL labels overlap on right side of X-bar chart.
-          R-bar label sits on data line.
+        comment: Label nudging prevents overlap but UCL/UWL and LWL/LCL pairs remain
+          tight.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Points well-sized, OOC points clearly distinguished with larger red
+        comment: Points well-sized, OOC points stand out clearly in red with larger
           markers.
       - id: VQ-04
         name: Color Accessibility
         score: 3
         max: 4
         passed: true
-        comment: Red and green used for limit lines but differentiated by line style.
-          Mostly accessible.
+        comment: Blue/red works for most colorblind types but not ideal for tritanopia.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good vertical split. Right margin extended for labels creates some
-          wasted space.
+        comment: Good vertical stacking with 55/45 ratio. Right margin accommodates
+          labels well.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: All axes labeled with units (mm).
+        comment: Descriptive labels with units on both axes.
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Custom color palette, thoughtful marker styling. Above defaults but
-          limit lines feel visually busy.
+        comment: Thoughtful muted gray palette for limits, Python blue for data, strong
+          red for OOC. Clearly above defaults.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: White background, y-axis-only subtle grid, x-grid removed, gray axis
-          lines.
+        comment: X-grid removed, subtle y-grid, white backgrounds. Spines still present
+          on all sides.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: OOC points prominently highlighted creating clear focal points. Visual
-          hierarchy guides interpretation.
+        comment: Red OOC points create immediate focal points. Line style hierarchy
+          distinguishes limit types.
     spec_compliance:
       score: 15
       max: 15
@@ -116,50 +117,51 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct X-bar on top, R chart on bottom, vertically stacked.
+        comment: Correct X-bar on top, R chart on bottom, vertically stacked sharing
+          x-axis.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: UCL/LCL dashed, CL solid, OOC highlighted,
+        comment: 'All features present: dashed UCL/LCL, solid CL, OOC highlights,
           warning limits, standard constants.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X is sample number, Y is sample mean/range. All data visible.
+        comment: X=sample number, Y=mean/range. All 30 samples visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title in correct format. No legend needed for this chart type.
+        comment: Title format correct. No legend needed - color coding is self-explanatory.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows in-control and OOC points, upward and downward shifts. Could
-          show gradual drift pattern.
+        comment: OOC points in both directions, in-control variability, both X-bar
+          and R charts.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: CNC shaft diameter measurements, realistic manufacturing QC scenario.
+        comment: CNC shaft diameter (25.0mm target, 0.05mm sigma) - classic manufacturing
+          SPC scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 25mm target with 0.05mm std, subgroups of n=5. Realistic for CNC
-          machining.
+        comment: Realistic values for precision machining with appropriate shift magnitudes.
     code_quality:
       score: 10
       max: 10
@@ -169,7 +171,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear flow, no functions or classes.
+        comment: 'Linear flow: imports, data, limits, plots, save. No functions/classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -187,15 +189,16 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Well-organized, appropriate complexity for ggplot grammar approach.
+        comment: Well-structured, appropriate complexity. Interactive layers are for
+          legitimate HTML export.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with scale=3, also exports HTML.
+        comment: ggsave with scale=3 to plot.png. Current API.
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -203,23 +206,24 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good ggplot grammar usage with proper layering, aes mappings, and
-          theme customization.
+        comment: Proper ggplot grammar with layered geoms, aes mappings, gggrid for
+          subplots.
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Uses gggrid() for panel layout and HTML export. gggrid with height
-          ratios is distinctive.
+        comment: layer_tooltips for HTML interactivity, gggrid for subplot composition,
+          dual PNG+HTML export.
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
   - subplots
   - layer-composition
+  - hover-tooltips
   - html-export
+  - annotations
   patterns:
   - data-generation
   dataprep: []

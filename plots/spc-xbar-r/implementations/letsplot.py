@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 spc-xbar-r: Statistical Process Control Chart (X-bar/R)
 Library: letsplot 4.9.0 | Python 3.14.3
-Quality: 84/100 | Created: 2026-03-19
+Quality: 88/100 | Created: 2026-03-19
 """
 
 import numpy as np
