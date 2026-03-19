@@ -1,7 +1,7 @@
 library: plotnine
 specification_id: spc-xbar-r
 created: '2026-03-19T21:47:18Z'
-updated: '2026-03-19T21:51:03Z'
+updated: '2026-03-19T21:59:16Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23318370331
 issue: 4551
@@ -10,32 +10,33 @@ library_version: 0.15.3
 preview_url: https://storage.googleapis.com/pyplots-images/plots/spc-xbar-r/plotnine/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/spc-xbar-r/plotnine/plot_thumb.png
 preview_html: null
-quality_score: 84
+quality_score: 85
 review:
   strengths:
-  - Excellent data quality with realistic CNC machining scenario and well-crafted
-    OOC points
-  - Idiomatic plotnine usage with facet_wrap for dual-panel layout
-  - Good visual storytelling through OOC highlighting with red diamonds
-  - Clean well-organized code with proper SPC constants (A2, D3, D4)
-  - Thoughtful color scheme distinguishing data, limits, center line, and warnings
+  - Perfect spec compliance — all required features implemented correctly (UCL/LCL,
+    center line, warning limits, OOC highlighting, standard constants)
+  - Excellent data quality — realistic CNC machining scenario with well-chosen out-of-control
+    injections showing different failure modes
+  - Clean, idiomatic plotnine code using long-format data with faceting rather than
+    manual subplot management
+  - Strong color accessibility with shape differentiation supplementing color coding
   weaknesses:
-  - Control limit lines (UCL, LCL, CL, UWL, LWL) not labeled on the chart as spec
-    requires
-  - Y-axis label Value is generic and lacks units (mm)
-  - Red-green color combination not optimal for colorblind accessibility
-  - Title font size 22pt slightly below 24pt guideline
-  image_description: The plot displays two vertically stacked SPC charts for CNC shaft
-    diameter monitoring. The top panel is the X-bar Chart (Sample Mean) showing 30
-    sample means oscillating around 25.000 mm, with a solid green center line, red
-    dashed UCL/LCL lines, and orange dotted warning limits. Three out-of-control points
-    are highlighted as larger red diamond markers at samples 8 (high shift), 19 (low
-    shift), and 25 (high shift). The bottom panel is the R Chart (Sample Range) showing
-    sample ranges around 0.05 mm with the same control limit styling. One out-of-control
-    point appears at sample 25 (range approximately 0.21). The background is light
-    gray, x-axis shows sample numbers 1-29 (odd), y-axis shows "Value". The data line
-    is blue with blue circular markers for in-control points. Strip labels in gray
-    backgrounds identify each panel.
+  - Right-edge control line labels overlap where limit values are close together (UCL/UWL
+    and LCL/LWL in X-bar chart)
+  - R chart panel is compressed relative to X-bar chart due to free_y scaling behavior
+  image_description: 'The plot displays two vertically stacked SPC charts for CNC
+    shaft diameter monitoring. The top panel is the X-bar Chart showing sample means
+    clustered around 25.000 mm, and the bottom panel is the R Chart showing sample
+    ranges. Both charts feature: a solid blue center line (CL), red dashed UCL/LCL
+    lines, and lighter amber/orange dotted warning lines (UWL/LWL). Normal data points
+    are shown as blue circles connected by a semi-transparent blue line, while out-of-control
+    points appear as larger red diamond markers. In the X-bar chart, sample 8 exceeds
+    the UCL upward (~25.06), sample 19 drops well below the LCL (~24.93), and sample
+    25 is near/above the UCL. In the R chart, sample 25 shows a large range spike
+    (~0.21) exceeding the UCL. Right-edge text labels identify each control line (UCL,
+    UWL, CL, LWL, LCL). The background is light gray (#fafafa) with subtle horizontal
+    gridlines and gray strip headers. The title reads "CNC Shaft Diameter Monitoring
+    · spc-xbar-r · plotnine · pyplots.ai".'
   criteria_checklist:
     visual_quality:
       score: 25
@@ -43,45 +44,44 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title 22pt, axis titles 20pt, ticks 16pt,
-          strip 18pt). Title slightly below 24pt guideline.
+        comment: 'All font sizes explicitly set: title 24pt, axis titles 20pt, tick
+          labels 16pt, strip text 18pt'
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 3
         max: 6
-        passed: true
-        comment: No overlapping text elements anywhere.
+        passed: false
+        comment: Right-edge control line labels overlap where UCL/UWL and LCL/LWL
+          values are close together
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: OOC points effectively highlighted with larger red diamonds. Normal
-          points slightly small but visible.
+        comment: Points and OOC markers clearly visible, connecting line slightly
+          faint at alpha=0.6
       - id: VQ-04
         name: Color Accessibility
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Red-green combination for limits vs center line not ideal for colorblind
-          viewers. Line styles help mitigate.
+        comment: Colorblind-safe palette with shape differentiation supplementing
+          color
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good overall layout with faceted panels. Some excess vertical whitespace
-          between panels.
+        comment: Good canvas use but R chart panel compressed relative to X-bar chart
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Sample Number is descriptive but Value is generic and lacks units
-          (mm).
+        passed: true
+        comment: Sample Number and Measurement (mm) with units
     design_excellence:
       score: 13
       max: 20
@@ -91,24 +91,23 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Thoughtful color scheme, custom background, styled strips. Above
-          defaults but not publication-quality.
+        comment: Custom palette, intentional background styling, styled strip headers,
+          above defaults
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: X-grid removed, subtle y-grid, axis lines added, backgrounds customized.
-          Good refinement.
+        comment: Minor gridlines removed, x-grid removed, subtle y-grid, custom backgrounds
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: OOC points as red diamonds create clear focal points. Viewer immediately
-          sees process instability.
+        comment: OOC points highlighted with color and shape change creating clear
+          focal points
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -116,27 +115,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct X-bar and R chart vertically stacked sharing x-axis.
+        comment: Correct X-bar and R chart, vertically stacked pair
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: All features present except control limit line labels which spec
-          explicitly requires.
+        comment: 'All features from spec present: UCL/LCL, center line, warning limits,
+          OOC highlighting, standard constants'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = sample number, Y = mean/range. Correct mapping.
+        comment: 'Correct mapping: sample number on x-axis, measurement values on
+          y-axis'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows correct format with context. No legend needed with
-          identity scales.
+        comment: Title format correct with spec-id, library, and pyplots.ai
     data_quality:
       score: 15
       max: 15
@@ -146,22 +145,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: OOC in both charts, shifts up and down, high variability event. Excellent
-          coverage.
+        comment: In-control and OOC points, upward/downward shifts, high variability
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: CNC shaft diameter 25.00mm - realistic manufacturing scenario matching
-          spec example.
+        comment: CNC shaft diameter measurements - real, specific, neutral manufacturing
+          scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Target 25.0mm with 0.02mm std, subgroup size 5, 30 samples - all
-          realistic for CNC.
+        comment: Target 25.00 mm with sigma=0.02 mm realistic for CNC machining
     code_quality:
       score: 10
       max: 10
@@ -171,31 +168,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports-data-plot-save structure. No functions or classes.
+        comment: 'Clean linear flow: imports, data, plot, save'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set at beginning.
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used, no unused imports.
+        comment: All imports are used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-organized with long-format data and faceting. Appropriate complexity.
+        comment: Elegant long-format approach with faceting
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300. Current API.
+        comment: Saves as plot.png with dpi=300
     library_mastery:
       score: 7
       max: 10
@@ -205,19 +202,18 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Excellent grammar-of-graphics usage: facet_wrap, identity scales,
-          long-format data, Categorical ordering.'
+        comment: 'Idiomatic plotnine: ggplot, aes, geom layers, facet_wrap, scale_*_identity'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: facet_wrap with free_y, Categorical ordering, identity scales are
-          ggplot-specific patterns.
+        comment: facet_wrap with free_y, scale_*_identity, pd.Categorical ordering
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
   - faceting
   - layer-composition
   patterns:
