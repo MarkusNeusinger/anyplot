@@ -1,7 +1,7 @@
 library: letsplot
 specification_id: histogram-capability
 created: '2026-03-19T21:43:56Z'
-updated: '2026-03-19T21:47:52Z'
+updated: '2026-03-19T21:58:02Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23318228728
 issue: 4552
@@ -10,74 +10,80 @@ library_version: 4.9.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/histogram-capability/letsplot/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/histogram-capability/letsplot/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/histogram-capability/letsplot/plot.html
-quality_score: 81
+quality_score: 86
 review:
   strengths:
-  - Perfect spec compliance with all required features present and correct
-  - Excellent code quality with clean KISS structure and reproducible seed
-  - Good data storytelling with Cp/Cpk as clear focal point and contextual subtitle
-  - Idiomatic lets-plot usage with layer_tooltips for interactive HTML version
+  - Full spec compliance with all required elements (histogram, normal curve, LSL/USL/Target
+    lines, Cp/Cpk)
+  - Realistic manufacturing data context with appropriate scale values
+  - Good use of lets-plot specific features (layer_tooltips, HTML export)
+  - Clean well-structured code with good ggplot grammar usage
+  - 'Effective colorblind-safe color coding: orange for limits, teal for target, blue
+    for data'
   weaknesses:
-  - Green Target label overlaps histogram bars and normal curve, harming readability
-  - Red-green color scheme for spec limits vs target is colorblind-problematic
-  - USL label partially cut off at right canvas edge
-  - Stats annotation text overlaps with normal distribution curve
+  - Target label positioned at x~10.042 (near USL) instead of near actual target line
+    at x=10.000 — spatially confusing
+  - Normal curve area fill extends well beyond data range creating visual noise at
+    tails
+  - Wasted canvas space to the right of USL (x-axis extends to ~10.070 with no data)
+  - Annotation text sizes (size=11) noticeably smaller than axis text reducing visual
+    hierarchy
   image_description: 'The plot displays a histogram of 200 shaft diameter measurements
-    (mm) in semi-transparent blue (#306998) with white bar edges, overlaid with a
-    fitted normal distribution curve shown as a blue outline with light blue area
-    fill. Three dashed vertical lines mark the specification limits: red dashed lines
-    for LSL (9.950) on the left and USL (10.050) on the right, and a green dashed
-    line for the Target (10.000) in the center. Each vertical line has a bold label
-    with its value. The Cp = 1.49 and Cpk = 1.45 capability indices are prominently
-    displayed in bold dark text near the top-center. Below them, the mean (10.0015
-    mm) and standard deviation (0.0112 mm) are shown in gray. The title reads "histogram-capability
-    · letsplot · pyplots.ai" with a descriptive subtitle. X-axis shows "Shaft Diameter
-    (mm)" and Y-axis shows "Frequency". The background is white with subtle horizontal
-    gridlines only.'
+    (mm) in blue (#306998) bars with white edges and alpha=0.7. A fitted normal distribution
+    curve is overlaid as a blue line with light blue area fill. Three vertical dashed
+    lines mark specification limits: orange dashed lines for LSL (9.950) on the left
+    and USL (10.050) on the right, and a dark teal dashed line for the target value
+    (10.000) near the center. Bold black text annotates "Cp = 1.49 | Cpk = 1.45" in
+    the upper-left area, with gray text below showing "Mean = 10.0015 mm | Std = 0.0112
+    mm". Labels for LSL, USL, and Target are positioned near their respective lines.
+    The title reads "histogram-capability · letsplot · pyplots.ai" with a descriptive
+    subtitle. X-axis shows "Shaft Diameter (mm)" with 3-decimal formatting, Y-axis
+    shows "Frequency" with integer formatting. The background is white with subtle
+    horizontal grid lines only.'
   criteria_checklist:
     visual_quality:
-      score: 22
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title=24, subtitle=16, axis_title=20,
-          axis_text=16, annotations=13/11'
+        comment: All font sizes explicitly set (title=24, subtitle=16, axis_title=20,
+          axis_text=16). Annotation text at size 11 is slightly small.
       - id: VQ-02
         name: No Overlap
-        score: 3
+        score: 6
         max: 6
-        passed: false
-        comment: Green Target label overlaps histogram bars and normal curve; stats
-          text overlaps curve line
+        passed: true
+        comment: No text collisions. Labels well-positioned at different y-levels.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Histogram bars clear with alpha=0.7; area fill slightly obscures
-          some bar edges
+        comment: Histogram bars and curve visible. Area fill extends beyond data range
+          creating some visual clutter.
       - id: VQ-04
         name: Color Accessibility
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: Red-green color combination for LSL/USL vs Target is colorblind-problematic
+        passed: true
+        comment: Orange for limits, teal for target, blue for data — colorblind-safe
+          with good contrast.
       - id: VQ-05
         name: Layout & Canvas
-        score: 2
+        score: 3
         max: 4
-        passed: false
-        comment: USL label partially cut off at right canvas edge
+        passed: true
+        comment: Good landscape format. Some wasted space to the right of USL.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Shaft Diameter (mm) with units, Frequency appropriate for histogram
+        comment: Shaft Diameter (mm) with units, Frequency is descriptive.
     design_excellence:
       score: 13
       max: 20
@@ -87,22 +93,21 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Thoughtful Python Blue color scheme, custom theme with subtitle.
-          Above defaults but not publication-level
+        comment: Custom color palette, theme_minimal with customization, alpha blending.
+          Above defaults but not publication-grade.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: X-grid removed, minor grid removed, subtle y-grid, white background.
-          Good chrome reduction
+        comment: X-axis grid removed, subtle y-axis grid, minimal theme, white background.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Cp/Cpk as clear focal point, spec limits frame the story, subtitle
-          contextualizes
+        comment: Cp/Cpk prominently displayed, spec limits frame the distribution,
+          clear capability story.
     spec_compliance:
       score: 15
       max: 15
@@ -112,25 +117,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct histogram with fitted normal overlay and spec limit lines
+        comment: Correct histogram with normal distribution overlay and specification
+          limit lines.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features: histogram, normal curve, LSL/USL/Target, Cp/Cpk annotations'
+        comment: 'All features present: histogram, normal curve, LSL/USL/Target lines,
+          Cp/Cpk annotations.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=measurements, Y=frequency, all data visible
+        comment: X=measurement values, Y=frequency counts. Correct mapping.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format, no legend needed for single-series
+        comment: Title format correct. No legend needed for single-series.
     data_quality:
       score: 14
       max: 15
@@ -140,20 +147,20 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Shows capable process but Cp and Cpk very similar; slightly off-center
-          would better demonstrate distinction
+        comment: Shows full distribution, spec limits, and capability indices. Process
+          is well-centered (Cp≈Cpk) — one scenario only.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Shaft diameter measurements with realistic manufacturing tolerances
+        comment: Shaft diameter measurements — textbook quality engineering scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values around 10mm with 0.012mm std, realistic for precision machining
+        comment: 200 measurements, ±0.05mm tolerance — realistic for precision machining.
     code_quality:
       score: 10
       max: 10
@@ -163,31 +170,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports-data-plot-save structure, no functions or classes
+        comment: 'Linear flow: imports, data, plot, save.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used, explicit imports from lets_plot
+        comment: All imports used. Explicit imports from lets_plot.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, idiomatic inline DataFrames for annotations
+        comment: Clean and well-organized.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with scale=3, plus HTML export
+        comment: Saves as plot.png with ggsave scale=3.
     library_mastery:
       score: 7
       max: 10
@@ -197,13 +204,15 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Proper ggplot grammar with layered geoms, scales, themes, inherit_aes=False
+        comment: Good ggplot grammar with layered geoms, proper aes mappings, inherit_aes=False
+          for annotations.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses layer_tooltips() and HTML export, distinctive lets-plot features
+        comment: Uses layer_tooltips() for interactive hover info and HTML export
+          — lets-plot specific features.
   verdict: REJECTED
 impl_tags:
   dependencies:
