@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 scatter-shot-chart: Basketball Shot Chart
 Library: highcharts unknown | Python 3.14.3
-Quality: repair-2 | Created: 2026-03-20
+Quality: 88/100 | Created: 2026-03-20
 """
 
 import tempfile

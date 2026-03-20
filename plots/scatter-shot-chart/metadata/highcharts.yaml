@@ -1,7 +1,7 @@
 library: highcharts
 specification_id: scatter-shot-chart
 created: '2026-03-20T20:30:35Z'
-updated: '2026-03-20T20:44:49Z'
+updated: '2026-03-20T20:55:00Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23361192951
 issue: 4416
@@ -10,40 +10,28 @@ library_version: unknown
 preview_url: https://storage.googleapis.com/pyplots-images/plots/scatter-shot-chart/highcharts/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/scatter-shot-chart/highcharts/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/scatter-shot-chart/highcharts/plot.html
-quality_score: 89
+quality_score: 88
 review:
   strengths:
-  - Excellent court drawing using Highcharts renderer API with accurate NBA dimensions
-  - Colorblind-safe blue/orange palette with redundant shape encoding (circles, diamonds,
-    squares)
-  - Dark theme is cohesive and professional with good contrast
-  - Realistic basketball data with zone-based shot generation and accurate make percentages
-  - Full spec compliance with all required court elements and shot data features
-  - Creative use of Highcharts load event monkey-patching for custom SVG court overlay
+  - Excellent dark theme design evoking professional basketball analytics/broadcast
+    graphics
+  - Colorblind-safe blue/orange palette with smart differentiation (fill opacity +
+    marker shape + size)
+  - Accurate NBA half-court geometry with tasteful line opacity hierarchy
+  - Comprehensive data generation covering all court zones with realistic make percentages
+  - Creative use of Highcharts renderer API for custom court drawing elements
+  - Perfect data quality with all shot types, zones, and outcomes represented
   weaknesses:
-  - Minor code redundancy in marker lineColor conditional (same value both branches)
-  - Legend text (24px) is slightly small relative to the 3600px canvas
-  - Some wasted space above the court outline area
-  - Court line hierarchy could be more refined - all court lines use same style weight
-  image_description: 'The plot displays a basketball half-court shot chart on a dark
-    navy background (#1a1a2e) with a slightly lighter plot area (#2a2a3e). The court
-    is rendered with semi-transparent white lines showing: an outer court boundary
-    rectangle, a three-point arc, paint/key area rectangle, free-throw circle (solid
-    top half, dashed bottom half), restricted area arc, an orange basket rim circle,
-    and a white backboard line. A faint italic "BASELINE" label appears at the bottom.
-    The title reads "scatter-shot-chart · highcharts · pyplots.ai" in light gray at
-    the top, with a subtitle "Season Shot Chart — 370 Attempts". Shot markers use
-    blue (#4A90D9) for made shots and orange (#E8833A) for missed shots, with circles
-    for 2-pointers, diamonds for 3-pointers, and squares for free throws. Made shots
-    are solid-filled and slightly larger; missed shots are semi-transparent with white
-    outlines. A vertical legend in the top-right corner (with dark semi-transparent
-    background) lists all six series. Shots are distributed realistically: dense in
-    the paint, spread across mid-range, clustered along the three-point arc, corner
-    threes on both sides, and free throws clustered at the free-throw line. The chart
-    uses a 1:1 square aspect ratio (3600x3600).'
+  - BASELINE text at 0.3 opacity is barely visible
+  - Spec requires green/red for made/missed but implementation uses blue/orange
+  - No zone annotations or shooting percentage labels to enhance data storytelling
+  image_description: |-
+    The plot displays a basketball half-court shot chart on a dark navy background (#1a1a2e) with a slightly lighter plot area (#2a2a3e). The court is drawn in white/light gray lines at varying opacities: the outer court outline is prominent, the three-point arc and corner straight lines are bold (0.75 opacity), while the paint/key rectangle, free-throw circle (top half solid, bottom half dashed), and restricted area arc are more subtle (0.55 opacity). The basket is rendered as an orange circle at the origin with a white backboard line above it. "BASELINE" appears in faint italic text below the court.
+
+    Shot markers use blue (#4A90D9) for made shots and orange (#E8833A) for missed shots. Made shots are solid-filled with a thin white border; missed shots are semi-transparent with a thicker white border. Marker shapes differentiate shot types: circles for 2-pointers, diamonds for 3-pointers, squares for free throws. Shots cluster realistically in the paint area, along the mid-range, around the three-point arc, in both corners, and tightly at the free-throw line. The title reads "scatter-shot-chart · highcharts · pyplots.ai" with a subtitle "Season Shot Chart — 370 Attempts". A vertical legend in the top-right lists all six series with appropriate symbols. The chart uses a square 1:1 aspect ratio (3600x3600).
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 26
       max: 30
       items:
       - id: VQ-01
@@ -52,44 +40,43 @@ review:
         max: 8
         passed: true
         comment: All font sizes explicitly set (title 42px, subtitle 28px, legend
-          24px). Legend text could be slightly larger for 3600px canvas.
+          28px). BASELINE label at 0.3 opacity is quite faint.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text. Legend positioned outside court area with semi-transparent
-          background.
+        comment: No overlapping text. Legend positioned outside court area.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Markers well-sized (radius 8-11) for ~370 points. Made/missed differentiation
-          via fill opacity effective. Some overlap in dense areas.
+        comment: Markers radius 8-11 appropriate for ~370 points. Made/missed differentiated
+          by fill opacity. Minor overlap in dense paint area.
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Colorblind-safe blue/orange palette with redundant shape encoding
-          for shot types.
+        comment: Blue/orange palette is colorblind-safe with strong contrast against
+          dark background.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Square 1:1 ratio correct. Court fills most of plot area. Some unused
-          space above court outline.
+        comment: Court fills plot area well with 1:1 ratio. Some wasted margin space
+          around edges.
       - id: VQ-06
         name: Axis Labels & Title
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: Axes intentionally hidden per spec. Title and subtitle descriptive
-          with shot count context.
+        comment: Title is descriptive and correct format. Axis labels intentionally
+          hidden per spec.
     design_excellence:
-      score: 14
+      score: 15
       max: 20
       items:
       - id: DE-01
@@ -97,25 +84,24 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Dark theme is cohesive and professional. Custom blue/orange palette
-          with shape differentiation. Styled legend. Clearly above defaults.
+        comment: Dark theme evokes broadcast/analytics graphics. Blue/orange palette
+          is professional. Court lines at varying opacities create depth.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Grid and axes removed. Court lines in subtle semi-transparent white.
-          Dashed half-court and FT lines. Could push further with court line hierarchy.
+        comment: No grid or axis spines. Court lines at tasteful opacities. Dashed
+          FT circle bottom. Orange rim accent. Well-polished.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Visual hierarchy via solid/larger made vs semi-transparent/smaller
-          missed. Shape coding by shot type. Court overlay contextualizes spatial
-          patterns.
+        comment: Spatial clustering tells a story. Made/missed differentiation through
+          color, opacity, and shape creates visual hierarchy.
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -123,28 +109,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Scatter plot overlaid on half-court diagram. Correct chart type.
+        comment: Correct scatter plot overlaying basketball half-court diagram.
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: All court elements present. Made/missed color coding. Shot type differentiation.
-          Legend included.
+        comment: All court elements present. Uses blue/orange instead of spec-required
+          green/red.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y positions correctly mapped to court coordinates with accurate
-          NBA dimensions.
+        comment: X/Y correctly mapped to court positions. All zones populated.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format. Legend labels clearly show all six
-          series.
+        comment: Title format correct. Legend labels clearly identify all six series.
     data_quality:
       score: 15
       max: 15
@@ -154,24 +138,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows all shot types with made/missed. Different make percentages
-          by zone.
+        comment: Shows all shot types, all court zones, both outcomes with varying
+          make percentages.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Basketball shot chart is a real sports analytics scenario. Neutral
-          topic.
+        comment: Basketball shot chart with correct NBA court dimensions. Neutral
+          sports topic.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 370 attempts realistic. Make percentages realistic by zone. Court
-          dimensions accurate.
+        comment: NBA court dimensions correct. 370 attempts realistic for a season
+          sample.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -179,35 +163,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, chart config, series, court JS, HTML,
-          screenshot.'
+        comment: Linear flow. No functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set at the top.
+        comment: np.random.seed(42) set at start.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used.
+        comment: All imports used.
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'Redundant conditional: lineColor is #ffffff in both branches of
-          is_made check.'
+        passed: true
+        comment: Compact zone definition table. DRY series loop. CDN fallback.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html. Current API.
+        comment: Saves as plot.png via Selenium screenshot. Current API.
     library_mastery:
-      score: 9
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -215,15 +197,15 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Proper use of Chart, HighchartsOptions, ScatterSeries. Uses to_js_literal()
-          and CDN fallback pattern.
+        comment: Proper use of Chart, HighchartsOptions, ScatterSeries, add_series(),
+          to_js_literal(). Renderer API is advanced.
       - id: LM-02
         name: Distinctive Features
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Excellent use of Highcharts renderer API for custom court drawing
-          via chart load event monkey-patching.
+        comment: Highcharts renderer API for custom court drawing is distinctive.
+          Chart events.load callback pattern is Highcharts-specific.
   verdict: REJECTED
 impl_tags:
   dependencies:
