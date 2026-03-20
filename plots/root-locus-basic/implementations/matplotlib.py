@@ -1,9 +1,11 @@
-""" pyplots.ai
+"""pyplots.ai
 root-locus-basic: Root Locus Plot for Control Systems
 Library: matplotlib 3.10.8 | Python 3.14.3
 Quality: 86/100 | Created: 2026-03-20
 """
 
+import matplotlib.patches as mpatches
+import matplotlib.patheffects as pe
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -80,14 +82,17 @@ for zeta in zeta_values:
     line_imag_pos = r * np.sin(np.pi - angle)
     ax.plot(line_real, line_imag_pos, "--", color="#CCCCCC", linewidth=0.8, alpha=0.6)
     ax.plot(line_real, -line_imag_pos, "--", color="#CCCCCC", linewidth=0.8, alpha=0.6)
-    label_r = 4.5
+    label_r = 3.8 if zeta >= 0.8 else 4.5
+    lx = -label_r * np.cos(np.pi - angle) - 0.1
+    ly = label_r * np.sin(np.pi - angle) + 0.15
     ax.text(
-        -label_r * np.cos(np.pi - angle) - 0.1,
-        label_r * np.sin(np.pi - angle) + 0.15,
+        lx,
+        ly,
         f"ζ={zeta}",
-        fontsize=11,
-        color="#999999",
-        alpha=0.7,
+        fontsize=14,
+        color="#888888",
+        alpha=0.8,
+        path_effects=[pe.withStroke(linewidth=3, foreground="white")],
     )
 
 # Constant natural frequency circles (light grid)
@@ -97,7 +102,7 @@ for wn in wn_values:
     ax.plot(wn * np.cos(circle_theta), wn * np.sin(circle_theta), "--", color="#CCCCCC", linewidth=0.8, alpha=0.4)
 
 # Branch colors
-branch_colors = ["#306998", "#E8553A", "#2CA02C", "#9467BD"]
+branch_colors = ["#306998", "#E8553A", "#17BECF", "#9467BD"]
 
 # Draw locus branches
 for branch in range(n_poles):
@@ -105,7 +110,7 @@ for branch in range(n_poles):
     imag = locus[:, branch].imag
     ax.plot(real, imag, color=branch_colors[branch % len(branch_colors)], linewidth=2.5, alpha=0.85, zorder=3)
 
-# Add arrows indicating direction of increasing gain
+# Add arrows indicating direction of increasing gain using FancyArrowPatch
 for branch in range(n_poles):
     n_pts = len(gains)
     idx = n_pts // 3
@@ -116,18 +121,17 @@ for branch in range(n_poles):
         dy = p2.imag - p1.imag
         length = np.sqrt(dx**2 + dy**2)
         if length > 0.005:
-            ax.annotate(
-                "",
-                xy=(p2.real, p2.imag),
-                xytext=(p1.real, p1.imag),
-                arrowprops={
-                    "arrowstyle": "-|>",
-                    "color": branch_colors[branch % len(branch_colors)],
-                    "lw": 2,
-                    "mutation_scale": 18,
-                },
+            arrow = mpatches.FancyArrowPatch(
+                (p1.real, p1.imag),
+                (p2.real, p2.imag),
+                arrowstyle="-|>",
+                color=branch_colors[branch % len(branch_colors)],
+                linewidth=2,
+                mutation_scale=20,
                 zorder=4,
+                path_effects=[pe.withStroke(linewidth=4, foreground="white", alpha=0.5)],
             )
+            ax.add_patch(arrow)
 
 # Mark open-loop poles (x markers)
 ax.scatter(
@@ -154,9 +158,20 @@ ax.scatter(
     label="Open-loop zeros",
 )
 
-# Mark imaginary axis crossings
+# Mark imaginary axis crossings with labels
 for cp in crossings:
-    ax.scatter(cp.real, cp.imag, marker="D", s=180, color="#E8553A", edgecolors="white", linewidths=1.5, zorder=6)
+    ax.scatter(cp.real, cp.imag, marker="D", s=200, color="#E8553A", edgecolors="white", linewidths=1.5, zorder=6)
+    ax.annotate(
+        f"jω≈{cp.imag:+.1f}",
+        xy=(cp.real, cp.imag),
+        xytext=(12, 8),
+        textcoords="offset points",
+        fontsize=13,
+        color="#C0392B",
+        fontweight="bold",
+        path_effects=[pe.withStroke(linewidth=3, foreground="white")],
+        zorder=7,
+    )
 
 # Real axis segments (to the left of odd number of real poles+zeros)
 real_points = np.sort(np.concatenate([open_loop_poles.real, open_loop_zeros.real]))
@@ -192,7 +207,7 @@ ax.set_title("root-locus-basic · matplotlib · pyplots.ai", fontsize=24, fontwe
 ax.tick_params(axis="both", labelsize=16)
 ax.legend(fontsize=16, loc="upper left")
 ax.set_aspect("equal")
-ax.set_xlim(-7, 2)
+ax.set_xlim(-7, 2.5)
 ax.set_ylim(-5, 5)
 ax.spines["top"].set_visible(False)
 ax.spines["right"].set_visible(False)
