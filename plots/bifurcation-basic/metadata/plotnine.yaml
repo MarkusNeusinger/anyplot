@@ -1,0 +1,228 @@
+library: plotnine
+specification_id: bifurcation-basic
+created: '2026-03-20T20:29:07Z'
+updated: '2026-03-20T20:52:59Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23361206530
+issue: 4415
+python_version: 3.14.3
+library_version: 0.15.3
+preview_url: https://storage.googleapis.com/pyplots-images/plots/bifurcation-basic/plotnine/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/bifurcation-basic/plotnine/plot_thumb.png
+preview_html: null
+quality_score: 93
+review:
+  strengths:
+  - Excellent use of geom_bin2d for density-based bifurcation rendering — a creative
+    and idiomatic plotnine approach
+  - Strong dark-theme design with cohesive blue-gold color palette and red annotation
+    accents
+  - Clear data storytelling with annotations guiding the viewer through the period-doubling
+    cascade
+  - Full spec compliance with all required features implemented
+  - Clean, deterministic code with appropriate complexity
+  weaknesses:
+  - Chaotic region (r > 3.57) is somewhat faint — windows of periodicity within chaos
+    are hard to discern due to bin2d density spread
+  image_description: The plot displays a bifurcation diagram of the logistic map on
+    a dark (#0d1117) panel background. The x-axis shows "Growth Rate (r)" ranging
+    from 2.50 to 4.00, and the y-axis shows "Steady-State Population (x)" from 0.0
+    to 1.0. The title reads "bifurcation-basic · plotnine · pyplots.ai" in bold dark
+    text. The bifurcation structure is rendered using a 2D histogram (geom_bin2d)
+    with a custom gradient from dark blue through medium blue to gold/yellow, creating
+    a density-based visualization. A stable fixed-point line is visible as a bright
+    gold curve from r=2.5 to r≈3.0, where it splits into two branches (period-2).
+    Further period-doubling is visible at r≈3.449 (period-4) and r≈3.544 (period-8),
+    leading into a chaotic regime rendered in lighter blue/gray tones. Three red dashed
+    vertical lines mark the bifurcation points, with red bold text annotations ("Period-2
+    r ≈ 3.0", "Period-4 r ≈ 3.449", "Period-8 r ≈ 3.544"). Two white-background label
+    annotations read "Stable Fixed Point" (left, blue text) and "Chaos" (right, gold
+    text). The outer plot background is light gray (#fafafa), and grid lines on the
+    dark panel are very subtle dark blue.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 24pt, axis titles 20pt, tick
+          text 16pt'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: All annotations well-positioned with no collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Bifurcation structure clearly visible; chaotic region somewhat faint
+          due to density spread
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue-gold gradient is colorblind-safe with good contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 16:9 layout with plot filling canvas well, balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive labels with variable notation: Growth Rate (r), Steady-State
+          Population (x)'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Strong dark theme with custom blue-gold gradient and red accents,
+          clearly above defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Dark panel with subtle grid, minor grid removed, deliberate light/dark
+          contrast
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Annotations guide viewer through period-doubling cascade, color gradient
+          emphasizes density
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct bifurcation diagram
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: density visualization, period-doubling
+          cascade, labeled bifurcation points'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=parameter (r), Y=state (x), axes show full range
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct, legend appropriately hidden for density plot
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Complete route from stable fixed point through period-doubling to
+          chaos
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Canonical logistic map example, neutral scientific context
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Standard ranges r=2.5-4.0, x=0-1 with 300K data points
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean linear flow: imports, data, plot, save'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic logistic map with fixed x0=0.5
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used, organized block
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no over-engineering
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with dpi=300, current API
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good grammar-of-graphics chaining with ggplot + aes + geom + scale
+          + labs + theme
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: geom_bin2d for 2D histogram, scale_fill_gradientn with custom breakpoints,
+          annotate with label type
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - dark-theme
+  - custom-colormap
+  - grid-styling
