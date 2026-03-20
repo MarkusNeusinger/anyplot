@@ -1,7 +1,7 @@
 library: bokeh
 specification_id: scatter-pitch-events
 created: '2026-03-20T12:32:46Z'
-updated: '2026-03-20T12:51:27Z'
+updated: '2026-03-20T12:58:47Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23342848863
 issue: 4417
@@ -10,39 +10,39 @@ library_version: 3.9.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/scatter-pitch-events/bokeh/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/scatter-pitch-events/bokeh/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/scatter-pitch-events/bokeh/plot.html
-quality_score: 83
+quality_score: 91
 review:
   strengths:
-  - Complete spec compliance with all pitch markings, event types, markers, arrows,
-    and outcome encoding
-  - 'Clean visual refinement: grid removed, axis lines hidden, tick marks eliminated
-    for professional look'
-  - Zone shading for attacking/defensive thirds adds tactical context beyond spec
-    requirements
-  - Realistic data generation with domain-appropriate distributions and probabilities
-  - Dual output (PNG + HTML) leverages Bokeh web-native strengths
+  - Excellent pitch rendering with all FIFA standard markings including corner arcs,
+    penalty arcs, and goal posts
+  - Strong data storytelling through danger zone gradient, shot annotation, and visual
+    hierarchy with shots as focal points
+  - Mow-pattern stripes add professional texture without distraction
+  - Dual PNG + HTML output leverages Bokeh interactive capabilities
+  - Colorblind-safe palette with shape redundancy ensures accessibility
+  - Realistic data proportions and spatial distributions for soccer events
   weaknesses:
-  - Blue and teal markers could be closer in hue than ideal for some colorblind viewers
-  - Arrow congestion in attacking third reduces clarity where shots cluster
-  - Data storytelling lacks a clear focal point — no single insight stands out
-  - Row-by-row arrow loop is verbose due to Bokeh API limitations
-  image_description: 'The plot displays a soccer pitch event map rendered on a correctly
-    proportioned 105m x 68m pitch diagram with a light green background. Standard
-    pitch markings are present: penalty areas, goal areas, center circle with center
-    spot, halfway line, penalty arcs, corner arcs, and goal posts (rendered as dark
-    gray bars). Subtle zone shading distinguishes the defensive third (blue tint)
-    and attacking third (red tint). Four event types are plotted with distinct markers
-    and colors: blue circles for passes, red stars for shots, teal triangles for tackles,
-    and orange diamonds for interceptions. Successful events appear as filled markers
-    while unsuccessful ones are hollow with colored outlines. Blue directional arrows
-    show pass trajectories across the pitch, and red arrows show shot trajectories
-    toward the right goal. The legend at the bottom center displays all 8 categories
-    (4 event types x 2 outcomes) in a horizontal layout across 2 rows. Axis labels
-    read "Pitch Length (m)" and "Pitch Width (m)" with tick values matching FIFA dimensions.
-    The title "scatter-pitch-events · bokeh · pyplots.ai" appears at the top left.'
+  - Unsuccessful event markers (white fill, low alpha) can be slightly hard to distinguish
+    on light green pitch
+  - Legend with 8 items across 2 rows is somewhat dense
+  image_description: 'The plot displays a soccer pitch event map on a light green
+    background with subtle alternating mow-pattern stripes. Standard FIFA pitch markings
+    are drawn in dark green: pitch outline, halfway line, center circle with center
+    spot, both penalty areas, goal areas, penalty spots, penalty arcs, corner arcs,
+    and gray goal posts at each end. A translucent red danger zone gradient highlights
+    the attacking third (right side). Four event types are plotted with distinct markers
+    and colors: blue circles for passes, red/pink stars for shots, gold triangles
+    for tackles, and purple diamonds for interceptions. Successful events appear filled
+    with high opacity; unsuccessful ones are hollow/white-filled with lower opacity.
+    Directional arrows connect start-to-end positions for passes (blue) and shots
+    (red), with shot arrows being thicker. A bold red annotation "16 shots · 3 on
+    target" appears in the top-right corner. The horizontal legend at the bottom lists
+    all 8 event type/outcome combinations. Title reads "scatter-pitch-events · bokeh
+    · pyplots.ai". Axes are labeled "Pitch Length (m)" and "Pitch Width (m)" with
+    clean gray text on a #FAFAFA background.'
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -50,67 +50,67 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (60pt title, 40pt axis labels, 30pt
-          ticks, 24pt legend). All text clearly readable.
+        comment: All font sizes explicitly set (title 52pt, axis labels 36pt, ticks
+          26pt, legend 22pt). Annotation text slightly small relative to plot scale.
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Legend below pitch avoids data overlap. Some arrow congestion in
-          attacking third from shot convergence.
+        comment: Legend with 8 items slightly dense. Some arrow lines cross markers.
+          All text readable.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Markers well-sized (20-28px) for 120 points. Hollow unsuccessful
-          markers slightly less prominent but distinguishable.
+        comment: Markers well-sized for 120 events. Unsuccessful markers occasionally
+          hard to distinguish on light green pitch.
       - id: VQ-04
         name: Color Accessibility
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Blue, red, teal, orange generally distinguishable. Blue and teal
-          could challenge tritanopia viewers.
+        comment: Blue, red, gold, purple palette with shape redundancy. Colorblind-safe.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Pitch fills canvas well with match_aspect. Bottom margin for legend
-          creates some unused vertical space.
+        comment: Pitch fills canvas well with balanced margins. Aspect ratio correctly
+          maintained.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: Pitch Length (m), Pitch Width (m).'
+        comment: 'Descriptive labels with units: Pitch Length (m) and Pitch Width
+          (m).'
     design_excellence:
-      score: 13
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Custom palette, zone shading for thirds, filled/hollow encoding,
-          detailed goal posts. Above defaults but not publication-grade.
+        comment: 'Strong design: custom palette, mow-pattern stripes, danger zone
+          gradient, removed axis lines/ticks/grid. Clearly above defaults.'
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: Grid removed, axis lines removed, tick marks removed, outline removed,
-          clean white border.
+        comment: Grid removed, axis lines removed, tick marks removed, clean background,
+          generous whitespace, subtle stripes.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
         passed: true
-        comment: Zone shading provides tactical context, spatial distributions meaningful.
-          No strong focal point or narrative emphasis.
+        comment: Danger zone gradient, shot annotation, shots as focal points. Visual
+          hierarchy guides viewer to key action area.
     spec_compliance:
       score: 15
       max: 15
@@ -120,56 +120,54 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Scatter plot on accurately scaled pitch diagram with all standard
-          markings.
+        comment: Correct scatter plot on accurately scaled pitch diagram.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: pitch markings, distinct markers/colors,
+        comment: 'All required features present: pitch markings, distinct markers/colors,
           outcome encoding, directional arrows, green background, correct aspect ratio.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = pitch length (0-105m), Y = pitch width (0-68m). All data visible
-          within pitch bounds.
+        comment: X = pitch length (0-105m), Y = pitch width (0-68m). All data visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format. Legend labels identify all 8 event type x outcome
+        comment: Correct title format. Legend labels show all 8 event type/outcome
           combinations.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: All 4 event types with both outcomes. Realistic spatial distributions.
-          Could have more variation in pass distances.
+        comment: All 4 event types with both outcomes. Good variation in positions
+          and trajectories.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Soccer match events with real-world plausible probabilities. Neutral
-          sporting context.
+        comment: Realistic soccer match data with plausible proportions and success
+          rates.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 120 events on FIFA-standard 105x68m pitch. All values within realistic
-          ranges.
+        comment: FIFA standard pitch dimensions. Events in realistic zones. 120 events
+          appropriate for match segment.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -177,8 +175,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data generation, pitch drawing, event plotting,
-          styling, save.'
+        comment: 'Linear flow: imports, data, pitch, events, styling, save. No functions/classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -193,20 +190,18 @@ review:
         comment: All imports used.
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Nested loops for arrow rendering are verbose but necessary for Bokeh
-          Arrow API.
+        passed: true
+        comment: Clean, well-structured with appropriate complexity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png via export_png and plot.html via save. Current
-          API.
+        comment: Saves as plot.png and plot.html. Current Bokeh API.
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -214,19 +209,20 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses ColumnDataSource, figure with Range1d, Arrow with NormalHead.
-          Good Bokeh patterns.
+        comment: Good use of ColumnDataSource, figure, scatter, Arrow layout, Label
+          layout. Idiomatic Bokeh patterns.
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Arrow/NormalHead annotations, HTML export with CDN, match_aspect
-          are Bokeh-specific features.
-  verdict: REJECTED
+        comment: Arrow with NormalHead, click_policy hide, dual PNG+HTML output. Distinctive
+          Bokeh capabilities.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
   - custom-legend
   - html-export
   patterns:
