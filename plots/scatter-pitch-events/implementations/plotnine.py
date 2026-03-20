@@ -1,7 +1,6 @@
-""" pyplots.ai
+"""pyplots.ai
 scatter-pitch-events: Soccer Pitch Event Map
 Library: plotnine 0.15.3 | Python 3.14.3
-Quality: 84/100 | Created: 2026-03-20
 """
 
 import numpy as np
@@ -18,6 +17,8 @@ from plotnine import (
     geom_point,
     geom_segment,
     ggplot,
+    guide_legend,
+    guides,
     labs,
     scale_alpha_manual,
     scale_color_manual,
@@ -34,39 +35,27 @@ np.random.seed(42)
 n_events = 120
 event_types = np.random.choice(["Pass", "Shot", "Tackle", "Interception"], size=n_events, p=[0.50, 0.15, 0.20, 0.15])
 
-x_positions = np.zeros(n_events)
-y_positions = np.zeros(n_events)
-outcomes = []
-x_end = np.zeros(n_events)
-y_end = np.zeros(n_events)
+# Vectorized position generation with event-specific distributions
+x_ranges = {"Pass": (10, 95), "Shot": (65, 100), "Tackle": (15, 80), "Interception": (20, 75)}
+y_ranges = {"Pass": (5, 63), "Shot": (15, 53), "Tackle": (5, 63), "Interception": (5, 63)}
+success_p = {"Pass": 0.75, "Shot": 0.30, "Tackle": 0.65, "Interception": 0.70}
 
+x_positions = np.array([np.random.uniform(*x_ranges[e]) for e in event_types])
+y_positions = np.array([np.random.uniform(*y_ranges[e]) for e in event_types])
+outcomes = [np.random.choice(["Successful", "Unsuccessful"], p=[success_p[e], 1 - success_p[e]]) for e in event_types]
+
+# Arrow endpoints: passes forward-biased, shots toward goal, others stay in place
+x_end = x_positions.copy()
+y_end = y_positions.copy()
 for i, evt in enumerate(event_types):
     if evt == "Pass":
-        x_positions[i] = np.random.uniform(10, 95)
-        y_positions[i] = np.random.uniform(5, 63)
-        dx = np.random.uniform(5, 25) * np.random.choice([-1, 1], p=[0.15, 0.85])
-        dy = np.random.uniform(-15, 15)
+        dx = np.random.uniform(5, 20) * np.random.choice([-1, 1], p=[0.15, 0.85])
+        dy = np.random.uniform(-12, 12)
         x_end[i] = np.clip(x_positions[i] + dx, 0, 105)
         y_end[i] = np.clip(y_positions[i] + dy, 0, 68)
-        outcomes.append(np.random.choice(["Successful", "Unsuccessful"], p=[0.75, 0.25]))
     elif evt == "Shot":
-        x_positions[i] = np.random.uniform(65, 100)
-        y_positions[i] = np.random.uniform(15, 53)
         x_end[i] = 105
         y_end[i] = np.random.uniform(28, 40)
-        outcomes.append(np.random.choice(["Successful", "Unsuccessful"], p=[0.30, 0.70]))
-    elif evt == "Tackle":
-        x_positions[i] = np.random.uniform(15, 80)
-        y_positions[i] = np.random.uniform(5, 63)
-        x_end[i] = x_positions[i]
-        y_end[i] = y_positions[i]
-        outcomes.append(np.random.choice(["Successful", "Unsuccessful"], p=[0.65, 0.35]))
-    else:
-        x_positions[i] = np.random.uniform(20, 75)
-        y_positions[i] = np.random.uniform(5, 63)
-        x_end[i] = x_positions[i]
-        y_end[i] = y_positions[i]
-        outcomes.append(np.random.choice(["Successful", "Unsuccessful"], p=[0.70, 0.30]))
 
 df = pd.DataFrame(
     {
@@ -75,21 +64,22 @@ df = pd.DataFrame(
         "x_end": x_end,
         "y_end": y_end,
         "event_type": pd.Categorical(event_types, categories=["Pass", "Shot", "Tackle", "Interception"]),
-        "outcome": outcomes,
+        "outcome": pd.Categorical(outcomes, categories=["Successful", "Unsuccessful"]),
     }
 )
 
-# Split data for visual hierarchy: shots rendered larger as focal point
+# Separate layers for visual hierarchy
 df_shots = df[df["event_type"] == "Shot"].copy()
 df_other = df[df["event_type"] != "Shot"].copy()
-arrows_df = df[df["event_type"].isin(["Pass", "Shot"])].copy()
+df_pass_arrows = df[df["event_type"] == "Pass"].copy()
+df_shot_arrows = df[df["event_type"] == "Shot"].copy()
 
-# Pitch markings
-pitch_color = "#2d8c3c"
-line_color = "white"
-lw = 0.8
+# Pitch styling — deep green with cream white lines for a premium look
+pitch_color = "#1a6b30"
+line_color = "#ffffffcc"
+lw = 0.7
 
-# Center circle path
+# Center circle
 theta = np.linspace(0, 2 * np.pi, 100)
 center_circle = pd.DataFrame({"cx": 52.5 + 9.15 * np.cos(theta), "cy": 34 + 9.15 * np.sin(theta), "grp": 1})
 
@@ -137,21 +127,22 @@ corner_arcs = pd.concat(
 
 all_curves = pd.concat([center_circle, left_arc, right_arc, corner_arcs], ignore_index=True)
 
-# Event colors and shapes — colorblind-friendly (orange replaces teal for tackles)
-event_colors = {"Pass": "#306998", "Shot": "#e74c3c", "Tackle": "#e67e22", "Interception": "#9b59b6"}
+# Colorblind-safe palette: blue, red, orange, teal — all perceptually distinct
+event_colors = {"Pass": "#4a90d9", "Shot": "#d94452", "Tackle": "#e8913a", "Interception": "#17a589"}
 event_shapes = {"Pass": "o", "Shot": "*", "Tackle": "^", "Interception": "D"}
-
 # Plot
 plot = (
     ggplot(df, aes(x="x", y="y", color="event_type", shape="event_type", alpha="outcome"))
-    # Pitch background
-    + annotate("rect", xmin=-2, xmax=107, ymin=-2, ymax=70, fill=pitch_color, color=pitch_color)
+    # Pitch background — extended to fill canvas edges
+    + annotate("rect", xmin=-5, xmax=110, ymin=-5, ymax=73, fill=pitch_color, color=pitch_color)
+    # Subtle pitch grass stripe effect (lighter bands)
+    + annotate("rect", xmin=0, xmax=105, ymin=0, ymax=68, fill="#1e7535", alpha=0.3, color="none")
     # Pitch outline
     + annotate("rect", xmin=0, xmax=105, ymin=0, ymax=68, fill="none", color=line_color, size=lw)
     # Halfway line
     + annotate("segment", x=52.5, xend=52.5, y=0, yend=68, color=line_color, size=lw)
     # Center spot
-    + annotate("point", x=52.5, y=34, color=line_color, size=2, shape="o", fill=line_color)
+    + annotate("point", x=52.5, y=34, color=line_color, size=1.8, shape="o", fill=line_color)
     # Left penalty area
     + annotate("rect", xmin=0, xmax=16.5, ymin=13.84, ymax=54.16, fill="none", color=line_color, size=lw)
     # Right penalty area
@@ -161,51 +152,72 @@ plot = (
     # Right goal area
     + annotate("rect", xmin=99.5, xmax=105, ymin=24.84, ymax=43.16, fill="none", color=line_color, size=lw)
     # Penalty spots
-    + annotate("point", x=11, y=34, color=line_color, size=1.5, shape="o", fill=line_color)
-    + annotate("point", x=94, y=34, color=line_color, size=1.5, shape="o", fill=line_color)
+    + annotate("point", x=11, y=34, color=line_color, size=1.2, shape="o", fill=line_color)
+    + annotate("point", x=94, y=34, color=line_color, size=1.2, shape="o", fill=line_color)
     # Left goal
-    + annotate("segment", x=-2, xend=-2, y=30.34, yend=37.66, color=line_color, size=1.5)
-    + annotate("segment", x=-2, xend=0, y=30.34, yend=30.34, color=line_color, size=0.5)
-    + annotate("segment", x=-2, xend=0, y=37.66, yend=37.66, color=line_color, size=0.5)
+    + annotate("segment", x=-2, xend=-2, y=30.34, yend=37.66, color="#ffffff", size=1.5)
+    + annotate("segment", x=-2, xend=0, y=30.34, yend=30.34, color="#ffffff", size=0.5)
+    + annotate("segment", x=-2, xend=0, y=37.66, yend=37.66, color="#ffffff", size=0.5)
     # Right goal
-    + annotate("segment", x=107, xend=107, y=30.34, yend=37.66, color=line_color, size=1.5)
-    + annotate("segment", x=105, xend=107, y=30.34, yend=30.34, color=line_color, size=0.5)
-    + annotate("segment", x=105, xend=107, y=37.66, yend=37.66, color=line_color, size=0.5)
-    # Center circle, penalty arcs, and corner arcs
+    + annotate("segment", x=107, xend=107, y=30.34, yend=37.66, color="#ffffff", size=1.5)
+    + annotate("segment", x=105, xend=107, y=30.34, yend=30.34, color="#ffffff", size=0.5)
+    + annotate("segment", x=105, xend=107, y=37.66, yend=37.66, color="#ffffff", size=0.5)
+    # Curves: center circle, penalty arcs, corner arcs
     + geom_path(data=all_curves, mapping=aes(x="cx", y="cy", group="grp"), color=line_color, size=lw, inherit_aes=False)
-    # Directional arrows for passes and shots
+    # Pass arrows — thin and subtle to avoid midfield clutter
     + geom_segment(
-        data=arrows_df,
-        mapping=aes(x="x", y="y", xend="x_end", yend="y_end", color="event_type", alpha="outcome"),
-        size=0.8,
-        arrow=arrow(length=0.15, type="open"),
+        data=df_pass_arrows,
+        mapping=aes(x="x", y="y", xend="x_end", yend="y_end", alpha="outcome"),
+        color=event_colors["Pass"],
+        size=0.4,
+        arrow=arrow(length=0.10, type="open"),
         inherit_aes=False,
     )
-    # Non-shot markers (standard size)
-    + geom_point(data=df_other, size=4.5, stroke=0.5)
-    # Shot markers (larger for visual emphasis)
-    + geom_point(data=df_shots, size=7, stroke=0.5)
+    # Shot arrows — bolder to emphasize attacking intent
+    + geom_segment(
+        data=df_shot_arrows,
+        mapping=aes(x="x", y="y", xend="x_end", yend="y_end", alpha="outcome"),
+        color=event_colors["Shot"],
+        size=0.9,
+        arrow=arrow(length=0.18, type="open"),
+        inherit_aes=False,
+    )
+    # Non-shot markers
+    + geom_point(data=df_other, size=4.5, stroke=0.4)
+    # Shot markers — larger for focal emphasis
+    + geom_point(data=df_shots, size=8, stroke=0.4)
+    # Scales
     + scale_color_manual(values=event_colors, name="Event Type")
     + scale_shape_manual(values=event_shapes, name="Event Type")
-    + scale_alpha_manual(values={"Successful": 0.9, "Unsuccessful": 0.5}, name="Outcome")
-    + scale_x_continuous(limits=(-4, 109), breaks=[])
-    + scale_y_continuous(limits=(-4, 72), breaks=[])
+    + scale_alpha_manual(values={"Successful": 0.92, "Unsuccessful": 0.40}, name="Outcome")
+    + scale_x_continuous(limits=(-5, 110), breaks=[])
+    + scale_y_continuous(limits=(-5, 73), breaks=[])
     + coord_fixed(ratio=1)
-    + labs(title="scatter-pitch-events · plotnine · pyplots.ai")
+    + labs(
+        title="scatter-pitch-events · plotnine · pyplots.ai",
+        subtitle="Match events: 120 actions across passes, shots, tackles & interceptions",
+    )
+    + guides(
+        color=guide_legend(override_aes={"size": 5}),
+        alpha=guide_legend(override_aes={"size": 5, "alpha": [0.92, 0.40]}),
+    )
     + theme(
         figure_size=(16, 9),
-        plot_title=element_text(size=24, weight="bold", color="#1a1a1a"),
+        plot_title=element_text(size=24, weight="bold", color="#1a1a1a", margin={"b": 4}),
+        plot_subtitle=element_text(size=16, color="#555555", style="italic", margin={"b": 12}),
         panel_background=element_rect(fill=pitch_color, color="none"),
-        plot_background=element_rect(fill="#f0f0f0", color="none"),
+        plot_background=element_rect(fill="#f5f5f0", color="none"),
         panel_grid_major=element_blank(),
         panel_grid_minor=element_blank(),
         axis_title=element_blank(),
         axis_text=element_blank(),
         axis_ticks=element_blank(),
-        legend_title=element_text(size=16, weight="bold"),
-        legend_text=element_text(size=14),
+        legend_title=element_text(size=16, weight="bold", color="#2a2a2a"),
+        legend_text=element_text(size=14, color="#3a3a3a"),
         legend_position="right",
-        legend_background=element_rect(fill="#f0f0f0", color="none"),
+        legend_background=element_rect(fill="#f5f5f0", color="none"),
+        legend_key=element_rect(fill="#f5f5f0", color="none"),
+        plot_margin=0.02,
     )
 )
 
