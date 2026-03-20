@@ -1,0 +1,234 @@
+library: plotnine
+specification_id: nyquist-basic
+created: '2026-03-20T22:47:50Z'
+updated: '2026-03-20T23:27:17Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23365453541
+issue: 4412
+python_version: 3.14.3
+library_version: 0.15.3
+preview_url: https://storage.googleapis.com/pyplots-images/plots/nyquist-basic/plotnine/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/nyquist-basic/plotnine/plot_thumb.png
+preview_html: null
+quality_score: 90
+review:
+  strengths:
+  - Comprehensive Nyquist plot with both positive and negative frequency curves, gain/phase
+    margins computed and annotated
+  - Professional color scheme with purposeful visual hierarchy (red critical point,
+    purple/orange crossovers)
+  - Stability region shading and unit circle provide immediate visual context
+  - Clean, deterministic code with realistic control systems transfer function
+  - All spec requirements met with thoughtful frequency annotations and direction
+    arrows
+  weaknesses:
+  - Minor crowding near origin where omega=3 label and phase crossover marker are
+    close together
+  - Frequency label loop breaks pure grammar-of-graphics idiom (minor)
+  image_description: 'The plot displays a Nyquist diagram on the complex plane with
+    "Real Axis [dimensionless]" on the x-axis and "Imaginary Axis [dimensionless]"
+    on the y-axis. The title reads "nyquist-basic · plotnine · pyplots.ai" in bold
+    at the top. Two curves are shown: a solid dark blue line for positive frequencies
+    (ω > 0) that spirals from the upper-right (~5, -0.8 at low ω) counterclockwise
+    through the lower half-plane and converges toward the origin, and a dashed lighter
+    blue line for negative frequencies (ω < 0) that mirrors it above the real axis.
+    A dashed gray unit circle is centered at the origin with a subtle shaded stability
+    region fill inside. The critical point (-1, 0) is marked with a bold red "X" and
+    labeled in red. A purple circle marks the gain crossover point with annotation
+    "ω = 2.5 rad/s · PM = 33°" in the lower-left. An orange square marks the phase
+    crossover point with annotation "ω = 4.1 rad/s · GM = 7.8 dB" in the upper-left.
+    Five blue dots along the positive-frequency curve are labeled with frequency values
+    (ω = 0.1, 0.3, 0.7, 1.5, 3). Dark arrows indicate the direction of increasing
+    frequency on both curves. A legend at the bottom distinguishes positive and negative
+    frequency curves. The aspect ratio is 1:1.'
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 24pt, axis titles 20pt, tick
+          labels 16pt, legend 14/12pt. Annotations use size=12 with bold weight.'
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Most labels well-separated. Minor crowding near origin where omega=3,
+          phase crossover marker, and curve convergence cluster.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Lines perfectly adapted: solid 1.5pt primary, dashed 1.0pt secondary.
+          Markers distinctly sized and shaped.'
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Colorblind-safe palette: dark blue, light blue, red, purple, orange.'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: 1:1 aspect ratio correct, balanced margins. Slight asymmetry in x
+          vs y range leaves some unused vertical space.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive with units: Real Axis [dimensionless], Imaginary Axis
+          [dimensionless].'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Cohesive color scheme anchored on Python blue with purposeful accent
+          colors. Stability region shading adds depth.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: theme_minimal removes spines, subtle grid, minor grid removed, custom
+          panel background.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Clear visual hierarchy: red critical point, color-coded crossovers
+          with computed margins, direction arrows, stability region shading.'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Nyquist plot on complex plane.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: critical point, unit circle, frequency
+          annotations, direction arrows, 1:1 aspect ratio, axis labels.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Real and imaginary parts correctly mapped. All data visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title follows required format. Legend clearly labels positive and
+          negative frequency curves.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Both frequency curves, gain/phase crossovers with computed margins,
+          multiple frequency annotations.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Realistic third-order transfer function with stable poles. Meaningful
+          gain and phase margins.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Standard frequency range with logarithmic spacing. Realistic response
+          magnitudes.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports, data, plot, save. No functions or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic analytical transfer function evaluation.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used in implementation.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-organized. Loops for annotations are appropriate.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with dpi=300, current plotnine API.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Good grammar of graphics usage: layered geoms, aesthetic mappings,
+          unified legend via scale_*_manual, coord_fixed.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Unified legend through mapped aesthetics, geom_ribbon for stability
+          region, coord_fixed are ggplot-specific patterns.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  - custom-legend
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling
