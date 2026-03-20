@@ -1,7 +1,7 @@
 library: plotly
 specification_id: line-parametric
 created: '2026-03-20T10:37:12Z'
-updated: '2026-03-20T10:40:30Z'
+updated: '2026-03-20T10:48:16Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23339035336
 issue: 4424
@@ -10,36 +10,35 @@ library_version: 6.6.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/line-parametric/plotly/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/line-parametric/plotly/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/line-parametric/plotly/plot.html
-quality_score: 80
+quality_score: 85
 review:
   strengths:
-  - Full spec compliance with all required features (equal aspect ratio, color gradient,
-    two curves, start/end markers)
-  - Excellent code quality with clean, deterministic, well-structured code
-  - 'Good design choices: custom blue-to-coral gradient, subtle grid hierarchy, clean
-    white template'
-  - Color gradient effectively communicates traversal direction
+  - Full spec compliance with both required curve types and all visual features (color
+    gradient, start/end markers, equal aspect)
+  - Custom colorscale with pi-notation colorbar ticks demonstrates attention to mathematical
+    detail
+  - Clean, well-structured code with deterministic data and proper output format
+  - Interactive features (hover tooltips with parameter values, HTML export) leverage
+    Plotly strengths
   weaknesses:
-  - Start/end marker labels overlap at origin (0,0) on the Lissajous curve
-  - 'Library mastery is low: 160 individual scatter traces instead of plotly native
-    colorscale'
-  - No hover information leveraging plotly interactivity
-  image_description: 'The plot displays two subplots side by side on a white background.
-    Left subplot: a Lissajous figure (x=sin(3t), y=sin(2t)) rendered as a continuous
-    curve with a color gradient transitioning from Python Blue (#306998) at t=0 to
-    coral/red (#E4573A) at t=2π. The curve self-intersects multiple times forming
-    the characteristic figure-eight-like pattern within [-1,1] bounds. Start point
-    marked with a blue circle and "t = 0" label, end point marked with a red square
-    and "t = 2π" label — both at the origin (0,0), causing label overlap. Right subplot:
-    an Archimedean spiral (x=t·cos(t), y=t·sin(t)) with the same color gradient from
-    t=0 to t=4π, expanding outward. Start marked with blue circle near origin, end
-    with red square at the rightmost extent. Both subplots have equal aspect ratio,
-    subtle gray gridlines, zero lines, and axis labels "x(t)" and "y(t)". Subplot
-    titles display the parametric equations. Main title reads "line-parametric · plotly
-    · pyplots.ai".'
+  - Start/end labels on Lissajous are crowded near origin since both points coincide
+  - Using mode=markers instead of lines creates thin gaps between points
+  - Design excellence could be elevated with stronger visual hierarchy between panels
+  - Right colorbar title slightly cramped against canvas edge
+  image_description: The plot displays two side-by-side parametric curves on a white
+    background. The main title reads "line-parametric · plotly · pyplots.ai" centered
+    at the top. The left panel shows a Lissajous figure (x = sin(3t), y = sin(2t))
+    — a classic self-intersecting closed curve with looping figure-eight-like shape.
+    The right panel shows an Archimedean Spiral (x = t·cos(t), y = t·sin(t)) expanding
+    outward from the origin. Both curves use a custom color gradient transitioning
+    from deep Python Blue (t=0) to coral/red (t=max), with vertical colorbars labeled
+    "Parameter t" showing π-based tick values. Start markers (blue circles) and end
+    markers (red/coral squares) are labeled on each curve. Axes are labeled "x(t)
+    — horizontal position" and "y(t) — vertical position" with subtle gray gridlines
+    and zero lines. Equal aspect ratios are maintained for both panels.
   criteria_checklist:
     visual_quality:
-      score: 24
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -47,40 +46,43 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 28, subplot titles 20, axis
-          labels 22, ticks 18, marker text 16'
+        comment: 'All font sizes explicitly set: title 28pt, axis labels 22pt, ticks
+          18pt, subplot titles 20pt, annotation text 16pt'
       - id: VQ-02
         name: No Overlap
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Start and end labels overlap at origin on Lissajous figure
+        passed: true
+        comment: Start/end labels on Lissajous crowded near origin where both points
+          coincide
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Line width 3.5 and markers size 14 with white outlines are visible
+        comment: Marker size 5 with 2000 points visible but mode=markers creates thin
+          gaps between points
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Blue-to-coral gradient is colorblind-safe with good contrast
+        comment: Custom blue-to-coral colorscale avoids red-green issues, good contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good two-subplot layout, minor asymmetric whitespace on spiral
+        comment: Good two-panel layout but right colorbar title slightly cramped against
+          edge
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Labels x(t) and y(t) are descriptive but lack units or physical context
+        passed: true
+        comment: Descriptive labels with horizontal/vertical position context
     design_excellence:
-      score: 13
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -88,20 +90,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom gradient, clean template, marker styling with white outlines
+        comment: Custom colorscale, plotly_white template, equation-annotated subtitles,
+          matched markers. Above defaults but not exceptional
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Subtle grid opacity hierarchy, styled zero lines, clean background
+        comment: Subtle grid at 0.08 opacity, zero lines at 0.15, pi-notation colorbar
+          ticks
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Color gradient communicates traversal direction, start/end markers
-          create narrative
+        comment: Color gradient conveys traversal direction, start/end markers guide
+          viewer, but no strong focal point
     spec_compliance:
       score: 15
       max: 15
@@ -111,49 +115,49 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct parametric curve plot with two curve types
+        comment: Correct parametric curve plot with two curves
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: equal aspect ratio, gradient, two curves,
-          markers, density'
+        comment: Equal aspect, color gradient, two curves, start/end markers, 2000
+          points
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x(t) and y(t) correctly computed and mapped
+        comment: X/Y correctly computed from parametric equations with scaleanchor
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title in correct format, no legend needed for this plot type
+        comment: Correct title format, colorbars serve as color reference
     data_quality:
       score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Self-intersecting closed curve and open expanding spiral show good
-          variety
+        comment: 'Two distinct curve types: Lissajous (closed, self-intersecting)
+          and spiral (open, expanding)'
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Real mathematical curves from physics and engineering
+        comment: Classic mathematical curves, plausible but inherently abstract
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Mathematically correct values
+        comment: Standard parameter ranges for the equations
     code_quality:
       score: 10
       max: 10
@@ -163,7 +167,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports-data-plot-save flow
+        comment: Clean Imports-Data-Plot-Save structure, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -175,47 +179,47 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: 'All imports used: numpy, go, make_subplots'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Segment loop is clean and appropriate
+        comment: Clean, well-organized code
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with correct 4800x2700 dimensions
+        comment: Saves plot.png with correct dimensions, also exports HTML
     library_mastery:
-      score: 4
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
-        passed: false
-        comment: 'Correct but verbose: 160 traces for color gradients instead of native
-          colorscale'
+        passed: true
+        comment: Good use of go.Scatter with marker colorscale, make_subplots, customdata,
+          scaleanchor
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 3
         max: 5
-        passed: false
-        comment: Does not leverage plotly-specific features like colorscales on lines
-          or hover data
+        passed: true
+        comment: Hover tooltips via hovertemplate, HTML export, interactive colorbars
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
+  - colorbar
   - subplots
   - annotations
-  - manual-ticks
+  - hover-tooltips
+  - html-export
   patterns:
   - data-generation
-  - iteration-over-groups
   dataprep: []
   styling:
   - custom-colormap
