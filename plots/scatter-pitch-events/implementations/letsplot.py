@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 scatter-pitch-events: Soccer Pitch Event Map
 Library: letsplot 4.9.0 | Python 3.14.3
 Quality: 86/100 | Created: 2026-03-20
@@ -56,8 +56,8 @@ for et in event_types:
         dy = np.random.uniform(-15, 15)
         xe, ye = np.clip(x + dx, 0, 105), np.clip(y + dy, 0, 68)
     elif et == "Shot":
-        x = np.random.uniform(60, 100)
-        y = np.random.uniform(15, 53)
+        x = np.random.uniform(55, 100)
+        y = np.random.uniform(10, 58)
         xe, ye = 105.0, np.random.uniform(28, 40)
     else:
         x = np.random.uniform(15, 85)
@@ -82,9 +82,10 @@ df = pd.DataFrame(
 )
 df["color"] = df["event_type"].map(color_map)
 df["shape"] = df["event_type"].map(shape_map)
-df["alpha"] = np.where(df["outcome"] == "Successful", 0.92, 0.3)
-df["fill"] = np.where(df["outcome"] == "Successful", df["color"], pitch_green)
-df["marker_size"] = np.where(df["event_type"] == "Shot", 7.0, 5.0)
+df["alpha"] = np.where(df["outcome"] == "Successful", 0.92, 0.55)
+df["fill"] = np.where(df["outcome"] == "Successful", df["color"], "rgba(0,0,0,0)")
+df["marker_size"] = np.where(df["event_type"] == "Shot", 8.0, 5.0)
+df["stroke_color"] = df["color"]
 
 # Directional events (passes and shots)
 df_arrows = df[df["event_type"].isin(["Pass", "Shot"])].copy()
@@ -143,8 +144,9 @@ df_outcome_text = pd.DataFrame(
     {"x": [32, 72], "y": [-15.5, -15.5], "label": ["\u25cf Filled = Successful", "\u25cb Hollow = Unsuccessful"]}
 )
 
-# Attacking third highlight zone (subtle overlay for storytelling)
+# Zone highlights for storytelling (attacking and defensive thirds)
 df_attack_zone = pd.DataFrame({"xmin": [70], "ymin": [0], "xmax": [105], "ymax": [68]})
+df_defend_zone = pd.DataFrame({"xmin": [0], "ymin": [0], "xmax": [35], "ymax": [68]})
 
 # Plot
 plot = (
@@ -156,11 +158,18 @@ plot = (
         fill=pitch_green,
         color=pitch_green,
     )
-    # Attacking third highlight
+    # Zone highlights
     + geom_rect(
         aes(xmin="xmin", ymin="ymin", xmax="xmax", ymax="ymax"),
         data=df_attack_zone,
         fill="#FFFFFF",
+        color="rgba(0,0,0,0)",
+        alpha=0.08,
+    )
+    + geom_rect(
+        aes(xmin="xmin", ymin="ymin", xmax="xmax", ymax="ymax"),
+        data=df_defend_zone,
+        fill="#000000",
         color="rgba(0,0,0,0)",
         alpha=0.06,
     )
@@ -199,26 +208,34 @@ plot = (
     + geom_point(
         aes(x="x", y="y"), data=pd.DataFrame({"x": [52.5, 11, 94], "y": [34, 34, 34]}), color="#FFFFFF", size=2
     )
-    # Directional arrows (thicker for visibility)
+    # Directional arrows
     + geom_segment(
         data=df_arrows,
         mapping=aes(x="x", y="y", xend="x_end", yend="y_end", color="color", alpha="alpha"),
-        size=1.0,
-        arrow=arrow(length=8, type="open"),
+        size=0.8,
+        arrow=arrow(length=7, type="open"),
     )
     # Event markers with size encoding (shots larger for focal emphasis)
     + geom_point(
         data=df,
         mapping=aes(x="x", y="y", color="color", fill="fill", shape="shape", alpha="alpha", size="marker_size"),
-        stroke=1.2,
+        stroke=1.5,
     )
-    # Zone annotation
+    # Zone annotations
     + geom_text(
         data=pd.DataFrame({"x": [87.5], "y": [65.5], "label": ["Attacking Third"]}),
         mapping=aes(x="x", y="y", label="label"),
-        size=9,
+        size=10,
         color="#FFFFFF",
-        alpha=0.5,
+        alpha=0.55,
+        fontface="italic",
+    )
+    + geom_text(
+        data=pd.DataFrame({"x": [17.5], "y": [65.5], "label": ["Defensive Third"]}),
+        mapping=aes(x="x", y="y", label="label"),
+        size=10,
+        color="#FFFFFF",
+        alpha=0.45,
         fontface="italic",
     )
     # Legend markers
@@ -227,10 +244,10 @@ plot = (
     )
     # Legend labels
     + geom_text(
-        data=df_legend_labels, mapping=aes(x="x", y="y", label="label"), size=13, color="#444444", fontface="bold"
+        data=df_legend_labels, mapping=aes(x="x", y="y", label="label"), size=15, color="#333333", fontface="bold"
     )
     # Outcome annotation
-    + geom_text(data=df_outcome_text, mapping=aes(x="x", y="y", label="label"), size=10, color="#666666")
+    + geom_text(data=df_outcome_text, mapping=aes(x="x", y="y", label="label"), size=12, color="#555555")
     + scale_color_identity()
     + scale_fill_identity()
     + scale_shape_identity()
@@ -240,10 +257,14 @@ plot = (
     + coord_fixed(ratio=1)
     + xlim(-5, 112)
     + ylim(-19, 76)
-    + labs(title="scatter-pitch-events \u00b7 letsplot \u00b7 pyplots.ai")
+    + labs(
+        title="scatter-pitch-events \u00b7 letsplot \u00b7 pyplots.ai",
+        subtitle="100 match events \u2014 passes, shots, tackles & interceptions with outcome encoding",
+    )
     + theme_void()
     + theme(
         plot_title=element_text(size=26, hjust=0.5, color="#222222", face="bold"),
+        plot_subtitle=element_text(size=16, hjust=0.5, color="#666666"),
         plot_background=element_rect(fill="#F5F5F0", color="#F5F5F0"),
         plot_margin=[40, 20, 20, 20],
     )
