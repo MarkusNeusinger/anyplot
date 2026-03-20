@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 bifurcation-basic: Bifurcation Diagram for Dynamical Systems
 Library: altair 6.0.0 | Python 3.14.3
 Quality: 84/100 | Created: 2026-03-20
@@ -28,19 +28,28 @@ for r in r_values:
 
 df = pd.DataFrame({"r": r_all, "x": x_all})
 
-# Key bifurcation points
+# Classify regions for conditional coloring
+df["region"] = np.where(df["r"] < 3.0, "Stable", np.where(df["r"] < 3.57, "Period-doubling", "Chaotic"))
+
+# Key bifurcation points — staggered y positions to avoid overlap
 bifurcation_points = pd.DataFrame(
     {
         "r": [3.0, 3.449, 3.544, 3.5699],
-        "label": ["r≈3.0 · Period 2", "r≈3.45 · Period 4", "r≈3.54 · Period 8", "r≈3.57 · Chaos"],
-        "y": [0.05, 0.05, 0.05, 0.05],
+        "label": ["Period 2 (r≈3.0)", "Period 4 (r≈3.45)", "Period 8 (r≈3.54)", "Chaos (r≈3.57)"],
+        "y": [0.92, 0.92, 0.85, 0.92],
     }
 )
 
-# Plot
+# Selection for interactive highlight on nearest point
+nearest = alt.selection_point(nearest=True, on="pointerover", fields=["r"], empty=False)
+
+# Color scale by dynamical regime
+region_color = alt.Scale(domain=["Stable", "Period-doubling", "Chaotic"], range=["#306998", "#5A9BD5", "#D94F4F"])
+
+# Base scatter layer
 points = (
     alt.Chart(df)
-    .mark_circle(size=1, opacity=0.15, color="#306998")
+    .mark_circle(size=1.5, opacity=0.18)
     .encode(
         x=alt.X(
             "r:Q",
@@ -51,53 +60,84 @@ points = (
         y=alt.Y(
             "x:Q",
             title="Steady-State Population (x)",
-            scale=alt.Scale(domain=[0, 1.02], nice=False),
+            scale=alt.Scale(domain=[0, 1.0], nice=False),
             axis=alt.Axis(tickCount=6, titleColor="#333333", labelColor="#555555", domain=False),
         ),
-        tooltip=[alt.Tooltip("r:Q", title="r", format=".4f"), alt.Tooltip("x:Q", title="x", format=".4f")],
+        color=alt.Color(
+            "region:N",
+            scale=region_color,
+            legend=alt.Legend(
+                title="Regime",
+                titleFontSize=16,
+                labelFontSize=14,
+                orient="top-right",
+                offset=-10,
+                fillColor="white",
+                strokeColor="#dddddd",
+                padding=8,
+                cornerRadius=4,
+            ),
+        ),
+        tooltip=[alt.Tooltip("r:Q", title="r", format=".4f"), alt.Tooltip("x:Q", title="x", format=".4f"), "region:N"],
     )
+)
+
+# Transparent voronoi layer for nearest-point selection
+voronoi = (
+    alt.Chart(df.sample(n=5000, random_state=42))
+    .mark_point(size=1, opacity=0)
+    .encode(x="r:Q", y="x:Q")
+    .add_params(nearest)
+)
+
+# Vertical crosshair following pointer
+crosshair = (
+    alt.Chart(df.sample(n=5000, random_state=42))
+    .mark_rule(color="#306998", strokeWidth=1.5, opacity=0.5)
+    .encode(x="r:Q")
+    .transform_filter(nearest)
 )
 
 # Bifurcation point markers
 rules = (
     alt.Chart(bifurcation_points)
-    .mark_rule(strokeDash=[6, 4], strokeWidth=1.2, opacity=0.4, color="#888888")
+    .mark_rule(strokeDash=[6, 4], strokeWidth=1.2, opacity=0.35, color="#888888")
     .encode(x="r:Q")
 )
 
 labels = (
     alt.Chart(bifurcation_points)
-    .mark_text(fontSize=13, fontWeight="bold", color="#555555", angle=270, align="left", dx=0, dy=-6)
+    .mark_text(fontSize=14, fontWeight="bold", color="#444444", angle=270, align="left", dx=0, dy=-8)
     .encode(x="r:Q", y="y:Q", text="label:N")
 )
 
 # Compose
 chart = (
-    (points + rules + labels)
+    (points + voronoi + crosshair + rules + labels)
     .properties(
         width=1600,
         height=900,
         title=alt.Title(
             "bifurcation-basic · altair · pyplots.ai",
             fontSize=28,
-            color="#222222",
+            fontWeight="bold",
+            color="#1a1a2e",
             subtitle="Logistic map period-doubling cascade from stability to chaos",
             subtitleFontSize=16,
-            subtitleColor="#777777",
-            subtitlePadding=6,
+            subtitleColor="#666666",
+            subtitlePadding=8,
         ),
     )
     .configure_axis(
         labelFontSize=18,
         titleFontSize=22,
-        titlePadding=12,
+        titlePadding=14,
         grid=True,
-        gridOpacity=0.15,
+        gridOpacity=0.12,
         gridColor="#cccccc",
         gridDash=[3, 3],
     )
     .configure_view(strokeWidth=0)
-    .interactive()
 )
 
 # Save
