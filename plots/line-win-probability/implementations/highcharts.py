@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 line-win-probability: Win Probability Chart
 Library: highcharts unknown | Python 3.14.3
 Quality: 83/100 | Created: 2026-03-20
@@ -52,9 +52,9 @@ win_prob[-1] = 100.0
 win_prob[-2] = 92.0
 win_prob[-3] = 88.0
 
-# Team colors
-home_color = "#004C54"  # Eagles midnight green
-away_color = "#E31837"  # Chiefs red
+# Team colors (colorblind-safe: dark blue vs orange)
+home_color = "#1B4F72"  # Eagles deep blue
+away_color = "#E67E22"  # Chiefs orange
 
 # Create chart
 chart = Chart(container="container")
@@ -63,24 +63,24 @@ chart.options = HighchartsOptions()
 chart.options.chart = {
     "width": 4800,
     "height": 2700,
-    "backgroundColor": "#ffffff",
+    "backgroundColor": "#FAFAFA",
     "marginTop": 200,
-    "marginBottom": 220,
+    "marginBottom": 280,
     "marginLeft": 280,
-    "marginRight": 120,
+    "marginRight": 260,
     "style": {"fontFamily": "'Segoe UI', Helvetica, Arial, sans-serif"},
 }
 
 chart.options.title = {
     "text": "line-win-probability \u00b7 highcharts \u00b7 pyplots.ai",
-    "style": {"fontSize": "64px", "fontWeight": "bold", "color": "#222222"},
+    "style": {"fontSize": "64px", "fontWeight": "bold", "color": "#1a1a2e", "letterSpacing": "1px"},
     "y": 50,
 }
 
 chart.options.subtitle = {
     "text": "Eagles 27 \u2013 Chiefs 20  \u2022  Simulated NFL Game Win Probability",
-    "style": {"fontSize": "40px", "color": "#555555"},
-    "y": 120,
+    "style": {"fontSize": "42px", "color": "#555555", "letterSpacing": "0.5px"},
+    "y": 125,
 }
 
 # X-axis with quarter markers
@@ -104,8 +104,8 @@ for q, play in [(1, 30), (2, 60), (3, 90)]:
     )
 
 chart.options.x_axis = {
-    "title": {"text": "Play Number", "style": {"fontSize": "44px", "color": "#333333"}, "margin": 30},
-    "labels": {"style": {"fontSize": "34px", "color": "#444444"}, "y": 50},
+    "title": {"text": "Play Number", "style": {"fontSize": "44px", "color": "#333333"}, "margin": 15},
+    "labels": {"style": {"fontSize": "34px", "color": "#444444"}, "y": 40},
     "min": 1,
     "max": n_plays,
     "tickInterval": 10,
@@ -146,13 +146,18 @@ chart.options.y_axis = {
 chart.options.legend = {
     "enabled": True,
     "layout": "horizontal",
-    "align": "center",
-    "verticalAlign": "bottom",
-    "itemStyle": {"fontSize": "36px", "fontWeight": "normal", "color": "#333333"},
+    "align": "left",
+    "verticalAlign": "top",
+    "x": 300,
+    "y": 160,
+    "floating": True,
+    "itemStyle": {"fontSize": "34px", "fontWeight": "normal", "color": "#333333"},
     "symbolWidth": 50,
     "symbolHeight": 18,
-    "itemDistance": 80,
-    "margin": 20,
+    "itemDistance": 60,
+    "backgroundColor": "rgba(250,250,250,0.85)",
+    "borderRadius": 6,
+    "padding": 16,
 }
 
 chart.options.tooltip = {"style": {"fontSize": "28px"}, "backgroundColor": "rgba(255,255,255,0.95)", "borderRadius": 8}
@@ -173,7 +178,7 @@ home_series = AreaSeries()
 home_series.data = prob_data
 home_series.name = "Eagles (Home)"
 home_series.color = home_color
-home_series.fill_color = "rgba(0, 76, 84, 0.35)"
+home_series.fill_color = "rgba(27, 79, 114, 0.35)"
 home_series.threshold = 50
 home_series.negative_color = "transparent"
 home_series.negative_fill_color = "transparent"
@@ -190,7 +195,7 @@ away_series.color = "transparent"
 away_series.fill_color = "transparent"
 away_series.threshold = 50
 away_series.negative_color = away_color
-away_series.negative_fill_color = "rgba(227, 24, 55, 0.35)"
+away_series.negative_fill_color = "rgba(230, 126, 34, 0.35)"
 away_series.line_width = 0
 away_series.show_in_legend = True
 away_series.enable_mouse_tracking = False
@@ -206,38 +211,44 @@ main_line.show_in_legend = False
 main_line.tooltip = {"headerFormat": "<b>Play {point.x:.0f}</b><br/>", "pointFormat": "Win Prob: {point.y:.1f}%"}
 chart.add_series(main_line)
 
-# Scoring event annotations - alternate label positions to avoid overlap
-event_plays = sorted(scoring_events.keys())
-for play in event_plays:
-    label, _shift = scoring_events[play]
+# Scoring event annotations - two series (home/away) with per-point labels
+home_annotations = []
+away_annotations = []
+for play in sorted(scoring_events.keys()):
+    label, shift = scoring_events[play]
     prob_val = round(float(win_prob[play]), 2)
-
-    # Alternate labels above and below the point
-    is_home_event = _shift > 0
-    y_offset = -30 if is_home_event else 30
-
-    s = ScatterSeries()
-    s.data = [{"x": int(play), "y": prob_val}]
-    s.name = label
-    s.color = home_color if is_home_event else away_color
-    s.marker = {
-        "radius": 14,
-        "symbol": "circle",
-        "fillColor": "#ffffff",
-        "lineWidth": 4,
-        "lineColor": home_color if is_home_event else away_color,
-    }
-    s.data_labels = {
-        "enabled": True,
-        "format": label,
-        "style": {
-            "fontSize": "22px",
-            "fontWeight": "bold",
-            "color": home_color if is_home_event else away_color,
-            "textOutline": "3px #ffffff",
+    is_home = shift > 0
+    # Place home labels above, away labels below; larger offset for legibility
+    y_off = -35 if is_home else 40
+    point = {
+        "x": int(play),
+        "y": prob_val,
+        "dataLabels": {
+            "enabled": True,
+            "format": label,
+            "y": y_off,
+            "style": {
+                "fontSize": "28px",
+                "fontWeight": "bold",
+                "color": home_color if is_home else away_color,
+                "textOutline": "3px #ffffff",
+            },
         },
-        "y": y_offset,
     }
+    if is_home:
+        home_annotations.append(point)
+    else:
+        away_annotations.append(point)
+
+for ann_data, color, name in [
+    (home_annotations, home_color, "Home Scores"),
+    (away_annotations, away_color, "Away Scores"),
+]:
+    s = ScatterSeries()
+    s.data = ann_data
+    s.name = name
+    s.color = color
+    s.marker = {"radius": 14, "symbol": "circle", "fillColor": "#ffffff", "lineWidth": 4, "lineColor": color}
     s.show_in_legend = False
     s.enable_mouse_tracking = False
     chart.add_series(s)
