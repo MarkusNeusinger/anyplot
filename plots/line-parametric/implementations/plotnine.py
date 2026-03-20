@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 line-parametric: Parametric Curve Plot
-Library: plotnine | Python 3.13
-Quality: pending | Created: 2026-03-20
+Library: plotnine 0.15.3 | Python 3.14.3
+Quality: 83/100 | Created: 2026-03-20
 """
 
 import numpy as np
