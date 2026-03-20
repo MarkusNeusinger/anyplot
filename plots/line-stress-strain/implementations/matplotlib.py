@@ -1,9 +1,10 @@
-""" pyplots.ai
+"""pyplots.ai
 line-stress-strain: Engineering Stress-Strain Curve
 Library: matplotlib 3.10.8 | Python 3.14.3
 Quality: 86/100 | Created: 2026-03-20
 """
 
+import matplotlib.patheffects as pe
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -50,7 +51,15 @@ offset_yield_stress = yield_stress
 # Plot
 fig, ax = plt.subplots(figsize=(16, 9))
 
-ax.plot(strain, stress, linewidth=3, color="#306998", zorder=5)
+ax.fill_between(strain, stress, alpha=0.04, color="#306998", zorder=2)
+ax.plot(
+    strain,
+    stress,
+    linewidth=3,
+    color="#306998",
+    zorder=5,
+    path_effects=[pe.Stroke(linewidth=5, foreground="white"), pe.Normal()],
+)
 
 # 0.2% offset line
 ax.plot(
@@ -69,7 +78,7 @@ ax.plot(
     offset_yield_stress,
     "o",
     markersize=12,
-    color="#D4762C",
+    color="#7B4EA3",
     markeredgecolor="white",
     markeredgewidth=1.5,
     zorder=6,
@@ -79,20 +88,20 @@ ax.annotate(
     xy=(offset_yield_strain, offset_yield_stress),
     xytext=(0.04, yield_stress + 40),
     fontsize=14,
-    color="#D4762C",
+    color="#7B4EA3",
     fontweight="bold",
-    arrowprops={"arrowstyle": "->", "color": "#D4762C", "lw": 1.5},
+    arrowprops={"arrowstyle": "->", "color": "#7B4EA3", "lw": 1.5},
 )
 
-ax.plot(uts_strain, uts, "o", markersize=12, color="#C44E52", markeredgecolor="white", markeredgewidth=1.5, zorder=6)
+ax.plot(uts_strain, uts, "o", markersize=12, color="#D62728", markeredgecolor="white", markeredgewidth=1.5, zorder=6)
 ax.annotate(
     "UTS",
     xy=(uts_strain, uts),
     xytext=(uts_strain + 0.02, uts + 20),
     fontsize=14,
-    color="#C44E52",
+    color="#D62728",
     fontweight="bold",
-    arrowprops={"arrowstyle": "->", "color": "#C44E52", "lw": 1.5},
+    arrowprops={"arrowstyle": "->", "color": "#D62728", "lw": 1.5},
 )
 
 fracture_stress = stress_necking[-1]
@@ -116,15 +125,29 @@ ax.annotate(
     arrowprops={"arrowstyle": "->", "color": "#8C564B", "lw": 1.5},
 )
 
-# Region labels with background shading
-ax.axvspan(0, yield_strain, alpha=0.06, color="#306998", zorder=1)
-ax.text(yield_strain / 2, 30, "Elastic", fontsize=13, ha="center", color="#306998", fontstyle="italic", alpha=0.8)
+# Region shading with subtle color-coded backgrounds
+region_colors = ["#306998", "#7B4EA3", "#306998", "#8C564B"]
+region_bounds = [(0, yield_strain), (yield_strain, 0.02), (0.02, uts_strain), (uts_strain, fracture_strain)]
+region_labels = ["Elastic", "Yield\nPlateau", "Strain Hardening", "Necking"]
+region_alphas = [0.08, 0.06, 0.05, 0.05]
 
-ax.axvspan(yield_strain, 0.02, alpha=0.06, color="#D4762C", zorder=1)
+for (x0, x1), color, alpha in zip(region_bounds, region_colors, region_alphas, strict=False):
+    ax.axvspan(x0, x1, alpha=alpha, color=color, zorder=1)
 
-ax.text(0.11, 30, "Strain Hardening", fontsize=13, ha="center", color="#306998", fontstyle="italic", alpha=0.8)
-
-ax.text(0.29, 30, "Necking", fontsize=13, ha="center", color="#8C564B", fontstyle="italic", alpha=0.8)
+# Region labels — position above x-axis, avoiding the cramped elastic zone
+ax.annotate(
+    "Elastic",
+    xy=(yield_strain / 2, 125),
+    xytext=(0.025, 60),
+    fontsize=14,
+    color="#306998",
+    fontstyle="italic",
+    fontweight="semibold",
+    arrowprops={"arrowstyle": "->", "color": "#306998", "lw": 1.0, "connectionstyle": "arc3,rad=0.2"},
+)
+ax.text(0.011, 50, "Yield\nPlateau", fontsize=11, ha="center", color="#7B4EA3", fontstyle="italic", alpha=0.9)
+ax.text(0.12, 30, "Strain Hardening", fontsize=14, ha="center", color="#306998", fontstyle="italic", alpha=0.9)
+ax.text(0.29, 30, "Necking", fontsize=14, ha="center", color="#8C564B", fontstyle="italic", alpha=0.9)
 
 # Elastic modulus annotation
 mid_elastic = len(strain_elastic) // 3
@@ -132,22 +155,38 @@ ax.annotate(
     f"E = {youngs_modulus:,} MPa",
     xy=(strain_elastic[mid_elastic], stress_elastic[mid_elastic]),
     xytext=(0.03, 150),
-    fontsize=13,
-    color="#555555",
-    arrowprops={"arrowstyle": "->", "color": "#555555", "lw": 1.2},
+    fontsize=14,
+    color="#444444",
+    fontweight="semibold",
+    arrowprops={"arrowstyle": "->", "color": "#444444", "lw": 1.2},
+    bbox={"boxstyle": "round,pad=0.3", "facecolor": "white", "edgecolor": "#cccccc", "alpha": 0.8},
 )
 
 # Style
 ax.set_xlabel("Engineering Strain (mm/mm)", fontsize=20)
 ax.set_ylabel("Engineering Stress (MPa)", fontsize=20)
-ax.set_title("Mild Steel Tensile Test · line-stress-strain · matplotlib · pyplots.ai", fontsize=24, fontweight="medium")
+ax.set_title("line-stress-strain · matplotlib · pyplots.ai", fontsize=24, fontweight="medium", pad=28)
+ax.text(
+    0.5,
+    1.015,
+    "Mild Steel Tensile Test — E = 210 GPa, σᵧ = 250 MPa, UTS = 400 MPa",
+    transform=ax.transAxes,
+    fontsize=14,
+    ha="center",
+    color="#666666",
+    fontstyle="italic",
+)
 ax.tick_params(axis="both", labelsize=16)
-ax.spines["top"].set_visible(False)
-ax.spines["right"].set_visible(False)
-ax.yaxis.grid(True, alpha=0.2, linewidth=0.8)
+for spine in ["top", "right"]:
+    ax.spines[spine].set_visible(False)
+for spine in ["bottom", "left"]:
+    ax.spines[spine].set_linewidth(0.8)
+    ax.spines[spine].set_color("#333333")
+ax.yaxis.grid(True, alpha=0.15, linewidth=0.8, color="#888888")
+ax.xaxis.grid(True, alpha=0.08, linewidth=0.5, color="#888888")
 ax.set_xlim(-0.01, 0.40)
 ax.set_ylim(-10, 470)
-ax.legend(fontsize=14, loc="center right")
+ax.legend(fontsize=16, loc="center right", framealpha=0.9, edgecolor="#cccccc")
 
 plt.tight_layout()
 plt.savefig("plot.png", dpi=300, bbox_inches="tight")
