@@ -1,7 +1,6 @@
-""" pyplots.ai
+"""pyplots.ai
 bar-pareto: Pareto Chart with Cumulative Line
 Library: pygal 3.1.0 | Python 3.14.3
-Quality: 81/100 | Created: 2026-03-20
 """
 
 import re
@@ -23,32 +22,39 @@ for c in counts:
     running += c
     cumulative_pct.append(round(running / total * 100, 1))
 
-# Style
+# 80% threshold boundary — bars in the "vital few" (cumulative ≤ 80%)
+vital_few_count = sum(1 for p in cumulative_pct if p <= 80.0)
+
+# Colors
+color_vital = "#306998"
+color_trivial = "#93B5CF"
+line_color = "#C0392B"
+threshold_color = "#7F8C8D"
+
 custom_style = Style(
     background="white",
-    plot_background="white",
+    plot_background="#FAFBFC",
     foreground="#2C3E50",
     foreground_strong="#2C3E50",
-    foreground_subtle="#E8E8E8",
-    colors=("#306998",),
+    foreground_subtle="#E0E0E0",
+    colors=(color_vital,),
     title_font_size=52,
-    label_font_size=32,
-    major_label_font_size=32,
-    value_font_size=28,
-    value_label_font_size=28,
-    legend_font_size=32,
+    label_font_size=30,
+    major_label_font_size=30,
+    value_font_size=26,
+    value_label_font_size=26,
+    legend_font_size=30,
     title_font_family="sans-serif",
     label_font_family="sans-serif",
     value_font_family="sans-serif",
 )
 
-# Bar chart with generous right margin for secondary y-axis
 chart = pygal.Bar(
     width=4800,
     height=2700,
     title="bar-pareto · pygal · pyplots.ai",
     x_title="Defect Type",
-    y_title="Frequency",
+    y_title="Frequency (Count)",
     style=custom_style,
     show_legend=False,
     print_values=True,
@@ -57,13 +63,13 @@ chart = pygal.Bar(
     show_y_guides=True,
     show_x_guides=False,
     margin=20,
-    margin_bottom=100,
+    margin_bottom=120,
     margin_left=120,
     margin_right=380,
     spacing=18,
-    rounded_bars=4,
+    rounded_bars=6,
     truncate_label=-1,
-    x_label_rotation=20,
+    x_label_rotation=15,
     js=[],
 )
 
@@ -73,15 +79,27 @@ chart.add("Defect Count", counts)
 # Render SVG
 svg_str = chart.render().decode("utf-8")
 
-# Extract bar rect positions
-bar_pattern = r'<rect\s[^>]*class="rect reactive tooltip-trigger"[^>]*/>'
-bar_matches = re.findall(bar_pattern, svg_str)
+# Recolor trivial-many bars by adding inline style override to CSS class colors
+bar_rects = list(re.finditer(r'<rect\s[^>]*class="rect reactive tooltip-trigger"[^>]*/>', svg_str))
+# Process in reverse order to preserve string positions
+for i in reversed(range(len(bar_rects))):
+    if i >= vital_few_count:
+        m = bar_rects[i]
+        old_rect = m.group(0)
+        new_rect = old_rect.replace(
+            'class="rect reactive tooltip-trigger"',
+            f'class="rect reactive tooltip-trigger" style="fill:{color_trivial};stroke:{color_trivial}"',
+        )
+        svg_str = svg_str[: m.start()] + new_rect + svg_str[m.end() :]
+
+# Extract bar rect positions for overlay placement
+bar_matches_pos = re.findall(r'<rect\s[^>]*class="rect reactive tooltip-trigger"[^>]*/>', svg_str)
 
 bar_centers_x = []
 bar_tops_y = []
 bar_bottoms_y = []
 
-for bar_svg in bar_matches:
+for bar_svg in bar_matches_pos:
     x_m = re.search(r'\bx="([^"]+)"', bar_svg)
     y_m = re.search(r'\by="([^"]+)"', bar_svg)
     w_m = re.search(r'\bwidth="([^"]+)"', bar_svg)
@@ -95,28 +113,39 @@ for bar_svg in bar_matches:
         bar_tops_y.append(y)
         bar_bottoms_y.append(y + h)
 
-# Compute coordinate mapping from bar data
+# Coordinate mapping from bar geometry
 y_base = max(bar_bottoms_y)
 pixels_per_count = (y_base - min(bar_tops_y)) / max(counts)
 
-# Find the highest y-axis label value from SVG text elements
+# Find highest y-axis value to determine plot top
 y_label_values = [int(m) for m in re.findall(r"<text[^>]*>(\d+)</text>", svg_str)]
 y_axis_max = max(v for v in y_label_values if v <= 200) if y_label_values else 140
 
-# Plot area top corresponds to y_axis_max on the count scale
 y_plot_top = y_base - pixels_per_count * y_axis_max
-
-# Map cumulative 0-100% to the full plot area height
 plot_height = y_base - y_plot_top
+
+# Map cumulative percentages to pixel coordinates
 cum_points = []
 for i, pct in enumerate(cumulative_pct):
     cx = bar_centers_x[i]
     cy = y_base - (pct / 100.0) * plot_height
     cum_points.append((cx, cy))
 
-# Build cumulative line SVG
+# 80% reference line
+y_80 = y_base - 0.80 * plot_height
+x_left = bar_centers_x[0] - 80
+x_right = bar_centers_x[-1] + 80
+
+ref_line_svg = f'''
+<g id="reference-80">
+  <line x1="{x_left:.1f}" y1="{y_80:.1f}" x2="{x_right:.1f}" y2="{y_80:.1f}"
+    stroke="{threshold_color}" stroke-width="3" stroke-dasharray="18,10"
+    opacity="0.6" />
+</g>
+'''
+
+# Cumulative line with dots
 points_str = " ".join(f"{x:.1f},{y:.1f}" for x, y in cum_points)
-line_color = "#C0392B"
 
 cumulative_svg = f'''
 <g id="cumulative-overlay">
@@ -125,37 +154,38 @@ cumulative_svg = f'''
     stroke-linecap="round" stroke-linejoin="round" />
 '''
 
-# Dots and labels at each data point
 for i, (cx, cy) in enumerate(cum_points):
     pct_val = cumulative_pct[i]
-    lx = cx + 16
-    ly = cy - 16
+    bar_top = bar_tops_y[i]
+    # Default: label to the right of dot, above
+    lx = cx + 22
+    ly = cy - 24
     anchor = "start"
-    # Last two points: put label to the left to avoid right-edge clipping
+    # If cumulative dot is near bar top, push label well above both
+    if abs(cy - bar_top) < 60:
+        ly = min(cy - 44, bar_top - 34)
+    # Last two: label to the left to avoid right-edge clipping
     if i >= len(cum_points) - 2:
-        lx = cx - 16
+        lx = cx - 22
         anchor = "end"
+    # First point: place below-left to avoid "142" value label at bar top
+    if i == 0:
+        lx = cx - 24
+        ly = cy + 38
+        anchor = "end"
+    # Second point: offset further right to avoid "98" value label
+    if i == 1:
+        lx = cx + 28
+        ly = cy - 28
     cumulative_svg += f'''
-  <circle cx="{cx:.1f}" cy="{cy:.1f}" r="9"
-    fill="{line_color}" stroke="white" stroke-width="2.5" />
+  <circle cx="{cx:.1f}" cy="{cy:.1f}" r="10"
+    fill="{line_color}" stroke="white" stroke-width="3" />
   <text x="{lx:.1f}" y="{ly:.1f}"
     text-anchor="{anchor}" fill="{line_color}"
     font-size="26" font-family="sans-serif" font-weight="bold">{pct_val:.0f}%</text>
 '''
 
 cumulative_svg += "</g>"
-
-# 80% reference line
-y_80 = y_base - 0.80 * plot_height
-x_left = bar_centers_x[0] - 60
-x_right = bar_centers_x[-1] + 60
-
-ref_line_svg = f'''
-<g id="reference-80">
-  <line x1="{x_left:.1f}" y1="{y_80:.1f}" x2="{x_right:.1f}" y2="{y_80:.1f}"
-    stroke="#999999" stroke-width="3" stroke-dasharray="18,10" />
-</g>
-'''
 
 # Secondary y-axis on the right
 right_edge = bar_centers_x[-1] + 80
@@ -165,23 +195,21 @@ for pct in [0, 20, 40, 60, 80, 100]:
     y_pos = y_base - (pct / 100.0) * plot_height
     sec_axis_svg += f'''
   <line x1="{right_edge:.1f}" y1="{y_pos:.1f}"
-    x2="{right_edge + 8:.1f}" y2="{y_pos:.1f}"
+    x2="{right_edge + 10:.1f}" y2="{y_pos:.1f}"
     stroke="{line_color}" stroke-width="2" />
-  <text x="{right_edge + 16:.1f}" y="{y_pos + 9:.1f}"
+  <text x="{right_edge + 18:.1f}" y="{y_pos + 10:.1f}"
     fill="{line_color}" font-size="28" font-family="sans-serif"
     text-anchor="start">{pct}%</text>
 '''
 
-# Vertical axis line
 sec_axis_svg += f'''
   <line x1="{right_edge:.1f}" y1="{y_base:.1f}"
     x2="{right_edge:.1f}" y2="{y_plot_top:.1f}"
     stroke="{line_color}" stroke-width="2" />
 '''
 
-# Rotated axis title
 mid_y = (y_base + y_plot_top) / 2
-title_x = right_edge + 100
+title_x = right_edge + 108
 sec_axis_svg += f'''
   <text x="{title_x:.1f}" y="{mid_y:.1f}"
     fill="{line_color}" font-size="32" font-family="sans-serif"
@@ -192,33 +220,38 @@ sec_axis_svg += "</g>"
 
 # Legend centered below the plot area
 legend_cx = (bar_centers_x[0] + bar_centers_x[-1]) / 2
-legend_y = y_base + 78
+legend_y = y_base + 90
 
 legend_svg = f'''
 <g id="pareto-legend">
-  <rect x="{legend_cx - 340:.1f}" y="{legend_y - 13:.1f}"
-    width="26" height="26" rx="3" fill="#306998" />
-  <text x="{legend_cx - 306:.1f}" y="{legend_y + 9:.1f}"
-    fill="#2C3E50" font-size="28" font-family="sans-serif">Defect Count</text>
+  <rect x="{legend_cx - 480:.1f}" y="{legend_y - 13:.1f}"
+    width="26" height="26" rx="4" fill="{color_vital}" />
+  <text x="{legend_cx - 446:.1f}" y="{legend_y + 9:.1f}"
+    fill="#2C3E50" font-size="28" font-family="sans-serif">Vital Few</text>
 
-  <line x1="{legend_cx - 80:.1f}" y1="{legend_y:.1f}"
-    x2="{legend_cx - 36:.1f}" y2="{legend_y:.1f}"
+  <rect x="{legend_cx - 280:.1f}" y="{legend_y - 13:.1f}"
+    width="26" height="26" rx="4" fill="{color_trivial}" />
+  <text x="{legend_cx - 246:.1f}" y="{legend_y + 9:.1f}"
+    fill="#2C3E50" font-size="28" font-family="sans-serif">Trivial Many</text>
+
+  <line x1="{legend_cx - 30:.1f}" y1="{legend_y:.1f}"
+    x2="{legend_cx + 14:.1f}" y2="{legend_y:.1f}"
     stroke="{line_color}" stroke-width="4" />
-  <circle cx="{legend_cx - 58:.1f}" cy="{legend_y:.1f}" r="6"
+  <circle cx="{legend_cx - 8:.1f}" cy="{legend_y:.1f}" r="6"
     fill="{line_color}" stroke="white" stroke-width="1.5" />
-  <text x="{legend_cx - 24:.1f}" y="{legend_y + 9:.1f}"
+  <text x="{legend_cx + 26:.1f}" y="{legend_y + 9:.1f}"
     fill="#2C3E50" font-size="28" font-family="sans-serif">Cumulative %</text>
 
-  <line x1="{legend_cx + 180:.1f}" y1="{legend_y:.1f}"
-    x2="{legend_cx + 224:.1f}" y2="{legend_y:.1f}"
-    stroke="#999999" stroke-width="3" stroke-dasharray="10,6" />
-  <text x="{legend_cx + 236:.1f}" y="{legend_y + 9:.1f}"
+  <line x1="{legend_cx + 230:.1f}" y1="{legend_y:.1f}"
+    x2="{legend_cx + 274:.1f}" y2="{legend_y:.1f}"
+    stroke="{threshold_color}" stroke-width="3" stroke-dasharray="10,6" />
+  <text x="{legend_cx + 286:.1f}" y="{legend_y + 9:.1f}"
     fill="#2C3E50" font-size="28" font-family="sans-serif">80% Threshold</text>
 </g>
 '''
 
-# Inject SVG elements
-injection = cumulative_svg + ref_line_svg + sec_axis_svg + legend_svg
+# Inject all SVG overlays
+injection = ref_line_svg + cumulative_svg + sec_axis_svg + legend_svg
 svg_str = svg_str.replace("</svg>", injection + "\n</svg>")
 
 # Save
