@@ -1,0 +1,224 @@
+library: seaborn
+specification_id: line-win-probability
+created: '2026-03-20T12:32:04Z'
+updated: '2026-03-20T12:45:51Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23342814414
+issue: 4418
+python_version: 3.14.3
+library_version: 0.13.2
+preview_url: https://storage.googleapis.com/pyplots-images/plots/line-win-probability/seaborn/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/line-win-probability/seaborn/plot_thumb.png
+preview_html: null
+quality_score: 91
+review:
+  strengths:
+  - Excellent data storytelling with annotated scoring events showing running score
+  - Polished design with custom background, cohesive palette, and styled final score
+    box
+  - Complete spec compliance — all required features implemented
+  - Realistic NFL game data with compelling back-and-forth narrative
+  weaknesses:
+  - Q4 quarter label is obscured by the Final score box (minor overlap issue)
+  - Library mastery could be stronger — core visualization relies heavily on matplotlib
+    rather than seaborn-specific plotting features
+  image_description: 'The plot displays a win probability line chart for an NFL game
+    across 120 plays. A dark blue line (#306998) traces the home team''s win probability
+    from ~50% at kickoff through various scoring events. The area above the 50% dashed
+    baseline is filled with translucent blue (Home) and below with translucent salmon/red
+    (#D4583B, Away). Five key events are annotated with curved arrows and bold colored
+    text showing the scoring play and running score: "TD Away 7-3", "TD Home 10-7",
+    "TD Home 20-14", "TD Away 23-27", and "TD Home 30-27". Dotted vertical lines mark
+    Q1, Q2, and Q3 boundaries. The y-axis shows 0%-100% with the 50% reference line.
+    A styled box at the bottom right displays "Final: Home 30 – Away 27". The title
+    follows the required format. A legend in the upper left shows Home (blue) and
+    Away (red) patches. The background is a subtle light blue-gray (#F7F9FC). An italic
+    subtitle reads "NFL Game — Home vs Away | Lead changes and momentum shifts across
+    120 plays".'
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt,
+          annotations 13pt'
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Q4 quarter label hidden behind Final score box; remaining annotations
+          well-spaced
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Line, fills, and scatter markers all clearly visible with appropriate
+          sizing
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue and salmon provide strong contrast, colorblind-distinguishable
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good 16:9 layout, balanced margins, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive labels with percentage units on y-axis
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom background, cohesive palette, italic subtitle, styled score
+          box — clearly above defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines removed, subtle grid, custom background, polished quarter
+          markers
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Annotations with running score, fill colors for momentum, final score
+          box — strong narrative
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct line chart showing win probability over game progression
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features: 50% reference, fill areas, annotations, final score,
+          quarter markers'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=Play Number, Y=Win Probability, full range displayed
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct title format and Home/Away legend patches
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Lead changes, momentum swings, multiple event types, both teams scoring
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: NFL game scenario, neutral sports context, plausible data
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 120 plays realistic for NFL, probability values in valid range
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean imports → data → plot → save flow, no functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with dpi=300
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of seaborn axes-level API, set_theme, set_context, despine
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Seaborn features are mainly styling utilities; core viz relies on
+          matplotlib
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  - manual-ticks
+  patterns:
+  - data-generation
+  - explicit-figure
+  dataprep:
+  - cumulative-sum
+  styling:
+  - alpha-blending
+  - grid-styling
+  - edge-highlighting

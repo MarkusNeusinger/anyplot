@@ -1,0 +1,233 @@
+library: plotly
+specification_id: line-win-probability
+created: '2026-03-20T12:32:19Z'
+updated: '2026-03-20T12:44:01Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23342814410
+issue: 4418
+python_version: 3.14.3
+library_version: 6.6.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/line-win-probability/plotly/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/line-win-probability/plotly/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/line-win-probability/plotly/plot.html
+quality_score: 91
+review:
+  strengths:
+  - Excellent spec compliance with all required features implemented
+  - Strong data storytelling with annotated scoring events and running score progression
+  - Good use of Plotly-specific features (spline, hovertemplate, HTML export, spike
+    lines)
+  - Clean well-structured code with deterministic data generation
+  - Colorblind-safe color scheme with appropriate contrast
+  weaknesses:
+  - Minor annotation crowding in Q3-Q4 region where four events occur in close proximity
+  - Annotation font size (15pt) slightly below the recommended tick-level minimum
+    of 16pt
+  image_description: 'The plot displays a win probability chart for an NFL game between
+    the Philadelphia Eagles and Dallas Cowboys. The x-axis shows "Play Number" (0-120)
+    and the y-axis shows "Win Probability (%)" (0%-100%). A dark spline line traces
+    the win probability over the course of the game. The area above the 50% dashed
+    reference line is filled with semi-transparent green (Eagles) and below with semi-transparent
+    blue (Cowboys). Quarter boundaries (Q1-Q4) are marked with dotted vertical lines
+    and bold gray labels at the top. Eight scoring events are annotated with colored
+    circular markers (green for Eagles, blue for Cowboys) connected by arrows to labeled
+    boxes showing the event and running score. Team identification annotations appear
+    in the upper-left and lower-left corners. The title reads "line-win-probability
+    · plotly · pyplots.ai" with subtitle "Final Score: Eagles 27 - Cowboys 17". The
+    background is light off-white with subtle y-axis gridlines.'
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All major font sizes explicitly set (title 28, labels 22, ticks 18).
+          Annotation text at 15pt slightly below 16pt guideline but readable.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Annotations intelligently staggered but Q3-Q4 region has minor crowding
+          with four events in close proximity.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Line width 3.5 with spline smoothing, markers size 14 with white
+          borders, area fills at 30% opacity all well-adapted.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Green vs blue is colorblind-safe with good contrast against light
+          background.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills canvas well with balanced margins, room for title and
+          subtitle.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive labels with units: Play Number, Win Probability (%).'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Strong design with custom team colors, styled annotations, spline
+          smoothing, custom background. Clearly above defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: plotly_white template, subtle grid at very low opacity, refined axis
+          lines, generous whitespace.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear game narrative with annotated scoring events, quarter markers,
+          team identification, and final score.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct win probability line chart with area fills above/below 50%.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: 50% line, team-colored fills, annotated
+          events, final score, quarter markers.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X is play number, Y is win probability percentage. Full data range
+          shown.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title follows spec-id format. Team annotations with colored triangles
+          serve as legend.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows TDs and FGs for both teams, momentum swings, lead changes,
+          decisive finish.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: NFL Eagles vs Cowboys game with realistic scoring progression. Neutral
+          sports context.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 120 plays realistic for NFL. Probability values proportionate to
+          scoring events.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports, data, plot, style, save. No functions or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set at start.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only numpy and plotly.graph_objects imported, both used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean and appropriately complex. Manual annotation staggering is
+          justified.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot.png at 4800x2700. Also exports HTML.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of go.Figure, go.Scatter with fill=tonexty, add_hline/vline,
+          add_annotation, hovertemplate.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Plotly-distinctive: spline line shape, hovertemplate, HTML export,
+          x unified hovermode, spike lines.'
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - cumulative-sum
+  styling:
+  - alpha-blending
+  - edge-highlighting
+  - grid-styling
