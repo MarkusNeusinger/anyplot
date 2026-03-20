@@ -1,7 +1,7 @@
 library: pygal
 specification_id: nyquist-basic
 created: '2026-03-20T22:44:57Z'
-updated: '2026-03-20T23:03:18Z'
+updated: '2026-03-20T23:12:00Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23365453282
 issue: 4412
@@ -10,34 +10,33 @@ library_version: 3.1.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/nyquist-basic/pygal/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/nyquist-basic/pygal/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/nyquist-basic/pygal/plot.html
-quality_score: 75
+quality_score: 76
 review:
   strengths:
-  - Solid transfer function choice G(s)=2/[s(s+1)(s+2)] - classic textbook example
-  - Good color scheme with meaningful differentiation (solid vs dashed, blue vs red)
-  - Critical point prominently marked with large red dot
-  - Correct 1:1 aspect ratio and appropriate axis range
-  - Clean overall visual appearance with white background and subtle grid
+  - Correct Nyquist plot with proper complex-plane frequency response computation
+  - Well-structured deterministic code with clean linear flow
+  - Good use of pygal-specific features (tooltip labels, dual PNG/HTML output, stroke_style)
+  - Critical point clearly highlighted in contrasting red
+  - Both positive and negative frequency contours shown with visual distinction
   weaknesses:
-  - Arrowhead series leak into the legend as extra entries, cluttering it
-  - Missing frequency annotations along the curve (spec requirement)
-  - Manual arrowhead geometry code is verbose and produces barely visible results
-  - Does not leverage pygal interactive features (tooltips with frequency values)
-  image_description: 'The plot shows a Nyquist diagram on a white background with
-    the title "nyquist-basic · pygal · pyplots.ai" at the top. The x-axis is labeled
-    "Real" and the y-axis "Imaginary", both ranging from approximately -2.5 to 2.5
-    with a 1:1 aspect ratio. A solid blue curve represents the positive-frequency
-    response G(jω) for ω ≥ 0, sweeping from the lower-left upward and curling near
-    the origin. A dashed lighter blue curve mirrors it for negative frequencies. A
-    large red filled circle marks the critical point at (-1, 0). A gray dashed unit
-    circle is centered at the origin. Small arrowhead-like shapes appear along the
-    positive-frequency curve indicating direction of increasing frequency. The legend
-    at the bottom contains six entries across two rows: the four named series plus
-    two extra entries that appear to leak from the arrowhead series, cluttering the
-    legend.'
+  - No arrows showing direction of increasing frequency (spec requirement)
+  - Frequency annotation values not visible in static PNG (only in SVG tooltips)
+  - Curves clip outside visible range, losing some Nyquist contour shape
+  - Right half of the plot is mostly empty space
+  image_description: The plot shows a Nyquist diagram on a square white canvas (4800x4800
+    px) with 1:1 aspect ratio. The title "nyquist-basic · pygal · pyplots.ai" is displayed
+    at the top. The x-axis is labeled "Real" and the y-axis "Imaginary", both ranging
+    from -2.4 to 2.4. A solid medium-blue curve represents G(jω) for ω ≥ 0, sweeping
+    from near the origin downward and to the left, extending beyond the bottom of
+    the visible range. A lighter dashed blue curve mirrors the positive-frequency
+    curve for ω < 0, extending upward off the top-left of the visible area. A prominent
+    red filled circle marks the critical point at (-1, 0). A gray dashed unit circle
+    is centered at the origin. Small dark blue dots mark frequency annotation points
+    along the positive-frequency curve. A five-entry legend at the bottom identifies
+    each series. Grid lines are visible but subtle in light gray.
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 23
       max: 30
       items:
       - id: VQ-01
@@ -45,69 +44,67 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'Font sizes explicitly set (title=72, label=48, etc.), all text readable.
-          Minor: legend text in second row is small.'
+        comment: Font sizes explicitly set (title=72, label=48, major_label=42, legend=42).
+          All text clearly readable.
       - id: VQ-02
         name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text elements. Legend well-spaced at bottom.
+      - id: VQ-03
+        name: Element Visibility
         score: 4
         max: 6
         passed: false
-        comment: Arrowhead series leak into legend as extra entries, creating clutter
-          and visual confusion.
-      - id: VQ-03
-        name: Element Visibility
-        score: 5
-        max: 6
-        passed: true
-        comment: Main curve, critical point, and unit circle clearly visible. Arrowheads
-          small and hard to distinguish.
+        comment: Main curve visible but frequency annotation dots are small. Negative-frequency
+          curve is faint.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
-        passed: true
-        comment: Blue curves, red critical point, gray unit circle — all distinguishable
-          for colorblind viewers.
-      - id: VQ-05
-        name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Square 1:1 aspect ratio correct. Reasonable canvas utilization, some
-          unused space in corners.
+        comment: Blue/light-blue/red/gray palette is colorblind-friendly but blue
+          shades are somewhat similar.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 2
+        max: 4
+        passed: false
+        comment: Curves clip at edges. Right half mostly empty space.
       - id: VQ-06
         name: Axis Labels & Title
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Real and Imaginary are standard Nyquist plot labels (dimensionless).
+        passed: false
+        comment: Labeled Real and Imaginary — correct but no units.
     design_excellence:
-      score: 12
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: true
-        comment: Thoughtful custom palette with blue/red/gray. Above defaults but
-          not publication-level.
+        comment: Custom color palette, clean white background. Well-configured default
+          level.
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: White background, subtle grid, clean appearance. Some refinement
-          but pygal default chrome present.
+        comment: Subtle grid, custom stroke widths, dashed patterns. Some refinement
+          beyond defaults.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Critical point highlighted prominently. Direction arrows and dashed
-          mirror curve establish visual hierarchy.
+        comment: Critical point highlighted in red. Positive vs negative frequency
+          visually distinguished.
     spec_compliance:
-      score: 12
+      score: 13
       max: 15
       items:
       - id: SC-01
@@ -121,23 +118,22 @@ review:
         score: 2
         max: 4
         passed: false
-        comment: Missing frequency annotations along curve at key points. Arrows present
-          but small.
+        comment: Missing directional arrows. Frequency values only in tooltips, not
+          visible in PNG.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Real on x-axis, imaginary on y-axis. Correct mapping.
+        comment: Real on x-axis, imaginary on y-axis. Correct transfer function computation.
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Title format correct. Legend has extra unwanted entries from arrowhead
-          series.
+        passed: true
+        comment: Title format correct. Legend labels descriptive and accurate.
     data_quality:
-      score: 14
+      score: 13
       max: 15
       items:
       - id: DQ-01
@@ -145,22 +141,24 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Shows positive/negative curves, critical point, unit circle, direction
-          arrows.
+        comment: Shows positive/negative frequency, critical point, unit circle. Some
+          curve clipping.
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Classic control systems transfer function from textbooks.
+        comment: Classic textbook transfer function G(s) = 2/[s(s+1)(s+2)] from control
+          engineering.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 800 log-spaced points, range [-2.5, 2.5] appropriate.
+        comment: 800 log-spaced points from 0.01 to 100 rad/s. Appropriate for the
+          transfer function.
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -168,56 +166,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear flow, no functions or classes.
+        comment: 'Clean linear flow: imports, data, style, chart, series, save.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic mathematical function.
+        comment: Fully deterministic analytical computation.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used.
+        comment: 'All imports used: math, numpy, pygal, Style.'
       - id: CQ-04
         name: Code Elegance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: Manual arrowhead geometry is 30 lines of over-engineered code producing
-          barely visible results that leak into legend.
+        passed: true
+        comment: Clean, Pythonic. Good list comprehensions with dict-based labels.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png. Current API.
+        comment: Saves as plot.png. Also outputs HTML for interactive viewing.
     library_mastery:
-      score: 4
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of pygal XY, Style class, stroke_style, dict-based data
+          points.
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Standard pygal XY chart usage with Style class.
-      - id: LM-02
-        name: Distinctive Features
-        score: 1
-        max: 5
-        passed: false
-        comment: Generic XY usage. Doesn't leverage pygal tooltips or value_formatter.
-  verdict: REJECTED
+        comment: Tooltip labels, dual PNG/HTML output, stroke_style dash patterns
+          — pygal strengths.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
+  - hover-tooltips
   - html-export
   patterns:
   - data-generation
-  - iteration-over-groups
   dataprep: []
   styling:
   - grid-styling
