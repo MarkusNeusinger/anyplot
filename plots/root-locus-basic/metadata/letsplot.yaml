@@ -1,0 +1,237 @@
+library: letsplot
+specification_id: root-locus-basic
+created: '2026-03-20T21:21:41Z'
+updated: '2026-03-20T21:44:14Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23362982902
+issue: 4414
+python_version: 3.14.3
+library_version: 4.9.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/root-locus-basic/letsplot/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/root-locus-basic/letsplot/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/root-locus-basic/letsplot/plot.html
+quality_score: 90
+review:
+  strengths:
+  - Perfect spec compliance with every required root locus feature implemented and
+    visually clear
+  - 'Excellent data storytelling: STABLE/UNSTABLE labels, stable region shading, and
+    K≈7.2 annotation at the critical crossing immediately orient the viewer'
+  - Colorblind-safe palette fully addresses the original review main weakness
+  - Domain-specific overlays (damping ratio lines, natural frequency arcs) replace
+    the default grid
+  - Clean, fully deterministic code with realistic 4th-order transfer function
+  - Good use of lets-plot interactive tooltips for branch/gain information
+  weaknesses:
+  - Minor real-axis overlap between Branches 1 and 2 between poles
+  - Zeta labels still somewhat proximate despite staggering improvement
+  - Library mastery could be deeper with more lets-plot-specific patterns
+  image_description: 'The plot displays a root locus diagram on a near-white (#FCFCFC)
+    background. Four locus branches are shown in colorblind-safe colors: dark blue
+    (#306998, Branch 1), orange (#E69F00, Branch 2), pink (#CC79A7, Branch 3), and
+    light blue (#56B4E9, Branch 4). Open-loop poles are marked with large black ×
+    markers at s = 0, -1, -2, and -4 on the real axis. An open-loop zero is marked
+    with a black ○ at s = -3. The left half-plane is shaded in a very faint green
+    (#E8F4E8) indicating the stable region, with bold green "STABLE" and orange "UNSTABLE"
+    labels in the upper corners. Dashed gray semicircular arcs represent constant
+    natural frequency (ωn = 1, 2, 3, 4), and dashed gray radial lines show constant
+    damping ratios (ζ = 0.2, 0.4, 0.6, 0.8) with staggered monospace labels in the
+    upper half-plane. Orange diamond markers highlight imaginary axis crossings with
+    a bold "K ≈ 7.2" annotation indicating the critical gain. Open-tipped arrows on
+    branches indicate direction of increasing gain. Serif "jω" and "σ" labels appear
+    near the imaginary and real axes respectively. The title reads "root-locus-basic
+    · letsplot · pyplots.ai" in bold. Axis labels are "Real Axis (σ)" and "Imaginary
+    Axis (jω)". A caption shows the transfer function G(s) = (s + 3) / [s(s+1)(s+2)(s+4)]
+    with pole/zero legend. The legend on the right identifies all four branches under
+    "Locus Branch".'
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title=26, axis_title=20, axis_text=16,
+          legend_text=14, caption=14'
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Staggered zeta labels reduce crowding; minor proximity between zeta=0.4
+          and zeta=0.6
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Branches at size=1.8, arrows now larger at length=14; minor real-axis
+          overlap between Branches 1 and 2
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Colorblind-safe palette: dark blue, orange, pink, light blue'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good coord_fixed layout; some unused space near legend area
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Real Axis (sigma) and Imaginary Axis (j omega) with proper mathematical
+          symbols
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom palette, mixed typography, stable region shading, STABLE/UNSTABLE
+          labels, K annotation
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Grid replaced with domain overlays, off-white background, clean axis
+          styling, generous margins
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Strong hierarchy: stable region shading, STABLE/UNSTABLE labels,
+          K~7.2 annotation at critical crossing'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct root locus plot showing pole migration
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features: poles, zeros, branches, arrows, crossings, damping/frequency
+          grid'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct real/imaginary mapping with equal axis scaling
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Exact title format, legend identifies all four branches
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows breakaway, complex conjugate pairs, real axis segments, stability
+          crossings, asymptotic behavior
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Realistic 4th-order control system transfer function, neutral engineering
+          domain
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Typical pole/zero locations and gain range for control systems
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear flow, no functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic polynomial root computation
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, appropriate complexity for root locus computation
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot.png with scale=3, current API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good ggplot grammar with layered geoms, coord_fixed, theme_minimal
+          with extensive customization
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: layer_tooltips() with formatted hover info, arrow() in geom_segment,
+          HTML export
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  - custom-legend
+  - manual-ticks
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - interpolation
+  styling:
+  - alpha-blending
+  - grid-styling

@@ -1,0 +1,231 @@
+library: plotly
+specification_id: line-stress-strain
+created: '2026-03-20T21:26:01Z'
+updated: '2026-03-20T21:52:15Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23363004974
+issue: 4413
+python_version: 3.14.3
+library_version: 6.6.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/line-stress-strain/plotly/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/line-stress-strain/plotly/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/line-stress-strain/plotly/plot.html
+quality_score: 90
+review:
+  strengths:
+  - Excellent data modeling with physically accurate mild steel properties across
+    all deformation regions
+  - Strong data storytelling with labeled regions, annotated critical points, and
+    0.2% offset method visualization
+  - Clean intentional color palette with good accessibility and all font sizes explicitly
+    set
+  - Proper use of Plotly features including hover templates and HTML export
+  - Well-organized KISS code structure with clear section separation
+  weaknesses:
+  - Minor crowding in the elastic region area where multiple annotations cluster near
+    the origin
+  - Could push design further with more distinctive visual styling beyond plotly_white
+    template
+  image_description: 'The plot displays a mild steel tensile test stress-strain curve
+    on a clean white background. The main curve is drawn as a thick dark blue (#306998)
+    solid line spanning from strain 0 to ~0.35 and stress 0 to ~400 MPa. A dashed
+    brown/rust line represents the 0.2% offset line near the origin. Three distinct
+    markers highlight critical points: a brown diamond at the yield point (~250 MPa),
+    a gold star at UTS (400 MPa at strain ~0.22), and a red X at the fracture point
+    (~310 MPa at strain ~0.35). Each critical point has a colored annotation with
+    an arrow. Gray text labels identify the "Elastic", "Strain Hardening", and "Necking"
+    regions. A blue annotation "E = 210 GPa" marks the elastic modulus slope. The
+    legend is positioned in the lower-center area with a subtle border, listing all
+    five traces. The title reads "Mild Steel Tensile Test · line-stress-strain · plotly
+    · pyplots.ai". Y-axis has subtle horizontal gridlines; x-axis grid is removed.
+    Overall layout is well-proportioned with good use of canvas space.'
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 28pt, axis labels 22pt, ticks
+          18pt, annotations 16-17pt'
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Slight crowding in elastic region with multiple annotations, but
+          no actual text collision
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Main curve width 3.5, markers size 14 with white outlines, offset
+          line distinguishable with dash style
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue, brown, gold, red all distinguishable; no red-green only distinction
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 1600x900 at scale 3 produces 4800x2700; balanced margins, good canvas
+          utilization
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Engineering Stress (MPa) includes units; Engineering Strain is correctly
+          dimensionless
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Thoughtful color palette, clean template, intentional hierarchy;
+          above defaults but not showcase level
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid at 8% opacity, x-axis grid removed, legend with subtle
+          border, good whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Region labels guide viewer through deformation stages; color-coded
+          critical points create clear hierarchy
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct line plot for stress-strain curve
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: region labels, critical points, elastic modulus
+          annotation, 0.2% offset line'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=strain, Y=stress correctly assigned; axes cover all data
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title follows format with descriptive prefix; legend labels are descriptive
+          and match data
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all tensile test regions: elastic, yield plateau, strain hardening,
+          necking, fracture'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Mild steel tensile test is a classic neutral engineering scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: E=210 GPa, yield=250 MPa, UTS=400 MPa, fracture strain=0.35 all accurate
+          for mild steel
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean imports → data → plot → save structure, no functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set before data generation
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only numpy and plotly.graph_objects imported, both used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-organized with clear section comments; appropriate complexity
+          for multi-region curve
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with correct dimensions; also exports plot.html;
+          current API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of go.Figure, go.Scatter, add_trace, add_annotation, update_layout
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses hovertemplate for custom tooltips, HTML export, interactive
+          annotation system
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - grid-styling

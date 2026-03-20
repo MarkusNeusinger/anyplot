@@ -1,0 +1,237 @@
+library: bokeh
+specification_id: root-locus-basic
+created: '2026-03-20T21:23:12Z'
+updated: '2026-03-20T21:51:22Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23362981928
+issue: 4414
+python_version: 3.14.3
+library_version: 3.9.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/root-locus-basic/bokeh/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/root-locus-basic/bokeh/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/root-locus-basic/bokeh/plot.html
+quality_score: 90
+review:
+  strengths:
+  - Excellent engineering context with analytically correct data (Routh criterion,
+    breakaway computation, asymptote centroid)
+  - Strong visual storytelling through targeted annotations at key control theory
+    points
+  - Clean design with removed axis lines/ticks, subtle grid, and professional color
+    scheme
+  - Good use of Bokeh-specific features (HoverTool, HTML export, Span)
+  - All spec requirements fully met including direction arrows, real-axis segments,
+    and guide lines
+  weaknesses:
+  - Damping ratio and natural frequency guide lines are extremely faint (alpha 0.25-0.3),
+    reducing their utility as reference guides
+  - Minor legend overlap with guide line labels in the top-right corner
+  - Locus scatter points are small (size=6); slightly larger would improve visibility
+  image_description: 'The plot displays a root locus diagram for the transfer function
+    G(s) = 1/(s(s+1)(s+3)) on a light gray (#FAFAFA) background. The title "root-locus-basic
+    · bokeh · pyplots.ai" appears at the top left in dark text. The x-axis is labeled
+    "Real Axis (σ)" and the y-axis "Imaginary Axis (jω)". Three open-loop poles are
+    marked with large dark × markers at s=0, s=-1, and s=-3 on the real axis. Two
+    blue real-axis locus segments extend from -1 to 0 and from -5.5 to -3. Two orange
+    complex branches curve symmetrically upward and downward from a breakaway point
+    near σ=-0.451, crossing the imaginary axis at approximately ±j1.73. Red diamond
+    markers highlight the jω-axis crossings with a bold red annotation "jω-crossing:
+    K=12, ω=√3≈1.73". A blue square marker indicates the breakaway point with annotation
+    "Breakaway: σ=-0.451, K=0.63". A small gray circle marks the centroid at σ=-1.33
+    with italic annotation. Faint dotted damping ratio lines (ζ=0.6, ζ=0.8 visible)
+    radiate from the origin, and faint dotted natural frequency arcs (ωn=1, 2, 3 visible)
+    appear as semicircles. A dashed red line along the imaginary axis indicates the
+    stability boundary. A blue triangle arrow on one branch indicates the direction
+    of increasing gain. The legend in the top-right lists: Real-axis locus, Complex
+    branches, Open-loop poles, Stability crossing (K=12), and Breakaway (K=0.63).'
+  criteria_checklist:
+    visual_quality:
+      score: 26
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 72pt, axis labels 48pt, ticks
+          36pt, annotations 24-28pt'
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Minor overlap between legend and guide line labels in top-right area
+      - id: VQ-03
+        name: Element Visibility
+        score: 4
+        max: 6
+        passed: true
+        comment: Locus branches visible but scatter size=6 is small; damping/frequency
+          guide lines extremely faint
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue/orange colorblind-safe palette with shape differentiation for
+          markers
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good canvas use; minor issue with branch extending near y-range edge
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive labels with engineering symbols: Real Axis (σ), Imaginary
+          Axis (jω)'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Strong design with custom palette, Helvetica typography, clean color
+          scheme
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Axis lines/ticks removed, subtle grid, styled background and legend
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Annotations at key engineering points tell a clear stability analysis
+          story
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct root locus plot with pole migration through complex plane
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: pole markers, locus curves, arrows, real-axis
+          segments, crossings, guide lines'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Real/imaginary axes correctly mapped, gain parameterizes curves
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title follows exact format, legend labels descriptive and correct
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all root locus aspects: branches, breakaway, complex conjugates,
+          axis crossings, asymptotes'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Classic control systems transfer function with proper engineering
+          terminology
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sensible gain range and pole locations; analytically correct critical
+          values
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports, data, plot, style, save'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic analytical computation
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-organized, appropriate complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png via export_png, current Bokeh API
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of ColumnDataSource, proper figure configuration, idiomatic
+          styling
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: HoverTool, HTML export, Span model, active_scroll are distinctively
+          Bokeh features
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - hover-tooltips
+  - html-export
+  - custom-legend
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  - columndatasource
+  dataprep: []
+  styling:
+  - grid-styling
+  - alpha-blending
