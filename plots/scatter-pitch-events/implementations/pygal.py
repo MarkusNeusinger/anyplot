@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 scatter-pitch-events: Soccer Pitch Event Map
 Library: pygal 3.1.0 | Python 3.14.3
 Quality: 81/100 | Created: 2026-03-20
@@ -14,10 +14,10 @@ from pygal.style import Style
 # Data — synthetic match events on a 105m x 68m pitch
 np.random.seed(42)
 
-n_passes = 80
-n_shots = 15
-n_tackles = 25
-n_interceptions = 20
+n_passes = 35
+n_shots = 12
+n_tackles = 18
+n_interceptions = 14
 
 pass_x = np.random.uniform(10, 95, n_passes)
 pass_y = np.random.uniform(5, 63, n_passes)
@@ -73,42 +73,42 @@ corner_tl = [(math.cos(a), 68 + math.sin(a)) for a in corner_angles_tl]
 # Successful: bright/saturated, Unsuccessful: desaturated/muted with distinct hue shift
 font = "DejaVu Sans, Helvetica, Arial, sans-serif"
 custom_style = Style(
-    background="#1b5e20",
-    plot_background="#2e7d32",
+    background="#15471a",
+    plot_background="#276b2e",
     foreground="#ffffff",
     foreground_strong="#ffffff",
     foreground_subtle="#2e7d32",
     guide_stroke_color="#2e7d32",
     colors=(
-        "#ffffff",  # pitch outline
-        "#ffffff",  # halfway
-        "#ffffff",  # left penalty
-        "#ffffff",  # right penalty
-        "#ffffff",  # left goal area
-        "#ffffff",  # right goal area
-        "#ffffff",  # center circle
-        "#ffffff",  # center spot
-        "#ffffff",  # left penalty arc
-        "#ffffff",  # right penalty arc
-        "#ffffff",  # corner bl
-        "#ffffff",  # corner br
-        "#ffffff",  # corner tr
-        "#ffffff",  # corner tl
-        "#64b5f6",  # Pass (successful) — medium blue, subtle
-        "#fdd835",  # Pass (unsuccessful) — yellow, visible on green
-        "#d50000",  # Shot (successful/goal) — bright red, focal point
-        "#ff8a80",  # Shot (unsuccessful) — salmon pink, visible
-        "#ff6d00",  # Tackle (successful) — vivid orange
-        "#ffab40",  # Tackle (unsuccessful) — amber
-        "#00bfa5",  # Interception (successful) — bright teal
-        "#80cbc4",  # Interception (unsuccessful) — light teal
+        "#ffffffcc",  # pitch outline
+        "#ffffffcc",  # halfway
+        "#ffffffcc",  # left penalty
+        "#ffffffcc",  # right penalty
+        "#ffffffcc",  # left goal area
+        "#ffffffcc",  # right goal area
+        "#ffffffcc",  # center circle
+        "#ffffffcc",  # center spot
+        "#ffffffcc",  # left penalty arc
+        "#ffffffcc",  # right penalty arc
+        "#ffffffcc",  # corner bl
+        "#ffffffcc",  # corner br
+        "#ffffffcc",  # corner tr
+        "#ffffffcc",  # corner tl
+        "#5c9bd5",  # Pass (successful) — steel blue, readable
+        "#fbc02d",  # Pass (unsuccessful) — golden yellow, visible on green
+        "#e53935",  # Shot (successful/goal) — vivid red, focal point
+        "#ef9a9a",  # Shot (unsuccessful) — light coral
+        "#ff8f00",  # Tackle (successful) — vivid amber
+        "#ffcc80",  # Tackle (unsuccessful) — peach
+        "#ab47bc",  # Interception (successful) — rich purple, distinct from blue
+        "#ce93d8",  # Interception (unsuccessful) — light purple
     ),
     font_family=font,
     title_font_family=font,
     title_font_size=52,
     label_font_size=36,
     major_label_font_size=32,
-    legend_font_size=32,
+    legend_font_size=38,
     legend_font_family=font,
     value_font_size=24,
     tooltip_font_size=24,
@@ -128,7 +128,7 @@ chart = pygal.XY(
     show_legend=True,
     legend_at_bottom=True,
     legend_at_bottom_columns=4,
-    legend_box_size=28,
+    legend_box_size=32,
     stroke=True,
     dots_size=0,
     show_x_guides=False,
@@ -137,12 +137,14 @@ chart = pygal.XY(
     show_y_labels=False,
     xrange=(-5, 110),
     range=(-5, 73),
-    margin_bottom=100,
+    margin_bottom=110,
     margin_left=20,
     margin_right=20,
     margin_top=50,
     print_values=False,
     print_zeroes=False,
+    tooltip_border_radius=8,
+    tooltip_fancy_mode=True,
     js=[],
 )
 
@@ -185,7 +187,12 @@ for sx, sy, ex, ey in zip(
     pass_succ_lines.append((float(ex), float(ey)))
     pass_succ_lines.append(None)
 chart.add(
-    "Pass ✓", pass_succ_lines, stroke=True, show_dots=True, dots_size=5, stroke_style={"width": 2, "linecap": "round"}
+    "Pass ✓",
+    pass_succ_lines,
+    stroke=True,
+    show_dots=True,
+    dots_size=4,
+    stroke_style={"width": 1.5, "linecap": "round", "opacity": "0.7"},
 )
 
 pass_fail_mask = ~pass_succ_mask
@@ -201,8 +208,8 @@ chart.add(
     pass_fail_lines,
     stroke=True,
     show_dots=True,
-    dots_size=5,
-    stroke_style={"width": 2, "linecap": "round", "dasharray": "8,6"},
+    dots_size=4,
+    stroke_style={"width": 1.5, "linecap": "round", "dasharray": "8,6", "opacity": "0.65"},
 )
 
 # Shots as directional lines (prominent — key events for storytelling)
@@ -219,8 +226,8 @@ chart.add(
     shot_succ_lines,
     stroke=True,
     show_dots=True,
-    dots_size=14,
-    stroke_style={"width": 6, "linecap": "round"},
+    dots_size=18,
+    stroke_style={"width": 7, "linecap": "round"},
 )
 
 shot_fail_mask = ~shot_succ_mask
@@ -236,8 +243,8 @@ chart.add(
     shot_fail_lines,
     stroke=True,
     show_dots=True,
-    dots_size=9,
-    stroke_style={"width": 4, "linecap": "round", "dasharray": "6,4"},
+    dots_size=12,
+    stroke_style={"width": 5, "linecap": "round", "dasharray": "6,4"},
 )
 
 # Tackles as scatter dots (large markers)
