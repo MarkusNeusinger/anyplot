@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 scatter-pitch-events: Soccer Pitch Event Map
 Library: bokeh 3.9.0 | Python 3.14.3
 Quality: 82/100 | Created: 2026-03-20
@@ -61,6 +61,7 @@ df = pd.DataFrame(
 # Color and marker mapping
 event_colors = {"pass": "#306998", "shot": "#E63946", "tackle": "#2A9D8F", "interception": "#E9C46A"}
 event_markers = {"pass": "circle", "shot": "star", "tackle": "triangle", "interception": "diamond"}
+event_sizes = {"pass": 20, "shot": 28, "tackle": 22, "interception": 20}
 
 # Plot
 pitch_margin = 5
@@ -69,13 +70,17 @@ p = figure(
     height=2700,
     title="scatter-pitch-events · bokeh · pyplots.ai",
     x_range=Range1d(-pitch_margin, 105 + pitch_margin),
-    y_range=Range1d(-pitch_margin, 68 + pitch_margin),
+    y_range=Range1d(-pitch_margin - 12, 68 + pitch_margin),
     toolbar_location=None,
     match_aspect=True,
 )
 
 # Pitch background
-p.rect(x=52.5, y=34, width=105, height=68, fill_color="#2E7D32", fill_alpha=0.15, line_color="#2E7D32", line_width=4)
+p.rect(x=52.5, y=34, width=105, height=68, fill_color="#3a8c3f", fill_alpha=0.18, line_color="#2E7D32", line_width=4)
+
+# Pitch zone shading — attacking third highlighted
+p.rect(x=87.5, y=34, width=35, height=68, fill_color="#E63946", fill_alpha=0.04, line_color=None)
+p.rect(x=17.5, y=34, width=35, height=68, fill_color="#306998", fill_alpha=0.04, line_color=None)
 
 # Pitch outline
 p.line([0, 105, 105, 0, 0], [0, 0, 68, 68, 0], line_color="#2E7D32", line_width=4)
@@ -88,13 +93,13 @@ theta = np.linspace(0, 2 * np.pi, 100)
 p.line(52.5 + 9.15 * np.cos(theta), 34 + 9.15 * np.sin(theta), line_color="#2E7D32", line_width=3)
 p.scatter([52.5], [34], size=10, color="#2E7D32")
 
-# Left penalty area (16.5m from goal line, 40.3m wide)
+# Left penalty area
 p.line([0, 16.5, 16.5, 0], [13.85, 13.85, 54.15, 54.15], line_color="#2E7D32", line_width=3)
 
 # Right penalty area
 p.line([105, 88.5, 88.5, 105], [13.85, 13.85, 54.15, 54.15], line_color="#2E7D32", line_width=3)
 
-# Left goal area (5.5m from goal line, 18.3m wide)
+# Left goal area
 p.line([0, 5.5, 5.5, 0], [24.85, 24.85, 43.15, 43.15], line_color="#2E7D32", line_width=3)
 
 # Right goal area
@@ -103,7 +108,7 @@ p.line([105, 99.5, 99.5, 105], [24.85, 24.85, 43.15, 43.15], line_color="#2E7D32
 # Penalty spots
 p.scatter([11, 94], [34, 34], size=8, color="#2E7D32")
 
-# Penalty arcs (portion outside penalty area)
+# Penalty arcs
 arc_theta = np.linspace(-0.93, 0.93, 50)
 p.line(11 + 9.15 * np.cos(arc_theta), 34 + 9.15 * np.sin(arc_theta), line_color="#2E7D32", line_width=3)
 p.line(94 - 9.15 * np.cos(arc_theta), 34 + 9.15 * np.sin(arc_theta), line_color="#2E7D32", line_width=3)
@@ -127,59 +132,62 @@ p.line([105, 106], [37.66, 37.66], line_color="#444444", line_width=5)
 p.line([106, 106], [30.34, 37.66], line_color="#444444", line_width=5)
 
 # Directional arrows for passes and shots
-arrow_events = df[df["event_type"].isin(["pass", "shot"])]
-for _, row in arrow_events.iterrows():
-    alpha = 0.7 if row["outcome"] == "successful" else 0.25
-    color = event_colors[row["event_type"]]
-    p.add_layout(
-        Arrow(
-            end=NormalHead(size=12, fill_color=color, fill_alpha=alpha, line_color=color, line_alpha=alpha),
-            x_start=row["x"],
-            y_start=row["y"],
-            x_end=row["x_end"],
-            y_end=row["y_end"],
-            line_color=color,
-            line_alpha=alpha,
-            line_width=2,
-        )
-    )
+arrow_df = df[df["event_type"].isin(["pass", "shot"])]
+for etype, grp in arrow_df.groupby("event_type"):
+    color = event_colors[etype]
+    for outcome, sub in grp.groupby("outcome"):
+        alpha = 0.7 if outcome == "successful" else 0.35
+        for xs, ys, xe, ye in zip(sub["x"], sub["y"], sub["x_end"], sub["y_end"], strict=False):
+            p.add_layout(
+                Arrow(
+                    end=NormalHead(size=12, fill_color=color, fill_alpha=alpha, line_color=color, line_alpha=alpha),
+                    x_start=xs,
+                    y_start=ys,
+                    x_end=xe,
+                    y_end=ye,
+                    line_color=color,
+                    line_alpha=alpha,
+                    line_width=2,
+                )
+            )
 
-# Event markers
+# Event markers with size variation for visual hierarchy
 for etype in ["pass", "shot", "tackle", "interception"]:
     for outcome in ["successful", "unsuccessful"]:
         mask = (df["event_type"] == etype) & (df["outcome"] == outcome)
         subset = df[mask]
         if len(subset) == 0:
             continue
-        alpha = 0.85 if outcome == "successful" else 0.3
+        alpha = 0.9 if outcome == "successful" else 0.5
         fill = event_colors[etype] if outcome == "successful" else "white"
-        line_color = event_colors[etype]
         source = ColumnDataSource(data={"x": subset["x"].values, "y": subset["y"].values})
         p.scatter(
             x="x",
             y="y",
             source=source,
             marker=event_markers[etype],
-            size=22,
+            size=event_sizes[etype],
             fill_color=fill,
             fill_alpha=alpha,
-            line_color=line_color,
+            line_color=event_colors[etype],
             line_width=3,
             line_alpha=0.9,
             legend_label=f"{etype.capitalize()} ({outcome})",
         )
 
-# Legend styling
-p.legend.location = "top_left"
-p.legend.label_text_font_size = "28pt"
-p.legend.glyph_width = 40
-p.legend.glyph_height = 40
-p.legend.spacing = 8
-p.legend.padding = 15
-p.legend.background_fill_alpha = 0.85
+# Legend — positioned below pitch to avoid overlap
+p.legend.location = "bottom_center"
+p.legend.orientation = "horizontal"
+p.legend.label_text_font_size = "24pt"
+p.legend.glyph_width = 35
+p.legend.glyph_height = 35
+p.legend.spacing = 20
+p.legend.padding = 12
+p.legend.background_fill_alpha = 0.9
 p.legend.background_fill_color = "white"
 p.legend.border_line_color = "#CCCCCC"
 p.legend.border_line_width = 2
+p.legend.ncols = 4
 
 # Style
 p.title.text_font_size = "60pt"
