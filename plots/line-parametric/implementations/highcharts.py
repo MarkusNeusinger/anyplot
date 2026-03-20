@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 line-parametric: Parametric Curve Plot
 Library: highcharts unknown | Python 3.14.3
 Quality: 77/100 | Created: 2026-03-20
@@ -13,20 +13,10 @@ from pathlib import Path
 import numpy as np
 from highcharts_core.chart import Chart
 from highcharts_core.options import HighchartsOptions
+from highcharts_core.options.series.area import LineSeries
 from highcharts_core.options.series.scatter import ScatterSeries
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
-
-
-def gradient_colors(h_start, h_end, s, lightness, n):
-    """Generate n hex colors along a hue gradient in HSL space."""
-    colors = []
-    for i in range(n):
-        frac = i / max(n - 1, 1)
-        h = h_start + (h_end - h_start) * frac
-        r, g, b = colorsys.hls_to_rgb(h % 1.0, lightness + (0.15 * frac), s - (0.1 * frac))
-        colors.append(f"#{int(r * 255):02x}{int(g * 255):02x}{int(b * 255):02x}")
-    return colors
 
 
 # Data - parametric curves
@@ -38,27 +28,39 @@ t_spiral = np.linspace(0, 4 * np.pi, 600)
 x_spiral = t_spiral * np.cos(t_spiral) / (4 * np.pi)
 y_spiral = t_spiral * np.sin(t_spiral) / (4 * np.pi)
 
-# Generate gradient palettes programmatically (cool-to-warm)
-n_segments = 30
-lissajous_colors = gradient_colors(0.6, 0.07, 0.85, 0.3, n_segments)  # blue to orange
-spiral_colors = gradient_colors(0.78, 0.95, 0.75, 0.35, n_segments)  # purple to pink
+# Generate gradient palettes inline (blue-to-teal for Lissajous, purple-to-rose for spiral)
+n_segments = 18
+lissajous_colors = []
+for i in range(n_segments):
+    frac = i / max(n_segments - 1, 1)
+    h = 0.58 + (0.48 - 0.58) * frac  # blue (0.58) to teal (0.48)
+    r, g, b = colorsys.hls_to_rgb(h % 1.0, 0.35 + 0.10 * frac, 0.80)
+    lissajous_colors.append(f"#{int(r * 255):02x}{int(g * 255):02x}{int(b * 255):02x}")
 
+spiral_colors = []
+for i in range(n_segments):
+    frac = i / max(n_segments - 1, 1)
+    h = 0.82 + (0.95 - 0.82) * frac  # purple (0.82) to rose (0.95)
+    r, g, b = colorsys.hls_to_rgb(h % 1.0, 0.40 + 0.08 * frac, 0.70)
+    spiral_colors.append(f"#{int(r * 255):02x}{int(g * 255):02x}{int(b * 255):02x}")
 
-def build_segments(x, y, colors, n_seg):
-    """Split curve into colored segments for gradient effect."""
-    segments = []
-    pts_per_seg = len(x) // n_seg
-    for i in range(n_seg):
-        start = i * pts_per_seg
-        end = start + pts_per_seg + 1 if i < n_seg - 1 else len(x)
-        color_idx = int(i * (len(colors) - 1) / (n_seg - 1))
-        data = [[float(x[j]), float(y[j])] for j in range(start, end)]
-        segments.append({"data": data, "color": colors[color_idx]})
-    return segments
+# Build segments inline for Lissajous
+lissajous_segments = []
+pts_per_seg = len(x_lissajous) // n_segments
+for i in range(n_segments):
+    start = i * pts_per_seg
+    end = start + pts_per_seg + 1 if i < n_segments - 1 else len(x_lissajous)
+    data = [[float(x_lissajous[j]), float(y_lissajous[j])] for j in range(start, end)]
+    lissajous_segments.append({"data": data, "color": lissajous_colors[i]})
 
-
-lissajous_segments = build_segments(x_lissajous, y_lissajous, lissajous_colors, n_segments)
-spiral_segments = build_segments(x_spiral, y_spiral, spiral_colors, n_segments)
+# Build segments inline for spiral
+spiral_segments = []
+pts_per_seg_sp = len(x_spiral) // n_segments
+for i in range(n_segments):
+    start = i * pts_per_seg_sp
+    end = start + pts_per_seg_sp + 1 if i < n_segments - 1 else len(x_spiral)
+    data = [[float(x_spiral[j]), float(y_spiral[j])] for j in range(start, end)]
+    spiral_segments.append({"data": data, "color": spiral_colors[i]})
 
 # Create chart - square canvas for equal aspect ratio
 chart = Chart(container="container")
@@ -143,13 +145,13 @@ chart.options.tooltip = {
 chart.options.credits = {"enabled": False}
 
 chart.options.plot_options = {
-    "scatter": {"lineWidth": 5, "states": {"hover": {"lineWidthPlus": 0}}, "marker": {"enabled": False}},
+    "line": {"lineWidth": 5, "states": {"hover": {"lineWidthPlus": 0}}, "marker": {"enabled": False}},
     "series": {"animation": False, "turboThreshold": 0},
 }
 
-# Add Lissajous segments
+# Add Lissajous segments using LineSeries
 for i, seg in enumerate(lissajous_segments):
-    s = ScatterSeries()
+    s = LineSeries()
     s.data = seg["data"]
     s.color = seg["color"]
     s.name = "Lissajous: sin(3t), sin(2t)"
@@ -160,9 +162,9 @@ for i, seg in enumerate(lissajous_segments):
     s.enable_mouse_tracking = i == 0
     chart.add_series(s)
 
-# Add spiral segments
+# Add spiral segments using LineSeries
 for i, seg in enumerate(spiral_segments):
-    s = ScatterSeries()
+    s = LineSeries()
     s.data = seg["data"]
     s.color = seg["color"]
     s.name = "Spiral: t\u00b7cos(t), t\u00b7sin(t)"
@@ -173,12 +175,11 @@ for i, seg in enumerate(spiral_segments):
     s.enable_mouse_tracking = i == 0
     chart.add_series(s)
 
-# Lissajous is a closed curve (start=end at origin), mark with single "Lissajous t=0/2π" label
-# Spiral starts at origin, ends at outer edge
+# Start/end markers - offset labels to avoid overlap near origin
 marker_data = [
-    (x_lissajous[0], y_lissajous[0], "Lissajous t=0,2\u03c0", lissajous_colors[0], "circle", True, -40, "right"),
-    (x_spiral[0], y_spiral[0], "Spiral start", spiral_colors[0], "circle", False, 30, "left"),
-    (x_spiral[-1], y_spiral[-1], "Spiral end", spiral_colors[-1], "diamond", True, -35, "center"),
+    (x_lissajous[0], y_lissajous[0], "Lissajous t=0,2\u03c0", lissajous_colors[0], "circle", True, -50, "right"),
+    (x_spiral[0], y_spiral[0], "Spiral start", spiral_colors[0], "circle", False, 45, "left"),
+    (x_spiral[-1], y_spiral[-1], "Spiral end", spiral_colors[-1], "diamond", True, -40, "center"),
 ]
 
 for x, y, name, color, symbol, show_legend, y_offset, align in marker_data:
@@ -190,7 +191,7 @@ for x, y, name, color, symbol, show_legend, y_offset, align in marker_data:
     s.data_labels = {
         "enabled": True,
         "format": "{point.name}",
-        "style": {"fontSize": "26px", "fontWeight": "bold", "color": "#333333", "textOutline": "3px #ffffff"},
+        "style": {"fontSize": "28px", "fontWeight": "bold", "color": "#333333", "textOutline": "3px #ffffff"},
         "y": y_offset,
         "align": align,
     }
