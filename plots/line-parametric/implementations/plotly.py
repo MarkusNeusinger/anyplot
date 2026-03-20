@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 line-parametric: Parametric Curve Plot
 Library: plotly 6.6.0 | Python 3.14.3
-Quality: 85/100 | Created: 2026-03-20
+Quality: 88/100 | Created: 2026-03-20
 """
 
 import numpy as np
