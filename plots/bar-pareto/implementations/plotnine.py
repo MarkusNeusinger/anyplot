@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 bar-pareto: Pareto Chart with Cumulative Line
 Library: plotnine 0.15.3 | Python 3.14.3
 Quality: 84/100 | Created: 2026-03-20
@@ -19,6 +19,7 @@ from plotnine import (
     geom_text,
     ggplot,
     labs,
+    scale_fill_manual,
     scale_x_discrete,
     scale_y_continuous,
     theme,
@@ -52,23 +53,37 @@ max_count = df["count"].max()
 scale_factor = max_count / 100
 df["cum_scaled"] = df["cum_pct"] * scale_factor
 
-# Labels for cumulative percentage on each point
+# Vital few (contribute to first 80%) vs useful many
+df["vital"] = df["cum_pct"].shift(1, fill_value=0) < 80
+df["bar_fill"] = df["vital"].map({True: "vital", False: "useful"})
+
+# Labels for cumulative percentage
 df["pct_label"] = df["cum_pct"].apply(lambda v: f"{v:.0f}%")
 
-y_max = max_count * 1.1
+y_max = max_count * 1.12
 
 # Plot
 plot = (
     ggplot(df, aes(x="category"))
-    + geom_bar(aes(y="count"), stat="identity", fill="#306998", width=0.7)
+    + geom_bar(aes(y="count", fill="bar_fill"), stat="identity", width=0.7)
+    + scale_fill_manual(values={"vital": "#306998", "useful": "#A8C4D9"})
     + geom_line(aes(y="cum_scaled", group=1), color="#E85D3A", size=1.5)
     + geom_point(aes(y="cum_scaled"), color="#E85D3A", size=4, fill="white", stroke=1.5)
     # Percentage labels on cumulative line
-    + geom_text(aes(y="cum_scaled", label="pct_label"), size=10, va="bottom", nudge_y=6, color="#C04422")
+    + geom_text(
+        aes(y="cum_scaled", label="pct_label"), size=9, va="bottom", nudge_y=6, color="#C04422", fontweight="bold"
+    )
     # 80% threshold reference line
     + geom_hline(yintercept=80 * scale_factor, linetype="dashed", color="#999999", size=0.8)
     + annotate(
-        "text", x=10.5, y=80 * scale_factor + 4, label="80%", size=11, color="#777777", ha="right", fontweight="bold"
+        "text",
+        x=0.5,
+        y=80 * scale_factor + 5,
+        label="80% threshold",
+        size=10,
+        color="#777777",
+        ha="left",
+        fontweight="bold",
     )
     + scale_y_continuous(name="Defect Count", expand=(0, 0, 0.08, 0), limits=(0, y_max))
     + scale_x_discrete(expand=(0.05, 0.6))
@@ -87,9 +102,25 @@ plot = (
         axis_ticks=element_blank(),
         plot_background=element_rect(fill="white", color="white"),
         panel_background=element_rect(fill="white", color="white"),
+        legend_position="none",
         plot_margin=0.02,
     )
 )
 
+# Draw to matplotlib figure, then add secondary y-axis for cumulative %
+fig = plot.draw()
+ax = fig.axes[0]
+
+ax2 = ax.twinx()
+ax2.set_ylim(0, y_max / scale_factor)
+ax2.set_ylabel("Cumulative %", fontsize=20, color="#333333")
+ax2.set_yticks([0, 20, 40, 60, 80, 100])
+ax2.set_yticklabels([f"{t}%" for t in [0, 20, 40, 60, 80, 100]], fontsize=16, color="#333333")
+ax2.tick_params(axis="y", length=0)
+ax2.spines["top"].set_visible(False)
+ax2.spines["right"].set_visible(False)
+ax2.spines["left"].set_visible(False)
+ax2.spines["bottom"].set_visible(False)
+
 # Save
-plot.save("plot.png", dpi=300)
+fig.savefig("plot.png", dpi=300, bbox_inches="tight")
