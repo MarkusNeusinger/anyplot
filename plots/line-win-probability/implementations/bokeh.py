@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 line-win-probability: Win Probability Chart
 Library: bokeh 3.9.0 | Python 3.14.3
-Quality: 88/100 | Created: 2026-03-20
+Quality: 92/100 | Created: 2026-03-20
 """
 
 import numpy as np
