@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 root-locus-basic: Root Locus Plot for Control Systems
 Library: letsplot 4.9.0 | Python 3.14.3
-Quality: 84/100 | Created: 2026-03-20
+Quality: 89/100 | Created: 2026-03-20
 """
 
 import numpy as np
