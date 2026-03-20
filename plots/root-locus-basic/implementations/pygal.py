@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 root-locus-basic: Root Locus Plot for Control Systems
 Library: pygal 3.1.0 | Python 3.14.3
 Quality: 79/100 | Created: 2026-03-20
@@ -70,15 +70,16 @@ custom_style = Style(
     plot_background="white",
     foreground="#2a2a2a",
     foreground_strong="#2a2a2a",
-    foreground_subtle="#e0e0e0",
-    guide_stroke_color="#ebebeb",
-    guide_stroke_dasharray="4, 6",
+    foreground_subtle="#d0d0d0",
+    guide_stroke_color="#e8e8e8",
+    guide_stroke_dasharray="3, 5",
     colors=(
         "#306998",  # Root locus branches
-        "#666666",  # Real-axis locus
-        "#c62828",  # Open-loop poles
-        "#2e7d32",  # Open-loop zero
+        "#455a64",  # Real-axis locus (dark blue-gray, clearly visible)
+        "#c62828",  # Open-loop poles (red)
+        "#00897b",  # Open-loop zero (teal — colorblind-safe)
         "#e65100",  # Stability boundary (jω crossings)
+        "#306998",  # Gain direction arrows (match locus color)
         "#c8c8c8",  # ζ guide lines
         "#c8c8c8",  # ωn guide semicircles
     ),
@@ -141,7 +142,7 @@ for b in range(n_branches):
     locus_pts.append(None)
 
 chart.add(
-    "Root Locus", locus_pts, stroke_style={"width": 7, "linecap": "round"}, show_dots=False, allow_interruptions=True
+    "Root Locus", locus_pts, stroke_style={"width": 8, "linecap": "round"}, show_dots=False, allow_interruptions=True
 )
 
 # Real-axis locus segments
@@ -153,7 +154,7 @@ for seg_start, seg_end in real_segments:
 chart.add(
     "Real-Axis Locus",
     real_pts,
-    stroke_style={"width": 8, "linecap": "round"},
+    stroke_style={"width": 10, "linecap": "round"},
     show_dots=False,
     allow_interruptions=True,
 )
@@ -169,6 +170,17 @@ chart.add("Open-Loop Zero (○)", zero_pts, stroke=False, dots_size=20)
 # Imaginary axis crossings — stability boundary markers
 jw_pts = [{"value": (0.0, im), "label": f"jω crossing: s = {im:+.3f}j, K = {K:.2f}"} for im, K in jw_crossings]
 chart.add("Stability Boundary (jω)", jw_pts, stroke=False, dots_size=22)
+
+# Gain direction arrows — triangular markers along locus at selected gains
+arrow_pts = []
+arrow_gains = [5, 15, 40, 100, 250]
+for ag in arrow_gains:
+    idx = np.argmin(np.abs(gains - ag))
+    for b in range(n_branches):
+        r, im = float(loci[idx, b].real), float(loci[idx, b].imag)
+        if -6 <= r <= 3 and -5 <= im <= 5:
+            arrow_pts.append({"value": (round(r, 3), round(im, 3)), "label": f"K = {ag} →"})
+chart.add("Gain Direction (K →)", arrow_pts, stroke=False, dots_size=14)
 
 # Constant damping ratio guide lines (ζ rays from origin)
 zeta_pts = []
