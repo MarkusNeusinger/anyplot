@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 scatter-shot-chart: Basketball Shot Chart
 Library: bokeh 3.9.0 | Python 3.14.3
 Quality: 80/100 | Created: 2026-03-20
@@ -6,7 +6,7 @@ Quality: 80/100 | Created: 2026-03-20
 
 import numpy as np
 from bokeh.io import export_png, save
-from bokeh.models import ColumnDataSource, Label, Legend, LegendItem, Range1d
+from bokeh.models import ColumnDataSource, HoverTool, Label, Legend, LegendItem, Range1d
 from bokeh.plotting import figure
 from bokeh.resources import CDN
 
@@ -19,6 +19,7 @@ x = np.zeros(n_shots)
 y = np.zeros(n_shots)
 made = np.zeros(n_shots, dtype=bool)
 shot_type = []
+zone_label = []
 
 for i in range(n_shots):
     zone = np.random.choice(["paint", "midrange", "three", "corner3", "ft"], p=[0.25, 0.20, 0.30, 0.10, 0.15])
@@ -27,6 +28,7 @@ for i in range(n_shots):
         y[i] = np.random.uniform(0, 12)
         made[i] = np.random.random() < 0.55
         shot_type.append("2-pointer")
+        zone_label.append("Paint")
     elif zone == "midrange":
         x[i] = np.random.uniform(-16, 16)
         y[i] = np.random.uniform(5, 20)
@@ -37,6 +39,7 @@ for i in range(n_shots):
             dist = np.sqrt(x[i] ** 2 + y[i] ** 2)
         made[i] = np.random.random() < 0.42
         shot_type.append("2-pointer")
+        zone_label.append("Mid-Range")
     elif zone == "three":
         angle = np.random.uniform(0.25, np.pi - 0.25)
         r = np.random.uniform(24, 28)
@@ -46,19 +49,33 @@ for i in range(n_shots):
         y[i] = np.clip(y[i], 10, 33)
         made[i] = np.random.random() < 0.36
         shot_type.append("3-pointer")
+        zone_label.append("Three-Point")
     elif zone == "corner3":
         side = np.random.choice([-1, 1])
         x[i] = side * np.random.uniform(21.5, 23)
         y[i] = np.random.uniform(0, 10)
         made[i] = np.random.random() < 0.39
         shot_type.append("3-pointer")
+        zone_label.append("Corner 3")
     else:
-        x[i] = np.random.uniform(-0.8, 0.8)
-        y[i] = np.random.uniform(14.5, 15.5)
+        x[i] = np.random.uniform(-1.5, 1.5)
+        y[i] = np.random.uniform(13.5, 16.5)
         made[i] = np.random.random() < 0.78
         shot_type.append("free-throw")
+        zone_label.append("Free Throw")
 
 shot_type = np.array(shot_type)
+zone_label = np.array(zone_label)
+
+# Zone efficiency stats for storytelling
+zones = ["Paint", "Mid-Range", "Three-Point", "Corner 3", "Free Throw"]
+zone_stats = {}
+for z in zones:
+    mask = zone_label == z
+    z_made = int(np.sum(made[mask]))
+    z_total = int(np.sum(mask))
+    z_pct = z_made / z_total * 100 if z_total > 0 else 0
+    zone_stats[z] = (z_made, z_total, z_pct)
 
 # Plot — 1:1 aspect ratio for undistorted court
 p = figure(
@@ -108,20 +125,41 @@ p.line(0.75 * np.cos(hoop_theta), 0.75 * np.sin(hoop_theta) + 1.5, line_color="#
 # Backboard
 p.line([-3, 3], [0, 0], line_color="#555555", line_width=6)
 
-# Shot markers — made (green circles) and missed (red X)
+# Shot markers — colorblind-safe: blue for made, orange for missed
 made_mask = made
 missed_mask = ~made
 
-source_made = ColumnDataSource(data={"x": x[made_mask], "y": y[made_mask]})
-source_missed = ColumnDataSource(data={"x": x[missed_mask], "y": y[missed_mask]})
+result_label = np.where(made, "Made", "Missed")
+distance = np.round(np.sqrt(x**2 + y**2), 1)
+
+source_made = ColumnDataSource(
+    data={
+        "x": x[made_mask],
+        "y": y[made_mask],
+        "result": result_label[made_mask],
+        "zone": zone_label[made_mask],
+        "shot_type": shot_type[made_mask],
+        "distance": distance[made_mask],
+    }
+)
+source_missed = ColumnDataSource(
+    data={
+        "x": x[missed_mask],
+        "y": y[missed_mask],
+        "result": result_label[missed_mask],
+        "zone": zone_label[missed_mask],
+        "shot_type": shot_type[missed_mask],
+        "distance": distance[missed_mask],
+    }
+)
 
 r_made = p.scatter(
     x="x",
     y="y",
     source=source_made,
     size=20,
-    fill_color="#2E8B57",
-    fill_alpha=0.8,
+    fill_color="#2171B5",
+    fill_alpha=0.75,
     line_color="white",
     line_width=1.5,
     marker="circle",
@@ -134,10 +172,18 @@ r_missed = p.scatter(
     size=18,
     fill_color=None,
     fill_alpha=0,
-    line_color="#D94F4F",
+    line_color="#E6550D",
     line_width=3.5,
     marker="x",
 )
+
+# HoverTool — Bokeh's signature interactive feature
+hover = HoverTool(
+    renderers=[r_made, r_missed],
+    tooltips=[("Result", "@result"), ("Zone", "@zone"), ("Shot Type", "@shot_type"), ("Distance", "@distance ft")],
+    point_policy="snap_to_data",
+)
+p.add_tools(hover)
 
 # Legend
 n_made = int(np.sum(made))
@@ -174,6 +220,42 @@ p.add_layout(
         text_font_style="bold",
     )
 )
+
+# Zone efficiency breakdown — data storytelling
+zone_positions = {
+    "Paint": (0, 6),
+    "Mid-Range": (15, 14),
+    "Three-Point": (0, 30),
+    "Corner 3": (22, 5),
+    "Free Throw": (-13, 17),
+}
+for z, (zx, zy) in zone_positions.items():
+    z_made, z_total, z_pct = zone_stats[z]
+    p.add_layout(
+        Label(
+            x=zx,
+            y=zy,
+            text=f"{z_pct:.0f}%",
+            text_font_size="22pt",
+            text_color="#333333",
+            text_align="center",
+            text_font_style="bold",
+            background_fill_color="#F5F0E8",
+            background_fill_alpha=0.85,
+        )
+    )
+    p.add_layout(
+        Label(
+            x=zx,
+            y=zy - 1.8,
+            text=f"{z_made}/{z_total}",
+            text_font_size="16pt",
+            text_color="#777777",
+            text_align="center",
+            background_fill_color="#F5F0E8",
+            background_fill_alpha=0.85,
+        )
+    )
 
 # Style
 p.title.text_font_size = "40pt"
