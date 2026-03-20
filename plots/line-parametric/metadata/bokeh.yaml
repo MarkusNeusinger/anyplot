@@ -1,7 +1,7 @@
 library: bokeh
 specification_id: line-parametric
 created: '2026-03-20T10:39:02Z'
-updated: '2026-03-20T10:42:40Z'
+updated: '2026-03-20T10:50:25Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23339035325
 issue: 4424
@@ -10,37 +10,40 @@ library_version: 3.9.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/line-parametric/bokeh/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/line-parametric/bokeh/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/line-parametric/bokeh/plot.html
-quality_score: 83
+quality_score: 79
 review:
   strengths:
-  - Full spec compliance with all required features (equal aspect, gradient, two curves,
-    start/end markers)
-  - Effective use of Bokeh multi_line for per-segment color gradient — a distinctive
-    Bokeh technique
-  - Good visual refinement with subtle grids, custom background, and styled legends
-  - Color gradient effectively communicates the direction of parameter traversal
-  - Clean, deterministic code with explicit font sizing
+  - Excellent color gradient using Turbo256 with per-segment multi_line coloring effectively
+    communicates parameter direction
+  - Full spec compliance with both required curve types, equal aspect ratio, start/end
+    markers, and sufficient point density
+  - Good visual refinement with subtle dashed grid, custom background, and styled
+    typography
+  - Dual PNG and HTML export leverages Bokeh capabilities
   weaknesses:
-  - Lissajous start/end markers overlap at origin since both map to (0,0)
-  - Manual RGB palette construction is verbose — Bokeh has built-in palettes and color
-    mappers
-  - Main title positioned above left panel only, not centered over the full layout
-  - Canvas height 2500px is non-standard (should be 2700 for 16:9)
-  - Could use Bokeh linear_cmap or palette modules for cleaner color mapping
-  image_description: The plot shows two side-by-side parametric curves rendered with
-    Bokeh's gridplot layout. The left panel displays a Lissajous figure (x = sin(3t),
-    y = sin(2t)) with a color gradient transitioning from dark blue through teal to
-    amber/orange along the curve, showing the direction of increasing t. The right
-    panel shows a spiral curve (x = t·cos(t), y = t·sin(t)) with the same color gradient.
-    Both plots have circular start markers (blue) and square end markers (amber) with
-    white borders. The main title "line-parametric · bokeh · pyplots.ai" appears in
-    bold above the left panel. Each subplot has its own title, x(t)/y(t) axis labels,
-    and a legend identifying start/end points. The background is light gray (#fafafa)
-    with subtle grid lines. The Lissajous curve shows the characteristic self-intersecting
-    figure-eight-like pattern, while the spiral expands outward from the center.
+  - build_segments() function violates KISS structure requirement - inline the segment-building
+    logic
+  - Turbo256 palette is not colorblind-safe - use Viridis256 or Cividis256
+  - Axis lines/spines fully visible on all sides - remove top/right spines for visual
+    refinement
+  - Annotations too subtle to serve as effective storytelling anchors - increase font
+    size and use darker color
+  image_description: The plot displays two side-by-side panels on a light gray background
+    (#f8f9fa). The left panel shows a Lissajous figure (x = sin(3t), y = sin(2t))
+    — a self-intersecting figure-eight-like curve spanning [-1, 1] on both axes. The
+    right panel shows an Archimedean spiral (x = t·cos(t), y = t·sin(t)) expanding
+    outward to approximately ±12 on both axes. Both curves use a continuous color
+    gradient from the Turbo256 palette — transitioning from cyan/blue through green
+    and yellow to orange/red — to indicate the direction of increasing parameter t.
+    Start points are marked with filled circles (blue/cyan) and end points with filled
+    squares (orange/red), each with white borders. Small gray annotations "t = π"
+    and "t = 2π" appear at the midpoints of each curve. Legends in the top-right of
+    each panel label "Start" and "End" markers. Axis labels read "x(t)" and "y(t)".
+    Subplot titles are in italic gray. The main title "line-parametric · bokeh · pyplots.ai"
+    appears at the top of the canvas. Grid lines are subtle dashed lines at low opacity.
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 24
       max: 30
       items:
       - id: VQ-01
@@ -48,42 +51,45 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set (34pt title, 26pt labels, 20pt ticks, 22pt
-          legend). All readable, legend slightly small.
+        comment: All font sizes explicitly set (title 34pt, labels 26pt, ticks 20pt,
+          legend 22pt). Annotations slightly small relative to canvas.
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Start and end markers overlap at origin on Lissajous curve. No text
-          collisions.
+        comment: No significant text overlap. Legend slightly overlaps curve area
+          on Lissajous panel.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Line width=6 and marker size=30 appropriate. Curves clearly visible.
+        comment: Lines well-sized (width 7), markers visible (size 32 with white borders).
+          Smooth curves with 1000 points.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Blue to teal to amber gradient is colorblind-safe with good contrast.
+        comment: Turbo256 gradient is perceptually non-uniform and not ideal for colorblind
+          users, though acceptable for continuous direction.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Two panels fill width well. Height 2500px non-standard. Main title
-          not centered.
+        comment: Two-panel gridplot fills canvas width well. Some whitespace margins
+          could be tighter.
       - id: VQ-06
         name: Axis Labels & Title
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: x(t) and y(t) are correct mathematical notation for parametric curves.
+        comment: Labels x(t) and y(t) are descriptive for parametric curves but lack
+          units (pure math has none).
     design_excellence:
-      score: 13
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -91,22 +97,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom palette, styled background, removed toolbar. Above defaults
-          but not publication-stunning.
+        comment: Turbo256 gradient visually engaging. Custom background, italic titles,
+          white marker borders show design thought above defaults.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Subtle grid alpha=0.2, styled axis lines, custom background, legend
-          border removed.
+        comment: Grid alpha 0.15 dashed, minor ticks removed, toolbar hidden, custom
+          background. Axis lines still prominent with full spines.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Color gradient communicates direction. Start/end markers guide viewer.
-          Two contrasting curve types.
+        comment: Color gradient tells traversal story. Start/end markers with distinct
+          shapes guide viewer. Midpoint annotations add context.
     spec_compliance:
       score: 15
       max: 15
@@ -116,26 +122,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct parametric curve plots.
+        comment: Correct parametric curve plot with x(t) vs y(t).
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Equal aspect, color gradient, two curves, start/end markers, 1000
-          points.
+        comment: 'All spec features: equal aspect ratio, color gradient, two curves,
+          start/end markers, sufficient density.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Correct parametric equations and axis ranges.
+        comment: x(t) on x-axis, y(t) on y-axis, correct parametric equations.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Main title format correct. Legend labels descriptive.
+        comment: Title format correct via Div. Legend labels match data.
     data_quality:
       score: 13
       max: 15
@@ -145,54 +151,57 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Lissajous (self-intersecting, closed) and spiral (open, expanding).
-          Good variety.
+        comment: Shows self-intersecting Lissajous and expanding spiral. Could add
+          third curve type for richer coverage.
       - id: DQ-02
         name: Realistic Context
         score: 4
         max: 5
         passed: true
-        comment: Classical mathematical examples from physics and signal analysis.
+        comment: Standard mathematical curves used in physics and signal analysis.
+          Neutral scientific context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Lissajous bounded to [-1,1], spiral expands naturally. Correct.
+        comment: 'Mathematically correct: Lissajous in [-1,1], spiral expanding to
+          ~4pi.'
     code_quality:
-      score: 9
+      score: 8
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 1
         max: 3
-        passed: true
-        comment: Linear flow with no functions or classes.
+        passed: false
+        comment: Defines build_segments() function, violating no-functions/no-classes
+          rule.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic, no random data.
+        comment: Fully deterministic with trigonometric functions.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used.
+        comment: All imports used including output_file/save for HTML export.
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Manual RGB palette loop is verbose. Repetitive segment list comprehensions.
+        passed: true
+        comment: Clean readable code. No fake UI or over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png and plot.html with current Bokeh API.
+        comment: Saves plot.png via export_png. Also exports HTML.
     library_mastery:
       score: 7
       max: 10
@@ -202,25 +211,27 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses ColumnDataSource, multi_line, figure, gridplot, export_png idiomatically.
+        comment: Good use of ColumnDataSource, multi_line, gridplot, Div, Label.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: multi_line for per-segment coloring, dual HTML+PNG export, gridplot
-          layout.
+        comment: multi_line with per-segment colors is Bokeh-specific. Div for HTML
+          title and dual export leverage Bokeh strengths.
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
   - subplots
   - custom-legend
+  - html-export
   patterns:
   - data-generation
   - columndatasource
   dataprep: []
   styling:
-  - gradient-fill
+  - custom-colormap
   - grid-styling
   - edge-highlighting
