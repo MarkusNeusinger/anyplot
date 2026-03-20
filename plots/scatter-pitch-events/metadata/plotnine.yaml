@@ -1,7 +1,7 @@
 library: plotnine
 specification_id: scatter-pitch-events
 created: '2026-03-20T12:33:27Z'
-updated: '2026-03-20T12:46:40Z'
+updated: '2026-03-20T12:54:17Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23342848892
 issue: 4417
@@ -10,83 +10,77 @@ library_version: 0.15.3
 preview_url: https://storage.googleapis.com/pyplots-images/plots/scatter-pitch-events/plotnine/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/scatter-pitch-events/plotnine/plot_thumb.png
 preview_html: null
-quality_score: 79
+quality_score: 84
 review:
   strengths:
-  - Accurate pitch diagram with standard FIFA markings (penalty areas, goal areas,
-    center circle, halfway line, goals)
-  - Effective use of plotnine grammar of graphics for layer composition — pitch markings
-    as annotate layers, events as geom layers
-  - Realistic data generation with position distributions matching real football patterns
-    (shots in attacking third)
-  - Clean alpha-based outcome encoding and shape-based event type differentiation
+  - Comprehensive pitch drawing with all FIFA-standard markings including corner arcs,
+    goal posts, and penalty arcs
+  - Effective visual hierarchy with shots rendered larger as focal points
+  - Clean grammar-of-graphics composition with well-organized layer structure
+  - All spec requirements fully implemented including directional arrows and outcome
+    encoding
   weaknesses:
-  - Corner arcs defined in code but never rendered on the pitch (dead code + missing
-    spec feature)
-  - Unsuccessful events at alpha=0.35 are too faint against green background
-  - Title font size 22pt slightly below recommended 24pt minimum
-  - Arrow lines at size=0.5 are thin and hard to follow in cluttered areas
-  - No strong visual focal point or storytelling emphasis
-  image_description: 'The plot displays a soccer pitch with a green (#2d8c3c) background
-    and white pitch markings including penalty areas, goal areas, center circle, halfway
-    line, penalty spots, and goal posts. Four event types are scattered across the
-    pitch: blue circles for passes, red stars for shots, teal/green triangles for
-    tackles, and purple diamonds for interceptions. Directional arrows extend from
-    pass and shot origins toward their endpoints — pass arrows spread across the pitch
-    while shot arrows converge toward the right goal. Successful events appear at
-    high opacity (0.9) and unsuccessful events at low opacity (0.35). The title "scatter-pitch-events
-    · plotnine · pyplots.ai" is displayed in bold at the top left. A legend on the
-    right shows Event Type (4 categories with shapes/colors) and Outcome (Successful/Unsuccessful
-    with alpha difference). Axes and grid are hidden. The aspect ratio is correctly
-    fixed at 105:68.'
+  - Pass arrow clutter in dense midfield areas reduces readability
+  - Blue/purple color distinction could be improved for colorblind accessibility
+  - Data generation loop could be simplified with vectorized operations
+  image_description: 'The plot displays a soccer pitch rendered with a green (#2d8c3c)
+    background and white line markings including both penalty areas, goal areas, center
+    circle, halfway line, penalty spots, corner arcs, and goal posts. Event markers
+    are scattered across the pitch: blue circles for passes with directional arrows,
+    red stars for shots with arrows converging toward the right goal, orange triangles
+    for tackles, and purple diamonds for interceptions. Successful events appear at
+    higher opacity (0.9) while unsuccessful ones are more transparent (0.5). Shot
+    markers are rendered larger than other event types for visual emphasis. Two legends
+    on the right side show "Event Type" (with shape/color mapping) and "Outcome" (with
+    opacity mapping). The title "scatter-pitch-events · plotnine · pyplots.ai" appears
+    in bold at the top. The plot background is light gray (#f0f0f0).'
   criteria_checklist:
     visual_quality:
-      score: 23
+      score: 26
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Title explicitly set at 22pt (slightly under 24pt recommended), legend
-          title 16pt bold, legend text 14pt. All readable.
+        comment: 'Font sizes explicitly set: title 24pt bold, legend title 16pt bold,
+          legend text 14pt. All clearly readable.'
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Text elements clean. Minor marker/arrow overlap in dense pitch zones.
+        comment: No text overlap. Minimal marker overlap for 120 data points.
       - id: VQ-03
         name: Element Visibility
         score: 4
         max: 6
-        passed: false
-        comment: Unsuccessful events at alpha=0.35 are too faint against green pitch.
-          Arrow lines at size=0.5 are thin.
+        passed: true
+        comment: Markers visible but pass arrows create clutter in dense areas. Shot
+          arrows converging on goal overlap.
       - id: VQ-04
         name: Color Accessibility
         score: 3
         max: 4
         passed: true
-        comment: Shapes help differentiate but red and teal could confuse colorblind
-          viewers.
+        comment: Blue, red, orange, purple mostly colorblind-safe. Blue/purple distinction
+          could be tricky.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Pitch fills canvas well with coord_fixed. Slight extra whitespace
-          due to 16:9 vs pitch ratio.
+        comment: Pitch fills ~65% of canvas with balanced margins. Legend well-positioned.
+          Aspect ratio correct.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Axes appropriately hidden for pitch diagram. Title present in correct
-          format.
+        comment: Axis labels appropriately hidden for pitch diagram. Title is descriptive.
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -94,24 +88,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom color palette, realistic green pitch, intentional design.
-          Above defaults but not publication-level.
+        comment: Custom color palette themed to soccer context. Above defaults but
+          not publication-level.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Axes/ticks/grid removed. Clean pitch rendering. Light gray plot background
-          provides contrast.
+        comment: Axes, grid, ticks hidden. Clean backgrounds. Good attention to pitch
+          marking details.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Spatial distribution tells partial story but no strong focal point
-          or visual emphasis.
+        passed: true
+        comment: Shots as focal points, directional arrows convey flow, outcome encoding
+          differentiates success/failure.
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -122,22 +116,23 @@ review:
         comment: Correct scatter plot on accurately scaled pitch diagram.
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Most features present. Corner arcs defined but never drawn on pitch.
+        comment: 'All spec features implemented: pitch markings, distinct markers,
+          outcome encoding, directional arrows, green pitch, correct aspect ratio.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly mapped to pitch coordinates (0-105, 0-68).
+        comment: X/Y correctly mapped to pitch coordinates. All data visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Legend shows Event Type and Outcome categories.
+        comment: Title follows exact format. Legend labels match data categories.
     data_quality:
       score: 14
       max: 15
@@ -147,20 +142,22 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: All 4 event types with both outcomes. Good spatial distribution per
-          type.
+        comment: All 4 event types with realistic proportions. Both outcomes shown.
+          Position distributions match real match patterns.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Football match events with realistic positions and probability distributions.
+        comment: Soccer match events with plausible spatial distributions. Neutral
+          sports analytics context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: FIFA standard 105x68m pitch. 120 events realistic for match segment.
+        comment: FIFA standard pitch dimensions. Realistic event counts and success
+          probabilities.
     code_quality:
       score: 9
       max: 10
@@ -170,13 +167,14 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Follows imports-data-plot-save. Per-event loop is verbose but functional.
+        comment: Clean flow but per-event-type loop adds complexity, justified by
+          position-dependent distributions.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42) set at start.
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -188,13 +186,13 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Well-organized pitch drawing with clear comments. No fake functionality.
+        comment: Appropriate complexity. No fake functionality.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300.
+        comment: Saves as plot.png with dpi=300. Current API.
     library_mastery:
       score: 7
       max: 10
@@ -204,16 +202,16 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good grammar of graphics usage. Center circle via shifted geom_segment
-          is creative but geom_path would be more idiomatic.
+        comment: 'Good grammar of graphics usage: aes mappings, layered geoms, scale_*_manual,
+          coord_fixed, annotate, inherit_aes=False.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses inherit_aes=False, annotate layers, scale_alpha_manual, grammar
-          of graphics layer composition.
-  verdict: REJECTED
+        comment: Leverages plotnine grammar composition, scale_alpha_manual, geom_segment
+          with arrow(), Categorical types.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
