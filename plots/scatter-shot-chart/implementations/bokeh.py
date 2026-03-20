@@ -1,7 +1,7 @@
-""" pyplots.ai
+"""pyplots.ai
 scatter-shot-chart: Basketball Shot Chart
 Library: bokeh 3.9.0 | Python 3.14.3
-Quality: 87/100 | Created: 2026-03-20
+Created: 2026-03-20
 """
 
 import numpy as np
@@ -83,7 +83,7 @@ p = figure(
     height=3600,
     title="scatter-shot-chart · bokeh · pyplots.ai",
     x_range=Range1d(-27, 27),
-    y_range=Range1d(-2, 35),
+    y_range=Range1d(-3, 33),
     toolbar_location=None,
     match_aspect=True,
 )
@@ -212,7 +212,7 @@ fg_pct = n_made / n_shots * 100
 p.add_layout(
     Label(
         x=0,
-        y=33.5,
+        y=32,
         text=f"FG: {fg_pct:.1f}%  ·  {n_shots} attempts",
         text_font_size="26pt",
         text_color="#666666",
@@ -223,67 +223,40 @@ p.add_layout(
 
 # Zone efficiency breakdown — data storytelling
 zone_positions = {
-    "Paint": (0, 6),
-    "Mid-Range": (15, 14),
-    "Three-Point": (0, 30),
-    "Corner 3": (-21, 5),
-    "Free Throw": (0, 17),
+    "Paint": [(0, 6)],
+    "Mid-Range": [(15, 14)],
+    "Three-Point": [(0, 29)],
+    "Corner 3": [(-21, 5), (21, 5)],
+    "Free Throw": [(-12, 17)],
 }
-for z, (zx, zy) in zone_positions.items():
+for z, positions in zone_positions.items():
     z_made, z_total, z_pct = zone_stats[z]
-    p.add_layout(
-        Label(
-            x=zx,
-            y=zy,
-            text=f"{z_pct:.0f}%",
-            text_font_size="22pt",
-            text_color="#333333",
-            text_align="center",
-            text_font_style="bold",
-            background_fill_color="#F5F0E8",
-            background_fill_alpha=0.85,
+    for zx, zy in positions:
+        p.add_layout(
+            Label(
+                x=zx,
+                y=zy,
+                text=f"{z_pct:.0f}%",
+                text_font_size="22pt",
+                text_color="#333333",
+                text_align="center",
+                text_font_style="bold",
+                background_fill_color="#F5F0E8",
+                background_fill_alpha=0.9,
+            )
         )
-    )
-    p.add_layout(
-        Label(
-            x=zx,
-            y=zy - 1.8,
-            text=f"{z_made}/{z_total}",
-            text_font_size="16pt",
-            text_color="#777777",
-            text_align="center",
-            background_fill_color="#F5F0E8",
-            background_fill_alpha=0.85,
+        p.add_layout(
+            Label(
+                x=zx,
+                y=zy - 1.8,
+                text=f"{z_made}/{z_total}",
+                text_font_size="18pt",
+                text_color="#777777",
+                text_align="center",
+                background_fill_color="#F5F0E8",
+                background_fill_alpha=0.9,
+            )
         )
-    )
-
-# Mirror Corner 3 label on right side
-z_made, z_total, z_pct = zone_stats["Corner 3"]
-p.add_layout(
-    Label(
-        x=21,
-        y=5,
-        text=f"{z_pct:.0f}%",
-        text_font_size="22pt",
-        text_color="#333333",
-        text_align="center",
-        text_font_style="bold",
-        background_fill_color="#F5F0E8",
-        background_fill_alpha=0.85,
-    )
-)
-p.add_layout(
-    Label(
-        x=21,
-        y=3.2,
-        text=f"{z_made}/{z_total}",
-        text_font_size="16pt",
-        text_color="#777777",
-        text_align="center",
-        background_fill_color="#F5F0E8",
-        background_fill_alpha=0.85,
-    )
-)
 
 # Style
 p.title.text_font_size = "40pt"
