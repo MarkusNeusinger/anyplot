@@ -1,7 +1,7 @@
 library: plotnine
 specification_id: nyquist-basic
 created: '2026-03-20T22:47:50Z'
-updated: '2026-03-20T22:53:33Z'
+updated: '2026-03-20T23:05:03Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23365453541
 issue: 4412
@@ -13,35 +13,32 @@ preview_html: null
 quality_score: 82
 review:
   strengths:
-  - Excellent data quality with a realistic 3rd-order control systems transfer function
-    showing meaningful gain and phase margins
-  - All specification features fully implemented including unit circle, critical point,
-    frequency annotations, and direction arrows
-  - Strong data storytelling with gain/phase crossover annotations that quantitatively
-    convey system stability information
-  - Clean, well-structured code with deterministic data generation
+  - Complete spec compliance with all required features (critical point, unit circle,
+    frequency annotations, direction arrows, 1:1 aspect ratio)
+  - Thoughtful color scheme with distinct colors for different plot elements (blue
+    curves, red critical point, purple gain crossover, orange phase crossover)
+  - Good data storytelling with computed gain/phase margins annotated on the plot
+  - Idiomatic plotnine usage with aesthetic mappings and unified legend via scale_*_manual
+  - Stability region shading adds nice contextual information
   weaknesses:
-  - Crowding near the critical point (-1, 0) area where multiple annotations, markers,
-    and curves converge
-  - Annotation text for gain/phase crossover labels is somewhat small relative to
-    the plot size
-  - Red and green color pairing for critical point and gain crossover is not ideal
-    for colorblind accessibility
-  - Could leverage more plotnine-distinctive features
-  image_description: 'The plot displays a Nyquist diagram on the complex plane with
-    the title "nyquist-basic · plotnine · pyplots.ai" in bold at the top. The main
-    Nyquist curve (solid dark blue, #306998) traces the positive-frequency response
-    of a 3rd-order transfer function, starting near (5, 0) at low frequency and spiraling
-    inward toward the origin. A lighter dashed blue curve shows the negative-frequency
-    (conjugate) mirror in the upper half-plane. A dashed gray unit circle is centered
-    at the origin. The critical point (-1, 0) is marked with a bold red "X" and labeled
-    in red. A green circle marks the gain crossover point with an annotation ("ω=2.5
-    rad/s, PM=33°") connected by a leader line. An orange square marks the phase crossover
-    point with annotation ("ω=4.1 rad/s, GM=7.8 dB") and leader line. Five frequency
-    labels (ω=0.1, 0.3, 0.7, 1.5, 3.0) appear along the curve with small blue dots.
-    Dark arrows indicate the direction of increasing frequency on both curves. Axes
-    are labeled "Real" and "Imaginary" with tick marks at integer values. The aspect
-    ratio is 1:1 and the background is white with a very subtle gray grid.'
+  - Crowding near the origin where omega=3 label, phase crossover marker, and other
+    elements overlap
+  - Annotation text sizes (10-11pt) are small relative to other text elements
+  - Some wasted space on the right side of the canvas
+  image_description: The plot displays a Nyquist diagram on the complex plane with
+    "Real" on the x-axis and "Imaginary" on the y-axis. A solid dark blue curve traces
+    the positive frequency response from approximately (5, -0.8) sweeping down to
+    (1.5, -3.3) and back up through the origin area. A dashed light blue curve mirrors
+    this for negative frequencies above the real axis. A red "X" marks the critical
+    point at (-1, 0) with a bold red label and leader line. A gray dashed unit circle
+    is centered at the origin with a subtle gray shaded stability region inside it.
+    Five frequency annotations (omega=0.1, 0.3, 0.7, 1.5, 3) are placed along the
+    curve with small blue dots. A purple circle marks the gain crossover point with
+    annotation showing omega=2.5 rad/s and PM=33 degrees. An orange square marks the
+    phase crossover with annotation showing omega=4.1 rad/s and GM=7.8 dB. Black direction
+    arrows indicate increasing frequency along both curves. The legend at the bottom
+    shows "Frequency Response" with both curve types. Title reads "nyquist-basic ·
+    plotnine · pyplots.ai". Background is white with a very light blue-gray panel.
   criteria_checklist:
     visual_quality:
       score: 24
@@ -52,45 +49,42 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title=24, axis_title=20, axis_text=16).
-          Annotation text sizes 8-10 are readable but on the smaller side.
+        comment: Font sizes explicitly set (title 24, axes 20, ticks 16), but annotation
+          text at size 10-11 is noticeably smaller
       - id: VQ-02
         name: No Overlap
         score: 4
         max: 6
         passed: false
-        comment: Crowding near critical point area where multiple annotations, markers,
-          and curves converge around (-1, 0).
+        comment: 'Crowding near origin: omega=3 label overlaps phase crossover marker,
+          critical/gain/phase crossover markers packed tightly'
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: All main elements visible with good line widths. Phase crossover
-          orange square near real axis slightly hard to distinguish.
+        comment: Lines, markers, and arrows well-sized and clearly visible
       - id: VQ-04
         name: Color Accessibility
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Blue, red, green, orange with different shapes for redundancy. Red+green
-          pairing problematic for deuteranopia.
+        comment: Blue, red, purple, orange palette is colorblind-distinguishable
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: 1:1 aspect ratio correct. Canvas well-utilized with coord_fixed.
-          Minor unused space in upper-left.
+        comment: Good proportions with coord_fixed 12x12, some wasted space on right
+          side
       - id: VQ-06
         name: Axis Labels & Title
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Real and Imaginary are the correct domain-specific labels for the
-          complex plane.
+        passed: false
+        comment: Real and Imaginary are descriptive but lack units or additional context
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -98,22 +92,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Thoughtful color differentiation, different marker shapes, leader
-          lines. Above defaults but not publication-level polish.
+        comment: Thoughtful custom palette with intentional color hierarchy, above
+          defaults
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: theme_minimal removes spines, subtle grid. Could benefit from further
-          refinement around annotation spacing.
+        passed: true
+        comment: theme_minimal, minor grid removed, subtle major grid, light panel
+          tint
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Strong engineering narrative with gain/phase crossover focal points
-          and quantitative stability annotations.
+        comment: Strong hierarchy with annotated margins, critical point emphasis,
+          frequency progression
     spec_compliance:
       score: 15
       max: 15
@@ -123,55 +117,51 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Nyquist plot showing frequency response on the complex plane.
+        comment: Correct Nyquist plot on complex plane
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
         comment: 'All spec features present: critical point, unit circle, frequency
-          annotations, direction arrows, 1:1 aspect ratio.'
+          annotations, arrows, 1:1 ratio'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Real and imaginary parts correctly mapped from transfer function
-          evaluation.
+        comment: Real on x, imaginary on y, correct mapping
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title in correct format. No legend needed; series distinguished by
-          annotations.
+        comment: Title in correct format, legend shows frequency response curves
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Shows positive/negative frequency curves, gain/phase crossover points,
-          margins, frequency annotations, direction arrows.
+        comment: 3rd-order system shows both frequency curves and stability margins
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Standard 3rd-order control systems transfer function with realistic
-          margin values.
+        comment: Real control systems engineering context with meaningful transfer
+          function
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Frequency range and logarithmic spacing appropriate. Response values
-          physically correct.
+        comment: Realistic gain margin 7.8 dB and phase margin 33 degrees
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -179,33 +169,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear script with no functions or classes.
+        comment: 'Linear flow: imports, data, plot, save'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic transfer function evaluation.
+        comment: Deterministic analytical data, no randomness
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Well-organized, appropriate complexity. No fake UI elements.
+        passed: false
+        comment: Somewhat verbose with many separate DataFrames
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300, current plotnine API.
+        comment: Saves as plot.png with dpi=300
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -213,23 +203,22 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good grammar of graphics usage with layered ggplot, geom_path, geom_segment+arrow,
-          annotate, coord_fixed, and theme customization.
+        comment: Good grammar of graphics usage with aes mappings, scale_*_manual,
+          coord_fixed, layer composition
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Uses coord_fixed and grammar layering, but most techniques could
-          be replicated in matplotlib. No use of plotnine-specific scale_*, stat_*,
-          or faceting.
+        passed: true
+        comment: 'Uses plotnine-distinctive features: unified legend via scale mappings,
+          coord_fixed, geom_ribbon'
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - layer-composition
-  - manual-ticks
+  - custom-legend
   patterns:
   - data-generation
   dataprep: []
