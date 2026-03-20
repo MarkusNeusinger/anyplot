@@ -1,7 +1,7 @@
 library: pygal
 specification_id: ma-differential-expression
 created: '2026-03-20T10:39:33Z'
-updated: '2026-03-20T10:53:16Z'
+updated: '2026-03-20T11:04:07Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23339077886
 issue: 4420
@@ -10,41 +10,41 @@ library_version: 3.1.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/ma-differential-expression/pygal/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/ma-differential-expression/pygal/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/ma-differential-expression/pygal/plot.html
-quality_score: 76
+quality_score: 80
 review:
   strengths:
-  - Excellent data generation with realistic RNA-seq parameters (15,000 genes, realistic
-    fold changes, p-value simulation)
-  - Clean code structure with perfect KISS flow and reproducibility
-  - Good custom color palette with warm cream background that differentiates from
-    generic white
-  - Correct implementation of all required MA plot elements (reference lines, thresholds,
-    LOESS)
-  - Smart subsampling strategy that preserves all significant genes
+  - Excellent data quality with realistic RNA-seq gene names and biologically plausible
+    expression distributions
+  - Clean KISS code structure with good use of pygal XY chart and node dict format
+    for rich data points
+  - Good visual hierarchy with red significant genes standing out against steel blue
+    non-significant background
+  - Thoughtful subsampling strategy that keeps all significant genes while downsampling
+    non-significant for SVG performance
+  - LOESS smoothing approximation well-implemented without external dependencies
   weaknesses:
-  - Non-significant scatter points are nearly invisible — need larger dot size or
-    stronger color contrast against cream background
-  - LOESS trend curve is extremely hard to see — needs thicker stroke or more contrasting
-    color
-  - No gene name labels plotted despite creating the data for them
-  - Plot appears dominated by red significant points because non-significant cloud
-    is invisible
-  image_description: 'The plot displays an MA plot on a warm cream/beige background
-    (plot_background #F4F1EB). The x-axis shows "Mean Expression (A)" ranging from
-    0 to ~26, and the y-axis shows "Log₂ Fold Change (M)" ranging from about -4 to
-    +5. The title reads "ma-differential-expression · pygal · pyplots.ai" at the top.
-    Two scatter series are plotted: non-significant genes in a muted steel blue and
-    significant genes (p < 0.05) in deep red. A solid blue horizontal line marks M
-    = 0 (no change), dashed dark slate lines mark ±1 (±2-fold thresholds), and a green
-    LOESS trend line runs along M ≈ 0. The legend at the bottom shows 5 entries in
-    a single row. The data is heavily concentrated at low mean expression values (0-6),
-    with significant red points scattered widely in both positive and negative fold-change
-    directions. Non-significant points are very small and hard to distinguish from
-    the background, making the plot appear dominated by red significant points. The
-    LOESS curve is nearly invisible.'
+  - Dense overlap in low-expression region makes individual points hard to distinguish
+  - Top DE gene labels only appear in tooltips not as visible text annotations on
+    the plot
+  - Legend with 7 entries slightly crowded at bottom
+  - Non-significant dots could use more transparency to better reveal density patterns
+  image_description: The plot displays an MA plot (M-versus-A) for differential gene
+    expression on a white background. The x-axis is labeled "Mean Expression (A)"
+    ranging from 0 to ~26, and the y-axis is labeled "Log₂ Fold Change (M)" ranging
+    from about -4 to 5. The title reads "ma-differential-expression · pygal · pyplots.ai".
+    Non-significant genes are shown as steel blue dots clustered densely in the low-expression
+    region (left side), while significant genes (p < 0.05) are rendered as red dots
+    spread across the full expression range, with upregulated genes above M=0 and
+    downregulated genes below. A solid blue horizontal reference line marks M=0 (no
+    change). Two dashed gray horizontal lines mark the ±1 (2-fold change) thresholds.
+    An orange LOESS trend curve runs near M=0, showing minimal systematic bias. Dark/black
+    larger dots mark the top 10 most differentially expressed genes (BRCA1, TP53,
+    MYC, etc.). A 7-item legend at the bottom identifies all series. The plot is dense
+    on the left and sparse on the right, reflecting the exponential distribution of
+    gene expression levels.
   criteria_checklist:
     visual_quality:
-      score: 22
+      score: 23
       max: 30
       items:
       - id: VQ-01
@@ -53,44 +53,44 @@ review:
         max: 8
         passed: true
         comment: Font sizes explicitly set (title=48, label=38, major_label=36, legend=30).
-          All text readable, legend slightly small.
+          All text readable.
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: No significant text overlap. Dense scatter in low-expression region
-          but text elements clean.
+        comment: Dense overlap in low-expression region. Legend with 7 items readable
+          but slightly crowded.
       - id: VQ-03
         name: Element Visibility
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Non-significant points nearly invisible against cream background.
-          LOESS trend line extremely hard to see.
+        passed: true
+        comment: Significant red dots highly visible. Non-significant steel blue dots
+          lighter in dense areas.
       - id: VQ-04
         name: Color Accessibility
         score: 3
         max: 4
         passed: true
-        comment: Steel blue vs red is colorblind-distinguishable, but low visibility
-          of non-significant points undermines accessibility.
+        comment: Blue vs red distinction works for most colorblind types. Orange LOESS
+          adds third distinguishable color.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good canvas utilization. Slight imbalance with data concentrated
-          in left third.
+        comment: Good layout with plot filling most of canvas. Data concentrated on
+          left due to exponential distribution.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with variable notation: Mean Expression (A),
-          Log2 Fold Change (M).'
+        comment: 'Descriptive labels with context: Mean Expression (A) and Log2 Fold
+          Change (M).'
     design_excellence:
-      score: 11
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -98,22 +98,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom warm cream palette with intentional color choices. Above library
-          defaults.
+        comment: Custom color palette with intentional choices. Above defaults but
+          not publication-level.
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
-        passed: false
-        comment: Custom background and foreground_subtle for grid. Some refinement
-          but grid still prominent.
+        passed: true
+        comment: No x-guides, subtle y-guides, clean white background. Some refinement
+          visible.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Significant/non-significant distinction creates hierarchy, but invisible
-          non-sig cloud undermines MA plot storytelling.
+        comment: Good visual hierarchy with red significant genes against blue non-significant.
+          Reference lines provide context.
     spec_compliance:
       score: 14
       max: 15
@@ -123,26 +123,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct MA plot as XY scatter.
+        comment: Correct MA plot using XY scatter.
       - id: SC-02
         name: Required Features
         score: 3
         max: 4
         passed: true
-        comment: All required features present. LOESS curve barely visible. Gene labels
-          not plotted (optional).
+        comment: All major features present. Top DE gene names only in tooltips, not
+          visible text labels.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = mean expression (A), Y = log fold change (M). Correct.
+        comment: X=mean expression, Y=log fold change. Correct mapping.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Legend labels descriptive and match data.
+        comment: Title format correct. Legend labels descriptive and match data series.
     data_quality:
       score: 14
       max: 15
@@ -152,21 +152,22 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Shows up/downregulated genes, non-significant background, reference
-          lines, LOESS. Missing gene annotations.
+        comment: Shows upregulated and downregulated genes, non-significant background,
+          LOESS trend, thresholds.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: RNA-seq DE with realistic gene names (BRCA1, TP53, MYC). Science
-          domain.
+        comment: RNA-seq context with real gene names (BRCA1, TP53, MYC). Scientifically
+          accurate.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Mean expression 0-26, log2FC -4 to +5. Realistic for RNA-seq.
+        comment: 15000 genes, realistic log fold changes and expression range for
+          RNA-seq.
     code_quality:
       score: 10
       max: 10
@@ -176,59 +177,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, style, chart, save. No functions/classes.'
+        comment: 'Linear flow: imports, data, style, chart, save. No functions or
+          classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42) set at start.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: numpy, pygal, Style — all used.
+        comment: 'All imports used: numpy, pygal, Style.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-structured, appropriate complexity.
+        comment: Clean, well-organized code. LOESS via binned moving average is elegant.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png. Current API.
+        comment: Saves as plot.png via render_to_png. Current API.
     library_mastery:
-      score: 5
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of pygal.XY with Style, series config, stroke_style for
+          dashed lines, node dict format.
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses pygal.XY with dict-based data points, stroke_style, Style customization.
-      - id: LM-02
-        name: Distinctive Features
-        score: 2
-        max: 5
-        passed: false
-        comment: Uses tooltip labels and stroke_style dasharray but doesn't deeply
-          leverage pygal's unique SVG capabilities.
-  verdict: REJECTED
+        comment: 'Uses pygal-specific: node dict with label for tooltips, dynamic_print_values,
+          SVG+PNG dual rendering.'
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - hover-tooltips
   - html-export
+  - custom-legend
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep:
   - binning
   styling:
-  - alpha-blending
   - grid-styling

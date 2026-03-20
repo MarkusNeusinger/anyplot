@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 ma-differential-expression: MA Plot for Differential Expression
 Library: pygal 3.1.0 | Python 3.14.3
-Quality: 76/100 | Created: 2026-03-20
+Quality: 80/100 | Created: 2026-03-20
 """
 
 import numpy as np
