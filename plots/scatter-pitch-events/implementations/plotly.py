@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 scatter-pitch-events: Soccer Pitch Event Map
 Library: plotly 6.6.0 | Python 3.14.3
 Quality: 89/100 | Created: 2026-03-20
@@ -174,7 +174,7 @@ for cx_pos, cy_pos in [(0, 0), (0, 68), (105, 0), (105, 68)]:
 # Event colors
 pass_color = "#4FC3F7"
 shot_color = "#FF7043"
-tackle_color = "#F5A623"
+tackle_color = "#FFEE58"
 intercept_color = "#CE93D8"
 
 # Batch direction lines using None separators for efficiency
@@ -188,7 +188,7 @@ fig.add_trace(
         x=pass_s_xs,
         y=pass_s_ys,
         mode="lines",
-        line={"color": "rgba(79,195,247,0.25)", "width": 1.2},
+        line={"color": "rgba(79,195,247,0.18)", "width": 1},
         showlegend=False,
         hoverinfo="skip",
     )
@@ -204,7 +204,7 @@ fig.add_trace(
         x=pass_u_xs,
         y=pass_u_ys,
         mode="lines",
-        line={"color": "rgba(79,195,247,0.12)", "width": 1, "dash": "dot"},
+        line={"color": "rgba(79,195,247,0.08)", "width": 0.8, "dash": "dot"},
         showlegend=False,
         hoverinfo="skip",
     )
@@ -380,6 +380,25 @@ fig.add_trace(
         name="Shot (off target)",
         hovertemplate="<b>Shot (off target)</b><br>x: %{x:.0f}m, y: %{y:.0f}m<extra></extra>",
     )
+)
+
+# Tactical annotation — highlight the shot-dense zone
+fig.add_annotation(
+    x=85,
+    y=62,
+    text="<b>Danger Zone</b><br>Shots cluster in<br>the final third",
+    showarrow=True,
+    arrowhead=2,
+    arrowsize=1,
+    arrowwidth=1.5,
+    arrowcolor="rgba(255,255,255,0.7)",
+    ax=0,
+    ay=40,
+    font={"size": 14, "color": "white", "family": "Arial, sans-serif"},
+    bgcolor="rgba(0,0,0,0.45)",
+    bordercolor="rgba(255,255,255,0.4)",
+    borderwidth=1,
+    borderpad=6,
 )
 
 # Layout
