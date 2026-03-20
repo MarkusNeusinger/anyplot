@@ -1,7 +1,7 @@
 library: altair
 specification_id: nyquist-basic
 created: '2026-03-20T22:45:14Z'
-updated: '2026-03-20T23:13:04Z'
+updated: '2026-03-20T23:24:29Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23365453459
 issue: 4412
@@ -10,79 +10,83 @@ library_version: 6.0.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/nyquist-basic/altair/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/nyquist-basic/altair/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/nyquist-basic/altair/plot.html
-quality_score: 84
+quality_score: 91
 review:
   strengths:
-  - Perfect spec compliance with all six Nyquist plot requirements implemented correctly
-  - Excellent data choice using a classic realistic third-order control system
-  - Strong visual hierarchy with red critical point as focal point and subtle gray
-    unit circle
-  - Clean well-structured code with idiomatic Altair layer composition
-  - Good data storytelling with subtitle frequency markers and gain crossover annotation
+  - Excellent spec compliance — every required feature from the specification is implemented
+  - Strong data storytelling with critical point emphasis (red cross + ring), annotated
+    crossover points, and directional arrows
+  - Professional typography with all font sizes explicitly set and mathematical notation
+    in axis labels
+  - Effective use of Altair interactive features (legend selection, tooltips, zoom/pan)
+  - Clean, deterministic data from a realistic control systems transfer function
   weaknesses:
-  - Frequency annotation labels overlap near omega=2.0 and gain crossover (dy_offset
-    computed but never encoded)
-  - Plot domain +/-6.5 slightly wider than needed leaving empty canvas corners
-  - Axis labels could be more descriptive
-  image_description: 'The plot shows a Nyquist diagram on a square canvas with 1:1
-    aspect ratio. Two branches are displayed: the positive frequency branch (ω ≥ 0)
-    in blue (#306998) spiraling from the right side (DC gain ≈ 5) downward and inward
-    toward the origin, and the negative frequency branch (ω ≤ 0) in orange (#e07b39)
-    mirrored above the real axis. A dashed gray unit circle is centered at the origin
-    for reference. The critical point (-1, 0) is prominently marked with a bold red
-    cross marker and labeled "(−1, 0)" in red text. Frequency annotations appear as
-    filled blue circles with text labels: ω = 0.5 and ω = 1.0 on the lower portion
-    of the positive branch, ω = 5.0 near the origin, and ω ≈ 2.7 (|G|=1) marking the
-    gain crossover. Triangle-shaped direction arrows on both branches indicate increasing
-    frequency. The title reads "nyquist-basic · altair · pyplots.ai" with a subtitle
-    showing the transfer function. Axes are labeled "Real" and "Imaginary". The legend
-    in the top-right corner distinguishes the two branches.'
+  - Minor label crowding near the critical point area where multiple annotations converge
+  - Some wasted canvas space on the left side due to symmetric axis range
+  image_description: 'The plot displays a Nyquist diagram for the transfer function
+    G(s) = 5 / ((s+1)(0.5s+1)(0.1s+1)) on the complex plane. Two branches are shown:
+    the positive frequency branch (blue, #306998) curves from the right (DC gain ≈
+    5) downward through the lower-right quadrant and spirals inward toward the origin,
+    while the negative frequency branch (orange, #e07b39) mirrors it above the real
+    axis. A light gray dashed unit circle is centered at the origin for reference.
+    The critical point (-1, 0) is prominently marked with a red cross and a surrounding
+    red ring, labeled "Critical Point (−1, 0)" in bold red text to the left. Frequency
+    annotations (ω = 0.5, 1.0, 2.0, 5.0) are shown as blue dots along the positive
+    branch with black bold labels. The gain crossover (ω ≈ 2.7, |G|=1) is labeled
+    below its point, and the phase crossover (ω ≈ 5.6) is marked with a brown diamond
+    and label. Triangle arrows on both branches indicate direction of increasing frequency.
+    The title "nyquist-basic · altair · pyplots.ai" appears top-left with subtitle
+    showing the transfer function. Axes are labeled "Real Part — Re[G(jω)]" and "Imaginary
+    Part — Im[G(jω)]". A legend in the top-right identifies the two branches. The
+    plot uses a 1:1 aspect ratio (square canvas, 1200×1200).'
   criteria_checklist:
     visual_quality:
-      score: 24
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Font sizes explicitly set throughout. Frequency annotations at 13pt
-          slightly small but readable.
+        comment: 'All font sizes explicitly set: title 28pt, axis titles 20pt, tick
+          labels 16pt, annotations 13-16pt'
       - id: VQ-02
         name: No Overlap
-        score: 4
-        max: 6
-        passed: false
-        comment: dy_offset column stored in dataframe but never encoded in mark_text,
-          causing annotation overlap near gain crossover.
-      - id: VQ-03
-        name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Lines, markers, arrows well-sized. Unit circle appropriately subtle.
+        comment: Minor crowding near critical point area but all labels remain readable
+          due to color/offset differentiation
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Lines well-weighted (strokeWidth=2.8), markers appropriately sized,
+          arrows clearly visible
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Blue/orange palette is colorblind-safe. Red critical point provides
-          strong contrast.
+        comment: Blue/orange colorblind-safe palette, red critical point distinct,
+          brown phase crossover marker
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: 1:1 aspect ratio correct. Domain +/-6.5 slightly wider than needed.
+        comment: 1:1 aspect ratio correct per spec; left half mostly empty due to
+          symmetric domain [-5.5, 5.5]
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Real and Imaginary are correct per spec but lack fuller context.
+        passed: true
+        comment: 'Descriptive labels with mathematical notation: Re[G(jω)] and Im[G(jω)]'
     design_excellence:
-      score: 14
+      score: 15
       max: 20
       items:
       - id: DE-01
@@ -90,22 +94,22 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom palette, intentional typography hierarchy, red accent on critical
-          point. Above defaults.
+        comment: Custom two-color palette, bold typography, subtitle with equation,
+          critical point ring effect, refined axis colors
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Grid removed, view stroke removed, subtle axis colors. Domain lines
-          still on all sides.
+        comment: Grid removed, view stroke removed, subtle axis colors, dashed unit
+          circle at low opacity
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Subtitle identifies system, critical point is focal point, frequency
-          markers guide viewer, arrows show direction.
+        comment: Critical point emphasized with cross+ring, crossover points annotated
+          with context, directional arrows guide viewer
     spec_compliance:
       score: 15
       max: 15
@@ -115,50 +119,49 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Nyquist plot on complex plane.
+        comment: Correct Nyquist plot on complex plane
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All six spec requirements met: critical point, unit circle, frequency
-          annotations, direction arrows, 1:1 aspect, axis labels.'
+        comment: 'All spec features: critical point, unit circle, frequency annotations,
+          arrows, 1:1 ratio, axis labels'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Real on x-axis, imaginary on y-axis, correctly computed from transfer
-          function.
+        comment: Real on X, imaginary on Y, correctly computed from transfer function
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Legend labels clear and descriptive.
+        comment: Title format correct, legend identifies frequency branches
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows both branches, gain crossover, spiral shape. Phase crossover
-          could be more explicit.
+        comment: Both branches, gain/phase crossover, DC behavior, high-frequency
+          asymptotic behavior
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Classic third-order control system with realistic time constants.
+        comment: Realistic third-order control system, common textbook example
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: DC gain of 5, realistic time constants and frequency range.
+        comment: Frequency range 0.01-1000 rad/s, DC gain 5, distinct time constants
     code_quality:
       score: 10
       max: 10
@@ -168,33 +171,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat linear flow with no functions or classes.
+        comment: Linear flow, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic analytical computation.
+        comment: Fully deterministic analytical computation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only altair, numpy, pandas — all used.
+        comment: Only altair, numpy, pandas — all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-organized layer composition. No fake functionality.
+        comment: Well-organized, smart label offset approach
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html. Current Altair API.
+        comment: Saves plot.png and plot.html, current Altair 6.x API
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -202,13 +205,15 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of declarative grammar, layered composition, encoding channels.
+        comment: 'Good declarative grammar: layered composition, encoding channels,
+          Scale/Axis config'
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Uses interactive(), tooltips, HTML export, layered grammar of graphics.
+        comment: selection_point for legend highlighting, tooltips, .interactive(),
+          HTML export
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -217,6 +222,7 @@ impl_tags:
   - layer-composition
   - hover-tooltips
   - html-export
+  - custom-legend
   patterns:
   - data-generation
   dataprep: []
