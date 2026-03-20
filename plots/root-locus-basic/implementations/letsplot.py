@@ -1,0 +1,325 @@
+""" pyplots.ai
+root-locus-basic: Root Locus Plot for Control Systems
+Library: letsplot 4.9.0 | Python 3.14.3
+Quality: 90/100 | Created: 2026-03-20
+"""
+
+import numpy as np
+import pandas as pd
+from lets_plot import *  # noqa: F403
+from lets_plot.export import ggsave as export_ggsave
+
+
+LetsPlot.setup_html()  # noqa: F405
+
+# Data - Root locus for G(s) = (s + 3) / [s(s + 1)(s + 2)(s + 4)]
+# Open-loop poles: 0, -1, -2, -4 | Open-loop zero: -3
+num_coeffs = np.array([1, 3])  # s + 3
+den_coeffs = np.polymul(np.polymul([1, 0], [1, 1]), np.polymul([1, 2], [1, 4]))  # s(s+1)(s+2)(s+4)
+
+open_loop_poles = np.array([0.0, -1.0, -2.0, -4.0])
+open_loop_zeros = np.array([-3.0])
+
+# Compute closed-loop poles for varying gain K
+k_values = np.concatenate(
+    [np.linspace(0, 0.5, 200), np.linspace(0.5, 5, 400), np.linspace(5, 30, 400), np.linspace(30, 120, 400)]
+)
+
+all_real = []
+all_imag = []
+all_gain = []
+all_branch = []
+
+for k in k_values:
+    char_poly = np.polyadd(den_coeffs, k * np.array([0, 0, 0, 1, 3]))
+    roots = np.roots(char_poly)
+    roots = np.sort_complex(roots)
+    for b, root in enumerate(roots):
+        all_real.append(root.real)
+        all_imag.append(root.imag)
+        all_gain.append(k)
+        all_branch.append(f"Branch {b + 1}")
+
+df = pd.DataFrame({"real": all_real, "imaginary": all_imag, "gain": all_gain, "branch": all_branch})
+
+# Open-loop poles and zeros for markers
+poles_df = pd.DataFrame(
+    {
+        "real": open_loop_poles,
+        "imaginary": [0.0] * len(open_loop_poles),
+        "type": ["Open-loop pole"] * len(open_loop_poles),
+    }
+)
+zeros_df = pd.DataFrame(
+    {
+        "real": open_loop_zeros,
+        "imaginary": [0.0] * len(open_loop_zeros),
+        "type": ["Open-loop zero"] * len(open_loop_zeros),
+    }
+)
+
+# Find imaginary axis crossings (where real part ≈ 0 and imag ≠ 0)
+crossing_mask = (np.abs(df["real"]) < 0.08) & (np.abs(df["imaginary"]) > 0.3)
+crossings = df[crossing_mask].copy()
+if len(crossings) > 0:
+    crossings = crossings.sort_values("imaginary")
+    pos_cross = crossings[crossings["imaginary"] > 0].head(1)
+    neg_cross = crossings[crossings["imaginary"] < 0].head(1)
+    crossing_pts = pd.concat([pos_cross, neg_cross])
+else:
+    crossing_pts = pd.DataFrame(columns=df.columns)
+
+# Direction arrows - sample points at specific gain values for each branch
+arrow_gains = [5, 15, 50]
+arrow_rows = []
+for ag in arrow_gains:
+    idx = np.argmin(np.abs(k_values - ag))
+    subset = df[(df["gain"] >= k_values[max(0, idx - 1)]) & (df["gain"] <= k_values[min(len(k_values) - 1, idx + 1)])]
+    for _, row in subset.drop_duplicates(subset="branch").iterrows():
+        k_next = k_values[min(len(k_values) - 1, idx + 5)]
+        next_pts = df[(np.abs(df["gain"] - k_next) < 1.0) & (df["branch"] == row["branch"])]
+        if len(next_pts) > 0:
+            npt = next_pts.iloc[0]
+            dx = npt["real"] - row["real"]
+            dy = npt["imaginary"] - row["imaginary"]
+            mag = np.sqrt(dx**2 + dy**2)
+            if mag > 0.01:
+                scale = 0.25 / mag
+                arrow_rows.append(
+                    {
+                        "x": row["real"],
+                        "y": row["imaginary"],
+                        "xend": row["real"] + dx * scale,
+                        "yend": row["imaginary"] + dy * scale,
+                    }
+                )
+
+arrows_df = pd.DataFrame(arrow_rows) if arrow_rows else pd.DataFrame(columns=["x", "y", "xend", "yend"])
+
+# Damping ratio lines (constant zeta)
+zeta_values = [0.2, 0.4, 0.6, 0.8]
+zeta_lines = []
+for zeta in zeta_values:
+    theta = np.arccos(zeta)
+    r_max = 5.0
+    zeta_lines.append(
+        {"x": 0, "y": 0, "xend": -r_max * np.cos(theta), "yend": r_max * np.sin(theta), "label": f"ζ={zeta}"}
+    )
+    zeta_lines.append(
+        {"x": 0, "y": 0, "xend": -r_max * np.cos(theta), "yend": -r_max * np.sin(theta), "label": f"ζ={zeta}"}
+    )
+zeta_df = pd.DataFrame(zeta_lines)
+
+# Zeta labels (upper half only, positioned along lines with offset to avoid crowding)
+zeta_label_df = pd.DataFrame(
+    [
+        {
+            "x": -r_max * (0.4 + i * 0.08) * np.cos(np.arccos(z)),
+            "y": r_max * (0.4 + i * 0.08) * np.sin(np.arccos(z)),
+            "label": f"ζ={z}",
+        }
+        for i, z in enumerate(zeta_values)
+    ]
+)
+
+# Natural frequency circles (constant ωn)
+wn_values = [1, 2, 3, 4]
+wn_rows = []
+for wn in wn_values:
+    theta = np.linspace(np.pi / 2, 3 * np.pi / 2, 100)
+    wn_rows.extend([{"real": wn * np.cos(t), "imaginary": wn * np.sin(t), "wn": f"ωn={wn}"} for t in theta])
+wn_df = pd.DataFrame(wn_rows)
+
+# Branch colors - colorblind-safe palette (no red-green pair)
+branch_colors = ["#306998", "#E69F00", "#CC79A7", "#56B4E9"]
+
+# Plot
+plot = (
+    ggplot()  # noqa: F405
+    # Natural frequency arcs
+    + geom_path(  # noqa: F405
+        aes(x="real", y="imaginary", group="wn"),  # noqa: F405
+        data=wn_df,
+        color="#E0E0E0",
+        size=0.4,
+        linetype="dashed",
+        tooltips="none",
+    )
+    # Damping ratio lines
+    + geom_segment(  # noqa: F405
+        aes(x="x", y="y", xend="xend", yend="yend"),  # noqa: F405
+        data=zeta_df,
+        color="#E0E0E0",
+        size=0.4,
+        linetype="dashed",
+        tooltips="none",
+    )
+    # Damping ratio labels
+    + geom_text(  # noqa: F405
+        aes(x="x", y="y", label="label"),  # noqa: F405
+        data=zeta_label_df,
+        size=11,
+        color="#A0A0A0",
+        inherit_aes=False,
+        family="monospace",
+    )
+    # Stable region shading (left half-plane)
+    + geom_rect(  # noqa: F405
+        aes(xmin="xmin", ymin="ymin", xmax="xmax", ymax="ymax"),  # noqa: F405
+        data=pd.DataFrame({"xmin": [-5.0], "xmax": [0], "ymin": [-4], "ymax": [4]}),
+        fill="#E8F4E8",
+        alpha=0.3,
+        inherit_aes=False,
+        tooltips="none",
+    )
+    # Imaginary axis (stability boundary)
+    + geom_vline(xintercept=0, color="#B0B0B0", size=0.7, linetype="solid")  # noqa: F405
+    + geom_hline(yintercept=0, color="#CCCCCC", size=0.4)  # noqa: F405
+    # Stability boundary label
+    + geom_text(  # noqa: F405
+        aes(x="x", y="y", label="label"),  # noqa: F405
+        data=pd.DataFrame({"x": [0.15], "y": [3.7], "label": ["jω"]}),
+        size=14,
+        color="#888888",
+        inherit_aes=False,
+        hjust=0,
+        family="serif",
+    )
+    + geom_text(  # noqa: F405
+        aes(x="x", y="y", label="label"),  # noqa: F405
+        data=pd.DataFrame({"x": [1.1], "y": [-0.25], "label": ["σ"]}),
+        size=14,
+        color="#888888",
+        inherit_aes=False,
+        hjust=0,
+        family="serif",
+    )
+    # Region labels for storytelling
+    + geom_text(  # noqa: F405
+        aes(x="x", y="y", label="label"),  # noqa: F405
+        data=pd.DataFrame({"x": [-4.3], "y": [2.8], "label": ["STABLE"]}),
+        size=16,
+        color="#4CAF50",
+        alpha=0.4,
+        inherit_aes=False,
+        family="monospace",
+        fontface="bold",
+    )
+    + geom_text(  # noqa: F405
+        aes(x="x", y="y", label="label"),  # noqa: F405
+        data=pd.DataFrame({"x": [0.55], "y": [2.8], "label": ["UNSTABLE"]}),
+        size=12,
+        color="#D55E00",
+        alpha=0.35,
+        inherit_aes=False,
+        family="monospace",
+        fontface="bold",
+    )
+    # Root locus branches with interactive tooltips
+    + geom_path(  # noqa: F405
+        aes(x="real", y="imaginary", color="branch"),  # noqa: F405
+        data=df,
+        size=1.8,
+        alpha=0.9,
+        tooltips=layer_tooltips()  # noqa: F405
+        .format("gain", ".2f")
+        .format("real", ".3f")
+        .format("imaginary", ".3f")
+        .line("Branch: @branch")
+        .line("Gain K: @gain")
+        .line("Re: @real")
+        .line("Im: @imaginary"),
+    )
+    + scale_color_manual(  # noqa: F405
+        values=branch_colors, name="Locus Branch"
+    )
+    # Direction arrows (larger, more visible)
+    + geom_segment(  # noqa: F405
+        aes(x="x", y="y", xend="xend", yend="yend"),  # noqa: F405
+        data=arrows_df,
+        color="#333333",
+        size=1.2,
+        arrow=arrow(length=14, ends="last", type="open"),  # noqa: F405
+        inherit_aes=False,
+        tooltips="none",
+    )
+    # Open-loop poles (× markers)
+    + geom_point(  # noqa: F405
+        aes(x="real", y="imaginary"),  # noqa: F405
+        data=poles_df,
+        shape=4,  # cross/x marker
+        size=8,
+        color="#222222",
+        stroke=2.5,
+        inherit_aes=False,
+        tooltips=layer_tooltips().line("Open-loop pole").line("s = @real"),  # noqa: F405
+    )
+    # Open-loop zeros (○ markers)
+    + geom_point(  # noqa: F405
+        aes(x="real", y="imaginary"),  # noqa: F405
+        data=zeros_df,
+        shape=1,  # open circle
+        size=8,
+        color="#222222",
+        stroke=2.5,
+        inherit_aes=False,
+        tooltips=layer_tooltips().line("Open-loop zero").line("s = @real"),  # noqa: F405
+    )
+    # Imaginary axis crossings
+    + geom_point(  # noqa: F405
+        aes(x="real", y="imaginary"),  # noqa: F405
+        data=crossing_pts,
+        shape=18,  # diamond
+        size=8,
+        color="#D55E00",
+        inherit_aes=False,
+        tooltips=layer_tooltips().line("Stability boundary crossing").line("K ≈ @gain").line("Im: @imaginary"),  # noqa: F405
+    )
+    # Crossing gain annotation
+    + geom_text(  # noqa: F405
+        aes(x="x", y="y", label="label"),  # noqa: F405
+        data=pd.DataFrame(
+            {
+                "x": [0.25],
+                "y": [crossing_pts["imaginary"].max() if len(crossing_pts) > 0 else 2.0],
+                "label": [f"K ≈ {crossing_pts['gain'].iloc[0]:.1f}" if len(crossing_pts) > 0 else ""],
+            }
+        ),
+        size=13,
+        color="#D55E00",
+        inherit_aes=False,
+        hjust=0,
+        family="monospace",
+        fontface="bold",
+    )
+    # Labels and styling
+    + labs(  # noqa: F405
+        x="Real Axis (σ)",
+        y="Imaginary Axis (jω)",
+        title="root-locus-basic · letsplot · pyplots.ai",
+        caption="G(s) = (s + 3) / [s(s + 1)(s + 2)(s + 4)]  ·  × = poles  ·  ○ = zeros  ·  Stable region shaded",
+    )
+    + coord_fixed(ratio=1, xlim=[-5.0, 1.5], ylim=[-4, 4])  # noqa: F405
+    + ggsize(1600, 900)  # noqa: F405
+    + theme_minimal()  # noqa: F405
+    + theme(  # noqa: F405
+        axis_text=element_text(size=16, color="#666666", family="monospace"),  # noqa: F405
+        axis_title=element_text(size=20, color="#333333", face="bold"),  # noqa: F405
+        plot_title=element_text(size=26, color="#1A1A1A", face="bold"),  # noqa: F405
+        plot_caption=element_text(size=14, color="#777777", face="italic"),  # noqa: F405
+        legend_text=element_text(size=14),  # noqa: F405
+        legend_title=element_text(size=16, face="bold"),  # noqa: F405
+        legend_position="right",
+        panel_grid_major=element_blank(),  # noqa: F405
+        panel_grid_minor=element_blank(),  # noqa: F405
+        plot_background=element_rect(fill="#FCFCFC", color="#FCFCFC"),  # noqa: F405
+        panel_background=element_rect(fill="#FCFCFC", color="#FCFCFC"),  # noqa: F405
+        axis_ticks=element_line(color="#CCCCCC", size=0.3),  # noqa: F405
+        axis_line=element_line(color="#BBBBBB", size=0.5),  # noqa: F405
+        plot_margin=[35, 45, 25, 25],
+    )
+)
+
+# Save
+export_ggsave(plot, filename="plot.png", path=".", scale=3)
+export_ggsave(plot, filename="plot.html", path=".")
