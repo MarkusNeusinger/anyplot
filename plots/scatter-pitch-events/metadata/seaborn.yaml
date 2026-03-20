@@ -1,7 +1,7 @@
 library: seaborn
 specification_id: scatter-pitch-events
 created: '2026-03-20T12:31:48Z'
-updated: '2026-03-20T12:36:09Z'
+updated: '2026-03-20T12:45:09Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23342848876
 issue: 4417
@@ -10,35 +10,35 @@ library_version: 0.13.2
 preview_url: https://storage.googleapis.com/pyplots-images/plots/scatter-pitch-events/seaborn/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/scatter-pitch-events/seaborn/plot_thumb.png
 preview_html: null
-quality_score: 71
+quality_score: 78
 review:
   strengths:
-  - Excellent pitch diagram with all required markings (penalty areas, goal areas,
-    center circle, corner arcs, goal posts, penalty arcs)
-  - Strong aesthetic design with custom dark green theme and well-chosen color palette
-  - Good marker differentiation using both color and shape for accessibility
-  - Directional arrows for passes and shots add tactical context
-  - Realistic spatial distribution of events by type
+  - Excellent pitch rendering with accurate FIFA markings including all required elements
+  - Strong thematic design with dark green color scheme and custom event palette
+  - All spec requirements fully met — directional arrows, distinct markers/colors,
+    outcome encoding
+  - Realistic spatial distribution of events matching tactical football patterns
+  - Perfect data quality with appropriate domain context
   weaknesses:
-  - No seaborn usage at all — the entire implementation uses only matplotlib, fundamentally
-    undermining the purpose of a seaborn implementation
-  - Arrows only shown for successful events; spec requests arrows for all passes and
-    shots
-  - Unsuccessful events at alpha=0.35 are hard to see against the green background
-  - Data generation creates random scatter without tactical patterns — no storytelling
-  - Verbose per-point plotting loop instead of vectorized approach
-  image_description: 'The plot displays a soccer pitch with a dark green background
-    (#2d8a4e) and white pitch markings including outer boundary, halfway line, center
-    circle, penalty areas, goal areas, penalty arcs, corner arcs, and goal posts.
-    Events are scattered across the pitch using four distinct marker types: light
-    blue circles for passes, orange/red stars for shots, yellow triangles for tackles,
-    and pink/purple diamonds for interceptions. Successful events are rendered with
-    filled markers at high opacity, while unsuccessful events appear as hollow markers
-    at low opacity (~0.35). Directional arrows extend from successful passes (light
-    blue) and successful shots (orange) indicating trajectory. The title "scatter-pitch-events
-    · seaborn · pyplots.ai" appears in white at the top. A styled legend at the bottom
-    with dark green background shows all 8 categories (4 event types × 2 outcomes)
-    in 4 columns across 2 rows.'
+  - No seaborn usage at all — the implementation is pure matplotlib, which is the
+    most critical issue
+  - Unsuccessful markers at alpha=0.35 are too faint, especially yellow on green
+  - Shot area near right goal has dense overlapping markers and arrows
+  - Legend font size (13pt) is small for the target output resolution
+  image_description: 'The plot displays a soccer pitch rendered with a dark green
+    background (#2d8a4e) and white pitch markings including outer boundary, halfway
+    line, center circle with center spot, both penalty areas, both goal areas, penalty
+    spots, penalty arcs, corner arcs, and goal posts. Four event types are scattered
+    across the pitch: light blue circles for passes (distributed across the full pitch),
+    orange/red stars for shots (concentrated in the right attacking third near the
+    goal), yellow triangles for tackles (mostly in the defensive and midfield areas),
+    and purple diamonds for interceptions (spread across mid-field areas). Successful
+    events appear as filled markers with higher opacity, while unsuccessful events
+    appear as hollow/unfilled markers with low opacity (quite faint). Directional
+    arrows extend from successful passes and shots showing trajectory. The title "scatter-pitch-events
+    · seaborn · pyplots.ai" appears at the top in white text. A legend at the bottom
+    in a dark green box with white border shows all 8 marker categories (4 event types
+    × 2 outcomes) arranged in 4 columns.'
   criteria_checklist:
     visual_quality:
       score: 23
@@ -49,45 +49,43 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Title fontsize=24 explicitly set, legend fontsize=13 set. Legend
-          text slightly small for output resolution.
+        comment: Title at 24pt good, legend at 13pt too small for target resolution
       - id: VQ-02
         name: No Overlap
         score: 4
         max: 6
-        passed: false
-        comment: Some marker/arrow overlap in dense attacking third. Legend slightly
-          cramped with 8 entries.
+        passed: true
+        comment: Dense overlap in shot area near right goal with clustered arrows
+          and markers
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Markers well-sized for 180 points. Unsuccessful events at alpha=0.35
-          are hard to see against green background.
+        comment: Successful markers visible but unsuccessful at alpha=0.35 are too
+          faint on green
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
-        passed: true
-        comment: Blue/orange/yellow/purple palette avoids red-green confusion. Distinct
-          marker shapes add redundant encoding.
-      - id: VQ-05
-        name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good pitch proportions with correct aspect ratio. Minor asymmetry
-          in border area.
+        comment: Blue/orange/yellow/purple mostly distinguishable; yellow on green
+          has reduced contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Pitch fills canvas well with balanced margins and correct aspect
+          ratio
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Title present and correct. Axes off is standard for pitch diagrams
-          but no scale reference provided.
+        passed: true
+        comment: Title present, axis off appropriate for pitch diagram
     design_excellence:
-      score: 12
+      score: 15
       max: 20
       items:
       - id: DE-01
@@ -95,24 +93,23 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom dark green theme, thoughtful 4-color palette, styled legend
-          matching pitch aesthetic. Sports analytics look.
+        comment: Strong thematic dark green design with custom palette, above defaults
       - id: DE-02
         name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Axis hidden, clean pitch markings, consistent line weights, minor
+          arrow noise
+      - id: DE-03
+        name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Axes removed, controlled alpha on pitch markings, styled legend with
-          matching background.
-      - id: DE-03
-        name: Data Storytelling
-        score: 2
-        max: 6
-        passed: false
-        comment: Random data without tactical patterns. No visible pressing zones,
-          passing lanes, or tactical story.
+        comment: Spatial patterns tell tactical story with shots near goal and tackles
+          in defense
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -120,88 +117,83 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct scatter plot on accurately scaled pitch diagram with FIFA
-          dimensions.
+        comment: Correct scatter plot on accurately scaled pitch diagram
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 'All major features present. Minor: arrows only for successful events,
-          spec doesn''t limit to successful only.'
+        comment: All spec requirements present including arrows, markers, colors,
+          outcome encoding
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly mapped to pitch coordinates (0-105m, 0-68m).
+        comment: Correct FIFA dimensions 105x68m with appropriate event positioning
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Legend labels clearly match data categories.
+        comment: Title in correct format, legend shows all 8 categories
     data_quality:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: All 4 event types with both outcomes. Shots in attacking third. Could
-          show more tactical variation.
+        comment: All 4 event types with realistic spatial distributions and both outcomes
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Soccer match events with realistic spatial distributions and plausible
-          event type proportions.
+        comment: Soccer match events are real-world neutral domain with tactical realism
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: FIFA standard dimensions, 180 events reasonable for match segment,
-          65/35 success rate realistic.
+        comment: 180 events reasonable, FIFA dimensions correct, coordinate ranges
+          realistic
     code_quality:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Correct pattern but verbose per-point iterrows loop.
+        comment: Linear flow with no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set at start.
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Seaborn is not imported at all. This is supposed to be a seaborn
-          implementation.
+        passed: true
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 1
         max: 2
         passed: false
-        comment: Verbose iterrows loop for individual markers instead of vectorized
-          scatter calls.
+        comment: iterrows() loop is verbose, could use vectorized seaborn calls
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300, bbox_inches='tight'.
+        comment: Saves as plot.png with dpi=300
     library_mastery:
       score: 2
       max: 10
@@ -211,15 +203,13 @@ review:
         score: 1
         max: 5
         passed: false
-        comment: 'Critical: No seaborn import or function calls. Entirely matplotlib.
-          Should use sns.scatterplot().'
+        comment: No seaborn functions used at all, entire plot is raw matplotlib
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
         passed: false
-        comment: No seaborn features used. Missing hue/style mapping, statistical
-          context capabilities.
+        comment: Zero seaborn features leveraged, could use sns.scatterplot with hue/style
   verdict: REJECTED
 impl_tags:
   dependencies: []
