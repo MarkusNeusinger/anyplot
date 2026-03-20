@@ -1,0 +1,233 @@
+library: plotly
+specification_id: bifurcation-basic
+created: '2026-03-20T20:28:31Z'
+updated: '2026-03-20T20:33:16Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23361206064
+issue: 4415
+python_version: 3.14.3
+library_version: 6.6.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/bifurcation-basic/plotly/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/bifurcation-basic/plotly/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/bifurcation-basic/plotly/plot.html
+quality_score: 90
+review:
+  strengths:
+  - Excellent use of Scattergl for performant rendering of ~200K data points — expert
+    Plotly choice
+  - Density-based visualization with tiny markers and low alpha perfectly reveals
+    the bifurcation structure
+  - Annotated bifurcation points with vertical reference lines create a clear narrative
+  - Fully deterministic data generation with well-chosen parameters (2000 r-values,
+    200 transient, 100 recorded)
+  - Dual output (PNG + HTML) leverages Plotly interactive capabilities
+  weaknesses:
+  - Annotation font size (13) is slightly small relative to other text elements
+  - Title prepends extra text before the standard format
+  - Design could be elevated with stronger visual emphasis on the chaos transition
+    region
+  image_description: 'The plot displays a bifurcation diagram of the logistic map
+    with growth rate (r) on the x-axis ranging from 2.5 to 4.0 and steady-state population
+    (x) on the y-axis ranging from 0 to 1. Data points are rendered in a steel blue
+    color (#306998) with very low opacity, creating a density-based visualization.
+    The diagram clearly shows: a single stable fixed point from r=2.5 to r≈3.0, a
+    period-2 bifurcation at r≈3.0, period-4 at r≈3.449, period-8 at r≈3.544, and the
+    onset of chaos at r≈3.5699. Four vertical dotted red lines mark these key bifurcation
+    points, with brownish-red labels at the top of the plot identifying each transition.
+    The chaotic regime from r≈3.57 to r=4.0 is richly detailed, with visible windows
+    of periodicity. The title reads "Logistic Map · bifurcation-basic · plotly · pyplots.ai"
+    in dark blue bold font. The background is white with a very light gray paper background
+    (#FAFBFC). The y-axis has a subtle grid; the x-axis has no grid. Overall layout
+    is clean and well-proportioned.'
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 28, labels 22, ticks 18). Annotation
+          font at 13 is readable but slightly small.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping elements. Annotations use different xanchor offsets
+          for closely-spaced bifurcation points.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Marker size 1 with opacity 0.15 perfectly adapted to ~200K point
+          density. Bifurcation structure is crystal clear.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Single color (Python Blue) against white background. No colorblind
+          concerns.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good canvas utilization with appropriate margins.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive labels with parameter notation: Growth Rate (r), Steady-State
+          Population (x).'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above defaults: custom Python Blue, plotly_white template, subtle
+          paper background, cohesive annotation palette.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: X-axis grid removed, y-axis grid at very low opacity, zeroline off,
+          generous margins.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Vertical reference lines with labels guide the viewer through the
+          period-doubling cascade to chaos.
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct scatter/point bifurcation diagram.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec requirements met: small points, low alpha, full cascade,
+          labeled bifurcation points, transient discarded.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=parameter (r), Y=state (x), both axes show full range.
+      - id: SC-04
+        name: Title & Legend
+        score: 2
+        max: 3
+        passed: true
+        comment: Title prepends 'Logistic Map' before the required format. No legend
+          needed for single-series.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all aspects: stable fixed point, period-2/4/8 doubling, chaotic
+          regime, windows of periodicity.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Logistic map is the canonical example for bifurcation diagrams in
+          nonlinear dynamics.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Standard ranges: r in [2.5, 4.0], x in [0, 1]. Well-calibrated iteration
+          parameters.'
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean linear flow: imports, data generation, plot, style, save.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Fully deterministic: logistic map with fixed initial condition x=0.5.'
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only numpy and plotly.graph_objects, both used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, straightforward implementation with appropriate complexity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png (4800x2700) and plot.html. Uses current API.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert use of go.Scattergl for WebGL rendering of ~200K points. Proper
+          graph_objects API.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Scattergl (WebGL), custom hovertemplate, HTML export. Could leverage
+          more Plotly-specific features.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling
