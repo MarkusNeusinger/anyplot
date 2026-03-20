@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 line-stress-strain: Engineering Stress-Strain Curve
 Library: highcharts unknown | Python 3.14.3
 Quality: 88/100 | Created: 2026-03-20
@@ -51,10 +51,9 @@ stress_necking += np.random.normal(0, 1.0, len(strain_necking))
 strain = np.concatenate([strain_elastic, strain_plateau[1:], strain_hardening[1:], strain_necking[1:]])
 stress = np.concatenate([stress_elastic, stress_plateau[1:], stress_hardening[1:], stress_necking[1:]])
 
-# 0.2% offset line - extend well beyond yield to make it clearly visible
+# 0.2% offset line - extend to full y-axis range for maximum visibility
 offset = 0.002
-# Extend offset line from 0 stress up to ~320 MPa so it's clearly visible on the chart
-offset_max_stress = 320  # MPa - extends well past yield for visibility
+offset_max_stress = 480  # MPa - extend to full chart height
 offset_line_strain_full = np.array([offset, offset + offset_max_stress / youngs_modulus])
 offset_line_stress_full = np.array([0, offset_max_stress])
 
@@ -101,7 +100,7 @@ chart.options.x_axis = {
         {
             "from": 0,
             "to": 0.015,
-            "color": "rgba(23, 165, 137, 0.08)",
+            "color": "rgba(23, 165, 137, 0.10)",
             "label": {
                 "text": "Elastic",
                 "align": "center",
@@ -153,8 +152,8 @@ chart.options.y_axis = {
             "dashStyle": "Dot",
             "label": {
                 "text": f"σ_y = {yield_strength} MPa",
-                "align": "right",
-                "x": -20,
+                "align": "left",
+                "x": 80,
                 "y": -12,
                 "style": {"fontSize": "28px", "color": "rgba(23, 165, 137, 0.9)"},
             },
@@ -167,8 +166,8 @@ chart.options.y_axis = {
             "dashStyle": "Dot",
             "label": {
                 "text": f"UTS = {uts} MPa",
-                "align": "right",
-                "x": -20,
+                "align": "left",
+                "x": 80,
                 "y": -12,
                 "style": {"fontSize": "28px", "color": "rgba(41, 128, 185, 0.9)"},
             },
@@ -195,13 +194,13 @@ chart.options.legend = {
 
 chart.options.credits = {"enabled": False}
 
-# Elastic modulus annotation on chart body
+# Elastic modulus annotation on chart body - positioned to avoid crowding
 chart.options.annotations = [
     {
         "draggable": "",
         "labels": [
             {
-                "point": {"x": 0.012, "y": 130, "xAxis": 0, "yAxis": 0},
+                "point": {"x": 0.025, "y": 180, "xAxis": 0, "yAxis": 0},
                 "text": "E = 210 GPa",
                 "style": {"fontSize": "32px", "fontWeight": "bold", "color": "#306998"},
                 "backgroundColor": "rgba(255, 255, 255, 0.85)",
@@ -212,7 +211,7 @@ chart.options.annotations = [
                 "shape": "rect",
             },
             {
-                "point": {"x": 0.04, "y": 300, "xAxis": 0, "yAxis": 0},
+                "point": {"x": 0.025, "y": 380, "xAxis": 0, "yAxis": 0},
                 "text": "← 0.2% Offset Yield Method",
                 "style": {"fontSize": "28px", "fontWeight": "bold", "color": "#e67e22"},
                 "backgroundColor": "rgba(255, 255, 255, 0.90)",
@@ -243,17 +242,18 @@ main_series.color = "#306998"
 main_series.marker = {"enabled": False}
 chart.add_series(main_series)
 
-# 0.2% offset line
+# 0.2% offset line - use multiple points for better rendering at short length
 offset_series = LineSeries()
-offset_series.data = [
-    [round(float(offset_line_strain_full[0]), 5), round(float(offset_line_stress_full[0]), 1)],
-    [round(float(offset_line_strain_full[1]), 5), round(float(offset_line_stress_full[1]), 1)],
-]
+offset_n_pts = 10
+offset_strains = np.linspace(float(offset_line_strain_full[0]), float(offset_line_strain_full[1]), offset_n_pts)
+offset_stresses = np.linspace(float(offset_line_stress_full[0]), float(offset_line_stress_full[1]), offset_n_pts)
+offset_series.data = [[round(float(s), 5), round(float(st), 1)] for s, st in zip(offset_strains, offset_stresses, strict=True)]
 offset_series.name = "0.2% Offset Line"
 offset_series.color = "#e67e22"
 offset_series.dash_style = "Dash"
-offset_series.line_width = 6
+offset_series.line_width = 8
 offset_series.marker = {"enabled": False}
+offset_series.z_index = 5
 chart.add_series(offset_series)
 
 # Critical points as scatter-like markers
