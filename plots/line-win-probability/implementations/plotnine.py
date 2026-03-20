@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 line-win-probability: Win Probability Chart
 Library: plotnine 0.15.3 | Python 3.14.3
-Quality: 87/100 | Created: 2026-03-20
+Quality: 92/100 | Created: 2026-03-20
 """
 
 import numpy as np
