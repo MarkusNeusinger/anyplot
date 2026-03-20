@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 bar-pareto: Pareto Chart with Cumulative Line
 Library: letsplot 4.9.0 | Python 3.14.3
-Quality: 86/100 | Created: 2026-03-20
+Quality: 90/100 | Created: 2026-03-20
 """
 
 import numpy as np
