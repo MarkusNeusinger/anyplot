@@ -1,7 +1,7 @@
 library: seaborn
 specification_id: scatter-pitch-events
 created: '2026-03-20T12:31:48Z'
-updated: '2026-03-20T12:52:37Z'
+updated: '2026-03-20T13:02:25Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23342848876
 issue: 4417
@@ -10,39 +10,39 @@ library_version: 0.13.2
 preview_url: https://storage.googleapis.com/pyplots-images/plots/scatter-pitch-events/seaborn/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/scatter-pitch-events/seaborn/plot_thumb.png
 preview_html: null
-quality_score: 85
+quality_score: 86
 review:
   strengths:
-  - Excellent pitch diagram with complete, accurate FIFA-standard markings including
-    goal posts, corner arcs, and penalty arcs
-  - Strong thematic design with dark green background evoking professional football
-    analytics aesthetics
-  - Good outcome encoding using both opacity and size differentiation
-  - Realistic spatial data distribution (shots near goal, passes across pitch)
-  - Directional arrows for passes and shots add valuable tactical information
-  - Clean, well-organized code with proper reproducibility
+  - Excellent pitch rendering with accurate FIFA dimensions, goal posts, corner arcs,
+    and penalty arcs
+  - Professional dark green theme with white markings creates a broadcast-quality
+    aesthetic
+  - KDE density contours add unique analytical depth beyond basic scatter plotting
+  - Directional arrows for passes and shots fulfill the spec trajectory requirement
+    elegantly
+  - Smart data generation with realistic spatial distributions per event type
+  - Clean outcome encoding via combined size and opacity differentiation
   weaknesses:
-  - Library mastery limited since pitch drawing is necessarily matplotlib-heavy; seaborn
-    only used for scatter layer
-  - Arrow clutter in dense areas (left half passes) slightly reduces visual clarity
-  - Legend at 16pt could be slightly larger for optimal readability
-  image_description: 'The plot displays a soccer pitch event map on a dark green (#1a472a/#2d8a4e)
-    background with white pitch markings including both penalty areas, goal areas,
-    center circle with center spot, halfway line, penalty arcs, corner arcs, and goal
-    posts. Four event types are plotted: passes (light blue circles, most numerous,
-    distributed across the pitch), shots (orange/red stars, concentrated in the right-side
-    attacking third near goal), tackles (yellow triangles, spread across defensive
-    and midfield zones), and interceptions (purple/pink diamonds, distributed across
-    the pitch). Successful events appear at higher opacity (0.92) with larger markers
-    (s=120), while unsuccessful events are more transparent (0.55) and smaller (s=80).
-    Directional arrows extend from successful passes (cyan) and shots (orange), showing
-    movement direction. The title "scatter-pitch-events · seaborn · pyplots.ai" appears
-    at top in white text. A two-row legend at the bottom shows all 8 categories (4
-    event types × 2 outcomes) with matching markers and colors on a dark green background
-    with white border.'
+  - Some visual clutter in the right penalty area where shots, arrows, and contours
+    overlap
+  - Yellow markers on green pitch have slightly reduced contrast
+  - Legend with 8 entries across 4 columns is dense
+  image_description: 'The plot displays a soccer pitch rendered with a dark green
+    background (#2d8a4e) and darker green border (#1a472a), featuring accurate white
+    pitch markings including penalty areas, goal areas, center circle, halfway line,
+    corner arcs, and goal posts. Four event types are plotted: light blue circles
+    for passes (spread across the entire pitch), orange-red stars for shots (clustered
+    in the right penalty area/attacking third), yellow triangles for tackles (distributed
+    across defensive and midfield zones), and pink/purple diamonds for interceptions
+    (spread across midfield). Successful events appear larger and more opaque, while
+    unsuccessful events are smaller and more transparent. Directional arrows in matching
+    colors show pass and shot trajectories. Subtle KDE density contours outline the
+    spatial clustering for each event type. The title "scatter-pitch-events · seaborn
+    · pyplots.ai" appears at the top in white text. A two-row legend at the bottom
+    identifies all 8 categories (4 event types × 2 outcomes) with matching markers.'
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 25
       max: 30
       items:
       - id: VQ-01
@@ -50,36 +50,36 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title 24pt, legend 16pt explicitly set. All text readable. Legend
-          could be 18pt for optimal readability.
+        comment: Title at 24pt, legend at 18pt, set_context('talk') with font_scale=1.1.
+          All readable. Legend slightly dense with 8 entries.
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Minor marker overlap in attacking third. Text elements clean. Legend
-          slightly tight but readable.
+        comment: Some marker congestion in right penalty area. Arrows overlapping
+          with markers in dense zones.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Marker sizes s=120/80 appropriate for 180 events. Distinct shapes
-          help differentiation. Alpha encoding works.
+        comment: Marker sizes appropriate for 180 events. Unsuccessful markers at
+          alpha=0.55 distinguishable but could be clearer.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Light blue, orange, yellow, purple palette is colorblind-friendly.
-          Good contrast against dark green.
+        comment: Good palette avoids red-green issues. Yellow on green has slightly
+          reduced contrast.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Pitch fills canvas well with correct 105:68 aspect ratio. Balanced
-          margins.
+        comment: Excellent canvas utilization. 16:9 aspect ratio perfect for pitch.
+          Dark border frames well.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -87,7 +87,7 @@ review:
         passed: true
         comment: Axes correctly off for pitch diagram. Title follows required format.
     design_excellence:
-      score: 14
+      score: 15
       max: 20
       items:
       - id: DE-01
@@ -95,22 +95,22 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Strong thematic dark green pitch design. Custom color palette. Clearly
-          above defaults.
+        comment: Professional dark green pitch theme. Custom palette with good harmony.
+          Edge highlighting on markers. Density contours add sophistication.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Axes hidden, dark themed, clean pitch markings. Arrow clutter in
-          dense areas slightly reduces polish.
+        comment: Axes hidden, clean pitch markings, generous margins. Dark border
+          framing. Carefully tuned alpha values.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Spatial distribution tells a story. Shots near goal, passes spanning
-          pitch. Opacity encoding adds narrative.
+        comment: Spatial distributions reveal tactical patterns. KDE contours highlight
+          hotspots. Size/opacity encoding adds analytical layer.
     spec_compliance:
       score: 15
       max: 15
@@ -120,27 +120,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct scatter plot on accurately-scaled pitch diagram.
+        comment: Correct scatter plot on accurately scaled soccer pitch.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: pitch markings, distinct markers, outcome
-          encoding, arrows, green background, correct ratio.'
+        comment: 'All spec requirements met: pitch markings, distinct markers/colors,
+          outcome encoding, directional arrows, green background, correct aspect ratio.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X maps to horizontal (0-105m), Y to vertical (0-68m). All data visible.
+        comment: X/Y correctly mapped to pitch coordinates (0-105m x 0-68m).
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows required format. Legend labels show event type and
-          outcome.
+        comment: Title format correct. Legend identifies all 8 categories with matching
+          markers.
     data_quality:
       score: 14
       max: 15
@@ -150,21 +150,22 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: All 4 event types with both outcomes. Realistic spatial clustering.
-          Arrows show directionality.
+        comment: 'All 4 event types with realistic spatial distributions. Both outcomes
+          represented. Minor: tackles and interceptions overlap spatially.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Soccer match event data is real, neutral. Proportions and success
-          rate realistic.
+        comment: Soccer match events with realistic coordinates. Neutral sports topic.
+          Plausible event proportions and success rate.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: FIFA standard dimensions. Event positions respect pitch zones realistically.
+        comment: 180 events realistic for match segment. All coordinates within FIFA-standard
+          dimensions.
     code_quality:
       score: 10
       max: 10
@@ -174,13 +175,13 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports-data-plot-save flow. No functions or classes.
+        comment: Clean imports-data-plot-save structure. No functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42) set at start.
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -192,45 +193,45 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized. No fake functionality.
+        comment: Well-organized. Smart arrow thinning. Clean pitch drawing.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300, bbox_inches tight.
+        comment: Saves as plot.png at dpi=300. No deprecated API.
     library_mastery:
-      score: 5
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of sns.scatterplot with hue/style, sns.kdeplot, sns.set_theme/set_context.
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses sns.scatterplot with hue/style. sns.set_theme for styling. Most
-          heavy lifting is matplotlib.
-      - id: LM-02
-        name: Distinctive Features
-        score: 2
-        max: 5
-        passed: false
-        comment: Seaborn adds value for scatter layer but pitch diagram is necessarily
-          matplotlib-heavy.
+        comment: KDE density contours via sns.kdeplot are distinctive. Hue+style mapping
+          is seaborn-specific. Much pitch drawing uses raw matplotlib.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
   - custom-legend
+  - annotations
   - patches
   patterns:
   - data-generation
   - iteration-over-groups
   - explicit-figure
-  dataprep: []
+  dataprep:
+  - kde
   styling:
   - dark-theme
-  - minimal-chrome
   - alpha-blending
   - edge-highlighting
+  - minimal-chrome

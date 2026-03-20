@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 scatter-pitch-events: Soccer Pitch Event Map
 Library: seaborn 0.13.2 | Python 3.14.3
-Quality: 85/100 | Created: 2026-03-20
+Quality: 86/100 | Created: 2026-03-20
 """
 
 import matplotlib.patches as patches
