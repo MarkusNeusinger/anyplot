@@ -1,0 +1,229 @@
+library: plotnine
+specification_id: line-stress-strain
+created: '2026-03-20T21:22:28Z'
+updated: '2026-03-20T21:43:25Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23363004971
+issue: 4413
+python_version: 3.14.3
+library_version: 0.15.3
+preview_url: https://storage.googleapis.com/pyplots-images/plots/line-stress-strain/plotnine/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/line-stress-strain/plotnine/plot_thumb.png
+preview_html: null
+quality_score: 90
+review:
+  strengths:
+  - Excellent data storytelling through color-coded region shading that guides the
+    viewer through material behavior phases
+  - 'All spec-required features implemented: region labels, critical points, elastic
+    modulus annotation, 0.2% offset line'
+  - Realistic mild steel data with appropriate engineering values
+  - Clean, well-structured code following KISS principles
+  - Good use of plotnine grammar-of-graphics approach with layered composition
+  weaknesses:
+  - The elastic region is horizontally compressed, creating visual density with multiple
+    labels in a narrow space
+  - The 0.2% offset annotation text (size=11) is noticeably smaller than other text
+    elements
+  image_description: 'The plot displays an engineering stress-strain curve for mild
+    steel on a white background. The title "line-stress-strain · plotnine · pyplots.ai"
+    appears in bold dark text at the top. The x-axis is labeled "Engineering Strain"
+    (0.00–0.35) and the y-axis "Engineering Stress (MPa)" (0–450). A thick dark blue
+    line traces the characteristic stress-strain path from origin through elastic
+    deformation, yield plateau, strain hardening up to ~400 MPa at strain ~0.22 (UTS),
+    then necking down to ~320 MPa at fracture (strain ~0.35). Four color-shaded rectangular
+    regions mark the material behavior zones: light blue (Elastic), light green (Yield
+    Plateau), light yellow/orange (Strain Hardening), and light pink/red (Necking),
+    each with gray italic region labels. Three red dots mark critical points labeled
+    in bold: "Yield Point (0.2% offset)", "UTS", and "Fracture". A red dashed line
+    shows the 0.2% offset construction with a small red italic "0.2% offset" label
+    near the bottom. "E = 210 GPa" appears in bold blue text. The y-axis grid is subtle
+    light gray; x-axis grid is removed. Layout is 16:9 with good canvas utilization.'
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All major text sizes explicitly set (title=26, axis_title=22, axis_text=16).
+          The 0.2% offset annotation at size=11 is smaller than other text.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: No actual text overlap, but elastic region is horizontally compressed
+          with multiple labels in a narrow band.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Main curve at size=2.8 clearly visible, key points at size=6 are
+          prominent.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue curve with red accents, pastel region shading. Colorblind-safe,
+          no red-green dependency.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good 16:9 proportions with plot filling the canvas well.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive labels with units: Engineering Strain and Engineering
+          Stress (MPa).'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Color-coded region shading, custom palette, intentional typographic
+          hierarchy. Above defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: X-grid removed, subtle y-only grid, clean white background. Minor
+          density in elastic region.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Color-coded regions guide viewer through material behavior. Key points
+          create clear focal points.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct engineering stress-strain curve as line plot.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: region labels, critical points, modulus
+          annotation, offset line.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=strain, Y=stress correctly mapped with full data range.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title follows exact format. No legend needed for single-series.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all curve regions: elastic, yield plateau, strain hardening,
+          necking, fracture.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Mild steel tensile test - classic, neutral engineering scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Realistic values for mild steel: E=210 GPa, yield=250 MPa, UTS=400
+          MPa.'
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean linear flow: imports, data, plot, save. No functions or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set at start.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports are used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-organized with clear sections. No fake UI.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with dpi=300. Current plotnine API.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good grammar-of-graphics with layered composition, aes mapping, identity
+          scales, theme customization.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses annotate rect for region shading, coord_cartesian, identity
+          scales, geom_segment.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling
