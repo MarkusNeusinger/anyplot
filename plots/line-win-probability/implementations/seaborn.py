@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 line-win-probability: Win Probability Chart
 Library: seaborn 0.13.2 | Python 3.14.3
-Quality: 83/100 | Created: 2026-03-20
+Quality: 91/100 | Created: 2026-03-20
 """
 
 import matplotlib.patches as mpatches

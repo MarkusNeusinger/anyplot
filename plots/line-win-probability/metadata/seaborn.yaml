@@ -1,7 +1,7 @@
 library: seaborn
 specification_id: line-win-probability
 created: '2026-03-20T12:32:04Z'
-updated: '2026-03-20T12:35:36Z'
+updated: '2026-03-20T12:45:51Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23342814414
 issue: 4418
@@ -10,104 +10,100 @@ library_version: 0.13.2
 preview_url: https://storage.googleapis.com/pyplots-images/plots/line-win-probability/seaborn/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/line-win-probability/seaborn/plot_thumb.png
 preview_html: null
-quality_score: 83
+quality_score: 91
 review:
   strengths:
-  - Excellent spec compliance — all required features implemented (fill areas, 50%
-    line, annotations, quarter markers, final score)
-  - Strong data storytelling with a realistic NFL game narrative showing lead changes
-    and dramatic finish
-  - Clean, well-organized code with good reproducibility
-  - 'Good visual refinement: removed spines, subtle grid, well-positioned annotations
-    with running scores'
+  - Excellent data storytelling with annotated scoring events showing running score
+  - Polished design with custom background, cohesive palette, and styled final score
+    box
+  - Complete spec compliance — all required features implemented
+  - Realistic NFL game data with compelling back-and-forth narrative
   weaknesses:
-  - Minimal seaborn usage — nearly the entire plot is built with matplotlib; only
-    sns.lineplot uses the library
-  - Annotation font size (11pt) could be larger for better readability at full resolution
-  - Design polish could be elevated further (e.g., background tint, team name labels,
-    subtitle)
-  image_description: 'The plot shows a win probability line chart for an NFL-style
-    football game. A blue line (#306998) tracks home team win probability from play
-    0 to 120 against a white background. The area above the 50% dashed baseline is
-    filled with light blue (Home), and below with light salmon/red (Away). Five key
-    scoring events are annotated with bold colored text and connecting dots: "TD Away
-    7-3" (red, around play 22), "TD Home 10-7" (blue, around play 35), "TD Home 20-14"
-    (blue, around play 65), "TD Away 23-27" (red, around play 95), and "TD Home 30-27"
-    (blue, around play 105). Quarter markers (Q1-Q4) appear as subtle dotted vertical
-    lines with labels at the bottom. The title reads "line-win-probability · seaborn
-    · pyplots.ai". Y-axis shows "Home Win Probability" with percentage labels (0%-100%),
-    X-axis shows "Play Number". A legend in the upper left identifies Home (blue)
-    and Away (red). The final score "Home 30 – Away 27" is displayed in italic gray
-    text at the bottom right. Top and right spines are removed, with a subtle y-axis
-    grid.'
+  - Q4 quarter label is obscured by the Final score box (minor overlap issue)
+  - Library mastery could be stronger — core visualization relies heavily on matplotlib
+    rather than seaborn-specific plotting features
+  image_description: 'The plot displays a win probability line chart for an NFL game
+    across 120 plays. A dark blue line (#306998) traces the home team''s win probability
+    from ~50% at kickoff through various scoring events. The area above the 50% dashed
+    baseline is filled with translucent blue (Home) and below with translucent salmon/red
+    (#D4583B, Away). Five key events are annotated with curved arrows and bold colored
+    text showing the scoring play and running score: "TD Away 7-3", "TD Home 10-7",
+    "TD Home 20-14", "TD Away 23-27", and "TD Home 30-27". Dotted vertical lines mark
+    Q1, Q2, and Q3 boundaries. The y-axis shows 0%-100% with the 50% reference line.
+    A styled box at the bottom right displays "Final: Home 30 – Away 27". The title
+    follows the required format. A legend in the upper left shows Home (blue) and
+    Away (red) patches. The background is a subtle light blue-gray (#F7F9FC). An italic
+    subtitle reads "NFL Game — Home vs Away | Lead changes and momentum shifts across
+    120 plays".'
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title 24, labels 20, ticks 16). Annotation
-          text at 11pt slightly small but readable.
+        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt,
+          annotations 13pt'
       - id: VQ-02
         name: No Overlap
-        score: 6
-        max: 6
-        passed: true
-        comment: All annotations well-positioned with offsets, no overlapping text.
-      - id: VQ-03
-        name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Line visible at 2.5 width, fills effective at alpha 0.25. Scatter
-          markers at s=80 could be slightly larger.
+        comment: Q4 quarter label hidden behind Final score box; remaining annotations
+          well-spaced
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Line, fills, and scatter markers all clearly visible with appropriate
+          sizing
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Blue vs salmon-red provides good contrast and colorblind-distinguishable.
+        comment: Blue and salmon provide strong contrast, colorblind-distinguishable
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good layout overall. Final score text at y=-0.06 slightly outside
-          axis area.
+        comment: Good 16:9 layout, balanced margins, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with percentage format on y-axis.
+        comment: Descriptive labels with percentage units on y-axis
     design_excellence:
-      score: 13
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Custom two-color palette, clean typography, frameless legend, quarter
-          markers. Above defaults but not publication-level.
+        comment: Custom background, cohesive palette, italic subtitle, styled score
+          box — clearly above defaults
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Spines removed, subtle y-grid (alpha=0.15), subtle quarter dividers.
+        comment: Spines removed, subtle grid, custom background, polished quarter
+          markers
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Clear narrative arc with lead changes, color fills convey momentum,
-          annotations highlight turning points.
+        comment: Annotations with running score, fill colors for momentum, final score
+          box — strong narrative
     spec_compliance:
       score: 15
       max: 15
@@ -117,48 +113,48 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct win probability line chart.
+        comment: Correct line chart showing win probability over game progression
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: fill areas, 50% line, annotations, quarter
-          markers, final score.'
+        comment: 'All features: 50% reference, fill areas, annotations, final score,
+          quarter markers'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=play number, Y=win probability. Full range shown.
+        comment: X=Play Number, Y=Win Probability, full range displayed
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format and legend labels.
+        comment: Correct title format and Home/Away legend patches
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Lead changes, momentum swings, multiple event types, dramatic finish.
+        comment: Lead changes, momentum swings, multiple event types, both teams scoring
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: NFL game scenario with realistic play-by-play. Neutral sports topic.
+        comment: NFL game scenario, neutral sports context, plausible data
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Realistic probability range and appropriate scoring event shifts.
+        comment: 120 plays realistic for NFL, probability values in valid range
     code_quality:
       score: 10
       max: 10
@@ -168,50 +164,49 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports-data-plot-style-save flow. No functions or classes.
+        comment: Clean imports → data → plot → save flow, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized, appropriate complexity. No fake UI.
+        comment: Appropriate complexity, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png, dpi=300, bbox_inches=tight. No deprecated API.
+        comment: Saves as plot.png with dpi=300
     library_mastery:
-      score: 4
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
-        passed: false
-        comment: Uses sns.lineplot correctly but fill_between, scatter, annotate,
-          and all styling are pure matplotlib.
+        passed: true
+        comment: Good use of seaborn axes-level API, set_theme, set_context, despine
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 2
         max: 5
         passed: false
-        comment: Only seaborn call is sns.lineplot. No distinctive seaborn features
-          used.
-  verdict: REJECTED
+        comment: Seaborn features are mainly styling utilities; core viz relies on
+          matplotlib
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -220,7 +215,6 @@ impl_tags:
   - manual-ticks
   patterns:
   - data-generation
-  - iteration-over-groups
   - explicit-figure
   dataprep:
   - cumulative-sum
