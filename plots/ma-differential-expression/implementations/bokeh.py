@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 ma-differential-expression: MA Plot for Differential Expression
 Library: bokeh 3.9.0 | Python 3.14.3
 Quality: 78/100 | Created: 2026-03-20
@@ -6,14 +6,50 @@ Quality: 78/100 | Created: 2026-03-20
 
 import numpy as np
 from bokeh.io import export_png, save
-from bokeh.models import ColumnDataSource, Label, Span
+from bokeh.models import ColumnDataSource, HoverTool, Label, LinearColorMapper, Range1d, Span
 from bokeh.plotting import figure
 from bokeh.resources import CDN
+from bokeh.transform import transform
 
 
 # Data: Simulated RNA-seq differential expression results
 np.random.seed(42)
 n_genes = 15000
+
+# Gene names
+gene_prefixes = [
+    "BRCA",
+    "TP",
+    "MYC",
+    "EGFR",
+    "KRAS",
+    "PTEN",
+    "AKT",
+    "MAPK",
+    "STAT",
+    "JAK",
+    "CDK",
+    "RB",
+    "VEGF",
+    "HIF",
+    "TNF",
+    "IL",
+    "NOTCH",
+    "WNT",
+    "SHH",
+    "FGF",
+    "SOX",
+    "PAX",
+    "HOX",
+    "GATA",
+    "FOXP",
+    "RUNX",
+    "ETS",
+    "MMP",
+    "COL",
+    "FN",
+]
+gene_names = [f"{gene_prefixes[i % len(gene_prefixes)]}{i}" for i in range(n_genes)]
 
 # Mean expression (A values) - log2 scale, typical range 0-16
 mean_expression = np.random.gamma(shape=2.5, scale=2.5, size=n_genes)
@@ -33,47 +69,86 @@ p_values[~np.isin(np.arange(n_genes), de_indices)] = np.random.uniform(0.01, 1.0
 
 # Significance threshold
 significant = p_values < 0.05
+neg_log10_p = -np.log10(np.clip(p_values, 1e-15, 1.0))
 
 # Separate sources for legend
 sig_mask = significant
 nonsig_mask = ~significant
 
-source_nonsig = ColumnDataSource(data={"x": mean_expression[nonsig_mask], "y": log_fold_change[nonsig_mask]})
+source_nonsig = ColumnDataSource(
+    data={
+        "x": mean_expression[nonsig_mask],
+        "y": log_fold_change[nonsig_mask],
+        "gene": [gene_names[i] for i in np.where(nonsig_mask)[0]],
+        "pval": p_values[nonsig_mask],
+        "neg_log10_p": neg_log10_p[nonsig_mask],
+    }
+)
 
-source_sig = ColumnDataSource(data={"x": mean_expression[sig_mask], "y": log_fold_change[sig_mask]})
+source_sig = ColumnDataSource(
+    data={
+        "x": mean_expression[sig_mask],
+        "y": log_fold_change[sig_mask],
+        "gene": [gene_names[i] for i in np.where(sig_mask)[0]],
+        "pval": p_values[sig_mask],
+        "neg_log10_p": neg_log10_p[sig_mask],
+    }
+)
+
+# Clamp x-axis to remove sparse right tail
+x_limit = np.percentile(mean_expression, 99)
 
 # Plot
 p = figure(
     width=4800,
     height=2700,
     title="ma-differential-expression · bokeh · pyplots.ai",
-    x_axis_label="Mean Expression (log₂)",
-    y_axis_label="Log₂ Fold Change (M)",
+    x_axis_label="Mean Expression (log\u2082)",
+    y_axis_label="Log\u2082 Fold Change (M)",
     toolbar_location=None,
+    x_range=Range1d(-0.5, x_limit + 0.5),
+)
+
+# Color mapper for significant genes by -log10(p)
+color_mapper = LinearColorMapper(
+    palette=["#F4A582", "#E63946", "#99000D"],
+    low=neg_log10_p[sig_mask].min() if sig_mask.sum() > 0 else 0,
+    high=neg_log10_p[sig_mask].max() if sig_mask.sum() > 0 else 10,
 )
 
 # Non-significant genes (gray, behind)
-p.scatter(x="x", y="y", source=source_nonsig, size=8, color="#B0B0B0", alpha=0.2, legend_label="Not Significant")
+r_nonsig = p.scatter(
+    x="x", y="y", source=source_nonsig, size=7, color="#C0C0C0", alpha=0.15, legend_label="Not Significant"
+)
 
-# Significant genes (red, on top)
-p.scatter(
+# Significant genes with color mapped by significance strength
+r_sig = p.scatter(
     x="x",
     y="y",
     source=source_sig,
-    size=12,
-    color="#E63946",
-    alpha=0.6,
+    size=11,
+    color=transform("neg_log10_p", color_mapper),
+    alpha=0.65,
     legend_label=f"Significant (n={sig_mask.sum():,})",
 )
 
+# HoverTool for significant genes only
+hover = HoverTool(
+    renderers=[r_sig],
+    tooltips=[("Gene", "@gene"), ("Mean Expr", "@x{0.2f}"), ("Log\u2082 FC", "@y{0.2f}"), ("p-value", "@pval{0.2e}")],
+)
+p.add_tools(hover)
+
 # Reference lines
-zero_line = Span(location=0, dimension="width", line_color="#306998", line_width=2.5)
+zero_line = Span(location=0, dimension="width", line_color="#306998", line_width=2.5, line_alpha=0.8)
 p.add_layout(zero_line)
 
-upper_fc = Span(location=1, dimension="width", line_color="#306998", line_width=2, line_dash="dashed")
+upper_fc = Span(location=1, dimension="width", line_color="#306998", line_width=1.8, line_dash="dashed", line_alpha=0.6)
 p.add_layout(upper_fc)
 
-lower_fc = Span(location=-1, dimension="width", line_color="#306998", line_width=2, line_dash="dashed")
+lower_fc = Span(
+    location=-1, dimension="width", line_color="#306998", line_width=1.8, line_dash="dashed", line_alpha=0.6
+)
 p.add_layout(lower_fc)
 
 # Smoothing curve via binned moving average
@@ -81,15 +156,20 @@ sort_idx = np.argsort(mean_expression)
 x_sorted = mean_expression[sort_idx]
 y_sorted = log_fold_change[sort_idx]
 
-n_bins = 100
-bin_edges = np.linspace(x_sorted.min(), x_sorted.max(), n_bins + 1)
+# Only use data within visible range
+vis_mask = x_sorted <= x_limit
+x_vis = x_sorted[vis_mask]
+y_vis = y_sorted[vis_mask]
+
+n_bins = 80
+bin_edges = np.linspace(x_vis.min(), x_vis.max(), n_bins + 1)
 bin_centers = []
 bin_means = []
 for i in range(n_bins):
-    mask = (x_sorted >= bin_edges[i]) & (x_sorted < bin_edges[i + 1])
+    mask = (x_vis >= bin_edges[i]) & (x_vis < bin_edges[i + 1])
     if mask.sum() > 5:
         bin_centers.append((bin_edges[i] + bin_edges[i + 1]) / 2)
-        bin_means.append(np.mean(y_sorted[mask]))
+        bin_means.append(np.mean(y_vis[mask]))
 
 bin_centers = np.array(bin_centers)
 bin_means = np.array(bin_means)
@@ -101,37 +181,97 @@ padded = np.pad(bin_means, pad, mode="edge")
 y_smooth = np.convolve(padded, np.ones(window) / window, mode="valid")
 
 smooth_source = ColumnDataSource(data={"x": bin_centers, "y": y_smooth})
-p.line(x="x", y="y", source=smooth_source, line_width=4, color="#FFD43B", legend_label="LOESS Trend")
+p.line(x="x", y="y", source=smooth_source, line_width=4, color="#2D6A4F", alpha=0.85, legend_label="LOESS Trend")
 
 # Fold-change threshold labels
-x_max = mean_expression.max()
-label_x = x_max * 0.85
+label_x = x_limit * 0.88
 
 upper_label = Label(
-    x=label_x, y=1, text="FC = 2", text_font_size="18pt", text_color="#306998", text_baseline="bottom", y_offset=5
+    x=label_x,
+    y=1,
+    text="FC = 2",
+    text_font_size="16pt",
+    text_color="#306998",
+    text_baseline="bottom",
+    y_offset=5,
+    text_font_style="italic",
 )
 p.add_layout(upper_label)
 
 lower_label = Label(
-    x=label_x, y=-1, text="FC = −2", text_font_size="18pt", text_color="#306998", text_baseline="top", y_offset=-5
+    x=label_x,
+    y=-1,
+    text="FC = \u22122",
+    text_font_size="16pt",
+    text_color="#306998",
+    text_baseline="top",
+    y_offset=-5,
+    text_font_style="italic",
 )
 p.add_layout(lower_label)
 
+# Annotate top DE genes by |fold change| * -log10(p)
+sig_indices = np.where(sig_mask)[0]
+if len(sig_indices) > 0:
+    de_score = np.abs(log_fold_change[sig_indices]) * neg_log10_p[sig_indices]
+    top_n = 8
+    top_local = np.argsort(de_score)[-top_n:]
+    top_global = sig_indices[top_local]
+
+    for idx in top_global:
+        gx = mean_expression[idx]
+        gy = log_fold_change[idx]
+        if gx <= x_limit:
+            label = Label(
+                x=gx,
+                y=gy,
+                text=f" {gene_names[idx]}",
+                text_font_size="14pt",
+                text_color="#333333",
+                text_font_style="bold",
+                x_offset=8,
+                y_offset=6,
+            )
+            p.add_layout(label)
+
 # Styling
 p.title.text_font_size = "28pt"
+p.title.text_color = "#2C3E50"
 p.xaxis.axis_label_text_font_size = "22pt"
 p.yaxis.axis_label_text_font_size = "22pt"
 p.xaxis.major_label_text_font_size = "18pt"
 p.yaxis.major_label_text_font_size = "18pt"
+p.xaxis.axis_label_text_color = "#333333"
+p.yaxis.axis_label_text_color = "#333333"
 
-p.xgrid.grid_line_alpha = 0.2
-p.ygrid.grid_line_alpha = 0.2
+# Refined grid
+p.xgrid.grid_line_alpha = 0.15
+p.ygrid.grid_line_alpha = 0.15
+p.xgrid.grid_line_dash = [4, 4]
+p.ygrid.grid_line_dash = [4, 4]
 
+# Remove spines for cleaner look
+p.outline_line_color = None
+p.xaxis.axis_line_color = "#666666"
+p.yaxis.axis_line_color = "#666666"
+p.xaxis.axis_line_width = 1.5
+p.yaxis.axis_line_width = 1.5
+p.xaxis.minor_tick_line_color = None
+p.yaxis.minor_tick_line_color = None
+p.xaxis.major_tick_line_color = "#666666"
+p.yaxis.major_tick_line_color = "#666666"
+
+# Legend styling
 p.legend.label_text_font_size = "18pt"
 p.legend.location = "top_left"
-p.legend.background_fill_alpha = 0.8
+p.legend.background_fill_alpha = 0.85
+p.legend.border_line_color = "#CCCCCC"
+p.legend.border_line_width = 1
+p.legend.padding = 12
+p.legend.spacing = 8
+p.legend.margin = 15
 
-p.background_fill_color = "white"
+p.background_fill_color = "#FAFAFA"
 p.border_fill_color = "white"
 
 # Save
