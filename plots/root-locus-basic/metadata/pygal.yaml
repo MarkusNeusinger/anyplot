@@ -1,7 +1,7 @@
 library: pygal
 specification_id: root-locus-basic
 created: '2026-03-20T21:28:09Z'
-updated: '2026-03-20T21:33:07Z'
+updated: '2026-03-20T21:41:53Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23362982102
 issue: 4414
@@ -10,36 +10,38 @@ library_version: 3.1.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/root-locus-basic/pygal/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/root-locus-basic/pygal/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/root-locus-basic/pygal/plot.html
-quality_score: 79
+quality_score: 76
 review:
   strengths:
-  - 'Excellent data engineering: polynomial root computation with intelligent pole-tracking
-    across gain sweep'
+  - 'Excellent code quality: clean, well-commented, deterministic, with sophisticated
+    pole-tracking algorithm'
+  - Good use of pygal allow_interruptions for multi-branch rendering
   - 'Comprehensive feature set: damping ratio guides, natural frequency semicircles,
     stability boundary markers'
-  - Clean, deterministic code with well-structured data generation
-  - Good use of pygal allow_interruptions for multi-segment rendering
+  - Proper engineering notation on axes with sigma and j-omega symbols
+  - Custom color palette with distinct colors for each element type
   weaknesses:
-  - Real-axis locus segments are nearly invisible (gray on white background)
-  - Red-green color pairing for poles vs zeros is not colorblind-safe
-  - No arrows indicating direction of increasing gain (spec requirement)
-  - Design could benefit from stronger visual hierarchy and more refined styling
-  image_description: The plot displays a root locus diagram on a white background.
-    A blue curve traces the closed-loop pole migration through the complex plane —
-    two branches depart from near the origin along the real axis, then split into
-    the upper and lower half-planes, curving rightward and crossing the imaginary
-    axis around ±1.6j. Red circular markers indicate open-loop poles at s = 0, -1,
-    -2, and -4 on the real axis. A green circular marker shows the open-loop zero
-    at s = -3. Orange markers highlight the imaginary-axis (stability boundary) crossings
-    at approximately ±1.6j. Dashed gray lines radiate from the origin representing
-    constant damping ratio guides (ζ = 0.2, 0.4, 0.6, 0.8), and dashed gray semicircles
-    represent constant natural frequency guides (ωn = 1–5). The real-axis locus segments
-    are shown in gray but are barely distinguishable. The title reads "root-locus-basic
-    · pygal · pyplots.ai" and axis labels are "Real Axis (σ)" and "Imaginary Axis
-    (jω)". A legend at the bottom lists all seven series.
+  - Real-axis locus segments are invisible — blend with x-axis line at y=0
+  - Gain direction markers not visible in rendered PNG
+  - Red-green color choice for poles vs zeros not optimal for colorblind accessibility
+  - Axis scaling not equal — 16:9 canvas with different x/y ranges distorts geometric
+    relationships
+  image_description: The plot shows a root locus diagram on a white background with
+    the title "root-locus-basic · pygal · pyplots.ai" at the top. The x-axis is labeled
+    "Real Axis (σ)" ranging from -6.00 to 3.00, and the y-axis is labeled "Imaginary
+    Axis (jω)" ranging from -5.00 to 5.00. A blue continuous curve traces the root
+    locus branches that depart from the real axis near the origin and curve upward/downward
+    into the right half-plane. Four red dots mark open-loop poles at s = 0, -1, -2,
+    -4 on the real axis. One green dot marks the open-loop zero at s = -3. Two orange
+    dots mark the stability boundary (jω axis crossings) at approximately ±1.6j. Light
+    gray dashed lines radiate from the origin showing constant damping ratio (ζ) guide
+    lines, and gray dashed semicircles show constant natural frequency (ωn) arcs.
+    A legend at the bottom displays 8 series across 4 columns. The real-axis locus
+    segments are not visually distinguishable from the x-axis line. Gain direction
+    markers are not visible in the rendered plot.
   criteria_checklist:
     visual_quality:
-      score: 23
+      score: 22
       max: 30
       items:
       - id: VQ-01
@@ -47,39 +49,40 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title=52, label=40, major_label=36, legend=28).
-          All readable.
+        comment: Font sizes explicitly set (title=52, labels=40, major_label=36, legend=28).
+          All text readable.
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: No significant overlaps. Legend items tightly packed but readable.
+        comment: Legend with 8 series across 4 columns is slightly cramped but readable.
       - id: VQ-03
         name: Element Visibility
-        score: 4
+        score: 3
         max: 6
         passed: false
-        comment: Real-axis locus segments barely visible (gray on white).
+        comment: Real-axis locus segments indistinguishable from x-axis line. Gain
+          direction markers not visible.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 4
         passed: false
-        comment: Red-green pairing for poles vs zeros is problematic for colorblind
-          viewers.
+        comment: Red for poles and teal/green for zeros is a red-green distinction
+          problematic for colorblind users.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good proportions, plot fills canvas well.
+        comment: Plot fills most of the canvas with reasonable margins.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with proper mathematical notation.
+        comment: Real Axis (σ) and Imaginary Axis (jω) with proper engineering notation.
     design_excellence:
       score: 11
       max: 20
@@ -88,23 +91,25 @@ review:
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: false
-        comment: Custom palette, explicit typography, above defaults but not publication-level.
+        passed: true
+        comment: Custom color palette, clean white background, thoughtful styling
+          above defaults.
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: false
-        comment: White background, subtle dashed guides, some refinement visible.
+        comment: Subtle grid, dashed guide lines, custom stroke widths. Some refinement
+          visible.
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: false
-        comment: Stability boundary markers create focal point; guide lines provide
-          context.
+        comment: Color differentiation creates visual hierarchy. Guide lines add interpretive
+          context. No emphasis on critical gain values.
     spec_compliance:
-      score: 14
+      score: 13
       max: 15
       items:
       - id: SC-01
@@ -112,19 +117,20 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct root locus plot.
+        comment: Correct root locus plot using XY chart.
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 2
         max: 4
         passed: false
-        comment: Missing arrows indicating direction of increasing gain.
+        comment: Gain direction arrows not visible, real-axis segments indistinguishable,
+          equal axis scaling not preserved.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Real/imaginary axes correctly assigned.
+        comment: Real/imaginary correctly mapped to x/y.
       - id: SC-04
         name: Title & Legend
         score: 3
@@ -132,7 +138,7 @@ review:
         passed: true
         comment: Title follows exact format. Legend labels descriptive.
     data_quality:
-      score: 14
+      score: 13
       max: 15
       items:
       - id: DQ-01
@@ -140,19 +146,20 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Shows breakaway, complex conjugate branches, stability boundary crossing.
+        comment: Shows complex branch departure, jω crossings, multiple poles/zeros.
+          Missing visible breakaway emphasis.
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Plausible control systems transfer function.
+        comment: Standard control systems transfer function — textbook-quality example.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Gain range and axis limits appropriate.
+        comment: Gain range 0-500, pole locations sensible for control system.
     code_quality:
       score: 10
       max: 10
@@ -162,31 +169,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear structure, no functions/classes.
+        comment: Linear flow with no functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic.
+        comment: Fully deterministic with specific polynomial coefficients.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used.
+        comment: numpy, pygal, Style — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean pole-tracking algorithm, appropriate complexity.
+        comment: Well-structured with clear comments and appropriate complexity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png, current API.
+        comment: Saves as plot.png using render_to_png().
     library_mastery:
       score: 7
       max: 10
@@ -196,14 +203,15 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of XY chart, allow_interruptions, stroke_style dicts.
+        comment: Good use of pygal.XY, Style, allow_interruptions, stroke_style, dict-based
+          data points.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: false
-        comment: Uses pygal-specific allow_interruptions, stroke_style, label metadata,
-          dual export.
+        comment: Uses allow_interruptions and tooltip labels but doesn't deeply leverage
+          pygal interactive SVG.
   verdict: REJECTED
 impl_tags:
   dependencies: []
@@ -214,7 +222,6 @@ impl_tags:
   - data-generation
   - iteration-over-groups
   - matrix-construction
-  dataprep:
-  - interpolation
+  dataprep: []
   styling:
   - grid-styling
