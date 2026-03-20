@@ -1,7 +1,7 @@
 library: seaborn
 specification_id: line-parametric
 created: '2026-03-20T10:36:49Z'
-updated: '2026-03-20T10:40:32Z'
+updated: '2026-03-20T10:47:28Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23339035297
 issue: 4424
@@ -10,75 +10,82 @@ library_version: 0.13.2
 preview_url: https://storage.googleapis.com/pyplots-images/plots/line-parametric/seaborn/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/line-parametric/seaborn/plot_thumb.png
 preview_html: null
-quality_score: 76
+quality_score: 77
 review:
   strengths:
-  - Excellent spec compliance — all required features implemented perfectly
-  - Good color gradient technique using LineCollection for continuous parameter mapping
-  - Clean, deterministic code with clear structure
-  - Effective use of start/end markers with distinct shapes and colors
+  - 'Full spec compliance: both required curves, equal aspect, color gradients, start/end
+    markers all present'
+  - Good color choices with viridis and plasma colormaps — colorblind-safe and visually
+    distinct between panels
+  - Clean code structure with explicit font sizes and thoughtful styling (despine,
+    reduced grid alpha, white edgecolor on markers)
+  - Deterministic data generation with sufficient point density (1000 points)
   weaknesses:
-  - Seaborn is used only for set_theme() — essentially a pure matplotlib implementation
-  - Font sizes slightly below recommended thresholds for target resolution
-  - Subplot layout is unbalanced due to equal aspect ratio creating different-sized
-    panels
-  - No seaborn plotting functions used
-  image_description: The plot displays two side-by-side subplots on a white background
-    with the suptitle "line-parametric · seaborn · pyplots.ai" at the top. The left
-    subplot shows a Lissajous figure (x=sin(3t), y=sin(2t)) rendered as a continuous
-    curve with a viridis color gradient from dark purple (t=0) through teal/green
-    to yellow (t=2π). A blue circle marks the start point at origin and a red square
-    marks the end point, also near the origin. The right subplot shows an Archimedean
-    spiral (x=t·cos(t), y=t·sin(t)) with a plasma color gradient from dark purple
-    (t=0) through pink/orange to yellow (t=4π), expanding outward. A blue circle marks
-    the start at origin and red square marks the end at the outer edge. Both subplots
-    have equal aspect ratios, colorbars indicating the parameter t, axis labels "x(t)"
-    and "y(t)", subtle grid lines, and top/right spines removed. Legends identify
-    start and end markers.
+  - Scatter-based curve rendering creates visible beading at intersections and curve
+    extremes — a line-based approach would produce smoother curves
+  - Spiral end marker crowds the colorbar on the right panel — needs padding or repositioning
+  - Code duplication in marker plotting (6 near-identical scatterplot calls for start/end
+    markers across two panels)
+  - Axis labels x(t)/y(t) are minimal — could be more descriptive
+  - 'Library mastery could be stronger: using scatterplot for continuous curves is
+    not idiomatic'
+  image_description: 'The plot displays two side-by-side parametric curves with the
+    suptitle "line-parametric · seaborn · pyplots.ai" centered at the top. Left panel:
+    A Lissajous figure (x = sin(3t), y = sin(2t)) rendered as a scatter-based curve
+    colored by the viridis colormap, transitioning from dark purple (t=0) through
+    teal/green to yellow (t≈2π). A blue circle marks the start point at the origin
+    and a red square marks the end point. A vertical colorbar labeled "Parameter t"
+    (range 0–~6.3) sits to the right. Axes labeled x(t) and y(t), equal aspect ratio,
+    top/right spines removed, subtle grid. Right panel: An Archimedean spiral (x =
+    t·cos(t), y = t·sin(t)) colored by the plasma colormap from dark purple through
+    pink/orange to yellow. The spiral expands outward; blue circle at the origin (start),
+    red square at the far right edge near (12.6, 0) (end). Colorbar labeled "Parameter
+    t" (range 0–~12.6). The end marker appears very close to the colorbar, creating
+    slight visual congestion. Both panels have legends identifying start/end markers.'
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 24
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set but slightly below recommended thresholds
-          (title 20 vs 24, labels 18 vs 20, ticks 14 vs 16)
+        comment: All font sizes explicitly set (title 24pt, labels 20pt, ticks 16pt,
+          legend 14pt, colorbar 18pt, suptitle 26pt). All readable.
       - id: VQ-02
         name: No Overlap
-        score: 6
-        max: 6
-        passed: true
-        comment: No overlapping text elements
-      - id: VQ-03
-        name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Lines visible at linewidth=3, markers clear at size 12. Slightly
-          small relative to canvas
+        comment: Generally clean but spiral end marker crowds the colorbar.
+      - id: VQ-03
+        name: Element Visibility
+        score: 4
+        max: 6
+        passed: true
+        comment: Scatter-based rendering with s=20 creates visible beading at intersections.
+          Line-based would be smoother.
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Viridis and plasma are perceptually uniform colorblind-safe colormaps
+        comment: Viridis and plasma are perceptually uniform and colorblind-safe.
       - id: VQ-05
         name: Layout & Canvas
-        score: 2
+        score: 3
         max: 4
         passed: true
-        comment: Equal aspect ratio causes uneven subplot sizes with wasted space
+        comment: Two-panel layout fills space well. Slight crowding on spiral panel
+          near colorbar.
       - id: VQ-06
         name: Axis Labels & Title
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: x(t) and y(t) are standard notation for parametric curves; units
-          not applicable
+        comment: Labels x(t) and y(t) are descriptive for parametric context but minimal.
     design_excellence:
       score: 12
       max: 20
@@ -88,21 +95,21 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Thoughtful colormaps, spines removed, distinct start/end markers.
-          Above defaults but not publication-level
+        comment: Two distinct colormaps, whitegrid with reduced alpha, endpoint markers
+          with white edgecolor. Above default but not publication-level.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Spines removed, grid at alpha=0.2, colorbars with shrink. Good refinement
+        comment: Spines removed, grid alpha 0.15, colorbar shrunk. Good refinement.
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: Color gradient communicates direction, start/end markers add narrative,
-          two contrasting curve types
+        comment: Color gradient conveys parameter progression. Start/end markers with
+          distinct shapes add narrative.
     spec_compliance:
       score: 15
       max: 15
@@ -112,28 +119,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct parametric curve plot with two curves
+        comment: Correct parametric curve plot with two curves.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: equal aspect ratio, color gradient, two
-          curves, start/end markers, sufficient density'
+        comment: Equal aspect, color gradient, two curves, start/end markers, 1000
+          points.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x(t) and y(t) correctly computed from parametric equations
+        comment: x(t) and y(t) correctly computed and mapped.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legends correctly identify start/end points
+        comment: Title format correct. Legend labels descriptive and matching.
     data_quality:
-      score: 13
+      score: 12
       max: 15
       items:
       - id: DQ-01
@@ -141,23 +148,22 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Shows closed self-intersecting curve and open expanding spiral. Good
-          variety
+        comment: 'Two contrasting curves: self-intersecting Lissajous and expanding
+          spiral.'
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: Mathematical/scientific context using well-known parametric curves
+        comment: Classic mathematical examples, well-known but abstract/educational.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Lissajous in [-1,1], spiral expanding to ~12. Appropriate for the
-          functions
+        comment: Mathematically correct values for both curves.
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -165,61 +171,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, plot, style, save. No functions or classes'
+        comment: 'Linear flow: imports, data, figure, plot, style, save.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic, no random data
+        comment: Fully deterministic trigonometric functions.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: All imports used.
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: Clean and straightforward
+        comment: Duplicated marker-plotting code across panels.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300 and bbox_inches=tight
+        comment: Saves as plot.png, dpi=300, bbox_inches=tight.
     library_mastery:
-      score: 1
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 1
+        score: 3
         max: 5
-        passed: false
-        comment: Only sns.set_theme() used. All plotting via matplotlib LineCollection.
-          Essentially a matplotlib implementation
+        passed: true
+        comment: Uses sns.scatterplot with hue, set_theme, set_context, despine. But
+          scatterplot for continuous curves is not the most natural choice.
       - id: LM-02
         name: Distinctive Features
-        score: 0
+        score: 2
         max: 5
-        passed: false
-        comment: No seaborn-distinctive features used. set_theme is purely styling
-          utility
+        passed: true
+        comment: Leverages seaborn theme system and despine utility, but these are
+          basic features.
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
   - subplots
-  - annotations
-  - custom-legend
   patterns:
   - data-generation
-  - explicit-figure
   dataprep: []
   styling:
   - custom-colormap
   - grid-styling
+  - edge-highlighting

@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 line-parametric: Parametric Curve Plot
 Library: seaborn 0.13.2 | Python 3.14.3
-Quality: 76/100 | Created: 2026-03-20
+Quality: 77/100 | Created: 2026-03-20
 """
 
 import matplotlib.pyplot as plt
