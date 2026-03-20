@@ -1,6 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 bar-pareto: Pareto Chart with Cumulative Line
 Library: seaborn 0.13.2 | Python 3.14.3
+Quality: 92/100 | Created: 2026-03-20
 """
 
 import matplotlib.pyplot as plt
