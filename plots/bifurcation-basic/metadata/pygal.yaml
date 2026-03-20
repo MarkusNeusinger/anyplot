@@ -1,0 +1,228 @@
+library: pygal
+specification_id: bifurcation-basic
+created: '2026-03-20T20:27:44Z'
+updated: '2026-03-20T21:09:39Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23361206415
+issue: 4415
+python_version: 3.14.3
+library_version: 3.1.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/bifurcation-basic/pygal/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/bifurcation-basic/pygal/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/bifurcation-basic/pygal/plot.html
+quality_score: 90
+review:
+  strengths:
+  - Excellent data storytelling through three color-coded regions narrating the route
+    to chaos
+  - Strong colorblind-safe palette explicitly designed to avoid blue-green confusion
+  - Variable-density sampling (more points in complex regions) is a sophisticated
+    approach
+  - 'Good use of pygal-specific features: per-point tooltip metadata, secondary series
+    for annotations, HTML export'
+  - All spec requirements met including labeled bifurcation points and transient discarding
+  weaknesses:
+  - Secondary y-axis on right side from secondary annotation series adds visual clutter
+  - Dot size could be slightly smaller in transition regions for better density differentiation
+  image_description: 'The plot displays a bifurcation diagram of the logistic map
+    with the title "bifurcation-basic · pygal · pyplots.ai" centered at the top. The
+    x-axis is labeled "Growth Rate Parameter (r)" ranging from 2.500 to 4.000, and
+    the y-axis is labeled "Steady-State Population (xₙ)" ranging from 0.0000 to 1.0000.
+    Three color-coded regions are visible: (1) a navy blue line in the stable fixed-point
+    region (r≈2.5–3.0) showing a single steady state rising from ~0.6 to ~0.667; (2)
+    burnt orange points in the period-doubling cascade region (r≈3.0–3.57) showing
+    the classic fork pattern splitting into 2 then 4 branches; (3) deep violet/purple
+    points filling the chaotic regime (r≈3.57–4.0) as a dense cloud with visible windows
+    of periodicity. Faint dashed vertical lines mark the key bifurcation points at
+    r≈3.0, 3.449, and 3.544. The x-axis highlights these values as major labels. The
+    background is white with a light gray (#f7f7f7) plot area and subtle dashed grid
+    lines. A legend at the bottom shows four entries describing the three regions
+    and bifurcation points. A secondary y-axis appears on the right side due to the
+    secondary annotation series.'
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Font sizes explicitly set (title=52, label=40, major_label=36, legend=30);
+          all text clearly readable
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text; legend at bottom with 4 columns fits cleanly
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Dots at 1.8 size with 0.55 opacity create good density; slightly
+          large in transition zone
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Colorblind-safe palette: navy, burnt orange, deep violet; no blue-green
+          confusion'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good proportions; minor deduction for secondary y-axis clutter on
+          right
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive labels with units: Growth Rate Parameter (r), Steady-State
+          Population (xₙ)'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Strong design: custom colorblind-safe palette, custom fonts, light
+          gray background'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle dashed grid, light gray plot background; secondary y-axis
+          adds some clutter
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Color-coded regions narrate stability-to-chaos progression; annotation
+          lines mark transitions
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct bifurcation diagram using XY scatter
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features: small dots, low alpha, period-doubling cascade, labeled
+          bifurcation points, transient discarding'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: r on x-axis, x on y-axis; correct ranges 2.5-4.0 x 0.0-1.0
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; legend labels descriptive with parameter ranges
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all aspects: stable, periodic, chaotic, windows of periodicity'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Canonical logistic map; neutral scientific context
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Standard logistic map ranges; mathematically correct
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean imports-data-plot-save structure; no functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: numpy, pygal, Style'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity; variable-density sampling is smart
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png; also renders HTML for interactivity
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Good pygal usage: XY chart, Style class, series-based data with
+          per-point metadata'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Per-point tooltip metadata, secondary series, stroke_style, allow_interruptions,
+          HTML export
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - manual-ticks
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling
