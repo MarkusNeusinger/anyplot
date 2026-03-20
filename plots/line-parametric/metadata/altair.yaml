@@ -1,7 +1,7 @@
 library: altair
 specification_id: line-parametric
 created: '2026-03-20T10:38:12Z'
-updated: '2026-03-20T10:54:30Z'
+updated: '2026-03-20T11:02:24Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23339035331
 issue: 4424
@@ -10,83 +10,79 @@ library_version: 6.0.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/line-parametric/altair/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/line-parametric/altair/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/line-parametric/altair/plot.html
-quality_score: 81
+quality_score: 82
 review:
   strengths:
-  - Perfect spec compliance — all required features implemented correctly (two curves,
-    color gradient, start/end markers, equal aspect ratio)
-  - Viridis color gradient effectively conveys parameter progression and direction
-    of traversal
-  - Thoughtful marker design with distinct shapes (circle for start, diamond for end)
-    and contrasting colors
-  - Descriptive axis labels showing the actual parametric equations
+  - 'Full spec compliance: both required curves, color gradient direction, start/end
+    markers, equal aspect ratio'
+  - Excellent use of Altair declarative grammar with layered composition and interactive
+    selections
+  - Viridis colormap provides strong colorblind-safe color encoding
+  - Independent color scales per panel ensure full gradient range for each curve
+  - All font sizes explicitly set for consistent readability
   weaknesses:
-  - Shared color scale compresses the Lissajous gradient to only the dark end of the
-    viridis spectrum, losing color differentiation
-  - Code duplication between the two curve sections (start/end marker + label construction
-    repeated nearly identically)
-  - Axis spines still visible — removing top/right spines would improve visual refinement
-  - Legend title Parameter t slightly cut off at the edge
-  image_description: The plot displays two parametric curves side by side using Altair's
-    hconcat layout. The left panel shows a Lissajous figure (x = sin(3t), y = sin(2t))
-    — a self-intersecting figure-eight-like shape filling the [-1, 1] range in both
-    axes. The right panel shows an Archimedean spiral (x = t·cos(t), y = t·sin(t))
-    spiraling outward from the origin. Both curves use a viridis color gradient mapped
-    to the parameter t, with a shared color legend ("Parameter t") on the right side
-    ranging from 0 to ~18. Start points are marked with blue filled circles labeled
-    "t = 0" and end points with red diamonds labeled "t = 2π" / "t = 6π". Axis labels
-    show the parametric equations (e.g., "x(t) = sin(3t)"). The main title reads "line-parametric
-    · altair · pyplots.ai" in large font. Grid lines are very subtle (opacity 0.2),
-    and view borders are removed. Because the color scale is shared, the Lissajous
-    curve (t range 0–6.28) only uses the dark purple-blue portion of the viridis spectrum,
-    reducing its color differentiation compared to the spiral (t range 0–18.85).
+  - Function definition violates KISS flat-script structure
+  - Interactive selection/highlight logic adds complexity with no benefit for PNG
+    output
+  - 'Design could be more polished: domain lines could be removed, spacing between
+    panels optimized'
+  image_description: The plot displays two side-by-side panels on a white background.
+    The left panel shows a Lissajous figure (x=sin(3t), y=sin(2t)) — a complex self-intersecting
+    curve with loops reaching ±1 on both axes. The right panel shows an Archimedean
+    spiral (x=t·cos(t), y=t·sin(t)) expanding outward from the center. Both curves
+    use the viridis colormap (dark purple → teal → yellow) to indicate the parameter
+    t progression. Start points are marked with filled blue circles labeled "t = 0",
+    end points with red diamonds labeled "t = 2π" and "t = 6π" respectively. Each
+    panel has its own "Parameter t" color legend. The main title reads "line-parametric
+    · altair · pyplots.ai" in large text at top. Axes are labeled "x(t)" and "y(t)"
+    with subtle grid lines. Equal aspect ratio is maintained in both panels.
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Font sizes explicitly set throughout (title 28/22pt, axis labels
-          22pt, ticks 18pt). Subtitle font at 22pt slightly below 24pt ideal.
+        comment: 'All font sizes explicitly set: title 28, subtitles 22, axis titles
+          22, tick labels 18, legend title 18, legend labels 16'
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Start/end labels on Lissajous are close together near origin but
-          remain readable.
+        comment: Start/end labels offset vertically; spiral center label slightly
+          cramped
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: mark_circle(size=18) for 1000 points produces smooth curves. Lissajous
-          color differentiation compressed due to shared scale.
+        comment: mark_circle size=18 with 1000 points renders smooth curves; inner
+          spiral loops slightly dense
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Viridis is perceptually uniform and colorblind-safe.
+        comment: Viridis colormap is perceptually uniform and colorblind-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Side-by-side layout fills canvas well. Legend title slightly truncated
-          at top-right edge.
+        comment: Two panels fill canvas well; minor gap between panels and legend
+          at edge
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with parametric equations.
+        comment: x(t) and y(t) are mathematically appropriate for parametric plots
     design_excellence:
-      score: 11
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -94,22 +90,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Thoughtful viridis gradient, distinct start/end marker shapes with
-          white stroke. Above defaults but not publication-level.
+        comment: Viridis gradient, distinct marker shapes, equation subtitles. Above
+          defaults but not publication-level
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Subtle grid (opacity 0.2), view borders removed. Axis spines still
-          present.
+        comment: View stroke removed, grid opacity 0.2, thin domain lines. Good but
+          could remove domain lines entirely
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: Color gradient conveys direction; start/end markers guide viewer.
-          Shared scale undermines Lissajous narrative.
+        comment: Color gradient shows traversal, start/end markers guide viewer, two
+          contrasting curve types
     spec_compliance:
       score: 15
       max: 15
@@ -119,87 +115,86 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct parametric curve plot with two curves.
+        comment: Correct parametric curve plot with x(t) and y(t) from parameter t
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: equal aspect ratio, color gradient, two curves,
-          start/end markers, 1000 points.'
+        comment: Equal aspect ratio, color gradient, two curves, start/end markers,
+          1000 points
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly computed from parametric equations, axes show full
-          range.
+        comment: X/Y correctly computed from parametric equations
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Main title correct format. Color legend properly labeled.
+        comment: Title format correct, Parameter t legend appropriate
     data_quality:
-      score: 14
+      score: 13
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Shows self-intersecting closed curve and open expanding spiral, demonstrating
-          diverse parametric behaviors.
+        comment: Shows self-intersecting closed curve and open expanding spiral
       - id: DQ-02
         name: Realistic Context
         score: 4
         max: 5
         passed: true
-        comment: Classic mathematical curves appropriate for this spec, neutral and
-          educational.
+        comment: Classic mathematical curves from physics and geometry with equations
+          shown
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Mathematically correct values, spiral normalized to fit [-1, 1].
+        comment: Mathematically correct values, spiral normalized to match Lissajous
+          range
     code_quality:
-      score: 9
+      score: 7
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 1
         max: 3
-        passed: true
-        comment: 'Flat script: imports, data, plot, save. No functions or classes.'
+        passed: false
+        comment: Defines make_curve_chart function, violating flat script structure
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic trigonometric functions, no randomness.
+        comment: Fully deterministic trigonometric functions
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: altair, numpy, pandas.'
+        comment: 'All imports used: altair, numpy, pandas'
       - id: CQ-04
         name: Code Elegance
         score: 1
         max: 2
-        passed: false
-        comment: Significant code duplication between Lissajous and spiral chart construction.
+        passed: true
+        comment: Interactive selection logic adds complexity for PNG output
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html, current Altair API.
+        comment: Saves as plot.png with scale_factor=3.0, current API
     library_mastery:
-      score: 6
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -207,22 +202,23 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Good use of declarative grammar: encode(), hconcat(), resolve_scale(),
-          layer composition with +.'
+        comment: 'Good declarative grammar: layered composition, hconcat, resolve_scale,
+          alt.Title/Axis/Scale'
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 4
         max: 5
-        passed: false
-        comment: Uses hconcat and resolve_scale which are Altair-specific, but doesn't
-          leverage selections, interactive filtering, or calculated transforms.
+        passed: true
+        comment: Selection_point with nearest, Voronoi hover, hconcat with independent
+          scales, layered marks
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
   - layer-composition
-  - html-export
+  - hover-tooltips
+  - annotations
+  - custom-legend
   patterns:
   - data-generation
   dataprep: []
