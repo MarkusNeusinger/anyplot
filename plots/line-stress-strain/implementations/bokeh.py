@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 line-stress-strain: Engineering Stress-Strain Curve
 Library: bokeh 3.9.0 | Python 3.14.3
 Quality: 88/100 | Created: 2026-03-20
@@ -6,7 +6,7 @@ Quality: 88/100 | Created: 2026-03-20
 
 import numpy as np
 from bokeh.io import export_png
-from bokeh.models import ColumnDataSource, Label, Legend, LegendItem, Span
+from bokeh.models import ColumnDataSource, HoverTool, Label, Legend, LegendItem, Span
 from bokeh.plotting import figure, save
 
 
@@ -37,6 +37,15 @@ stress_necking = uts - (uts - 320) * necking_progress**0.8
 # Combine all regions
 strain = np.concatenate([strain_elastic, strain_plastic, strain_necking])
 stress = np.concatenate([stress_elastic, stress_plastic, stress_necking])
+
+# Region labels for hover tooltip
+region_labels = np.concatenate(
+    [
+        np.full(len(strain_elastic), "Elastic"),
+        np.full(len(strain_plastic), "Strain Hardening"),
+        np.full(len(strain_necking), "Necking"),
+    ]
+)
 
 # 0.2% offset line — extended to be clearly visible
 offset_strain_start = 0.002
@@ -86,9 +95,18 @@ p.add_layout(
     Span(location=uts, dimension="width", line_color=color_uts, line_alpha=0.2, line_dash="dotted", line_width=2)
 )
 
-# Main curve
-source = ColumnDataSource(data={"strain": strain, "stress": stress})
+# Main curve with region data for HoverTool
+source = ColumnDataSource(data={"strain": strain, "stress": stress, "region": region_labels})
 main_line = p.line(x="strain", y="stress", source=source, line_width=5, color=color_main)
+
+# HoverTool — Bokeh-distinctive interactive feature
+hover = HoverTool(
+    renderers=[main_line],
+    tooltips=[("Strain", "@strain{0.0000}"), ("Stress", "@stress{0.1} MPa"), ("Region", "@region")],
+    mode="vline",
+    line_policy="nearest",
+)
+p.add_tools(hover)
 
 # 0.2% offset line — thicker and more visible
 offset_source = ColumnDataSource(data={"strain": offset_strain_line, "stress": offset_stress_line})
@@ -125,9 +143,9 @@ fracture_glyph = p.scatter(
     line_width=3,
 )
 
-# Region labels
+# Region labels — repositioned to reduce left-side congestion
 p.add_layout(
-    Label(x=0.003, y=100, text="Elastic", text_font_size="22pt", text_color=color_region, text_font_style="italic")
+    Label(x=0.008, y=130, text="Elastic", text_font_size="22pt", text_color=color_region, text_font_style="italic")
 )
 
 p.add_layout(
@@ -140,11 +158,11 @@ p.add_layout(
     Label(x=0.27, y=380, text="Necking", text_font_size="22pt", text_color=color_region, text_font_style="italic")
 )
 
-# Key point annotations — positioned to avoid crowding
+# Key point annotations — repositioned to spread out and avoid left-side crowding
 p.add_layout(
     Label(
-        x=yield_point_strain + 0.012,
-        y=yield_point_stress + 10,
+        x=yield_point_strain + 0.018,
+        y=yield_point_stress - 25,
         text=f"Yield Point ({yield_point_stress} MPa)",
         text_font_size="18pt",
         text_color=color_yield,
@@ -174,10 +192,11 @@ p.add_layout(
     )
 )
 
+# Young's modulus annotation — moved right to reduce elastic region crowding
 p.add_layout(
     Label(
-        x=0.015,
-        y=55,
+        x=0.025,
+        y=50,
         text=f"E = {youngs_modulus // 1000} GPa",
         text_font_size="18pt",
         text_color=color_main,
@@ -194,7 +213,7 @@ legend = Legend(
         LegendItem(label="Ultimate Tensile Strength", renderers=[uts_glyph]),
         LegendItem(label="Fracture Point", renderers=[fracture_glyph]),
     ],
-    location=(2800, 250),
+    location=(2800, 200),
 )
 legend.label_text_font_size = "18pt"
 legend.glyph_height = 30
@@ -238,9 +257,9 @@ p.toolbar_location = None
 p.background_fill_color = "#FAFAFA"
 p.border_fill_color = "white"
 
-p.y_range.start = -15
-p.y_range.end = 460
-p.x_range.start = -0.008
+p.y_range.start = -10
+p.y_range.end = 450
+p.x_range.start = -0.005
 p.x_range.end = 0.38
 
 # Save
