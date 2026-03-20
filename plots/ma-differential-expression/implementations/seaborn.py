@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 ma-differential-expression: MA Plot for Differential Expression
-Library: seaborn | Python 3.13
-Quality: pending | Created: 2026-03-20
+Library: seaborn 0.13.2 | Python 3.14.3
+Quality: 80/100 | Created: 2026-03-20
 """
 
 import matplotlib.pyplot as plt
