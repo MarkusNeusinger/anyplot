@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 scatter-pitch-events: Soccer Pitch Event Map
 Library: matplotlib 3.10.8 | Python 3.14.3
 Quality: 89/100 | Created: 2026-03-20
@@ -85,9 +85,9 @@ ax.text(
     86.5,
     66,
     "Attacking Third",
-    fontsize=14,
+    fontsize=18,
     color="#ffcc44",
-    alpha=0.6,
+    alpha=0.7,
     ha="center",
     va="top",
     fontweight="bold",
@@ -98,11 +98,11 @@ ax.text(
 c_pass = "#48bfe3"
 c_shot = "#f72585"
 c_tackle = "#ffd166"
-c_intercept = "#ff9f1c"
+c_intercept = "#7b2d8e"
 
 # Events - passes (arrows with origin markers)
 for i in range(n_passes):
-    alpha = 0.65 if pass_success[i] else 0.2
+    alpha = 0.7 if pass_success[i] else 0.35
     ax.annotate(
         "",
         xy=(pass_end_x[i], pass_end_y[i]),
@@ -110,7 +110,7 @@ for i in range(n_passes):
         arrowprops={"arrowstyle": "->", "color": c_pass, "lw": 1.2, "alpha": alpha},
     )
     ax.plot(
-        pass_x[i], pass_y[i], "o", color=c_pass, markersize=4, alpha=alpha, markeredgecolor="white", markeredgewidth=0.3
+        pass_x[i], pass_y[i], "o", color=c_pass, markersize=6, alpha=alpha, markeredgecolor="white", markeredgewidth=0.4
     )
 
 # Events - shots (arrows with star markers)
@@ -139,7 +139,7 @@ tackle_rgba = np.array([to_rgba(c_tackle, a) for a in np.where(tackle_success, 0
 ax.scatter(tackle_x, tackle_y, marker="^", s=180, c=tackle_rgba, edgecolors="white", linewidth=0.5, zorder=5)
 
 # Events - interceptions (diamonds)
-intercept_rgba = np.array([to_rgba(c_intercept, a) for a in np.where(intercept_success, 0.8, 0.25)])
+intercept_rgba = np.array([to_rgba(c_intercept, a) for a in np.where(intercept_success, 0.85, 0.35)])
 ax.scatter(intercept_x, intercept_y, marker="D", s=140, c=intercept_rgba, edgecolors="white", linewidth=0.5, zorder=5)
 
 # Style
