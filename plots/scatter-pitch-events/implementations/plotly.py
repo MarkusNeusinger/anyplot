@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 scatter-pitch-events: Soccer Pitch Event Map
-Library: plotly | Python 3.13
-Quality: pending | Created: 2026-03-20
+Library: plotly 6.6.0 | Python 3.14.3
+Quality: 87/100 | Created: 2026-03-20
 """
 
 import numpy as np
