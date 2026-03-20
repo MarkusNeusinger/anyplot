@@ -1,0 +1,235 @@
+library: pygal
+specification_id: line-parametric
+created: '2026-03-20T10:39:29Z'
+updated: '2026-03-20T11:11:42Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23339035335
+issue: 4424
+python_version: 3.14.3
+library_version: 3.1.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/line-parametric/pygal/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/line-parametric/pygal/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/line-parametric/pygal/plot.html
+quality_score: 80
+review:
+  strengths:
+  - Full spec compliance with both required curves and all specified features
+  - Effective 4-segment color gradient technique to convey parameter direction
+  - Custom dual color palette (blue-orange + purple-green) cleanly distinguishes curves
+  - Good use of pygal-specific features (dict data points, stroke_style, HTML export)
+  - Deterministic output with 1000-point resolution for smooth rendering
+  weaknesses:
+  - Legend crowded with 12 entries making it dense to parse
+  - fmt_tooltip function adds complexity unnecessary for static PNG output
+  - Design excellence limited by pygal SVG rendering constraints
+  - Start markers near origin overlap since both curves begin at (0,0)
+  image_description: 'The plot displays two parametric curves on a square 3600x3600
+    canvas with a light gray (#f7f7f7) plot background and white outer background.
+    The title "line-parametric · pygal · pyplots.ai" appears at the top in dark text.
+    The x-axis is labeled "Horizontal Position x(t)" and y-axis "Vertical Position
+    y(t)", both ranging from approximately -1.2 to 1.2. The Lissajous figure (x=sin(3t),
+    y=sin(2t)) is drawn in 4 color-gradient segments: deep navy blue, steel blue,
+    burnt orange, and warm amber, forming the characteristic self-intersecting figure-eight-like
+    pattern spanning the full plot area. The spiral curve is drawn in 4 segments:
+    deep purple (small inner loop), orchid purple, teal, and forest green, expanding
+    outward from the center. Red dots mark the start points near the origin (spiral
+    start slightly offset), and dark/black dots mark the endpoints of both curves.
+    The legend at the bottom contains 12 entries arranged in 4 columns showing all
+    curve segments, start markers, and end markers. Subtle gray grid lines are visible
+    on the light plot background.'
+  criteria_checklist:
+    visual_quality:
+      score: 26
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title=52, label=36, major_label=32,
+          legend=30). Legend text slightly dense with 12 entries.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Legend with 12 entries in 4 columns is tight but readable. Start
+          markers near origin overlap slightly.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Thick stroke widths (8-10px) make curves highly visible. Start/end
+          dots large and distinct.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 3
+        max: 4
+        passed: true
+        comment: Blue-orange and purple-green gradients provide good contrast. Minor
+          tritanopia concern with navy-purple proximity.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Square canvas appropriate for geometric curves. Good axis range.
+          Bottom legend area dense with 12 items.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive labels with mathematical notation. Units N/A for dimensionless
+          curves.
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Custom dual color palette with intentional gradients. Curated style
+          above defaults but not publication-level.
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Subtle grid styling, light background, generous margins, rounded
+          linecaps. Pygal limits spine control.
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Color gradients convey parameter direction. Start/end markers create
+          traversal narrative. Lacks stronger focal point.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct parametric XY plot showing curves traced by x(t) and y(t).
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: equal aspect ratio, color gradient, two curves,
+          start/end markers, 1000 points.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y correctly computed from parametric equations with appropriate
+          axis padding.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format. Legend labels describe curve segments
+          with parameter ranges.
+    data_quality:
+      score: 13
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows self-intersecting closed curve (Lissajous) and open expanding
+          curve (spiral). Could include cusps.
+      - id: DQ-02
+        name: Realistic Context
+        score: 4
+        max: 5
+        passed: true
+        comment: Scientific/mathematical context using exact spec equations. Neutral
+          and domain-appropriate.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Spiral normalized to [-1,1] for visual comparison. Axis range ±1.3
+          provides balanced padding.
+    code_quality:
+      score: 8
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Mostly linear flow but includes fmt_tooltip helper function breaking
+          pure KISS.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic with pure mathematical functions.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: numpy, pygal, Style.'
+      - id: CQ-04
+        name: Code Elegance
+        score: 1
+        max: 2
+        passed: true
+        comment: Verbose segmentation loops. Tooltip formatter unnecessary for PNG.
+          Spiral start offset is a hack.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png via render_to_png. Current API.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good pygal XY chart usage, Style class, per-series stroke_style,
+          dict data points, legend configuration.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: 'Pygal-specific: dict data format, per-series stroke_style, HTML
+          export, truncate_legend, legend_at_bottom_columns.'
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-legend
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - normalization
+  styling:
+  - grid-styling
+  - edge-highlighting

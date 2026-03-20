@@ -1,0 +1,226 @@
+library: altair
+specification_id: line-parametric
+created: '2026-03-20T10:38:12Z'
+updated: '2026-03-20T11:10:31Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23339035331
+issue: 4424
+python_version: 3.14.3
+library_version: 6.0.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/line-parametric/altair/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/line-parametric/altair/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/line-parametric/altair/plot.html
+quality_score: 81
+review:
+  strengths:
+  - Excellent spec compliance with both required curve types and all key features
+    (color gradient, start/end markers, equal aspect ratio)
+  - 'Strong visual refinement: subtle grid, removed spines/ticks, clean view configuration'
+  - Effective data storytelling through color gradient and start/end marker differentiation
+  - Good use of Altair declarative grammar and layer composition
+  - Deterministic, clean code structure
+  weaknesses:
+  - mark_circle creates scattered/dotted appearance instead of smooth continuous curves
+    — mark_trail or mark_line would render smoother
+  - Lissajous start/end labels crowded at origin since both points coincide at (0,0)
+  - Code repetition between panels for marker and label creation
+  - Right-edge colorbar slightly tight against canvas boundary
+  image_description: The plot displays two side-by-side panels on a wide canvas. The
+    left panel shows a Lissajous figure (x=sin(3t), y=sin(2t)) rendered as small circles
+    colored by the viridis colormap mapping parameter t from 0 to ~6.28. The figure-eight-like
+    curve self-intersects multiple times, with dark purple at the start transitioning
+    through teal/green to yellow at the end. A blue circle marker labels "t = 0" and
+    a red diamond labels "t = 2π", both near the origin. The right panel shows an
+    Archimedean spiral (x=t·cos(t), y=t·sin(t)) normalized to [-1, 1], spiraling outward
+    from center with viridis coloring from t=0 (dark purple, center) to t=6π (yellow,
+    outer edge). Start and end markers are similarly styled. Both panels have axes
+    labeled x(t) and y(t), subtle dashed grids, and independent color legends. The
+    main title reads "line-parametric · altair · pyplots.ai" with a descriptive subtitle.
+  criteria_checklist:
+    visual_quality:
+      score: 24
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Font sizes explicitly set throughout (title 28, subtitle 18, panel
+          titles 22, axis 22, ticks 18, labels 16, legend 18/16). All readable.
+      - id: VQ-02
+        name: No Overlap
+        score: 4
+        max: 6
+        passed: true
+        comment: Lissajous start/end labels crowded at origin; spiral end label tight
+          near right colorbar edge.
+      - id: VQ-03
+        name: Element Visibility
+        score: 4
+        max: 6
+        passed: true
+        comment: mark_circle creates dotted appearance with visible gaps rather than
+          smooth continuous curves.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Viridis colormap is perceptually uniform and colorblind-safe.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Two panels fill canvas well but right colorbar tight against edge.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: x(t) and y(t) are descriptive and mathematically appropriate.
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Viridis gradient, contrasting start/end markers with white stroke.
+          Above defaults but not publication-level.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: View stroke removed, grid subtle (opacity 0.15, dashed), axis domain/ticks
+          removed.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Color gradient narrates parameter progression. Start/end markers
+          and contrasting curve types demonstrate parametric diversity.
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct parametric curve plot with two example curves.
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: All features present but mark_circle doesn't produce smooth continuous
+          curves as spec emphasizes.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x(t) and y(t) correctly computed from parametric equations.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct. Color legends show Parameter t.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Two distinct curve types: closed self-intersecting Lissajous and
+          open expanding spiral.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 4
+        max: 5
+        passed: true
+        comment: Classic mathematical/educational examples with equations shown in
+          panel titles.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values normalized to [-1.15, 1.15] range. Sensible and well-proportioned.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat structure with no functions or classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic data generation.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: altair, numpy, pandas all used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 1
+        max: 2
+        passed: true
+        comment: Significant code repetition between panels for markers and labels.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with scale_factor=3.0 and plot.html.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Good declarative grammar: encoding types, layer composition, hconcat,
+          resolve_scale, configure.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses hconcat with independent color scales, layer composition, HTML
+          export.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - custom-colormap
+  - grid-styling
+  - edge-highlighting
