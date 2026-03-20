@@ -1,7 +1,7 @@
 library: seaborn
 specification_id: nyquist-basic
 created: '2026-03-20T22:46:01Z'
-updated: '2026-03-20T23:00:24Z'
+updated: '2026-03-20T23:13:49Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23365453301
 issue: 4412
@@ -10,38 +10,34 @@ library_version: 0.13.2
 preview_url: https://storage.googleapis.com/pyplots-images/plots/nyquist-basic/seaborn/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/nyquist-basic/seaborn/plot_thumb.png
 preview_html: null
-quality_score: 82
+quality_score: 88
 review:
   strengths:
-  - Complete spec compliance - all six required features implemented correctly
-  - Strong data storytelling with red critical point as focal and alpha-differentiated
-    mirror curve
-  - Clean well-structured code with deterministic data from scipy
-  - Professional axis labels with proper mathematical notation G(jw)
-  - Good visual refinement with removed spines and subtle grid
+  - Complete spec compliance with all six required features implemented correctly
+  - Strong visual hierarchy with intentional color and opacity choices that guide
+    the viewer
+  - Deterministic realistic engineering data using scipy.signal transfer function
+  - Clean well-structured code with explicit font sizes throughout
+  - Effective use of seaborn hue/style system to differentiate positive and negative
+    frequency branches
   weaknesses:
-  - Very low seaborn utilization - most of the plot is matplotlib; seaborn used only
-    for two lineplot calls and set_context
-  - Frequency annotations near the origin are slightly crowded
-  - Could leverage seaborn styling capabilities more (sns.despine, sns.set_style,
-    color_palette)
-  image_description: The plot displays a Nyquist diagram on the complex plane. A solid
-    blue curve represents the positive-frequency response of a third-order transfer
-    function G(s) = 10/((s+1)(0.5s+1)(0.2s+1)), starting near (10, 0) at low frequencies
-    and spiraling inward toward the origin at high frequencies. A dashed, semi-transparent
-    blue curve mirrors the positive-frequency contour for negative frequencies. A
-    small dashed gray unit circle is drawn at the origin. The critical point (-1,
-    0) is prominently marked with a large red "X" and a red annotation arrow labeled
-    "Critical point (-1, 0)". Five frequency markers (w = 0.1, 0.5, 1.0, 3.0, 10.0
-    rad/s) are annotated along the curve with small arrows. Three directional arrows
-    on the solid curve indicate increasing frequency. Axes are labeled "Real Part
-    of G(jw)" and "Imaginary Part of G(jw)". Top and right spines are removed, a subtle
-    grid is visible, and thin gray reference lines mark the real and imaginary axes.
-    A legend in the bottom-left identifies the three visual elements. Title reads
-    "nyquist-basic · seaborn · pyplots.ai".
+  - Annotation crowding near origin where multiple labels converge
+  - Library mastery limited by inherently matplotlib-heavy nature of Nyquist plots
+  - Unit circle could be slightly more visible while remaining a background reference
+    element
+  image_description: The plot displays a Nyquist diagram on the complex plane with
+    a solid blue curve representing G(jω) for ω ≥ 0 and a dashed, semi-transparent
+    blue curve for the mirror branch (ω < 0). A red "X" marker at (-1, 0) is annotated
+    as "Critical point (-1, 0)" with a red arrow. A dotted gray unit circle is centered
+    at the origin. Five frequency points (ω = 0.1, 0.5, 1.0, 3.0, 10.0 rad/s) are
+    marked with filled blue dots and labeled with gray annotation arrows. Three direction
+    arrows along the main curve indicate increasing frequency. The title reads "nyquist-basic
+    · seaborn · pyplots.ai". Axes are labeled "Real Part of G(jω)" and "Imaginary
+    Part of G(jω)". The plot uses a 1:1 aspect ratio with top/right spines removed
+    and a subtle grid. The legend in the upper right distinguishes the two branches.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -56,58 +52,56 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Frequency annotations near the origin slightly crowded but all readable
+        comment: Minor crowding near origin where multiple annotations converge but
+          all readable
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Lines and markers clearly visible; frequency dot markers could be
-          slightly larger
+        comment: Lines, markers, and arrows well-adapted; mirror branch appropriately
+          subdued
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Blue/red/gray palette is colorblind-safe with strong contrast
+        comment: Blue/red palette is colorblind-safe with strong contrast
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Square canvas appropriate for 1:1 aspect ratio; some wasted space
-          in upper-right from mirror curve
+        comment: Square figure with 1:1 aspect ratio fills canvas well
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with proper mathematical notation G(jw)
+        comment: Descriptive labels with mathematical notation
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Thoughtful color scheme with Python Blue, red accent, muted grays.
-          Above defaults but not flagship
+        comment: Thoughtful color hierarchy with intentional visual weight distribution
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Top/right spines removed, subtle grid alpha=0.15, thin axis reference
-          lines
+        comment: Spines removed, subtle grid, light axis lines, generous whitespace
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Red critical point focal, alpha-differentiated mirror curve, frequency
-          labels guide understanding
+        comment: 'Clear hierarchy: red critical point, subdued mirror branch, frequency
+          annotations guide reader'
     spec_compliance:
       score: 15
       max: 15
@@ -117,26 +111,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Nyquist plot on the complex plane
+        comment: Correct Nyquist plot on complex plane
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec requirements met: critical point, unit circle, frequency
-          annotations, arrows, 1:1 ratio, axis labels'
+        comment: 'All spec features present: critical point, unit circle, annotations,
+          arrows, aspect ratio, labels'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Real on x-axis, imaginary on y-axis, all data visible
+        comment: Real on X, Imaginary on Y, correct mapping
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format and clear legend
+        comment: Correct title format and legend labels
     data_quality:
       score: 14
       max: 15
@@ -146,21 +140,20 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Realistic 3rd-order TF showing characteristic Nyquist behavior with
-          both frequency branches
+        comment: Third-order transfer function with characteristic curve shape and
+          both branches
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Standard control systems transfer function, neutral scientific context
+        comment: Realistic control systems engineering scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Frequency range 0.01-100 rad/s, 800 log-spaced points, realistic
-          gain values
+        comment: 800 points logarithmically spaced from 0.01 to 100 rad/s
     code_quality:
       score: 10
       max: 10
@@ -170,55 +163,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean Imports-Data-Plot-Style-Save flow, no functions or classes
+        comment: Clean linear structure with no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: 'Fully deterministic: analytical transfer function computation'
+        comment: Deterministic data from scipy.signal transfer function
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: matplotlib, numpy, seaborn, scipy.signal'
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, clean loop for frequency annotations
+        comment: Appropriate complexity, well-organized
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png at 300 DPI with bbox_inches tight
+        comment: Saves as plot.png with dpi=300
     library_mastery:
-      score: 3
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good seaborn usage with lineplot hue/style, scatterplot, set_theme,
+          despine
+      - id: LM-02
+        name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Only sns.lineplot and sns.set_context used; bulk of plot is pure
+        comment: Basic seaborn features; plot type inherently requires significant
           matplotlib
-      - id: LM-02
-        name: Distinctive Features
-        score: 1
-        max: 5
-        passed: false
-        comment: No seaborn-distinctive features; could be written identically in
-          pure matplotlib
   verdict: REJECTED
 impl_tags:
   dependencies:
   - scipy
   techniques:
   - annotations
+  - custom-legend
   patterns:
   - data-generation
   - explicit-figure

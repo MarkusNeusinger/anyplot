@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 nyquist-basic: Nyquist Plot for Control Systems
 Library: seaborn 0.13.2 | Python 3.14.3
-Quality: 82/100 | Created: 2026-03-20
+Quality: 88/100 | Created: 2026-03-20
 """
 
 import matplotlib.pyplot as plt
