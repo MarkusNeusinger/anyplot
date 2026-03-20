@@ -1,7 +1,7 @@
 library: pygal
 specification_id: scatter-shot-chart
 created: '2026-03-20T20:27:33Z'
-updated: '2026-03-20T20:32:08Z'
+updated: '2026-03-20T20:41:54Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23361192896
 issue: 4416
@@ -10,33 +10,35 @@ library_version: 3.1.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/scatter-shot-chart/pygal/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/scatter-shot-chart/pygal/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/scatter-shot-chart/pygal/plot.html
-quality_score: 82
+quality_score: 86
 review:
   strengths:
   - Excellent court geometry with accurate NBA dimensions and all required elements
+  - Colorblind-safe blue/orange palette with size-based visual hierarchy
   - Warm beige background creates tasteful hardwood-court aesthetic
-  - Perfect spec compliance and data quality with realistic shooting zones and percentages
-  - Clean legend with shot counts provides useful statistical context
-  - Good use of pygal-specific features (stroke_style, js=[], legend layout)
+  - Perfect data quality with realistic shooting zones and percentages
+  - Clean code with well-organized linear structure
   weaknesses:
-  - Red-green color scheme for made/missed is colorblind-unfriendly
-  - Redundant dead code on line 37
-  - Free-throw shots cluster too tightly making individual points indistinguishable
-  - No visual storytelling or hierarchy beyond raw data display
-  image_description: 'The plot displays a basketball half-court diagram on a warm
-    beige (#f5f0e8) background that evokes a hardwood floor. Court markings are drawn
-    in light gray: three-point arc, paint/key rectangle (16ft wide), free-throw circle
-    (solid top half, dashed bottom half), restricted area arc, baseline, corner three-point
-    lines, backboard (darker gray), and rim (orange circle). 200 shot attempts are
-    plotted as dots — green (#2eac66) for made shots and red (#d94444) for missed
-    shots. Shots cluster realistically in the paint, mid-range, along the three-point
-    arc (including corners), and tightly at the free-throw line. The title "scatter-shot-chart
-    · pygal · pyplots.ai" appears at the top. A legend at the bottom shows "Made (88/200)"
-    and "Missed (112/200)" in two columns. No axis ticks or labels are shown. The
-    chart is square (1:1 aspect ratio).'
+  - Excess whitespace above three-point arc wastes canvas space
+  - Court lines and shot dots compete visually — lines could be more subtle
+  - No on-chart annotations or summary statistics for richer data storytelling
+  image_description: 'The plot displays a basketball half-court on a warm beige (#f5f0e8)
+    background evoking a hardwood floor. Court markings are drawn in light gray: three-point
+    arc (curved from corner to corner), paint/key rectangle (16ft wide), free-throw
+    circle (solid top half, dashed bottom half), restricted area arc near the basket,
+    baseline, corner three-point vertical lines, backboard (darker gray), and rim
+    (orange circle). 200 shot attempts are plotted as colored dots using a colorblind-safe
+    blue/orange palette: darker blue (#2166ac) for made inside shots (larger dots,
+    48 shown), lighter blue (#5aa3d9) for made perimeter shots (smaller dots, 39 shown),
+    darker orange-red (#d6604d) for missed inside shots (larger dots, 37 shown), and
+    lighter orange (#e8a088) for missed perimeter shots (smaller dots, 76 shown).
+    Shots cluster realistically in the paint, mid-range, along the three-point arc
+    including corners, and tightly at the free-throw line. The title "scatter-shot-chart
+    · pygal · pyplots.ai" appears at the top. A 4-column legend at the bottom shows
+    all four categories with counts. No axis ticks or labels. Square 1:1 aspect ratio.'
   criteria_checklist:
     visual_quality:
-      score: 24
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -44,43 +46,43 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title=48, legend=36, labels=28), all text
-          clearly readable
+        comment: Font sizes explicitly set (title=48, legend=36, labels=28). All text
+          readable at 3600x3600.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements, legend cleanly at bottom
+        comment: No overlapping text. Legend cleanly positioned at bottom in 4 columns.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Markers visible with dots_size=10 and opacity=0.75, free-throw cluster
-          slightly too dense
+        comment: dots_size=13/8 with opacity=0.75 works well for 200 points. Free-throw
+          cluster slightly dense.
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 4
         max: 4
-        passed: false
-        comment: Red-green as primary differentiator is colorblind-unfriendly, no
-          secondary visual cue
+        passed: true
+        comment: Colorblind-safe blue/orange palette with size differentiation as
+          secondary cue.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Court fills plot well with 1:1 aspect, slight excess whitespace at
-          top
+        comment: Court fills well with 1:1 ratio. Some excess whitespace above the
+          three-point arc.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Axes hidden per spec, title present and correct
+        comment: Axes intentionally hidden per spec. Title present and correct.
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -88,22 +90,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Above-default design with warm beige background, subtle gray court
-          lines, orange rim detail
+        comment: 'Above defaults: warm beige hardwood background, colorblind-safe
+          palette with lighter variants, size hierarchy.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: 'Clean: no axes/ticks, no grid, dashed FT circle, rounded linecaps/linejoins'
+        comment: 'Good: axes hidden, no grid, dashed FT circle, subtle court markings,
+          rounded strokes.'
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Legend includes counts but no visual hierarchy highlights key insights
+        passed: true
+        comment: Size differentiation creates visual hierarchy. Legend breakdown reveals
+          shooting patterns by zone.
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -111,26 +115,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct XY scatter on half-court diagram
+        comment: Correct XY scatter on half-court diagram.
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: 'All spec features present: court markings, shot colors, 1:1 aspect,
-          legend'
+        comment: All court elements present. Colors deviate from spec green/red to
+          blue/orange for accessibility.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly mapped as court positions from basket center
+        comment: X/Y correctly mapped as court positions from basket center.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend labels informative with counts
+        comment: Title format correct. Legend labels descriptive with counts.
     data_quality:
       score: 15
       max: 15
@@ -140,22 +144,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows paint, mid-range, three-pointers, corner threes, free throws
-          with varying make rates
+        comment: Paint, mid-range, three-pointers with corners, free throws. Varying
+          make rates by zone.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic NBA basketball scenario with plausible shooting percentages
+        comment: Realistic NBA scenario with plausible shooting percentages. Neutral
+          topic.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: NBA court dimensions accurate, 200 shots realistic sample size
+        comment: Accurate NBA court dimensions. 200 shots is realistic.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -163,31 +168,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, court geometry, style, chart, save'
+        comment: 'Linear flow: imports, data, court geometry, style, chart, save.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set at top
+        comment: np.random.seed(42) set at top.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: math, numpy, pygal, Style'
+        comment: 'All imports used: math, numpy, pygal, Style.'
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Redundant dead code on line 37, slightly verbose
+        passed: true
+        comment: Clean code. Dead code from attempt 1 removed.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png via render_to_png
+        comment: Saves as plot.png via render_to_png.
     library_mastery:
       score: 7
       max: 10
@@ -197,20 +202,21 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Good pygal idioms: XY chart, Style class, stroke_style dicts'
+        comment: 'Good pygal idioms: XY chart, Style class, chart.add() with stroke/dots
+          options, None series for court markings.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: 'Uses pygal-specific features: stroke_style with dasharray, js=[],
-          tooltip config, legend_at_bottom_columns'
+        comment: Uses stroke_style with dasharray, js=[], legend_at_bottom_columns,
+          render_to_file for HTML.
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
   - custom-legend
-  - layer-composition
+  - html-export
   patterns:
   - data-generation
   - iteration-over-groups
