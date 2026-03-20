@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 bar-pareto: Pareto Chart with Cumulative Line
 Library: letsplot 4.9.0 | Python 3.14.3
 Quality: 86/100 | Created: 2026-03-20
@@ -24,8 +24,9 @@ cumulative_pct = np.cumsum(counts) / total * 100
 
 # Scale cumulative percentage to share y-axis with counts
 max_count = max(counts)
-y_max = int(max_count * 1.30)
-scale_factor = max_count / 100  # 100% maps to max_count, leaving headroom above
+y_max = int(max_count * 1.20)
+scale_factor = y_max / 120  # Map 100% well below y_max to avoid top collision
+
 cumulative_scaled = cumulative_pct * scale_factor
 
 # 80% threshold line (scaled)
@@ -50,7 +51,8 @@ df_points = pd.DataFrame(
     }
 )
 
-# Secondary y-axis tick labels (manual annotation on right side)
+# Secondary y-axis tick labels — use a dummy x position past the last category
+# Position labels at a fixed numeric offset beyond the last bar
 sec_ticks = [20, 40, 60, 80, 100]
 sec_labels_df = pd.DataFrame(
     {
@@ -60,8 +62,8 @@ sec_labels_df = pd.DataFrame(
     }
 )
 
-# Highlight bars contributing to the 80% threshold
-colors = ["#1E4F72" if cumulative_pct[i] <= 80 else "#306998" for i in range(len(categories))]
+# Highlight bars contributing to the 80% threshold with distinct colors
+colors = ["#1B3A4B" if cumulative_pct[i] <= 80 else "#7EB8DA" for i in range(len(categories))]
 df["bar_color"] = colors
 
 # Plot
@@ -70,7 +72,7 @@ plot = (
     + geom_bar(  # noqa: F405
         aes(fill="bar_color"),  # noqa: F405
         stat="identity",
-        width=0.7,
+        width=0.72,
         tooltips=layer_tooltips()  # noqa: F405
         .title("@category")
         .line("Count|@count")
@@ -82,7 +84,7 @@ plot = (
     + geom_segment(  # noqa: F405
         data=seg_df,
         mapping=aes(x="x", y="y", xend="xend", yend="yend"),  # noqa: F405
-        color="#CC5500",
+        color="#D35400",
         size=2.0,
         inherit_aes=False,
     )
@@ -90,7 +92,7 @@ plot = (
     + geom_point(  # noqa: F405
         data=df_points,
         mapping=aes(x="category", y="cumulative_scaled"),  # noqa: F405
-        color="#CC5500",
+        color="#D35400",
         fill="white",
         size=5,
         shape=21,
@@ -99,14 +101,46 @@ plot = (
         tooltips=layer_tooltips().line("Cumulative|@cumulative_pct"),  # noqa: F405
     )
     # 80% threshold horizontal line
-    + geom_hline(yintercept=threshold_80_scaled, color="#999999", size=1.0, linetype="dashed")  # noqa: F405
-    # Secondary y-axis labels (right side)
+    + geom_hline(yintercept=threshold_80_scaled, color="#888888", size=0.8, linetype="dashed")  # noqa: F405
+    # 80% threshold label
     + geom_text(  # noqa: F405
-        data=sec_labels_df,
+        data=pd.DataFrame({"category": [categories[0]], "y": [threshold_80_scaled], "label": ["80% threshold"]}),
         mapping=aes(x="category", y="y", label="label"),  # noqa: F405
-        color="#CC5500",
+        color="#888888",
+        size=9,
+        hjust=0.0,
+        vjust=-0.7,
+        inherit_aes=False,
+    )
+    # Secondary y-axis labels (right side) — exclude 100% to avoid overlap with last point
+    + geom_text(  # noqa: F405
+        data=sec_labels_df[sec_labels_df["label"] != "100%"],
+        mapping=aes(x="category", y="y", label="label"),  # noqa: F405
+        color="#D35400",
         size=11,
-        hjust=-1.0,
+        hjust=-1.8,
+        fontface="bold",
+        inherit_aes=False,
+    )
+    # 100% label offset vertically to avoid cumulative point marker
+    + geom_text(  # noqa: F405
+        data=sec_labels_df[sec_labels_df["label"] == "100%"],
+        mapping=aes(x="category", y="y", label="label"),  # noqa: F405
+        color="#D35400",
+        size=11,
+        hjust=-1.8,
+        vjust=1.8,
+        fontface="bold",
+        inherit_aes=False,
+    )
+    # Cumulative percentage annotations on the line points (top 3 only to avoid clutter)
+    + geom_text(  # noqa: F405
+        data=df_points.iloc[:3],
+        mapping=aes(x="category", y="cumulative_scaled", label="cumulative_pct"),  # noqa: F405
+        color="#D35400",
+        size=9,
+        vjust=-1.5,
+        fontface="bold",
         inherit_aes=False,
     )
     + scale_x_discrete(limits=categories)  # noqa: F405
@@ -128,9 +162,9 @@ plot = (
         plot_caption=element_text(size=14, color="#777777", hjust=0.5),  # noqa: F405
         panel_grid_major_x=element_blank(),  # noqa: F405
         panel_grid_minor=element_blank(),  # noqa: F405
-        panel_grid_major_y=element_line(color="#E0E0E0", size=0.4),  # noqa: F405
+        panel_grid_major_y=element_line(color="#E8E8E8", size=0.3),  # noqa: F405
         plot_background=element_rect(fill="white", color="white"),  # noqa: F405
-        plot_margin=[20, 100, 10, 10],
+        plot_margin=[20, 130, 10, 10],
     )
     + ggsize(1600, 900)  # noqa: F405
 )
