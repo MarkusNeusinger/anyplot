@@ -1,7 +1,7 @@
 library: highcharts
 specification_id: scatter-pitch-events
 created: '2026-03-20T12:40:34Z'
-updated: '2026-03-20T12:53:19Z'
+updated: '2026-03-20T13:02:19Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23342848945
 issue: 4417
@@ -10,39 +10,42 @@ library_version: unknown
 preview_url: https://storage.googleapis.com/pyplots-images/plots/scatter-pitch-events/highcharts/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/scatter-pitch-events/highcharts/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/scatter-pitch-events/highcharts/plot.html
-quality_score: 87
+quality_score: 88
 review:
   strengths:
-  - Excellent pitch rendering with accurate FIFA markings including penalty arcs,
-    corner arcs, and goal outlines
-  - Strong dark theme design with gradient pitch, shadows, and professional typography
+  - Excellent pitch rendering with all FIFA-standard markings accurately drawn using
+    Highcharts renderer API
+  - Professional dark sports analytics aesthetic with gradient green pitch and thoughtful
+    color choices
   - Complete spec compliance with all required features including directional arrows
-    with success/failure opacity encoding
-  - Effective use of Highcharts renderer API for custom SVG pitch drawing
-  - Thoughtful data storytelling with enlarged shots and arrow-based trajectory visualization
+    and outcome encoding
+  - Realistic data with plausible spatial distributions and success rates per event
+    type
+  - Interactive HTML output with native Highcharts tooltips leverages library strengths
   weaknesses:
-  - Blue and teal markers may be indistinguishable for colorblind viewers - needs
-    more distinct palette
-  - Zone labels at 12% opacity are effectively invisible and do not contribute to
-    visualization
-  - Does not use the highcharts-core Python API, missing idiomatic library usage
+  - Zone labels at the bottom are too faint (0.4 alpha) for immediate readability
+  - Arrow lines create visual clutter in dense areas particularly in the attacking
+    third
+  - Highcharts.chart monkey-patching pattern could be replaced with cleaner event
+    injection
   image_description: 'The plot displays a soccer pitch event map on a dark navy (#1a1a2e)
-    background with a gradient green pitch surface. Standard FIFA pitch markings are
-    drawn in semi-transparent white lines: two penalty areas, two goal areas, center
-    circle with center spot, halfway line, penalty spots with arcs, corner arcs, and
-    goal outlines beyond the pitch. Four event types are plotted as scatter markers:
-    Pass (blue circles, ~55 points distributed across the pitch), Shot (red upward
-    triangles, ~18 points concentrated in the attacking third), Tackle (orange downward
-    triangles, ~25 points across defensive/middle thirds), and Interception (teal
-    diamonds, ~22 points across the pitch). Successful events are filled with their
-    color; unsuccessful ones have white fill with colored borders. Blue directional
-    arrows show pass trajectories; red arrows show shot trajectories toward the goal.
-    The title reads "scatter-pitch-events · highcharts · pyplots.ai" in light gray.
-    A subtitle explains the encoding. The legend sits top-left with a semi-transparent
-    dark background. Very faint zone labels appear at the bottom edge.'
+    background with a gradient green pitch surface. White pitch markings are accurately
+    rendered: full pitch outline, halfway line, center circle with center spot, both
+    penalty areas, both goal areas, penalty spots, penalty arcs, corner arcs, and
+    goal outlines extending behind each goal line. Four event types are plotted with
+    distinct colored markers: blue circles for Passes, pink/coral triangles for Shots,
+    olive/yellow downward triangles for Tackles, and magenta diamonds for Interceptions.
+    Filled markers represent successful outcomes while white-filled markers with colored
+    borders represent unsuccessful ones. Semi-transparent directional arrows extend
+    from Pass and Shot markers showing trajectories — pass arrows spread across the
+    pitch while shot arrows converge toward the goal. The title "scatter-pitch-events
+    · highcharts · pyplots.ai" appears at the top in light gray. A subtitle explains
+    the encoding. A floating legend with dark translucent background sits in the top-left.
+    Zone labels ("DEFENSIVE THIRD", "MIDDLE THIRD", "ATTACKING THIRD") appear at the
+    bottom in very faint white italic text.'
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -51,43 +54,43 @@ review:
         max: 8
         passed: true
         comment: All font sizes explicitly set (title 46px, subtitle 30px, legend
-          30px). Zone labels intentionally subtle at 12% opacity.
+          30px, zones 28px). Zone labels at 0.4 alpha are quite faint.
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: No text overlap. Minor natural marker overlap in dense midfield areas.
+        comment: No text overlap. Markers occasionally cluster but distinct shapes
+          prevent confusion.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Markers well-sized (radius 13-18) with distinct shapes. Success/failure
-          encoding clear.
+        comment: Markers well-sized (radius 13-18) with distinct shapes. Arrow lines
+          create some visual clutter in dense areas.
       - id: VQ-04
         name: Color Accessibility
-        score: 3
-        max: 4
-        passed: false
-        comment: Blue and teal could be difficult to distinguish for deuteranopia/protanopia.
-          Red and orange also relatively close.
-      - id: VQ-05
-        name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Pitch fills canvas excellently with balanced margins. Correct 105:68
-          aspect ratio.
+        comment: Tol's qualitative palette is explicitly colorblind-safe with excellent
+          contrast against green pitch.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Pitch fills canvas well. Zone labels at bottom barely visible due
+          to low opacity.
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: No traditional axis labels (appropriate for pitch). Zone labels nearly
-          invisible at 12% opacity.
+        passed: true
+        comment: Axes appropriately hidden for pitch map. Title follows required format.
     design_excellence:
-      score: 15
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -95,22 +98,22 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Dark theme with gradient pitch, custom palette, shadows, professional
-          typography. Clearly above defaults.
+        comment: Strong dark sports analytics theme with gradient green pitch, Tol's
+          palette, translucent legend, marker shadows.
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: No unnecessary grid/spines. Clean pitch markings. Generous whitespace.
-          Goal outlines at reduced opacity.
+        comment: 'Good refinement: axes hidden, subtle arrow opacity differentiation.
+          Arrow clutter in dense regions detracts.'
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Shots enlarged for tactical emphasis. Arrow opacity differentiates
-          success/failure. Build-up patterns visible.
+        comment: Shots enlarged for tactical emphasis, outcome encoding, zone labels
+          provide context, shot trajectories converge on goal.
     spec_compliance:
       score: 15
       max: 15
@@ -126,21 +129,21 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: pitch markings, distinct markers, outcome
-          encoding, directional arrows, green pitch, correct ratio.'
+        comment: 'All required features present: pitch markings, distinct markers,
+          outcome encoding, directional arrows, green pitch, correct aspect ratio.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X (0-105m) and Y (0-68m) correctly mapped to pitch dimensions.
+        comment: X (0-105m) and Y (0-68m) correctly mapped to pitch coordinates.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows required format. Legend correctly labels all four event
-          types.
+        comment: Title format correct. Legend shows all four event types with matching
+          symbols and colors.
     data_quality:
       score: 15
       max: 15
@@ -150,24 +153,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All four event types with both outcomes. Directional arrows for passes
-          and shots.
+        comment: All 4 event types with both outcomes. Realistic spatial distributions
+          per event type.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic soccer match data with plausible event counts and success
-          rates.
+        comment: Soccer match events with realistic counts and success rates. Neutral
+          sports context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Coordinates within FIFA dimensions. Shots in attacking third. Realistic
-          success rates.
+        comment: FIFA standard dimensions, realistic event counts and success rates.
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -175,13 +177,14 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, config, HTML, screenshot. No functions/classes.'
+        comment: 'Linear flow: imports, data, chart config, series, pitch JS, HTML,
+          screenshot.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set at start.
+        comment: np.random.seed(42) set at top.
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -190,43 +193,44 @@ review:
         comment: All imports used.
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Well-organized event config dict. Clean arrow rendering. No fake
-          functionality.
+        passed: false
+        comment: Monkey-patching Highcharts.chart and string-replacement JSON injection
+          are functional but hacky.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png via Selenium. CDN fallback for Highcharts JS.
+        comment: Saves plot.png via Selenium and plot.html for interactive viewing.
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
-        passed: false
-        comment: Bypasses highcharts-core Python API entirely, using raw JSON config
-          and HTML. Pragmatic for custom rendering.
+        passed: true
+        comment: Good use of highcharts-core Python API. CDN fallback is robust. Monkey-patching
+          bypasses Python API event system.
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Excellent use of Highcharts renderer API for custom SVG, chart load
-          events, per-point marker styling.
+        comment: Leverages Highcharts renderer API for custom SVG, native tooltips,
+          z-index, HTML export.
   verdict: REJECTED
 impl_tags:
   dependencies:
   - selenium
   techniques:
   - html-export
-  - annotations
+  - hover-tooltips
   - custom-legend
+  - annotations
   patterns:
   - data-generation
   - iteration-over-groups
