@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 bifurcation-basic: Bifurcation Diagram for Dynamical Systems
-Library: highcharts | Python 3.13
-Quality: pending | Created: 2026-03-20
+Library: highcharts unknown | Python 3.14.3
+Quality: 82/100 | Created: 2026-03-20
 """
 
 import json
