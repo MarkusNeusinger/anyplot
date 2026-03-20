@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 scatter-pitch-events: Soccer Pitch Event Map
 Library: pygal 3.1.0 | Python 3.14.3
 Quality: 78/100 | Created: 2026-03-20
@@ -94,13 +94,13 @@ custom_style = Style(
         "#ffffff",  # corner br
         "#ffffff",  # corner tr
         "#ffffff",  # corner tl
-        "#1565c0",  # Pass (successful) — strong blue
-        "#90caf9",  # Pass (unsuccessful) — light blue
-        "#d50000",  # Shot (successful) — bright red
-        "#ef9a9a",  # Shot (unsuccessful) — light pink
-        "#e65100",  # Tackle (successful) — deep orange
-        "#ffcc80",  # Tackle (unsuccessful) — light peach
-        "#00695c",  # Interception (successful) — dark teal
+        "#64b5f6",  # Pass (successful) — medium blue, subtle
+        "#fdd835",  # Pass (unsuccessful) — yellow, visible on green
+        "#d50000",  # Shot (successful/goal) — bright red, focal point
+        "#ff8a80",  # Shot (unsuccessful) — salmon pink, visible
+        "#ff6d00",  # Tackle (successful) — vivid orange
+        "#ffab40",  # Tackle (unsuccessful) — amber
+        "#00bfa5",  # Interception (successful) — bright teal
         "#80cbc4",  # Interception (unsuccessful) — light teal
     ),
     font_family=font,
@@ -185,7 +185,7 @@ for sx, sy, ex, ey in zip(
     pass_succ_lines.append((float(ex), float(ey)))
     pass_succ_lines.append(None)
 chart.add(
-    "Pass ✓", pass_succ_lines, stroke=True, show_dots=True, dots_size=3, stroke_style={"width": 3, "linecap": "round"}
+    "Pass ✓", pass_succ_lines, stroke=True, show_dots=True, dots_size=5, stroke_style={"width": 2, "linecap": "round"}
 )
 
 pass_fail_mask = ~pass_succ_mask
@@ -201,7 +201,7 @@ chart.add(
     pass_fail_lines,
     stroke=True,
     show_dots=True,
-    dots_size=2,
+    dots_size=5,
     stroke_style={"width": 2, "linecap": "round", "dasharray": "8,6"},
 )
 
@@ -219,8 +219,8 @@ chart.add(
     shot_succ_lines,
     stroke=True,
     show_dots=True,
-    dots_size=10,
-    stroke_style={"width": 5, "linecap": "round"},
+    dots_size=14,
+    stroke_style={"width": 6, "linecap": "round"},
 )
 
 shot_fail_mask = ~shot_succ_mask
@@ -236,8 +236,8 @@ chart.add(
     shot_fail_lines,
     stroke=True,
     show_dots=True,
-    dots_size=6,
-    stroke_style={"width": 3, "linecap": "round", "dasharray": "6,4"},
+    dots_size=9,
+    stroke_style={"width": 4, "linecap": "round", "dasharray": "6,4"},
 )
 
 # Tackles as scatter dots (large markers)
@@ -246,14 +246,14 @@ tackle_succ_pts = [
     {"value": (float(x), float(y)), "label": "Tackle won"}
     for x, y in zip(tackle_x[tackle_succ_mask], tackle_y[tackle_succ_mask], strict=True)
 ]
-chart.add("Tackle ✓", tackle_succ_pts, stroke=False, dots_size=14)
+chart.add("Tackle ✓", tackle_succ_pts, stroke=False, dots_size=16)
 
 tackle_fail_mask = ~tackle_succ_mask
 tackle_fail_pts = [
     {"value": (float(x), float(y)), "label": "Tackle lost"}
     for x, y in zip(tackle_x[tackle_fail_mask], tackle_y[tackle_fail_mask], strict=True)
 ]
-chart.add("Tackle ✗", tackle_fail_pts, stroke=False, dots_size=8)
+chart.add("Tackle ✗", tackle_fail_pts, stroke=False, dots_size=10)
 
 # Interceptions as scatter dots
 int_succ_mask = interception_outcome == "successful"
@@ -261,14 +261,14 @@ int_succ_pts = [
     {"value": (float(x), float(y)), "label": "Interception"}
     for x, y in zip(interception_x[int_succ_mask], interception_y[int_succ_mask], strict=True)
 ]
-chart.add("Intercept ✓", int_succ_pts, stroke=False, dots_size=12)
+chart.add("Intercept ✓", int_succ_pts, stroke=False, dots_size=14)
 
 int_fail_mask = ~int_succ_mask
 int_fail_pts = [
     {"value": (float(x), float(y)), "label": "Intercept missed"}
     for x, y in zip(interception_x[int_fail_mask], interception_y[int_fail_mask], strict=True)
 ]
-chart.add("Intercept ✗", int_fail_pts, stroke=False, dots_size=7)
+chart.add("Intercept ✗", int_fail_pts, stroke=False, dots_size=9)
 
 # Save
 chart.render_to_png("plot.png")
