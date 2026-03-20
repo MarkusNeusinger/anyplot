@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 line-win-probability: Win Probability Chart
 Library: highcharts unknown | Python 3.14.3
 Quality: 88/100 | Created: 2026-03-20
@@ -67,7 +67,7 @@ chart.options.chart = {
     "marginTop": 200,
     "marginBottom": 280,
     "marginLeft": 280,
-    "marginRight": 260,
+    "marginRight": 360,
     "style": {"fontFamily": "'Segoe UI', Helvetica, Arial, sans-serif"},
 }
 
@@ -110,8 +110,7 @@ chart.options.x_axis = {
     "max": n_plays,
     "tickInterval": 10,
     "gridLineWidth": 0,
-    "lineWidth": 2,
-    "lineColor": "#cccccc",
+    "lineWidth": 0,
     "tickWidth": 0,
     "plotLines": quarter_lines,
 }
@@ -125,8 +124,43 @@ chart.options.y_axis = {
     "tickInterval": 25,
     "gridLineWidth": 1,
     "gridLineColor": "rgba(0,0,0,0.06)",
-    "lineWidth": 2,
-    "lineColor": "#cccccc",
+    "lineWidth": 0,
+    "plotBands": [
+        {
+            "from": 50,
+            "to": 100,
+            "color": "rgba(27, 79, 114, 0.04)",
+            "label": {
+                "text": "Eagles Favored",
+                "align": "left",
+                "x": 20,
+                "y": 30,
+                "style": {
+                    "fontSize": "26px",
+                    "color": "rgba(27, 79, 114, 0.35)",
+                    "fontWeight": "bold",
+                    "fontStyle": "italic",
+                },
+            },
+        },
+        {
+            "from": 0,
+            "to": 50,
+            "color": "rgba(230, 126, 34, 0.04)",
+            "label": {
+                "text": "Chiefs Favored",
+                "align": "left",
+                "x": 20,
+                "y": -20,
+                "style": {
+                    "fontSize": "26px",
+                    "color": "rgba(230, 126, 34, 0.35)",
+                    "fontWeight": "bold",
+                    "fontStyle": "italic",
+                },
+            },
+        },
+    ],
     "plotLines": [
         {
             "value": 50,
@@ -136,7 +170,7 @@ chart.options.y_axis = {
             "label": {
                 "text": "50%",
                 "align": "right",
-                "x": -10,
+                "x": -30,
                 "style": {"fontSize": "30px", "color": "#666666", "fontWeight": "bold"},
             },
         }
@@ -212,14 +246,19 @@ main_line.tooltip = {"headerFormat": "<b>Play {point.x:.0f}</b><br/>", "pointFor
 chart.add_series(main_line)
 
 # Scoring event annotations - two series (home/away) with per-point labels
+# Custom y-offsets to prevent crowding in dense regions
+annotation_offsets = {12: -40, 28: 50, 41: -55, 55: 55, 68: -40, 82: 50, 95: -50, 108: 55, 115: -45}
+
 home_annotations = []
 away_annotations = []
 for play in sorted(scoring_events.keys()):
     label, shift = scoring_events[play]
     prob_val = round(float(win_prob[play]), 2)
     is_home = shift > 0
-    # Place home labels above, away labels below; larger offset for legibility
-    y_off = -35 if is_home else 40
+    y_off = annotation_offsets[play]
+    # Align last annotation to the left to avoid right-edge clipping
+    align = "right" if play >= 105 else "center"
+    x_off = -10 if play >= 105 else 0
     point = {
         "x": int(play),
         "y": prob_val,
@@ -227,6 +266,8 @@ for play in sorted(scoring_events.keys()):
             "enabled": True,
             "format": label,
             "y": y_off,
+            "x": x_off,
+            "align": align,
             "style": {
                 "fontSize": "28px",
                 "fontWeight": "bold",
