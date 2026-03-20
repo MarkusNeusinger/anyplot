@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 bifurcation-basic: Bifurcation Diagram for Dynamical Systems
 Library: seaborn 0.13.2 | Python 3.14.3
 Quality: 87/100 | Created: 2026-03-20
@@ -34,7 +34,11 @@ regime = np.where(r_all < 3.0, "Stable", np.where(r_all < 3.57, "Period-Doubling
 
 df = pd.DataFrame({"r": r_all, "x": x_all, "Regime": regime})
 
-# Plot
+# Colorblind-safe palette: blue, orange, red - high perceptual distance
+palette = {"Stable": "#306998", "Period-Doubling": "#E88C30", "Chaos": "#DC2626"}
+regime_order = ["Stable", "Period-Doubling", "Chaos"]
+
+# Use seaborn JointGrid with marginal KDE — a distinctive seaborn feature
 sns.set_theme(
     style="ticks",
     context="talk",
@@ -42,23 +46,38 @@ sns.set_theme(
     rc={"font.family": "sans-serif", "axes.edgecolor": "#888888", "axes.linewidth": 0.8},
 )
 
-fig, ax = plt.subplots(figsize=(16, 9))
+g = sns.JointGrid(data=df, x="r", y="x", height=9, ratio=8, space=0.08, marginal_ticks=False)
+g.figure.set_size_inches(16, 9)
 
-palette = {"Stable": "#306998", "Period-Doubling": "#8B5CF6", "Chaos": "#DC2626"}
-sns.scatterplot(
-    data=df,
-    x="r",
-    y="x",
-    hue="Regime",
-    palette=palette,
-    s=0.2,
-    alpha=0.5,
-    linewidth=0,
-    edgecolor="none",
-    legend="brief",
-    ax=ax,
-    rasterized=True,
-)
+# Main plot: scatter per regime with size adapted to data density
+# Stable region has few unique points per r → larger markers for visibility
+for regime_name, marker_s, marker_alpha in [("Stable", 1.5, 0.8), ("Period-Doubling", 0.3, 0.55), ("Chaos", 0.3, 0.5)]:
+    subset = df[df["Regime"] == regime_name]
+    sns.scatterplot(
+        data=subset,
+        x="r",
+        y="x",
+        color=palette[regime_name],
+        s=marker_s,
+        alpha=marker_alpha,
+        linewidth=0,
+        edgecolor="none",
+        label=regime_name,
+        ax=g.ax_joint,
+        rasterized=True,
+    )
+
+# Marginal KDE on y-axis: distinctive seaborn density visualization per regime
+for regime_name in regime_order:
+    subset = df[df["Regime"] == regime_name]
+    sns.kdeplot(
+        y=subset["x"], color=palette[regime_name], fill=True, alpha=0.3, linewidth=1.5, ax=g.ax_marg_y, clip=(0, 1)
+    )
+
+# Remove x-marginal (uniform r sampling adds no insight)
+g.ax_marg_x.set_visible(False)
+
+ax = g.ax_joint
 
 # Annotate key bifurcation points
 bifurcation_points = [
@@ -73,7 +92,7 @@ for r_bif, label, x_offset in bifurcation_points:
         label,
         xy=(r_bif, 0.03),
         xytext=(r_bif + x_offset, 0.13),
-        fontsize=11,
+        fontsize=15,
         color="#475569",
         ha="left" if x_offset > 0 else "right",
         va="bottom",
@@ -88,16 +107,16 @@ ax.set_xlim(2.5, 4.0)
 ax.set_ylim(0, 1)
 ax.tick_params(axis="both", labelsize=16, colors="#555555")
 sns.despine(ax=ax)
+sns.despine(ax=g.ax_marg_y, bottom=True, left=True)
 
 # Refine legend
 legend = ax.get_legend()
 legend.set_title("Regime")
-legend.get_title().set_fontsize(14)
+legend.get_title().set_fontsize(15)
 for text in legend.get_texts():
-    text.set_fontsize(13)
+    text.set_fontsize(14)
 legend.set_frame_on(True)
 legend.get_frame().set_alpha(0.9)
 legend.get_frame().set_edgecolor("#cccccc")
 
-plt.tight_layout()
 plt.savefig("plot.png", dpi=300, bbox_inches="tight")
