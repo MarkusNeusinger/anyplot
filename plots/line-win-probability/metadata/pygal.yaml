@@ -1,7 +1,7 @@
 library: pygal
 specification_id: line-win-probability
 created: '2026-03-20T12:34:27Z'
-updated: '2026-03-20T12:38:21Z'
+updated: '2026-03-20T12:46:49Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23342814683
 issue: 4418
@@ -10,32 +10,30 @@ library_version: 3.1.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/line-win-probability/pygal/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/line-win-probability/pygal/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/line-win-probability/pygal/plot.html
-quality_score: 76
+quality_score: 78
 review:
   strengths:
-  - Compelling game narrative with realistic NFL data and multiple momentum swings
-  - Good use of pygal-specific features (cubic interpolation, labeled data points,
-    custom Style)
-  - Clean code structure with explicit font sizing and thorough style customization
-  - Correct title format with final score included
+  - Strong data storytelling with realistic NFL game scenario and clear momentum shifts
+  - Good use of team-appropriate colors (Eagles teal, Cowboys navy) that are colorblind-safe
+  - Effective use of pygal-specific features (cubic interpolation, x_labels_major,
+    per-series fill overrides)
+  - Scoring event markers with labeled tooltips enhance the narrative
   weaknesses:
-  - Missing two-color fill (above/below 50% baseline) - a core visual feature from
-    the spec
-  - Scoring event annotations not visible as text on the static PNG output (labels
-    only appear in SVG tooltips)
-  - 50% baseline is barely visible - needs much stronger contrast/styling
-  - Legend labels are series names rather than team-oriented labels
-  image_description: 'The plot displays a line chart with a teal/gray filled area
-    showing Eagles win probability over the course of an NFL game against the Cowboys.
-    The x-axis shows game progression with labels "Kickoff", "Q2", "Halftime", "Q4",
-    and "Final". The y-axis shows "Eagles Win Probability (%)" from 0% to 100%. The
-    title reads "Eagles vs Cowboys (24-17) · line-win-probability · pygal · pyplots.ai".
-    The filled area extends from the win probability line down to 0% in a single muted
-    teal color. Red/orange dots mark scoring events at key moments. A 50% baseline
-    is present but barely visible as a very faint gray line. The legend at the bottom
-    lists three series: "Eagles Win Probability", "50% Baseline", and "Scoring Events".
-    The line shows momentum swings — dropping to ~35% after Cowboys scores, rising
-    to ~74% after Eagles scores, then ultimately climbing to ~97% at the end.'
+  - 50% baseline dashed line is obscured by fill areas and needs to be more prominent
+  - X-axis labels are crowded with both quarter markers and scoring events competing
+    for space
+  - Fill approach results in heavy visual with entire 0-50% range always filled solid
+  - Legend contains 4 entries including 50% Baseline which adds clutter
+  image_description: 'The plot shows a win probability chart for an Eagles vs Cowboys
+    NFL game (final score 24-17). The title reads "Eagles vs Cowboys (24-17) · line-win-probability
+    · pygal · pyplots.ai" at the top. The y-axis shows "Win Probability (%)" ranging
+    from 0% to 100% with 10% increments. The x-axis shows "Game Progression" with
+    rotated labels including quarter markers (Kickoff, Q2, Halftime, Q4, Final) and
+    scoring events (DAL FG (3-0), PHI TD (7-3), etc.). Two filled areas represent
+    team momentum: a darker teal (Eagles) and a lighter blue/navy (Cowboys) overlapping
+    around the 50% baseline. Red/orange dots mark key scoring events. A dashed 50%
+    baseline is present but partially obscured by the fill colors. The legend at the
+    bottom shows DAL Cowboys, PHI Eagles, 50% Baseline, and Key Plays.'
   criteria_checklist:
     visual_quality:
       score: 24
@@ -46,41 +44,44 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=56, labels=40, major_labels=42).
-          Readable throughout.
+        comment: 'Font sizes explicitly set (title 56, labels 36, major labels 42).
+          All text readable. Minor: rotated x-axis labels could be slightly larger.'
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 4
         max: 6
-        passed: true
-        comment: No significant overlap. Minor crowding at right edge with Final label.
+        passed: false
+        comment: X-axis labels rotated at 35° but crowded; scoring event labels and
+          quarter markers compete for space.
       - id: VQ-03
         name: Element Visibility
         score: 4
         max: 6
         passed: false
-        comment: Main line and fill visible. 50% baseline barely visible, blends into
-          background.
+        comment: Fill areas and key play dots visible, but 50% baseline dashed line
+          is largely obscured by overlapping fill colors.
       - id: VQ-04
         name: Color Accessibility
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Teal and red/orange are distinguishable. Baseline gray too low-contrast.
+        comment: Cowboys navy vs Eagles teal is colorblind-safe. Red dots for events
+          provide strong contrast.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Plot fills canvas reasonably well. Minor right margin issue.
+        comment: Good canvas utilization. Lower half (0-50%) is solid color block
+          that wastes some visual real estate.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis has units, X-axis is descriptive.
+        comment: Win Probability (%) with units, Game Progression is descriptive.
     design_excellence:
-      score: 11
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -88,24 +89,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom teal Eagles color, white background, custom fonts. Above defaults
-          but not publication-level.
+        comment: Custom team colors, custom font family, styled grid guides. Sports-themed
+          palette above defaults but not publication-level.
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
-        passed: true
-        comment: Custom grid styling with dashed guides, x-guides hidden. Some refinement
-          visible.
+        passed: false
+        comment: White background, subtle dashed grid guides, no x-guides. Two massive
+          fill blocks feel heavy.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Game narrative with momentum swings. Missing two-color fill and visible
-          annotations reduce storytelling.
+        comment: Chart tells a game narrative with scoring events, momentum shifts
+          via fill colors, and final score in title.
     spec_compliance:
-      score: 11
+      score: 13
       max: 15
       items:
       - id: SC-01
@@ -113,27 +114,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct line chart for win probability.
+        comment: Line chart showing win probability evolution. Correct.
       - id: SC-02
         name: Required Features
-        score: 2
+        score: 3
         max: 4
         passed: false
-        comment: Missing two-color fill above/below 50%. Scoring event labels not
-          visible on PNG.
+        comment: Most features present. 50% baseline not prominent as spec requires
+          — obscured by fill areas.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X is game progression, Y is win probability. Correct.
+        comment: X is game progression, Y is win probability. Correct mapping.
       - id: SC-04
         name: Title & Legend
-        score: 1
+        score: 2
         max: 3
-        passed: false
-        comment: Title format correct. Legend labels are functional series names rather
-          than team-oriented.
+        passed: true
+        comment: Title includes spec-id format with game context. Legend has 4 entries
+          which adds some clutter.
     data_quality:
       score: 14
       max: 15
@@ -143,30 +144,33 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Multiple momentum shifts, lead changes, scoring events across all
-          quarters.
+        comment: Shows momentum shifts both ways, multiple scoring events, tie game,
+          comeback, and decisive finish.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: NFL game between Eagles and Cowboys. Realistic and neutral.
+        comment: NFL game between Eagles and Cowboys with realistic scoring. Neutral
+          sports context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Win probability values are realistic and plausible.
+        comment: Win probabilities range 35-97%, starting at 50%. Realistic for NFL
+          game.
     code_quality:
-      score: 9
+      score: 8
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Linear structure with no functions or classes.
+        passed: false
+        comment: Follows imports-data-plot-save but data generation is verbose with
+          many separate for-loops.
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -178,19 +182,20 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports used.
+        comment: All imports used (numpy, pygal, Style).
       - id: CQ-04
         name: Code Elegance
         score: 1
         max: 2
-        passed: true
-        comment: Slightly verbose with repeated loop patterns for data generation.
+        passed: false
+        comment: Two-fill overlay approach is clever but verbose. Acceptable but could
+          be cleaner.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png using current pygal API.
+        comment: Saves as plot.png via render_to_png.
     library_mastery:
       score: 7
       max: 10
@@ -200,19 +205,20 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Good use of pygal API: custom Style, labeled data points, fill,
-          interpolation.'
+        comment: Good use of pygal Line with fill, custom Style, x_labels_major, cubic
+          interpolation, per-series overrides.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses pygal-specific cubic interpolation, tooltip config, labeled
-          data point dicts.
+        comment: 'Leverages pygal-specific features: cubic interpolation, x_labels_major,
+          per-series dict data with labels.'
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
+  - hover-tooltips
   - html-export
   patterns:
   - data-generation
@@ -221,3 +227,4 @@ impl_tags:
   - cumulative-sum
   styling:
   - grid-styling
+  - alpha-blending
