@@ -1,7 +1,7 @@
 """ pyplots.ai
 scatter-shot-chart: Basketball Shot Chart
 Library: matplotlib 3.10.8 | Python 3.14.3
-Quality: 87/100 | Created: 2026-03-20
+Quality: 88/100 | Created: 2026-03-20
 """
 
 import matplotlib.patches as patches

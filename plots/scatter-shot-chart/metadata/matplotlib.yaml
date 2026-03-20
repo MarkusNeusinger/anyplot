@@ -1,7 +1,7 @@
 library: matplotlib
 specification_id: scatter-shot-chart
 created: '2026-03-20T20:28:25Z'
-updated: '2026-03-20T20:32:38Z'
+updated: '2026-03-20T20:41:48Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23361192893
 issue: 4416
@@ -10,37 +10,37 @@ library_version: 3.10.8
 preview_url: https://storage.googleapis.com/pyplots-images/plots/scatter-shot-chart/matplotlib/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/scatter-shot-chart/matplotlib/plot_thumb.png
 preview_html: null
-quality_score: 87
+quality_score: 88
 review:
   strengths:
-  - Excellent dark theme with professional teal/coral palette on navy background
-  - Accurate NBA court geometry with proper dimensions (50ft wide, 23.75ft three-point
-    arc)
-  - Path effects on text for readability against dark background
-  - Distance-based shot probability creates realistic storytelling data
-  - FG% summary annotation adds analytical context
+  - Excellent dark theme with cohesive color design and intentional visual hierarchy
+  - Accurate NBA half-court rendering with all required geometric features
+  - Colorblind-safe teal/coral palette with dual encoding (color + marker shape)
+  - Distance-based make probability creates realistic shooting pattern that tells
+    a story
+  - Clean code with good use of matplotlib patches module for court geometry
   weaknesses:
-  - Marker sizes (s=120-150) too large for 350 data points causing overlap near basket
-    — reduce to s=40-60
-  - shot_type data computed but never visually distinguished
-  - Spec says green/red for made/missed but uses teal/coral instead
-  image_description: 'The plot displays a basketball half-court shot chart on a dark
-    navy background (#1a1a2e) with a slightly lighter court surface (#2b2b40). Court
-    lines are drawn in muted gray-blue, including the three-point arc, free-throw
-    line and circle (with dashed lower half), paint/key rectangle, restricted area
-    arc, basket (orange circle), backboard line, half-court line, and center circle
-    arc. Made shots appear as teal (#2a9d8f) filled circles with white edges, while
-    missed shots are coral/orange (#e76f51) X markers. The title "scatter-shot-chart
-    · matplotlib · pyplots.ai" sits at the top with a text stroke effect for readability.
-    An "FG: 167/350 (47.7%)" summary is in the upper left corner. A two-item legend
-    ("Missed" with X marker, "Made" with circle marker) is centered at the bottom.
-    Shot density is highest near the basket and along the three-point arc, with made
-    shots (teal circles) concentrated closer to the basket, showing realistic distance-based
-    accuracy. The court is oriented with the basket at the bottom and half-court at
-    the top.'
+  - Marker sizes (s=120-150) and alpha values (0.55-0.7) too large for 350 data points,
+    causing excessive overlap in dense areas
+  - Library mastery could be enhanced with more distinctive matplotlib features
+  image_description: 'The plot displays a basketball half-court on a dark navy background
+    (#1a1a2e) with the court surface in dark blue-gray (#2b2b40). Court markings are
+    drawn in muted gray-blue: the court outline, paint/key area (16ft wide rectangle),
+    free-throw line and circle (solid upper half, dashed lower half), restricted area
+    arc near the basket, three-point arc with straight corner segments, half-court
+    line, and center circle. The basket is rendered as an orange circle with a gray
+    backboard line. 350 shot attempts are plotted: made shots appear as teal (#2a9d8f)
+    circles with white edges, missed shots as coral (#e76f51) X markers. Shots cluster
+    realistically — dense near the basket (mostly teal/made), spreading out through
+    the mid-range and three-point zones (increasingly coral/missed). The legend at
+    the bottom shows categories distinguishing Made and Missed with different marker
+    shapes and colors. "FG: 167/350 (47.7%)" is displayed in the upper-left corner.
+    The title "scatter-shot-chart · matplotlib · pyplots.ai" sits at the top with
+    a dark stroke outline for readability. The court fills the square canvas well
+    with a 1:1 aspect ratio.'
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 26
       max: 30
       items:
       - id: VQ-01
@@ -48,40 +48,41 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (title=24, legend=18, summary=18).
-          Readable. Minor: no axis labels but axes appropriately hidden.'
+        comment: All font sizes explicitly set (title=24, legend=18, summary=18).
+          Path effects for contrast.
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No overlapping text elements. Legend cleanly positioned below court.
+        comment: No text overlap. Some marker overlap in dense areas near basket and
+          corners.
       - id: VQ-03
         name: Element Visibility
         score: 4
         max: 6
         passed: false
-        comment: Markers oversized (s=120-150) for 350 points. Guidelines recommend
-          s=20-50 for 300+. Overlap near basket.
+        comment: 'Markers s=120-150 oversized for 350 points (guidelines: s=20-50).
+          Alpha 0.55-0.7 too high (guidelines: 0.3-0.5).'
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Teal/coral palette is colorblind-safe. Good contrast against dark
-          background.
+        comment: Teal/coral colorblind-safe palette with marker shape as secondary
+          channel.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square figure with 1:1 aspect ratio. Court fills canvas well.
+        comment: Court fills square canvas well, 1:1 aspect ratio, balanced margins.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Axes appropriately hidden per spec. Title present and descriptive.
+        comment: Axes appropriately off for court diagram. Title present.
     design_excellence:
       score: 15
       max: 20
@@ -91,24 +92,24 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: 'Strong design: custom dark theme, intentional teal/coral palette,
-          path effects, orange basket accent.'
+        comment: Dark theme with custom palette, path effects, orange basket accent.
+          Above defaults.
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: Axes hidden, dark background contrast, path effects for text. Good
-          whitespace.
+        comment: Axes hidden, subtle court lines, dashed FT semicircle, dark theme
+          with refined hierarchy.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Shot distribution tells a story — higher make rate near basket. FG%
-          summary adds context. Different markers add distinction.
+        comment: Distance-based make probability creates shooting efficiency gradient.
+          FG% summary adds context.
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -116,51 +117,49 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: scatter plot on half-court diagram.'
+        comment: Correct scatter plot on half-court diagram.
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 'All court elements present. Minor: uses teal/coral instead of spec''s
-          green/red. shot_type not visually distinguished.'
+        comment: All court features present. Made/missed color coding with accessible
+          palette.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly mapped to court positions in feet from basket center.
+        comment: X/Y correctly mapped to court positions. NBA dimensions accurate.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows exact format. Legend labels match data.
+        comment: Title format correct. Legend labels Made and Missed categories.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows shots from all court zones with realistic distribution. shot_type
-          computed but not visualized.
+        comment: 'Shots across all court zones: paint, mid-range, corners, top of
+          arc, wings.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic NBA court dimensions and plausible shot distribution. FG%
-          of 47.7% is realistic.
+        comment: Basketball shooting data is real and neutral. 47.7% FG is realistic.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Court dimensions match NBA standards. Shot positions are spatially
-          realistic.
+        comment: 350 shots reasonable. Court dimensions match NBA standards.
     code_quality:
       score: 10
       max: 10
@@ -170,13 +169,13 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save flow. No functions or classes.
+        comment: 'Clean linear flow: imports, data, court, shots, styling, save.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42) set at start.
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -188,13 +187,13 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity. No fake functionality.
+        comment: Well-organized with clear comments. Appropriate complexity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300, bbox_inches='tight'.
+        comment: Saves as plot.png with dpi=300, bbox_inches=tight.
     library_mastery:
       score: 7
       max: 10
@@ -204,26 +203,25 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses ax methods consistently, patches module for court geometry,
-          Arc for curves.
+        comment: Good Axes methods, proper patches module usage for court geometry.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Leverages patches (Circle, Rectangle, Arc), patheffects (withStroke),
-          custom marker differentiation.
+        comment: patches.Arc/Circle/Rectangle and patheffects are distinctive matplotlib
+          features.
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
   - patches
+  - annotations
   patterns:
   - data-generation
   dataprep: []
   styling:
   - dark-theme
   - alpha-blending
-  - edge-highlighting
   - minimal-chrome
+  - edge-highlighting
