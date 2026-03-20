@@ -1,7 +1,7 @@
 library: bokeh
 specification_id: line-win-probability
 created: '2026-03-20T12:31:39Z'
-updated: '2026-03-20T12:45:32Z'
+updated: '2026-03-20T12:52:28Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23342814515
 issue: 4418
@@ -13,34 +13,35 @@ preview_html: https://storage.googleapis.com/pyplots-images/plots/line-win-proba
 quality_score: 88
 review:
   strengths:
-  - Excellent data storytelling with realistic NFL game narrative showing dramatic
-    momentum swings
-  - 'All spec requirements fully implemented: area fills, 50% reference, quarter markers,
-    annotations, final score'
-  - Clean well-structured code with explicit font sizing for the 4800x2700 canvas
-  - Good use of Bokeh-specific features (HoverTool, varea, dual PNG+HTML output)
-  - Perfect data quality with authentic sports context and realistic probability values
+  - Excellent data storytelling with a dramatic game narrative that naturally creates
+    visual interest
+  - All spec requirements fully implemented including area fills, annotations, quarter
+    markers, and final score
+  - Strong font sizing and explicit typography control for the 4800x2700 canvas
+  - 'Clean visual refinement: subtle grids, removed outlines, hidden toolbar'
+  - Team-inspired color palette creates cohesive, professional look
+  - Perfect data quality with realistic NFL game simulation
   weaknesses:
-  - No legend or color key identifying which fill color belongs to which team
-  - All four axis spines present giving a boxy appearance - removing top/right would
-    be cleaner
-  - Annotation positioning could be more polished with visual anchors at event points
-  image_description: 'The plot shows a win probability chart for an Eagles vs Cowboys
-    NFL game. The x-axis displays "Play Number" (0-120) and the y-axis shows "Eagles
-    Win Probability (%)" with percentage labels at 0%, 25%, 50%, 75%, and 100%. A
-    teal/green (#004C54) area fill appears above the 50% dashed reference line representing
-    Eagles momentum, while a salmon/peach (#003594 at 0.3 alpha) fill below 50% represents
-    Cowboys momentum. A dark line (line_width=5) traces the probability throughout
-    the game. Dotted vertical lines mark quarter boundaries at plays 30, 60, and 90
-    with "Q2", "Q3", "Q4" labels at the top. Five key scoring events are annotated
-    in bold text: "TD Eagles 10-7", "TD Eagles 17-10", "TD Cowboys 17-17", "TD Cowboys
-    20-24", and "TD Eagles 27-24". A bold teal "Final: Eagles 27 - Cowboys 24" label
-    appears in the lower-right area. The title reads "line-win-probability · bokeh
-    · pyplots.ai" at the top left. The toolbar is hidden. Grid lines are very subtle
-    (alpha 0.15). The plot fills the canvas well with good margins.'
+  - Annotations crowd together near the right edge of the chart (plays 105-118)
+  - Title format includes extra Eagles vs Cowboys prefix beyond the required spec-id
+    format
+  - Could leverage more Bokeh-distinctive features (e.g., CustomJS for richer interactivity
+    in HTML output)
+  image_description: 'The plot displays a win probability chart for an Eagles vs Cowboys
+    NFL game. The x-axis shows "Play Number" (0-120) and the y-axis shows "Eagles
+    Win Probability (%)" ranging from 0% to 100%. A solid dark line traces the win
+    probability over the course of the game. The area above the 50% dashed baseline
+    is filled with a muted teal color representing the Eagles, while the area below
+    is filled with a light gray for the Cowboys. Dotted vertical lines mark quarter
+    transitions (Q2, Q3, Q4) with labels at the top. Five key scoring events are annotated
+    with black dots and bold text labels (TD Eagles 10-7, TD Eagles 17-10, TD Cowboys
+    17-17, TD Cowboys 20-24, TD Eagles 27-24). A bold teal "Final: Eagles 27 - Cowboys
+    24" label sits in the lower-right area. A legend in the top-left identifies Eagles
+    (teal) and Cowboys (gray). The overall design is clean with subtle grids, removed
+    outline frame, and generous typography.'
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -48,66 +49,65 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 42pt, axis labels 32pt, ticks
-          26pt, annotations 22pt, final score 34pt'
+        comment: 'All font sizes explicitly set: title 42pt, axis labels 32pt, tick
+          labels 26pt, annotations 22pt'
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Minor crowding on TD Cowboys 20-24 annotation near fill boundary
+        comment: Minor crowding of annotation text near right edge (plays 105-118)
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Line width 5 clearly visible, area fills well-defined with alpha
-          0.3
+        comment: Line width 5, fills with appropriate alpha, annotation dots size
+          20 — well-adapted to canvas
       - id: VQ-04
         name: Color Accessibility
-        score: 3
-        max: 4
-        passed: true
-        comment: Teal and salmon fills distinguishable but base colors somewhat close
-          in hue
-      - id: VQ-05
-        name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills canvas well with generous margins
+        comment: Teal and gray are colorblind-safe with strong luminance contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good canvas usage but annotations approach right edge
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: Play Number, Eagles Win Probability
+        comment: 'Descriptive labels with units: Play Number and Eagles Win Probability
           (%)'
     design_excellence:
-      score: 14
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Team-themed colors, intentional hierarchy, clean frame. Above defaults
-          but not publication-level polish
+        comment: Team-inspired palette, cohesive dark line, intentional hierarchy.
+          Above defaults but not FiveThirtyEight-level
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Subtle grid alpha 0.15, outline removed, toolbar hidden. But all
-          four axis spines still present
+        comment: Subtle grid alpha 0.15, outline removed, minor ticks removed, toolbar
+          hidden
       - id: DE-03
         name: Data Storytelling
         score: 5
         max: 6
         passed: true
-        comment: Clear narrative with momentum swings, filled areas convey advantage,
-          annotations mark pivotal plays, final score provides closure
+        comment: Strong narrative with annotated scoring events, quarter markers,
+          and dramatic late-game focal point
     spec_compliance:
       score: 14
       max: 15
@@ -117,26 +117,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct line chart with area fill for win probability
+        comment: Correct win probability line chart with area fills
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: 50% ref line, area fills, annotations,
-          quarter markers, final score'
+        comment: 'All spec features present: 50% line, team fills, annotations, final
+          score, quarter markers'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=play number, Y=win probability, full range shown
+        comment: X = play number, Y = win probability. Correct mapping
       - id: SC-04
         name: Title & Legend
         score: 2
         max: 3
         passed: true
-        comment: Title format correct but no legend identifying team fill colors
+        comment: Title prepends Eagles vs Cowboys beyond required format. Legend correctly
+          identifies teams
     data_quality:
       score: 15
       max: 15
@@ -146,20 +147,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Momentum swings both directions, lead changes, dramatic comeback,
-          convergence to 100%
+        comment: Shows momentum swings both ways, multiple event types, dramatic finish
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: NFL Eagles vs Cowboys game with authentic scoring events
+        comment: Realistic NFL game scenario with plausible teams and scoring progression
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 120 plays realistic for NFL, probabilities in valid range
+        comment: 120 plays realistic for NFL, probability values follow sensible trajectories
     code_quality:
       score: 10
       max: 10
@@ -169,31 +169,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean linear flow, no functions or classes
+        comment: Clean linear flow with no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set before random operations
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: All imports are used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean appropriate complexity, no fake functionality
+        comment: Well-organized, appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png via export_png, uses current Bokeh API
+        comment: Saves as plot.png via export_png, also generates HTML
     library_mastery:
       score: 7
       max: 10
@@ -203,28 +203,28 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of ColumnDataSource, figure, varea, Label, Span. Declarative
-          model well-used
+        comment: Good use of ColumnDataSource, varea, Span, Label, Legend, HoverTool
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: HoverTool with vline mode and dual PNG+HTML output are distinctive
-          Bokeh features
+        comment: HoverTool with vline mode and dual PNG+HTML output leverage Bokeh's
+          web-native design
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - hover-tooltips
-  - manual-ticks
+  - custom-legend
   - html-export
   patterns:
   - data-generation
   - columndatasource
+  - iteration-over-groups
   dataprep:
-  - rolling-window
+  - cumulative-sum
   styling:
   - alpha-blending
   - grid-styling
