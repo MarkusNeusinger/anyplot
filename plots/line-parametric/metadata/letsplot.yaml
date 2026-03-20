@@ -1,7 +1,7 @@
 library: letsplot
 specification_id: line-parametric
 created: '2026-03-20T10:36:59Z'
-updated: '2026-03-20T10:50:12Z'
+updated: '2026-03-20T10:57:06Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23339035363
 issue: 4424
@@ -10,80 +10,78 @@ library_version: 4.9.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/line-parametric/letsplot/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/line-parametric/letsplot/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/line-parametric/letsplot/plot.html
-quality_score: 89
+quality_score: 90
 review:
   strengths:
-  - Excellent spec compliance with all required features implemented (equal aspect
-    ratio, color gradient, two curves, start/end markers, high point density)
-  - 'Strong design polish with custom theme: removed spines, subtle grid, custom panel
-    background, harmonious blue-to-purple color scheme'
-  - Effective data storytelling through descriptive subtitles and contrasting curve
-    types (closed vs open)
-  - Good use of lets-plot distinctive features (gggrid, layer_tooltips, HTML export)
-  - Clean, well-organized code with deterministic data
+  - 'Excellent spec compliance with all required features: equal aspect ratio, color
+    gradient, two curves, start/end markers'
+  - Strong visual refinement with removed spines, subtle grid, custom teal-to-gold
+    palette, off-white panel background
+  - Good data storytelling through descriptive subtitles and contrasting curve types
+    (closed vs open)
+  - 'Effective use of letsplot-specific features: gggrid, layer_tooltips, HTML export'
+  - Clean deterministic code with explicit font sizing throughout
   weaknesses:
-  - Legend text at 14pt is slightly below the 16pt threshold for optimal readability
-  - Spiral panel has noticeable empty space in lower-left due to coord_fixed geometry
-    constraints
-  - Color gradient mid-tones could have slightly more contrast against the panel background
-  image_description: The plot displays two side-by-side parametric curve panels on
-    a white background with light gray (#fafafa) panel areas. The left panel shows
-    a Lissajous figure (x=sin(3t), y=sin(2t)) — a closed, self-intersecting curve
-    with a color gradient transitioning from dark blue (t≈0) to purple (t≈2π). The
-    right panel shows an Archimedean spiral (x=t·cos(t), y=t·sin(t)) expanding outward
-    with the same blue-to-purple gradient (t from 0 to ~12.6). Both panels have dark
-    blue circle markers at the start point and orange triangle markers at the end
-    point. Each panel has its own "t (rad)" color bar legend on the right. Axis labels
-    display the parametric equations. Subplot titles describe curve characteristics
-    ("closed, self-intersecting" and "expanding outward"). The main title "line-parametric
-    · letsplot · pyplots.ai" appears at the top left. Grid lines are subtle gray,
-    spines are removed, and ticks are hidden.
+  - Start/end markers on Lissajous curve overlap at origin since the curve is closed
+  - Spiral panel has slightly more whitespace than ideal due to fixed axis limits
+  image_description: The plot displays two side-by-side panels on a white background
+    with an overall title "line-parametric · letsplot · pyplots.ai" at the top. The
+    left panel shows a Lissajous figure titled "Lissajous Figure · closed, self-intersecting"
+    with x(t) = sin(3t) on the x-axis and y(t) = sin(2t) on the y-axis. The curve
+    traces a self-intersecting figure-eight-like pattern with a color gradient from
+    dark teal (t=0) to golden yellow (t≈6.3). A dark teal circle marks the start and
+    a red triangle marks the end, both at the origin since the curve is closed. The
+    right panel shows an "Archimedean Spiral · expanding outward" with x(t) = t·cos(t)
+    and y(t) = t·sin(t). The spiral expands from center outward, colored from dark
+    teal to gold. Start (dark circle) is at origin, end (red triangle) at the outer
+    edge around x≈12. Both panels have light gray subtle grids, no axis spines or
+    ticks, and separate "t (rad)" color legends. Axis text is gray, titles are bold
+    dark.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 24pt, axis title 20pt, axis
-          text 16pt). Legend text at 14pt slightly below 16pt threshold but readable.
+        comment: 'All font sizes explicitly set: title 22-24pt, axis titles 20pt,
+          axis text 16pt, legend text 16pt'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or elements anywhere in the plot.
+        comment: No overlapping text, legends positioned outside panels
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Curves well-sized (size=2.0/1.8) with good alpha (0.85). Start/end
-          markers clearly visible. Mid-range gradient slightly reduced contrast.
+        comment: Curves well visible; start/end markers on Lissajous overlap at origin
+          since curve is closed
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Blue-to-purple gradient colorblind-safe. Start/end markers (dark
-          blue/orange) have excellent contrast.
+        comment: Teal-to-gold gradient is colorblind-safe; markers use both color
+          and shape differentiation
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Two-panel gggrid fills canvas reasonably. Some vertical whitespace
-          below plots and empty space in spiral panel.
+        comment: Good two-panel layout; spiral panel has slight extra whitespace from
+          fixed axis limits
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Axis labels show parametric equations — appropriate descriptive labeling
-          for mathematical curves.
+        comment: Descriptive labels with mathematical notation
     design_excellence:
       score: 15
       max: 20
@@ -93,22 +91,22 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: 'Strong design: custom blue-to-purple gradient, harmonious colors,
-          descriptive subtitles. Above defaults but not quite publication-level.'
+        comment: Custom teal-to-gold palette, intentional text color hierarchy, off-white
+          panel background
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: Spines removed, ticks hidden, subtle grid, custom panel background,
-          generous whitespace. Well-polished.
+        comment: Spines removed, subtle grid, minor grid blank, refined panel and
+          legend borders
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Good hierarchy: descriptive subtitles, start/end markers with different
-          shapes, color gradient shows progression, contrasting curve types.'
+        comment: Descriptive subtitles provide narrative; contrasting curve types
+          create natural comparison
     spec_compliance:
       score: 15
       max: 15
@@ -118,29 +116,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct parametric curve plot using geom_path with color-mapped parameter
-          t.
+        comment: Correct parametric curve plot with two distinct curves
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: equal aspect ratio, color gradient, two curves,
-          start/end markers, 1000-point density.'
+        comment: 'All spec requirements met: equal aspect ratio, color gradient, two
+          curves, start/end markers, 1000 points'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly computed from parametric equations, axes show full
-          data range.
+        comment: X/Y correctly computed from parametric equations
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Main title in correct format. Color bar legends labeled 't (rad)'
-          with proper formatting.
+        comment: Correct title format and descriptive legend labels
     data_quality:
       score: 14
       max: 15
@@ -150,22 +145,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows both closed/self-intersecting and open/expanding curves, demonstrating
-          full range of parametric behaviors.
+        comment: Shows closed self-intersecting and open expanding curves
       - id: DQ-02
         name: Realistic Context
         score: 4
         max: 5
         passed: true
-        comment: Classic mathematical curves from spec. Appropriate for domain but
-          inherently abstract.
+        comment: Well-known mathematical curves used in physics and engineering
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Mathematically correct values: Lissajous bounded [-1,1], spiral
-          expanding to ~±12.6.'
+        comment: Mathematically exact values for both curves
     code_quality:
       score: 10
       max: 10
@@ -175,33 +167,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean Import → Data → Theme → Plot → Grid → Save structure. No functions
-          or classes.
+        comment: Clean linear flow with no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic — trigonometric functions with no randomness.
+        comment: Fully deterministic trigonometric functions
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: numpy, pandas, lets_plot.'
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized. Parallel structure for both curves is clear
-          and readable.
+        comment: Clean and well-organized, appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png via ggsave with scale=3. Also exports HTML.
+        comment: Saves as plot.png with ggsave at scale=3
     library_mastery:
       score: 8
       max: 10
@@ -211,22 +201,21 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Good ggplot grammar usage: aes, geom_path, scale_color_gradient,
-          coord_fixed, custom theme.'
+        comment: Proper ggplot grammar with letsplot idioms
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Uses gggrid (distinctive multi-plot), layer_tooltips (interactive),
-          and combined PNG+HTML export.
-  verdict: REJECTED
+        comment: Uses gggrid, layer_tooltips, and HTML export - distinctive letsplot
+          features
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - subplots
   - layer-composition
   - hover-tooltips
-  - subplots
   - html-export
   patterns:
   - data-generation
