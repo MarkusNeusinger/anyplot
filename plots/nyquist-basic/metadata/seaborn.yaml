@@ -1,0 +1,228 @@
+library: seaborn
+specification_id: nyquist-basic
+created: '2026-03-20T22:46:01Z'
+updated: '2026-03-20T23:25:04Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23365453301
+issue: 4412
+python_version: 3.14.3
+library_version: 0.13.2
+preview_url: https://storage.googleapis.com/pyplots-images/plots/nyquist-basic/seaborn/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/nyquist-basic/seaborn/plot_thumb.png
+preview_html: null
+quality_score: 90
+review:
+  strengths:
+  - All specification requirements fully implemented with careful attention to detail
+  - 'Excellent visual hierarchy: critical point prominently marked, mirror branch
+    de-emphasized, directional arrows guide the viewer'
+  - Realistic and well-chosen transfer function producing a pedagogically clear Nyquist
+    curve
+  - Clean deterministic code with proper scipy.signal usage for frequency response
+    computation
+  - Cohesive color scheme and professional polish with subtle grid, removed spines,
+    and balanced layout
+  weaknesses:
+  - Minor annotation crowding near the origin where multiple frequency labels converge
+  - Seaborn role is somewhat limited since Nyquist plots require specialized matplotlib
+    features for annotations, arrows, and geometric references
+  image_description: The plot displays a Nyquist diagram on the complex plane. The
+    positive-frequency branch (solid dark blue line, labeled "G(jω), ω ≥ 0") sweeps
+    from approximately (10, 0) at low frequencies downward through the lower half-plane,
+    curving left and back toward the origin at high frequencies. The mirror (negative-frequency)
+    branch (dashed lighter blue, labeled "G(jω), ω < 0") reflects symmetrically through
+    the upper half-plane with reduced opacity. A dotted gray unit circle is centered
+    at the origin for reference. The critical point at (-1, 0) is marked with a bold
+    red X and annotated with a red arrow and "Critical point (-1, 0)" label. Five
+    frequency points (ω = 0.1, 0.5, 1.0, 3.0, 10.0 rad/s) are marked with teal dots
+    and labeled via gray annotation arrows. Three blue directional arrows along the
+    positive branch indicate increasing frequency. Title reads "nyquist-basic · seaborn
+    · pyplots.ai". Axes are labeled "Real Part of G(jω)" and "Imaginary Part of G(jω)".
+    Legend in upper right with both branch labels. Top and right spines removed. Subtle
+    whitegrid with low-alpha gridlines. Square aspect ratio maintained.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt,
+          annotations 12-14pt'
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Manual offsets prevent most collisions; minor crowding near origin
+          between frequency labels
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Lines at 2.5 width, markers s=120 with white edges, directional arrows
+          prominent
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue/red/gray scheme is colorblind-safe with no red-green ambiguity
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square 10x10 figure with equal aspect ratio, good canvas utilization
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive labels with mathematical notation: Real Part of G(jω)'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Cohesive color scheme, intentional hierarchy with alpha-reduced mirror
+          branch, professional typography
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines removed, grid alpha 0.15, axis reference lines, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Good visual hierarchy: critical point emphasized, mirror branch
+          de-emphasized, directional arrows guide viewer'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Nyquist plot on complex plane
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: critical point, unit circle, freq annotations,
+          arrows, 1:1 aspect'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Real on X, imaginary on Y, both branches correctly computed
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct title format, legend labels match branch descriptions
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Full frequency sweep, both branches, gain/phase characteristics visible
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Realistic 3rd-order control system G(s) = 10/((s+1)(0.5s+1)(0.2s+1))
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Frequency range 0.01-100 rad/s appropriate for this system
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports, data, plot, save. No functions or classes'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic via scipy.signal.freqresp with fixed coefficients
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All five imports used: matplotlib, numpy, pandas, seaborn, scipy'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-organized, no over-engineering or fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png at dpi=300 with bbox_inches=tight
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Good seaborn usage: lineplot with hue/style, scatterplot, set_theme,
+          despine, color_palette'
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: true
+        comment: Uses seaborn theming and hue-based styling but bulk requires matplotlib
+          for specialized features
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - scipy
+  techniques:
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
+  - explicit-figure
+  dataprep: []
+  styling:
+  - grid-styling
+  - alpha-blending
+  - edge-highlighting
