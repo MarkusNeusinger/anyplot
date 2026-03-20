@@ -1,12 +1,12 @@
-""" pyplots.ai
+"""pyplots.ai
 line-stress-strain: Engineering Stress-Strain Curve
 Library: seaborn 0.13.2 | Python 3.14.3
 Quality: 84/100 | Created: 2026-03-20
 """
 
-import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import seaborn as sns
 
 
@@ -24,7 +24,7 @@ yield_strain = yield_stress / youngs_modulus
 strain_elastic = np.linspace(0, yield_strain, 60)
 stress_elastic = youngs_modulus * strain_elastic
 
-# Yield plateau and strain hardening (quadratic rise to UTS)
+# Strain hardening (quadratic rise to UTS)
 strain_hardening = np.linspace(yield_strain, uts_strain, 200)
 t = (strain_hardening - yield_strain) / (uts_strain - yield_strain)
 stress_hardening = yield_stress + (uts - yield_stress) * (2 * t - t**2)
@@ -35,9 +35,11 @@ t_neck = (strain_necking - uts_strain) / (fracture_strain - uts_strain)
 fracture_stress = 320
 stress_necking = uts - (uts - fracture_stress) * t_neck**1.5
 
-# Combine all regions
-strain = np.concatenate([strain_elastic, strain_hardening, strain_necking])
-stress = np.concatenate([stress_elastic, stress_hardening, stress_necking])
+# Build DataFrame with region labels for seaborn hue-based plotting
+df_elastic = pd.DataFrame({"strain": strain_elastic, "stress": stress_elastic, "region": "Elastic"})
+df_hardening = pd.DataFrame({"strain": strain_hardening, "stress": stress_hardening, "region": "Strain Hardening"})
+df_necking = pd.DataFrame({"strain": strain_necking, "stress": stress_necking, "region": "Necking"})
+df = pd.concat([df_elastic, df_hardening, df_necking], ignore_index=True)
 
 # 0.2% offset yield point
 offset = 0.002
@@ -45,53 +47,71 @@ offset_line_strain = np.linspace(offset, offset + yield_stress / youngs_modulus 
 offset_line_stress = youngs_modulus * (offset_line_strain - offset)
 offset_line_stress = np.clip(offset_line_stress, 0, yield_stress + 20)
 
-# Find intersection point (0.2% offset yield)
 yield_offset_strain = offset + yield_stress / youngs_modulus
 yield_offset_stress = yield_stress
 
-# Plot
-sns.set_context("talk", font_scale=1.2)
+# Define seaborn palette and style
+region_palette = {"Elastic": "#306998", "Strain Hardening": "#E07B39", "Necking": "#C0392B"}
+sns.set_style("whitegrid", {"grid.linestyle": "-", "grid.alpha": 0.15, "grid.linewidth": 0.8})
+sns.set_context(
+    "talk",
+    rc={
+        "axes.titlesize": 24,
+        "axes.labelsize": 20,
+        "xtick.labelsize": 16,
+        "ytick.labelsize": 16,
+        "legend.fontsize": 13,
+        "font.weight": "medium",
+    },
+)
+
 fig, ax = plt.subplots(figsize=(16, 9))
 
-sns.lineplot(x=strain, y=stress, ax=ax, linewidth=3.5, color="#306998", legend=False)
+# Plot stress-strain curve using seaborn lineplot with hue for regions
+sns.lineplot(
+    data=df, x="strain", y="stress", hue="region", palette=region_palette, linewidth=3.5, ax=ax, legend=True, sort=False
+)
 
 # 0.2% offset line
 ax.plot(offset_line_strain, offset_line_stress, linestyle="--", linewidth=2, color="#808080", zorder=3)
 
-# Mark critical points
-ax.plot(
-    yield_offset_strain,
-    yield_offset_stress,
-    "o",
-    markersize=12,
-    color="#E07B39",
-    markeredgecolor="white",
-    markeredgewidth=1.5,
-    zorder=5,
+# Mark critical points using seaborn scatterplot for consistent styling
+critical_points = pd.DataFrame(
+    {
+        "strain": [yield_offset_strain, uts_strain, fracture_strain],
+        "stress": [yield_offset_stress, uts, fracture_stress],
+        "point": ["Yield Point", "UTS", "Fracture"],
+    }
 )
-ax.plot(uts_strain, uts, "o", markersize=12, color="#C0392B", markeredgecolor="white", markeredgewidth=1.5, zorder=5)
-ax.plot(
-    fracture_strain,
-    fracture_stress,
-    "X",
-    markersize=14,
-    color="#2C3E50",
-    markeredgecolor="white",
-    markeredgewidth=1.5,
+point_palette = {"Yield Point": "#E07B39", "UTS": "#C0392B", "Fracture": "#2C3E50"}
+point_markers = {"Yield Point": "o", "UTS": "o", "Fracture": "X"}
+sns.scatterplot(
+    data=critical_points,
+    x="strain",
+    y="stress",
+    hue="point",
+    style="point",
+    palette=point_palette,
+    markers=point_markers,
+    s=200,
+    edgecolor="white",
+    linewidth=1.5,
+    ax=ax,
     zorder=5,
+    legend=True,
 )
 
-# Annotations for critical points
+# Annotations for critical points — yield moved right to reduce left-side clutter
 ax.annotate(
     "Yield Point\n(0.2% offset)",
     xy=(yield_offset_strain, yield_offset_stress),
-    xytext=(0.04, yield_offset_stress + 40),
+    xytext=(0.06, yield_offset_stress - 30),
     fontsize=14,
     fontweight="bold",
     color="#E07B39",
     arrowprops={"arrowstyle": "-|>", "color": "#E07B39", "lw": 1.5},
     ha="left",
-    va="bottom",
+    va="top",
 )
 
 ax.annotate(
@@ -118,13 +138,11 @@ ax.annotate(
     va="top",
 )
 
-# Elastic modulus annotation
-mid_elastic_strain = yield_strain * 0.45
-mid_elastic_stress = youngs_modulus * mid_elastic_strain
+# Elastic modulus annotation — positioned to the right to avoid left-side clutter
 ax.annotate(
     f"E = {youngs_modulus // 1000} GPa",
-    xy=(mid_elastic_strain, mid_elastic_stress),
-    xytext=(0.03, 80),
+    xy=(yield_strain * 0.5, youngs_modulus * yield_strain * 0.5),
+    xytext=(0.05, 60),
     fontsize=13,
     fontstyle="italic",
     color="#306998",
@@ -133,69 +151,28 @@ ax.annotate(
     va="center",
 )
 
-# Region labels (shaded backgrounds)
-ax.axvspan(0, yield_strain, alpha=0.06, color="#306998")
-ax.axvspan(yield_strain, uts_strain, alpha=0.06, color="#E07B39")
-ax.axvspan(uts_strain, fracture_strain, alpha=0.06, color="#C0392B")
-
-ax.text(yield_strain / 2, -28, "Elastic", fontsize=12, ha="center", color="#306998", fontweight="medium")
-ax.text(
-    (yield_strain + uts_strain) / 2,
-    -28,
-    "Strain Hardening",
-    fontsize=12,
-    ha="center",
-    color="#E07B39",
-    fontweight="medium",
-)
-ax.text(
-    (uts_strain + fracture_strain) / 2, -28, "Necking", fontsize=12, ha="center", color="#C0392B", fontweight="medium"
-)
-
-# 0.2% offset label
-ax.text(offset + 0.001, -18, "0.2%", fontsize=11, color="#808080", ha="left")
-
-# Style
-ax.set_xlabel("Engineering Strain", fontsize=20)
-ax.set_ylabel("Engineering Stress (MPa)", fontsize=20)
-ax.set_title("Mild Steel Tensile Test · line-stress-strain · seaborn · pyplots.ai", fontsize=24, fontweight="medium")
-ax.tick_params(axis="both", labelsize=16)
-ax.spines["top"].set_visible(False)
-ax.spines["right"].set_visible(False)
-ax.yaxis.grid(True, alpha=0.2, linewidth=0.8)
-ax.set_xlim(-0.01, fracture_strain + 0.03)
-ax.set_ylim(-45, uts + 80)
-
-# Legend for critical points
-legend_elements = [
-    mpatches.Patch(facecolor="#306998", alpha=0.15, label="Elastic region"),
-    mpatches.Patch(facecolor="#E07B39", alpha=0.15, label="Strain hardening"),
-    mpatches.Patch(facecolor="#C0392B", alpha=0.15, label="Necking"),
-    plt.Line2D(
-        [0],
-        [0],
-        marker="o",
-        color="w",
-        markerfacecolor="#E07B39",
-        markeredgecolor="white",
-        markersize=10,
-        label="Yield point",
-    ),
-    plt.Line2D(
-        [0], [0], marker="o", color="w", markerfacecolor="#C0392B", markeredgecolor="white", markersize=10, label="UTS"
-    ),
-    plt.Line2D(
-        [0],
-        [0],
-        marker="X",
-        color="w",
-        markerfacecolor="#2C3E50",
-        markeredgecolor="white",
-        markersize=10,
-        label="Fracture",
-    ),
+# Region shading using axvspan
+region_shading = [
+    (0, yield_strain, "#306998"),
+    (yield_strain, uts_strain, "#E07B39"),
+    (uts_strain, fracture_strain, "#C0392B"),
 ]
-ax.legend(handles=legend_elements, fontsize=13, loc="center right", framealpha=0.9, edgecolor="#cccccc")
+for x0, x1, color in region_shading:
+    ax.axvspan(x0, x1, alpha=0.06, color=color, zorder=0)
+
+# Style using seaborn's despine
+sns.despine(ax=ax)
+ax.xaxis.grid(False)
+ax.set_xlabel("Engineering Strain")
+ax.set_ylabel("Engineering Stress (MPa)")
+ax.set_title("line-stress-strain · seaborn · pyplots.ai", fontweight="medium")
+ax.set_xlim(-0.01, fracture_strain + 0.03)
+ax.set_ylim(-10, uts + 80)
+
+# Consolidate legend: combine region lines and critical point markers
+handles, labels = ax.get_legend_handles_labels()
+# Reorder: regions first, then critical points
+ax.legend(handles=handles, labels=labels, fontsize=13, loc="center right", framealpha=0.9, edgecolor="#cccccc")
 
 # Save
 plt.tight_layout()
