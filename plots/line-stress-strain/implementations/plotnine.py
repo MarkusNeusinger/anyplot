@@ -1,4 +1,4 @@
-"""pyplots.ai
+""" pyplots.ai
 line-stress-strain: Engineering Stress-Strain Curve
 Library: plotnine 0.15.3 | Python 3.14.3
 Quality: 86/100 | Created: 2026-03-20
