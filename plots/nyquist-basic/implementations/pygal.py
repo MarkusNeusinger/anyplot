@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 nyquist-basic: Nyquist Plot for Control Systems
 Library: pygal 3.1.0 | Python 3.14.3
 Quality: 75/100 | Created: 2026-03-20
@@ -35,6 +35,7 @@ custom_style = Style(
         "#7BA1C7",  # Nyquist curve (negative freq)
         "#E74C3C",  # Critical point
         "#AAAAAA",  # Unit circle
+        "#306998",  # Frequency annotations (same as positive curve)
     ),
     title_font_size=72,
     label_font_size=48,
@@ -64,57 +65,42 @@ chart = pygal.XY(
     explicit_size=True,
     range=(-2.5, 2.5),
     xrange=(-2.5, 2.5),
+    value_formatter=lambda x: f"{x:.3f}",
 )
 
-# Positive frequency curve — subsample for performance
+# Positive frequency curve with tooltips showing frequency values
 step = 4
-nyquist_positive = [(float(real_part[i]), float(imag_part[i])) for i in range(0, len(omega), step)]
+nyquist_positive = [
+    {"value": (float(real_part[i]), float(imag_part[i])), "label": f"ω = {omega[i]:.3f} rad/s"}
+    for i in range(0, len(omega), step)
+]
 chart.add("G(jω), ω ≥ 0", nyquist_positive, show_dots=False, stroke_style={"width": 5})
 
-# Negative frequency curve (mirror)
-nyquist_negative = [(float(real_mirror[i]), float(imag_mirror[i])) for i in range(0, len(omega), step)]
+# Negative frequency curve (mirror) with tooltips
+nyquist_negative = [
+    {"value": (float(real_mirror[i]), float(imag_mirror[i])), "label": f"ω = -{omega[len(omega) - 1 - i]:.3f} rad/s"}
+    for i in range(0, len(omega), step)
+]
 chart.add("G(jω), ω < 0", nyquist_negative, show_dots=False, stroke_style={"width": 4, "dasharray": "12,6"})
 
 # Critical point (-1, 0)
-chart.add("Critical Point (-1, 0)", [(-1.0, 0.0)], stroke=False, dots_size=24)
+chart.add(
+    "Critical Point (-1, 0)", [{"value": (-1.0, 0.0), "label": "Critical Point: (-1, 0)"}], stroke=False, dots_size=24
+)
 
 # Unit circle
-circle_points = []
-for angle in range(0, 361, 3):
-    rad = math.radians(angle)
-    circle_points.append((math.cos(rad), math.sin(rad)))
+circle_points = [
+    {"value": (math.cos(math.radians(a)), math.sin(math.radians(a))), "label": f"{a}°"} for a in range(0, 361, 3)
+]
 chart.add("Unit Circle", circle_points, stroke=True, show_dots=False, stroke_style={"width": 3, "dasharray": "8,6"})
 
-# Direction arrows along positive frequency curve at selected frequencies
-arrow_indices = [50, 150, 300, 500]
-arrow_head_len = 0.06
-arrow_head_wid = 0.03
-
-for idx in arrow_indices:
-    if idx + 1 >= len(omega):
-        continue
-    x0, y0 = float(real_part[idx]), float(imag_part[idx])
-    x1, y1 = float(real_part[idx + 1]), float(imag_part[idx + 1])
-
-    dx = x1 - x0
-    dy = y1 - y0
-    length = math.sqrt(dx * dx + dy * dy)
-    if length < 1e-12:
-        continue
-    ux, uy = dx / length, dy / length
-    px, py = -uy, ux
-
-    tip_x, tip_y = x0, y0
-    hb_x = tip_x - ux * arrow_head_len
-    hb_y = tip_y - uy * arrow_head_len
-
-    arrowhead = [
-        (hb_x + px * arrow_head_wid, hb_y + py * arrow_head_wid),
-        (tip_x, tip_y),
-        (hb_x - px * arrow_head_wid, hb_y - py * arrow_head_wid),
-        (tip_x, tip_y),
-    ]
-    chart.add(None, arrowhead, stroke=True, show_dots=False, fill=False, stroke_style={"width": 4})
+# Frequency annotations at key points along the curve (▶ markers with labels)
+freq_targets = [0.1, 0.5, 1.0, 2.0, 5.0, 10.0]
+freq_annotations = []
+for ft in freq_targets:
+    idx = int(np.argmin(np.abs(omega - ft)))
+    freq_annotations.append({"value": (float(real_part[idx]), float(imag_part[idx])), "label": f"ω = {ft} rad/s"})
+chart.add("Frequency ω (rad/s)", freq_annotations, stroke=False, dots_size=12)
 
 # Save
 chart.render_to_png("plot.png")
