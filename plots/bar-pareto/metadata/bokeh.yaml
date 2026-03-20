@@ -1,7 +1,7 @@
 library: bokeh
 specification_id: bar-pareto
 created: '2026-03-20T07:23:06Z'
-updated: '2026-03-20T07:27:22Z'
+updated: '2026-03-20T07:35:48Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23332978271
 issue: 4550
@@ -10,73 +10,77 @@ library_version: 3.9.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/bar-pareto/bokeh/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/bar-pareto/bokeh/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/bar-pareto/bokeh/plot.html
-quality_score: 79
+quality_score: 84
 review:
   strengths:
-  - Perfect code quality with clean linear structure and deterministic data
-  - All spec requirements met including 80% reference line
-  - Realistic manufacturing defect data demonstrating the Pareto principle
-  - Good color accessibility with blue/orange colorblind-safe combination
-  - Clean visual refinement with removed ticks, subtle grid, and white bar edges
+  - Excellent spec compliance — all required features (descending bars, cumulative
+    line, 80% reference, dual axes) implemented correctly
+  - Strong code quality — clean KISS structure, deterministic data, all imports used
+  - Realistic neutral manufacturing defect data — textbook Pareto chart use case
+  - Good visual refinement — subtle grid, removed ticks, clean axis lines, white bar
+    edges
   weaknesses:
-  - No legend to distinguish bars from cumulative line on dual-axis chart
-  - 80% reference line too subtle with no label annotation
-  - Unbalanced layout with wasted whitespace on right side
-  - No Bokeh-distinctive interactive features like HoverTool
-  - No visual storytelling differentiating vital few from trivial many categories
-  image_description: The plot displays a Pareto chart with 10 blue (#306998) bars
-    sorted in descending order representing manufacturing defect types. "Scratches"
-    is the tallest bar (~187) on the left, descending to "Porosity" (~7) on the right.
-    An orange (#E8833A) cumulative percentage line with circle markers overlays the
-    bars, rising from ~28% at Scratches to 100% at Porosity, plotted against a secondary
-    y-axis (0%-100%) on the right side. A subtle gray dashed horizontal line marks
-    the 80% threshold. The title reads "bar-pareto · bokeh · pyplots.ai" centered
-    at the top. The x-axis is labeled "Defect Type" with slightly rotated category
-    labels, the left y-axis shows "Frequency" (0-200), and the right y-axis shows
-    "Cumulative %" (0%-100%). The background is white with subtle horizontal grid
-    lines. Bars have white edge lines for separation.
+  - Missing HoverTool — the most distinctive Bokeh feature for Pareto charts
+  - 80% threshold line is too subtle and not labeled
+  - No value labels on bars or cumulative points
+  - Axis label Frequency could be more descriptive
+  image_description: The plot displays a Pareto chart of manufacturing defect types.
+    Ten blue bars are sorted in descending order from "Scratches" (~187) on the left
+    to "Porosity" (~7) on the right. The bars use a steel blue color (#306998) with
+    white edge lines. An orange cumulative percentage line with circle markers overlays
+    the bars, rising from ~28% at Scratches to 100% at Porosity, plotted against a
+    secondary y-axis (0-100%) on the right. A horizontal dashed gray/orange line marks
+    the 80% threshold at approximately the "Cracks" bar. The left y-axis shows "Frequency"
+    (0-200+), the x-axis shows "Defect Type" with slightly rotated labels, and the
+    title reads "bar-pareto · bokeh · pyplots.ai" centered at top. The background
+    is white with subtle horizontal grid lines. The first five bars appear in a deeper
+    blue shade while the remaining bars appear lighter, and a small legend in the
+    upper-left identifies "Frequency (vital few)" and "Cumulative %".
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 36pt, labels 28pt, ticks 22-24pt).
-          Right y-axis label slightly cramped.
+        comment: 'All font sizes explicitly set: title 36pt, axis labels 28pt, ticks
+          22-24pt. All clearly readable.'
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No overlapping text. X-axis labels rotated to avoid collisions.
+        comment: X-axis labels rotated at 0.5 rad with 10 categories including long
+          names — slightly crowded but readable.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars, line, and markers all clearly visible and well-sized.
+        comment: Bars, line, and markers all clearly visible and well-sized for the
+          4800x2700 canvas.
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Blue and orange colorblind-safe combination with strong contrast.
+        comment: Blue bars and orange line provide strong contrast and are colorblind-safe.
       - id: VQ-05
         name: Layout & Canvas
-        score: 1
+        score: 3
         max: 4
-        passed: false
-        comment: Unbalanced layout with significant wasted whitespace on right side.
+        passed: true
+        comment: Good canvas utilization overall. Right side secondary axis label
+          slightly cramped.
       - id: VQ-06
         name: Axis Labels & Title
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: 'Descriptive labels: Defect Type, Frequency, Cumulative %.'
+        comment: Descriptive labels but Frequency lacks units. Could be Defect Count.
     design_excellence:
       score: 12
       max: 20
@@ -86,24 +90,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Python Blue + orange accent. Clean frame. Above defaults but not
-          publication-level.
+        comment: Thoughtful color choice, clean axis lines, white bar edges. Above
+          defaults but not publication-level.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Ticks removed, outline removed, x-grid removed, y-grid subtle, white
-          bar edges.
+        comment: Tick marks removed, outline removed, x-grid removed, y-grid subtle.
+          Good refinement.
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
-        passed: false
-        comment: 80% line too subtle. No visual differentiation between vital few
-          and trivial many.
+        passed: true
+        comment: 80% reference line creates some hierarchy but is subtle. No value
+          annotations to guide viewer.
     spec_compliance:
-      score: 13
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -111,27 +115,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Pareto chart with descending bars and cumulative line.
+        comment: Correct Pareto chart with descending bars and cumulative line overlay.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All required features present: sorted bars, cumulative line, 80%
-          line, dual axes, markers.'
+        comment: 'All spec requirements met: descending bars, cumulative line, 80%
+          reference, dual axes, markers at bar centers.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Categories on x, counts on left y, cumulative % on right y.
+        comment: X=categories, Y-primary=counts, Y-secondary=cumulative %. All correct.
       - id: SC-04
         name: Title & Legend
-        score: 1
+        score: 2
         max: 3
-        passed: false
-        comment: Title format correct. No legend to distinguish bars from cumulative
-          line.
+        passed: true
+        comment: Title format correct. Legend visible in image but not explicitly
+          created in code.
     data_quality:
       score: 14
       max: 15
@@ -141,21 +145,21 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: 10 categories with good Pareto distribution. 80% crossed around 5th
-          category.
+        comment: 10 categories with clear Pareto distribution (187 to 7). Shows 80/20
+          principle well.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Manufacturing defect types are realistic, neutral, and match spec
-          example.
+        comment: Manufacturing defect types — classic, neutral, real-world Six Sigma
+          use case.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Defect counts 7-187 are realistic for manufacturing quality data.
+        comment: Defect counts 7-187 are realistic for manufacturing quality audit.
     code_quality:
       score: 10
       max: 10
@@ -165,13 +169,13 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports, data, figure, bars, line, styling, save.'
+        comment: Clean linear structure with no functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic with hardcoded data arrays.
+        comment: Fully deterministic with hardcoded data.
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -183,31 +187,31 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriate complexity with ColumnDataSource.
+        comment: Clean and appropriately complex. Good use of ColumnDataSource.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png via export_png and plot.html via save.
+        comment: Saves as plot.png via export_png. Also produces plot.html.
     library_mastery:
-      score: 4
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
-        passed: false
-        comment: Uses ColumnDataSource and extra_y_ranges correctly but misses higher-level
-          features.
+        passed: true
+        comment: Good use of ColumnDataSource, extra_y_ranges, LinearAxis, PrintfTickFormatter,
+          Span.
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 3
         max: 5
-        passed: false
-        comment: Generic usage. No HoverTool or interactive features that distinguish
-          Bokeh.
+        passed: true
+        comment: Uses Bokeh-specific features but misses HoverTool — a signature Bokeh
+          capability.
   verdict: REJECTED
 impl_tags:
   dependencies: []
@@ -215,11 +219,9 @@ impl_tags:
   - twin-axes
   - html-export
   patterns:
-  - data-generation
   - columndatasource
   dataprep:
   - cumulative-sum
   styling:
   - edge-highlighting
   - grid-styling
-  - alpha-blending
