@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 scatter-pitch-events: Soccer Pitch Event Map
 Library: bokeh 3.9.0 | Python 3.14.3
-Quality: 89/100 | Created: 2026-03-20
+Quality: 83/100 | Created: 2026-03-20
 """
 
 import numpy as np
