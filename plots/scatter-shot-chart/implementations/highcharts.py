@@ -1,7 +1,7 @@
-""" pyplots.ai
+"""pyplots.ai
 scatter-shot-chart: Basketball Shot Chart
 Library: highcharts unknown | Python 3.14.3
-Quality: 85/100 | Created: 2026-03-20
+Quality: 85/100 | Repair 1/3 | Created: 2026-03-20
 """
 
 import tempfile
@@ -24,52 +24,36 @@ np.random.seed(42)
 # Court is 50 ft wide (x: -25 to 25)
 # Basket center is 5.25 ft from baseline
 
-# Generate shot data by zone
+# Generate shot data by zone using a compact zone definition table
 shots = []
+# Zone definitions: (n, angle_range, dist_range, make_pct, shot_type, use_polar)
+zones = [
+    (80, (0, np.pi), (0, 8), 0.55, "2-pointer", True),  # Paint area
+    (100, (0.1, np.pi - 0.1), (8, 22), 0.40, "2-pointer", True),  # Mid-range
+    (120, (0.05, np.pi - 0.05), (23, 27), 0.35, "3-pointer", True),  # Arc threes
+]
+for n, (a_lo, a_hi), (d_lo, d_hi), pct, stype, _ in zones:
+    angles = np.random.uniform(a_lo, a_hi, n)
+    dists = np.random.uniform(d_lo, d_hi, n)
+    signs = np.where(np.random.random(n) > 0.5, 1, -1)
+    xs, ys = dists * np.cos(angles) * signs, dists * np.sin(angles)
+    made = np.random.random(n) < pct
+    for i in range(n):
+        shots.append({"x": float(xs[i]), "y": float(ys[i]), "made": bool(made[i]), "type": stype})
 
-# Paint area 2-pointers (close range)
-n_paint = 80
-paint_angles = np.random.uniform(0, np.pi, n_paint)
-paint_dist = np.random.uniform(0, 8, n_paint)
-paint_x = paint_dist * np.cos(paint_angles) * np.array([1 if np.random.random() > 0.5 else -1 for _ in range(n_paint)])
-paint_y = paint_dist * np.sin(paint_angles)
-paint_made = np.random.random(n_paint) < 0.55
-for i in range(n_paint):
-    shots.append({"x": float(paint_x[i]), "y": float(paint_y[i]), "made": bool(paint_made[i]), "type": "2-pointer"})
-
-# Mid-range 2-pointers
-n_mid = 100
-mid_angles = np.random.uniform(0.1, np.pi - 0.1, n_mid)
-mid_dist = np.random.uniform(8, 22, n_mid)
-mid_x = mid_dist * np.cos(mid_angles) * np.array([1 if np.random.random() > 0.5 else -1 for _ in range(n_mid)])
-mid_y = mid_dist * np.sin(mid_angles)
-mid_made = np.random.random(n_mid) < 0.40
-for i in range(n_mid):
-    shots.append({"x": float(mid_x[i]), "y": float(mid_y[i]), "made": bool(mid_made[i]), "type": "2-pointer"})
-
-# Three-pointers (arc)
-n_three = 120
-three_angles = np.random.uniform(0.05, np.pi - 0.05, n_three)
-three_dist = np.random.uniform(23, 27, n_three)
-three_x = three_dist * np.cos(three_angles) * np.array([1 if np.random.random() > 0.5 else -1 for _ in range(n_three)])
-three_y = three_dist * np.sin(three_angles)
-three_made = np.random.random(n_three) < 0.35
-for i in range(n_three):
-    shots.append({"x": float(three_x[i]), "y": float(three_y[i]), "made": bool(three_made[i]), "type": "3-pointer"})
-
-# Corner threes
+# Corner threes (rectangular distribution)
 n_corner = 40
-corner_side = np.array([1 if np.random.random() > 0.5 else -1 for _ in range(n_corner)])
-corner_x = corner_side * np.random.uniform(20, 22, n_corner)
+corner_signs = np.where(np.random.random(n_corner) > 0.5, 1, -1)
+corner_x = corner_signs * np.random.uniform(20, 22, n_corner)
 corner_y = np.random.uniform(-1, 8, n_corner)
 corner_made = np.random.random(n_corner) < 0.38
 for i in range(n_corner):
     shots.append({"x": float(corner_x[i]), "y": float(corner_y[i]), "made": bool(corner_made[i]), "type": "3-pointer"})
 
-# Free throws
+# Free throws (clustered at FT line)
 n_ft = 30
 ft_x = np.random.normal(0, 0.3, n_ft)
-ft_y = np.full(n_ft, 14.0) + np.random.normal(0, 0.2, n_ft)
+ft_y = 14.0 + np.random.normal(0, 0.2, n_ft)
 ft_made = np.random.random(n_ft) < 0.80
 for i in range(n_ft):
     shots.append({"x": float(ft_x[i]), "y": float(ft_y[i]), "made": bool(ft_made[i]), "type": "free-throw"})
@@ -169,13 +153,16 @@ chart.options.tooltip = {
 chart.options.plot_options = {"scatter": {"shadow": False, "states": {"hover": {"enabled": True}}}}
 
 # Series definitions
+# Colorblind-safe palette: blue (#4A90D9) for made, orange (#E8833A) for missed
+MADE_COLOR = "#4A90D9"
+MISSED_COLOR = "#E8833A"
 series_defs = [
-    {"name": "Made 2PT", "data": made_2pt, "color": "#2ecc71", "symbol": "circle", "radius": 10},
-    {"name": "Missed 2PT", "data": missed_2pt, "color": "#e74c3c", "symbol": "circle", "radius": 8},
-    {"name": "Made 3PT", "data": made_3pt, "color": "#27ae60", "symbol": "diamond", "radius": 11},
-    {"name": "Missed 3PT", "data": missed_3pt, "color": "#c0392b", "symbol": "diamond", "radius": 9},
-    {"name": "Made FT", "data": made_ft, "color": "#2ecc71", "symbol": "square", "radius": 9},
-    {"name": "Missed FT", "data": missed_ft, "color": "#e74c3c", "symbol": "square", "radius": 7},
+    {"name": "Made 2PT", "data": made_2pt, "color": MADE_COLOR, "symbol": "circle", "radius": 10},
+    {"name": "Missed 2PT", "data": missed_2pt, "color": MISSED_COLOR, "symbol": "circle", "radius": 8},
+    {"name": "Made 3PT", "data": made_3pt, "color": MADE_COLOR, "symbol": "diamond", "radius": 11},
+    {"name": "Missed 3PT", "data": missed_3pt, "color": MISSED_COLOR, "symbol": "diamond", "radius": 9},
+    {"name": "Made FT", "data": made_ft, "color": MADE_COLOR, "symbol": "square", "radius": 9},
+    {"name": "Missed FT", "data": missed_ft, "color": MISSED_COLOR, "symbol": "square", "radius": 7},
 ]
 
 for sdef in series_defs:
@@ -187,9 +174,9 @@ for sdef in series_defs:
     series.marker = {
         "symbol": sdef["symbol"],
         "radius": sdef["radius"],
-        "lineColor": "#ffffff" if is_made else sdef["color"],
+        "lineColor": "#ffffff" if is_made else "#ffffff",
         "lineWidth": 1 if is_made else 2,
-        "fillColor": sdef["color"] if is_made else "rgba(0,0,0,0.15)",
+        "fillColor": sdef["color"] if is_made else "rgba(232,131,58,0.45)",
     }
     series.z_index = 6 if is_made else 5
     chart.add_series(series)
