@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 line-win-probability: Win Probability Chart
 Library: altair 6.0.0 | Python 3.14.3
 Quality: 85/100 | Created: 2026-03-20
@@ -33,7 +33,6 @@ scoring_plays = [
 ]
 
 for i in range(1, len(plays)):
-    dt = plays[i] - plays[i - 1]
     drift = 0.0
     for event_time, shift, label in scoring_plays:
         if plays[i - 1] < event_time <= plays[i]:
@@ -54,6 +53,15 @@ df["below_50"] = df["win_pct"].clip(upper=50)
 df_events = pd.DataFrame(events, columns=["minute", "label"])
 df_events["win_pct"] = [np.interp(m, df["minute"], df["win_pct"]) for m in df_events["minute"]]
 
+# Manual label y-offsets tuned per event to avoid overlap
+# Positive = above point, negative = below point
+label_nudges = [8, -12, -12, -10, 7, 10, -10, -14, 7, 7]
+df_events["label_y"] = np.clip(df_events["win_pct"] + label_nudges, 5, 97)
+
+# Split events into early/late for different label alignment
+df_events_left = df_events[df_events["minute"] <= 50].copy()
+df_events_right = df_events[df_events["minute"] > 50].copy()
+
 df_quarters = pd.DataFrame({"minute": quarters, "label": quarter_labels})
 
 # Plot
@@ -71,7 +79,8 @@ area_away = base.mark_area(interpolate="monotone", opacity=0.4, color="#7B2D26")
     x="minute:Q", y=alt.Y("below_50:Q", scale=alt.Scale(domain=[0, 100])), y2=alt.datum(50)
 )
 
-line = base.mark_line(interpolate="monotone", strokeWidth=3, color="#306998").encode(
+# Use dark charcoal line instead of Python Blue to harmonize with team-colored fills
+line = base.mark_line(interpolate="monotone", strokeWidth=3.5, color="#2D2D2D").encode(
     x="minute:Q",
     y=alt.Y("win_pct:Q"),
     tooltip=[
@@ -80,9 +89,26 @@ line = base.mark_line(interpolate="monotone", strokeWidth=3, color="#306998").en
     ],
 )
 
+# Interactive nearest-point selection for crosshair effect
+nearest = alt.selection_point(nearest=True, on="pointerover", fields=["minute"], empty=False)
+
+# Invisible voronoi layer to capture mouse position
+selectors = base.mark_point(size=1, opacity=0).encode(x="minute:Q").add_params(nearest)
+
+# Crosshair vertical rule that follows cursor
+crosshair_rule = base.mark_rule(color="#666666", strokeWidth=1, strokeDash=[3, 3]).encode(
+    x="minute:Q", opacity=alt.condition(nearest, alt.value(0.7), alt.value(0))
+)
+
+# Highlight dot on line at nearest point
+highlight_dot = base.mark_circle(size=180, color="#2D2D2D", stroke="white", strokeWidth=2).encode(
+    x="minute:Q", y="win_pct:Q", opacity=alt.condition(nearest, alt.value(1), alt.value(0))
+)
+
+# Event markers: use gold/amber for clear contrast against both team fills
 event_points = (
     alt.Chart(df_events)
-    .mark_circle(size=200, color="#E84855", stroke="white", strokeWidth=2)
+    .mark_circle(size=220, color="#F5A623", stroke="#2D2D2D", strokeWidth=2)
     .encode(
         x="minute:Q",
         y="win_pct:Q",
@@ -90,10 +116,17 @@ event_points = (
     )
 )
 
-event_labels = (
-    alt.Chart(df_events)
-    .mark_text(fontSize=13, fontWeight="bold", align="left", dx=10, dy=-12, color="#333")
-    .encode(x="minute:Q", y="win_pct:Q", text="label:N")
+# Staggered event labels to prevent overlap - split into left/right aligned groups
+event_labels_left = (
+    alt.Chart(df_events_left)
+    .mark_text(fontSize=15, fontWeight="bold", align="left", dx=12, color="#2D2D2D")
+    .encode(x="minute:Q", y="label_y:Q", text="label:N")
+)
+
+event_labels_right = (
+    alt.Chart(df_events_right)
+    .mark_text(fontSize=15, fontWeight="bold", align="right", dx=-12, color="#2D2D2D")
+    .encode(x="minute:Q", y="label_y:Q", text="label:N")
 )
 
 quarter_rules = (
@@ -107,7 +140,20 @@ quarter_text = (
 )
 
 chart = (
-    (area_home + area_away + baseline + line + event_points + event_labels + quarter_rules + quarter_text)
+    (
+        area_home
+        + area_away
+        + baseline
+        + line
+        + event_points
+        + event_labels_left
+        + event_labels_right
+        + quarter_rules
+        + quarter_text
+        + selectors
+        + crosshair_rule
+        + highlight_dot
+    )
     .properties(
         width=1600,
         height=900,
