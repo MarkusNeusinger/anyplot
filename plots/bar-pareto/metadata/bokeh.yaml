@@ -1,0 +1,225 @@
+library: bokeh
+specification_id: bar-pareto
+created: '2026-03-20T07:23:06Z'
+updated: '2026-03-20T07:42:48Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23332978271
+issue: 4550
+python_version: 3.14.3
+library_version: 3.9.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/bar-pareto/bokeh/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/bar-pareto/bokeh/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/bar-pareto/bokeh/plot.html
+quality_score: 90
+review:
+  strengths:
+  - Excellent vital few / trivial many color distinction that enhances the Pareto
+    narrative
+  - All spec requirements implemented completely (descending bars, cumulative line,
+    80% threshold, secondary axis)
+  - Clean polished styling with removed ticks, subtle grid, and cohesive color palette
+  - Realistic manufacturing defect data with appropriate Pareto distribution
+  - Good use of Bokeh-specific features (HoverTool, ColumnDataSource, dual output)
+  weaknesses:
+  - Minor crowding of cumulative percentage labels at the right end where values converge
+    (94-100%)
+  - Could benefit from slightly more distinctive Bokeh features
+  image_description: The plot displays a Pareto chart of manufacturing defect types.
+    Ten descending blue bars represent defect counts, with the first five bars (Scratches=187,
+    Dents=143, Misalignment=98, Discoloration=72, Cracks=54) rendered in darker blue
+    (#306998) as the "vital few," and the remaining five (Burrs=38, Warping=27, Contamination=19,
+    Chipping=12, Porosity=7) in lighter blue (#7BA4C7) as the "trivial many." An orange
+    cumulative percentage line with circular markers overlays the bars, with percentage
+    labels (28%, 50%, 65%, 76%, 84%, 90%, 94%, 97%, 99%, 100%) above each marker.
+    A dashed orange 80% threshold line spans the full width with an "80% threshold"
+    label at the right. The right y-axis shows cumulative percentage (0-100%) with
+    "%" formatted ticks. The left y-axis shows "Defect Count" (0-200). X-axis labels
+    are slightly rotated. Title reads "bar-pareto · bokeh · pyplots.ai" centered at
+    top. A legend in the top-left corner shows "Defect Count" and "Cumulative %".
+    Background is white with subtle horizontal gridlines.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 36pt, axis labels 28pt, ticks
+          22-24pt, percentage labels 18pt, legend 20pt'
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Minor crowding of cumulative percentage labels at right end (94-100%)
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Bars, line, and markers all clearly visible with appropriate sizing
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue/orange palette is colorblind-safe with good contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good canvas utilization at 4800x2700 with balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive labels: Defect Count, Defect Type, Cumulative %'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Strong design with vital few/trivial many color coding, cohesive
+          blue-orange palette, white bar borders
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Good refinement: outline removed, ticks removed, x-grid hidden,
+          y-grid subtle'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Vital few/trivial many color distinction and 80% threshold line create
+          visual narrative
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Pareto chart with descending bars and cumulative line
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All required: descending sort, cumulative line, 80% reference, markers
+          at bar centers'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Categories on x, counts on primary y, cumulative % on secondary y
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct title format and legend labels match data
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 10 categories with clear Pareto distribution, wide range 7-187
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Manufacturing defect types represent genuine quality control scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Defect counts 7-187 realistic for manufacturing inspection
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean imports-data-plot-save structure, no functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic with hardcoded data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean and well-organized with elegant vital_mask logic
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot.png via export_png and plot.html via save
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of ColumnDataSource, categorical x_range, extra_y_ranges,
+          LinearAxis, PrintfTickFormatter, Span, Label
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: HoverTool with tooltips and HTML export leverage Bokeh's interactive
+          capabilities
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - twin-axes
+  - annotations
+  - hover-tooltips
+  - html-export
+  patterns:
+  - columndatasource
+  dataprep:
+  - cumulative-sum
+  styling:
+  - alpha-blending
+  - edge-highlighting
+  - grid-styling

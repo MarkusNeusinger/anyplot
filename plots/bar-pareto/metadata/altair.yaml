@@ -1,0 +1,222 @@
+library: altair
+specification_id: bar-pareto
+created: '2026-03-20T07:21:24Z'
+updated: '2026-03-20T07:31:05Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23332978723
+issue: 4550
+python_version: 3.14.3
+library_version: 6.0.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/bar-pareto/altair/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/bar-pareto/altair/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/bar-pareto/altair/plot.html
+quality_score: 92
+review:
+  strengths:
+  - Excellent data storytelling through vital-few/trivial-many color distinction with
+    80% threshold
+  - Clean dual-axis implementation using Altair resolve_scale pattern
+  - 'Professional polish: rounded corners, colored secondary axis, informative subtitle'
+  - Perfect spec compliance with all required features
+  - Tooltips provide additional interactivity in HTML version
+  weaknesses:
+  - 'Minor: tick font sizes could be slightly larger for the 4800x2700 canvas'
+  image_description: The plot displays a Pareto chart analyzing 10 manufacturing defect
+    categories. Bars are sorted in descending order from "Scratches" (187) to "Wrong
+    Dimensions" (8). The first 5 categories (Scratches, Dents, Misalignment, Cracks,
+    Discoloration) are rendered in dark blue (#306998) representing the "vital few,"
+    while the remaining 5 (Burrs, Warping, Contamination, Missing Parts, Wrong Dimensions)
+    are in light gray-blue (#A8C4D9) representing the "trivial many." An orange (#D4770B)
+    cumulative percentage line with filled circle markers overlays the bars, using
+    a secondary y-axis (0-105%) on the right side, with the axis labels and title
+    colored orange to match. A dashed gray 80% reference line crosses horizontally,
+    with an "80%" label at the top-left. The title reads "Manufacturing Defect Analysis
+    · bar-pareto · altair · pyplots.ai" with a subtitle "Vital few defects (dark)
+    account for 80% of all occurrences." X-axis labels are angled at -45°. Subtle
+    dashed y-axis gridlines are present. Bars have rounded top corners. View border
+    is removed.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 28pt, axis titles 22pt, ticks
+          18pt). Clearly readable.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: X-axis labels angled at -45° prevent overlap. All text fully readable.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Bars clearly visible. Line has strokeWidth=3 with size=120 markers.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue/light-blue bars with orange line is colorblind-safe.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 1600x900 chart fills canvas well with balanced margins.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive labels with units: Defect Type, Frequency, Cumulative
+          Percentage (%).'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful vital-few/trivial-many color coding, orange secondary
+          axis, rounded corners, subtitle.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: View stroke removed, subtle dashed gridlines at 15% opacity.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Color distinction and 80% threshold tell clear Pareto story. Subtitle
+          guides viewer.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Pareto chart with descending bars and cumulative line.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features: descending sort, cumulative line, secondary y-axis,
+          80% reference line, markers.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Categories on x, counts on left y, cumulative % on right y.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title includes bar-pareto · altair · pyplots.ai. Subtitle explains
+          color coding.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 10 categories with clear Pareto distribution and good variation.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Manufacturing defect data matching spec context. Neutral scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Defect counts 8-187 are realistic for manufacturing QC.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean imports-data-plot-save structure. No functions or classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hardcoded data.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only altair and pandas imported, both used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-organized. Appropriate complexity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with scale_factor=3.0 and plot.html.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert use of declarative grammar: layered composition, resolve_scale,
+          conditional encoding, tooltips.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses alt.condition, resolve_scale(y=independent), alt.OverlayMarkDef.
+          Good but common patterns.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  dataprep:
+  - cumulative-sum
+  styling:
+  - grid-styling
+  - edge-highlighting
