@@ -1,7 +1,6 @@
-""" pyplots.ai
+"""pyplots.ai
 root-locus-basic: Root Locus Plot for Control Systems
 Library: altair 6.0.0 | Python 3.14.3
-Quality: 87/100 | Created: 2026-03-20
 """
 
 import altair as alt
@@ -81,8 +80,15 @@ for zeta in [0.2, 0.4, 0.6, 0.8]:
     for side, sign in [("upper", 1), ("lower", -1)]:
         seg = f"ζ={zeta}_{side}"
         damping_rows.append({"gx": 0.0, "gy": 0.0, "seg": seg, "ord": 0})
-        damping_rows.append({"gx": 6.0 * np.cos(angle), "gy": sign * 6.0 * np.sin(angle), "seg": seg, "ord": 1})
+        damping_rows.append({"gx": 5.0 * np.cos(angle), "gy": sign * 5.0 * np.sin(angle), "seg": seg, "ord": 1})
 damping_df = pd.DataFrame(damping_rows)
+
+# Damping ratio labels at end of guide lines
+damping_label_rows = []
+for zeta in [0.4, 0.8]:
+    angle = np.pi - np.arccos(zeta)
+    damping_label_rows.append({"lx": 4.6 * np.cos(angle), "ly": 4.6 * np.sin(angle), "label": f"ζ={zeta}"})
+damping_label_df = pd.DataFrame(damping_label_rows)
 
 # Natural frequency arcs (ωn = 1, 2, 3, 4) in left half-plane
 wn_rows = []
@@ -95,7 +101,7 @@ wn_df = pd.DataFrame(wn_rows)
 # Real axis segments: (-1, 0) and (-∞, -2)
 real_axis_df = pd.DataFrame(
     {
-        "rx": [-1.0, 0.0, -6.0, -2.0],
+        "rx": [-1.0, 0.0, -5.0, -2.0],
         "ry": [0.0, 0.0, 0.0, 0.0],
         "seg": ["seg1", "seg1", "seg2", "seg2"],
         "ord": [0, 1, 0, 1],
@@ -105,7 +111,7 @@ real_axis_df = pd.DataFrame(
 # Arrow direction indicators along complex branches
 arrows = []
 for b in range(n_roots):
-    for idx in [400, 550]:
+    for idx in [350, 500]:
         if idx + 5 < len(gains):
             r0 = all_roots[idx, b]
             if abs(r0.imag) > 0.3:
@@ -113,9 +119,8 @@ for b in range(n_roots):
 arrow_df = pd.DataFrame(arrows) if arrows else pd.DataFrame({"ax": [], "ay": [], "branch": []})
 
 # Equal-scaling axes centered on origin (square canvas, equal domain = equal scaling)
-axis_range = 6.0
-x_scale = alt.Scale(domain=[-axis_range, axis_range], nice=False)
-y_scale = alt.Scale(domain=[-axis_range, axis_range], nice=False)
+x_scale = alt.Scale(domain=[-5.0, 5.0], nice=False)
+y_scale = alt.Scale(domain=[-5.0, 5.0], nice=False)
 
 branch_palette = ["#306998", "#e07b39", "#2ca02c"]
 branch_domain = ["Branch 1", "Branch 2", "Branch 3"]
@@ -123,7 +128,7 @@ branch_domain = ["Branch 1", "Branch 2", "Branch 3"]
 # Layer: Locus branches — FIRST so its axis config takes effect
 locus_layer = (
     alt.Chart(locus_df)
-    .mark_line(strokeWidth=2.5, opacity=0.9)
+    .mark_line(strokeWidth=2.8, opacity=0.92)
     .encode(
         x=alt.X(
             "real:Q",
@@ -131,13 +136,15 @@ locus_layer = (
             title="Real Axis (σ)",
             axis=alt.Axis(
                 labelFontSize=16,
-                titleFontSize=20,
+                titleFontSize=21,
                 titleFontWeight="bold",
-                titleColor="#333333",
-                labelColor="#333333",
+                titleColor="#2a2a2a",
+                labelColor="#444444",
                 grid=False,
-                tickCount=7,
-                titlePadding=12,
+                tickCount=6,
+                titlePadding=14,
+                domainColor="#888888",
+                tickColor="#888888",
             ),
         ),
         y=alt.Y(
@@ -146,13 +153,15 @@ locus_layer = (
             title="Imaginary Axis (jω)",
             axis=alt.Axis(
                 labelFontSize=16,
-                titleFontSize=20,
+                titleFontSize=21,
                 titleFontWeight="bold",
-                titleColor="#333333",
-                labelColor="#333333",
+                titleColor="#2a2a2a",
+                labelColor="#444444",
                 grid=False,
-                tickCount=7,
-                titlePadding=12,
+                tickCount=6,
+                titlePadding=14,
+                domainColor="#888888",
+                tickColor="#888888",
             ),
         ),
         color=alt.Color(
@@ -181,14 +190,21 @@ locus_layer = (
 # Layer: Damping ratio lines
 damping_layer = (
     alt.Chart(damping_df)
-    .mark_line(strokeWidth=1, strokeDash=[6, 4], color="#c0c0c0")
+    .mark_line(strokeWidth=0.8, strokeDash=[6, 4], color="#d0d0d0")
     .encode(x=alt.X("gx:Q", scale=x_scale), y=alt.Y("gy:Q", scale=y_scale), detail="seg:N", order="ord:Q")
+)
+
+# Layer: Damping ratio labels
+damping_label_layer = (
+    alt.Chart(damping_label_df)
+    .mark_text(fontSize=12, color="#aaaaaa", fontStyle="italic", align="center")
+    .encode(x=alt.X("lx:Q", scale=x_scale), y=alt.Y("ly:Q", scale=y_scale), text="label:N")
 )
 
 # Layer: Natural frequency arcs
 wn_layer = (
     alt.Chart(wn_df)
-    .mark_line(strokeWidth=1, strokeDash=[4, 4], color="#c0c0c0")
+    .mark_line(strokeWidth=0.8, strokeDash=[4, 4], color="#d0d0d0")
     .encode(x=alt.X("gx:Q", scale=x_scale), y=alt.Y("gy:Q", scale=y_scale), detail="wn:N", order="ord:Q")
 )
 
@@ -224,7 +240,7 @@ crossing_layer = (
 # Layer: Crossing labels
 crossing_text = (
     alt.Chart(crossing_df)
-    .mark_text(fontSize=15, fontWeight="bold", color="#d62728", align="left", dx=18)
+    .mark_text(fontSize=17, fontWeight="bold", color="#c5211e", align="left", dx=20, font="sans-serif")
     .encode(x=alt.X("real:Q", scale=x_scale), y=alt.Y("imaginary:Q", scale=y_scale), text="label:N")
 )
 
@@ -266,6 +282,7 @@ chart = (
     (
         locus_layer
         + damping_layer
+        + damping_label_layer
         + wn_layer
         + real_axis_layer
         + poles_layer
@@ -281,11 +298,14 @@ chart = (
         title=alt.Title(
             "root-locus-basic · altair · pyplots.ai",
             fontSize=28,
-            color="#222222",
-            subtitle="G(s) = 1 / s(s+1)(s+2) — Closed-Loop Pole Trajectories vs Gain K",
-            subtitleFontSize=17,
-            subtitleColor="#666666",
-            subtitlePadding=8,
+            fontWeight="bold",
+            color="#1a1a1a",
+            subtitle="G(s) = 1 / s(s+1)(s+2)  ·  Closed-Loop Pole Trajectories vs Gain K",
+            subtitleFontSize=18,
+            subtitleColor="#555555",
+            subtitlePadding=10,
+            anchor="start",
+            offset=10,
         ),
     )
     .configure_view(strokeWidth=0)
