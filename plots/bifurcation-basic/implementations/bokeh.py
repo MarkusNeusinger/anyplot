@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 bifurcation-basic: Bifurcation Diagram for Dynamical Systems
 Library: bokeh 3.9.0 | Python 3.14.3
 Quality: 88/100 | Created: 2026-03-20
@@ -13,9 +13,9 @@ from bokeh.resources import Resources
 
 # Data - Logistic map: x(n+1) = r * x(n) * (1 - x(n))
 r_min, r_max = 2.5, 4.0
-n_r = 2000
-n_transient = 200
-n_keep = 100
+n_r = 3000
+n_transient = 300
+n_keep = 150
 
 r_values = np.linspace(r_min, r_max, n_r)
 all_r = np.repeat(r_values, n_keep)
@@ -31,7 +31,26 @@ for r in r_values:
         all_x[idx] = x
         idx += 1
 
-source = ColumnDataSource(data={"r": all_r, "x": all_x})
+# Regime-based coloring for visual storytelling
+colors = np.empty(len(all_r), dtype="U7")
+alphas = np.empty(len(all_r))
+
+for i in range(len(all_r)):
+    r = all_r[i]
+    if r < 3.0:
+        colors[i] = "#306998"  # Python blue - stable
+        alphas[i] = 0.35
+    elif r < 3.449:
+        colors[i] = "#4A90D9"  # Lighter blue - periodic
+        alphas[i] = 0.25
+    elif r < 3.5699:
+        colors[i] = "#8B5CF6"  # Purple - higher period
+        alphas[i] = 0.20
+    else:
+        colors[i] = "#E74C3C"  # Red-orange - chaotic
+        alphas[i] = 0.15
+
+source = ColumnDataSource(data={"r": all_r, "x": all_x, "color": colors, "alpha": alphas})
 
 # Plot
 p = figure(
@@ -46,7 +65,7 @@ p = figure(
     active_scroll="wheel_zoom",
 )
 
-scatter = p.scatter(x="r", y="x", source=source, size=1, color="#306998", alpha=0.12, line_color=None)
+scatter = p.scatter(x="r", y="x", source=source, size=1.5, color="color", alpha="alpha", line_color=None)
 
 # HoverTool - Bokeh-distinctive interactive feature
 hover = HoverTool(
@@ -55,7 +74,7 @@ hover = HoverTool(
 p.add_tools(hover)
 
 # Vertical spans at key bifurcation points for visual storytelling
-bif_spans = [(3.0, "Period-2"), (3.449, "Period-8"), (3.5699, "Chaos onset")]
+bif_spans = [(3.0, "Period-2"), (3.449, "Period-4"), (3.5699, "Chaos onset")]
 for r_bif, _ in bif_spans:
     span = Span(
         location=r_bif, dimension="height", line_color="#AA3939", line_width=2, line_alpha=0.25, line_dash="dashed"
@@ -63,7 +82,11 @@ for r_bif, _ in bif_spans:
     p.add_layout(span)
 
 # Key bifurcation point annotations - spread apart for readability
-annotations = [(3.0, 0.68, "r ≈ 3.0\nPeriod-2"), (3.449, 0.92, "r ≈ 3.449"), (3.5699, 0.05, "r ≈ 3.57\nOnset of chaos")]
+annotations = [
+    (3.0, 0.68, "r ≈ 3.0\nPeriod-2"),
+    (3.449, 0.92, "r ≈ 3.449\nPeriod-4"),
+    (3.5699, 0.05, "r ≈ 3.57\nOnset of chaos"),
+]
 
 for r_bif, y_pos, label_text in annotations:
     label = Label(
