@@ -1,7 +1,7 @@
 """ pyplots.ai
 line-parametric: Parametric Curve Plot
 Library: highcharts unknown | Python 3.14.3
-Quality: 76/100 | Created: 2026-03-20
+Quality: 77/100 | Created: 2026-03-20
 """
 
 import colorsys
