@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 line-win-probability: Win Probability Chart
 Library: pygal 3.1.0 | Python 3.14.3
 Quality: 76/100 | Created: 2026-03-20
@@ -76,18 +76,26 @@ win_prob[plays] = 0.97
 # Convert to percentages
 win_pct = [p * 100 for p in win_prob]
 
-# Custom style - Eagles teal (#004C54) as primary color
+# Two-color fill data: split at 50% baseline
+# Cowboys fill: constant 50 (renders first, fills 0-50 in Cowboys blue)
+cowboys_fill = [50.0] * len(win_pct)
+# Eagles fill: actual win probability (renders second, fills 0-pct in Eagles teal)
+# When pct > 50: Eagles teal covers Cowboys blue, teal visible from 50 to pct
+# When pct < 50: Cowboys blue visible from pct to 50 (showing Cowboys momentum)
+eagles_fill = [round(pct, 1) for pct in win_pct]
+
+# Custom style - Eagles teal (#004C54) vs Cowboys navy (#003594)
 custom_style = Style(
     background="white",
     plot_background="white",
     foreground="#2d2d2d",
     foreground_strong="#2d2d2d",
     foreground_subtle="#e0e0e0",
-    colors=("#004C54", "#999999", "#d4380d"),
+    colors=("#003594", "#004C54", "#1a1a1a", "#d4380d"),
     font_family="DejaVu Sans, Helvetica, Arial, sans-serif",
     title_font_family="DejaVu Sans, Helvetica, Arial, sans-serif",
     title_font_size=56,
-    label_font_size=40,
+    label_font_size=36,
     major_label_font_size=42,
     value_font_size=32,
     legend_font_size=34,
@@ -95,8 +103,8 @@ custom_style = Style(
     label_font_family="DejaVu Sans, Helvetica, Arial, sans-serif",
     major_label_font_family="DejaVu Sans, Helvetica, Arial, sans-serif",
     value_font_family="DejaVu Sans, Helvetica, Arial, sans-serif",
-    opacity=0.30,
-    opacity_hover=0.45,
+    opacity=0.55,
+    opacity_hover=0.65,
     guide_stroke_color="#e0e0e0",
     guide_stroke_dasharray="3,3",
     major_guide_stroke_color="#cccccc",
@@ -114,11 +122,11 @@ chart = pygal.Line(
     height=2700,
     title="Eagles vs Cowboys (24-17) \u00b7 line-win-probability \u00b7 pygal \u00b7 pyplots.ai",
     x_title="Game Progression",
-    y_title="Eagles Win Probability (%)",
+    y_title="Win Probability (%)",
     style=custom_style,
-    fill=True,
+    fill=False,
     show_dots=False,
-    stroke_style={"width": 5},
+    stroke_style={"width": 4},
     show_y_guides=True,
     show_x_guides=False,
     show_legend=True,
@@ -132,7 +140,7 @@ chart = pygal.Line(
     max_scale=10,
     margin_bottom=120,
     margin_left=100,
-    margin_right=50,
+    margin_right=60,
     margin_top=60,
     spacing=12,
     tooltip_border_radius=8,
@@ -140,7 +148,10 @@ chart = pygal.Line(
     show_minor_x_labels=False,
 )
 
-# Eagles win probability line with filled area
+# Series 1: Cowboys fill area (constant 50%, fills 0-50 in Cowboys blue)
+chart.add("DAL Cowboys", cowboys_fill, fill=True, show_dots=False, stroke_style={"width": 0})
+
+# Series 2: Eagles win probability (fills 0-pct in Eagles teal, overlaying Cowboys)
 eagles_data = []
 for i, pct in enumerate(win_pct):
     label = scoring_events.get(i, None)
@@ -148,23 +159,45 @@ for i, pct in enumerate(win_pct):
         eagles_data.append({"value": round(pct, 1), "label": label})
     else:
         eagles_data.append(round(pct, 1))
-chart.add("Eagles Win Probability", eagles_data, fill=True, stroke_style={"width": 5})
+chart.add("PHI Eagles", eagles_data, fill=True, stroke_style={"width": 5})
 
-# 50% baseline reference line
+# Series 3: 50% baseline reference line (prominent, dark, dashed)
 baseline = [50] * len(win_pct)
-chart.add("50% Baseline", baseline, fill=False, show_dots=False, stroke_style={"width": 3, "dasharray": "16, 10"})
+chart.add("50% Baseline", baseline, fill=False, show_dots=False, stroke_style={"width": 6, "dasharray": "20, 12"})
 
-# Scoring event markers (prominent dots)
+# Series 4: Scoring event markers with labels
 event_series = [None] * len(win_pct)
 for idx, label in scoring_events.items():
     event_series[idx] = {"value": round(win_pct[idx], 1), "label": label}
-chart.add("Scoring Events", event_series, fill=False, show_dots=True, dots_size=20, stroke=False)
+chart.add("Key Plays", event_series, fill=False, show_dots=True, dots_size=22, stroke=False)
 
-# X-axis labels - only show quarter/period markers
+# X-axis labels: quarter markers + scoring event annotations
+x_labels = []
 quarter_plays = {0: "Kickoff", 30: "Q2", 60: "Halftime", 90: "Q4", 120: "Final"}
-chart.x_labels = [quarter_plays.get(i, None) for i in range(plays + 1)]
-chart.x_labels_major_count = 5
+for i in range(plays + 1):
+    if i in quarter_plays:
+        x_labels.append(quarter_plays[i])
+    elif i in scoring_events:
+        x_labels.append(scoring_events[i])
+    else:
+        x_labels.append("")
+chart.x_labels = x_labels
+chart.x_labels_major = [
+    "Kickoff",
+    "Q2",
+    "Halftime",
+    "Q4",
+    "Final",
+    "DAL FG (3-0)",
+    "PHI TD (7-3)",
+    "DAL TD (10-7)",
+    "PHI TD (14-10)",
+    "PHI FG (17-10)",
+    "DAL TD (17-17)",
+    "PHI TD (24-17)",
+]
 chart.truncate_label = -1
+chart.x_label_rotation = 35
 
 # Save
 chart.render_to_file("plot.html")
