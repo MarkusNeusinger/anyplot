@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 scatter-pitch-events: Soccer Pitch Event Map
 Library: pygal 3.1.0 | Python 3.14.3
-Quality: 68/100 | Created: 2026-03-20
+Quality: 78/100 | Created: 2026-03-20
 """
 
 import math

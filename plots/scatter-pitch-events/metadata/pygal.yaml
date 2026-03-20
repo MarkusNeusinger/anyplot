@@ -1,7 +1,7 @@
 library: pygal
 specification_id: scatter-pitch-events
 created: '2026-03-20T12:33:29Z'
-updated: '2026-03-20T12:37:51Z'
+updated: '2026-03-20T12:46:46Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23342848750
 issue: 4417
@@ -10,82 +10,82 @@ library_version: 3.1.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/scatter-pitch-events/pygal/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/scatter-pitch-events/pygal/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/scatter-pitch-events/pygal/plot.html
-quality_score: 68
+quality_score: 78
 review:
   strengths:
-  - Excellent pitch rendering with accurate FIFA dimensions and all major markings
-  - Thematic green background is aesthetically appropriate and distinctive
-  - Realistic well-distributed synthetic match event data with sensible success rates
-  - Perfect code quality with clean structure and reproducibility
-  - Good canvas utilization with balanced margins
+  - Accurate pitch rendering with all FIFA standard markings (penalty areas, goal
+    areas, center circle, corner arcs)
+  - Good use of pygal None-break technique for discontinuous pass/shot line segments
+  - Thoughtful color palette differentiating 8 event categories with colorblind consideration
+  - Clean KISS code structure with realistic data generation and proper seed
   weaknesses:
-  - All event types use identical circle markers — spec requires distinct shapes per
-    event type
-  - No directional arrows for passes and shots as required by spec
-  - Successful vs unsuccessful distinction nearly invisible — size and color differences
-    too subtle
-  - No visual hierarchy or storytelling — all events compete equally for attention
-  - Legend color swatches tiny making color identification difficult
-  - Low library mastery — does not leverage pygal-specific features
-  image_description: 'The plot displays a soccer pitch on a green background (#388e3c)
-    with white pitch markings including the outline, penalty areas, goal areas, center
-    circle, halfway line, center spot, and penalty arcs. Scattered across the pitch
-    are colored circular dots representing match events: blue dots for passes (successful
-    in brighter blue, unsuccessful in lighter blue), red/pink dots for shots (successful
-    in bright red, unsuccessful in lighter pink), orange dots for tackles (successful
-    in bright orange, unsuccessful in lighter orange), and purple dots for interceptions
-    (successful in saturated purple, unsuccessful in lighter purple). The title "scatter-pitch-events
-    · pygal · pyplots.ai" appears in white at the top. A legend at the bottom lists
-    all 8 event categories in 4 columns. No axis labels or grid lines are shown —
-    axes are hidden, which is appropriate for a pitch diagram. The pitch fills most
-    of the canvas with good proportions.'
+  - Unsuccessful pass lines (light blue dashed) are nearly invisible against the green
+    pitch background
+  - Small dot sizes (dots_size=2-3) for some series make events hard to distinguish
+  - Pass line web creates visual clutter that dominates the plot and obscures other
+    event types
+  - No true directional arrows - line segments do not clearly convey direction of
+    play
+  image_description: 'The plot shows a soccer pitch rendered with a dark green background
+    and white pitch markings (outline, penalty areas, goal areas, center circle, halfway
+    line, penalty arcs, and corner arcs). The title "scatter-pitch-events · pygal
+    · pyplots.ai" appears at the top in white text. Match events are plotted across
+    the pitch: successful passes shown as blue line segments with small dots, unsuccessful
+    passes as very faint light-blue dashed lines, successful shots (goals) as prominent
+    red lines with large dots converging toward the right goal, unsuccessful shots
+    as lighter pink dashed lines, tackles as orange/peach dots of varying sizes, and
+    interceptions as teal dots. A legend at the bottom shows 8 categories in 4 columns.
+    The pitch proportions appear correct (landscape). Pass lines create a web pattern
+    across the pitch. Shot lines cluster in the attacking third toward the right goal.'
   criteria_checklist:
     visual_quality:
-      score: 20
+      score: 21
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title=52, label=36, legend=30). All text
-          readable.
+        comment: Font sizes explicitly set (title=52, label=36, legend=32). Title
+          readable, legend adequate.
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: No significant text overlap. Legend items spaced adequately in 4
-          columns.
+        comment: No text overlap. Pass line segments overlap creating visual noise
+          but text is clean.
       - id: VQ-03
         name: Element Visibility
         score: 3
         max: 6
         passed: false
-        comment: Dots too small on large canvas. Success/failure size difference (8
-          vs 6) nearly indistinguishable.
+        comment: Unsuccessful pass lines nearly invisible against green. Small dots
+          (size 2-3) hard to distinguish.
       - id: VQ-04
         name: Color Accessibility
-        score: 2
-        max: 4
-        passed: false
-        comment: Event type colors distinguishable but success/failure saturation
-          pairs too similar for colorblind users.
-      - id: VQ-05
-        name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Pitch fills ~70% of canvas with balanced margins. Good aspect ratio.
+        comment: Blue/red/orange/teal palette is colorblind-friendly. Light blue passes
+          blend with green pitch.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Pitch fills canvas well with good proportions. Slight excess margin
+          at top/bottom.
       - id: VQ-06
         name: Axis Labels & Title
         score: 1
         max: 2
-        passed: false
-        comment: Axes hidden (appropriate for pitch map) but no unit indication anywhere.
+        passed: true
+        comment: Axes hidden intentionally for pitch map. Title correctly formatted.
+          No dimension labels.
     design_excellence:
-      score: 11
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -93,23 +93,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Thematic green pitch background, custom color palette, clean white
-          markings.
+        comment: Green pitch with custom color palette shows design intent. Above
+          defaults but not publication-quality.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Axes/grid hidden, rounded line caps on pitch markings, generous margins.
+        comment: Axes and grid hidden appropriately. Clean pitch rendering. Good stroke
+          style usage.
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 3
         max: 6
         passed: false
-        comment: No visual hierarchy or focal point. All events compete equally for
-          attention.
+        comment: Some hierarchy with shot emphasis but pass line web dominates and
+          obscures the story.
     spec_compliance:
-      score: 10
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -117,27 +118,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct XY scatter on pitch diagram.
+        comment: Correct XY scatter plot on pitch diagram.
       - id: SC-02
         name: Required Features
-        score: 1
+        score: 3
         max: 4
-        passed: false
-        comment: Missing distinct marker shapes per event type and directional arrows
-          for passes/shots. Missing corner arcs.
+        passed: true
+        comment: All pitch markings present. Distinct markers/colors. Missing true
+          directional arrows (pygal limitation).
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly mapped to pitch coordinates (0-105, 0-68).
+        comment: X/Y correctly mapped to pitch coordinates (0-105m, 0-68m).
       - id: SC-04
         name: Title & Legend
-        score: 1
+        score: 3
         max: 3
-        passed: false
-        comment: Title format correct. Legend has 8 entries with tiny color swatches
-          making identification difficult.
+        passed: true
+        comment: Title format correct. Legend has 8 descriptive entries.
     data_quality:
       score: 14
       max: 15
@@ -147,21 +147,20 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: All 4 event types with both outcomes. Shots clustered in attacking
-          third.
+        comment: All 4 event types with both outcomes. Good spatial distribution.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic soccer match event data with plausible counts and success
-          rates.
+        comment: Soccer match events with FIFA-standard pitch. Neutral, plausible
+          scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: FIFA standard pitch dimensions. All coordinates in valid ranges.
+        comment: Realistic event counts and outcome probabilities for a match segment.
     code_quality:
       score: 10
       max: 10
@@ -171,7 +170,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: imports, data, style, chart, save.'
+        comment: Linear flow with no functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -189,35 +188,36 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized. Repetition inherent to data structure.
+        comment: Clean, appropriate complexity. None-break technique well-applied.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html. Current pygal API.
+        comment: Saves plot.png and plot.html. Current pygal API.
     library_mastery:
-      score: 3
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 2
+        score: 4
         max: 5
-        passed: false
-        comment: Basic pygal.XY usage. Pitch markings as None-labeled line series
-          works but is not sophisticated.
+        passed: true
+        comment: Good use of XY chart, None-break technique, stroke_style dicts, label
+          dicts for tooltips.
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 3
         max: 5
-        passed: false
-        comment: Generic XY scatter. Tooltip labels nice for HTML but no benefit in
-          PNG.
+        passed: true
+        comment: 'Uses pygal-specific: None-break, tooltip labels, stroke_style, dual
+          SVG+PNG output.'
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
+  - layer-composition
   - custom-legend
   - html-export
   patterns:
@@ -226,3 +226,4 @@ impl_tags:
   dataprep: []
   styling:
   - dark-theme
+  - alpha-blending
