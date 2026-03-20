@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 scatter-shot-chart: Basketball Shot Chart
 Library: bokeh 3.9.0 | Python 3.14.3
-Created: 2026-03-20
+Quality: 91/100 | Created: 2026-03-20
 """
 
 import numpy as np
