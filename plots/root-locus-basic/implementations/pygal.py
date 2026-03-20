@@ -1,7 +1,6 @@
-""" pyplots.ai
+"""pyplots.ai
 root-locus-basic: Root Locus Plot for Control Systems
 Library: pygal 3.1.0 | Python 3.14.3
-Quality: 76/100 | Created: 2026-03-20
 """
 
 import numpy as np
@@ -74,12 +73,12 @@ custom_style = Style(
     guide_stroke_color="#e8e8e8",
     guide_stroke_dasharray="3, 5",
     colors=(
-        "#306998",  # Root locus branches
-        "#455a64",  # Real-axis locus (dark blue-gray, clearly visible)
+        "#306998",  # Root locus branches (blue)
+        "#e65100",  # Real-axis locus (orange — contrasts with axis)
         "#c62828",  # Open-loop poles (red)
-        "#00897b",  # Open-loop zero (teal — colorblind-safe)
-        "#e65100",  # Stability boundary (jω crossings)
-        "#306998",  # Gain direction arrows (match locus color)
+        "#6A1B9A",  # Open-loop zero (purple — colorblind-safe vs red)
+        "#ef6c00",  # Stability boundary (jω crossings, amber)
+        "#1565C0",  # Gain direction arrows (dark blue, visible)
         "#c8c8c8",  # ζ guide lines
         "#c8c8c8",  # ωn guide semicircles
     ),
@@ -99,15 +98,15 @@ custom_style = Style(
 )
 
 chart = pygal.XY(
-    width=4800,
-    height=2700,
+    width=3600,
+    height=3600,
     style=custom_style,
     title="root-locus-basic · pygal · pyplots.ai",
     x_title="Real Axis (σ)",
     y_title="Imaginary Axis (jω)",
     show_legend=True,
     legend_at_bottom=True,
-    legend_at_bottom_columns=4,
+    legend_at_bottom_columns=3,
     legend_box_size=24,
     stroke=True,
     dots_size=0,
@@ -119,7 +118,7 @@ chart = pygal.XY(
     margin_left=80,
     margin_right=50,
     margin_top=55,
-    xrange=(-6, 3),
+    xrange=(-6, 4),
     range=(-5, 5),
     print_values=False,
     print_zeroes=False,
@@ -136,7 +135,7 @@ for b in range(n_branches):
     branch_data = []
     for i in range(len(gains)):
         r, im = float(loci[i, b].real), float(loci[i, b].imag)
-        if -6 <= r <= 3 and -5 <= im <= 5:
+        if -6 <= r <= 4 and -5 <= im <= 5:
             branch_data.append({"value": (round(r, 4), round(im, 4)), "label": f"K = {gains[i]:.2f}"})
     locus_pts.extend(branch_data)
     locus_pts.append(None)
@@ -145,16 +144,16 @@ chart.add(
     "Root Locus", locus_pts, stroke_style={"width": 8, "linecap": "round"}, show_dots=False, allow_interruptions=True
 )
 
-# Real-axis locus segments
+# Real-axis locus segments — thick orange line clearly visible against the axis
 real_pts = []
 for seg_start, seg_end in real_segments:
-    for x in np.linspace(seg_start, seg_end, 40):
+    for x in np.linspace(seg_start, seg_end, 60):
         real_pts.append((round(float(x), 3), 0.0))
     real_pts.append(None)
 chart.add(
     "Real-Axis Locus",
     real_pts,
-    stroke_style={"width": 10, "linecap": "round"},
+    stroke_style={"width": 14, "linecap": "round"},
     show_dots=False,
     allow_interruptions=True,
 )
@@ -178,9 +177,9 @@ for ag in arrow_gains:
     idx = np.argmin(np.abs(gains - ag))
     for b in range(n_branches):
         r, im = float(loci[idx, b].real), float(loci[idx, b].imag)
-        if -6 <= r <= 3 and -5 <= im <= 5:
+        if -6 <= r <= 4 and -5 <= im <= 5:
             arrow_pts.append({"value": (round(r, 3), round(im, 3)), "label": f"K = {ag} →"})
-chart.add("Gain Direction (K →)", arrow_pts, stroke=False, dots_size=14)
+chart.add("Gain Direction (K →)", arrow_pts, stroke=False, dots_size=26)
 
 # Constant damping ratio guide lines (ζ rays from origin)
 zeta_pts = []
