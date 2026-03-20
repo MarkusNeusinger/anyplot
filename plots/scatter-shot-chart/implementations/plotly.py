@@ -1,7 +1,7 @@
-""" pyplots.ai
+"""pyplots.ai
 scatter-shot-chart: Basketball Shot Chart
 Library: plotly 6.6.0 | Python 3.14.3
-Quality: 89/100 | Created: 2026-03-20
+Quality: repair-2 | Created: 2026-03-20
 """
 
 import numpy as np
@@ -60,23 +60,46 @@ overall_pct = np.mean(made) * 100
 # Court drawing shapes
 court_shapes = []
 
+# Court shadow for subtle depth
+court_shapes.append(
+    {
+        "type": "rect",
+        "x0": -24.6,
+        "y0": -0.4,
+        "x1": 25.4,
+        "y1": 47.4,
+        "line": {"width": 0},
+        "fillcolor": "rgba(80,60,40,0.08)",
+        "layer": "below",
+    }
+)
+
 # Subtle court floor — warm hardwood tone (layer below traces so shots are visible)
 court_shapes.append(
-    dict(
-        type="rect",
-        x0=-25,
-        y0=0,
-        x1=25,
-        y1=47,
-        line=dict(color="#6B5B4F", width=2.5),
-        fillcolor="#FDF6EC",
-        layer="below",
-    )
+    {
+        "type": "rect",
+        "x0": -25,
+        "y0": 0,
+        "x1": 25,
+        "y1": 47,
+        "line": {"color": "#6B5B4F", "width": 2.5},
+        "fillcolor": "#FDF6EC",
+        "layer": "below",
+    }
 )
 
 # Paint / key area with subtle highlight
 court_shapes.append(
-    dict(type="rect", x0=-8, y0=0, x1=8, y1=19, line=dict(color="#6B5B4F", width=2), fillcolor="#F5EBD8", layer="below")
+    {
+        "type": "rect",
+        "x0": -8,
+        "y0": 0,
+        "x1": 8,
+        "y1": 19,
+        "line": {"color": "#6B5B4F", "width": 2},
+        "fillcolor": "#F5EBD8",
+        "layer": "below",
+    }
 )
 
 # Free-throw circle (6 ft radius at y=19)
@@ -100,7 +123,15 @@ corner_3_right_y = [0, 23.75 * np.sin(np.arccos(22 / 23.75))]
 
 # Backboard
 court_shapes.append(
-    dict(type="line", x0=-3, y0=-0.5, x1=3, y1=-0.5, line=dict(color="#6B5B4F", width=3), layer="below")
+    {
+        "type": "line",
+        "x0": -3,
+        "y0": -0.5,
+        "x1": 3,
+        "y1": -0.5,
+        "line": {"color": "#6B5B4F", "width": 3},
+        "layer": "below",
+    }
 )
 
 # Basket (rim)
@@ -112,7 +143,7 @@ rim_y = 1.25 + 0.75 * np.sin(theta_rim)
 fig = go.Figure()
 
 # Court line style
-line_style = dict(color="#6B5B4F", width=2)
+line_style = {"color": "#6B5B4F", "width": 2}
 
 # Three-point arc
 fig.add_trace(
@@ -120,7 +151,7 @@ fig.add_trace(
         x=np.concatenate([[-22], three_x[::-1], [22]]),
         y=np.concatenate([[0], three_y[::-1], [0]]),
         mode="lines",
-        line=dict(color="#6B5B4F", width=2.5),
+        line={"color": "#6B5B4F", "width": 2.5},
         showlegend=False,
         hoverinfo="skip",
     )
@@ -148,7 +179,7 @@ fig.add_trace(
         x=6 * np.cos(theta_ft_bottom),
         y=19 + 6 * np.sin(theta_ft_bottom),
         mode="lines",
-        line=dict(color="#6B5B4F", width=2, dash="dash"),
+        line={"color": "#6B5B4F", "width": 2, "dash": "dash"},
         showlegend=False,
         hoverinfo="skip",
     )
@@ -160,13 +191,16 @@ fig.add_trace(go.Scatter(x=ra_x, y=ra_y, mode="lines", line=line_style, showlege
 # Basket rim
 fig.add_trace(
     go.Scatter(
-        x=rim_x, y=rim_y, mode="lines", line=dict(color="#CC5500", width=2.5), showlegend=False, hoverinfo="skip"
+        x=rim_x, y=rim_y, mode="lines", line={"color": "#CC5500", "width": 2.5}, showlegend=False, hoverinfo="skip"
     )
 )
 
 # Colorblind-safe palette: blue for made, orange for missed
 color_made = "#306998"
 color_missed = "#E8871E"
+
+# Marker sizes vary slightly by distance for visual depth
+marker_sizes = np.clip(14 - distance * 0.15, 8, 14)
 
 # Shot markers — missed shots first (underneath)
 missed_mask = ~made
@@ -175,7 +209,13 @@ fig.add_trace(
         x=x[missed_mask],
         y=y[missed_mask],
         mode="markers",
-        marker=dict(size=10, color=color_missed, symbol="x", line=dict(width=1.5, color=color_missed), opacity=0.7),
+        marker={
+            "size": marker_sizes[missed_mask],
+            "color": color_missed,
+            "symbol": "x",
+            "line": {"width": 1.5, "color": color_missed},
+            "opacity": 0.7,
+        },
         name="Missed",
         hovertemplate="x: %{x:.1f} ft<br>y: %{y:.1f} ft<br>Missed<extra></extra>",
     )
@@ -187,7 +227,13 @@ fig.add_trace(
         x=x[made],
         y=y[made],
         mode="markers",
-        marker=dict(size=10, color=color_made, symbol="circle", line=dict(width=1, color="white"), opacity=0.8),
+        marker={
+            "size": marker_sizes[made],
+            "color": color_made,
+            "symbol": "circle",
+            "line": {"width": 1.2, "color": "white"},
+            "opacity": 0.8,
+        },
         name="Made",
         hovertemplate="x: %{x:.1f} ft<br>y: %{y:.1f} ft<br>Made<extra></extra>",
     )
@@ -199,63 +245,69 @@ fig.add_annotation(
     y=9,
     text=f"Paint<br><b>{paint_pct:.0f}%</b>",
     showarrow=False,
-    font=dict(size=16, color="#444444"),
-    bgcolor="rgba(255,255,255,0.75)",
-    borderpad=4,
+    font={"size": 20, "color": "#3A3A3A", "family": "Arial Black, sans-serif"},
+    bgcolor="rgba(255,255,255,0.8)",
+    borderpad=6,
+    bordercolor="rgba(107,91,79,0.3)",
+    borderwidth=1,
 )
 fig.add_annotation(
     x=18,
     y=16,
     text=f"Mid-range<br><b>{mid_pct:.0f}%</b>",
     showarrow=False,
-    font=dict(size=14, color="#444444"),
-    bgcolor="rgba(255,255,255,0.75)",
-    borderpad=4,
+    font={"size": 18, "color": "#3A3A3A", "family": "Arial Black, sans-serif"},
+    bgcolor="rgba(255,255,255,0.8)",
+    borderpad=6,
+    bordercolor="rgba(107,91,79,0.3)",
+    borderwidth=1,
 )
 fig.add_annotation(
     x=0,
-    y=38,
+    y=35,
     text=f"3-Point<br><b>{three_pct:.0f}%</b>",
     showarrow=False,
-    font=dict(size=14, color="#444444"),
-    bgcolor="rgba(255,255,255,0.75)",
-    borderpad=4,
+    font={"size": 18, "color": "#3A3A3A", "family": "Arial Black, sans-serif"},
+    bgcolor="rgba(255,255,255,0.8)",
+    borderpad=6,
+    bordercolor="rgba(107,91,79,0.3)",
+    borderwidth=1,
 )
 
 # Style
 subtitle = f"{int(np.sum(made))}/{len(made)} shots made ({overall_pct:.1f}% FG)  ·  Paint {paint_pct:.0f}%  ·  Mid {mid_pct:.0f}%  ·  3PT {three_pct:.0f}%"
 fig.update_layout(
-    title=dict(
-        text=f"scatter-shot-chart · plotly · pyplots.ai<br><span style='font-size:18px;color:#777777'>{subtitle}</span>",
-        font=dict(size=28, color="#333333"),
-        x=0.5,
-        xanchor="center",
-    ),
+    title={
+        "text": f"scatter-shot-chart · plotly · pyplots.ai<br><span style='font-size:20px;color:#777777'>{subtitle}</span>",
+        "font": {"size": 30, "color": "#2A2A2A", "family": "Arial Black, sans-serif"},
+        "x": 0.5,
+        "xanchor": "center",
+    },
     template="plotly_white",
     width=1200,
     height=1200,
-    xaxis=dict(
-        range=[-28, 28],
-        showgrid=False,
-        zeroline=False,
-        showticklabels=False,
-        scaleanchor="y",
-        scaleratio=1,
-        fixedrange=True,
-    ),
-    yaxis=dict(range=[-3, 50], showgrid=False, zeroline=False, showticklabels=False, fixedrange=True),
+    xaxis={
+        "range": [-28, 28],
+        "showgrid": False,
+        "zeroline": False,
+        "showticklabels": False,
+        "scaleanchor": "y",
+        "scaleratio": 1,
+        "fixedrange": True,
+    },
+    yaxis={"range": [-2.5, 40], "showgrid": False, "zeroline": False, "showticklabels": False, "fixedrange": True},
     plot_bgcolor="#FAFAFA",
     shapes=court_shapes,
-    legend=dict(
-        font=dict(size=18),
-        x=0.85,
-        y=0.98,
-        bgcolor="rgba(255,255,255,0.9)",
-        bordercolor="#CCCCCC",
-        borderwidth=1,
-        itemsizing="constant",
-    ),
-    margin=dict(l=20, r=20, t=80, b=20),
+    legend={
+        "font": {"size": 18},
+        "x": 0.85,
+        "y": 0.98,
+        "bgcolor": "rgba(255,255,255,0.9)",
+        "bordercolor": "#CCCCCC",
+        "borderwidth": 1,
+        "itemsizing": "constant",
+    },
+    margin={"l": 20, "r": 20, "t": 80, "b": 20},
 )
 
 # Save
