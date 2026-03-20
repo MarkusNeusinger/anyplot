@@ -1,0 +1,230 @@
+library: pygal
+specification_id: scatter-pitch-events
+created: '2026-03-20T12:33:29Z'
+updated: '2026-03-20T13:02:39Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23342848750
+issue: 4417
+python_version: 3.14.3
+library_version: 3.1.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/scatter-pitch-events/pygal/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/scatter-pitch-events/pygal/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/scatter-pitch-events/pygal/plot.html
+quality_score: 86
+review:
+  strengths:
+  - Excellent pitch rendering with complete FIFA-standard markings including corner
+    arcs and penalty arcs
+  - Thoughtful color palette with clear differentiation between all 8 event categories
+  - Good visual hierarchy with shots emphasized as focal points via thicker lines
+    and larger dots
+  - Effective use of pygal None-break technique for rendering disconnected directional
+    line segments
+  - Dual output (PNG + HTML) leveraging pygal native SVG capabilities
+  weaknesses:
+  - All markers are circles due to pygal XY limitation - no shape differentiation
+    between event types as spec requests
+  - Pass lines create visual noise with many crossing segments especially in midfield
+  - No dimensional labels or scale reference on the pitch
+  image_description: 'The plot displays a soccer pitch rendered on a rich dark green
+    background with semi-transparent white pitch markings including the outline, penalty
+    areas, goal areas, center circle, halfway line, penalty arcs, and corner arcs.
+    Match events are plotted as colored markers and lines: successful passes appear
+    as steel blue thin lines connecting start and end points, unsuccessful passes
+    as golden yellow dashed lines, successful shots (goals) as vivid red thick lines
+    with large dots directed toward the right goal, missed shots as light coral dashed
+    lines, successful tackles as vivid amber/orange large dots, unsuccessful tackles
+    as smaller peach dots, successful interceptions as rich purple dots, and unsuccessful
+    interceptions as lighter purple smaller dots. The title "scatter-pitch-events
+    · pygal · pyplots.ai" is centered at the top in white. A legend at the bottom
+    shows all 8 event categories in 4 columns across 2 rows. The pitch fills the canvas
+    well with balanced margins.'
+  criteria_checklist:
+    visual_quality:
+      score: 26
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title=52, label=36, legend=38), text
+          readable at full resolution
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: No text overlap; pass lines create some visual clutter from crossing
+          but text remains clear
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: All event types visible; pass lines thin but distinguishable, shots
+          prominent
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Colorblind-safe palette using blue, yellow, red, orange, purple with
+          no red-green ambiguity
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Pitch fills canvas well with balanced margins, good proportions
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 1
+        max: 2
+        passed: true
+        comment: Title correct; axis labels intentionally hidden for pitch map but
+          no dimensional units shown
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom green pitch background, thoughtful color palette, professional
+          appearance above defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Axes/grid hidden appropriately, pitch markings as natural structure,
+          good whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Visual hierarchy through size differentiation, shots as focal point
+          with thick lines
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct scatter plot on pitch diagram
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: All event types with outcomes and directional lines; markers all
+          circles due to pygal limitation
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y correctly mapped to pitch coordinates (0-105m x 0-68m)
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct, legend labels descriptive with outcome indicators
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All 4 event types with both successful and unsuccessful outcomes
+          shown
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Soccer match event data with realistic counts and plausible success
+          rates
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: FIFA standard 105x68m dimensions, realistic coordinate ranges
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Flat structure: imports, data, style, chart, markings, events, save'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: math, numpy, pygal, Style all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-organized with appropriate complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png via render_to_png
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Good pygal patterns: None-break technique, dict values for tooltips,
+          stroke_style, custom Style'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: 'Uses pygal-specific: None-break, tooltip labels, stroke_style dasharray,
+          dual PNG+HTML output'
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - dark-theme
+  - alpha-blending
