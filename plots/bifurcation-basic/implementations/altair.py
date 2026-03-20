@@ -1,4 +1,4 @@
-"""pyplots.ai
+""" pyplots.ai
 bifurcation-basic: Bifurcation Diagram for Dynamical Systems
 Library: altair 6.0.0 | Python 3.14.3
 Quality: 87/100 | Created: 2026-03-20
