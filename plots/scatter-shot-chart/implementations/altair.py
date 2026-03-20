@@ -1,7 +1,6 @@
-""" pyplots.ai
+"""pyplots.ai
 scatter-shot-chart: Basketball Shot Chart
 Library: altair 6.0.0 | Python 3.14.3
-Quality: 80/100 | Created: 2026-03-20
 """
 
 import altair as alt
@@ -54,51 +53,57 @@ shots_df = pd.DataFrame(
     }
 )
 
-# Court geometry (NBA half-court, basket at origin)
-court_lines = []
-
-
-def add_seg(xs, ys, seg_id):
-    for i, (xi, yi) in enumerate(zip(xs, ys, strict=True)):
-        court_lines.append({"cx": float(xi), "cy": float(yi), "seg": seg_id, "ord": i})
-
-
-# Outer boundary
-add_seg([-25, -25], [-5.25, 41.75], "sideline_l")
-add_seg([25, 25], [-5.25, 41.75], "sideline_r")
-add_seg([-25, 25], [-5.25, -5.25], "baseline")
-add_seg([-25, 25], [41.75, 41.75], "halfcourt")
-
-# Paint / key (16 ft wide, baseline to free-throw line)
-add_seg([-8, -8], [-5.25, 13.75], "paint_l")
-add_seg([8, 8], [-5.25, 13.75], "paint_r")
-add_seg([-8, 8], [13.75, 13.75], "ft_line")
-
-# Free-throw circle top half (radius 6 ft)
+# Court geometry (NBA half-court, basket at origin) — flat data construction
 theta_ft = np.linspace(0, np.pi, 60)
-add_seg(6 * np.cos(theta_ft), 13.75 + 6 * np.sin(theta_ft), "ft_circle")
-
-# Three-point line
-corner_y = np.sqrt(23.75**2 - 22**2)
-add_seg([-22, -22], [-5.25, corner_y], "corner3_l")
-add_seg([22, 22], [-5.25, corner_y], "corner3_r")
 theta_3 = np.linspace(np.arccos(22 / 23.75), np.pi - np.arccos(22 / 23.75), 100)
-add_seg(23.75 * np.cos(theta_3), 23.75 * np.sin(theta_3), "three_arc")
-
-# Restricted area (4 ft radius)
 theta_ra = np.linspace(0, np.pi, 40)
-add_seg(4 * np.cos(theta_ra), 4 * np.sin(theta_ra), "restricted")
-
-# Basket ring and backboard
 theta_b = np.linspace(0, 2 * np.pi + 0.1, 40)
-add_seg(0.75 * np.cos(theta_b), 0.75 * np.sin(theta_b), "basket")
-add_seg([-3, 3], [-1.0, -1.0], "backboard")
-
-# Center court semi-circle (bottom half)
 theta_cc = np.linspace(np.pi, 2 * np.pi, 40)
-add_seg(6 * np.cos(theta_cc), 41.75 + 6 * np.sin(theta_cc), "center_circle")
+corner_y = np.sqrt(23.75**2 - 22**2)
+
+# Build all court segments as (xs_array, ys_array, segment_name)
+segments = [
+    ([-25, -25], [-5.25, 41.75], "sideline_l"),
+    ([25, 25], [-5.25, 41.75], "sideline_r"),
+    ([-25, 25], [-5.25, -5.25], "baseline"),
+    ([-25, 25], [41.75, 41.75], "halfcourt"),
+    ([-8, -8], [-5.25, 13.75], "paint_l"),
+    ([8, 8], [-5.25, 13.75], "paint_r"),
+    ([-8, 8], [13.75, 13.75], "ft_line"),
+    (6 * np.cos(theta_ft), 13.75 + 6 * np.sin(theta_ft), "ft_circle"),
+    ([-22, -22], [-5.25, corner_y], "corner3_l"),
+    ([22, 22], [-5.25, corner_y], "corner3_r"),
+    (23.75 * np.cos(theta_3), 23.75 * np.sin(theta_3), "three_arc"),
+    (4 * np.cos(theta_ra), 4 * np.sin(theta_ra), "restricted"),
+    (0.75 * np.cos(theta_b), 0.75 * np.sin(theta_b), "basket"),
+    ([-3, 3], [-1.0, -1.0], "backboard"),
+    (6 * np.cos(theta_cc), 41.75 + 6 * np.sin(theta_cc), "center_circle"),
+]
+
+court_lines = []
+for xs, ys, seg_name in segments:
+    for i, (xi, yi) in enumerate(zip(xs, ys, strict=True)):
+        court_lines.append({"cx": float(xi), "cy": float(yi), "seg": seg_name, "ord": i})
 
 court_df = pd.DataFrame(court_lines)
+
+# Zone annotations with shooting percentages
+paint_mask = (shots_df["y"] < 13.75) & (shots_df["x"].abs() < 8) & (shots_df["shot_type"] != "free-throw")
+mid_mask = (shots_df["shot_type"] == "2-pointer") & ~((shots_df["y"] < 13.75) & (shots_df["x"].abs() < 8))
+three_mask = shots_df["shot_type"] == "3-pointer"
+
+paint_pct = int(100 * shots_df.loc[paint_mask, "result"].eq("Made").mean())
+mid_pct = int(100 * shots_df.loc[mid_mask, "result"].eq("Made").mean())
+three_pct = int(100 * shots_df.loc[three_mask, "result"].eq("Made").mean())
+total_fg = int(100 * shots_df["result"].eq("Made").mean())
+
+zone_df = pd.DataFrame(
+    [
+        {"label": f"Paint: {paint_pct}%", "zx": 0, "zy": 6},
+        {"label": f"Mid-Range: {mid_pct}%", "zx": 0, "zy": 20},
+        {"label": f"3PT: {three_pct}%", "zx": 0, "zy": 30},
+    ]
+)
 
 # Scales (equal domain range for 1:1 aspect ratio)
 x_scale = alt.Scale(domain=[-26, 26], nice=False)
@@ -116,16 +121,16 @@ court = (
     )
 )
 
-# Shot markers layer
+# Shot markers layer — size and opacity tuned for 300 points
 shots = (
     alt.Chart(shots_df)
-    .mark_point(filled=True, size=100, opacity=0.8, strokeWidth=0.6, stroke="white")
+    .mark_point(filled=True, size=50, opacity=0.55, strokeWidth=0.5, stroke="white")
     .encode(
         x=alt.X("x:Q", scale=x_scale),
         y=alt.Y("y:Q", scale=y_scale),
         color=alt.Color(
             "result:N",
-            scale=alt.Scale(domain=["Made", "Missed"], range=["#27ae60", "#c0392b"]),
+            scale=alt.Scale(domain=["Made", "Missed"], range=["#306998", "#e67e22"]),
             legend=alt.Legend(
                 title="Shot Result", titleFontSize=18, labelFontSize=16, symbolSize=150, orient="top-right", offset=10
             ),
@@ -140,9 +145,16 @@ shots = (
     )
 )
 
+# Zone annotation layer
+zones = (
+    alt.Chart(zone_df)
+    .mark_text(fontSize=15, fontWeight="bold", color="#555555", opacity=0.7)
+    .encode(x=alt.X("zx:Q", scale=x_scale), y=alt.Y("zy:Q", scale=y_scale), text="label:N")
+)
+
 # Compose
 chart = (
-    (court + shots)
+    (court + shots + zones)
     .properties(
         width=1200,
         height=1200,
@@ -150,7 +162,7 @@ chart = (
             "scatter-shot-chart · altair · pyplots.ai",
             fontSize=28,
             color="#222222",
-            subtitle="NBA Player Shot Chart — 300 Attempts (FG 44%)",
+            subtitle=f"NBA Player Shot Chart — 300 Attempts (FG {total_fg}%)",
             subtitleFontSize=16,
             subtitleColor="#777777",
             subtitlePadding=6,
