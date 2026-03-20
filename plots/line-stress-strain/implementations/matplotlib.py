@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 line-stress-strain: Engineering Stress-Strain Curve
 Library: matplotlib 3.10.8 | Python 3.14.3
-Quality: 86/100 | Created: 2026-03-20
+Quality: 90/100 | Created: 2026-03-20
 """
 
 import matplotlib.patheffects as pe
