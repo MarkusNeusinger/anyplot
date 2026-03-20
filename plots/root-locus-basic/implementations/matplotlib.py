@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 root-locus-basic: Root Locus Plot for Control Systems
 Library: matplotlib 3.10.8 | Python 3.14.3
 Quality: 87/100 | Created: 2026-03-20
@@ -71,6 +71,28 @@ for branch in range(n_poles):
 # Plot
 fig, ax = plt.subplots(figsize=(16, 9))
 
+# Subtle background shading: stable (left) vs unstable (right) half-plane
+ax.axvspan(-10, 0, color="#2ECC71", alpha=0.04, zorder=0)
+ax.axvspan(0, 5, color="#E74C3C", alpha=0.04, zorder=0)
+ax.text(
+    -6.5,
+    -4.5,
+    "Stable",
+    fontsize=14,
+    color="#27AE60",
+    alpha=0.6,
+    path_effects=[pe.withStroke(linewidth=3, foreground="white")],
+)
+ax.text(
+    0.4,
+    -4.5,
+    "Unstable",
+    fontsize=14,
+    color="#C0392B",
+    alpha=0.6,
+    path_effects=[pe.withStroke(linewidth=3, foreground="white")],
+)
+
 # Constant damping ratio lines (light grid)
 zeta_values = [0.2, 0.4, 0.6, 0.8]
 theta_range = np.linspace(0, np.pi, 200)
@@ -82,7 +104,7 @@ for zeta in zeta_values:
     line_imag_pos = r * np.sin(np.pi - angle)
     ax.plot(line_real, line_imag_pos, "--", color="#CCCCCC", linewidth=0.8, alpha=0.6)
     ax.plot(line_real, -line_imag_pos, "--", color="#CCCCCC", linewidth=0.8, alpha=0.6)
-    label_r = 3.8 if zeta >= 0.8 else 4.5
+    label_r = 3.2 if zeta >= 0.8 else 4.0
     lx = -label_r * np.cos(np.pi - angle) - 0.1
     ly = label_r * np.sin(np.pi - angle) + 0.15
     ax.text(
@@ -99,7 +121,7 @@ for zeta in zeta_values:
 wn_values = [1, 2, 3, 4, 5, 6]
 for wn in wn_values:
     circle_theta = np.linspace(np.pi / 2, 3 * np.pi / 2, 200)
-    ax.plot(wn * np.cos(circle_theta), wn * np.sin(circle_theta), "--", color="#CCCCCC", linewidth=0.8, alpha=0.4)
+    ax.plot(wn * np.cos(circle_theta), wn * np.sin(circle_theta), "--", color="#CCCCCC", linewidth=0.8, alpha=0.6)
 
 # Branch colors
 branch_colors = ["#306998", "#E8553A", "#17BECF", "#9467BD"]
@@ -160,14 +182,14 @@ ax.scatter(
 
 # Mark imaginary axis crossings with labels
 for cp in crossings:
-    ax.scatter(cp.real, cp.imag, marker="D", s=200, color="#E8553A", edgecolors="white", linewidths=1.5, zorder=6)
+    ax.scatter(cp.real, cp.imag, marker="D", s=200, color="#D4A017", edgecolors="white", linewidths=1.5, zorder=6)
     ax.annotate(
         f"jω≈{cp.imag:+.1f}",
         xy=(cp.real, cp.imag),
         xytext=(12, 8),
         textcoords="offset points",
         fontsize=13,
-        color="#C0392B",
+        color="#B8860B",
         fontweight="bold",
         path_effects=[pe.withStroke(linewidth=3, foreground="white")],
         zorder=7,
@@ -205,7 +227,7 @@ ax.set_xlabel("Real Axis (σ)", fontsize=20)
 ax.set_ylabel("Imaginary Axis (jω)", fontsize=20)
 ax.set_title("root-locus-basic · matplotlib · pyplots.ai", fontsize=24, fontweight="medium")
 ax.tick_params(axis="both", labelsize=16)
-ax.legend(fontsize=16, loc="upper left")
+ax.legend(fontsize=16, loc="upper left", framealpha=0.9)
 ax.set_aspect("equal")
 ax.set_xlim(-7, 2.5)
 ax.set_ylim(-5, 5)
