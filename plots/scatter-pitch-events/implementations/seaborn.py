@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 scatter-pitch-events: Soccer Pitch Event Map
 Library: seaborn 0.13.2 | Python 3.14.3
 Quality: 85/100 | Created: 2026-03-20
@@ -51,7 +51,11 @@ df = pd.DataFrame(
 )
 
 # Plot
+palette = {"Pass": "#4FC3F7", "Shot": "#FF7043", "Tackle": "#FFD54F", "Interception": "#CE93D8"}
+marker_map = {"Pass": "o", "Shot": "*", "Tackle": "^", "Interception": "D"}
+
 sns.set_theme(style="white", rc={"axes.facecolor": "#2d8a4e", "figure.facecolor": "#1a472a"})
+sns.set_context("talk", font_scale=1.1)
 
 fig, ax = plt.subplots(figsize=(16, 9))
 fig.set_facecolor("#1a472a")
@@ -97,14 +101,28 @@ ax.plot([105, 106.5], [30.34, 30.34], color=pitch_color, lw=lw + 1, alpha=alpha_
 ax.plot([105, 106.5], [37.66, 37.66], color=pitch_color, lw=lw + 1, alpha=alpha_line)
 ax.plot([106.5, 106.5], [30.34, 37.66], color=pitch_color, lw=lw + 1, alpha=alpha_line)
 
-# Event markers using seaborn scatterplot
-palette = {"Pass": "#4FC3F7", "Shot": "#FF7043", "Tackle": "#FFD54F", "Interception": "#CE93D8"}
-marker_map = {"Pass": "o", "Shot": "*", "Tackle": "^", "Interception": "D"}
+# Density contours per event type using seaborn kdeplot
+for etype in ["Pass", "Shot", "Tackle", "Interception"]:
+    subset = df[df["Event Type"] == etype]
+    if len(subset) > 5:
+        sns.kdeplot(
+            data=subset,
+            x="x",
+            y="y",
+            color=palette[etype],
+            levels=3,
+            alpha=0.25,
+            linewidths=1.2,
+            ax=ax,
+            zorder=3,
+            warn_singular=False,
+            clip=((0, 105), (0, 68)),
+        )
 
+# Event markers using seaborn scatterplot with hue and style
 df_success = df[df["Outcome"] == "Successful"]
 df_unsuccess = df[df["Outcome"] == "Unsuccessful"]
 
-# Successful events — filled markers, high alpha
 sns.scatterplot(
     data=df_success,
     x="x",
@@ -122,7 +140,6 @@ sns.scatterplot(
     zorder=5,
 )
 
-# Unsuccessful events — lower alpha, edge-only appearance
 sns.scatterplot(
     data=df_unsuccess,
     x="x",
@@ -140,14 +157,15 @@ sns.scatterplot(
     zorder=5,
 )
 
-# Directional arrows for successful passes and shots
+# Directional arrows — only for successful events, thinned to reduce clutter
 arrows = df_success[df_success["Event Type"].isin(["Pass", "Shot"])]
-for _, row in arrows.iterrows():
+arrow_sample = arrows.sample(frac=0.6, random_state=42)
+for _, row in arrow_sample.iterrows():
     ax.annotate(
         "",
         xy=(row["x"] + row["dx"], row["y"] + row["dy"]),
         xytext=(row["x"], row["y"]),
-        arrowprops={"arrowstyle": "->", "color": palette[row["Event Type"]], "lw": 1.2, "alpha": 0.5},
+        arrowprops={"arrowstyle": "->", "color": palette[row["Event Type"]], "lw": 1.0, "alpha": 0.45},
         zorder=4,
     )
 
@@ -195,7 +213,7 @@ ax.legend(
     loc="lower center",
     bbox_to_anchor=(0.5, -0.06),
     ncol=4,
-    fontsize=16,
+    fontsize=18,
     frameon=True,
     facecolor="#1a472a",
     edgecolor="white",
