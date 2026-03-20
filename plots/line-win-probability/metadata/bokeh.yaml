@@ -1,0 +1,232 @@
+library: bokeh
+specification_id: line-win-probability
+created: '2026-03-20T12:31:39Z'
+updated: '2026-03-20T13:01:06Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23342814515
+issue: 4418
+python_version: 3.14.3
+library_version: 3.9.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/line-win-probability/bokeh/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/line-win-probability/bokeh/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/line-win-probability/bokeh/plot.html
+quality_score: 92
+review:
+  strengths:
+  - Excellent spec compliance — all required features implemented (fills, 50% line,
+    annotations, score, quarters)
+  - Strong data storytelling with team colors, event annotations, and final score
+    creating a clear game narrative
+  - Good use of Bokeh-specific features (HoverTool, CustomJS crosshair, HTML export)
+    that add value beyond the static PNG
+  - Professional visual refinement with custom colors, subtle grid, clean frame, and
+    explicit font sizing
+  - Well-structured, reproducible code with clean imports
+  weaknesses:
+  - Minor annotation crowding in Q4 area where two event labels are horizontally close
+  - Confidence band adds slight visual noise without strong justification from the
+    spec
+  - Quarter band construction could use BoxAnnotation for more idiomatic Bokeh
+  image_description: 'The plot displays a win probability line chart for an NFL game
+    between the Eagles and Cowboys. The x-axis shows "Play Number" (0-120) and the
+    y-axis shows "Win Probability (%)" (0%-100%). A dark line traces the probability
+    trajectory with a subtle confidence band around it. The area above the 50% dashed
+    reference line is filled with muted teal (#004C54, Eagles) and the area below
+    with gray (#869397, Cowboys). Quarter markers (Q1-Q4) appear at the top with dotted
+    vertical lines at plays 30, 60, and 90, with alternating subtle background bands.
+    Five key scoring events are annotated with teal dots and bold labels on white
+    backgrounds: TD Eagles 10-7, TD Eagles 17-10, TD Cowboys 17-17, TD Cowboys 20-24,
+    and TD Eagles 27-24. Semi-transparent "EAGLES" and "COWBOYS" team labels appear
+    near the 50% line on the left. A legend in the top-left identifies the team fills.
+    A prominent "Final: Eagles 27 - Cowboys 24" label sits in the lower-center area.
+    The background is light gray (#fafafa) with white border fill, subtle grid lines,
+    and clean axis styling with no tick marks.'
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 40pt, axis labels 30pt, ticks
+          24pt, annotations 20-22pt'
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Minor crowding in Q4 area where two event annotations are horizontally
+          close
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Main line, fills, and markers all well-sized and clearly visible
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Teal vs gray easily distinguishable for colorblind users
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good canvas utilization with explicit margins at 4800x2700
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Play Number and Win Probability (%) are descriptive with units
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom team palette, professional typography, above defaults but
+          not FiveThirtyEight-level
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid, clean frame, generous margins. Confidence band adds
+          slight noise
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Strong narrative through team fills, scoring annotations, final score,
+          and quarter markers
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct win probability line chart with area fills
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features: 50% line, team fills, annotations, final score, quarter
+          markers'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=play number, Y=win probability. Correct mapping with full range
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct title format and legend with team labels
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Lead changes, momentum swings, ties, dramatic Q4 comeback, diverse
+          events
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Eagles vs Cowboys NFL game with plausible scoring events
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Probability 0-1 with realistic fluctuations, starts 0.50, ends 1.0
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean Imports-Data-Plot-Save structure, no functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set at top
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, appropriate complexity, no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png via export_png, current Bokeh 3.9 API
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of ColumnDataSource, Band, Span, Label, Legend, NumeralTickFormatter.
+          Could use BoxAnnotation for quarters
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: HoverTool with HTML tooltips, CustomJS crosshair callback, dual PNG+HTML
+          output
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - hover-tooltips
+  - custom-legend
+  - html-export
+  - manual-ticks
+  patterns:
+  - data-generation
+  - columndatasource
+  dataprep:
+  - rolling-window
+  styling:
+  - alpha-blending
+  - grid-styling
