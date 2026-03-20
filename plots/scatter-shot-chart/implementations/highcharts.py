@@ -1,7 +1,7 @@
-""" pyplots.ai
+"""pyplots.ai
 scatter-shot-chart: Basketball Shot Chart
 Library: highcharts unknown | Python 3.14.3
-Quality: 89/100 | Created: 2026-03-20
+Quality: repair-2 | Created: 2026-03-20
 """
 
 import tempfile
@@ -83,7 +83,7 @@ chart.options.chart = {
     "backgroundColor": "#1a1a2e",
     "plotBackgroundColor": "#2a2a3e",
     "marginBottom": 120,
-    "marginTop": 180,
+    "marginTop": 160,
     "marginLeft": 120,
     "marginRight": 120,
     "style": {"fontFamily": "'Segoe UI', Helvetica, Arial, sans-serif"},
@@ -111,7 +111,7 @@ chart.options.x_axis = {
 
 chart.options.y_axis = {
     "min": -8,
-    "max": 32,
+    "max": 30,
     "title": {"enabled": False},
     "labels": {"enabled": False},
     "gridLineWidth": 0,
@@ -127,7 +127,7 @@ chart.options.legend = {
     "x": -30,
     "y": 80,
     "layout": "vertical",
-    "itemStyle": {"fontSize": "24px", "fontWeight": "normal", "color": "#ddd"},
+    "itemStyle": {"fontSize": "28px", "fontWeight": "normal", "color": "#ddd"},
     "itemHoverStyle": {"color": "#fff"},
     "symbolRadius": 6,
     "symbolWidth": 22,
@@ -174,7 +174,7 @@ for sdef in series_defs:
     series.marker = {
         "symbol": sdef["symbol"],
         "radius": sdef["radius"],
-        "lineColor": "#ffffff" if is_made else "#ffffff",
+        "lineColor": "#ffffff",
         "lineWidth": 1 if is_made else 2,
         "fillColor": sdef["color"] if is_made else "rgba(232,131,58,0.45)",
     }
@@ -212,11 +212,12 @@ court_js = """
             function px(v) { return xA.toPixels(v); }
             function py(v) { return yA.toPixels(v); }
 
-            var la = {stroke: "rgba(255,255,255,0.65)", "stroke-width": 3, fill: "none"};
+            var la = {stroke: "rgba(255,255,255,0.55)", "stroke-width": 2.5, fill: "none"};
+            var laPrimary = {stroke: "rgba(255,255,255,0.75)", "stroke-width": 4, fill: "none"};
 
             // Court outline (half court: 50ft wide, baseline to beyond 3pt arc)
             r.rect(px(-25), py(30), px(25)-px(-25), py(-5.25)-py(30)).attr(
-                {stroke: "rgba(255,255,255,0.7)", "stroke-width": 4, fill: "none"}
+                {stroke: "rgba(255,255,255,0.8)", "stroke-width": 5, fill: "none"}
             ).add();
 
             // Half-court line
@@ -265,9 +266,9 @@ court_js = """
             var arcStartY = Math.sqrt(23.75*23.75 - 22*22);
 
             // Left corner straight
-            r.path(["M", px(-22), py(-5.25), "L", px(-22), py(arcStartY)]).attr(la).add();
+            r.path(["M", px(-22), py(-5.25), "L", px(-22), py(arcStartY)]).attr(laPrimary).add();
             // Right corner straight
-            r.path(["M", px(22), py(-5.25), "L", px(22), py(arcStartY)]).attr(la).add();
+            r.path(["M", px(22), py(-5.25), "L", px(22), py(arcStartY)]).attr(laPrimary).add();
 
             // Three-point arc
             var tpPts = [];
@@ -278,7 +279,7 @@ court_js = """
                 tpPts.push(px(23.75 * Math.cos(a)));
                 tpPts.push(py(23.75 * Math.sin(a)));
             }
-            r.path(tpPts).attr(la).add();
+            r.path(tpPts).attr(laPrimary).add();
 
             // Basket (rim circle, ~0.75 ft radius)
             r.circle(px(0), py(0), 8).attr(
