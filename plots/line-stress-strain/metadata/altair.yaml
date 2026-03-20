@@ -1,0 +1,234 @@
+library: altair
+specification_id: line-stress-strain
+created: '2026-03-20T21:23:28Z'
+updated: '2026-03-20T21:36:36Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23363005597
+issue: 4413
+python_version: 3.14.3
+library_version: 6.0.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/line-stress-strain/altair/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/line-stress-strain/altair/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/line-stress-strain/altair/plot.html
+quality_score: 90
+review:
+  strengths:
+  - Comprehensive engineering story with all required regions, key points, and annotations
+    well-positioned
+  - Colorblind-safe palette with distinct orange/purple/teal markers against blue
+    curve
+  - Strong use of Altair interactive features (selection, tooltips, zoom/pan) with
+    HTML export
+  - Region labels with separators provide clear structural guidance
+  - Connector lines for displaced labels prevent overlap while maintaining association
+  weaknesses:
+  - Elastic region compressed into ~3% of x-axis, cramming yield-related annotations
+    into tight space
+  - Title format adds descriptive prefix rather than exact spec format
+  - Code is verbose with many small DataFrames for individual annotation elements
+  image_description: 'The plot displays an engineering stress-strain curve for mild
+    steel tensile testing. The main curve is rendered as a solid blue (#306998) line
+    starting from the origin, rising steeply through a nearly vertical elastic region,
+    transitioning through a yield plateau near 250 MPa, curving upward through strain
+    hardening to a peak (UTS) around 400 MPa at ~0.22 strain, then declining through
+    necking to fracture at ~280 MPa and ~0.35 strain. Three key points are marked
+    with large filled circles: Yield Point (orange) near the elastic-plastic transition,
+    UTS (purple) at the peak, and Fracture (teal) at the end. Region labels ("Elastic",
+    "Strain Hardening", "Necking") appear in italic gray at the top, separated by
+    subtle dashed vertical lines. A dashed gray 0.2% offset line is drawn parallel
+    to the elastic slope. Young''s modulus "E = 210,000 MPa" is annotated in blue
+    with a connector line to the elastic slope. The title reads "Mild Steel Tensile
+    Test · line-stress-strain · altair · pyplots.ai" with a gray subtitle. Axes are
+    labeled "Engineering Strain" and "Engineering Stress (MPa)". No grid; axes have
+    subtle gray domain lines and ticks.'
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title=28, subtitle=16, axes=22, ticks=18,
+          annotations=15-17). All readable.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Minor visual density in elastic region where slope line, offset line,
+          yield marker converge. Labels displaced with connectors.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Main curve strokeWidth=3, key points size=450 with white stroke.
+          All elements prominent.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Orange, purple, teal for key points — colorblind-safe and well-distinguished.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good canvas use overall. Elastic region compressed into ~3% of x-axis,
+          cramming annotations.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Engineering Strain and Engineering Stress (MPa) — descriptive with
+          units.
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Strong design with intentional palette, hierarchical typography,
+          connector lines, region separators.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Grid disabled, view stroke removed, subtle axis styling, differentiated
+          label colors.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Region labels guide viewer through elastic→hardening→necking. Key
+          points create focal points. Modulus annotated.
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct line chart showing stress-strain curve.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features: region labels, yield/UTS/fracture points, 0.2% offset
+          line, Young''s modulus annotation.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=strain, Y=stress correctly assigned with appropriate padding.
+      - id: SC-04
+        name: Title & Legend
+        score: 2
+        max: 3
+        passed: true
+        comment: Title includes required elements but adds descriptive prefix. Legend
+          hidden with direct labeling.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all regions: elastic, yield plateau, strain hardening, necking
+          to fracture.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Mild steel tensile test — classic real-world engineering scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: E=210 GPa, yield=250 MPa, UTS=400 MPa, fracture strain=0.35 — realistic
+          for mild steel.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat script with imports, data, chart layers, combine, save.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: altair, numpy, pandas — all used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 1
+        max: 2
+        passed: false
+        comment: Verbose with many separate DataFrames for annotations, connectors,
+          labels.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png and plot.html. Current API.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Excellent declarative grammar: alt.layer(), encoding channels, alt.Scale,
+          alt.Title, configure_axis/view.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: selection_point with nearest, tooltips, .interactive() for zoom/pan,
+          dual HTML+PNG export.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - edge-highlighting

@@ -1,0 +1,232 @@
+library: matplotlib
+specification_id: root-locus-basic
+created: '2026-03-20T21:25:58Z'
+updated: '2026-03-20T21:47:37Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23362981734
+issue: 4414
+python_version: 3.14.3
+library_version: 3.10.8
+preview_url: https://storage.googleapis.com/pyplots-images/plots/root-locus-basic/matplotlib/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/root-locus-basic/matplotlib/plot_thumb.png
+preview_html: null
+quality_score: 91
+review:
+  strengths:
+  - Comprehensive implementation of all spec requirements including damping ratio
+    lines, natural frequency circles, and real-axis segments
+  - Excellent data storytelling with stable/unstable region shading and prominently
+    marked stability boundaries
+  - Professional visual polish with path effects, custom markers, and thoughtful color
+    palette
+  - Clean, well-structured code with appropriate complexity for the mathematical computation
+    involved
+  weaknesses:
+  - Minor colorblind concern with green/red background shading (mitigated by very
+    low alpha and text labels)
+  - Could use a slightly more real-world transfer function context rather than a textbook
+    example
+  image_description: 'The plot displays a root locus diagram for the transfer function
+    G(s) = (s+2)/[s(s+1)(s+3)(s+5)]. Four locus branches are drawn in distinct colors:
+    dark blue (heading left along the real axis), salmon/red (short segment near -3
+    to -2), cyan (curving downward into the lower half-plane), and purple (curving
+    upward into the upper half-plane). Open-loop poles are marked with large dark
+    X markers at s = 0, -1, -3, -5 on the real axis. An open-loop zero is marked with
+    a hollow O at s = -2. The left half-plane has a very subtle green "Stable" shading
+    and the right half-plane has subtle red "Unstable" shading with corresponding
+    text labels. Constant damping ratio lines (zeta = 0.2, 0.4, 0.6, 0.8) are shown
+    as dashed gray lines radiating from the origin. Constant natural frequency semicircles
+    are visible as dashed arcs. Imaginary axis crossings are prominently marked with
+    gold diamond markers at jw approx +2.9 and jw approx -2.9 with bold labels. Directional
+    arrows on each branch indicate increasing gain. Real axis segments of the root
+    locus are drawn as semi-transparent blue bands. Title reads "root-locus-basic
+    · matplotlib · pyplots.ai". Axes are labeled "Real Axis (sigma)" and "Imaginary
+    Axis (jw)" with equal scaling. Top and right spines are removed.'
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt,
+          legend 16pt, annotations 13-14pt'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text elements
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Poles s=250, zeros s=200, diamonds s=200, lines linewidth=2.5 all
+          clearly visible
+      - id: VQ-04
+        name: Color Accessibility
+        score: 3
+        max: 4
+        passed: true
+        comment: Branch colors distinguishable, minor concern with green/red background
+          shading for colorblind users though alpha is very low
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 16:9 figsize with equal aspect ratio, well-chosen axis limits, plot
+          fills canvas effectively
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Real Axis (sigma) and Imaginary Axis (jw) with proper engineering
+          notation
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom palette, stable/unstable shading, gold markers, path effects,
+          professional polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines removed, subtle dashed grid, origin axes, path effects on
+          text, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Stable/unstable regions labeled, crossings highlighted, directional
+          arrows guide understanding
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct root locus plot showing pole migration
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: poles, zeros, arrows, real-axis segments,
+          crossings, damping/frequency grid'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Real/imaginary parts correctly mapped to axes
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct title format, accurate legend labels
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Rich behavior with breakaway, divergence, crossings, real-axis segments
+      - id: DQ-02
+        name: Realistic Context
+        score: 4
+        max: 5
+        passed: true
+        comment: Standard control systems transfer function, realistic but textbook
+          example
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Standard pole/zero locations sensible for control system analysis
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean imports-data-plot-save flow, no functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic polynomial root computation
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All four imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, necessary branch tracking algorithm
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with dpi=300, current API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Proper Axes methods, subplots, tight_layout, idiomatic matplotlib
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: FancyArrowPatch, path_effects, axvspan are matplotlib-distinctive
+          features
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - patches
+  - custom-legend
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling
