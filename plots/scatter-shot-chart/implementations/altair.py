@@ -1,6 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 scatter-shot-chart: Basketball Shot Chart
 Library: altair 6.0.0 | Python 3.14.3
+Quality: 86/100 | Created: 2026-03-20
 """
 
 import altair as alt
