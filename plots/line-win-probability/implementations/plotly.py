@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 line-win-probability: Win Probability Chart
 Library: plotly 6.6.0 | Python 3.14.3
 Quality: 86/100 | Created: 2026-03-20
@@ -50,9 +50,11 @@ win_prob[-3] = 0.92
 # Convert to percentage
 win_pct = win_prob * 100
 
-# Team colors
-home_color = "#004C54"  # Eagles dark teal
-away_color = "#041E42"  # Cowboys navy
+# Team colors - high contrast for accessibility
+home_color = "#00875A"  # Eagles green (brighter, distinct)
+away_color = "#003594"  # Cowboys blue (brighter, distinct)
+home_fill = "rgba(0,135,90,0.30)"  # Green fill - clearly distinguishable
+away_fill = "rgba(0,53,148,0.30)"  # Blue fill - clearly distinguishable
 
 # Plot
 fig = go.Figure()
@@ -67,7 +69,7 @@ fig.add_trace(
         mode="lines",
         line={"width": 0},
         fill="tonexty",
-        fillcolor="rgba(0,76,84,0.25)",
+        fillcolor=home_fill,
         showlegend=False,
         hoverinfo="skip",
     )
@@ -83,19 +85,19 @@ fig.add_trace(
         mode="lines",
         line={"width": 0},
         fill="tonexty",
-        fillcolor="rgba(4,30,66,0.25)",
+        fillcolor=away_fill,
         showlegend=False,
         hoverinfo="skip",
     )
 )
 
-# Main win probability line
+# Main win probability line with smoothing
 fig.add_trace(
     go.Scatter(
         x=plays,
         y=win_pct,
         mode="lines",
-        line={"width": 3.5, "color": "#306998"},
+        line={"width": 3.5, "color": "#2a2a2a", "shape": "spline", "smoothing": 0.8},
         name="Win Probability",
         hovertemplate="Play %{x}<br>Win Prob: %{y:.1f}%<extra></extra>",
     )
@@ -132,29 +134,37 @@ for play_idx, _, label in events:
         )
     )
 
-    ay_offset = -55 if y_val > 55 else 55
+    ay_offset = -60 if y_val > 55 else 60
     ax_offset = 0
-    # Stagger annotations to reduce overlap
-    if play_idx in (68, 112):
-        ax_offset = 40
-    elif play_idx in (80,):
-        ax_offset = -40
+    # Stagger annotations to reduce overlap in crowded regions
+    if play_idx == 68:
+        ax_offset = 55
+        ay_offset = -45
+    elif play_idx == 80:
+        ax_offset = -55
+        ay_offset = 50
+    elif play_idx == 98:
+        ax_offset = 45
+        ay_offset = -55
+    elif play_idx == 112:
+        ax_offset = 55
+        ay_offset = -40
 
     fig.add_annotation(
         x=play_idx,
         y=y_val,
         text=f"<b>{label_clean}</b>",
         showarrow=True,
-        arrowhead=0,
+        arrowhead=2,
         arrowwidth=1.5,
         arrowcolor=marker_color,
         ax=ax_offset,
         ay=ay_offset,
-        font={"size": 13, "color": marker_color},
-        bgcolor="rgba(255,255,255,0.92)",
+        font={"size": 15, "color": marker_color},
+        bgcolor="rgba(255,255,255,0.94)",
         bordercolor=marker_color,
-        borderwidth=1,
-        borderpad=4,
+        borderwidth=1.5,
+        borderpad=5,
     )
 
 # Team legend annotations
@@ -229,6 +239,12 @@ fig.update_layout(
     showlegend=False,
     margin={"l": 80, "r": 40, "t": 130, "b": 70},
 )
+
+# Add custom hover mode for better interactivity in HTML
+fig.update_layout(hovermode="x unified")
+
+# Add play-by-play spike lines for HTML interactivity
+fig.update_xaxes(showspikes=True, spikecolor="rgba(0,0,0,0.3)", spikethickness=1, spikedash="dot")
 
 # Save
 fig.write_image("plot.png", width=1600, height=900, scale=3)
