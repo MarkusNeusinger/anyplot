@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 ma-differential-expression: MA Plot for Differential Expression
 Library: plotly 6.6.0 | Python 3.14.3
 Quality: 83/100 | Created: 2026-03-20
@@ -53,6 +53,14 @@ sorted_lfc = log_fold_change[sort_idx]
 window = min(501, len(sorted_lfc) // 4 * 2 + 1)
 smoothed = savgol_filter(sorted_lfc, window, 3)
 
+# Color palette - refined, distinctive
+COLOR_NONSIG = "#B0B8C4"
+COLOR_SIG = "#0E8A7A"
+COLOR_LOESS = "#306998"
+COLOR_REFLINE = "#5A5A6E"
+COLOR_THRESHOLD = "#9E9EAE"
+COLOR_LABEL = "#2B2B3D"
+
 # Plot
 fig = go.Figure()
 
@@ -62,7 +70,7 @@ fig.add_trace(
         x=mean_expression[non_sig_mask],
         y=log_fold_change[non_sig_mask],
         mode="markers",
-        marker={"size": 7, "color": "#BBBBBB", "opacity": 0.3, "line": {"width": 0.5, "color": "white"}},
+        marker={"size": 8, "color": COLOR_NONSIG, "opacity": 0.25, "line": {"width": 0}},
         name="Not significant",
         hovertemplate="A: %{x:.1f}<br>M: %{y:.2f}<extra>Not significant</extra>",
     )
@@ -74,7 +82,7 @@ fig.add_trace(
         x=mean_expression[sig_mask],
         y=log_fold_change[sig_mask],
         mode="markers",
-        marker={"size": 9, "color": "#D64545", "opacity": 0.5, "line": {"width": 0.5, "color": "white"}},
+        marker={"size": 10, "color": COLOR_SIG, "opacity": 0.6, "line": {"width": 0.5, "color": "white"}},
         name="Significant (padj < 0.05)",
         hovertemplate="A: %{x:.1f}<br>M: %{y:.2f}<extra>Significant</extra>",
     )
@@ -86,16 +94,37 @@ fig.add_trace(
         x=sorted_expr,
         y=smoothed,
         mode="lines",
-        line={"color": "#306998", "width": 3},
+        line={"color": COLOR_LOESS, "width": 3.5},
         name="LOESS trend",
         hoverinfo="skip",
     )
 )
 
-# Reference lines
-fig.add_hline(y=0, line={"color": "#306998", "width": 2})
-fig.add_hline(y=1, line={"color": "#888888", "width": 1.5, "dash": "dash"})
-fig.add_hline(y=-1, line={"color": "#888888", "width": 1.5, "dash": "dash"})
+# Reference line at y=0 (distinct from LOESS)
+fig.add_hline(y=0, line={"color": COLOR_REFLINE, "width": 1.5, "dash": "dot"})
+
+# Fold-change threshold lines with annotations
+fig.add_hline(y=1, line={"color": COLOR_THRESHOLD, "width": 1.5, "dash": "dash"})
+fig.add_hline(y=-1, line={"color": COLOR_THRESHOLD, "width": 1.5, "dash": "dash"})
+
+fig.add_annotation(
+    x=15.5,
+    y=1,
+    text="2-fold up",
+    showarrow=False,
+    font={"size": 14, "color": COLOR_THRESHOLD},
+    xanchor="right",
+    yshift=14,
+)
+fig.add_annotation(
+    x=15.5,
+    y=-1,
+    text="2-fold down",
+    showarrow=False,
+    font={"size": 14, "color": COLOR_THRESHOLD},
+    xanchor="right",
+    yshift=-14,
+)
 
 # Label top DE genes
 label_indices = [sig_indices[i] for i in top_de]
@@ -106,7 +135,7 @@ fig.add_trace(
         mode="text",
         text=[gene_names[i] for i in label_indices],
         textposition="top center",
-        textfont={"size": 13, "color": "#333333"},
+        textfont={"size": 16, "color": COLOR_LABEL, "family": "Arial Black, sans-serif"},
         showlegend=False,
         hoverinfo="skip",
     )
@@ -116,27 +145,34 @@ fig.add_trace(
 fig.update_layout(
     title={
         "text": "ma-differential-expression · plotly · pyplots.ai",
-        "font": {"size": 28},
+        "font": {"size": 28, "color": "#2B2B3D", "family": "Arial, sans-serif"},
         "x": 0.5,
         "xanchor": "center",
     },
     xaxis={
-        "title": {"text": "Mean Expression (A)", "font": {"size": 22}},
-        "tickfont": {"size": 18},
-        "gridcolor": "rgba(0,0,0,0.08)",
-        "showgrid": True,
+        "title": {"text": "Mean Expression (A)", "font": {"size": 22, "color": "#3A3A4A"}},
+        "tickfont": {"size": 18, "color": "#4A4A5A"},
+        "showgrid": False,
         "zeroline": False,
     },
     yaxis={
-        "title": {"text": "Log₂ Fold Change (M)", "font": {"size": 22}},
-        "tickfont": {"size": 18},
-        "gridcolor": "rgba(0,0,0,0.08)",
+        "title": {"text": "Log₂ Fold Change (M)", "font": {"size": 22, "color": "#3A3A4A"}},
+        "tickfont": {"size": 18, "color": "#4A4A5A"},
+        "gridcolor": "rgba(0,0,0,0.06)",
         "showgrid": True,
         "zeroline": False,
     },
     template="plotly_white",
-    legend={"font": {"size": 16}, "x": 0.02, "y": 0.98, "bgcolor": "rgba(255,255,255,0.8)"},
-    margin={"l": 100, "r": 60, "t": 100, "b": 100},
+    legend={
+        "font": {"size": 16, "color": "#3A3A4A"},
+        "x": 0.98,
+        "y": 0.98,
+        "xanchor": "right",
+        "bgcolor": "rgba(255,255,255,0.85)",
+        "bordercolor": "rgba(0,0,0,0.1)",
+        "borderwidth": 1,
+    },
+    margin={"l": 100, "r": 80, "t": 100, "b": 100},
     plot_bgcolor="white",
 )
 
