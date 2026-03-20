@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 bifurcation-basic: Bifurcation Diagram for Dynamical Systems
 Library: pygal 3.1.0 | Python 3.14.3
-Quality: 78/100 | Created: 2026-03-20
+Quality: 83/100 | Created: 2026-03-20
 """
 
 import numpy as np
