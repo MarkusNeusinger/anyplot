@@ -1,7 +1,7 @@
 library: bokeh
 specification_id: scatter-shot-chart
 created: '2026-03-20T20:30:00Z'
-updated: '2026-03-20T20:43:41Z'
+updated: '2026-03-20T20:53:13Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23361192943
 issue: 4416
@@ -10,38 +10,31 @@ library_version: 3.9.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/scatter-shot-chart/bokeh/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/scatter-shot-chart/bokeh/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/scatter-shot-chart/bokeh/plot.html
-quality_score: 88
+quality_score: 87
 review:
   strengths:
-  - Excellent court drawing with accurate NBA dimensions and all required elements
-  - Zone efficiency overlays provide genuine data storytelling (percentages + shot
-    counts)
-  - Colorblind-safe blue/orange palette with distinct marker shapes (circle vs X)
-  - 'Strong use of Bokeh-specific features: HoverTool tooltips, HTML export, ColumnDataSource'
-  - Warm beige court background evokes real hardwood, professional aesthetic
-  - Clean, well-structured code with proper seed
+  - Accurate NBA half-court geometry with all required elements
+  - Excellent data storytelling with zone efficiency percentages overlaid on the court
+  - Colorblind-safe blue/orange palette with shape differentiation
+  - Good use of Bokeh-specific features (HoverTool, HTML export, ColumnDataSource)
+  - Professional visual design with warm beige court floor and clean layout
   weaknesses:
-  - 'Paint area marker congestion: alpha 0.75 is too high for 350 data points, causing
-    heavy overlap in the paint zone'
-  - Free Throw zone label mispositioned at (-13, 17) — should be near the free-throw
-    line (x≈0, y≈15)
-  - Wasted vertical space above three-point arc and below baseline
-  - Corner 3 zone label only annotates one side of the court
+  - Free-throw zone is visually crowded with overlapping markers and labels
+  - Small fraction labels hard to read near dense marker areas
+  - Corner 3 label code is manually duplicated rather than looped
+  - Some unused vertical space above the three-point zone
   image_description: 'The plot displays a basketball half-court shot chart on a warm
-    beige (#F5F0E8) background. The title "scatter-shot-chart · bokeh · pyplots.ai"
-    appears in bold black text at the top. Below it, a horizontal legend shows "Made
-    (164)" with blue filled circles and "Missed (186)" with orange X markers. A summary
-    line reads "FG: 46.9% · 350 attempts". The court drawing includes: baseline and
-    sidelines in gray, a rectangular paint/key area (16ft wide), a free-throw circle
-    (top half solid, bottom dashed), a three-point arc, corner three-point lines,
-    a restricted area arc, a red basket ring, and a dark backboard. Shot markers are
-    distributed across the court — dense clusters in the paint area with many overlapping
-    markers, scattered along the three-point arc, and grouped in the corners. Zone
-    efficiency labels with semi-transparent beige backgrounds overlay the court: "29%"
-    (27/92) for Three-Point at top center, "67%" (43/64) for Free Throw on the left,
-    "56%" (54/97) for Paint near center, "44%" (27/61) for Corner 3 on the right,
-    and "36%" (13/36) for Mid-Range at bottom-right. The overall layout uses a 1:1
-    aspect ratio with axes hidden.'
+    beige (#F5F0E8) court floor. The title "scatter-shot-chart · bokeh · pyplots.ai"
+    appears at the top in bold black text. Below it, a horizontal legend shows "Made
+    (164)" with blue filled circles and "Missed (186)" with orange X markers. A subtitle
+    reads "FG: 46.9% · 350 attempts". The court features are accurately drawn in gray:
+    three-point arc, paint/key area (16ft wide), free-throw circle (solid top half,
+    dashed bottom), restricted area arc, corner three-point lines, a red hoop circle,
+    and a dark backboard line. Zone efficiency percentages are overlaid: 29% (three-point),
+    67% (free throw), 44% (mid-range), 56% (paint), and 36% (corner 3, mirrored on
+    both sides), each with made/total counts beneath. Shot markers use blue filled
+    circles for made shots and orange X outlines for misses, distributed realistically
+    across all court zones.'
   criteria_checklist:
     visual_quality:
       score: 25
@@ -52,45 +45,43 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set (40pt title, 28pt legend, 26pt summary,
-          22pt zone%, 16pt fractions). All readable; fraction labels slightly small.
+        comment: All font sizes explicitly set (title 40pt, legend 28pt, zone labels
+          22pt/16pt, FG summary 26pt). All readable.
       - id: VQ-02
         name: No Overlap
+        score: 4
+        max: 6
+        passed: true
+        comment: Free-throw zone has dense shot cluster overlapping with zone labels.
+          Small fraction labels hard to read.
+      - id: VQ-03
+        name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Zone labels have background fills. Minor congestion where markers
-          cluster in the paint area.
-      - id: VQ-03
-        name: Element Visibility
-        score: 4
-        max: 6
-        passed: false
-        comment: Alpha 0.75 too high for 350 points (recommended 0.3-0.5 for 300+).
-          Paint area heavily congested. Different marker shapes partially mitigate.
+        comment: Good marker differentiation (filled circles vs X). Appropriate sizes
+          for 350 points. FT area slightly crowded.
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Blue/orange colorblind-safe combination with good contrast against
-          beige court.
+        comment: Blue/orange is colorblind-safe with good contrast against beige court.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good 1:1 aspect ratio. Wasted vertical space above three-point arc
-          and below baseline.
+        comment: Square format appropriate for court. Some unused vertical space above
+          three-point zone stats.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
         comment: Axes appropriately hidden; court geometry provides spatial reference.
-          Title descriptive.
     design_excellence:
-      score: 15
+      score: 16
       max: 20
       items:
       - id: DE-01
@@ -98,24 +89,24 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Warm beige court, professional blue/orange scheme, distinct marker
-          shapes. Clearly above defaults.
+        comment: Custom beige court, thoughtful blue/orange scheme with shape differentiation,
+          zone efficiency overlays. Above defaults.
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: Axes hidden, no grid, outline removed, transparent legend, semi-transparent
-          zone labels. Well-polished.
+        comment: Axes hidden, grids removed, outline removed, custom backgrounds,
+          marker edge highlighting.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Zone efficiency overlays provide immediate insight. FT label mispositioned;
-          Corner 3 label only on one side.
+        comment: Zone efficiency percentages create immediate visual story. FG summary
+          and per-zone counts provide context.
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -123,25 +114,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct scatter plot overlaid on half-court diagram.
+        comment: Correct basketball shot chart with half-court overlay.
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: All court elements, shot markers by outcome, legend, 1:1 aspect ratio.
+        comment: All court elements present. Uses blue/orange instead of green/red
+          for accessibility. Legend shows made/missed but not shot type.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly mapped to court positions. Shot types properly distributed.
+        comment: X/Y correctly mapped to court coordinates with proper NBA dimensions.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Legend labels clear with counts.
+        comment: Title format correct. Legend labels match data.
     data_quality:
       score: 15
       max: 15
@@ -151,22 +143,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All shot types shown with realistic zone-specific percentages.
+        comment: Shows all five shot zones with distinct and realistic shooting percentages.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible basketball shooting percentages. Neutral sports analytics
-          context.
+        comment: Basketball shooting data is realistic and neutral with real-world
+          zone patterns.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: NBA standard court dimensions. 350 attempts realistic.
+        comment: NBA court dimensions correct. Shot counts and FG percentages realistic.
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -174,7 +166,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean linear flow. No functions or classes.
+        comment: 'Linear flow: imports, data generation, plot, court, markers, styling,
+          save.'
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -189,16 +182,17 @@ review:
         comment: All imports used.
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: Well-organized, appropriate complexity. No fake functionality.
+        comment: Repetitive zone label code; Corner 3 manually mirrored rather than
+          looped.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png via export_png. Current Bokeh API.
+        comment: Saves as plot.png and plot.html with CDN resources.
     library_mastery:
       score: 8
       max: 10
@@ -208,15 +202,15 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Proper ColumnDataSource, figure, scatter, Legend/LegendItem, Label.
-          Idiomatic Bokeh.
+        comment: 'Idiomatic Bokeh: ColumnDataSource, figure, scatter, Legend/LegendItem,
+          Label.'
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: HoverTool with custom tooltips, HTML export, ColumnDataSource with
-          rich data fields.
+        comment: HoverTool with snap_to_data, dual HTML+PNG export, ColumnDataSource
+          enabling hover tooltips.
   verdict: REJECTED
 impl_tags:
   dependencies: []
