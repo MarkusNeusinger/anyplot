@@ -1,7 +1,7 @@
 library: altair
 specification_id: root-locus-basic
 created: '2026-03-20T21:26:28Z'
-updated: '2026-03-20T21:59:52Z'
+updated: '2026-03-20T22:11:12Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23362981953
 issue: 4414
@@ -10,38 +10,37 @@ library_version: 6.0.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/root-locus-basic/altair/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/root-locus-basic/altair/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/root-locus-basic/altair/plot.html
-quality_score: 87
+quality_score: 86
 review:
   strengths:
-  - Perfect spec compliance with all required root locus features implemented correctly
-  - Mathematically accurate data with proper polynomial root computation
-  - Strong visual hierarchy with red critical points, prominent colored branches,
-    and subtle gray guide lines
-  - Effective use of Altair interactive tooltips showing gain values along locus
-  - Clean well-structured code with logical layer composition
+  - Excellent spec compliance — all required root locus features present and correctly
+    implemented
+  - Strong data storytelling with labeled crossings, breakaway point, and transfer
+    function in subtitle
+  - Clean layered architecture with well-separated concerns per chart layer
+  - Proper engineering notation on axes and annotations
+  - Deterministic, mathematically correct root computation with appropriate gain range
   weaknesses:
-  - DE-01/DE-02 could be pushed further with more typographic refinement
-  - Axis range [-6, 6] leaves some unused canvas space in corners
-  - Crossing labels at 15pt slightly smaller than ideal for canvas size
-  image_description: 'The plot displays a root locus diagram for the transfer function
-    G(s) = 1/s(s+1)(s+2) on a square canvas with equal axis scaling from -6 to 6.
-    Three branches are shown in distinct colors: Branch 1 (blue) extends along the
-    negative real axis from the origin toward negative infinity; Branch 2 (orange)
-    curves upward from the real axis into the upper half-plane; Branch 3 (green) curves
-    downward into the lower half-plane. Open-loop poles are marked with red cross
-    markers at s=0, s=-1, and s=-2 on the real axis. Red diamond markers indicate
-    imaginary axis crossings at jw = plus/minus sqrt(2) with labels showing K=6. A
-    dark gray square marks the breakaway point near s approximately -0.42. Light blue
-    thick lines highlight real axis segments between (-1, 0) and from -2 to negative
-    infinity. Subtle dashed gray lines show constant damping ratio guides radiating
-    from the origin and natural frequency semicircular arcs in the left half-plane.
-    Triangle-shaped direction arrows on the complex branches indicate the direction
-    of increasing gain. The title reads "root-locus-basic · altair · pyplots.ai" with
-    a subtitle describing the transfer function. A legend in the top-right identifies
-    the three branches.'
+  - Right half-plane is mostly empty, wasting some canvas space
+  - Damping ratio labels only shown for two of four guide lines
+  - Axis spines still present; removing top/right would improve visual refinement
+  image_description: 'The plot displays a root locus diagram on a square canvas with
+    equal axis scaling from -6 to 6 on both axes. Three branches are shown in distinct
+    colors: Branch 1 (blue) runs along the negative real axis from the origin leftward
+    toward negative infinity, Branch 2 (orange) curves upward into the upper half-plane,
+    and Branch 3 (green) curves downward into the lower half-plane. Open-loop poles
+    are marked with red cross markers at s=0, s=-1, and s=-2 on the real axis. Red
+    diamond markers indicate imaginary axis crossings at jω = ±j√2 (K=6) with bold
+    red labels. A gray square marks the breakaway point near s ≈ -0.42. Light dashed
+    gray lines show constant damping ratio guide lines radiating from the origin (ζ=0.4
+    and ζ=0.8 labeled) and natural frequency arcs (semicircles for ωn=1,2,3,4). Real
+    axis segments of the root locus are shown as thick semi-transparent blue lines
+    between (-1, 0) and from -2 leftward. Triangle markers indicate direction of increasing
+    gain on the complex branches. Title reads "root-locus-basic · altair · pyplots.ai"
+    with subtitle showing the transfer function and description.'
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -49,66 +48,60 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title 28pt, axis 20pt, ticks 16pt, crossing
-          labels 15pt). All readable.
+        comment: Font sizes explicitly set throughout; damping labels slightly small
+          at 12pt
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Minor visual crowding near origin but no text overlap.
+        comment: All text elements clearly separated
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Branch lines, pole markers, and crossing markers well-sized. Guide
-          lines appropriately subtle.
+        comment: All elements visible; guide lines intentionally subtle
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Blue/orange/green palette is colorblind-safe. Red for critical markers
-          provides good contrast.
+        comment: Blue/orange/green colorblind-safe palette
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Square 3600x3600 canvas appropriate. Axis range slightly generous
-          but needed for guide lines.
+        comment: Square canvas correct for root locus; right half mostly empty
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Real Axis (σ) and Imaginary Axis (jω) with proper engineering notation.
+        comment: Descriptive with engineering notation
     design_excellence:
-      score: 14
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Custom palette with intentional color hierarchy. Professional appearance
-          above defaults.
+        comment: Custom palette, thoughtful typography, above defaults
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: View border removed, grid disabled, guide lines as subtle dashed
-          gray.
+        comment: View stroke removed, grid disabled, subtle guide lines
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Visual hierarchy through color contrast, labeled crossings, direction
-          arrows guide the viewer.
+        comment: Clear engineering story with labeled crossings and breakaway
     spec_compliance:
       score: 15
       max: 15
@@ -118,50 +111,47 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct root locus plot with pole trajectories in complex plane.
+        comment: Correct root locus plot
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: poles, branches, arrows, crossings, real
-          axis segments, guide lines.'
+        comment: All spec features present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Real/imaginary correctly mapped to X/Y axes.
+        comment: Correct real/imaginary mapping
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Legend labels match branch data.
+        comment: Correct title format and legend
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: 'Comprehensive: multiple branches, breakaway, crossings, real axis
-          segments, guide grid.'
+        comment: Shows breakaway, complex branches, crossing, real axis segments
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Classic control systems transfer function. Standard textbook example.
+        comment: Classic textbook transfer function
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Mathematically accurate: breakaway at s≈-0.42, crossing at ω=√2
-          for K=6.'
+        comment: Appropriate gain range and pole locations
     code_quality:
       score: 10
       max: 10
@@ -171,31 +161,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports → data → chart layers → composition → save. No functions/classes.
+        comment: Flat structure, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic polynomial root computation.
+        comment: Fully deterministic polynomial roots
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: altair, numpy, pandas.'
+        comment: Only altair, numpy, pandas — all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized. Necessary complexity for domain-specific plot.
+        comment: Clean, well-organized code
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png and plot.html. Current Altair API.
+        comment: Saves as plot.png and plot.html
     library_mastery:
       score: 7
       max: 10
@@ -205,27 +195,26 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Good declarative Altair patterns: layered composition, encoding
-          types, tooltips, .interactive().'
+        comment: Good declarative grammar usage with layers, encodings, tooltips
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Interactive tooltips with gain values, HTML export, multi-layer composition
-          with varied marks.
-  verdict: REJECTED
+        comment: Layer composition, interactive exploration, tooltip encoding
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
   - annotations
   - hover-tooltips
+  - custom-legend
   - html-export
   patterns:
   - data-generation
   - iteration-over-groups
-  - matrix-construction
   dataprep: []
   styling:
   - grid-styling
+  - alpha-blending
