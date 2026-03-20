@@ -1,7 +1,7 @@
 library: matplotlib
 specification_id: nyquist-basic
 created: '2026-03-20T22:47:13Z'
-updated: '2026-03-20T22:52:36Z'
+updated: '2026-03-20T23:07:27Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23365453247
 issue: 4412
@@ -10,35 +10,33 @@ library_version: 3.10.8
 preview_url: https://storage.googleapis.com/pyplots-images/plots/nyquist-basic/matplotlib/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/nyquist-basic/matplotlib/plot_thumb.png
 preview_html: null
-quality_score: 84
+quality_score: 87
 review:
   strengths:
-  - Complete spec compliance — all six required features implemented correctly
-  - Effective visual hierarchy with alpha-differentiated mirror curve and prominent
-    critical point
-  - Clean deterministic code using scipy for realistic transfer function data
-  - Good use of zorder layering to manage visual element priority
+  - Full spec compliance with all six required features implemented correctly
+  - Clean deterministic code using scipy for realistic transfer function computation
+  - Good visual hierarchy with red critical point emphasis and alpha-differentiated
+    mirror curve
+  - Appropriate square aspect ratio choice for the complex plane
   weaknesses:
-  - Frequency annotations near the origin (ω=5.0, ω=10.0) are crowded and overlap
-  - Could use more distinctive annotation positioning or leader lines to avoid clutter
-    near the origin
-  image_description: The plot displays a Nyquist diagram on the complex plane with
-    axes labeled "Real" (x-axis) and "Imaginary" (y-axis). The main frequency response
-    curve G(jω) is drawn as a solid dark blue line starting near (2, 0) at low frequencies
-    and sweeping counterclockwise through the lower half-plane, reaching approximately
-    (-2, -3) before curving back toward the origin. Its mirror image G(-jω) is shown
-    as a dashed lighter blue line in the upper half-plane with reduced opacity (alpha=0.35).
-    Four directional arrows on each curve indicate the direction of increasing frequency.
-    A dotted gray unit circle is centered at the origin. The critical point (-1, 0)
-    is marked with a prominent red "X" marker. Five frequency annotations (ω=0.3,
-    ω=1.0, ω=2.0, ω=5.0, ω=10.0) are placed along the curve with blue dot markers.
-    The title reads "nyquist-basic · matplotlib · pyplots.ai" at the top. Top and
-    right spines are removed, and a subtle grid (alpha=0.15) is present. A legend
-    in the lower-left corner identifies the three elements. The aspect ratio is 1:1
-    (square).
+  - Frequency annotations near the origin (ω=5, ω=10) are somewhat crowded
+  - Annotation font size at 14pt is slightly below the 16pt guideline
+  - Design could be pushed further toward publication quality
+  image_description: The plot displays a Nyquist diagram on the complex plane. A solid
+    steel-blue curve (G(jω)) traces the open-loop frequency response from low frequency
+    (starting near Real≈8, Imaginary≈0) sweeping down through the lower half-plane
+    (reaching approximately Imaginary≈-5) and curving back toward the origin. A dashed,
+    lighter blue curve (G(−jω)) mirrors it in the upper half-plane. A dotted gray
+    unit circle is centered at the origin. A prominent red "X" marks the critical
+    point at (-1, 0). Five frequency annotations (ω=0.3, 1, 2, 5, 10) are placed along
+    the curve with small dot markers and connecting offsets. Directional arrows along
+    the solid curve indicate increasing frequency. The title reads "nyquist-basic
+    · matplotlib · pyplots.ai". Axes are labeled "Real" and "Imaginary". Top and right
+    spines are removed, with a subtle grid at low alpha. The aspect ratio is equal,
+    making the unit circle appear circular.
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -46,43 +44,38 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 24, labels 20, ticks 16, legend
-          16, annotations 14). Annotation text slightly small but readable.
+        comment: All major sizes explicitly set; annotations at 14pt slightly below
+          16pt guideline
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Near origin, ω=5.0 and ω=10.0 annotations crowded and partially overlap.
-          ω=1.0 close to legend area.
+        passed: true
+        comment: Minor crowding of ω=5 and ω=10 annotations near origin
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Lines thick (lw=3), arrows visible, critical point prominent (markersize=18),
-          frequency dots well-sized.
+        comment: Lines, arrows, markers all clearly visible and well-sized
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Single blue color scheme with red for critical point only. Good contrast
-          throughout.
+        comment: Blue, red, gray well-differentiated; no colorblind issues
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Square format appropriate for 1:1 aspect ratio. Some empty space
-          in upper-right quadrant.
+        comment: Square figure with equal aspect ratio fills canvas well
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Real and Imaginary are standard correct labels for Nyquist plots.
-          Units dimensionless and not applicable.
+        comment: Real and Imaginary are standard descriptive labels for complex plane
     design_excellence:
       score: 13
       max: 20
@@ -92,22 +85,21 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Thoughtful color choices with Python Blue, muted grays, alpha differentiation.
-          Above defaults but not publication-level.
+        comment: Thoughtful design with Python Blue palette, alpha-differentiated
+          mirror curve, above defaults
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Spines removed, subtle grid (alpha=0.15), axis reference lines, generous
-          whitespace.
+        comment: Spines removed, subtle grid, light origin lines; good refinement
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Critical point prominent with red, arrows guide reader, mirror curve
-          with reduced opacity creates hierarchy.
+        comment: Clear hierarchy with red critical point, frequency annotations guide
+          viewer, alpha separation
     spec_compliance:
       score: 15
       max: 15
@@ -117,29 +109,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Nyquist plot on the complex plane.
+        comment: Correct Nyquist plot on complex plane
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: critical point, unit circle, frequency annotations,
-          direction arrows, 1:1 aspect ratio.'
+        comment: All six spec features present and working
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Real and Imaginary parts correctly mapped to x and y axes.
+        comment: Real on x-axis, Imaginary on y-axis, correctly computed
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title in correct format. Legend identifies G(jω), G(-jω), and Critical
-          point.
+        comment: Correct title format and descriptive legend labels
     data_quality:
-      score: 13
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -147,22 +137,21 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Complete Nyquist contour with mirror image and multiple frequency
-          annotations. Could show encirclement of -1.
+        comment: Complete Nyquist curve with encirclement, both frequency branches;
+          could show near-instability
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Realistic cascaded transfer function G(s) = 2/((s+1)(0.5s+1)(0.2s+1))
-          — plausible industrial control system.
+        comment: Realistic third-order transfer function with cascaded first-order
+          lags
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 800 log-spaced points from ω=10^-1.5 to 10^2 rad/s, appropriate engineering
-          range.
+        comment: Sensible frequency range and point count for chosen system
     code_quality:
       score: 10
       max: 10
@@ -172,31 +161,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean linear flow with no functions or classes.
+        comment: Clean linear flow with no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic using scipy.signal.freqresp with fixed coefficients.
+        comment: Fully deterministic, no randomness
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All four imports used.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized with appropriate loop usage.
+        comment: Clean and well-organized with appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300 and bbox_inches tight. Current API.
+        comment: Saves as plot.png with dpi=300, current API
     library_mastery:
       score: 7
       max: 10
@@ -206,14 +195,14 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Proper Axes methods, annotate API, add_patch, zorder management.
+        comment: Good use of ax methods, patches, annotate with arrowprops, zorder
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses patches.Circle, annotate with arrowprops, zorder layering —
-          moderately distinctive to matplotlib.
+        comment: Circle patch, annotate arrowprops, zorder layering are moderately
+          distinctive
   verdict: REJECTED
 impl_tags:
   dependencies:
