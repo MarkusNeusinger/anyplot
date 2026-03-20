@@ -1,0 +1,229 @@
+library: seaborn
+specification_id: line-parametric
+created: '2026-03-20T10:36:49Z'
+updated: '2026-03-20T11:01:48Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23339035297
+issue: 4424
+python_version: 3.14.3
+library_version: 0.13.2
+preview_url: https://storage.googleapis.com/pyplots-images/plots/line-parametric/seaborn/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/line-parametric/seaborn/plot_thumb.png
+preview_html: null
+quality_score: 81
+review:
+  strengths:
+  - Perfect spec compliance with all required features implemented correctly
+  - Excellent text legibility with all font sizes explicitly set
+  - Smart use of two distinct colorblind-safe colormaps (viridis, plasma) to differentiate
+    curves
+  - Start/end markers with both color and shape differentiation for accessibility
+  - Smooth rendering with 1000 points per curve and LineCollection for efficient color-mapping
+  weaknesses:
+  - Helper function make_segments() violates KISS flat structure requirement
+  - Library mastery is limited — seaborn mostly used for styling while matplotlib
+    does heavy lifting
+  - Marker loop with iterrows is verbose
+  - Data storytelling could be stronger with annotations at notable curve features
+  image_description: The plot displays two side-by-side panels on a white background
+    with the suptitle "line-parametric · seaborn · pyplots.ai" at the top. The left
+    panel shows a Lissajous figure (x = sin(3t), y = sin(2t)) — a self-intersecting
+    closed curve colored along a viridis gradient from dark purple (t=0) to yellow
+    (t=2π), with a colorbar on the right labeled "Parameter t (radians)". The right
+    panel shows an Archimedean spiral (x = t·cos(t), y = t·sin(t)) colored along a
+    plasma gradient from purple (t=0) to yellow (t=4π), also with its own colorbar.
+    Both panels have blue circle markers for start (t=0) and red square markers for
+    end points, with legends in the lower right. Axes are labeled "Horizontal position
+    x(t)" and "Vertical position y(t)". Top and right spines are removed. Grid is
+    subtle (alpha=0.15). Equal aspect ratio is maintained on both panels.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: suptitle 26pt, titles 24pt, labels
+          20pt, ticks 16pt, colorbar labels 18pt, legend 14pt'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text elements anywhere
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Lines 3pt wide with smooth color gradients, markers s=300 with white
+          edges
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Viridis and plasma colormaps are colorblind-safe, markers differ
+          by color and shape
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good two-panel layout on 18x9 canvas, slight tightness on right colorbar
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive labels with function notation, no units needed for dimensionless
+          math curves
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Two distinct colormaps, custom fonts, edge-highlighted markers, above
+          defaults but not exceptional
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines removed, subtle grid alpha=0.15, good whitespace, colorbars
+          properly sized
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Color gradient shows direction, start/end markers provide narrative,
+          but lacks annotations at notable features
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct parametric curve plot with color-mapped lines
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features: equal aspect, color gradient, two curves, start/end
+          markers, 1000 points'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y correctly computed from parametric equations
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct title format and descriptive legend labels
+    data_quality:
+      score: 13
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Two complementary curves: Lissajous (closed, self-intersecting)
+          and spiral (open, expanding)'
+      - id: DQ-02
+        name: Realistic Context
+        score: 4
+        max: 5
+        passed: true
+        comment: Standard mathematical curves from physics/math education, neutral
+          and educational
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Standard parameter ranges and frequency ratios
+    code_quality:
+      score: 8
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: false
+        comment: Contains helper function make_segments() which breaks flat script
+          structure
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic trigonometric data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 1
+        max: 2
+        passed: false
+        comment: Helper function adds unnecessary abstraction, marker loop with iterrows
+          is verbose
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with dpi=300, current API
+    library_mastery:
+      score: 4
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 2
+        max: 5
+        passed: false
+        comment: Seaborn used primarily for styling and markers; main curves use matplotlib
+          LineCollection directly
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Uses set_theme, set_context, despine which are seaborn-specific but
+          core viz is pure matplotlib
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - subplots
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - custom-colormap
+  - grid-styling
+  - edge-highlighting

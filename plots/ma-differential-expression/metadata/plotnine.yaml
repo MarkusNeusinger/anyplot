@@ -1,0 +1,227 @@
+library: plotnine
+specification_id: ma-differential-expression
+created: '2026-03-20T10:38:20Z'
+updated: '2026-03-20T10:59:43Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23339077857
+issue: 4420
+python_version: 3.14.3
+library_version: 0.15.3
+preview_url: https://storage.googleapis.com/pyplots-images/plots/ma-differential-expression/plotnine/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/ma-differential-expression/plotnine/plot_thumb.png
+preview_html: null
+quality_score: 90
+review:
+  strengths:
+  - Excellent data storytelling through three-category color/size/alpha mapping that
+    immediately conveys up/down regulation
+  - All spec requirements implemented comprehensively (reference lines, LOESS, gene
+    labels, transparency)
+  - Realistic genomics context with real gene names and appropriate data scales
+  - Clean idiomatic plotnine code leveraging grammar of graphics layering
+  weaknesses:
+  - Label nudge logic is verbose and could be simplified
+  - The ±2-fold threshold annotation text (size=11) is slightly small relative to
+    other text elements
+  image_description: 'The plot displays an MA plot for differential gene expression
+    with Mean Expression (A) on the x-axis (range 0-15) and Log2 Fold Change (M) on
+    the y-axis (range approximately -7 to +7). Three categories are shown via a top
+    legend: Downregulated (blue), Not significant (light gray, faded), and Upregulated
+    (orange). A solid dark horizontal reference line sits at M=0, with dashed gray
+    lines at M=+/-1 labeled "±2-fold threshold" on the right. A dark blue LOESS smoothing
+    curve traces near the zero line showing minimal systematic bias. Eight top differentially
+    expressed genes are labeled in italic text (APC, BRCA1, RB1, TP53, MYC, KRAS,
+    EGFR, PTEN) with labels nudged away from their data points. The background is
+    light gray (#FAFAFA) with subtle horizontal-only gridlines. Significant genes
+    (orange/blue) are larger and more opaque, while non-significant genes are small
+    and nearly transparent.'
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 24pt, axis titles 20pt, axis/tick
+          text 16pt, legend text 16pt'
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Gene labels use nudge logic; threshold annotation slightly small
+          and at canvas edge
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: 15k points handled well with alpha=0.15 for non-significant and alpha=0.8
+          + larger size for significant
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Orange and blue are colorblind-safe with gray non-significant providing
+          good contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 16:9 aspect ratio with good canvas utilization and balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive labels with parenthetical notation: Mean Expression
+          (A), Log2 Fold Change (M)'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful warm/cool color scheme, intentional visual hierarchy through
+          alpha/size mapping, custom background
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: X-grid removed, subtle y-grid, minor grid removed, custom background,
+          legend refined
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Strong visual hierarchy with three-category scheme, gene labels identify
+          key players, LOESS adds analytical depth
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct MA plot type
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: highlighting, reference lines, LOESS,
+          transparency, gene labels'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=mean_expression, Y=log_fold_change correctly mapped
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct title format and clear legend labels
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows upregulated, downregulated, non-significant, labeled outlier
+          genes, full expression range
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real gene names (BRCA1, TP53, MYC, etc.), realistic RNA-seq genomics
+          context
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 15,000 genes realistic for whole-transcriptome, appropriate expression
+          and fold-change ranges
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean Imports-Data-Plot-Save structure, no functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 1
+        max: 2
+        passed: false
+        comment: Label nudge/stagger logic is verbose (~18 lines of manual iteration)
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png, current plotnine API
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert grammar of graphics usage: ggplot+aes, layered geoms, scale_*_manual,
+          guides, theme composition'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses stat_smooth (LOESS), scale_alpha_manual/scale_size_manual, guide_legend
+          with override_aes
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  - custom-legend
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling
