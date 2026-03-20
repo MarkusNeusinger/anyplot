@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 nyquist-basic: Nyquist Plot for Control Systems
 Library: highcharts unknown | Python 3.14.3
 Quality: 79/100 | Created: 2026-03-20
@@ -52,14 +52,9 @@ sign_changes = np.where(np.diff(np.sign(imag_part[1:])))[0] + 1
 phase_crossover_idx = sign_changes[0] if len(sign_changes) > 0 else 0
 phase_crossover_freq = omega[phase_crossover_idx]
 
-# Select annotation frequencies (key points + a few along the curve)
-annotation_indices = [
-    np.argmin(np.abs(omega - 0.1)),
-    np.argmin(np.abs(omega - 0.5)),
-    gain_crossover_idx,
-    phase_crossover_idx,
-    np.argmin(np.abs(omega - 5.0)),
-]
+# Select annotation frequencies - spread out to avoid crowding near origin
+annotation_freqs = [0.5, 0.7, 2.0, 5.0]
+annotation_indices = [np.argmin(np.abs(omega - f)) for f in annotation_freqs]
 annotation_indices = sorted(set(annotation_indices))
 
 # Build Nyquist curve data (positive frequencies)
@@ -78,8 +73,8 @@ chart = Chart(container="container")
 chart.options = HighchartsOptions()
 
 chart.options.chart = {
-    "width": 4800,
-    "height": 2700,
+    "width": 3600,
+    "height": 3600,
     "backgroundColor": "#ffffff",
     "marginBottom": 220,
     "marginLeft": 260,
@@ -155,26 +150,30 @@ chart.options.tooltip = {
 # Annotations for frequency labels and critical point
 annotation_labels = []
 
-# Add frequency annotations along the curve
-for idx in annotation_indices:
+# Add frequency annotations along the curve with alternating offsets
+label_offsets = [(-30, -40), (25, 30), (-25, -35), (30, 25)]
+for i, idx in enumerate(annotation_indices):
     if idx < len(real_part) and mask[idx]:
         freq = omega[idx]
         r = float(real_part[idx])
         im = float(imag_part[idx])
         if abs(r) < 10 and abs(im) < 10:
             freq_text = f"\u03c9={freq:.1f}" if freq >= 0.1 else f"\u03c9={freq:.2f}"
+            x_off, y_off = label_offsets[i % len(label_offsets)]
             annotation_labels.append(
                 {
                     "point": {"x": round(r, 3), "y": round(im, 3), "xAxis": 0, "yAxis": 0},
                     "text": freq_text,
-                    "style": {"fontSize": "26px", "fontWeight": "600", "color": "#306998"},
-                    "backgroundColor": "rgba(255, 255, 255, 0.9)",
+                    "style": {"fontSize": "28px", "fontWeight": "600", "color": "#306998"},
+                    "backgroundColor": "rgba(255, 255, 255, 0.92)",
                     "borderColor": "#306998",
                     "borderWidth": 2,
                     "borderRadius": 6,
-                    "padding": 8,
+                    "padding": 10,
                     "shape": "rect",
-                    "distance": 20,
+                    "distance": 30,
+                    "x": x_off,
+                    "y": y_off,
                 }
             )
 
@@ -270,6 +269,7 @@ arrow_series.marker = {
     "lineColor": "#ffffff",
 }
 arrow_series.z_index = 5
+arrow_series.show_in_legend = False
 chart.add_series(arrow_series)
 
 # Save HTML
@@ -288,7 +288,7 @@ html_content = (
     "    <script>" + highcharts_js + "</script>\n"
     "    <script>" + annotations_js + "</script>\n"
     '</head>\n<body style="margin:0;">\n'
-    '    <div id="container" style="width: 4800px; height: 2700px;"></div>\n'
+    '    <div id="container" style="width: 3600px; height: 3600px;"></div>\n'
     "    <script>" + html_str + "</script>\n"
     "</body>\n</html>"
 )
@@ -307,7 +307,7 @@ chrome_options.add_argument("--headless")
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
 chrome_options.add_argument("--disable-gpu")
-chrome_options.add_argument("--window-size=4800,2700")
+chrome_options.add_argument("--window-size=3600,3600")
 
 driver = webdriver.Chrome(options=chrome_options)
 driver.get(f"file://{temp_path}")
