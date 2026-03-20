@@ -1,7 +1,7 @@
 library: plotly
 specification_id: bar-pareto
 created: '2026-03-20T07:21:33Z'
-updated: '2026-03-20T07:25:40Z'
+updated: '2026-03-20T07:32:49Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23332978618
 issue: 4550
@@ -10,33 +10,39 @@ library_version: 6.6.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/bar-pareto/plotly/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/bar-pareto/plotly/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/bar-pareto/plotly/plot.html
-quality_score: 84
+quality_score: 91
 review:
   strengths:
-  - Perfect spec compliance — all required Pareto chart features present and correct
-  - Excellent data choice — manufacturing defects are a classic realistic Pareto application
-  - Clean minimal code with deterministic data and proper KISS structure
-  - Good color pairing between bars and cumulative line with accessible contrast
+  - Excellent data storytelling through vital few/trivial many color distinction with
+    subtle vrect background shading
+  - All spec requirements fully met including 80% threshold reference line and cumulative
+    markers at bar centers
+  - Clean professional aesthetic with thoughtful color palette and spline interpolation
+    on cumulative line
+  - Strong typography with all font sizes explicitly set and readable
+  - Value labels on top 3 bars and 81% threshold crossing annotation add useful context
   weaknesses:
-  - Design could be elevated with color differentiation between categories above/below
-    the 80% threshold
-  - Visual refinement is moderate — could benefit from more intentional whitespace
-    and polish
-  - The 80% line storytelling could be stronger with visual emphasis on vital few
-    vs trivial many
-  image_description: The plot displays a Pareto chart with 10 steel-blue bars sorted
-    in descending order from Scratches (142) to Porosity (9), representing manufacturing
-    defect frequencies. An orange-red cumulative percentage line with white-bordered
-    circular markers overlays on a secondary y-axis (right side, 0-100%). A dashed
-    gray horizontal line marks the 80% threshold with a "80%" label at the far right.
-    The title reads "bar-pareto · plotly · pyplots.ai". The x-axis is labeled "Defect
-    Type", left y-axis "Frequency", and right y-axis "Cumulative Percentage (%)".
-    A legend in the lower-right area shows "Defect Count" (blue square) and "Cumulative
-    %" (orange line). White background with subtle gray gridlines on the primary y-axis
-    only.
+  - 'Minor dead code: bar_colors list computed on line 34 but never used'
+  - Annotation font sizes (14-15pt) slightly small relative to other text elements
+  image_description: 'The plot displays a Pareto chart for manufacturing defect types.
+    Ten categories are shown on the x-axis sorted in descending order by frequency:
+    Scratches (142), Dents (118), Misalignment (87), Cracks (64), Discoloration (53),
+    Burrs (38), Warping (29), Contamination (21), Chipping (15), and Porosity (9).
+    Bars are color-coded: the first five categories ("Vital Few") are in dark steel
+    blue (#306998), while the remaining five ("Trivial Many") are in lighter blue
+    (#A8C4D9). A subtle blue-tinted background rectangle highlights the vital few
+    region. A red cumulative percentage line (#C0392B) with spline interpolation and
+    white-bordered circle markers overlays the bars, plotted against a secondary y-axis
+    (0-100%) on the right. The 80% threshold is shown as a dotted horizontal line
+    with a "80% threshold" annotation on the right. The cumulative crossing point
+    is annotated with "81%" in red text. Value labels (142, 118, 87) appear above
+    the top three bars. The legend in the lower-right shows "Vital Few", "Trivial
+    Many", and "Cumulative %". Title reads "bar-pareto · plotly · pyplots.ai" centered
+    at the top. Background is white with very subtle horizontal gridlines on the primary
+    y-axis.'
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -44,64 +50,65 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 28, labels 22, ticks 16-18).
-          Minor inconsistency between x and y tick sizes.
+        comment: All font sizes explicitly set (title 28, axis labels 22, ticks 17-18).
+          Annotations at 14-15pt slightly small.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text anywhere. All labels fully readable.
+        comment: No overlapping elements anywhere
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Bars well-sized, line markers (size 12) clearly visible with white
-          borders.
+        comment: Bars clearly visible, cumulative line markers size 14 with white
+          borders stand out well
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Blue and orange-red provide strong contrast, distinguishable under
-          colorblindness.
+        comment: Blue/light-blue bars plus red line is colorblind-safe
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good canvas utilization. Right y-axis title slightly cramped.
+        comment: Good canvas utilization with balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units on percentage axis.
+        comment: 'Descriptive labels with units: Defect Type, Frequency, Cumulative
+          Percentage (%)'
     design_excellence:
-      score: 11
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Thoughtful color pairing, white marker borders add polish. Above
-          defaults but not publication-level.
+        comment: Strong design with intentional vital few/trivial many color-coding,
+          spline curve, white-bordered markers
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Subtle grid opacity, grid only on primary y-axis. Moderate refinement.
+        comment: plotly_white template, subtle grid at 6% opacity, vrect shading,
+          clean bar edges
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
         passed: true
-        comment: 80% reference line communicates Pareto principle. Could be stronger
-          with color differentiation.
+        comment: 'Excellent storytelling: vital few/trivial many distinction, 80%
+          threshold annotation, value labels on top bars'
     spec_compliance:
       score: 15
       max: 15
@@ -111,49 +118,49 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Pareto chart with descending bars and cumulative line.
+        comment: Correct Pareto chart with descending bars and cumulative line
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All required features present: descending sort, cumulative line,
-          80% reference, dual axes.'
+        comment: 'All features present: descending sort, cumulative line, 80% reference,
+          dual axes, bar-center markers'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Categories on x, counts on primary y, cumulative % on secondary y.
+        comment: Categories on x, counts on primary y, cumulative % on secondary y
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Legend labels clear and matching.
+        comment: Correct title format and legend labels match data
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 10 categories with clear descending distribution demonstrating Pareto
-          principle.
+        comment: 10 categories with clear Pareto distribution, good variation 142
+          down to 9
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Manufacturing defect data is a classic real-world Pareto application.
+        comment: Manufacturing defect data is a classic neutral Pareto analysis scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Counts 9-142, realistic for manufacturing defect tracking.
+        comment: Defect counts 9-142 are realistic for manufacturing quality analysis
     code_quality:
       score: 10
       max: 10
@@ -163,31 +170,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports, data, plot, style, save.'
+        comment: Clean Imports-Data-Plot-Save structure, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hardcoded data.
+        comment: Fully deterministic with hardcoded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy and plotly.graph_objects, both used.
+        comment: Only numpy and plotly.graph_objects, both used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, concise code with reasonable defensive sorting.
+        comment: Clean and well-organized, two-trace approach is appropriate for plotly
+          legend
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png (4800x2700) and plot.html.
+        comment: Saves plot.png at 4800x2700 and plot.html, current API
     library_mastery:
       score: 7
       max: 10
@@ -197,16 +205,16 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of go.Figure, go.Bar, go.Scatter with yaxis2, add_hline,
-          add_annotation.
+        comment: Good graph_objects usage with yaxis2 overlaying, add_hline, add_annotation,
+          add_vrect
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: 'Uses plotly-specific features: secondary axis via yaxis2/overlaying,
-          add_hline with yref, HTML export.'
-  verdict: REJECTED
+        comment: Uses plotly-specific add_hline, add_vrect, spline shape, HTML export
+          with CDN
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -219,3 +227,4 @@ impl_tags:
   - cumulative-sum
   styling:
   - grid-styling
+  - edge-highlighting
