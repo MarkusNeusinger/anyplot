@@ -1,7 +1,7 @@
 library: plotnine
 specification_id: ma-differential-expression
 created: '2026-03-20T10:38:20Z'
-updated: '2026-03-20T10:42:13Z'
+updated: '2026-03-20T10:48:33Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23339077857
 issue: 4420
@@ -13,31 +13,31 @@ preview_html: null
 quality_score: 85
 review:
   strengths:
-  - Excellent spec compliance — all required features present and correctly implemented
-  - Strong data quality with realistic gene names and appropriate scales for RNA-seq
-    context
-  - Good visual hierarchy with alpha differentiation separating significant from non-significant
-    genes
-  - Clean, well-structured code with proper reproducibility
+  - Perfect spec compliance with all required features present and correct
+  - Excellent data quality with realistic genomics context and real gene names
+  - Clean idiomatic plotnine code with good grammar-of-graphics composition
+  - Effective visual hierarchy separating significant from non-significant genes
+  - Good use of stat_smooth for LOESS integration
   weaknesses:
-  - Manual LOESS calculation via statsmodels instead of plotnine built-in stat_smooth
-  - Gene label text size could be larger for better readability
-  - Significant point color appears washed out due to alpha blending
-  - Grid could be refined further (y-axis only for cleaner look)
-  image_description: 'The plot displays an MA plot with Mean Expression (A) on the
-    x-axis (range 0-15) and Log2 Fold Change (M) on the y-axis (range approximately
-    -7 to +6). Points are colored in two groups: light gray with low alpha for "Not
-    significant" genes and pink/red with moderate alpha for "Significant" genes. A
-    solid dark horizontal line marks M=0 (no change), with dashed gray lines at M=+1
-    and M=-1 (2-fold change thresholds). A blue LOESS smoothing curve runs through
-    the data near M=0 showing slight expression-dependent bias. Eight well-known cancer
-    genes (APC, BRCA1, RB1, MYC, TP53, KRAS, EGFR, PTEN) are labeled near the extremes
-    of the fold-change distribution. The legend is positioned at the top. Title reads
-    "ma-differential-expression · plotnine · pyplots.ai". Layout is 16:9 landscape
-    with theme_minimal styling.'
+  - Gene label font size (11) is small relative to other text elements
+  - MYC and TP53 labels positioned close together risking minor overlap
+  - Red color palette not optimal for all color vision deficiencies
+  - Could leverage more distinctive plotnine features for higher library mastery
+  image_description: 'The plot displays an MA plot (M-versus-A) for differential gene
+    expression analysis. The x-axis shows "Mean Expression (A)" ranging from 0 to
+    15, and the y-axis shows "Log₂ Fold Change (M)" ranging from approximately -6
+    to +6. Non-significant genes appear as light gray semi-transparent points (alpha
+    ~0.2), while significant genes are shown in a muted red/pink (alpha ~0.75). A
+    solid dark horizontal reference line sits at M=0, with dashed gray lines at M=+1
+    and M=-1 marking 2-fold change thresholds. A blue LOESS smoothing curve runs nearly
+    flat near zero across the expression range. Eight top differentially expressed
+    genes are labeled: BRCA1, APC, RB1, MYC, TP53, KRAS, EGFR, and PTEN. The title
+    reads "ma-differential-expression · plotnine · pyplots.ai" in bold at the top.
+    The legend at top shows "Not significant" and "Significant" categories. The background
+    is clean white with subtle horizontal grid lines only.'
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 25
       max: 30
       items:
       - id: VQ-01
@@ -45,41 +45,42 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=24, axis_title=20, axis_text=16,
-          legend_text=16). Gene label size=9 is slightly small.
+        comment: All major font sizes explicitly set (title=24, axis_title=20, axis_text=16,
+          legend_text=16). Gene labels at size=11 are slightly small but readable.
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: MYC and TP53 labels are close together; minor crowding risk.
+        comment: Most labels well-placed. MYC and TP53 labels close together but individually
+          readable.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Good alpha differentiation (0.2 vs 0.6). Point size=1.5 appropriate
-          for 15k points.
+        comment: Good alpha differentiation (0.2 vs 0.75) and small point size (1.5)
+          appropriate for 15K points.
       - id: VQ-04
         name: Color Accessibility
         score: 3
         max: 4
         passed: true
-        comment: Red vs gray provides luminance contrast. Significant points appear
-          slightly pink due to alpha.
+        comment: Red vs gray provides good luminance contrast but red could be difficult
+          for some color vision deficiencies.
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Good 16:9 proportions, plot fills canvas well.
+        comment: Good 16:9 proportions, data fills canvas well. Some vertical empty
+          space at extreme y-values.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with notation: Mean Expression (A), Log2 Fold
-          Change (M).'
+        comment: Descriptive labels with standard MA plot notation (A) and (M).
     design_excellence:
       score: 13
       max: 20
@@ -89,22 +90,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom color scheme, above defaults but not publication-level. Pink-on-gray
-          could be stronger.
+        comment: Thoughtful color choices, custom alpha values, LOESS in distinct
+          blue. Above defaults but not publication-level.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: theme_minimal removes spines, subtle grid. Could refine to y-axis
-          only grid.
+        comment: theme_minimal, subtle y-only grid, legend at top. Good whitespace.
+          Missing reference line labels.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Clear visual hierarchy with labeled genes, significant points, and
-          LOESS trend.
+        comment: 'Clear hierarchy: significant genes in red, top genes labeled with
+          real names, LOESS reveals near-zero bias.'
     spec_compliance:
       score: 15
       max: 15
@@ -114,26 +115,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct MA plot type.
+        comment: Correct MA plot with mean expression on x-axis and log fold change
+          on y-axis.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: highlighting, reference lines, LOESS,
-          transparency, labels.'
+        comment: 'All spec features present: reference lines, LOESS, significance
+          coloring, gene labels.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=mean expression, Y=log fold change. Correct.
+        comment: X=mean_expression, Y=log_fold_change, color=significance. All correctly
+          mapped.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows exact format. Legend labels correct.
+        comment: Title follows exact format. Legend labels clear and match data.
     data_quality:
       score: 15
       max: 15
@@ -143,20 +146,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows upregulated/downregulated, dense cloud, outliers, labeled genes,
-          LOESS.
+        comment: Shows significant and non-significant, upregulated and downregulated,
+          full expression range, labeled top candidates.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real cancer gene names, realistic RNA-seq context.
+        comment: Realistic genomics context with real gene names (BRCA1, TP53, MYC,
+          etc.). 15K genes in typical range.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 15k genes, expression 0-15, realistic fold-change distribution.
+        comment: Expression 0-15, fold changes centered near 0, 8% significance rate
+          — all realistic for RNA-seq.
     code_quality:
       score: 10
       max: 10
@@ -166,33 +171,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports-data-plot-save structure.
+        comment: 'Clean linear flow: Imports, Data, Plot, Save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42) set at top.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used.
+        comment: All imports used. Specific plotnine imports.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, appropriate complexity.
+        comment: Clean, well-organized, appropriate complexity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300.
+        comment: Saves as plot.png with dpi=300, current API.
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -200,24 +205,24 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good grammar-of-graphics approach with layered geoms and scales.
+        comment: 'Good grammar of graphics usage: aes mappings, layered geoms, scale_color_manual,
+          stat_smooth, theme customization.'
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Manual LOESS instead of plotnine stat_smooth. Generic usage.
+        passed: true
+        comment: stat_smooth with LOESS is plotnine-distinctive. scale_alpha_manual
+          and layered composition are idiomatic ggplot patterns.
   verdict: REJECTED
 impl_tags:
-  dependencies:
-  - statsmodels
+  dependencies: []
   techniques:
   - annotations
   - layer-composition
   patterns:
   - data-generation
-  dataprep:
-  - regression
+  dataprep: []
   styling:
   - alpha-blending
   - grid-styling

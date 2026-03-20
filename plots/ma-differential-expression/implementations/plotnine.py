@@ -1,4 +1,4 @@
-"""pyplots.ai
+""" pyplots.ai
 ma-differential-expression: MA Plot for Differential Expression
 Library: plotnine 0.15.3 | Python 3.14.3
 Quality: 85/100 | Created: 2026-03-20
