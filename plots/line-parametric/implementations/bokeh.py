@@ -1,7 +1,7 @@
 """ pyplots.ai
 line-parametric: Parametric Curve Plot
 Library: bokeh 3.9.0 | Python 3.14.3
-Quality: 79/100 | Created: 2026-03-20
+Quality: 82/100 | Created: 2026-03-20
 """
 
 import numpy as np
