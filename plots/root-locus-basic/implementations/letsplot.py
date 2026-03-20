@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 root-locus-basic: Root Locus Plot for Control Systems
 Library: letsplot 4.9.0 | Python 3.14.3
 Quality: 89/100 | Created: 2026-03-20
@@ -70,17 +70,29 @@ else:
     crossing_pts = pd.DataFrame(columns=df.columns)
 
 # Direction arrows - sample points at specific gain values for each branch
-arrow_gains = [8, 25, 60]
+arrow_gains = [5, 15, 50]
 arrow_rows = []
 for ag in arrow_gains:
     idx = np.argmin(np.abs(k_values - ag))
     subset = df[(df["gain"] >= k_values[max(0, idx - 1)]) & (df["gain"] <= k_values[min(len(k_values) - 1, idx + 1)])]
     for _, row in subset.drop_duplicates(subset="branch").iterrows():
-        k_next = k_values[min(len(k_values) - 1, idx + 3)]
-        next_pts = df[(np.abs(df["gain"] - k_next) < 0.5) & (df["branch"] == row["branch"])]
+        k_next = k_values[min(len(k_values) - 1, idx + 5)]
+        next_pts = df[(np.abs(df["gain"] - k_next) < 1.0) & (df["branch"] == row["branch"])]
         if len(next_pts) > 0:
             npt = next_pts.iloc[0]
-            arrow_rows.append({"x": row["real"], "y": row["imaginary"], "xend": npt["real"], "yend": npt["imaginary"]})
+            dx = npt["real"] - row["real"]
+            dy = npt["imaginary"] - row["imaginary"]
+            mag = np.sqrt(dx**2 + dy**2)
+            if mag > 0.01:
+                scale = 0.25 / mag
+                arrow_rows.append(
+                    {
+                        "x": row["real"],
+                        "y": row["imaginary"],
+                        "xend": row["real"] + dx * scale,
+                        "yend": row["imaginary"] + dy * scale,
+                    }
+                )
 
 arrows_df = pd.DataFrame(arrow_rows) if arrow_rows else pd.DataFrame(columns=["x", "y", "xend", "yend"])
 
@@ -98,11 +110,15 @@ for zeta in zeta_values:
     )
 zeta_df = pd.DataFrame(zeta_lines)
 
-# Zeta labels (upper half only)
+# Zeta labels (upper half only, positioned along lines with offset to avoid crowding)
 zeta_label_df = pd.DataFrame(
     [
-        {"x": -r_max * 0.55 * np.cos(np.arccos(z)), "y": r_max * 0.55 * np.sin(np.arccos(z)), "label": f"ζ={z}"}
-        for z in zeta_values
+        {
+            "x": -r_max * (0.4 + i * 0.08) * np.cos(np.arccos(z)),
+            "y": r_max * (0.4 + i * 0.08) * np.sin(np.arccos(z)),
+            "label": f"ζ={z}",
+        }
+        for i, z in enumerate(zeta_values)
     ]
 )
 
@@ -150,7 +166,7 @@ plot = (
     # Stable region shading (left half-plane)
     + geom_rect(  # noqa: F405
         aes(xmin="xmin", ymin="ymin", xmax="xmax", ymax="ymax"),  # noqa: F405
-        data=pd.DataFrame({"xmin": [-5.5], "xmax": [0], "ymin": [-4], "ymax": [4]}),
+        data=pd.DataFrame({"xmin": [-5.0], "xmax": [0], "ymin": [-4], "ymax": [4]}),
         fill="#E8F4E8",
         alpha=0.3,
         inherit_aes=False,
@@ -178,13 +194,37 @@ plot = (
         hjust=0,
         family="serif",
     )
-    # Root locus branches
+    # Region labels for storytelling
+    + geom_text(  # noqa: F405
+        aes(x="x", y="y", label="label"),  # noqa: F405
+        data=pd.DataFrame({"x": [-4.3], "y": [2.8], "label": ["STABLE"]}),
+        size=16,
+        color="#4CAF50",
+        alpha=0.4,
+        inherit_aes=False,
+        family="monospace",
+        fontface="bold",
+    )
+    + geom_text(  # noqa: F405
+        aes(x="x", y="y", label="label"),  # noqa: F405
+        data=pd.DataFrame({"x": [0.55], "y": [2.8], "label": ["UNSTABLE"]}),
+        size=12,
+        color="#D55E00",
+        alpha=0.35,
+        inherit_aes=False,
+        family="monospace",
+        fontface="bold",
+    )
+    # Root locus branches with interactive tooltips
     + geom_path(  # noqa: F405
         aes(x="real", y="imaginary", color="branch"),  # noqa: F405
         data=df,
-        size=1.5,
-        alpha=0.85,
+        size=1.8,
+        alpha=0.9,
         tooltips=layer_tooltips()  # noqa: F405
+        .format("gain", ".2f")
+        .format("real", ".3f")
+        .format("imaginary", ".3f")
         .line("Branch: @branch")
         .line("Gain K: @gain")
         .line("Re: @real")
@@ -193,13 +233,13 @@ plot = (
     + scale_color_manual(  # noqa: F405
         values=branch_colors, name="Locus Branch"
     )
-    # Direction arrows
+    # Direction arrows (larger, more visible)
     + geom_segment(  # noqa: F405
         aes(x="x", y="y", xend="xend", yend="yend"),  # noqa: F405
         data=arrows_df,
-        color="#555555",
-        size=0.8,
-        arrow=arrow(length=8, type="open"),  # noqa: F405
+        color="#333333",
+        size=1.2,
+        arrow=arrow(length=14, ends="last", type="open"),  # noqa: F405
         inherit_aes=False,
         tooltips="none",
     )
@@ -230,10 +270,27 @@ plot = (
         aes(x="real", y="imaginary"),  # noqa: F405
         data=crossing_pts,
         shape=18,  # diamond
-        size=7,
+        size=8,
         color="#D55E00",
         inherit_aes=False,
-        tooltips=layer_tooltips().line("Stability boundary crossing").line("Im: @imaginary"),  # noqa: F405
+        tooltips=layer_tooltips().line("Stability boundary crossing").line("K ≈ @gain").line("Im: @imaginary"),  # noqa: F405
+    )
+    # Crossing gain annotation
+    + geom_text(  # noqa: F405
+        aes(x="x", y="y", label="label"),  # noqa: F405
+        data=pd.DataFrame(
+            {
+                "x": [0.25],
+                "y": [crossing_pts["imaginary"].max() if len(crossing_pts) > 0 else 2.0],
+                "label": [f"K ≈ {crossing_pts['gain'].iloc[0]:.1f}" if len(crossing_pts) > 0 else ""],
+            }
+        ),
+        size=13,
+        color="#D55E00",
+        inherit_aes=False,
+        hjust=0,
+        family="monospace",
+        fontface="bold",
     )
     # Labels and styling
     + labs(  # noqa: F405
@@ -242,7 +299,7 @@ plot = (
         title="root-locus-basic · letsplot · pyplots.ai",
         caption="G(s) = (s + 3) / [s(s + 1)(s + 2)(s + 4)]  ·  × = poles  ·  ○ = zeros  ·  Stable region shaded",
     )
-    + coord_fixed(ratio=1, xlim=[-5.5, 1.5], ylim=[-4, 4])  # noqa: F405
+    + coord_fixed(ratio=1, xlim=[-5.0, 1.5], ylim=[-4, 4])  # noqa: F405
     + ggsize(1600, 900)  # noqa: F405
     + theme_minimal()  # noqa: F405
     + theme(  # noqa: F405
