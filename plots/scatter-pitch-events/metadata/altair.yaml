@@ -1,0 +1,237 @@
+library: altair
+specification_id: scatter-pitch-events
+created: '2026-03-20T12:36:39Z'
+updated: '2026-03-20T13:06:47Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23342848762
+issue: 4417
+python_version: 3.14.3
+library_version: 6.0.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/scatter-pitch-events/altair/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/scatter-pitch-events/altair/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/scatter-pitch-events/altair/plot.html
+quality_score: 89
+review:
+  strengths:
+  - Comprehensive pitch diagram with all standard FIFA markings rendered cleanly in
+    white on green
+  - Zone shading gradient creates depth and highlights the attacking third as a focal
+    area
+  - Shot size hierarchy (280 vs 160) combined with zone emphasis creates strong data
+    storytelling
+  - Perfect spec compliance — all required features including directional arrows with
+    arrowheads
+  - Colorblind-safe palette with excellent contrast against the pitch background
+  - Interactive features (tooltips, zoom/pan) and HTML export leverage Altair strengths
+  weaknesses:
+  - Some visual congestion in the attacking third where shot arrows converge near
+    the goal
+  - Whitespace below the pitch slightly reduces canvas utilization
+  - Zone shading opacity differences are subtle — could be more pronounced for stronger
+    storytelling
+  image_description: 'The plot displays a soccer pitch event map on a dark green background
+    with three zone shadings — a darker defensive third (left), medium middle third,
+    and a brighter/lighter attacking third (right) that draws the eye. White pitch
+    markings include boundary lines, penalty areas on both sides, goal areas, center
+    circle, halfway line, penalty arcs, corner arcs, and center/penalty spots — all
+    cleanly rendered. Four event types are plotted with distinct markers and colors:
+    blue circles for Passes (distributed across the pitch with directional arrows),
+    orange right-pointing triangles for Shots (clustered in the attacking third with
+    arrows converging toward the goal), teal upward-pointing triangles for Tackles,
+    and purple diamonds for Interceptions. Shots use larger markers (280 vs 160) creating
+    visual hierarchy. Opacity encodes outcome — successful events are nearly opaque
+    while unsuccessful events are semi-transparent. Two styled legends on the right
+    show "Event Type" and "Outcome" with custom backgrounds, borders, and rounded
+    corners. The title reads "scatter-pitch-events · altair · pyplots.ai" in bold
+    28pt with a 19pt subtitle describing the content. Some whitespace remains below
+    the pitch.'
+  criteria_checklist:
+    visual_quality:
+      score: 26
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title 28pt, subtitle 19pt, legend titles 18pt, legend labels 16pt
+          — all explicitly set and readable
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: No text overlap; some visual congestion in attacking third where
+          shot arrows converge
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Markers visible with white stroke. Shot size hierarchy helps. Minor
+          congestion near goal
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Colorblind-safe palette (blue, orange, teal, purple) with excellent
+          contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Correct aspect ratio, pitch fills width well. Some whitespace below
+          pitch
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Axes appropriately hidden for pitch diagram. Descriptive title and
+          subtitle
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom palette, zone gradient shading, white marker strokes, styled
+          legends. Above defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines hidden, zone shading with distinct opacities, pitch lines
+          at 0.75 opacity, styled legend
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Attacking third highlighted, shots larger, subtitle narrates story,
+          arrows converge on goal
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct scatter/event map on accurately scaled pitch diagram
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: All spec features present including directional arrows with arrowheads
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X (0-105m) and Y (0-68m) correctly mapped to pitch coordinates
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct. Legends for Event Type and Outcome with accurate
+          labels
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All four event types with realistic proportions and both outcomes
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Soccer match events — neutral sports analytics domain
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: FIFA standard dimensions, 120 events, zone-appropriate positioning
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear flow with no functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-structured with clever arrowhead computation
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot.png and plot.html with current API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Excellent alt.layer() composition, proper encoding types, resolve_scale
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses interactive(), tooltips, angle encoding, resolve_scale, HTML
+          export
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - hover-tooltips
+  - custom-legend
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
+  - minimal-chrome
