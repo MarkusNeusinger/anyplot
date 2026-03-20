@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 scatter-pitch-events: Soccer Pitch Event Map
 Library: plotnine 0.15.3 | Python 3.14.3
 Quality: 79/100 | Created: 2026-03-20
@@ -14,6 +14,7 @@ from plotnine import (
     element_blank,
     element_rect,
     element_text,
+    geom_path,
     geom_point,
     geom_segment,
     ggplot,
@@ -78,29 +79,66 @@ df = pd.DataFrame(
     }
 )
 
+# Split data for visual hierarchy: shots rendered larger as focal point
+df_shots = df[df["event_type"] == "Shot"].copy()
+df_other = df[df["event_type"] != "Shot"].copy()
 arrows_df = df[df["event_type"].isin(["Pass", "Shot"])].copy()
 
-# Pitch markings data
+# Pitch markings
 pitch_color = "#2d8c3c"
 line_color = "white"
 lw = 0.8
 
-# Center circle points
+# Center circle path
 theta = np.linspace(0, 2 * np.pi, 100)
-center_circle = pd.DataFrame({"cx": 52.5 + 9.15 * np.cos(theta), "cy": 34 + 9.15 * np.sin(theta)})
+center_circle = pd.DataFrame({"cx": 52.5 + 9.15 * np.cos(theta), "cy": 34 + 9.15 * np.sin(theta), "grp": 1})
 
 # Penalty arcs
 theta_left = np.linspace(-0.65, 0.65, 50)
-left_arc = pd.DataFrame({"ax": 11 + 9.15 * np.cos(theta_left), "ay": 34 + 9.15 * np.sin(theta_left)})
+left_arc = pd.DataFrame({"cx": 11 + 9.15 * np.cos(theta_left), "cy": 34 + 9.15 * np.sin(theta_left), "grp": 2})
 theta_right = np.linspace(np.pi - 0.65, np.pi + 0.65, 50)
-right_arc = pd.DataFrame({"ax": 94 + 9.15 * np.cos(theta_right), "ay": 34 + 9.15 * np.sin(theta_right)})
+right_arc = pd.DataFrame({"cx": 94 + 9.15 * np.cos(theta_right), "cy": 34 + 9.15 * np.sin(theta_right), "grp": 3})
 
-# Corner arc points
-corner_theta = np.linspace(0, np.pi / 2, 25)
+# Corner arcs
 ca_r = 1.0
+corner_arcs = pd.concat(
+    [
+        pd.DataFrame(
+            {
+                "cx": ca_r * np.cos(np.linspace(0, np.pi / 2, 20)),
+                "cy": ca_r * np.sin(np.linspace(0, np.pi / 2, 20)),
+                "grp": 4,
+            }
+        ),
+        pd.DataFrame(
+            {
+                "cx": ca_r * np.cos(np.linspace(np.pi / 2, np.pi, 20)),
+                "cy": 68 + ca_r * np.sin(np.linspace(np.pi / 2, np.pi, 20)),
+                "grp": 5,
+            }
+        ),
+        pd.DataFrame(
+            {
+                "cx": 105 + ca_r * np.cos(np.linspace(-np.pi / 2, 0, 20)),
+                "cy": ca_r * np.sin(np.linspace(-np.pi / 2, 0, 20)),
+                "grp": 6,
+            }
+        ),
+        pd.DataFrame(
+            {
+                "cx": 105 + ca_r * np.cos(np.linspace(np.pi, 3 * np.pi / 2, 20)),
+                "cy": 68 + ca_r * np.sin(np.linspace(np.pi, 3 * np.pi / 2, 20)),
+                "grp": 7,
+            }
+        ),
+    ],
+    ignore_index=True,
+)
 
-# Event colors and shapes
-event_colors = {"Pass": "#306998", "Shot": "#e74c3c", "Tackle": "#f39c12", "Interception": "#9b59b6"}
+all_curves = pd.concat([center_circle, left_arc, right_arc, corner_arcs], ignore_index=True)
+
+# Event colors and shapes — colorblind-friendly (orange replaces teal for tackles)
+event_colors = {"Pass": "#306998", "Shot": "#e74c3c", "Tackle": "#e67e22", "Interception": "#9b59b6"}
 event_shapes = {"Pass": "o", "Shot": "*", "Tackle": "^", "Interception": "D"}
 
 # Plot
@@ -133,50 +171,30 @@ plot = (
     + annotate("segment", x=107, xend=107, y=30.34, yend=37.66, color=line_color, size=1.5)
     + annotate("segment", x=105, xend=107, y=30.34, yend=30.34, color=line_color, size=0.5)
     + annotate("segment", x=105, xend=107, y=37.66, yend=37.66, color=line_color, size=0.5)
-    # Center circle
-    + geom_segment(
-        data=center_circle.assign(cx2=center_circle["cx"].shift(-1), cy2=center_circle["cy"].shift(-1)).dropna(),
-        mapping=aes(x="cx", y="cy", xend="cx2", yend="cy2"),
-        color=line_color,
-        size=lw,
-        inherit_aes=False,
-    )
-    # Left penalty arc
-    + geom_segment(
-        data=left_arc.assign(ax2=left_arc["ax"].shift(-1), ay2=left_arc["ay"].shift(-1)).dropna(),
-        mapping=aes(x="ax", y="ay", xend="ax2", yend="ay2"),
-        color=line_color,
-        size=lw,
-        inherit_aes=False,
-    )
-    # Right penalty arc
-    + geom_segment(
-        data=right_arc.assign(ax2=right_arc["ax"].shift(-1), ay2=right_arc["ay"].shift(-1)).dropna(),
-        mapping=aes(x="ax", y="ay", xend="ax2", yend="ay2"),
-        color=line_color,
-        size=lw,
-        inherit_aes=False,
-    )
+    # Center circle, penalty arcs, and corner arcs
+    + geom_path(data=all_curves, mapping=aes(x="cx", y="cy", group="grp"), color=line_color, size=lw, inherit_aes=False)
     # Directional arrows for passes and shots
     + geom_segment(
         data=arrows_df,
         mapping=aes(x="x", y="y", xend="x_end", yend="y_end", color="event_type", alpha="outcome"),
-        size=0.5,
+        size=0.8,
         arrow=arrow(length=0.15, type="open"),
         inherit_aes=False,
     )
-    # Event markers
-    + geom_point(size=5, stroke=0.5)
+    # Non-shot markers (standard size)
+    + geom_point(data=df_other, size=4.5, stroke=0.5)
+    # Shot markers (larger for visual emphasis)
+    + geom_point(data=df_shots, size=7, stroke=0.5)
     + scale_color_manual(values=event_colors, name="Event Type")
     + scale_shape_manual(values=event_shapes, name="Event Type")
-    + scale_alpha_manual(values={"Successful": 0.9, "Unsuccessful": 0.35}, name="Outcome")
+    + scale_alpha_manual(values={"Successful": 0.9, "Unsuccessful": 0.5}, name="Outcome")
     + scale_x_continuous(limits=(-4, 109), breaks=[])
     + scale_y_continuous(limits=(-4, 72), breaks=[])
     + coord_fixed(ratio=1)
     + labs(title="scatter-pitch-events · plotnine · pyplots.ai")
     + theme(
         figure_size=(16, 9),
-        plot_title=element_text(size=22, weight="bold", color="#1a1a1a"),
+        plot_title=element_text(size=24, weight="bold", color="#1a1a1a"),
         panel_background=element_rect(fill=pitch_color, color="none"),
         plot_background=element_rect(fill="#f0f0f0", color="none"),
         panel_grid_major=element_blank(),
