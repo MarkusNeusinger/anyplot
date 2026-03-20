@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 scatter-shot-chart: Basketball Shot Chart
 Library: pygal 3.1.0 | Python 3.14.3
 Quality: 82/100 | Created: 2026-03-20
@@ -34,7 +34,6 @@ for i in range(n_shots):
     elif zones[i] == "midrange":
         angle = np.random.uniform(0, math.pi)
         r = np.random.uniform(10, 22)
-        x[i] = r * math.cos(angle) - r * math.cos(angle) * 0.0 + np.random.normal(0, 1)
         x[i] = r * math.cos(angle)
         y[i] = r * math.sin(angle)
         made[i] = np.random.random() < 0.40
@@ -51,8 +50,8 @@ for i in range(n_shots):
         made[i] = np.random.random() < 0.36
         shot_type.append("3-pointer")
     else:
-        x[i] = np.random.normal(0, 0.3)
-        y[i] = 15 + np.random.normal(0, 0.3)
+        x[i] = np.random.normal(0, 0.8)
+        y[i] = 15 + np.random.normal(0, 0.8)
         made[i] = np.random.random() < 0.80
         shot_type.append("free-throw")
 
@@ -105,8 +104,10 @@ custom_style = Style(
         "#888888",  # restricted arc
         "#555555",  # backboard
         "#dd6600",  # rim
-        "#2eac66",  # made shots — green
-        "#d94444",  # missed shots — red
+        "#2166ac",  # made inside — blue (colorblind-safe)
+        "#5aa3d9",  # made perimeter — light blue
+        "#d6604d",  # missed inside — orange (colorblind-safe)
+        "#e8a088",  # missed perimeter — light orange
     ),
     font_family=font,
     title_font_family=font,
@@ -130,7 +131,7 @@ chart = pygal.XY(
     title="scatter-shot-chart · pygal · pyplots.ai",
     show_legend=True,
     legend_at_bottom=True,
-    legend_at_bottom_columns=2,
+    legend_at_bottom_columns=4,
     legend_box_size=28,
     stroke=True,
     dots_size=0,
@@ -172,18 +173,38 @@ chart.add(None, restricted_arc, stroke=True, show_dots=False, stroke_style=thin_
 chart.add(None, backboard, stroke=True, show_dots=False, stroke_style={"width": 6, "linecap": "round"})
 chart.add(None, rim, stroke=True, show_dots=False, stroke_style={"width": 4, "linecap": "round"})
 
-# Shot data
+# Shot data — separate by zone for visual hierarchy
+# Paint/FT shots (high efficiency) get larger dots; perimeter shots get smaller dots
 made_mask = made
-made_pts = [
-    {"value": (float(x[i]), float(y[i])), "label": f"{shot_type[i]} — Made"} for i in range(n_shots) if made_mask[i]
-]
-chart.add(f"Made ({sum(made_mask)}/{n_shots})", made_pts, stroke=False, dots_size=10)
 
-missed_mask = ~made
-missed_pts = [
-    {"value": (float(x[i]), float(y[i])), "label": f"{shot_type[i]} — Missed"} for i in range(n_shots) if missed_mask[i]
+# Made shots: paint/FT with bigger markers, perimeter with smaller
+made_inside = [
+    {"value": (float(x[i]), float(y[i])), "label": f"{shot_type[i]} ({zones[i]}) — Made"}
+    for i in range(n_shots)
+    if made_mask[i] and zones[i] in ("paint", "free_throw")
 ]
-chart.add(f"Missed ({sum(missed_mask)}/{n_shots})", missed_pts, stroke=False, dots_size=10)
+made_outside = [
+    {"value": (float(x[i]), float(y[i])), "label": f"{shot_type[i]} ({zones[i]}) — Made"}
+    for i in range(n_shots)
+    if made_mask[i] and zones[i] in ("midrange", "three")
+]
+chart.add(f"Made — Inside ({len(made_inside)})", made_inside, stroke=False, dots_size=13)
+chart.add(f"Made — Perimeter ({len(made_outside)})", made_outside, stroke=False, dots_size=8)
+
+# Missed shots: same size logic
+missed_mask = ~made
+missed_inside = [
+    {"value": (float(x[i]), float(y[i])), "label": f"{shot_type[i]} ({zones[i]}) — Missed"}
+    for i in range(n_shots)
+    if missed_mask[i] and zones[i] in ("paint", "free_throw")
+]
+missed_outside = [
+    {"value": (float(x[i]), float(y[i])), "label": f"{shot_type[i]} ({zones[i]}) — Missed"}
+    for i in range(n_shots)
+    if missed_mask[i] and zones[i] in ("midrange", "three")
+]
+chart.add(f"Missed — Inside ({len(missed_inside)})", missed_inside, stroke=False, dots_size=13)
+chart.add(f"Missed — Perimeter ({len(missed_outside)})", missed_outside, stroke=False, dots_size=8)
 
 # Save
 chart.render_to_png("plot.png")
