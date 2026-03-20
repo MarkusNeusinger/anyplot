@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 scatter-shot-chart: Basketball Shot Chart
 Library: matplotlib 3.10.8 | Python 3.14.3
 Quality: 88/100 | Created: 2026-03-20
@@ -8,6 +8,8 @@ import matplotlib.patches as patches
 import matplotlib.patheffects as pe
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.colors import LinearSegmentedColormap
+from matplotlib.path import Path
 
 
 # Data
@@ -16,7 +18,6 @@ np.random.seed(42)
 n_shots = 350
 
 # Shot locations in feet relative to basket center at (0, 0)
-# x: sideline (-25 to 25), y: baseline toward half-court (0 to ~42)
 x = np.concatenate(
     [
         np.random.normal(0, 3, 60),  # paint area shots
@@ -68,38 +69,29 @@ ax.set_facecolor("#2b2b40")
 court_color = "#8899aa"
 lw = 2.0
 
-# Court outline (half-court)
-ax.add_patch(patches.Rectangle((-25, -5.25), 50, 47, linewidth=lw, edgecolor=court_color, facecolor="none"))
+# Court geometry using PatchCollection for batch rendering
+court_patches = [
+    patches.Rectangle((-25, -5.25), 50, 47, linewidth=lw, edgecolor=court_color, facecolor="none"),
+    patches.Circle((0, 0), 0.75, linewidth=lw, edgecolor="#ff6600", facecolor="none"),
+    patches.Rectangle((-8, -5.25), 16, 19.25, linewidth=lw, edgecolor=court_color, facecolor="none"),
+    patches.Arc((0, 14.0), 12, 12, angle=0, theta1=0, theta2=180, linewidth=lw, edgecolor=court_color),
+    patches.Arc(
+        (0, 14.0), 12, 12, angle=0, theta1=180, theta2=360, linewidth=lw, edgecolor=court_color, linestyle="--"
+    ),
+    patches.Arc((0, 0), 8, 8, angle=0, theta1=0, theta2=180, linewidth=lw, edgecolor=court_color),
+    patches.Arc((0, 41.75), 12, 12, angle=0, theta1=180, theta2=360, linewidth=lw, edgecolor=court_color),
+]
+for p in court_patches:
+    ax.add_patch(p)
 
-# Basket and backboard
-ax.add_patch(patches.Circle((0, 0), 0.75, linewidth=lw, edgecolor="#ff6600", facecolor="none"))
+# Backboard
 ax.plot([-3, 3], [-1.0, -1.0], color=court_color, linewidth=3)
 
-# Paint / key area (16ft wide, from baseline to free-throw line)
-paint_bottom = -5.25
-paint_top = 14.0
-ax.add_patch(
-    patches.Rectangle(
-        (-8, paint_bottom), 16, paint_top - paint_bottom, linewidth=lw, edgecolor=court_color, facecolor="none"
-    )
-)
-
-# Free-throw circle (6ft radius)
-ax.add_patch(patches.Arc((0, 14.0), 12, 12, angle=0, theta1=0, theta2=180, linewidth=lw, edgecolor=court_color))
-ax.add_patch(
-    patches.Arc((0, 14.0), 12, 12, angle=0, theta1=180, theta2=360, linewidth=lw, edgecolor=court_color, linestyle="--")
-)
-
-# Restricted area arc (4ft radius)
-ax.add_patch(patches.Arc((0, 0), 8, 8, angle=0, theta1=0, theta2=180, linewidth=lw, edgecolor=court_color))
-
-# Three-point line
-# Corner straight portions (22ft from basket, extending 14ft from baseline)
-corner_y = 8.75  # 14ft from baseline minus 5.25ft basket offset
+# Three-point line corners and arc
+corner_y = 8.75
 ax.plot([-22, -22], [-5.25, corner_y], color=court_color, linewidth=lw)
 ax.plot([22, 22], [-5.25, corner_y], color=court_color, linewidth=lw)
 
-# Three-point arc (23.75ft radius from basket center)
 three_arc_angle = np.degrees(np.arccos(22.0 / 23.75))
 ax.add_patch(
     patches.Arc(
@@ -117,28 +109,46 @@ ax.add_patch(
 # Half-court line
 ax.plot([-25, 25], [41.75, 41.75], color=court_color, linewidth=lw)
 
-# Half-court center circle (visible part)
-ax.add_patch(patches.Arc((0, 41.75), 12, 12, angle=0, theta1=180, theta2=360, linewidth=lw, edgecolor=court_color))
+# Subtle hexbin underlay showing shooting efficiency zones
+zone_cmap = LinearSegmentedColormap.from_list("efficiency", ["#e76f51", "#3d3d55", "#2a9d8f"])
+hb = ax.hexbin(
+    x,
+    y,
+    C=made.astype(float),
+    gridsize=15,
+    cmap=zone_cmap,
+    reduce_C_function=np.mean,
+    alpha=0.12,
+    extent=[-25, 25, -5, 42],
+    mincnt=2,
+    zorder=2,
+    linewidths=0,
+)
 
-# Shot markers — colorblind-safe palette
-c_made = "#2a9d8f"  # teal green
-c_missed = "#e76f51"  # coral orange
+# Custom marker path for made shots (diamond shape — distinctive from default circle)
+diamond_verts = [(-0.5, 0), (0, 0.7), (0.5, 0), (0, -0.7), (-0.5, 0)]
+diamond_codes = [Path.MOVETO, Path.LINETO, Path.LINETO, Path.LINETO, Path.CLOSEPOLY]
+diamond_marker = Path(diamond_verts, diamond_codes)
+
+# Shot markers — colorblind-safe palette, sized for 350-point density
+c_made = "#2a9d8f"
+c_missed = "#e76f51"
 
 made_mask = made
 missed_mask = ~made
 
 ax.scatter(
-    x[missed_mask], y[missed_mask], s=120, marker="x", c=c_missed, alpha=0.55, linewidths=2, zorder=4, label="Missed"
+    x[missed_mask], y[missed_mask], s=45, marker="x", c=c_missed, alpha=0.45, linewidths=1.5, zorder=4, label="Missed"
 )
 ax.scatter(
     x[made_mask],
     y[made_mask],
-    s=150,
-    marker="o",
+    s=50,
+    marker=diamond_marker,
     c=c_made,
-    alpha=0.7,
+    alpha=0.5,
     edgecolors="white",
-    linewidth=0.5,
+    linewidth=0.4,
     zorder=5,
     label="Made",
 )
@@ -168,20 +178,27 @@ legend = ax.legend(
     edgecolor="#444444",
     labelcolor="#e0e0e0",
     bbox_to_anchor=(0.5, -0.03),
-    markerscale=1.5,
+    markerscale=1.8,
     handletextpad=0.8,
 )
 
-# Shooting summary text
+# Shooting summary with zone breakdown
 total = n_shots
-makes = made.sum()
+makes = int(made.sum())
 fg_pct = makes / total * 100
+twos = shot_type == "2-pointer"
+threes = shot_type == "3-pointer"
+fg2 = made[twos].sum() / twos.sum() * 100 if twos.sum() > 0 else 0
+fg3 = made[threes].sum() / threes.sum() * 100 if threes.sum() > 0 else 0
+
+summary = f"FG: {makes}/{total} ({fg_pct:.1f}%)  |  2PT: {fg2:.0f}%  |  3PT: {fg3:.0f}%"
 ax.text(
-    -24,
-    43,
-    f"FG: {makes}/{total} ({fg_pct:.1f}%)",
-    fontsize=18,
+    0,
+    43.5,
+    summary,
+    fontsize=16,
     color="#cccccc",
+    ha="center",
     va="top",
     path_effects=[pe.withStroke(linewidth=2, foreground="#1a1a2e")],
 )
