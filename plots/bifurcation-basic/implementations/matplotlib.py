@@ -1,12 +1,12 @@
-""" pyplots.ai
+"""pyplots.ai
 bifurcation-basic: Bifurcation Diagram for Dynamical Systems
 Library: matplotlib 3.10.8 | Python 3.14.3
 Quality: 88/100 | Created: 2026-03-20
 """
 
-import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.colors import PowerNorm
 
 
 # Data
@@ -28,9 +28,11 @@ for i, r in enumerate(r_values):
         r_plot[i * iterations + j] = r
         x_plot[i * iterations + j] = x
 
-# Create custom colormap transitioning from Python Blue to a warm accent
-cmap = mcolors.LinearSegmentedColormap.from_list("bifurcation", ["#306998", "#4A90D9", "#7B68AE", "#C06070"], N=256)
-norm = mcolors.Normalize(vmin=r_min, vmax=r_max)
+# Create 2D histogram for density-based rendering of the chaotic region
+# This reveals structure (periodic windows, attractor density) far better than scatter
+r_bins = 800
+x_bins = 600
+hist, r_edges, x_edges = np.histogram2d(r_plot, x_plot, bins=[r_bins, x_bins], range=[[r_min, r_max], [0, 1]])
 
 # Plot
 fig, ax = plt.subplots(figsize=(16, 9))
@@ -38,50 +40,68 @@ fig, ax = plt.subplots(figsize=(16, 9))
 # Subtle regime background shading
 ax.axvspan(r_min, 3.0, color="#E8F4FD", alpha=0.3, zorder=0)
 ax.axvspan(3.0, 3.57, color="#F0EBF8", alpha=0.3, zorder=0)
-ax.axvspan(3.57, r_max, color="#FDE8E8", alpha=0.25, zorder=0)
+ax.axvspan(3.57, r_max, color="#FDE8E8", alpha=0.2, zorder=0)
 
-ax.scatter(r_plot, x_plot, s=0.05, c=r_plot, cmap=cmap, norm=norm, alpha=0.4, linewidths=0, rasterized=True)
+# Density heatmap with PowerNorm to reveal structure across the full range
+# cividis is perceptually uniform and colorblind-safe
+ax.pcolormesh(
+    r_edges,
+    x_edges,
+    hist.T,
+    cmap="cividis",
+    norm=PowerNorm(gamma=0.35, vmin=0, vmax=hist.max()),
+    rasterized=True,
+    zorder=1,
+)
 
-# Regime labels at bottom
+# Regime labels at bottom with semi-transparent background for readability
+label_bbox = {"boxstyle": "round,pad=0.3", "facecolor": "white", "edgecolor": "none", "alpha": 0.7}
 for rx, label in [(2.75, "Stable"), (3.28, "Periodic"), (3.78, "Chaotic")]:
     ax.text(
         rx,
-        0.03,
+        0.04,
         label,
         transform=ax.get_xaxis_transform(),
         fontsize=14,
-        color="#888888",
+        color="#666666",
         ha="center",
         va="bottom",
         fontstyle="italic",
+        bbox=label_bbox,
+        zorder=3,
     )
 
-# Annotations for key bifurcation points
-bifurcation_points = [(3.0, "Period-2", -14), (3.449, "Period-4", -55), (3.544, "Period-8", 14)]
-for r_bif, label, x_offset in bifurcation_points:
-    ax.axvline(r_bif, color="#B0B0B0", linewidth=0.8, linestyle="--", alpha=0.4)
+# Annotations for key bifurcation points — well spaced
+bifurcation_points = [(3.0, "Period-2", -14, 0.97), (3.449, "Period-4", -60, 0.97), (3.544, "Period-8", -60, 0.87)]
+for r_bif, label, x_offset, y_frac in bifurcation_points:
+    ax.axvline(r_bif, color="#CCCCCC", linewidth=0.8, linestyle="--", alpha=0.6, zorder=2)
     ha = "right" if x_offset < 0 else "left"
+    ann_bbox = {"boxstyle": "round,pad=0.3", "facecolor": "white", "edgecolor": "none", "alpha": 0.8}
     ax.annotate(
         f"{label}  r ≈ {r_bif}",
-        xy=(r_bif, 0.97),
+        xy=(r_bif, y_frac),
         xycoords=("data", "axes fraction"),
         xytext=(x_offset, 0),
         textcoords="offset points",
         fontsize=14,
-        color="#555555",
+        color="#444444",
         ha=ha,
         va="top",
+        bbox=ann_bbox,
+        zorder=4,
     )
 
 # Onset of chaos annotation
 ax.annotate(
     "Onset of chaos\nr ≈ 3.57",
     xy=(3.57, 0.75),
-    xytext=(3.72, 0.88),
+    xytext=(3.75, 0.93),
     fontsize=14,
-    color="#555555",
+    color="#444444",
     ha="center",
-    arrowprops={"arrowstyle": "->", "color": "#999999", "connectionstyle": "arc3,rad=-0.2"},
+    bbox={"boxstyle": "round,pad=0.3", "facecolor": "white", "edgecolor": "none", "alpha": 0.8},
+    arrowprops={"arrowstyle": "->", "color": "#666666", "connectionstyle": "arc3,rad=-0.2"},
+    zorder=4,
 )
 
 # Style
@@ -94,5 +114,4 @@ ax.set_ylim(0, 1)
 ax.spines["top"].set_visible(False)
 ax.spines["right"].set_visible(False)
 
-plt.tight_layout()
 plt.savefig("plot.png", dpi=300, bbox_inches="tight")
