@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 ma-differential-expression: MA Plot for Differential Expression
 Library: bokeh 3.9.0 | Python 3.14.3
 Quality: 86/100 | Created: 2026-03-20
@@ -6,7 +6,7 @@ Quality: 86/100 | Created: 2026-03-20
 
 import numpy as np
 from bokeh.io import export_png, save
-from bokeh.models import ColumnDataSource, HoverTool, Label, LinearColorMapper, Range1d, Span
+from bokeh.models import BasicTicker, ColorBar, ColumnDataSource, HoverTool, Label, LinearColorMapper, Range1d, Span
 from bokeh.plotting import figure
 from bokeh.resources import CDN
 from bokeh.transform import transform
@@ -109,9 +109,21 @@ p = figure(
     x_range=Range1d(-0.5, x_limit + 0.5),
 )
 
-# Color mapper for significant genes by -log10(p)
+# Color mapper for significant genes by -log10(p) using Inferno-inspired palette
+inferno_palette = [
+    "#FCFFA4",
+    "#F7D03C",
+    "#FB9906",
+    "#ED6925",
+    "#CF4446",
+    "#A52C60",
+    "#781C6D",
+    "#4B0C6B",
+    "#1B0C41",
+    "#000004",
+]
 color_mapper = LinearColorMapper(
-    palette=["#F4A582", "#E63946", "#99000D"],
+    palette=inferno_palette,
     low=neg_log10_p[sig_mask].min() if sig_mask.sum() > 0 else 0,
     high=neg_log10_p[sig_mask].max() if sig_mask.sum() > 0 else 10,
 )
@@ -190,7 +202,7 @@ upper_label = Label(
     x=label_x,
     y=1,
     text="FC = 2",
-    text_font_size="16pt",
+    text_font_size="20pt",
     text_color="#306998",
     text_baseline="bottom",
     y_offset=5,
@@ -202,7 +214,7 @@ lower_label = Label(
     x=label_x,
     y=-1,
     text="FC = \u22122",
-    text_font_size="16pt",
+    text_font_size="20pt",
     text_color="#306998",
     text_baseline="top",
     y_offset=-5,
@@ -226,13 +238,44 @@ if len(sig_indices) > 0:
                 x=gx,
                 y=gy,
                 text=f" {gene_names[idx]}",
-                text_font_size="14pt",
-                text_color="#333333",
+                text_font_size="17pt",
+                text_color="#1a1a2e",
                 text_font_style="bold",
                 x_offset=8,
                 y_offset=6,
             )
             p.add_layout(label)
+
+# Summary annotation: upregulated vs downregulated counts
+n_up = int(np.sum((significant) & (log_fold_change > 1)))
+n_down = int(np.sum((significant) & (log_fold_change < -1)))
+summary_label = Label(
+    x=70,
+    y=70,
+    x_units="screen",
+    y_units="screen",
+    text=f"▲ {n_up} upregulated  ·  ▼ {n_down} downregulated  (|FC| > 2, p < 0.05)",
+    text_font_size="18pt",
+    text_color="#444444",
+    text_font_style="italic",
+)
+p.add_layout(summary_label)
+
+# ColorBar for significance gradient
+color_bar = ColorBar(
+    color_mapper=color_mapper,
+    ticker=BasicTicker(desired_num_ticks=6),
+    label_standoff=14,
+    major_label_text_font_size="16pt",
+    title="-log₁₀(p-value)",
+    title_text_font_size="17pt",
+    title_text_font_style="italic",
+    title_standoff=12,
+    width=28,
+    location=(0, 0),
+    padding=20,
+)
+p.add_layout(color_bar, "right")
 
 # Styling
 p.title.text_font_size = "28pt"
@@ -244,10 +287,9 @@ p.yaxis.major_label_text_font_size = "18pt"
 p.xaxis.axis_label_text_color = "#333333"
 p.yaxis.axis_label_text_color = "#333333"
 
-# Refined grid
-p.xgrid.grid_line_alpha = 0.15
-p.ygrid.grid_line_alpha = 0.15
-p.xgrid.grid_line_dash = [4, 4]
+# Refined grid - y-axis only for cleaner appearance
+p.xgrid.grid_line_color = None
+p.ygrid.grid_line_alpha = 0.2
 p.ygrid.grid_line_dash = [4, 4]
 
 # Remove spines for cleaner look
