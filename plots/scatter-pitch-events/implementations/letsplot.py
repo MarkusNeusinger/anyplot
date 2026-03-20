@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 scatter-pitch-events: Soccer Pitch Event Map
 Library: letsplot 4.9.0 | Python 3.14.3
 Quality: 86/100 | Created: 2026-03-20
@@ -70,7 +70,7 @@ for et in event_types:
 
 # Colorblind-safe palette (distinct hues: blue, red, orange, purple)
 pitch_green = "#2E7D32"
-pass_color = "#306998"
+pass_color = "#FFD700"
 shot_color = "#E63946"
 tackle_color = "#F77F00"
 intercept_color = "#7B2D8E"
@@ -82,10 +82,9 @@ df = pd.DataFrame(
 )
 df["color"] = df["event_type"].map(color_map)
 df["shape"] = df["event_type"].map(shape_map)
-df["alpha"] = np.where(df["outcome"] == "Successful", 0.92, 0.55)
-df["fill"] = np.where(df["outcome"] == "Successful", df["color"], "rgba(0,0,0,0)")
+df["alpha"] = np.where(df["outcome"] == "Successful", 0.92, 0.85)
+df["fill"] = np.where(df["outcome"] == "Successful", df["color"], "#FFFFFF")
 df["marker_size"] = np.where(df["event_type"] == "Shot", 8.0, 5.0)
-df["stroke_color"] = df["color"]
 
 # Directional events (passes and shots)
 df_arrows = df[df["event_type"].isin(["Pass", "Shot"])].copy()
@@ -141,7 +140,7 @@ df_legend_labels = pd.DataFrame({"x": legend_x, "y": legend_y_label, "label": le
 
 # Outcome annotation
 df_outcome_text = pd.DataFrame(
-    {"x": [32, 72], "y": [-15.5, -15.5], "label": ["\u25cf Filled = Successful", "\u25cb Hollow = Unsuccessful"]}
+    {"x": [32, 72], "y": [-15.5, -15.5], "label": ["\u25cf Colored = Successful", "\u25cb White fill = Unsuccessful"]}
 )
 
 # Zone highlights for storytelling (attacking and defensive thirds)
