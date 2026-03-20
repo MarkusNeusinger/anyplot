@@ -1,7 +1,7 @@
 library: bokeh
 specification_id: bifurcation-basic
 created: '2026-03-20T20:28:57Z'
-updated: '2026-03-20T20:40:58Z'
+updated: '2026-03-20T20:48:16Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23361206273
 issue: 4415
@@ -10,35 +10,33 @@ library_version: 3.9.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/bifurcation-basic/bokeh/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/bifurcation-basic/bokeh/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/bifurcation-basic/bokeh/plot.html
-quality_score: 86
+quality_score: 88
 review:
   strengths:
-  - Excellent data quality showing the complete period-doubling cascade with windows
-    of periodicity clearly visible
-  - Clean, minimal visual design with removed axis lines/ticks and subtle grid
-  - Annotations effectively label key bifurcation points, guiding the viewer
-  - Fully deterministic, clean code with appropriate density visualization parameters
-  - Perfect spec compliance — all required features implemented
+  - 'Excellent data quality: logistic map correctly computed with proper transient
+    discard, full cascade visible'
+  - Clean visual design with removed axis lines, subtle grid, and well-placed annotations
+  - Good use of Bokeh-distinctive features (HoverTool, HTML export, interactive tools)
+  - 'Perfect code structure: deterministic, clean imports, KISS layout'
   weaknesses:
-  - Library mastery is limited — Bokeh interactive capabilities (HoverTool, zoom,
-    linked brushing) are untapped
-  - Annotation font size (30pt) could be larger for better readability on the 4800x2700
-    canvas
-  - The two upper annotations (r ≈ 3.449 and r ≈ 3.57 chaos) are positioned too close
-    together
-  - Design polish could be elevated further with font family customization or a more
-    refined color treatment
+  - Annotation at r≈3.449 lacks bifurcation type label (should say Period-4); code
+    internally mislabels as Period-8
+  - Chaotic region could benefit from slightly higher point density or alpha to make
+    band structure more visually impactful
+  - Design excellence could be elevated with regime-based color coding or more intentional
+    visual hierarchy
   image_description: 'The plot displays a bifurcation diagram of the logistic map
-    with "Growth Rate (r)" on the x-axis ranging from 2.5 to 4.0 and "Steady-State
-    Population (x)" on the y-axis from 0 to 1. The title reads "bifurcation-basic
-    · bokeh · pyplots.ai" in dark gray at the top. Blue (#306998) scatter points with
-    very low alpha (0.12) create a density-based visualization showing the classic
-    period-doubling cascade: a single stable branch from r=2.5 to ~3.0, period-2 splitting
-    around r=3.0, further doublings, and full chaos beyond r≈3.57. Three red annotation
-    labels mark key bifurcation points: "r ≈ 3.0", "r ≈ 3.449", and "r ≈ 3.57 (chaos)".
-    The background is light gray (#FAFAFA) with subtle grid lines (alpha=0.15). Axis
-    lines and tick marks are removed for a clean look. Windows of periodicity within
-    the chaotic regime are visible near r≈3.83.'
+    with the x-axis labeled "Growth Rate (r)" spanning 2.5 to 4.0 and y-axis labeled
+    "Steady-State Population (x)" spanning 0 to 1. The title reads "bifurcation-basic
+    · bokeh · pyplots.ai" in dark text at top-left. Blue scatter points (#306998)
+    with low alpha form the characteristic period-doubling cascade: a single stable
+    branch from r=2.5 to ~3.0, splitting into period-2 branches, then period-4, and
+    eventually into chaotic bands beyond r≈3.57. Three red (#AA3939) annotations mark
+    key bifurcation points: "r ≈ 3.0 Period-2", "r ≈ 3.449", and "r ≈ 3.57 Onset of
+    chaos". Faint red dashed vertical lines mark these transitions. The background
+    is light gray (#FAFAFA) with subtle gridlines, no axis lines or tick marks, giving
+    a clean minimal aesthetic. The chaotic region shows density-based structure with
+    visible periodic windows.'
   criteria_checklist:
     visual_quality:
       score: 28
@@ -46,44 +44,44 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title 72pt, labels 48pt, ticks 36pt, annotations
-          30pt). Annotations slightly small relative to canvas.
+        comment: 'All font sizes explicitly set: title 72pt, axis labels 48pt, tick
+          labels 36pt, annotations 36pt'
       - id: VQ-02
         name: No Overlap
-        score: 5
-        max: 6
-        passed: true
-        comment: Upper annotations (r ≈ 3.449 and r ≈ 3.57 chaos) positioned close
-          together, minor proximity issue.
-      - id: VQ-03
-        name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Excellent density adaptation with size=1 and alpha=0.12 for 200K
-          points.
+        comment: Annotations positioned at different y-levels to avoid collision,
+          no text overlap
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Density visualization effective for 200k points but chaotic region
+          could be slightly more visible
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Single blue color with red annotations, colorblind-safe.
+        comment: Single blue series with red annotations, no colorblind issues
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Good canvas utilization with balanced margins.
+        comment: Good proportions, rightmost data near r=4.0 slightly cramped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
         comment: 'Descriptive labels with parameter notation: Growth Rate (r), Steady-State
-          Population (x).'
+          Population (x)'
     design_excellence:
       score: 13
       max: 20
@@ -93,24 +91,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Above defaults with removed axis lines/ticks, custom background,
-          red annotations. Thoughtful but not publication-level.
+        comment: Thoughtful colors and typography, above defaults but not publication-level
+          polish
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: 'Good refinement: axis lines removed, ticks removed, subtle grid
-          at alpha=0.15. Could benefit from more typographic refinement.'
+        comment: Axis lines removed, subtle grid, clean background, good refinement
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Annotations guide viewer through period-doubling cascade to chaos,
-          creating narrative flow.
+        comment: Annotations and vertical lines guide viewer through route to chaos
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -118,26 +114,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct bifurcation diagram using scatter points.
+        comment: Correct bifurcation diagram with period-doubling cascade
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: 'All features present: logistic map, small points with low alpha,
-          bifurcation labels, transient discarded.'
+        comment: All features present but r≈3.449 annotation missing Period-4 label
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: r parameter on x-axis (2.5-4.0), state values on y-axis (0-1).
+        comment: X=growth rate r, Y=steady-state x, correct mapping
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. No legend needed for single series.
+        comment: Correct title format, no legend needed for single series
     data_quality:
       score: 15
       max: 15
@@ -147,20 +142,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: period-1, period-2, period-4, chaos, and windows
-          of periodicity.'
+        comment: Complete period-doubling route with periodic windows visible in chaotic
+          regime
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Logistic map is the canonical example for bifurcation diagrams.
+        comment: Logistic map is canonical example from nonlinear dynamics
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: r from 2.5 to 4.0, x from 0 to 1, correct for logistic map.
+        comment: r from 2.5 to 4.0, x from 0 to 1, mathematically correct
     code_quality:
       score: 10
       max: 10
@@ -170,61 +165,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear structure: imports, data, plot, styling, save.'
+        comment: 'Linear flow: imports, data, plot, style, save'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: 'Fully deterministic: x=0.5 start, no randomness.'
+        comment: Fully deterministic logistic map with fixed x0=0.5
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for logistic map iteration.
+        comment: Clean, appropriate complexity for logistic map computation
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html, current API.
+        comment: Saves plot.png and plot.html with current Bokeh API
     library_mastery:
-      score: 5
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
-        passed: false
-        comment: Standard Bokeh patterns (ColumnDataSource, figure, scatter, Label)
-          but nothing beyond basics.
+        passed: true
+        comment: Uses ColumnDataSource, figure, scatter, Label, Span idiomatically
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 4
         max: 5
-        passed: false
-        comment: HTML export with CDN resources is Bokeh-distinctive, but HoverTool
-          and interactive features not leveraged.
+        passed: true
+        comment: HoverTool, HTML export with CDN, active_scroll are distinctly Bokeh
+          features
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
+  - hover-tooltips
   - html-export
   patterns:
   - data-generation
-  - columndatasource
   - iteration-over-groups
+  - columndatasource
   dataprep: []
   styling:
   - alpha-blending
   - grid-styling
-  - minimal-chrome
