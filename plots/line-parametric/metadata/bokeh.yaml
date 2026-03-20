@@ -1,7 +1,7 @@
 library: bokeh
 specification_id: line-parametric
 created: '2026-03-20T10:39:02Z'
-updated: '2026-03-20T10:59:30Z'
+updated: '2026-03-20T11:08:33Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23339035325
 issue: 4424
@@ -10,39 +10,39 @@ library_version: 3.9.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/line-parametric/bokeh/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/line-parametric/bokeh/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/line-parametric/bokeh/plot.html
-quality_score: 82
+quality_score: 85
 review:
   strengths:
-  - Full spec compliance with all required features (equal aspect, color gradient,
-    two curves, start/end markers, high point density)
-  - Effective use of Bokeh multi_line for per-segment color gradient — a technique
-    distinctive to Bokeh
-  - Good visual refinement with subtle dashed grid, cleaned axis styling, and well-styled
-    legends
-  - Color gradient effectively tells the story of parameter progression along each
-    curve
-  - Dual PNG/HTML output leverages Bokeh web-native strengths
+  - Excellent use of Viridis color gradient to show parameter progression along both
+    curves
+  - Well-chosen pair of parametric curves (Lissajous + spiral) demonstrating different
+    behaviors
+  - Clean, idiomatic Bokeh code with good use of ColumnDataSource and multi_line
+  - 'Polished styling: subtle grid, custom typography, styled legends, distinct start/end
+    markers'
+  - Dual output (PNG + HTML) leverages Bokeh interactive capabilities
   weaknesses:
-  - Turbo palette is not the most colorblind-safe choice; viridis or cividis would
-    score higher on accessibility
-  - Helper function breaks strict KISS structure
-  - Could use a more publication-ready color palette and typography choices to push
-    design excellence higher
-  image_description: The plot displays two side-by-side panels on a light gray background
-    (#f8f9fa). The left panel shows a Lissajous figure (x = sin(3t), y = sin(2t))
-    — a self-intersecting, looping curve rendered with a color gradient progressing
-    from dark blue/purple through teal and green to yellow, representing the parameter
-    t from 0 to 2π. A circular start marker (dark blue) and square end marker (yellow)
-    are visible, along with a "t = π" annotation at the midpoint. The right panel
-    shows an Archimedean spiral (x = t·cos(t), y = t·sin(t)) with the same color gradient
-    scheme, expanding outward from the origin. A start circle is near center, an end
-    square at the outer edge, and a "t = 2π" annotation at the midpoint. Both panels
-    have italic subtitles, x(t)/y(t) axis labels, subtle dashed grid lines (alpha
-    0.15), styled legends with Start/End entries, and no toolbar. The main title "line-parametric
-    · bokeh · pyplots.ai" appears as bold text above the grid.
+  - Colorbars defined in code but not visible in rendered PNG output — the quantitative
+    parameter scale is lost
+  - Design excellence could be further elevated with more distinctive visual treatment
+  - Library mastery could leverage more Bokeh-specific features (e.g., HoverTool in
+    HTML version)
+  image_description: The plot displays two side-by-side panels on a light off-white
+    background. The left panel shows a Lissajous figure (x = sin(3t), y = sin(2t))
+    — a complex self-intersecting curve rendered with a Viridis color gradient progressing
+    from dark purple/blue (start, t ≈ 0) through teal/green to yellow (end, t ≈ 2π).
+    A dark circle marks the start point and a yellow square marks the end point. A
+    "t = π" annotation in gray italic text appears near the midpoint. The right panel
+    shows an Archimedean spiral (x = t·cos(t), y = t·sin(t)) also colored with Viridis
+    gradient, spiraling outward from the center. Start (circle) and end (square) markers
+    are visible, with a "t = 2π" midpoint annotation. Both panels have legends identifying
+    Start and End points, subtle dashed grid lines, and italic axis labels. The main
+    title "line-parametric · bokeh · pyplots.ai" appears at the top with a subtitle
+    about Viridis palette. Notably, the colorbars defined in code for showing the
+    parameter t scale are not visible in the rendered output.
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -50,42 +50,41 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 42pt/34pt, labels 26pt, ticks
-          20pt, legend 22pt, annotations 20pt). Well-scaled for canvas.
+        comment: 'All font sizes explicitly set (title 34pt, labels 26pt, ticks 20pt,
+          legend 22pt). Readable throughout. Minor: some rendered text slightly compact.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data elements. Legends positioned cleanly.
+        comment: No overlapping text elements. Legends, labels, annotations clearly
+          separated.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Lines at width 7 and markers at size 32 clearly visible. Color gradient
-          segments smooth.
+        comment: Curves visible with line_width=7, markers at size=34. Color gradient
+          clear. Colorbars not visible in render.
       - id: VQ-04
         name: Color Accessibility
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Turbo256 subset provides good perceptual contrast but is not the
-          most colorblind-safe option.
+        comment: Viridis palette is perceptually uniform and colorblind-safe.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Two-panel layout fills canvas well. Some vertical whitespace due
-          to match_aspect.
+        comment: Two-panel gridplot uses space reasonably. Equal aspect ratio creates
+          some unused space. Colorbars absent.
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: x(t) and y(t) are appropriate mathematical notation but generic.
-          No physical units applicable.
+        comment: Descriptive axis labels with mathematical notation providing context.
     design_excellence:
       score: 13
       max: 20
@@ -95,24 +94,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom Turbo256 subset palette, italic titles, light gray background,
-          styled legends. Above defaults but not publication-ready.
+        comment: Custom Viridis palette, styled typography, custom background, styled
+          legends. Above defaults but not publication-level.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Subtle dashed grid at alpha 0.15, minor ticks removed, toolbar hidden,
-          custom axis styling.
+        comment: Subtle grid (alpha 0.12, dashed), custom axis styling, minor ticks
+          removed, styled outline border.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Color gradient communicates parameter progression. Start/end markers
-          with different shapes create traversal narrative.
+        comment: Color gradient conveys parameter progression. Start/end markers with
+          distinct shapes guide viewer. Midpoint annotations add context.
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -120,29 +119,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct parametric curve plots with Lissajous and spiral.
+        comment: Correct parametric curve plot with Lissajous and Archimedean spiral.
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Equal aspect ratio, color gradient, two curves, start/end markers,
-          1000-point density.
+        comment: Equal aspect, color gradient, start/end markers, 1000 points. Colorbars
+          not rendering in PNG.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly computed from parametric equations, axes show full
-          data range.
+        comment: X/Y correctly computed for both curves. Axes display full data range.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format and accurate legend labels.
+        comment: Correct title format via HTML Div. Legend labels identify Start/End
+          with parameter values.
     data_quality:
-      score: 13
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -150,55 +149,55 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Shows self-intersecting loops and expanding spiral. Demonstrates
-          key parametric features.
+        comment: 'Two distinct parametric curves: Lissajous (closed, self-intersecting)
+          and spiral (open, expanding).'
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Classic mathematical curves used in physics and engineering. Neutral,
-          educational context.
+        comment: Real mathematical/physics constructs. Neutral, educational context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Mathematically correct values for both curves.
+        comment: Standard mathematical ranges for both curve types.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Helper function build_segments breaks strict KISS but avoids duplication.
+        comment: 'Linear flow: imports, data, segments, figures, styling, layout,
+          save.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic data generation.
+        comment: 'Fully deterministic: trigonometric functions with fixed parameters.'
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used.
+        comment: All imports used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized code. No over-engineering.
+        comment: Clean, well-organized. Styling loop reduces duplication.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png via export_png. Also saves HTML.
+        comment: Saves as plot.png via export_png. Current Bokeh API.
     library_mastery:
       score: 7
       max: 10
@@ -208,26 +207,26 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of ColumnDataSource, multi_line, gridplot, Div, Label, match_aspect.
+        comment: 'Good idiomatic Bokeh: ColumnDataSource, multi_line, ColorBar, LinearColorMapper,
+          gridplot, Div.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: multi_line per-segment coloring and Div HTML title are Bokeh-distinctive
-          techniques.
+        comment: Multi_line per-segment coloring, HTML Div title, dual PNG+HTML output,
+          match_aspect.
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
+  - colorbar
   - annotations
   - subplots
-  - custom-legend
   - html-export
   patterns:
   - data-generation
   - columndatasource
-  - iteration-over-groups
   dataprep: []
   styling:
   - custom-colormap
