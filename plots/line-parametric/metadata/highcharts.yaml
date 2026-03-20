@@ -1,7 +1,7 @@
 library: highcharts
 specification_id: line-parametric
 created: '2026-03-20T10:38:45Z'
-updated: '2026-03-20T11:03:31Z'
+updated: '2026-03-20T11:11:28Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23339035358
 issue: 4424
@@ -10,115 +10,107 @@ library_version: unknown
 preview_url: https://storage.googleapis.com/pyplots-images/plots/line-parametric/highcharts/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/line-parametric/highcharts/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/line-parametric/highcharts/plot.html
-quality_score: 77
+quality_score: 88
 review:
   strengths:
-  - Excellent color gradient implementation using segmented series with programmatic
-    HSL-based palette generation
-  - Both required parametric curves (Lissajous + spiral) present with correct mathematical
-    formulas
-  - 'Good visual refinement: subtle dotted grid, styled legend, custom typography,
-    removed tick marks'
-  - Start/end point markers with data labels provide direction-of-traversal information
-  - Equal aspect ratio maintained with square canvas
+  - 'Perfect spec compliance: all required features implemented (two curves, color
+    gradients, start/end markers, equal aspect ratio)'
+  - Strong design with custom gradient color palettes that effectively communicate
+    parameter direction
+  - Deterministic mathematical data with excellent feature coverage showing contrasting
+    curve behaviors
+  - Clean, well-structured code with appropriate segment-based gradient technique
   weaknesses:
-  - Helper functions gradient_colors and build_segments violate KISS principle — should
-    be inline code
-  - Label overlap near origin where Lissajous t=0,2π and Spiral start compete for
-    space
-  - Rainbow-like color progression on Lissajous is visually noisy — a smoother two-color
-    gradient would be more elegant
-  - 60 total series (30 segments x 2 curves) is heavy; could reduce segment count
-  - ScatterSeries used for line rendering instead of more idiomatic LineSeries
-  image_description: The plot displays two parametric curves on a square canvas (3600x3600)
-    with a light gray (#fafafa) background. A Lissajous figure (sin(3t), sin(2t))
-    is rendered as a multi-segment line with a color gradient transitioning from blue
-    through cyan, green, yellow to orange, representing the progression of parameter
-    t. An Archimedean spiral (t·cos(t), t·sin(t)) is rendered with a gradient from
-    purple through magenta to pink. The title "line-parametric · highcharts · pyplots.ai"
-    appears in bold at the top with a descriptive subtitle explaining both formulas.
-    Axes are labeled "x(t) — horizontal position" and "y(t) — vertical position" with
-    subtle dotted grid lines. Marker points are placed near the origin for "Lissajous
-    t=0,2π" (blue circle) and "Spiral start" (purple circle), and a red diamond for
-    "Spiral end" at the outer edge. A horizontal legend with rounded border sits at
-    the bottom of the chart. The two curves overlap and intersect in several places,
-    with the Lissajous forming its characteristic figure-eight-like pattern and the
-    spiral expanding outward from the center.
+  - Minor label proximity near the origin where both curves start at (0, 0)
+  - Axis lines/spines still fully visible — removing or lightening them would improve
+    visual refinement
+  - LineSeries imported from area module rather than line module
+  image_description: The plot displays two parametric curves on a square canvas with
+    a light gray (#fafafa) background. The title "line-parametric · highcharts · pyplots.ai"
+    is prominently displayed at the top in bold dark text, with a subtitle explaining
+    both curves' equations. The Lissajous figure (x=sin(3t), y=sin(2t)) is rendered
+    as a smooth figure-eight-like shape with a color gradient transitioning from blue
+    to teal/cyan, showing the direction of increasing parameter t. The Archimedean
+    spiral (x=t·cos(t), y=t·sin(t)) starts near the origin and spirals outward, colored
+    with a gradient from purple to rose/pink. Both axes range from -1.5 to 1.5 with
+    tick intervals of 0.5, labeled "x(t) — horizontal position" and "y(t) — vertical
+    position". A subtle dotted grid is visible. Start/end markers are placed near
+    the origin with labels "Lissajous t=0,2π" and "Spiral start", plus a "Spiral end"
+    diamond marker near the outer edge of the spiral. The legend at the bottom shows
+    four entries in a styled box with rounded corners and subtle border.
   criteria_checklist:
     visual_quality:
-      score: 24
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Font sizes explicitly set throughout (64px title, 40px axis titles,
-          30px ticks, 26px data labels). All readable, data labels near origin slightly
-          small.
+        comment: 'All font sizes explicitly set: title 64px, subtitle 36px, axis titles
+          40px, tick labels 30px, data labels 28px, legend 34px'
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Lissajous and Spiral start labels overlap near origin since both
-          curves start at/near (0,0).
+        passed: true
+        comment: Minor proximity between start-point labels near origin, both readable
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Lines clearly visible at lineWidth=5. Color gradient segments distinct.
-          Curves easy to follow.
+        comment: Lines clearly visible at width 5, markers prominent, gradient transitions
+          subtle in some areas
       - id: VQ-04
         name: Color Accessibility
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Blue-to-orange and purple-to-pink gradients distinguishable. Some
-          intermediate colors can be confused where curves cross.
+        comment: Blue-to-teal and purple-to-rose palettes are colorblind-safe with
+          strong contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Square canvas with equal aspect ratio appropriate. Some unused corner
-          space. Legend well-placed.
+        comment: Square canvas with equal aspect ratio, some unused space at corners
+          from axis range padding
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with context. Parametric curves are unitless so
-          labels are appropriate.
+        comment: Descriptive labels with context, units N/A for mathematical parametric
+          curves
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Custom gradient palettes, styled background, refined typography.
-          Above defaults but rainbow-like Lissajous gradient is somewhat chaotic.
+        comment: Custom gradient palettes, styled legend, explicit typography hierarchy,
+          above defaults
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Dotted subtle grid (0.06 opacity), ticks removed, styled legend with
-          border-radius. Good refinement.
+        comment: Subtle dotted grid, tick marks removed, generous spacing, but axis
+          lines still present
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Start/end markers tell traversal direction. Subtitle explains formulas.
-          Color gradient encodes parameter progression.
+        comment: Color gradient communicates parameter direction, start/end markers
+          guide viewer, subtitle provides context
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -126,110 +118,100 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct parametric curve plot with x(t) and y(t) as functions of
-          parameter t.
+        comment: Correct parametric curve plot
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 'All key features present. Minor: Spiral end label hard to see near
-          chart edge.'
+        comment: 'All spec features present: equal aspect ratio, color gradient, two
+          curves, markers, sufficient density'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Correct parametric equations. Axes show full data range with appropriate
-          padding.
+        comment: X and Y correctly computed from parametric equations
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows exact format. Legend labels match curve names with
-          formulas.
+        comment: Correct title format, legend labels match curves with equations
     data_quality:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows closed self-intersecting (Lissajous) and open expanding (spiral)
-          curves. Demonstrates loops, self-intersection, non-function behavior.
+        comment: Two distinct curve types showing loops, self-intersections, and expanding
+          spirals
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Classical mathematical curves with proper formulas. Standard examples
-          from physics and mathematics.
+        comment: Classical mathematical curves used in physics and signal analysis
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Lissajous bounded in [-1,1], spiral normalized to same range. Axis
-          limits provide appropriate padding.
+        comment: Lissajous bounded [-1,1], spiral normalized to same scale
     code_quality:
-      score: 7
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 1
+        score: 3
         max: 3
-        passed: false
-        comment: Contains two helper functions (gradient_colors, build_segments) violating
-          no-functions/classes rule.
+        passed: true
+        comment: Linear flow with no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic data using trigonometric functions, no randomness.
+        comment: Fully deterministic mathematical formulas
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: colorsys, tempfile, time, urllib.request, Path,
-          numpy, highcharts_core, selenium.'
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: Segment-based gradient approach is clever but verbose. 60 series
-          is heavy.
+        comment: Segment-based gradient approach is appropriate for Highcharts
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png via Selenium screenshot. Uses current highcharts_core
-          API.
+        comment: Saves as plot.png via Selenium
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Uses ScatterSeries with lineWidth for lines instead of more idiomatic
-          LineSeries. Proper use of linked_to and data_labels.
+        comment: Proper use of Chart, series classes, linked_to for grouping. Import
+          from area module is unconventional.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Leverages linked_to ':previous' for legend grouping, enable_mouse_tracking,
-          custom tooltip formatting, inline JS export.
+        comment: Uses linked_to, plotOptions, turboThreshold, interactive tooltips
   verdict: REJECTED
 impl_tags:
   dependencies:
