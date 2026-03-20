@@ -1,7 +1,7 @@
 library: highcharts
 specification_id: nyquist-basic
 created: '2026-03-20T22:45:04Z'
-updated: '2026-03-20T23:12:19Z'
+updated: '2026-03-20T23:26:04Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23365453271
 issue: 4412
@@ -10,40 +10,45 @@ library_version: unknown
 preview_url: https://storage.googleapis.com/pyplots-images/plots/nyquist-basic/highcharts/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/nyquist-basic/highcharts/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/nyquist-basic/highcharts/plot.html
-quality_score: 86
+quality_score: 89
 review:
   strengths:
-  - Perfect spec compliance with all required features (critical point, unit circle,
-    frequency annotations, direction arrows, 1:1 aspect ratio)
+  - Perfect spec compliance with all required features including critical point, unit
+    circle, frequency annotations, direction arrows, and 1:1 aspect ratio
+  - Enhanced beyond spec with gain margin and phase margin indicators that add real
+    engineering insight
   - Excellent data quality using a realistic textbook-standard control system transfer
     function
-  - Enhanced beyond spec with gain margin and phase margin indicators
-  - Clean well-organized code with appropriate complexity
-  - Good use of Highcharts annotations module for labeled callouts
+  - Professional annotation styling with bordered labels, matching colors, and clear
+    visual hierarchy
+  - Clean, well-organized code with appropriate complexity for the visualization
   weaknesses:
-  - X-axis Real label not prominently visible in rendered output
-  - Minor annotation crowding near the origin where multiple markers and labels converge
-  - Design could be further elevated with more refined color transitions or additional
-    visual polish
+  - Minor annotation crowding near (-1, 0) where critical point, gain margin, and
+    phase margin labels converge
+  - Design sophistication falls just short of publication-quality — could benefit
+    from more refined typography or subtle color gradients
+  - Legend text appears slightly small relative to other text elements in the rendered
+    output
   image_description: The plot displays a Nyquist diagram on a square white canvas
-    (1:1 aspect ratio). The title "nyquist-basic · highcharts · pyplots.ai" appears
-    at top in bold, with subtitle "G(s) = 2 / [s(s+1)(0.5s+1)] — Open-Loop Frequency
-    Response" below it. The main Nyquist curve is a solid blue (#306998) line sweeping
-    from the lower-left quadrant upward and curving toward the origin, representing
+    with 1:1 aspect ratio. The title "nyquist-basic · highcharts · pyplots.ai" appears
+    at the top in bold 56px text, with subtitle "G(s) = 2 / [s(s+1)(0.5s+1)] — Open-Loop
+    Frequency Response" below. The main Nyquist curve is a solid blue (#306998) line
+    sweeping from the lower-left quadrant upward and curving toward the origin, representing
     G(jω) for ω > 0. A dashed blue mirror curve shows negative frequencies (ω < 0),
     reflected across the real axis. A gray dotted unit circle is centered at the origin.
-    The critical point (-1, 0) is marked with a large red diamond (#c0392b) and labeled
-    with a bordered annotation box. Green and purple diamond markers indicate gain
-    margin (3.5 dB) and phase margin (11.6°) respectively, with a "PM = 11.6°" annotation
-    near the origin. Frequency annotations (ω=0.5, ω=0.7, ω=2.0, ω=5.0) are placed
-    along the curve in bordered blue label boxes. Small blue triangle markers indicate
-    the direction of increasing frequency. The y-axis is labeled "Imaginary Axis".
-    The legend in the upper-right corner lists all series. Subtle grid lines (very
-    low opacity) are visible. Axis tick labels range from approximately -3 to 3 horizontally
-    and -4 to 3 vertically.
+    The critical point (-1, 0) is marked with a large red diamond (#c0392b) with white
+    border and labeled with a bordered red annotation box. Green and purple diamond
+    markers indicate gain margin (3.5 dB) and phase margin (11.6°) respectively, with
+    a "PM = 11.6°" annotation near the gain crossover point. Frequency annotations
+    (ω=0.5, ω=0.7, ω=2.0) are placed along the curve in bordered blue label boxes.
+    Small blue triangle markers indicate the direction of increasing frequency. The
+    x-axis is labeled "Real Axis" and y-axis "Imaginary Axis" with tick labels from
+    -4 to 3 (x) and -4 to 4 (y). The legend in the upper-right corner lists all six
+    series. Subtle grid lines (very low opacity) and faint zero-reference plot lines
+    are visible.
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -52,65 +57,68 @@ review:
         max: 8
         passed: true
         comment: All font sizes explicitly set (title 56px, axis titles 42px, ticks
-          32px, annotations 28px). Clearly readable.
+          32px, annotations 28px, legend 30px). Legend text slightly small in rendered
+          output.
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Most annotations well-positioned. Minor crowding near origin where
-          gain/phase margin annotations converge.
+        comment: Most annotations well-positioned. Minor crowding near (-1, 0) where
+          critical point, gain margin, and phase margin annotations converge.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Main curve prominent at lineWidth 5, critical point diamond large,
-          direction triangles visible. Unit circle appropriately subtle.
+        comment: Main curve prominent at lineWidth 5, critical point diamond large
+          (radius 18), direction triangles visible. Unit circle appropriately subtle.
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Blue, red, green, purple palette is colorblind-safe with good contrast.
+        comment: Blue, red, green, purple palette is colorblind-safe with good luminance
+          contrast.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square 1:1 aspect ratio as spec requires. Good margins, balanced
+        comment: Square 1:1 aspect ratio as spec requires. Generous margins, well-balanced
           whitespace.
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: Y-axis labeled but x-axis Real label not prominently visible in render.
+        comment: Axes labeled Real and Imaginary. Standard nomenclature for complex
+          plane, units not applicable.
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Custom Python Blue palette, clean typography, bordered annotation
-          boxes. Above defaults but not publication-ready.
+        comment: Custom Python Blue palette, clean sans-serif typography, bordered
+          annotation boxes. Clearly above defaults but not publication-ready.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Very subtle grid, plotLines at zero axes, generous margins. Good
-          whitespace balance.
+        comment: Very subtle grid (8% opacity), faint zero-axis plotLines, generous
+          margins, styled annotations with rounded corners.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
         comment: Clear visual hierarchy with critical point emphasized, gain/phase
-          margins highlighted, frequency progression shown.
+          margins highlighted, frequency progression shown via annotations and arrows.
     spec_compliance:
       score: 15
       max: 15
@@ -133,13 +141,15 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Real on x-axis, imaginary on y-axis. All data visible.
+        comment: Real on x-axis, imaginary on y-axis. All data visible within axis
+          range.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Legend labels descriptive.
+        comment: Title format correct. Legend labels descriptive and matching data
+          series.
     data_quality:
       score: 15
       max: 15
@@ -156,7 +166,8 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Standard second-order control system transfer function, textbook-quality.
+        comment: Standard second-order control system transfer function, textbook-quality
+          example.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
@@ -172,7 +183,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, chart config, series, save.'
+        comment: 'Linear flow: imports, data computation, chart config, series, HTML
+          export, screenshot.'
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -184,7 +196,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports used.
+        comment: All imports used. LineSeries from area module works but unconventional.
       - id: CQ-04
         name: Code Elegance
         score: 2
@@ -196,7 +208,7 @@ review:
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png via Selenium. Current API.
+        comment: Saves as plot.png via Selenium. Current highcharts_core API.
     library_mastery:
       score: 7
       max: 10
@@ -206,16 +218,16 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of HighchartsOptions, series types, add_series pattern,
-          plotLines, annotations module.
+        comment: 'Good use of HighchartsOptions, series types, add_series pattern,
+          plotLines, annotations module. Minor: LineSeries from wrong module path.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses Highcharts annotations module, plotLines, dashStyle. Library-specific
-          features.
-  verdict: APPROVED
+        comment: Uses Highcharts annotations module, plotLines, dashStyle, series
+          zIndex layering. Library-specific features.
+  verdict: REJECTED
 impl_tags:
   dependencies:
   - selenium
