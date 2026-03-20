@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 scatter-shot-chart: Basketball Shot Chart
 Library: letsplot 4.9.0 | Python 3.14.3
 Quality: 84/100 | Created: 2026-03-20
@@ -43,20 +43,24 @@ shot_x = np.concatenate(
     [
         np.random.normal(0, 3, 60),
         np.random.normal(0, 8, 80),
-        np.random.uniform(-22, 22, 70),
-        np.random.normal(-18, 3, 35),
-        np.random.normal(18, 3, 35),
-        np.random.normal(0, 10, 70),
+        np.random.uniform(-22, 22, 50),
+        np.random.normal(-22, 1.5, 28),
+        np.random.normal(22, 1.5, 28),
+        np.random.normal(-18, 3, 20),
+        np.random.normal(18, 3, 20),
+        np.random.normal(0, 10, 64),
     ]
 )
 shot_y = np.concatenate(
     [
         np.random.uniform(0, 6, 60),
         np.random.uniform(5, 15, 80),
-        np.random.uniform(14, 24, 70),
-        np.random.uniform(0, 8, 35),
-        np.random.uniform(0, 8, 35),
-        np.random.uniform(20, 30, 70),
+        np.random.uniform(14, 24, 50),
+        np.random.uniform(0, 12, 28),
+        np.random.uniform(0, 12, 28),
+        np.random.uniform(0, 8, 20),
+        np.random.uniform(0, 8, 20),
+        np.random.uniform(20, 30, 64),
     ]
 )
 
@@ -134,13 +138,13 @@ fg_percent = n_made / n_shots * 100
 # Zone annotation positions and labels
 zone_annotations = pd.DataFrame(
     {
-        "x": [0, 0, 0, -19],
-        "y": [2.5, 13, 28, 5],
+        "x": [0, 13, 0, -14],
+        "y": [1.5, 10, 29, 14],
         "label": [
             f"Paint: {zone_stats['Paint'][0]:.0f}% ({zone_stats['Paint'][1]})",
             f"Mid-Range: {zone_stats['Mid-Range'][0]:.0f}% ({zone_stats['Mid-Range'][1]})",
             f"3PT: {zone_stats['Above Break 3'][0]:.0f}% ({zone_stats['Above Break 3'][1]})",
-            f"Corner: {zone_stats['Corner 3'][0]:.0f}% ({zone_stats['Corner 3'][1]})",
+            f"Corner 3: {zone_stats['Corner 3'][0]:.0f}% ({zone_stats['Corner 3'][1]})",
         ],
     }
 )
@@ -148,7 +152,7 @@ zone_annotations = pd.DataFrame(
 legend_y = -8
 df_legend = pd.DataFrame(
     {
-        "x": [-12, 2],
+        "x": [-15, 3],
         "y": [legend_y, legend_y],
         "color": [made_color, missed_color],
         "fill": [made_color, missed_color],
@@ -156,7 +160,7 @@ df_legend = pd.DataFrame(
     }
 )
 df_legend_text = pd.DataFrame(
-    {"x": [-9.5, 4.5], "y": [legend_y, legend_y], "label": [f"Made ({n_made})", f"Missed ({n_missed})"]}
+    {"x": [-12.5, 5.5], "y": [legend_y, legend_y], "label": [f"Made ({n_made})", f"Missed ({n_missed})"]}
 )
 
 # Plot
@@ -215,14 +219,16 @@ plot = (
         alpha=0.45,
         tooltips=layer_tooltips().line("@result | @shot_type").line("Zone: @zone").line("Position: (@x, @y)"),
     )
-    # Zone FG% annotations (data storytelling)
+    # Zone FG% annotations with semi-transparent background for readability
     + geom_text(
         data=zone_annotations,
         mapping=aes(x="x", y="y", label="label"),
-        size=11,
-        color="#222222",
+        size=16,
+        color="#1A1A1A",
         fontface="bold",
-        label_padding=0.3,
+        label_padding=0.4,
+        fill="rgba(232,220,200,0.85)",
+        label_size=0,
     )
     # Overall FG% header
     + geom_text(
@@ -234,7 +240,7 @@ plot = (
     )
     # Legend
     + geom_point(aes(x="x", y="y", color="color", fill="fill", shape="shape"), data=df_legend, size=5, stroke=0.5)
-    + geom_text(data=df_legend_text, mapping=aes(x="x", y="y", label="label"), size=13, color="#333333", hjust=0)
+    + geom_text(data=df_legend_text, mapping=aes(x="x", y="y", label="label"), size=15, color="#333333", hjust=0)
     + scale_color_identity()
     + scale_fill_identity()
     + scale_size_identity()
