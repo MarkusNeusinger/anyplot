@@ -1,7 +1,7 @@
 library: pygal
 specification_id: bar-pareto
 created: '2026-03-20T07:29:26Z'
-updated: '2026-03-20T07:53:16Z'
+updated: '2026-03-20T08:03:19Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23332979008
 issue: 4550
@@ -10,38 +10,36 @@ library_version: 3.1.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/bar-pareto/pygal/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/bar-pareto/pygal/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/bar-pareto/pygal/plot.html
-quality_score: 81
+quality_score: 87
 review:
   strengths:
-  - Perfect spec compliance with all required Pareto chart features including secondary
-    axis, 80% threshold, and cumulative markers
-  - Excellent realistic manufacturing defect data that naturally demonstrates the
-    Pareto principle
-  - Creative SVG injection technique to overcome pygal lack of native dual-axis support
-  - Good visual storytelling through cumulative line and 80% threshold interaction
-  - Clean custom legend with all three visual elements explained
+  - Complete spec compliance with all required Pareto features (descending bars, cumulative
+    line, 80% threshold, secondary axis)
+  - Strong data storytelling through vital few / trivial many color distinction
+  - Professional color palette and visual design with attention to detail (rounded
+    bars, subtle background, custom legend)
+  - Realistic manufacturing defect context that perfectly fits the Pareto principle
+  - Creative SVG overlay approach to work around pygal dual-axis limitations
   weaknesses:
-  - Minor text congestion between cumulative percentage labels and bar value labels,
-    especially on the first bar
-  - SVG regex parsing is fragile and adds code complexity
-  - Design is good but not yet publication-quality polish
-  image_description: 'The plot displays a Pareto chart with 8 steel-blue bars sorted
-    in descending order representing manufacturing defect counts: Scratches (142),
-    Dents (98), Misalignment (84), Cracks (56), Discoloration (42), Warping (31),
-    Contamination (18), and Burrs (9). A red cumulative percentage line with circular
-    markers overlays the bars, rising from approximately 30% at Scratches to 100%
-    at Burrs. A gray dashed horizontal line marks the 80% threshold, crossing around
-    the Misalignment/Cracks boundary. The right side features a red secondary y-axis
-    labeled "Cumulative %" with tick marks at 0%, 20%, 40%, 60%, 80%, and 100%. The
-    primary y-axis shows "Frequency (Count)" from 0 to approximately 142. X-axis labels
-    are slightly rotated showing defect type names. A custom legend at the bottom
-    shows three items: blue square for "Defect Count", red line with dot for "Cumulative
-    %", and dashed gray line for "80% Threshold". Title reads "bar-pareto · pygal
-    · pyplots.ai" in the top center. White background with subtle horizontal grid
-    lines.'
+  - SVG regex manipulation is fragile and verbose (~100 lines of string parsing)
+  - Two-blue palette contrast between vital/trivial could be stronger for accessibility
+  - Cumulative % label placement on first bar (below dot) breaks visual consistency
+  image_description: 'The plot displays a Pareto chart titled "bar-pareto · pygal
+    · pyplots.ai" with 8 descending bars representing manufacturing defect types.
+    The bars are colored in two shades of blue: a darker steel blue (#306998) for
+    the "Vital Few" (Scratches 142, Dents 98, Misalignment 84, Cracks 56) and a lighter
+    blue (#93B5CF) for the "Trivial Many" (Discoloration 42, Warping 31, Contamination
+    18, Burrs 9). A red cumulative percentage line with circular markers runs across
+    the tops, with percentage labels (30%, 50%, 68%, 79%, 88%, 94%, 98%, 100%). A
+    dashed gray 80% threshold line crosses horizontally. The primary y-axis shows
+    "Frequency (Count)" and a secondary red y-axis on the right shows "Cumulative
+    %" from 0% to 100%. X-axis labels are slightly rotated showing defect type names.
+    A centered legend at the bottom identifies all four elements. The background is
+    white with a subtle #FAFBFC plot area. Bars have rounded corners and value labels
+    printed above each bar.'
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -49,67 +47,67 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set in Style (title=52, label=32, value=28).
-          Cumulative labels at 26pt slightly small but legible.
+        comment: All font sizes explicitly set (title 52, labels 30, values 26). All
+          text readable. Cumulative labels slightly small relative to bar values.
       - id: VQ-02
         name: No Overlap
-        score: 4
-        max: 6
-        passed: false
-        comment: First cumulative label 30% cramped near bar value 142. Some percentage
-          labels sit close to bar values causing minor congestion.
-      - id: VQ-03
-        name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Bars clearly visible with good proportions. Cumulative line markers
-          visible. Rounded bars add polish.
+        comment: Generally clean. First cumulative label placed below dot to avoid
+          bar value overlap. Minor crowding in middle bars.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Bars well-sized with good spacing. Cumulative line dots and line
+          clearly visible.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
-        passed: true
-        comment: Blue and red distinguishable for most colorblind types. Gray threshold
-          line provides good contrast.
-      - id: VQ-05
-        name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Plot fills most of canvas. Right margin for secondary axis well-managed.
-          Slight wasted space below legend.
+        comment: Blue tones differentiate well. Red line contrasts with blue bars.
+          Two blues could have more contrast for low-vision users.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills canvas well. Right margin accommodates secondary y-axis.
+          Bottom margin fits legend and labels.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels: Defect Type, Frequency (Count), Cumulative %.'
+        comment: 'Descriptive labels: Frequency (Count), Defect Type, Cumulative %.'
     design_excellence:
-      score: 12
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Custom color palette, rounded bars, clean white background, intentional
-          typography hierarchy. Above default.
+        comment: Thoughtful dual-blue palette, professional colors, rounded bars,
+          subtle background. Above defaults but not publication-level.
       - id: DE-02
         name: Visual Refinement
-        score: 3
-        max: 6
-        passed: true
-        comment: Y-guides only, custom margins, rounded bars. Some refinement visible
-          but could be more polished.
-      - id: DE-03
-        name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Pareto chart naturally tells prioritization story. 80% threshold
-          creates clear narrative about which defects matter most.
+        comment: Subtle grid, clean background, good spacing, rounded bars, well-crafted
+          custom legend.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Strong Pareto narrative with vital few/trivial many coloring and
+          80% threshold. Clear focal point.
     spec_compliance:
       score: 15
       max: 15
@@ -125,20 +123,21 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: 'All required: descending bars, cumulative line, secondary y-axis,
-          80% threshold, markers at bar centers.'
+        comment: 'All features: descending bars, cumulative line, secondary y-axis,
+          80% reference line, markers at bar centers.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Categories on x-axis, counts on primary y-axis, cumulative % on secondary.
+        comment: Categories on x-axis, counts on primary y, cumulative % on secondary
+          y.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Custom legend with all three visual elements.
+        comment: Correct title format. Custom legend with all four elements.
     data_quality:
       score: 15
       max: 15
@@ -148,36 +147,38 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 8 categories showing clear Pareto distribution from 142 to 9.
+        comment: Full Pareto distribution with 8 categories, clear vital/trivial separation,
+          cumulative reaches 100%.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Manufacturing defect data is a classic real-world Pareto analysis
-          scenario.
+        comment: Manufacturing defect analysis - classic, neutral Pareto application.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Counts from 9-142 realistic for manufacturing quality control.
+        comment: Counts 9-142, total 480 defects - realistic for manufacturing quality
+          report.
     code_quality:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Linear flow but SVG regex manipulation adds significant complexity.
+        passed: true
+        comment: 'Flat script: imports, data, chart config, SVG render, overlay injection,
+          save.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data deterministic (hardcoded values).
+        comment: Fully deterministic with hardcoded data.
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -188,15 +189,15 @@ review:
         name: Code Elegance
         score: 1
         max: 2
-        passed: false
-        comment: SVG regex parsing is creative but fragile workaround for pygal dual-axis
-          limitation.
+        passed: true
+        comment: SVG regex manipulation necessary but fragile and verbose. Well-organized
+          with clear comments.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png via cairosvg. Also saves HTML.
+        comment: Saves plot.png via cairosvg and plot.html via render_to_file.
     library_mastery:
       score: 6
       max: 10
@@ -206,15 +207,15 @@ review:
         score: 3
         max: 5
         passed: true
-        comment: Uses pygal Bar, Style, x_labels, add(), render(). Heavy SVG post-processing
-          means much output comes from manual injection.
+        comment: Correct pygal.Bar usage with Style, print_values, rounded_bars. Extensive
+          SVG post-processing goes around pygal API.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Leverages pygal SVG output for injection. Uses rounded_bars, print_values,
-          value_formatter — pygal-specific features.
+        comment: Leverages pygal SVG-native rendering for post-processing, rounded_bars,
+          print_values_position, HTML output.
   verdict: REJECTED
 impl_tags:
   dependencies:
@@ -223,8 +224,10 @@ impl_tags:
   - twin-axes
   - annotations
   - custom-legend
-  patterns: []
+  patterns:
+  - data-generation
   dataprep:
   - cumulative-sum
   styling:
   - edge-highlighting
+  - grid-styling
