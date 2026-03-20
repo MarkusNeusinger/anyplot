@@ -1,0 +1,236 @@
+library: bokeh
+specification_id: scatter-pitch-events
+created: '2026-03-20T12:32:46Z'
+updated: '2026-03-20T12:58:47Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23342848863
+issue: 4417
+python_version: 3.14.3
+library_version: 3.9.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/scatter-pitch-events/bokeh/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/scatter-pitch-events/bokeh/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/scatter-pitch-events/bokeh/plot.html
+quality_score: 91
+review:
+  strengths:
+  - Excellent pitch rendering with all FIFA standard markings including corner arcs,
+    penalty arcs, and goal posts
+  - Strong data storytelling through danger zone gradient, shot annotation, and visual
+    hierarchy with shots as focal points
+  - Mow-pattern stripes add professional texture without distraction
+  - Dual PNG + HTML output leverages Bokeh interactive capabilities
+  - Colorblind-safe palette with shape redundancy ensures accessibility
+  - Realistic data proportions and spatial distributions for soccer events
+  weaknesses:
+  - Unsuccessful event markers (white fill, low alpha) can be slightly hard to distinguish
+    on light green pitch
+  - Legend with 8 items across 2 rows is somewhat dense
+  image_description: 'The plot displays a soccer pitch event map on a light green
+    background with subtle alternating mow-pattern stripes. Standard FIFA pitch markings
+    are drawn in dark green: pitch outline, halfway line, center circle with center
+    spot, both penalty areas, goal areas, penalty spots, penalty arcs, corner arcs,
+    and gray goal posts at each end. A translucent red danger zone gradient highlights
+    the attacking third (right side). Four event types are plotted with distinct markers
+    and colors: blue circles for passes, red/pink stars for shots, gold triangles
+    for tackles, and purple diamonds for interceptions. Successful events appear filled
+    with high opacity; unsuccessful ones are hollow/white-filled with lower opacity.
+    Directional arrows connect start-to-end positions for passes (blue) and shots
+    (red), with shot arrows being thicker. A bold red annotation "16 shots · 3 on
+    target" appears in the top-right corner. The horizontal legend at the bottom lists
+    all 8 event type/outcome combinations. Title reads "scatter-pitch-events · bokeh
+    · pyplots.ai". Axes are labeled "Pitch Length (m)" and "Pitch Width (m)" with
+    clean gray text on a #FAFAFA background.'
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 52pt, axis labels 36pt, ticks
+          26pt, legend 22pt). Annotation text slightly small relative to plot scale.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Legend with 8 items slightly dense. Some arrow lines cross markers.
+          All text readable.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Markers well-sized for 120 events. Unsuccessful markers occasionally
+          hard to distinguish on light green pitch.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue, red, gold, purple palette with shape redundancy. Colorblind-safe.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Pitch fills canvas well with balanced margins. Aspect ratio correctly
+          maintained.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive labels with units: Pitch Length (m) and Pitch Width
+          (m).'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Strong design: custom palette, mow-pattern stripes, danger zone
+          gradient, removed axis lines/ticks/grid. Clearly above defaults.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Grid removed, axis lines removed, tick marks removed, clean background,
+          generous whitespace, subtle stripes.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Danger zone gradient, shot annotation, shots as focal points. Visual
+          hierarchy guides viewer to key action area.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct scatter plot on accurately scaled pitch diagram.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All required features present: pitch markings, distinct markers/colors,
+          outcome encoding, directional arrows, green background, correct aspect ratio.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = pitch length (0-105m), Y = pitch width (0-68m). All data visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct title format. Legend labels show all 8 event type/outcome
+          combinations.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All 4 event types with both outcomes. Good variation in positions
+          and trajectories.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Realistic soccer match data with plausible proportions and success
+          rates.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: FIFA standard pitch dimensions. Events in realistic zones. 120 events
+          appropriate for match segment.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports, data, pitch, events, styling, save. No functions/classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set at start.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-structured with appropriate complexity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png and plot.html. Current Bokeh API.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of ColumnDataSource, figure, scatter, Arrow layout, Label
+          layout. Idiomatic Bokeh patterns.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Arrow with NormalHead, click_policy hide, dual PNG+HTML output. Distinctive
+          Bokeh capabilities.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  - columndatasource
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - alpha-blending
+  - edge-highlighting
