@@ -1,7 +1,7 @@
 library: plotly
 specification_id: scatter-pitch-events
 created: '2026-03-20T12:39:22Z'
-updated: '2026-03-20T12:51:17Z'
+updated: '2026-03-20T12:59:22Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23342848809
 issue: 4417
@@ -10,87 +10,90 @@ library_version: 6.6.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/scatter-pitch-events/plotly/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/scatter-pitch-events/plotly/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/scatter-pitch-events/plotly/plot.html
-quality_score: 88
+quality_score: 89
 review:
   strengths:
   - Comprehensive pitch diagram with all FIFA-standard markings including corner arcs,
-    penalty arcs, and goal posts
+    penalty arcs, and semi-transparent goal posts
   - Strong design with custom two-tone green scheme, well-chosen event colors, and
     white marker edge highlighting
   - Excellent data generation with realistic spatial distributions per event type
     and plausible success rates
   - Effective use of Plotly-specific features (hover tooltips, HTML export, shape
     layering, aspect ratio locking)
-  - Clear visual hierarchy through marker size differentiation (shots=22, tackles/interceptions=16,
-    passes=11)
+  - Clear visual hierarchy through marker size differentiation creating natural focal
+    points on shots
   weaknesses:
-  - Right side of pitch near the goal is cluttered with converging pass/shot lines
+  - Right side of pitch near the goal is congested with converging pass/shot lines
     overlapping markers
-  - Unsuccessful open markers at low opacity can be difficult to distinguish against
-    the green background
-  - Yellow tackle markers have reduced contrast against the green pitch for some viewers
-  - Legend font size (15pt) is on the small side for the output resolution
-  image_description: 'The plot displays a soccer pitch event map on a green field
-    (#3A9D5C) with a darker green frame (#1B5E20). White pitch markings include the
-    outline, penalty areas, goal areas, center circle, halfway line, penalty arcs,
-    corner arcs, penalty spots, center spot, and goal posts rendered as semi-transparent
-    rectangles. Four event types are plotted with distinct markers: light blue circles
-    for passes (filled=successful, open=unsuccessful), orange/red stars for shots
-    (filled=on target, open=off target), yellow triangles for tackles (filled=successful,
-    open=unsuccessful), and purple diamonds for interceptions (filled=successful,
-    open=unsuccessful). Directional lines connect pass origins to endpoints (solid
-    light blue for successful, dotted for unsuccessful) and shot origins toward the
-    goal (solid orange for on target, dotted for off target). Shots are concentrated
-    in the final third, passes are distributed with an attacking bias, tackles and
-    interceptions cluster in midfield/defensive zones. A legend at the bottom lists
-    all 8 event categories with matching symbols. The title "scatter-pitch-events
-    · plotly · pyplots.ai" appears centered at the top in white.'
+  - Yellow tackle markers have slightly reduced contrast against the green pitch for
+    some colorblind viewers
+  - Could benefit from annotation or callout to highlight a key tactical insight for
+    stronger data storytelling
+  image_description: 'The plot displays a soccer pitch event map on a vivid green
+    field (#3A9D5C) framed by a darker green background (#1B5E20). White pitch markings
+    include the full outline, penalty areas, goal areas, center circle with center
+    spot, halfway line, penalty arcs with penalty spots, corner arcs, and goal posts
+    rendered as semi-transparent rectangles. Four event types are plotted with distinct
+    markers: light blue filled circles for successful passes and open circles for
+    unsuccessful passes, orange/red filled stars for shots on target and open stars
+    for off-target shots, yellow filled triangles for successful tackles and open
+    triangles for unsuccessful tackles, and purple filled diamonds for successful
+    interceptions and open diamonds for unsuccessful interceptions. Directional lines
+    connect pass start positions to endpoints (solid light blue for successful, dotted
+    for unsuccessful) and shot positions toward the goal (solid orange for on target,
+    dotted for off target). Shots cluster in the final third, passes distribute with
+    an attacking-half bias, tackles and interceptions concentrate in midfield and
+    defensive zones. A horizontal legend at the bottom-left lists all 8 event categories
+    with matching symbols on a semi-transparent black background. The title "scatter-pitch-events
+    · plotly · pyplots.ai" appears centered at the top in white Arial Black font.'
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 26
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Title 28pt and legend 15pt explicitly set. All readable but legend
-          could be slightly larger.
+        comment: Title 28pt Arial Black, legend 18pt, hoverlabel 14pt all explicitly
+          set and clearly readable at 4800x2700
       - id: VQ-02
         name: No Overlap
         score: 4
         max: 6
         passed: true
-        comment: Right side of pitch cluttered with converging pass/shot lines and
-          overlapping markers near goal. Legend items tightly packed.
+        comment: Right side of pitch has congestion where pass and shot lines converge
+          toward the goal. Rest of pitch is clean
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Successful markers clearly visible with white edges. Unsuccessful
-          open markers at 0.35-0.4 opacity hard to see on green.
+        comment: Successful markers with white edges clearly visible. Unsuccessful
+          open markers at 0.55 opacity distinguishable but less prominent against
+          green
       - id: VQ-04
         name: Color Accessibility
         score: 3
         max: 4
         passed: true
-        comment: Light blue, orange, purple span distinct hues. Yellow tackles on
-          green pitch have reduced contrast.
+        comment: Light blue, orange, purple span distinct hues. Yellow tackle triangles
+          on green pitch have slightly reduced contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Pitch fills canvas well. Correct aspect ratio. Dark green paper provides
-          professional framing.
+        comment: Pitch fills canvas well with correct 105:68 aspect ratio via scaleanchor.
+          Dark green paper provides professional framing
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Axes correctly hidden for pitch diagram. Title correctly formatted.
+        comment: Axes correctly hidden for pitch diagram. Title correctly formatted
     design_excellence:
       score: 15
       max: 20
@@ -100,22 +103,22 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: 'Strong design: custom two-tone green, distinct event colors, white
-          marker edges, semi-transparent legend background.'
+        comment: Strong design with custom two-tone green, distinct event colors,
+          white marker edges, semi-transparent legend
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
         comment: Axes hidden, no grid, consistent line weights, white marker borders,
-          subtle goal post fills.
+          subtle goal post fills, proper layer separation
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
         comment: Visual hierarchy through marker sizes. Success/failure encoding via
-          fill and opacity. Spatial distribution tells tactical story.
+          fill and opacity. Spatial distribution tells tactical story
     spec_compliance:
       score: 15
       max: 15
@@ -125,26 +128,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct scatter plot on accurately scaled pitch diagram.
+        comment: Correct scatter plot on accurately scaled pitch diagram
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
         comment: 'All spec requirements met: pitch markings, distinct markers, outcome
-          encoding, directional lines, green background, correct aspect ratio.'
+          encoding, directional lines, green background, correct aspect ratio'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly mapped to pitch coordinates (0-105, 0-68).
+        comment: X/Y correctly mapped to pitch coordinates (0-105, 0-68)
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Legend labels match all 8 event categories.
+        comment: Title format correct. Legend labels match all 8 event categories
     data_quality:
       score: 15
       max: 15
@@ -155,21 +158,21 @@ review:
         max: 6
         passed: true
         comment: All 4 event types with success/failure. 134 events with realistic
-          distribution.
+          distribution
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
         comment: Soccer match events with realistic spatial distributions and plausible
-          success rates.
+          success rates
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 134 events realistic for match segment. Standard FIFA dimensions.
-          Plausible success rates.
+        comment: Standard FIFA dimensions. 134 events realistic for match segment.
+          Plausible success rates
     code_quality:
       score: 10
       max: 10
@@ -179,32 +182,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script with clear sections. No functions or classes.
+        comment: Flat script with clear sections. No functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set at top.
+        comment: np.random.seed(42) set at top
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy and plotly.graph_objects, both fully used.
+        comment: Only numpy and plotly.graph_objects, both fully used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
         comment: Well-organized with efficient None-separator batching for direction
-          lines.
+          lines
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png at 4800x2700 and plot.html. Current API.
+        comment: Saves plot.png at 4800x2700 and plot.html. Current API
     library_mastery:
       score: 8
       max: 10
@@ -214,15 +217,15 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses go.Figure with add_trace and add_shape correctly. Idiomatic
-          layout configuration.
+        comment: Uses go.Figure with add_trace and add_shape correctly. Proper layout
+          configuration with scaleanchor
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Hovertemplate, write_html, layer='below', scaleanchor, fixedrange
-          are Plotly-specific features.
+        comment: Hovertemplate, write_html, layer=below, scaleanchor, fixedrange are
+          Plotly-specific features
   verdict: REJECTED
 impl_tags:
   dependencies: []
