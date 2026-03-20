@@ -1,7 +1,7 @@
 library: altair
 specification_id: scatter-shot-chart
 created: '2026-03-20T20:31:23Z'
-updated: '2026-03-20T20:47:22Z'
+updated: '2026-03-20T20:57:40Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23361192907
 issue: 4416
@@ -10,40 +10,36 @@ library_version: 6.0.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/scatter-shot-chart/altair/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/scatter-shot-chart/altair/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/scatter-shot-chart/altair/plot.html
-quality_score: 82
+quality_score: 80
 review:
   strengths:
-  - Excellent court geometry with all required NBA features (three-point arc, paint,
-    free-throw circle, restricted area, basket, backboard, center court)
-  - Realistic data generation with zone-specific make rates (55% close, 40% mid, 35%
-    three, 80% FT)
-  - Good use of Altair declarative layer composition and encoding system
-  - Shape encoding (circle vs cross) provides secondary visual distinction beyond
-    color
-  - Perfect spec compliance with all required features present
+  - Full court geometry with all required NBA court elements accurately drawn
+  - Zone percentage annotations add genuine analytical value and storytelling
+  - Redundant shape encoding (circle/cross) alongside color for made/missed distinction
+  - Clean layered composition using Altair declarative grammar
+  - Interactive features (tooltips, zoom/pan) and HTML export leverage Altair strengths
+  - Realistic shot distribution with appropriate zone-based shooting percentages
   weaknesses:
-  - Red-green color palette is not colorblind-accessible — use blue/coral or teal/orange
-    instead
-  - 'No data storytelling: missing zone annotations showing FG% by area to guide viewer
-    insight'
-  - Opacity 0.8 slightly high for 300 data points causing visual density near basket
-  - Helper function add_seg() breaks KISS structure requirement
-  image_description: 'The plot displays an NBA half-court basketball shot chart with
-    approximately 300 shot attempts. The title "scatter-shot-chart · altair · pyplots.ai"
-    appears bold at the top with a subtitle "NBA Player Shot Chart — 300 Attempts
-    (FG 49%)". Shot markers use two visual encodings: blue filled circles for made
-    shots and orange cross markers for missed shots. The court is drawn in gray lines
-    showing the baseline, sidelines, half-court line, paint/key area, free-throw line,
-    free-throw circle (top half), three-point arc with corner sections, restricted
-    area, basket ring, backboard, and center court semi-circle. A legend labeled "Shot
-    Result" sits in the top-right corner. Zone annotations show shooting percentages:
-    "Paint: 62%", "Mid-Range: 45%", "3PT: 26%". The court maintains a 1:1 aspect ratio
-    with shots distributed realistically — dense near the basket, spread through mid-range,
-    and clustered along the three-point arc. Free throws cluster tightly near the
-    free-throw line.'
+  - Helper function add_seg() violates KISS flat-script requirement
+  - Marker size (100) and opacity (0.8) too high for 300 data points causing visual
+    clutter near basket
+  - Red-green color scheme is not colorblind-safe despite shape mitigation
+  image_description: 'The plot displays an NBA half-court basketball shot chart on
+    a light cream/beige background. Court geometry is drawn with gray lines (#888)
+    including sidelines, baseline, half-court line, paint/key area (16 ft wide), free-throw
+    line and top-half circle, three-point arc, restricted area circle, basket ring,
+    and backboard. Made shots are shown as filled blue/teal circles and missed shots
+    as salmon/coral crosses, with a "Shot Result" legend in the top-right corner.
+    The title reads "scatter-shot-chart · altair · pyplots.ai" in bold ~28pt font,
+    with a subtitle "NBA Player Shot Chart — 300 Attempts (FG 49%)". Zone labels with
+    shooting percentages are displayed: "Paint: 65%", "Mid-Range: 46%", and "3PT:
+    26%", adding analytical context. The court fills the square canvas well with a
+    1:1 aspect ratio and no axis ticks. Shots are distributed realistically across
+    all court zones with higher density near the basket and along the three-point
+    arc.'
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 24
       max: 30
       items:
       - id: VQ-01
@@ -51,43 +47,44 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title fontSize=28, subtitle 16, legend title 18, labels 16 — all
-          explicitly set and readable
+        comment: Title 28pt, legend title 18pt, legend labels 16pt explicitly set.
+          Subtitle at 16pt slightly small but readable.
       - id: VQ-02
         name: No Overlap
-        score: 6
-        max: 6
-        passed: true
-        comment: No text or element overlap anywhere
-      - id: VQ-03
-        name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: 300 points with size=100 and shape encoding. Opacity 0.8 slightly
-          high for this density
+        comment: Minor marker overlap near basket area due to shot density, no text
+          collisions.
+      - id: VQ-03
+        name: Element Visibility
+        score: 4
+        max: 6
+        passed: true
+        comment: 300 points with size=100 and opacity=0.8 too large for density; white
+          stroke helps but areas are cluttered.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 4
-        passed: false
-        comment: Red-green color scheme (#27ae60/#c0392b) not colorblind-safe. Shape
-          encoding mitigates as secondary cue
+        passed: true
+        comment: Red-green scheme mitigated by shape encoding (circle vs cross) but
+          still problematic for deuteranopia.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good 1:1 aspect ratio, court fills plot well. Some unused space above
-          half-court line
+        comment: Square 1:1 aspect ratio, court fills canvas well with balanced margins.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Axes hidden per spec recommendation. Title and subtitle are descriptive
+        comment: No axis labels appropriate per spec. Descriptive title and subtitle
+          with stats.
     design_excellence:
-      score: 11
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -95,22 +92,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Above defaults with custom palette, shape encoding, white stroke,
-          informative subtitle. Not publication-quality
+        comment: Clean cream background, muted court lines, white stroke on markers.
+          Above defaults but not publication-level.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Axes removed, view stroke removed, white marker stroke, clean court
-          lines at 1.8px
+        comment: View stroke removed, axes hidden, clean court presentation. Some
+          refinement evident.
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Subtitle with FG% adds context but no zone annotations or visual
-          hierarchy to guide viewer
+        passed: true
+        comment: Zone percentage labels create analytical narrative. Subtitle includes
+          overall FG%. Shape encoding adds dimension.
     spec_compliance:
       score: 15
       max: 15
@@ -120,84 +117,87 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct scatter plot overlaid on half-court diagram
+        comment: Correct scatter/point overlay on half-court diagram.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All court elements, made/missed coloring, shot types, legend included
+        comment: 'All court elements present: three-point arc, free-throw line/circle,
+          paint/key, restricted area, basket/backboard. Color-coded shots, 1:1 aspect
+          ratio, legend.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly mapped to court positions in feet from basket center
+        comment: X/Y correctly mapped to court positions (feet from basket center).
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend labels Made/Missed match data
+        comment: Title format correct. Legend labels Made/Missed match data.
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: All shot types with realistic distribution and zone-specific make
-          rates
+        comment: Shows 2-pointers, 3-pointers, free throws with both outcomes. Good
+          spatial distribution.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Basketball shot chart with accurate NBA court dimensions. Neutral
-          topic
+        comment: NBA basketball scenario with realistic shot distribution and percentages.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Court dimensions, shot distances, and make percentages all realistic
-          for NBA data
+        comment: Court dimensions match NBA standards. Shot counts and percentages
+          realistic.
     code_quality:
-      score: 9
+      score: 7
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 1
         max: 3
         passed: false
-        comment: Helper function add_seg() breaks no-functions rule. Could be inlined
+        comment: Defines add_seg() helper function, violating flat Imports-Data-Plot-Save
+          structure.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports (altair, numpy, pandas) are used
+        comment: Only altair, numpy, pandas — all used.
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: Clean, well-organized code. No fake UI or over-engineering
+        comment: Helper function adds unnecessary complexity; otherwise clean and
+          well-organized.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html. Current Altair API
+        comment: Saves as plot.png and plot.html. Current API.
     library_mastery:
       score: 7
       max: 10
@@ -207,22 +207,23 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Good declarative grammar: layer composition, detail/order encoding,
-          encoding types, legend config'
+        comment: 'Good declarative grammar: layered composition, encoding channels,
+          Scale/Legend configuration.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses detail encoding for line segments, order encoding, interactive(),
-          rich tooltips
-  verdict: REJECTED
+        comment: Tooltips, .interactive(), shape encoding, HTML export, layer composition
+          — distinctive Altair features.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
   - hover-tooltips
   - html-export
+  - custom-legend
   patterns:
   - data-generation
   dataprep: []
