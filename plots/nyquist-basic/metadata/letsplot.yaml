@@ -1,0 +1,229 @@
+library: letsplot
+specification_id: nyquist-basic
+created: '2026-03-20T22:47:00Z'
+updated: '2026-03-20T23:15:00Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23365453660
+issue: 4412
+python_version: 3.14.3
+library_version: 4.9.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/nyquist-basic/letsplot/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/nyquist-basic/letsplot/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/nyquist-basic/letsplot/plot.html
+quality_score: 91
+review:
+  strengths:
+  - Excellent data storytelling with gain margin annotation, stability zone highlight,
+    and informative subtitle
+  - Custom color palette with named constants creates professional, cohesive appearance
+  - Complete spec compliance with all required features implemented
+  - Realistic engineering data using scipy.signal for accurate frequency response
+    computation
+  - Interactive tooltips and HTML export leverage lets-plot distinctive capabilities
+  weaknesses:
+  - Minor visual crowding near the critical point where multiple labels converge
+  - Upper canvas area has less content density than lower portion
+  image_description: The plot shows a Nyquist diagram on the complex plane with a
+    1:1 aspect ratio. The main curve is drawn in dark navy blue, sweeping from approximately
+    (2, 0) at low frequency down through the lower half-plane, curving left and upward
+    to approach the origin at high frequency. A light blue dashed mirror curve reflects
+    the negative-frequency contour in the upper half-plane. A gray dashed unit circle
+    is centered at the origin. The critical point (-1, 0) is marked with a bold red
+    X with a red label "(-1, 0)" nearby. A red-bordered label "GM = 15.9 dB" indicates
+    the gain margin with a dotted red line from (-1, 0) to the real-axis crossing
+    point. Four frequency annotations (ω=0.01, ω=0.04, ω=0.40, ω=6.39) appear in light
+    gray labels along the curve. Dark blue arrows indicate increasing frequency direction.
+    A subtle pink stability zone circle surrounds the critical point. The title reads
+    "nyquist-basic · letsplot · pyplots.ai" with a subtitle showing the transfer function
+    and stability conclusion. Axes are labeled Re{G(jω)} and Im{G(jω)}. Background
+    is near-white with very subtle major gridlines.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title=26, subtitle=16, axis_title=22,
+          axis_text=16, labels=16-18'
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Minor crowding near critical point with (-1,0) and GM labels in close
+          proximity
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Main curve thick (size=2.2), arrows prominent, critical point marker
+          large and distinct
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Colorblind-safe palette: dark navy, light blue, red, gray. Good
+          contrast'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Square format appropriate for 1:1 aspect ratio, upper canvas has
+          less content density
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive mathematical notation: Re{G(jω)} and Im{G(jω)}'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom 8-color palette, professional polish, styled labels with rounded
+          corners
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Minimal theme, subtle grid, ticks removed, clean background, generous
+          margins
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Gain margin annotation, stability zone highlight, informative subtitle
+          with stability conclusion
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Nyquist plot on complex plane
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features: critical point, unit circle, frequency annotations,
+          arrows, 1:1 aspect, labeled axes'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Real on x-axis, imaginary on y-axis, 500 logarithmically spaced points
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct title format, no legend needed for single-series
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Complete contour with mirror, gain margin, stability zone, frequency
+          annotations at key points
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real third-order transfer function computed with scipy.signal
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Frequency range 0.01-100 rad/s appropriate, GM=15.9 dB realistic
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat imports-data-plot-save structure, no functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic with scipy.signal.freqresp
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: numpy, pandas, lets_plot, export_ggsave, scipy.signal'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-organized, named color constants, appropriate complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png via export_ggsave with scale=3
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good ggplot grammar with layered geoms, aes mappings, coord_fixed,
+          theme customization
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses layer_tooltips() for interactive hover info, HTML export, arrow()
+          function
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - scipy
+  techniques:
+  - annotations
+  - layer-composition
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling
