@@ -1,0 +1,228 @@
+library: plotly
+specification_id: scatter-shot-chart
+created: '2026-03-20T20:27:50Z'
+updated: '2026-03-20T21:04:28Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23361193093
+issue: 4416
+python_version: 3.14.3
+library_version: 6.6.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/scatter-shot-chart/plotly/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/scatter-shot-chart/plotly/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/scatter-shot-chart/plotly/plot.html
+quality_score: 89
+review:
+  strengths:
+  - Excellent warm hardwood court aesthetic with shadow depth effect creates professional
+    sports-analytics appearance
+  - Zone shooting percentage annotations provide strong data storytelling (paint 55%
+    → mid 51% → 3PT 28%)
+  - Colorblind-safe blue/orange palette with distinct marker shapes (circle vs x)
+    for accessibility
+  - Complete court geometry with all required markings including dashed free-throw
+    circle bottom half
+  - Perfect data quality with realistic shot distributions and make percentages
+  weaknesses:
+  - Y-axis range (-2.5 to 40) clips the top 7ft of the 47ft court, truncating the
+    court outline
+  - Zone annotations slightly overlap shot markers in dense areas (paint)
+  - Color scheme uses blue/orange instead of spec-requested green/red for made/missed
+  image_description: 'The plot displays a basketball half-court shot chart on a warm
+    hardwood-toned background (#FDF6EC) with a subtle shadow effect. Court markings
+    are drawn in brown (#6B5B4F): three-point arc, paint/key area (slightly darker
+    fill), free-throw circle (top half solid, bottom half dashed), restricted area
+    arc, backboard, and basket rim (orange). Shot attempts are plotted as markers
+    — orange "x" symbols for missed shots and dark blue circles with white edges for
+    made shots. Three zone annotations with semi-transparent white backgrounds show
+    shooting percentages: Paint 55%, Mid-range 51%, 3-Point 28%. The title reads "scatter-shot-chart
+    · plotly · pyplots.ai" in bold Arial Black, with a subtitle "171/350 shots made
+    (48.9% FG) · Paint 55% · Mid 51% · 3PT 28%". A legend in the upper right distinguishes
+    Made and Missed. The layout is square (1:1 aspect ratio) with no axis ticks, appropriate
+    for a court diagram.'
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 30pt, subtitle 20px, annotations
+          18-20pt, legend 18pt. All perfectly readable.'
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Minor overlap of zone annotations with shot markers in paint area;
+          Mid-range label pushed to far right edge.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Good marker visibility with sizes 8-14 and alpha 0.7-0.8 for 350
+          points. Paint area dense but markers distinguishable via shape.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Colorblind-safe blue/orange palette avoids red-green distinction.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Court fills canvas well with 1:1 ratio. Y-axis range (-2.5 to 40)
+          clips top 7ft of 47ft court.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Axis labels correctly omitted per spec. Title present and descriptive.
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Strong design: warm hardwood court, shadow for depth, custom blue/orange
+          palette, Arial Black typography.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Grid/axes hidden, court shadow for depth, paint highlighted, dashed
+          FT circle bottom.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Zone percentages create narrative (55% paint, 51% mid, 28% 3PT).
+          Subtitle summarizes stats. Marker sizes vary by distance.
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct basketball shot chart with half-court overlay.
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: All court markings present. Uses blue/orange instead of spec green/red.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y correctly mapped to court positions in feet.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct. Legend shows Made/Missed with correct symbols.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows all shot types, zones, both outcomes with realistic distribution.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Basketball shooting data with NBA-standard court dimensions and realistic
+          patterns.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Court dimensions correct. Three-point arc at 23.75ft. Plausible shot
+          counts and percentages.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports, data, court shapes, plot, style, save.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set at start.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only numpy and plotly.graph_objects, both used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-organized, no fake functionality.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot.png and plot.html with current API.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of go.Figure, shapes, annotations, scaleanchor, hovertemplate.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses hover templates, HTML export, and layout shapes — Plotly-distinctive
+          features.
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - alpha-blending
+  - edge-highlighting

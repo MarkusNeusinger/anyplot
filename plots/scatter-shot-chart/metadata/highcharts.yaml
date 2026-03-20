@@ -1,0 +1,225 @@
+library: highcharts
+specification_id: scatter-shot-chart
+created: '2026-03-20T20:30:35Z'
+updated: '2026-03-20T21:08:05Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23361192951
+issue: 4416
+python_version: 3.14.3
+library_version: unknown
+preview_url: https://storage.googleapis.com/pyplots-images/plots/scatter-shot-chart/highcharts/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/scatter-shot-chart/highcharts/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/scatter-shot-chart/highcharts/plot.html
+quality_score: 88
+review:
+  strengths:
+  - Professional dark theme evoking broadcast basketball analytics graphics
+  - Colorblind-safe blue/orange palette with multi-dimensional differentiation (fill
+    opacity, marker shape, size, border width)
+  - Accurate NBA half-court geometry with tasteful line opacity hierarchy creating
+    visual depth
+  - Comprehensive data generation covering all court zones with realistic zone-specific
+    make percentages
+  - Creative use of Highcharts renderer API for custom court drawing
+  - Zone percentage labels enhance analytical context and data storytelling
+  - Clean well-structured code with DRY patterns and CDN fallback
+  weaknesses:
+  - Spec explicitly calls for green/red coloring but implementation uses blue/orange
+    (accessibility improvement but literal spec deviation)
+  - BASELINE text at 0.3 opacity is barely visible
+  - Some wasted canvas space in upper corners above three-point arc
+  - Data storytelling could be stronger with a highlighted insight or focal point
+  image_description: |-
+    The plot displays a basketball half-court shot chart on a dark navy background (#1a1a2e) with a slightly lighter plot area (#2a2a3e). The court is rendered with white lines at varying opacities creating a clear visual hierarchy: the outer court outline is bold (0.8 opacity, 5px), the three-point arc and corner straight lines are prominent (0.75 opacity, 4px), while the paint/key rectangle, free-throw circle (top solid, bottom dashed), and restricted area arc are more subtle (0.55 opacity, 2.5px). The basket is an orange circle at the origin with a white backboard line above. BASELINE appears in faint italic text below the court.
+
+    Shot markers use blue (#4A90D9) for made shots and orange (#E8833A) for missed shots. Made shots are solid-filled with thin white borders; missed shots are semi-transparent with thicker white borders. Marker shapes differentiate shot types: circles for 2-pointers, diamonds for 3-pointers, squares for free throws. Zone percentage labels appear on the court: Arc 35%, FT 80%, Mid 40%, Paint 55%, Corner 38%. Shots cluster realistically in the paint, mid-range, three-point arc, corners, and at the free-throw line. Title reads "scatter-shot-chart · highcharts · pyplots.ai" with subtitle "Season Shot Chart — 370 Attempts". Vertical legend in top-right lists all six series. Square 1:1 aspect ratio (3600x3600).
+  criteria_checklist:
+    visual_quality:
+      score: 26
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 42px, subtitle 28px, legend
+          28px, tooltip 20px, zone labels 24px). BASELINE at 0.3 opacity is faint.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text. Legend outside court with semi-transparent background.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Marker radii 7-11px appropriate for ~370 points. Minor overlap in
+          dense paint area.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue/orange colorblind-safe palette with strong contrast on dark
+          background.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Court fills plot well with 1:1 ratio. Some wasted space above three-point
+          arc.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 1
+        max: 2
+        passed: true
+        comment: Title format perfect. Axis labels intentionally hidden per spec but
+          no units present.
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Dark theme evokes broadcast analytics. Custom palette, court line
+          opacity hierarchy, multi-dimensional marker differentiation.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: No grid/axes. Tasteful court line opacity hierarchy. Dashed FT circle
+          bottom and half-court line.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Zone labels add context. Spatial clustering tells a story. No focal
+          point or highlighted insight.
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct scatter plot overlaying basketball half-court diagram.
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: All court elements present. Uses blue/orange instead of spec green/red.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y correctly mapped to court positions in feet from basket center.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct. Legend identifies all six series with symbols.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All shot types, zones, and outcomes with varying make percentages.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: NBA court with correct dimensions. Neutral sports topic. Realistic
+          zone percentages.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Accurate NBA dimensions. 370 attempts realistic for season sample.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear flow with no functions or classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set at start.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Compact zone table, DRY series loop, CDN fallback.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot.png and plot.html. Current API.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Proper Chart/Options/Series usage. Renderer API in load event is
+          advanced. Monkey-patching approach is functional but not most idiomatic.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Renderer API for custom SVG court drawing. Interactive tooltips.
+          Marker symbol differentiation. Z-index layering.
+  verdict: REJECTED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - custom-legend
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - dark-theme
+  - edge-highlighting
+  - alpha-blending

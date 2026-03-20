@@ -1,0 +1,241 @@
+library: matplotlib
+specification_id: scatter-shot-chart
+created: '2026-03-20T20:28:25Z'
+updated: '2026-03-20T21:05:53Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23361192893
+issue: 4416
+python_version: 3.14.3
+library_version: 3.10.8
+preview_url: https://storage.googleapis.com/pyplots-images/plots/scatter-shot-chart/matplotlib/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/scatter-shot-chart/matplotlib/plot_thumb.png
+preview_html: null
+quality_score: 92
+review:
+  strengths:
+  - Excellent dark theme design evoking professional basketball analytics tools
+  - Hexbin efficiency underlay at subtle alpha creates compelling spatial narrative
+    without obscuring individual shots
+  - Custom diamond marker for made shots provides clear visual distinction from X
+    markers
+  - Comprehensive statistical summary (FG%, 2PT%, 3PT%, FT%) adds valuable context
+  - Realistic NBA court geometry with accurate dimensions
+  - Path effects on text ensure readability against dark background
+  - Well-structured data generation covering all court zones with distance-based make
+    probability
+  weaknesses:
+  - Missed free throws are visually indistinguishable from missed field goals and
+    legend does not clarify this
+  image_description: 'The plot displays a basketball half-court shot chart on a dark
+    navy (#1a1a2e) background with a slate (#2b2b40) court surface. Court lines are
+    drawn in muted gray (#8899aa), showing the three-point arc, paint/key area (16
+    ft wide rectangle), free-throw line and circles (solid top half, dashed bottom),
+    restricted area arc, backboard (thick horizontal line), basket (small orange circle),
+    and half-court line with center circle. Shot markers use teal (#2a9d8f) diamond
+    shapes for made field goals, coral (#e76f51) X markers for missed shots, and orange
+    (#f4a261) circles for made free throws. A subtle hexbin underlay (alpha=0.12)
+    shows shooting efficiency zones — teal in the paint (high efficiency) transitioning
+    to coral at the perimeter (lower efficiency). The title "scatter-shot-chart ·
+    matplotlib · pyplots.ai" appears at the top in light gray with a dark stroke outline.
+    Below it, a statistical summary reads "FG: 177/350 (50.6%) | 2PT: 51% | 3PT: 41%
+    | FT: 72%". A styled legend at the bottom shows Missed (X), Made (diamond), and
+    Free Throw (circle) markers against a dark background. The plot uses a 1:1 aspect
+    ratio with axes turned off.'
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title 24pt, legend 18pt, summary 16pt all explicitly set and readable.
+          Summary text could be slightly larger.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text. Legend cleanly positioned below court.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: 350 shots with s=40-50 and alpha=0.45-0.6 appropriate for density.
+          Some markers blend slightly with hexbin underlay.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 3
+        max: 4
+        passed: true
+        comment: Teal vs coral better than pure red-green. Different marker shapes
+          provide redundant encoding. Could be stronger for deuteranopia.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 12x12 figure with court filling canvas. Well-balanced margins.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Axes appropriately off per spec. Title correct. Statistical summary
+          provides context.
+    design_excellence:
+      score: 17
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: Dark theme evokes professional basketball analytics tools. Custom
+          palette, path effects, custom markers. Clearly above defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Axes off, subtle hexbin at alpha=0.12, white edge highlights, path
+          effects on text, styled legend.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Hexbin efficiency underlay creates spatial narrative. Statistical
+          summary provides context. Different markers create visual hierarchy.
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct scatter shot chart with court overlay.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All court elements present: three-point arc, free-throw line, paint,
+          restricted area, basket/backboard, half-court line. Made/missed color coding.
+          1:1 aspect ratio.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y correctly mapped to court positions in feet from basket center.
+          All zones covered.
+      - id: SC-04
+        name: Title & Legend
+        score: 2
+        max: 3
+        passed: true
+        comment: Title format correct. Legend shows Made, Missed, Free Throw but missed
+          FTs indistinguishable from missed field goals.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows all shot types across all court zones. Both made and missed
+          well-represented. Distance-based make probability.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Realistic NBA-like statistics: FG 50.6%, 2PT 51%, 3PT 41%, FT 72%.
+          Neutral sports context.'
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: NBA-standard court dimensions. 350 shots realistic for a season sample.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports, seed, data, court, shots, styling, save. No
+          functions or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set at the top.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: patches, patheffects, pyplot, numpy, LinearSegmentedColormap,
+          Path.'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-organized Pythonic code. No fake functionality. Appropriate
+          complexity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with dpi=300. No deprecated API.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert OO API usage: ax methods, patches, Arc, hexbin, custom Path,
+          path_effects.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: hexbin with reduce_C_function, LinearSegmentedColormap, custom Path
+          marker, patheffects.withStroke.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - patches
+  - custom-legend
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - dark-theme
+  - custom-colormap
+  - alpha-blending
+  - edge-highlighting
+  - minimal-chrome
