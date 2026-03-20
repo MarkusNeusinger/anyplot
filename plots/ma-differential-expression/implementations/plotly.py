@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 ma-differential-expression: MA Plot for Differential Expression
-Library: plotly | Python 3.13
-Quality: pending | Created: 2026-03-20
+Library: plotly 6.6.0 | Python 3.14.3
+Quality: 83/100 | Created: 2026-03-20
 """
 
 import numpy as np
