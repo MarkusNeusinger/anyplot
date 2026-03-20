@@ -1,0 +1,236 @@
+library: bokeh
+specification_id: nyquist-basic
+created: '2026-03-20T22:45:13Z'
+updated: '2026-03-20T23:11:59Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23365453475
+issue: 4412
+python_version: 3.14.3
+library_version: 3.9.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/nyquist-basic/bokeh/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/nyquist-basic/bokeh/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/nyquist-basic/bokeh/plot.html
+quality_score: 90
+review:
+  strengths:
+  - Full spec compliance with all required features implemented correctly
+  - Strong data storytelling with quantitative stability margins (GM=7.8 dB, PM=32.8°)
+    annotated at crossover points
+  - Professional visual design with custom color palette, Helvetica typography, and
+    refined grid/axis styling
+  - Effective use of Bokeh interactive features (HoverTool with detailed tooltips,
+    HTML export)
+  - Deterministic data from analytical transfer function
+  weaknesses:
+  - Mirror arrow calculation code remains verbose with nested conditionals
+  - Minor annotation crowding near origin between phase crossover and omega-infinity
+    labels
+  image_description: 'The plot displays a Nyquist diagram on a square canvas (3600x3600).
+    A solid blue curve represents positive frequencies (omega > 0), starting from
+    approximately (5, 0) at low frequency and spiraling inward toward the origin as
+    omega approaches infinity. An orange dashed curve mirrors the positive frequency
+    branch for omega < 0. A dashed gray unit circle is centered at the origin. A prominent
+    red X marks the critical point at (-1, 0). Blue triangular arrows along the positive-frequency
+    curve indicate the direction of increasing frequency, with corresponding orange
+    arrows on the mirror curve. Two annotated crossover points are shown: a blue filled
+    circle at the gain crossover (omega=2.54 rad/s, PM=32.8 degrees) and a red diamond
+    at the phase crossover (omega=4.08, GM=7.8 dB). Labels omega-to-0 and omega-to-infinity
+    mark the curve endpoints. A green dotted line segment indicates the gain margin
+    between the phase crossover point and the critical point. The legend in the top-right
+    corner lists Unit circle, omega > 0, omega < 0, and Critical point (-1, 0). Background
+    is light gray with very subtle grid lines. Axes are labeled Real and Imaginary.
+    The title reads "nyquist-basic · bokeh · pyplots.ai".'
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 60pt, axis labels 44pt, ticks
+          32pt, annotations 26-28pt. All text clearly readable.'
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Minor crowding near origin between phase crossover and omega-infinity
+          labels, but all text remains readable.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Lines well-sized (4.5px positive, 3px negative). Markers, arrows,
+          and crossover indicators all clearly visible.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue/orange colorblind-safe pair. Red critical point and green gain
+          margin line all distinguishable.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Square 1:1 aspect ratio correct for Nyquist plot. Data fills canvas
+          reasonably but upper-left quadrant has some empty space.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Axes labeled Real and Imaginary as spec requires. Standard descriptive
+          labels for complex plane coordinates.
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom cohesive color palette, Helvetica typography throughout, professional
+          polish. Clearly above defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Axis lines and ticks removed, subtle grid (alpha=0.10), light gray
+          background, white border, well-styled legend.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Gain/phase margin annotations with quantitative values. Green dotted
+          gain margin line. Direction arrows guide frequency progression.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Nyquist plot on complex plane.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features: critical point, unit circle, frequency annotations,
+          arrows, 1:1 aspect, axis labels.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Real on x-axis, imaginary on y-axis. Both frequency branches shown.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format. Legend labels clear and descriptive.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows gain/phase crossover, mirror branch, spiral behavior, stability
+          margins.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Third-order transfer function with realistic poles and gain. Plausible
+          engineering values.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Frequency range and transfer function values sensible for the given
+          system.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports, data, plot, styling, save. No functions or
+          classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic from analytical transfer function.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 1
+        max: 2
+        passed: false
+        comment: Mirror arrow calculation is verbose with nested conditionals. Main
+          curve logic is clean.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot.png and plot.html. Current Bokeh 3.9 API.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of ColumnDataSource, HoverTool, Label, Span. Arrows via
+          scatter triangles rather than Arrow annotations.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: HoverTool with detailed tooltips, interactive tools, HTML export.
+          Distinctive Bokeh capabilities.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  - columndatasource
+  dataprep: []
+  styling:
+  - grid-styling
+  - alpha-blending
