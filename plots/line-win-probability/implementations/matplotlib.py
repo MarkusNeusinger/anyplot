@@ -1,11 +1,13 @@
-""" pyplots.ai
+"""pyplots.ai
 line-win-probability: Win Probability Chart
 Library: matplotlib 3.10.8 | Python 3.14.3
 Quality: 87/100 | Created: 2026-03-20
 """
 
 import matplotlib.patches as mpatches
+import matplotlib.patheffects as pe
 import matplotlib.pyplot as plt
+import matplotlib.ticker as mticker
 import numpy as np
 
 
@@ -56,7 +58,7 @@ quarter_labels = ["Q1", "Q2", "Q3", "Q4"]
 
 # Colors
 eagles_green = "#004C54"
-cowboys_blue = "#869397"
+cowboys_navy = "#003594"
 baseline_color = "#444444"
 
 # Plot
@@ -64,10 +66,12 @@ fig, ax = plt.subplots(figsize=(16, 9))
 
 # Fill above/below 50%
 ax.fill_between(plays, win_prob, 0.5, where=(win_prob >= 0.5), color=eagles_green, alpha=0.3, interpolate=True)
-ax.fill_between(plays, win_prob, 0.5, where=(win_prob < 0.5), color=cowboys_blue, alpha=0.3, interpolate=True)
+ax.fill_between(plays, win_prob, 0.5, where=(win_prob < 0.5), color=cowboys_navy, alpha=0.45, interpolate=True)
 
-# Win probability line
-ax.plot(plays, win_prob, color=eagles_green, linewidth=3, zorder=3)
+# Win probability line - color changes based on which team leads
+for i in range(len(plays) - 1):
+    color = eagles_green if win_prob[i] >= 0.5 else cowboys_navy
+    ax.plot(plays[i : i + 2], win_prob[i : i + 2], color=color, linewidth=3, zorder=3, solid_capstyle="round")
 
 # 50% baseline
 ax.axhline(y=0.5, color=baseline_color, linewidth=1.5, linestyle="--", alpha=0.5, zorder=2)
@@ -94,18 +98,19 @@ annotation_events = [
 for play_idx, label in annotation_events:
     wp = win_prob[play_idx]
     offset_y = 0.06 if wp >= 0.5 else -0.06
-    ax.annotate(
+    txt = ax.annotate(
         label,
         xy=(play_idx, wp),
         xytext=(play_idx, wp + offset_y),
         fontsize=12,
-        fontweight="medium",
+        fontweight="bold",
         ha="center",
         va="center",
-        color="#333333",
+        color="#222222",
         arrowprops={"arrowstyle": "-", "color": "#999999", "linewidth": 0.8},
         zorder=4,
     )
+    txt.set_path_effects([pe.withStroke(linewidth=3, foreground="white")])
 
 # Scatter dots on scoring events for visibility
 for play_idx, _ in annotation_events:
@@ -113,7 +118,7 @@ for play_idx, _ in annotation_events:
         play_idx,
         win_prob[play_idx],
         "o",
-        color=eagles_green if win_prob[play_idx] >= 0.5 else cowboys_blue,
+        color=eagles_green if win_prob[play_idx] >= 0.5 else cowboys_navy,
         markersize=7,
         zorder=5,
         markeredgecolor="white",
@@ -124,7 +129,11 @@ for play_idx, _ in annotation_events:
 ax.set_xlim(0, n_plays)
 ax.set_ylim(0, 1)
 ax.set_yticks([0, 0.25, 0.5, 0.75, 1.0])
-ax.set_yticklabels(["0%", "25%", "50%", "75%", "100%"])
+ax.yaxis.set_major_formatter(mticker.FuncFormatter(lambda x, _: f"{x:.0%}"))
+
+# Subtle y-axis gridlines for easier probability reading
+ax.yaxis.grid(True, alpha=0.15, linewidth=0.8, color="#888888")
+ax.set_axisbelow(True)
 ax.set_xlabel("Play Number", fontsize=20)
 ax.set_ylabel("Win Probability", fontsize=20)
 ax.set_title(
@@ -136,7 +145,7 @@ ax.spines["right"].set_visible(False)
 
 # Legend
 eagles_patch = mpatches.Patch(color=eagles_green, alpha=0.4, label="Eagles")
-cowboys_patch = mpatches.Patch(color=cowboys_blue, alpha=0.4, label="Cowboys")
+cowboys_patch = mpatches.Patch(color=cowboys_navy, alpha=0.5, label="Cowboys")
 ax.legend(handles=[eagles_patch, cowboys_patch], fontsize=16, loc="upper left", framealpha=0.8, edgecolor="none")
 
 plt.tight_layout()
