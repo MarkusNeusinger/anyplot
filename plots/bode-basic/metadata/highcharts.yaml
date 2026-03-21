@@ -1,7 +1,7 @@
 library: highcharts
 specification_id: bode-basic
 created: '2026-03-21T20:47:54Z'
-updated: '2026-03-21T20:52:51Z'
+updated: '2026-03-21T21:03:07Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23388395538
 issue: 4411
@@ -10,37 +10,39 @@ library_version: unknown
 preview_url: https://storage.googleapis.com/pyplots-images/plots/bode-basic/highcharts/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/bode-basic/highcharts/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/bode-basic/highcharts/plot.html
-quality_score: 79
+quality_score: 86
 review:
   strengths:
-  - Excellent data quality with realistic control systems transfer function and correct
-    engineering computations
-  - Well-structured dual-panel layout with explicit margin and panel height calculations
-  - Good use of Highcharts plotLines for reference lines at 0 dB and -180°
-  - Informative legend entries with computed crossover frequencies and margin values
-  - Clean, deterministic code with good variable naming
+  - Full spec compliance with all required Bode plot features (dual panels, log axis,
+    margins, reference lines)
+  - Excellent data quality with realistic three-pole transfer function and meaningful
+    stability margins
+  - Clean, well-organized code with deterministic data generation
+  - Good use of Highcharts multi-axis positioning for the dual-panel layout
+  - Professional color palette and annotation design
   weaknesses:
-  - X-axis tick labels overlap badly in the low-frequency range on both panels
-  - Red and green marker colors create colorblind accessibility issues
-  - Margin annotations exist only in the legend — spec requests annotations directly
-    on the chart
-  - LineSeries imported from wrong module (area instead of line)
-  image_description: The plot displays a dual-panel Bode plot for the transfer function
-    G(s) = 10 / [(s+1)(s/5+1)(s/20+1)]. The top panel shows Magnitude (dB) vs Frequency
-    (Hz) with a blue line starting at ~20 dB and rolling off at higher frequencies.
-    A red dashed reference line at 0 dB is labeled "0 dB" on the right. A blue diamond
-    marker indicates the gain crossover point (~0.96 Hz), and a red circle marker
-    shows the gain margin point (~1.77 Hz). The bottom panel shows Phase (degrees)
-    vs Frequency (Hz) with an orange line starting near 0° and decreasing to about
-    -270°. A red dashed reference line at -180° is labeled "-180°". A green diamond
-    marker shows the phase margin point, and a red circle marks the phase crossover.
-    Both panels share a logarithmic frequency axis with "Frequency (Hz)" labeled at
-    the bottom. The title reads "bode-basic · highcharts · pyplots.ai" with a subtitle
-    showing the transfer function. A legend on the upper right lists all series with
-    computed values. White background with subtle gray grid lines.
+  - Legend is crowded with 6 entries in the upper right — could be simplified or repositioned
+  - Design polish could be elevated further (e.g., more distinctive panel separation,
+    refined marker styling)
+  - No vertical line segments connecting crossover markers to reference lines (would
+    visually reinforce the margin concept)
+  image_description: 'The plot displays a dual-panel Bode plot for the transfer function
+    G(s) = 10 / [(s+1)(s/5+1)(s/20+1)]. The top panel shows magnitude in dB (blue
+    line, #306998) ranging from ~20 dB down to ~-130 dB, with a dashed 0 dB reference
+    line labeled "0 dB". The bottom panel shows phase in degrees (orange line, #e67e22)
+    rolling off from 0 degrees to approximately -270 degrees, with a dashed -180 degree
+    reference line labeled "-180°". Both panels share a logarithmic frequency axis
+    (Hz) from ~0.003 to ~160 Hz. Key markers include: a blue diamond at the gain crossover
+    frequency (~0.96 Hz, 0 dB), a purple diamond showing the phase margin (~32.4 degrees
+    above -180 degrees), an orange circle at the gain margin point (~9.9 dB below
+    0 dB at phase crossover), and an orange circle at the phase crossover on the -180
+    degree line (~1.77 Hz). Text annotations "GM = 9.9 dB" and "PM = 32.4°" are displayed
+    near their respective markers. The title reads "bode-basic · highcharts · pyplots.ai"
+    with subtitle showing the transfer function. A legend in the top-right lists all
+    six series. The background is white with subtle gray grid lines.'
   criteria_checklist:
     visual_quality:
-      score: 22
+      score: 26
       max: 30
       items:
       - id: VQ-01
@@ -48,42 +50,43 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set (48px title, 34px axis titles, 26px ticks).
-          Legend and plotLine labels slightly small.
+        comment: All font sizes explicitly set (48px title, 34px axis titles, 26px
+          tick labels, 24px annotations). All text readable.
       - id: VQ-02
         name: No Overlap
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: X-axis tick labels overlap in the 0.005-0.01 Hz range on both panels.
+        passed: true
+        comment: Mostly clean. Legend with 6 entries is somewhat crowded; annotation
+          labels near markers are tight.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Lines clearly visible (5px width), markers large (radius 16) with
-          white borders.
+        comment: Lines thick (lineWidth 5), markers radius 14-16 with white borders.
+          All clearly visible.
       - id: VQ-04
         name: Color Accessibility
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: Red-green marker colors create colorblind issue. Different shapes
-          partially mitigate.
+        passed: true
+        comment: Blue, orange, purple, dark orange. Colorblind-safe palette with good
+          contrast.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Dual-panel layout well-proportioned. Minor wasted space on right
-          side.
+        comment: Dual-panel layout fills canvas reasonably well. Some unused space
+          on right side.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'All axes labeled with units: Magnitude (dB), Phase (degrees), Frequency
-          (Hz).'
+        comment: Magnitude (dB), Phase (degrees), Frequency (Hz) — all descriptive
+          with units.
     design_excellence:
       score: 13
       max: 20
@@ -93,24 +96,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom palette, clean typography, informative subtitle. Above defaults
-          but not publication-quality.
+        comment: Custom color palette, clean typography with Segoe UI/Roboto, professional
+          subtitle. Above defaults but not publication-stunning.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Subtle grid (rgba 0.1), clean axis lines, generous whitespace between
-          panels.
+        comment: Subtle grid lines (rgba 0.1), dashed reference lines with labels,
+          tick marks removed. Good refinement.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Markers highlight key crossover points. Reference lines guide interpretation.
-          Legend includes computed values.
+        comment: Clear visual hierarchy with annotated margins, reference lines guide
+          interpretation, diamond vs circle markers distinguish crossover types.
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -118,51 +121,51 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct dual-panel Bode plot with magnitude on top and phase on bottom.
+        comment: Correct dual-panel Bode plot with magnitude on top, phase on bottom.
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: All features present except direct annotations on chart for margin
-          values (only in legend).
+        comment: 'All spec features: dual-panel, log axis, gain/phase margin annotations,
+          reference lines, grid.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Correct frequency vs magnitude/phase mapping with log scale.
+        comment: Frequency on x (log), magnitude dB on top y, phase degrees on bottom
+          y. Correct.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format. Legend labels descriptive with computed
-          values.
+        comment: Title format correct. Legend labels descriptive and accurate.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows three-pole rolloff, crossover points, stability margins. No
-          resonance peak shown.
+        comment: Three-pole system shows magnitude rolloff, phase rolloff, distinct
+          gain/phase crossover frequencies with measurable margins.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real control systems scenario with standard three-pole open-loop
-          transfer function.
+        comment: Classic control systems transfer function with meaningful stability
+          margins.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Frequency, magnitude, and phase ranges all physically sensible.
+        comment: 600 log-spaced points, GM ~9.9 dB, PM ~32.4 degrees — realistic values.
     code_quality:
       score: 10
       max: 10
@@ -172,26 +175,26 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear flow with no functions or classes.
+        comment: 'Flat structure: imports, data, chart config, series, export. No
+          functions/classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic mathematical computation.
+        comment: 'Fully deterministic: transfer function computed analytically.'
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used. LineSeries from area module is non-idiomatic but
-          functional.
+        comment: All imports used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-structured with good variable naming.
+        comment: Appropriate complexity for multi-panel Bode plot with annotations.
       - id: CQ-05
         name: Output & API
         score: 1
@@ -199,23 +202,23 @@ review:
         passed: true
         comment: Saves as plot.png via Selenium screenshot.
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Correct API usage but LineSeries from wrong module, npm pack instead
-          of URL download.
+        comment: 'Good use of highcharts-core Python API: multiple axes, plotLines,
+          data labels, plot options.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Good use of plotLines, percentage-based panel positioning, scatter
-          overlay on line charts.
+        comment: Uses plotLines with labels, multi-axis panel layout via top/height
+          percentages, z-index layering.
   verdict: REJECTED
 impl_tags:
   dependencies:

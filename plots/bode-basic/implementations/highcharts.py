@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 bode-basic: Bode Plot for Frequency Response
 Library: highcharts unknown | Python 3.14.3
-Quality: 79/100 | Created: 2026-03-21
+Quality: 86/100 | Created: 2026-03-21
 """
 
 import subprocess
