@@ -1,7 +1,7 @@
 library: plotly
 specification_id: bode-basic
 created: '2026-03-21T20:45:56Z'
-updated: '2026-03-21T20:57:28Z'
+updated: '2026-03-21T21:08:50Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23388395345
 issue: 4411
@@ -10,102 +10,117 @@ library_version: 6.6.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/bode-basic/plotly/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/bode-basic/plotly/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/bode-basic/plotly/plot.html
-quality_score: 84
+quality_score: 90
 review:
   strengths:
-  - Perfect spec compliance with all required features including gain/phase margin
-    annotations and reference lines
-  - Clean deterministic code with good KISS structure and linear flow
-  - Effective data storytelling through margin annotations that immediately communicate
-    system stability
-  - Good use of plotly make_subplots, add_hline, and HTML export capabilities
+  - Professional dual-panel Bode plot with well-designed gain and phase margin annotations
+    using color-coded shaded regions and cross-panel markers
+  - Excellent colorblind-safe color choices (orange vs purple) with explicit justification
+    in code comments
+  - Strong data storytelling through visual hierarchy — margins are immediately visible
+    with annotation boxes, arrow pointers, and distinct marker symbols
+  - Realistic third-order transfer function with underdamped complex pair showing
+    resonance peak and meaningful stability margins
+  - Clean KISS code structure with deterministic data and all font sizes explicitly
+    set
   weaknesses:
-  - Orange vs green margin indicators may be difficult for deuteranopic viewers -
-    consider blue vs orange or add dash patterns
-  - Crossover region visually dense with overlapping markers from both margins
-  - Margin annotations rely on legend rather than direct text labels on plot
-  - Third-order system with all real poles does not demonstrate resonance peak
-  image_description: The plot displays a Bode diagram with two vertically-stacked
-    panels sharing a logarithmic frequency axis (0.1 Hz to 10 kHz). The top panel
-    shows Magnitude (dB) with a blue line (#306998) starting at ~30 dB, flat through
-    low frequencies, then rolling off steeply past 1 Hz with -60 dB/decade slope at
-    high frequencies. A dashed gray reference line marks 0 dB. The bottom panel shows
-    Phase (degrees), starting near 0° and decreasing to approximately -270° at 10
-    kHz, with a dashed gray reference at -180°. Orange diamond markers (#E8590C) indicate
-    the gain margin (7.5 dB) with a vertical line between the magnitude curve and
-    0 dB at the phase crossover frequency (~30 Hz). Green diamond markers (#2B8A3E)
-    mark the phase margin (17.0°) with a vertical line between the phase curve and
-    -180° at the gain crossover frequency (~20 Hz). The legend in the upper-right
-    of the magnitude panel labels both margins. Title reads "bode-basic · plotly ·
-    pyplots.ai". The plotly_white template provides a clean white background with
-    very subtle gridlines.
+  - Magnitude y-axis range extends to -225 dB which compresses the interesting gain
+    margin region visually — tighter axis limits would improve readability
+  - Minor crowding around annotation markers in both panels where gain/phase margin
+    indicators cluster near crossover frequencies
+  image_description: The plot shows a dual-panel Bode diagram with magnitude (dB)
+    on top and phase (degrees) on the bottom, sharing a logarithmic frequency axis
+    from 0.1 Hz to 10 kHz. The main frequency response curves are drawn in dark blue
+    (#306998) with a line width of 3. The magnitude panel shows a flat region around
+    +25 dB at low frequencies, a slight resonance bump near 100 Hz, then steep rolloff
+    to about -200 dB at 10 kHz. A dashed gray reference line marks 0 dB. The phase
+    panel shows phase starting near 0 degrees, rolling off through -90, -180, and
+    eventually reaching about -360 degrees at high frequencies. A dashed gray reference
+    line marks -180 degrees. The gain margin (GM = 10.8 dB) is annotated in orange
+    with diamond markers and a shaded orange rectangle between the magnitude curve
+    and 0 dB at the phase crossover frequency (~40 Hz). An orange diamond marker also
+    appears on the phase plot at the -180 degree crossing. The phase margin (PM =
+    24.1 degrees) is annotated in purple with square markers and a shaded purple rectangle
+    between the phase curve and -180 degrees at the gain crossover frequency (~20
+    Hz). A purple square marker also appears on the magnitude plot at the 0 dB crossing.
+    Both annotations have bordered text boxes with white backgrounds. The title reads
+    "bode-basic · plotly · pyplots.ai" centered at the top. Axis labels include "Magnitude
+    (dB)", "Phase (degrees)", and "Frequency (Hz)" with appropriate units. The background
+    uses plotly_white template with very subtle grid lines.
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 28, labels 22, ticks 18); annotation
-          labels slightly small in crossover region
+        comment: 'All font sizes explicitly set: title 28pt, axis labels 22pt, tick
+          labels 18pt — all clearly readable'
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Gain and phase margin markers cluster near 20-30 Hz crossover region;
-          readable but tight
+        comment: Minor crowding around margin annotations and crossover markers, but
+          all text fully readable
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Lines width=3, markers size 10-12 well-sized; main curves clearly
-          visible
+        comment: Lines width 3, markers 10-12px, all clearly visible and well-adapted
+          to data density
       - id: VQ-04
         name: Color Accessibility
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Orange vs green can be challenging for deuteranopia; consider blue
-          vs orange
+        comment: Orange vs purple colorblind-safe palette with explicit code comment
+          justification
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good dual-panel layout with shared x-axis; some unused space on right
+        comment: Good dual-panel layout but magnitude y-axis extends to -225 dB compressing
+          the interesting region
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: All axes have descriptive labels with units
+        comment: 'All axes labeled with units: Magnitude (dB), Phase (degrees), Frequency
+          (Hz)'
     design_excellence:
-      score: 13
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: plotly_white with custom colors, above defaults but not publication-level
+        comment: Custom color palette, annotation boxes with borders/backgrounds,
+          shaded margin rectangles, cross-panel markers with different symbols — clearly
+          above defaults
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Subtle grid, good panel spacing, clean template
+        comment: plotly_white template, subtle grid (0.06 opacity), minor grids (0.03),
+          custom background color
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Margin annotations with colored lines tell stability story
+        comment: Gain/phase margins visually emphasized with color-coded annotations,
+          shaded regions, and cross-panel markers; viewer immediately sees stability
+          characteristics
     spec_compliance:
       score: 15
       max: 15
@@ -115,50 +130,53 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Bode plot with magnitude and phase panels
+        comment: Correct Bode plot with dual vertically-aligned panels
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: dual-panel, margins, reference lines, log
-          axis, grid'
+        comment: 'All features: dual-panel, gain/phase margin annotations, 0dB and
+          -180° reference lines, log axis, grid lines'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Correct frequency/magnitude/phase mapping
+        comment: Frequency on x (log scale), magnitude/phase on y, all data visible
+          across full range
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend labels informative
+        comment: 'Title format correct: bode-basic · plotly · pyplots.ai. No legend
+          needed for single-system Bode plot'
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Third-order system shows rolloff and margins; no resonance peak with
-          all real poles
+        comment: Shows resonance peak, phase rolloff, both stability margins, crossover
+          frequencies, underdamped behavior
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic open-loop transfer function with poles at 1, 10, 100 Hz
+        comment: Realistic third-order control system transfer function with plausible
+          engineering parameters
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Appropriate frequency range and magnitude/phase scales for third-order
-          system
+        comment: Realistic pole locations (1Hz, 10Hz, 100Hz), zeta=0.3, K=40, margins
+          GM=10.8dB PM=24.1°
     code_quality:
       score: 10
       max: 10
@@ -168,31 +186,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, crossover calc, plot, style, save'
+        comment: 'Linear structure: imports → data/transfer function → crossover calculations
+          → plot → style → save'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic analytical transfer function
+        comment: Fully deterministic — no random data, analytical transfer function
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: numpy, go, make_subplots all used
+        comment: 'All three imports used: numpy, go, make_subplots'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized, appropriate complexity
+        comment: Clean code with appropriate complexity for the visualization, conditional
+          margin calculations well-structured
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png at 4800x2700 and plot.html
+        comment: Saves as plot.png with correct 1600x900 scale=3, plus HTML export
     library_mastery:
       score: 7
       max: 10
@@ -202,20 +222,21 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of make_subplots, go.Scatter, add_hline, update_xaxes/yaxes
+        comment: Idiomatic use of make_subplots, go.Scatter, add_hline, add_shape,
+          add_annotation, update_layout
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: make_subplots shared_xaxes, add_hline, HTML export with interactivity
-  verdict: REJECTED
+        comment: 'Plotly-specific: make_subplots with shared_xaxes/row_heights, add_shape
+          with fillcolor/opacity, annotation arrows, HTML export, minor gridlines'
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - subplots
   - annotations
-  - html-export
   patterns:
   - data-generation
   dataprep: []
