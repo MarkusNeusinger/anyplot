@@ -1,7 +1,7 @@
 """ pyplots.ai
 titration-curve: Acid-Base Titration Curve
 Library: pygal 3.1.0 | Python 3.14.3
-Quality: 82/100 | Created: 2026-03-21
+Quality: 83/100 | Created: 2026-03-21
 """
 
 import io
