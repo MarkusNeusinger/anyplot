@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 bode-basic: Bode Plot for Frequency Response
 Library: plotnine 0.15.3 | Python 3.14.3
 Quality: 89/100 | Created: 2026-03-21
@@ -50,8 +50,10 @@ pc_freq = frequency_hz[pc_idx]
 mag_at_pc = magnitude_db[pc_idx]
 gain_margin = -mag_at_pc
 
-# Clip magnitude for display: show passband and rolloff without excessive range
-mag_display = np.clip(magnitude_db, -30, None)
+# Limit magnitude display to relevant range (above -50 dB) to avoid
+# compressing the interesting region around 0 dB
+freq_mag = frequency_hz[magnitude_db >= -50]
+mag_display = magnitude_db[magnitude_db >= -50]
 
 # Panel categories
 panels = ["Magnitude (dB)", "Phase (degrees)"]
@@ -60,7 +62,7 @@ panel_cat = pd.CategoricalDtype(categories=panels, ordered=True)
 # Long-format data for faceted plot
 df = pd.concat(
     [
-        pd.DataFrame({"freq": frequency_hz, "value": mag_display, "panel": "Magnitude (dB)"}),
+        pd.DataFrame({"freq": freq_mag, "value": mag_display, "panel": "Magnitude (dB)"}),
         pd.DataFrame({"freq": frequency_hz, "value": phase_deg, "panel": "Phase (degrees)"}),
     ],
     ignore_index=True,
@@ -130,14 +132,14 @@ guides = pd.DataFrame(
     }
 )
 
-# Plot
+# Plot — landscape format for optimal log-frequency axis display
 plot = (
     ggplot(df, aes(x="freq", y="value"))
     + geom_line(size=2.5, color=PYTHON_BLUE, alpha=0.92)
     # Reference lines
-    + geom_hline(ref_lines, aes(yintercept="yintercept"), linetype="dashed", color="#78909C", size=1.0)
+    + geom_hline(ref_lines, aes(yintercept="yintercept"), linetype="dashed", color="#90A4AE", size=0.8)
     # Crossover guide lines
-    + geom_vline(guides, aes(xintercept="xintercept"), linetype="dotted", color="#B0BEC5", size=0.6)
+    + geom_vline(guides, aes(xintercept="xintercept"), linetype="dotted", color="#B0BEC5", size=0.5)
     # Gain margin segment
     + geom_segment(gm_seg, aes(x="x", xend="x", y="ymin", yend="ymax"), color=GM_COLOR, size=5.0, alpha=0.9)
     # Phase margin segment
@@ -177,16 +179,17 @@ plot = (
     + labs(x="Frequency (Hz)", y="", title="bode-basic · plotnine · pyplots.ai")
     + theme_minimal()
     + theme(
-        figure_size=(12, 12),
+        figure_size=(16, 9),
         text=element_text(size=14, color=MID_TEXT),
         axis_title=element_text(size=20, color=MID_TEXT),
         axis_text=element_text(size=16, color=LIGHT_TEXT),
+        axis_ticks=element_line(color="#CFD8DC", size=0.4),
         plot_title=element_text(size=24, weight="bold", ha="center", color=DARK_TEXT),
         strip_text=element_text(size=20, weight="bold", color=DARK_TEXT),
         strip_background=element_rect(fill="#E8EAF6", color="none"),
-        panel_grid_major=element_line(color="#E0E0E0", size=0.3),
-        panel_grid_minor=element_line(color="#F0F0F0", size=0.15),
-        panel_spacing_y=0.3,
+        panel_grid_major=element_line(color="#E0E0E0", size=0.25),
+        panel_grid_minor=element_line(color="#F5F5F5", size=0.12),
+        panel_spacing_y=0.35,
         plot_background=element_rect(fill="#FAFAFA", color="#FAFAFA"),
         panel_background=element_rect(fill="white", color="none"),
     )
