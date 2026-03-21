@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 bode-basic: Bode Plot for Frequency Response
 Library: letsplot 4.9.0 | Python 3.14.3
 Quality: 84/100 | Created: 2026-03-21
@@ -13,12 +13,12 @@ from scipy import signal
 
 LetsPlot.setup_html()  # noqa: F405
 
-# Data - 3rd-order system: G(s) = 500 / ((s+20)(s^2+3s+25))
-# Complex poles (wn=5, zeta=0.3) give a visible resonance peak
+# Data - 3rd-order system: G(s) = 500 / ((s+20)(s^2+2.6s+25))
+# Complex poles (wn=5, zeta=0.26) give a prominent resonance peak ~6 dB
 # Real pole at s=-20 preserves resonance shape
-# Stable system with GM≈9.3 dB and PM≈35°
+# Stable system with GM≈7.9 dB and PM≈27°
 num = [500.0]
-den = np.polymul([1, 20], [1, 3, 25])
+den = np.polymul([1, 20], [1, 2.6, 25])
 system = signal.TransferFunction(num, den)
 
 omega = np.logspace(-1, 2.5, 500)
@@ -53,11 +53,11 @@ else:
     freq_pc = None
     gain_margin = None
 
-# Colors
+# Colors - colorblind-safe palette (no red-green)
 COLOR_MAIN = "#1B4F72"
 COLOR_REF = "#AEB6BF"
-COLOR_MARGIN = "#C0392B"
-COLOR_PM = "#27AE60"
+COLOR_GM = "#D35400"  # Orange for gain margin
+COLOR_PM = "#2471A3"  # Blue for phase margin
 
 # Common theme
 common_theme = flavor_high_contrast_light() + theme(  # noqa: F405
@@ -102,23 +102,23 @@ if freq_pc is not None:
         + geom_segment(  # noqa: F405
             aes(x="x", y="y", xend="xend", yend="yend"),  # noqa: F405
             data=gm_seg,
-            color=COLOR_MARGIN,
-            size=1.8,
-            linetype="dotted",
+            color=COLOR_GM,
+            size=2.5,
+            linetype="dashed",
         )
         + geom_point(  # noqa: F405
             aes(x="x", y="y"),  # noqa: F405
             data=gm_pt,
-            color=COLOR_MARGIN,
-            size=8,
+            color=COLOR_GM,
+            size=10,
             shape=18,
         )
         + geom_label(  # noqa: F405
             aes(x="x", y="y", label="label"),  # noqa: F405
             data=gm_label,
-            size=14,
-            color=COLOR_MARGIN,
-            fill="#FDEDEC",
+            size=16,
+            color=COLOR_GM,
+            fill="#FDEBD0",
             label_padding=0.3,
             label_r=0.15,
             fontface="bold",
@@ -132,7 +132,7 @@ if freq_gc is not None:
         aes(x="x", y="y"),  # noqa: F405
         data=gc_mag_pt,
         color=COLOR_PM,
-        size=8,
+        size=10,
         shape=18,
     )
 
@@ -168,22 +168,22 @@ if freq_gc is not None:
             aes(x="x", y="y", xend="xend", yend="yend"),  # noqa: F405
             data=pm_seg,
             color=COLOR_PM,
-            size=1.8,
-            linetype="dotted",
+            size=2.5,
+            linetype="dashed",
         )
         + geom_point(  # noqa: F405
             aes(x="x", y="y"),  # noqa: F405
             data=pm_pt,
             color=COLOR_PM,
-            size=8,
+            size=10,
             shape=18,
         )
         + geom_label(  # noqa: F405
             aes(x="x", y="y", label="label"),  # noqa: F405
             data=pm_label,
-            size=14,
+            size=16,
             color=COLOR_PM,
-            fill="#EAFAF1",
+            fill="#D4E6F1",
             label_padding=0.3,
             label_r=0.15,
             fontface="bold",
@@ -196,14 +196,14 @@ if freq_pc is not None:
     phase_plot = phase_plot + geom_point(  # noqa: F405
         aes(x="x", y="y"),  # noqa: F405
         data=pc_phase_pt,
-        color=COLOR_MARGIN,
-        size=8,
+        color=COLOR_GM,
+        size=10,
         shape=18,
     )
 
 # Combine vertically
 combined = ggbunch(  # noqa: F405
-    plots=[mag_plot, phase_plot], regions=[(0, 0, 1, 0.52, 0, 0), (0, 0.48, 1, 0.54, 0, 0)]
+    plots=[mag_plot, phase_plot], regions=[(0, 0, 1, 0.53, 0, 0), (0, 0.47, 1, 0.55, 0, 0)]
 )
 
 # Save
