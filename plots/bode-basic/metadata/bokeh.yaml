@@ -1,7 +1,7 @@
 library: bokeh
 specification_id: bode-basic
 created: '2026-03-21T20:47:21Z'
-updated: '2026-03-21T20:59:58Z'
+updated: '2026-03-21T21:08:03Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23388395472
 issue: 4411
@@ -10,39 +10,37 @@ library_version: 3.9.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/bode-basic/bokeh/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/bode-basic/bokeh/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/bode-basic/bokeh/plot.html
-quality_score: 83
+quality_score: 84
 review:
   strengths:
-  - Perfect spec compliance with all required Bode plot features (dual panels, margin
-    annotations, reference lines, log scale)
-  - Excellent data quality with realistic control systems engineering context and
-    appropriate parameters
-  - Clean well-structured code with deterministic data and linear KISS flow
-  - Good data storytelling through color-coded gain/phase margin annotations that
-    guide the viewer to stability metrics
+  - Full spec compliance with all required Bode plot features (dual panels, gain/phase
+    margins, reference lines, log axis)
+  - Clean, professional styling with removed outlines, subtle grids, and intentional
+    color scheme
+  - Excellent data storytelling through color-coded margin annotations that immediately
+    convey stability information
+  - Deterministic, well-structured code with idiomatic Bokeh patterns
+  - Dual output (PNG + HTML) leverages Bokeh interactive capabilities
   weaknesses:
-  - Annotation labels render with semi-transparent background rectangles that create
-    visual clutter and overlap with markers
-  - Orange/green color pair for GM/PM annotations is not optimal for colorblind accessibility
-  - Styling code is duplicated between the two plots
-  image_description: The plot displays a Bode plot with two vertically stacked panels
-    on a white background. The top panel shows magnitude (dB) vs frequency (Hz) on
-    a logarithmic x-axis from 10^-1 to 10^3 Hz, with a blue (#306998) line decreasing
-    from ~40 dB to ~-130 dB. A dashed gray reference line at 0 dB is present. An orange
-    dotted vertical segment marks the gain margin (GM = 10.7 dB) between the magnitude
-    at phase crossover and 0 dB, with orange circle markers at both endpoints and
-    an orange label. A green circle marker sits at the gain crossover frequency on
-    the 0 dB line. The bottom panel shows phase (degrees) vs frequency (Hz) with the
-    same shared log x-axis. The blue line decreases from about -90 degrees to about
-    -270 degrees. A dashed gray reference line at -180 degrees is drawn. Green dotted
-    vertical segment marks the phase margin (PM = 23.5 degrees) between the phase
-    at gain crossover and -180 degrees, with green circle markers and a green label.
-    An orange marker sits at the phase crossover point on -180 degrees. Title reads
-    "bode-basic · bokeh · pyplots.ai" in the top-left. Both annotation labels render
-    with semi-transparent background rectangles that create visual clutter.
+  - Reference lines (0 dB, -180°) are too faint to serve as strong visual anchors
+  - Orange/green color pair not optimal for all colorblind types
+  - Annotation text (18pt) could be slightly larger for better readability on the
+    large canvas
+  image_description: The plot displays a Bode diagram with two vertically stacked
+    panels sharing a logarithmic frequency axis (0.1–1000 Hz). The top panel shows
+    magnitude in dB, with a blue (#306998) curve starting at ~43 dB and rolling off.
+    A dashed gray 0 dB reference line is present. The gain crossover point (~7 Hz)
+    is marked with a blue dot, and the gain margin (GM = 10.7 dB) is annotated in
+    orange with a dotted vertical segment connecting two orange dots at the phase
+    crossover frequency (~20 Hz). The bottom panel shows phase in degrees, with the
+    blue curve declining from ~-90° to ~-270°. A dashed -180° reference line is visible.
+    The phase margin (PM = 22.4°) is annotated in green with a dotted vertical segment
+    and green dots at the gain crossover frequency. Orange dots mark the phase crossover
+    at -180°. Title reads "bode-basic · bokeh · pyplots.ai". White background, subtle
+    grids, clean styling with no outlines or tick marks.
   criteria_checklist:
     visual_quality:
-      score: 24
+      score: 25
       max: 30
       items:
       - id: VQ-01
@@ -50,37 +48,37 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title 28pt, labels 22pt, ticks 18pt, annotations
-          18pt). All readable but annotation label backgrounds reduce clarity slightly.
+        comment: All font sizes explicitly set (title 28pt, labels 22pt, ticks 18pt,
+          annotations 18pt). Readable, though annotation text is slightly small relative
+          to canvas.
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: GM and PM annotation labels render with semi-transparent background
-          rectangles that overlap with nearby markers and create visual clutter around
-          5-20 Hz.
+        passed: true
+        comment: PM annotation label sits close to surrounding markers; minor crowding
+          in the phase crossover area.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Lines (width 3.5) and markers (size 14) clearly visible. Markers
-          could be slightly larger for 4800px canvas.
+        comment: Lines and markers well-sized. Reference lines are very faint (alpha
+          0.5) and could be more prominent.
       - id: VQ-04
         name: Color Accessibility
         score: 3
         max: 4
         passed: true
-        comment: Blue line excellent. Orange/green pair for GM/PM not optimal for
-          deuteranopia.
+        comment: Blue/orange/green palette is mostly distinguishable but orange vs
+          green not ideal for deuteranopia.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Two panels at 4800x1350 fill 4800x2700 canvas well. Minor gap between
-          panels.
+        comment: Two-panel layout fills 4800x2700 canvas well. Some wasted space in
+          lower-right areas.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -97,22 +95,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Thoughtful color choices, removed tick marks, clean white background.
-          Above defaults but annotation background boxes detract.
+        comment: Clean white background, intentional color scheme for GM/PM annotations.
+          Above defaults but not publication-quality.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Tick marks removed, subtle grid (alpha=0.2), outline removed. Good
-          refinement but annotation styling needs work.
+        comment: Outlines removed, tick marks removed, subtle grids (alpha 0.2), clean
+          borders.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Color-coded margin annotations create clear focal points. Vertical
-          segments guide viewer to key stability metrics.
+        comment: Color-coded gain/phase margin annotations guide viewer to key stability
+          metrics.
     spec_compliance:
       score: 15
       max: 15
@@ -122,28 +120,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Bode plot with dual panels (magnitude on top, phase on bottom).
+        comment: Correct Bode plot with dual vertically-aligned panels.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: dual-panel layout, gain/phase margin
-          annotations, reference lines, log scale, grid lines.'
+        comment: 'All spec features present: dual panels, margins, reference lines,
+          log axis, grid.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Frequency on shared log x-axis, magnitude (dB) on top, phase (°)
-          on bottom. All data visible.
+        comment: X=frequency (log), Y=magnitude/phase. Correct.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. No legend needed for single-series with color-coded
-          annotations.
+        comment: Title format correct. No legend needed; annotations serve as labels.
     data_quality:
       score: 14
       max: 15
@@ -153,21 +149,22 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Third-order open-loop TF shows gain rolloff, phase rolloff, both
-          crossover frequencies, both margins. Could show resonance peak.
+        comment: Shows gain margin, phase margin, crossover frequencies, typical rolloff.
+          Could show resonance peak.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real control systems engineering scenario with physically meaningful
-          parameters.
+        comment: Third-order open-loop transfer function — realistic control systems
+          scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Frequency range 0.1-1000 Hz, realistic gain and phase values.
+        comment: Frequency 0.1-1000 Hz, magnitude and phase ranges all physically
+          realistic.
     code_quality:
       score: 10
       max: 10
@@ -177,13 +174,13 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, calculations, plots, styling, save.'
+        comment: 'Linear flow: imports, data, plots, styling, save.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic, no random data.
+        comment: Fully deterministic transfer function computation.
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -195,13 +192,13 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized, appropriate complexity.
+        comment: Clean, well-organized code.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html. Current Bokeh API.
+        comment: Saves as plot.png via export_png plus HTML export.
     library_mastery:
       score: 7
       max: 10
@@ -211,15 +208,14 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of ColumnDataSource, Span, Label, column layout, shared
-          x_range.
+        comment: Good use of ColumnDataSource, figure, Span, Label, column layout,
+          shared x_range.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: false
-        comment: Uses Bokeh-specific features (ColumnDataSource, Span, Label, HTML
-          export) but doesn't leverage interactive strengths like HoverTool.
+        passed: true
+        comment: Linked x_range, column layout, Span, dual HTML+PNG export with CDN.
   verdict: REJECTED
 impl_tags:
   dependencies: []
@@ -233,4 +229,3 @@ impl_tags:
   dataprep: []
   styling:
   - grid-styling
-  - minimal-chrome
