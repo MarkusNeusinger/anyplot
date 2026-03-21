@@ -1,7 +1,7 @@
 library: plotnine
 specification_id: titration-curve
 created: '2026-03-21T22:11:31Z'
-updated: '2026-03-21T22:22:39Z'
+updated: '2026-03-21T22:29:40Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23389866067
 issue: 4407
@@ -13,28 +13,32 @@ preview_html: null
 quality_score: 88
 review:
   strengths:
-  - Chemically accurate data generation with proper acid-base equilibrium calculations
-  - Excellent visual hierarchy with red diamond focal point, shaded transition region,
-    and derivative overlay
-  - Clean grammar-of-graphics composition with well-layered geoms
-  - Strong color accessibility with blue/orange/red palette
-  - Perfect data quality — realistic, neutral, educational context
+  - Excellent analytical chemistry implementation with proper calculations
+  - Strong visual design with custom color palette, refined grid styling, and clear
+    visual hierarchy
+  - Effective data storytelling through equivalence point highlighting and derivative
+    overlay
+  - Clean well-structured code with all font sizes explicitly set
+  - All imports are used and appropriate
   weaknesses:
-  - Legend header shows series (DataFrame column name) instead of being suppressed
-  - Derivative curve lacks a secondary y-axis making scaled values uninterpretable
-  - Shaded transition region spanning full y-range is visually heavy
-  image_description: 'The plot shows a titration curve with two series on a white
-    background. A blue S-shaped line represents pH vs. volume of NaOH added, rising
-    from ~1 at 0 mL to ~12.5 at 50 mL. An orange line shows the scaled dpH/dV derivative,
-    which is flat near zero except for a sharp spike at 25 mL. A vertical dashed grey
-    line marks the equivalence point at 25 mL. A red diamond marker sits at the equivalence
-    point (25 mL, pH 7) with an italic annotation label to its right reading "Equivalence
-    Point (25 mL, pH 7)". A light blue semi-transparent shaded band spans approximately
-    23-27 mL across the full height of the plot. The legend is positioned in the upper-left
-    with a white semi-transparent background, showing "dpH/dV (scaled)" in orange
-    and "pH" in blue, with a "series" header. X-axis reads "Volume of NaOH added (mL)"
-    (0-50), Y-axis reads "pH" (0-14). Subtle horizontal grid lines are present; no
-    vertical grid. Title is bold: "titration-curve · plotnine · pyplots.ai".'
+  - Derivative curve uses scaled single y-axis rather than a true secondary axis (plotnine
+    limitation)
+  - Ribbon shading around the curve is subtle and does not strongly convey buffer
+    region concept
+  - Could leverage more plotnine-distinctive features (stat layers, custom geoms)
+  image_description: The plot displays a strong acid-base titration curve (HCl + NaOH)
+    on a white background with subtle horizontal grid lines. A blue sigmoidal pH curve
+    rises from approximately 1 at 0 mL to approximately 13 at 50 mL, with the steep
+    transition centered at 25 mL. An orange derivative curve (dpH/dV, scaled) shows
+    a sharp spike reaching 12 at the equivalence point, remaining flat near zero elsewhere.
+    A red diamond marker sits at the equivalence point (25 mL, pH 7) with an italic
+    annotation reading "Equivalence Point (25 mL, pH 7)". A light blue semi-transparent
+    ribbon shades the transition region (23-27 mL) around the pH curve. The title
+    reads "titration-curve · plotnine · pyplots.ai" in bold at the top. X-axis labeled
+    "Volume of NaOH added (mL)" ranges from 0 to 50, Y-axis labeled "pH / dpH/dV (scaled)"
+    ranges from 0 to 14. Legend in upper-left shows "dpH/dV (scaled)" in orange and
+    "pH" in blue with a white background. An orange bold annotation at right reads
+    "Peak dpH/dV = 57.5 at 25 mL".
   criteria_checklist:
     visual_quality:
       score: 29
@@ -45,39 +49,38 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 24pt, axis titles 20pt, tick
-          labels 16pt, legend 16pt'
+        comment: 'All font sizes explicitly set: title=24, axis_title=20, axis_text=16,
+          legend_text=16'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements, annotation well-positioned
+        comment: No overlapping text elements
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: pH curve and marker clearly visible; derivative curve reads as a
-          spike rather than a curve
+        comment: Lines visible at size=1.5, ribbon subtle but readable
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Blue/orange/red palette is colorblind-safe
+        comment: Blue and amber colorblind-safe combination
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 ratio, plot fills canvas well with balanced margins
+        comment: Good 16:9 proportions, balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units on both axes
+        comment: X-axis has units (mL), y-axis descriptive
     design_excellence:
       score: 14
       max: 20
@@ -87,23 +90,21 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom palette, thoughtful typography, above defaults but not exceptional
+        comment: Custom palette, intentional typography, above defaults
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Good refinement with grid customization, muted axis lines, legend
-          styling
+        comment: Subtle grid, axis lines styled, minor grid removed
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Clear visual hierarchy with red diamond focal point and shaded transition
-          region
+        comment: Clear focal point at equivalence, derivative reinforces transition
     spec_compliance:
-      score: 13
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -111,49 +112,47 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct S-shaped titration curve with derivative overlay
+        comment: Correct sigmoidal titration curve
       - id: SC-02
         name: Required Features
         score: 3
         max: 4
         passed: true
-        comment: All features present; secondary y-axis replaced with scaling due
-          to library limitation
+        comment: Has equivalence point, derivative, shading; no true secondary axis
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=volume, Y=pH, correct ranges
+        comment: Volume on x, pH on y, full 0-14 scale
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend header shows generic 'series' text
+        comment: Correct title format, legend labels match
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Complete S-curve with acidic region, transition, and post-equivalence
-          region
+        comment: Shows all titration regions and derivative peak
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Standard HCl/NaOH titration — real, neutral chemistry scenario
+        comment: 'Real chemistry: HCl + NaOH titration'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Chemically accurate concentrations, volumes, and pH values
+        comment: Realistic concentrations and volumes
     code_quality:
       score: 10
       max: 10
@@ -163,13 +162,13 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean linear flow with no functions or classes
+        comment: Linear flow, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic chemistry calculations
+        comment: Fully deterministic analytical calculation
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -181,7 +180,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Appropriately complex, no fake UI
+        comment: Clean, appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
@@ -197,21 +196,20 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good grammar-of-graphics composition with multiple geom layers and
-          theme customization
+        comment: Good grammar-of-graphics composition with layered geoms
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses guide_legend override_aes, geom_ribbon, element-based theme
-          granularity
+        comment: Uses geom_ribbon, guide_legend override_aes, multi-source layering
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - layer-composition
+  - custom-legend
   patterns:
   - data-generation
   dataprep:
