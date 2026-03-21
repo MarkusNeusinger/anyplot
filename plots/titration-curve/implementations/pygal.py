@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 titration-curve: Acid-Base Titration Curve
 Library: pygal 3.1.0 | Python 3.14.3
 Quality: 85/100 | Created: 2026-03-21
@@ -48,6 +48,7 @@ bg_canvas = "#FAFCFF"
 bg_plot = "#F0F4F8"
 text_dark = "#1A1F36"
 grid_subtle = "#D5DAE2"
+buffer_fill = "#306998"  # semi-transparent blue for buffer/transition zone
 
 # Shared style settings
 _style_common = {
@@ -55,11 +56,11 @@ _style_common = {
     "plot_background": bg_plot,
     "foreground": text_dark,
     "foreground_strong": text_dark,
-    "foreground_subtle": grid_subtle,
+    "foreground_subtle": "#E2E6EA",
     "title_font_size": 56,
     "label_font_size": 34,
     "major_label_font_size": 32,
-    "legend_font_size": 34,
+    "legend_font_size": 40,
     "value_font_size": 22,
     "stroke_width": 4,
     "font_family": "'Helvetica Neue', 'Helvetica', 'Arial', sans-serif",
@@ -185,6 +186,43 @@ deriv_img = Image.open(io.BytesIO(deriv_png))
 combined = Image.new("RGB", (4800, 2700), bg_canvas)
 combined.paste(ph_img, (0, 0))
 combined.paste(deriv_img, (0, 1800))
+
+# Buffer/transition zone shading on the pH panel
+# For strong acid/strong base: shade the steep transition zone (~20-30 mL)
+# Map data coordinates to pixel coordinates on the pH panel
+# pH panel plot area approx: x from ~320 to ~4710, y from ~150 to ~1580
+plot_x_left, plot_x_right = 320, 4710
+plot_y_top, plot_y_bottom = 150, 1580
+x_data_min, x_data_max = 0.0, 50.0
+y_data_min, y_data_max = 0.0, 14.0
+
+
+def data_to_px(vx, vy):
+    px = plot_x_left + (vx - x_data_min) / (x_data_max - x_data_min) * (plot_x_right - plot_x_left)
+    py = plot_y_bottom - (vy - y_data_min) / (y_data_max - y_data_min) * (plot_y_bottom - plot_y_top)
+    return int(px), int(py)
+
+
+# Draw semi-transparent buffer zone overlay
+buffer_overlay = Image.new("RGBA", (4800, 2700), (0, 0, 0, 0))
+buf_draw = ImageDraw.Draw(buffer_overlay)
+
+# Transition zone: 20-30 mL (the steep part of the S-curve)
+buf_x1, _ = data_to_px(20.0, 0)
+buf_x2, _ = data_to_px(30.0, 0)
+_, buf_y1 = data_to_px(0, 14.0)
+_, buf_y2 = data_to_px(0, 0.0)
+buf_draw.rectangle([(buf_x1, buf_y1), (buf_x2, buf_y2)], fill=(48, 105, 152, 28))
+
+# Label the shaded zone
+try:
+    font_zone = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 34)
+except OSError:
+    font_zone = ImageFont.load_default()
+_, label_y = data_to_px(0, 3.0)
+buf_draw.text((buf_x1 + 16, label_y), "Transition\nZone", fill=(48, 105, 152, 160), font=font_zone)
+
+combined = Image.alpha_composite(combined.convert("RGBA"), buffer_overlay).convert("RGB")
 
 # Panel divider
 draw = ImageDraw.Draw(combined)
