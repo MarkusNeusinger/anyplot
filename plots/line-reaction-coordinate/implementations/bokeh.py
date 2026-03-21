@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 line-reaction-coordinate: Reaction Coordinate Energy Diagram
 Library: bokeh 3.9.0 | Python 3.14.3
-Quality: 88/100 | Created: 2026-03-21
+Quality: 90/100 | Created: 2026-03-21
 """
 
 import numpy as np
