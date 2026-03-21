@@ -1,7 +1,6 @@
-""" pyplots.ai
+"""pyplots.ai
 line-arrhenius: Arrhenius Plot for Reaction Kinetics
 Library: plotnine 0.15.3 | Python 3.14.3
-Quality: 86/100 | Created: 2026-03-21
 """
 
 import numpy as np
@@ -11,75 +10,87 @@ from plotnine import (
     annotate,
     element_blank,
     element_line,
+    element_rect,
     element_text,
-    geom_line,
     geom_point,
+    geom_smooth,
     ggplot,
     labs,
     scale_x_continuous,
     theme,
     theme_minimal,
 )
-from scipy import stats
 
 
-# Data
+# Data — first-order decomposition with slight experimental scatter
 temperature_K = np.array([300, 350, 400, 450, 500, 550, 600])
-rate_constant_k = np.array([0.0012, 0.0095, 0.052, 0.21, 0.68, 1.8, 4.1])
+rate_constant_k = np.array([0.0013, 0.0091, 0.054, 0.19, 0.72, 1.75, 4.2])
 
 inv_T = 1.0 / temperature_K
 ln_k = np.log(rate_constant_k)
 
-slope, intercept, r_value, p_value, std_err = stats.linregress(inv_T, ln_k)
-r_squared = r_value**2
+# Compute regression statistics for annotations
+coeffs = np.polyfit(inv_T, ln_k, 1)
+slope, intercept = coeffs
+ln_k_pred = np.polyval(coeffs, inv_T)
+ss_res = np.sum((ln_k - ln_k_pred) ** 2)
+ss_tot = np.sum((ln_k - ln_k.mean()) ** 2)
+r_squared = 1 - ss_res / ss_tot
 
 R = 8.314
 Ea_kJ = -slope * R / 1000
 
-inv_T_fit = np.linspace(inv_T.min() - 0.0001, inv_T.max() + 0.0001, 100)
-ln_k_fit = slope * inv_T_fit + intercept
+df = pd.DataFrame({"inv_T": inv_T, "ln_k": ln_k})
 
-df_data = pd.DataFrame({"inv_T": inv_T, "ln_k": ln_k})
-df_fit = pd.DataFrame({"inv_T": inv_T_fit, "ln_k": ln_k_fit})
-
-# Tick labels showing 1/T with temperature reference
+# Tick labels with temperature reference
 tick_positions = inv_T.tolist()
 tick_labels = [f"{v:.2e}\n({1 / v:.0f} K)" for v in inv_T]
 
-# Annotation position
+# Annotation placement
 anno_x = inv_T.mean()
-anno_y_top = ln_k.max() - 0.3
+anno_y_top = ln_k.max() - 0.2
 
-# Plot
+# Plot — leveraging geom_smooth for idiomatic plotnine regression
 plot = (
-    ggplot()
-    + geom_line(df_fit, aes(x="inv_T", y="ln_k"), color="#306998", size=1.5, alpha=0.7)
-    + geom_point(df_data, aes(x="inv_T", y="ln_k"), color="#306998", size=5, stroke=0.8)
+    ggplot(df, aes(x="inv_T", y="ln_k"))
+    + geom_smooth(method="lm", color="#4a90d9", size=1.8, alpha=0.15, fill="#4a90d9")
+    + geom_point(color="#1a3a5c", fill="#306998", size=6, stroke=1.2, shape="o")
     + scale_x_continuous(breaks=tick_positions, labels=tick_labels)
-    + annotate("text", x=anno_x, y=anno_y_top, label=f"R² = {r_squared:.4f}", size=14, color="#333333", ha="center")
     + annotate(
-        "text", x=anno_x, y=anno_y_top - 0.9, label=f"Eₐ = {Ea_kJ:.1f} kJ/mol", size=14, color="#333333", ha="center"
+        "text",
+        x=anno_x,
+        y=anno_y_top,
+        label=f"R² = {r_squared:.4f}",
+        size=16,
+        color="#1a3a5c",
+        fontweight="bold",
+        ha="center",
+    )
+    + annotate(
+        "text", x=anno_x, y=anno_y_top - 0.85, label=f"Eₐ = {Ea_kJ:.1f} kJ/mol", size=15, color="#333333", ha="center"
     )
     + annotate(
         "text",
         x=anno_x,
-        y=anno_y_top - 1.8,
+        y=anno_y_top - 1.6,
         label=f"slope = −Eₐ/R = {slope:.0f} K",
-        size=11,
-        color="#666666",
+        size=13,
+        color="#777777",
         ha="center",
     )
     + labs(x="1/T (K⁻¹)", y="ln(k)", title="line-arrhenius · plotnine · pyplots.ai")
     + theme_minimal()
     + theme(
         figure_size=(16, 9),
-        plot_title=element_text(size=24, weight="bold"),
-        axis_title=element_text(size=20),
-        axis_text=element_text(size=14),
-        axis_text_x=element_text(size=11),
+        plot_title=element_text(size=24, weight="bold", color="#1a3a5c"),
+        axis_title=element_text(size=20, color="#333333"),
+        axis_text=element_text(size=16, color="#444444"),
+        axis_text_x=element_text(size=14),
+        plot_background=element_rect(fill="#fafafa", color="none"),
+        panel_background=element_rect(fill="#fafafa", color="none"),
         panel_grid_major_x=element_blank(),
         panel_grid_minor=element_blank(),
-        panel_grid_major_y=element_line(color="#dddddd", size=0.5, alpha=0.5),
+        panel_grid_major_y=element_line(color="#e0e0e0", size=0.4, alpha=0.6),
     )
 )
 
