@@ -1,7 +1,6 @@
-""" pyplots.ai
+"""pyplots.ai
 titration-curve: Acid-Base Titration Curve
 Library: plotnine 0.15.3 | Python 3.14.3
-Quality: 88/100 | Created: 2026-03-21
 """
 
 import numpy as np
@@ -19,7 +18,6 @@ from plotnine import (
     geom_vline,
     ggplot,
     guide_legend,
-    guides,
     labs,
     scale_color_manual,
     scale_x_continuous,
@@ -68,11 +66,18 @@ df = pd.DataFrame(
     }
 )
 
-# Shading for steep transition region (±2 mL around equivalence)
+# Shading for steep transition region (±2 mL around equivalence), clipped to curve
 eq_volume = 25.0
 eq_ph = 7.0
 mask = (volume_ml >= 23) & (volume_ml <= 27)
-df_ribbon = pd.DataFrame({"volume_ml": volume_ml[mask], "ymin": np.zeros(mask.sum()), "ymax": np.full(mask.sum(), 14)})
+ph_in_region = ph[mask]
+df_ribbon = pd.DataFrame(
+    {
+        "volume_ml": volume_ml[mask],
+        "ymin": np.clip(ph_in_region - 0.8, 0, 14),
+        "ymax": np.clip(ph_in_region + 0.8, 0, 14),
+    }
+)
 
 # Equivalence point data
 df_eq = pd.DataFrame({"volume_ml": [eq_volume], "value": [eq_ph], "series": ["pH"]})
@@ -82,7 +87,7 @@ palette = {"pH": "#306998", "dpH/dV (scaled)": "#E8A838"}
 
 plot = (
     ggplot()
-    + geom_ribbon(aes(x="volume_ml", ymin="ymin", ymax="ymax"), data=df_ribbon, fill="#306998", alpha=0.08)
+    + geom_ribbon(aes(x="volume_ml", ymin="ymin", ymax="ymax"), data=df_ribbon, fill="#306998", alpha=0.15)
     + geom_vline(xintercept=eq_volume, linetype="dashed", color="#AAAAAA", size=0.7)
     + geom_line(aes(x="volume_ml", y="value", color="series"), data=df, size=1.5)
     + geom_point(aes(x="volume_ml", y="value"), data=df_eq, color="#C0392B", size=5, shape="D")
@@ -96,11 +101,20 @@ plot = (
         color="#333333",
         fontstyle="italic",
     )
-    + scale_color_manual(values=palette, name="")
+    + scale_color_manual(values=palette, name=" ", guide=guide_legend(override_aes={"size": 3}))
     + scale_x_continuous(breaks=range(0, 55, 5), limits=(0, 50))
     + scale_y_continuous(breaks=range(0, 15, 2), limits=(0, 14))
-    + labs(x="Volume of NaOH added (mL)", y="pH", title="titration-curve · plotnine · pyplots.ai")
-    + guides(color=guide_legend(override_aes={"size": 3}))
+    + labs(x="Volume of NaOH added (mL)", y="pH / dpH/dV (scaled)", title="titration-curve · plotnine · pyplots.ai")
+    + annotate(
+        "text",
+        x=38,
+        y=11,
+        label=f"Peak dpH/dV = {dph_max:.1f}\nat {eq_volume:.0f} mL",
+        size=9,
+        ha="left",
+        color="#E8A838",
+        fontweight="bold",
+    )
     + theme_minimal()
     + theme(
         figure_size=(16, 9),
