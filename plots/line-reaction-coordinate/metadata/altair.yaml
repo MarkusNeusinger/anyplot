@@ -1,0 +1,226 @@
+library: altair
+specification_id: line-reaction-coordinate
+created: '2026-03-21T20:48:15Z'
+updated: '2026-03-21T21:02:54Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23388404486
+issue: 4409
+python_version: 3.14.3
+library_version: 6.0.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/line-reaction-coordinate/altair/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/line-reaction-coordinate/altair/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/line-reaction-coordinate/altair/plot.html
+quality_score: 90
+review:
+  strengths:
+  - Excellent spec compliance with all required features (Ea arrow, ΔH arrow, labeled
+    species, dashed reference lines)
+  - Strong color-coded visual storytelling — orange for Ea, green for ΔH, blue for
+    energy curve
+  - Clean deterministic data generation using sigmoid + Gaussian analytical model
+  - Professional axis styling with removed view border and disabled grid
+  - Informative subtitle adds educational context
+  weaknesses:
+  - Energy value annotations (16pt italic gray) are at the minimum readability threshold
+  - Y-axis domain extends to 140 when content maxes around 130, leaving unused space
+  - Small dashed tick marks at ΔH arrow endpoints add minor visual noise
+  image_description: The plot displays a reaction coordinate energy diagram for a
+    single-step exothermic reaction. A smooth blue curve (#306998) traces the energy
+    profile from left (reactants at 50 kJ/mol) through a peak (transition state at
+    ~120 kJ/mol) down to products (20 kJ/mol) on the right. The title "line-reaction-coordinate
+    · altair · pyplots.ai" appears at the top in dark text with a subtitle "Exothermic
+    Reaction · Single-Step Energy Profile" in gray. Bold dark labels mark "Reactants",
+    "Transition State ‡", and "Products" near their respective positions. An orange
+    vertical double-headed arrow at x≈0.16 shows Ea = 70 kJ/mol between the reactant
+    energy level and the transition state level, connected by gray dashed horizontal
+    reference lines. A green vertical double-headed arrow at x≈0.82 shows ΔH = −30
+    kJ/mol between the reactant and product energy levels, also with dashed reference
+    lines and small tick marks. Italic gray annotations show the absolute energy values
+    (50, 120, 20 kJ/mol) at their respective levels. The x-axis is labeled "Reaction
+    Coordinate" and y-axis "Energy (kJ/mol)". The background is clean white with no
+    grid, no view border, and refined axis styling.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 28, axes 22, ticks 18, species
+          22, arrows 19, energy vals 16). Energy annotations at minimum threshold.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: All labels well-spaced with no collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Curve strokeWidth=4, arrows 2.5, arrowheads size=220. All clearly
+          visible.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Orange/green/blue palette is colorblind-safe with strong contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good proportions but y-axis extends to 140 when max content is ~130
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Energy (kJ/mol) with units, Reaction Coordinate appropriate for arbitrary
+          units
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom three-color palette with intentional color coding, refined
+          axis styling, clearly above defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Grid disabled, view border removed, axis styling refined. Minor noise
+          from ΔH tick marks.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Strong visual hierarchy through color-coded annotations, subtitle
+          provides educational context
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct reaction coordinate diagram with smooth curve and transition
+          state peak
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: labeled species, Ea arrow, ΔH arrow, dashed
+          lines, clean style'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=reaction coordinate, Y=energy correctly mapped
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct title format, no legend needed with direct labeling
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all aspects: reactant/product levels, transition state, Ea,
+          ΔH'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real chemistry context with kJ/mol units, neutral scientific domain
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Energy values (50, 120, 20 kJ/mol) are physically reasonable
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports → data → chart layers → combine → save'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic analytical functions, no randomness
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: altair, numpy, pandas — all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-organized with clear variable names and logical layer separation
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot.png with scale_factor=3.0 and plot.html, current API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of alt.layer(), encoding types, alt.Title, configure methods
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses .interactive(), tooltips, HTML export, shape encoding for arrowheads
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - minimal-chrome
