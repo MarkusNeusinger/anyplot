@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 titration-curve: Acid-Base Titration Curve
 Library: matplotlib 3.10.8 | Python 3.14.3
-Quality: 85/100 | Created: 2026-03-21
+Quality: 91/100 | Created: 2026-03-21
 """
 
 import matplotlib.pyplot as plt
