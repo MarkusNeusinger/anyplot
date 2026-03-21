@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 bode-basic: Bode Plot for Frequency Response
 Library: seaborn 0.13.2 | Python 3.14.3
-Quality: 86/100 | Created: 2026-03-21
+Quality: 93/100 | Created: 2026-03-21
 """
 
 import matplotlib.pyplot as plt
