@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 line-reaction-coordinate: Reaction Coordinate Energy Diagram
-Library: seaborn | Python 3.13
-Quality: pending | Created: 2026-03-21
+Library: seaborn 0.13.2 | Python 3.14.3
+Quality: 81/100 | Created: 2026-03-21
 """
 
 import matplotlib.pyplot as plt
