@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 titration-curve: Acid-Base Titration Curve
 Library: highcharts unknown | Python 3.14.3
 Quality: 87/100 | Created: 2026-03-21
@@ -67,8 +67,7 @@ chart.options.chart = {
     "height": chart_height,
     "backgroundColor": "#fafbfc",
     "plotBackgroundColor": "#ffffff",
-    "plotBorderWidth": 1,
-    "plotBorderColor": "rgba(0, 0, 0, 0.12)",
+    "plotBorderWidth": 0,
     "marginTop": 160,
     "marginBottom": 160,
     "marginLeft": 280,
@@ -99,8 +98,8 @@ chart.options.x_axis = {
     "labels": {"style": {"fontSize": "26px", "color": "#555555"}},
     "gridLineWidth": 1,
     "gridLineColor": "rgba(0, 0, 0, 0.06)",
-    "lineWidth": 2,
-    "lineColor": "#333333",
+    "lineWidth": 1,
+    "lineColor": "rgba(0, 0, 0, 0.2)",
     "tickWidth": 0,
     "min": 0,
     "max": 50,
@@ -121,6 +120,32 @@ chart.options.x_axis = {
                 "y": 60,
             },
         }
+    ],
+    "plotBands": [
+        {
+            "from": 0,
+            "to": 20,
+            "color": "rgba(46, 204, 113, 0.10)",
+            "label": {
+                "text": "Buffer Region",
+                "style": {"fontSize": "22px", "color": "rgba(39, 174, 96, 0.7)", "fontWeight": "600"},
+                "align": "center",
+                "verticalAlign": "bottom",
+                "y": -20,
+            },
+        },
+        {
+            "from": 30,
+            "to": 50,
+            "color": "rgba(46, 204, 113, 0.10)",
+            "label": {
+                "text": "Buffer Region",
+                "style": {"fontSize": "22px", "color": "rgba(39, 174, 96, 0.7)", "fontWeight": "600"},
+                "align": "center",
+                "verticalAlign": "bottom",
+                "y": -20,
+            },
+        },
     ],
 }
 
@@ -163,10 +188,10 @@ chart.options.plot_options = {
 chart.options.legend = {
     "enabled": True,
     "itemStyle": {"fontSize": "28px", "fontWeight": "normal"},
-    "align": "right",
+    "align": "left",
     "verticalAlign": "top",
     "layout": "vertical",
-    "x": -30,
+    "x": 80,
     "y": 150,
     "itemMarginBottom": 8,
     "backgroundColor": "rgba(255, 255, 255, 0.85)",
