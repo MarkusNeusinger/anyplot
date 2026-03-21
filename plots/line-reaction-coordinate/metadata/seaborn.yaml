@@ -1,0 +1,222 @@
+library: seaborn
+specification_id: line-reaction-coordinate
+created: '2026-03-21T20:48:16Z'
+updated: '2026-03-21T21:09:07Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23388404793
+issue: 4409
+python_version: 3.14.3
+library_version: 0.13.2
+preview_url: https://storage.googleapis.com/pyplots-images/plots/line-reaction-coordinate/seaborn/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/line-reaction-coordinate/seaborn/plot_thumb.png
+preview_html: null
+quality_score: 90
+review:
+  strengths:
+  - 'Excellent visual design with professional polish: custom colors, subtle fill,
+    clean typography'
+  - All spec requirements fully met with proper Ea and ΔH annotations
+  - Strong data storytelling through visual hierarchy and clear labeling
+  - Deterministic, clean code with appropriate use of PCHIP interpolation
+  - Perfect text legibility with all font sizes explicitly set
+  weaknesses:
+  - Heavy reliance on matplotlib for annotations/arrows rather than seaborn-specific
+    features (inherent limitation for this plot type)
+  - Could potentially show additional reaction pathway features (catalyzed comparison)
+  image_description: The plot displays a reaction coordinate energy diagram with a
+    smooth blue curve (#306998) tracing the energy pathway from reactants (50 kJ/mol)
+    on the left, rising through a transition state peak (120 kJ/mol) at the center,
+    and descending to products (20 kJ/mol) on the right. A subtle light blue fill
+    sits beneath the curve. Bold text labels identify "Reactants (50 kJ/mol)", "Transition
+    State (120 kJ/mol)", and "Products (20 kJ/mol)" at their respective positions.
+    A red double-headed arrow on the left shows "Eₐ = 70 kJ/mol" with a white background
+    box, and a blue double-headed arrow on the right shows "ΔH = -30 kJ/mol" also
+    with a white background box. Short horizontal dashed gray lines appear at the
+    reactant and product energy levels. The y-axis reads "Potential Energy (kJ/mol)"
+    ranging from 0 to 140, the x-axis reads "Reaction Coordinate" with no tick marks.
+    Top and right spines are removed. A subtle y-axis grid is visible. The title reads
+    "line-reaction-coordinate · seaborn · pyplots.ai".
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt,
+          annotations 15-16pt'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: All labels well-separated with no collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Curve clearly visible at linewidth 3.5 with subtle fill
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue curve, red/blue arrows provide colorblind-safe contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 16:9 well-utilized with balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Y-axis with units, x-axis descriptive
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom color scheme, white bbox annotations, subtle fill, professional
+          polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Despine, subtle grid alpha=0.15, x-ticks removed, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Clear hierarchy: curve primary, colored arrows for Ea/ΔH, labeled
+          values for immediate understanding'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct reaction coordinate energy diagram
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features: labels, Ea arrow, ΔH arrow, smooth curve, dashed lines,
+          clean style'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=reaction coordinate, Y=potential energy correctly mapped
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct title format, no legend needed for single series
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows single-step exothermic reaction with Ea and ΔH as specified
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Chemistry context with plausible energy values, neutral science topic
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Realistic kJ/mol values for chemical reaction energy profile
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean imports-data-plot-save structure, no functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic with fixed control points
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean and appropriate, PCHIP interpolation is elegant
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png, dpi=300, current API
+    library_mastery:
+      score: 5
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses sns.lineplot, set_style, set_context, despine but bulk of viz
+          is matplotlib
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: true
+        comment: Seaborn theming and despine used but plot type inherently requires
+          matplotlib-level control
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - scipy
+  techniques:
+  - annotations
+  - manual-ticks
+  patterns:
+  - data-generation
+  - explicit-figure
+  dataprep:
+  - interpolation
+  styling:
+  - grid-styling
+  - alpha-blending
