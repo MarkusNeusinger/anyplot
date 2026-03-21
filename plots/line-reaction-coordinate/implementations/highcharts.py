@@ -1,10 +1,9 @@
-""" pyplots.ai
+"""pyplots.ai
 line-reaction-coordinate: Reaction Coordinate Energy Diagram
 Library: highcharts unknown | Python 3.14.3
 Quality: 85/100 | Created: 2026-03-21
 """
 
-import json
 import tempfile
 import time
 import urllib.request
@@ -13,6 +12,7 @@ from pathlib import Path
 import numpy as np
 from highcharts_core.chart import Chart
 from highcharts_core.options import HighchartsOptions
+from highcharts_core.options.annotations import Annotation
 from highcharts_core.options.series.spline import SplineSeries
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -64,30 +64,30 @@ chart.options = HighchartsOptions()
 chart.options.chart = {
     "width": 4800,
     "height": 2700,
-    "backgroundColor": "#ffffff",
-    "spacingTop": 80,
-    "spacingBottom": 120,
-    "spacingLeft": 100,
-    "spacingRight": 120,
-    "marginBottom": 260,
+    "backgroundColor": "#fafbfc",
+    "spacingTop": 60,
+    "spacingBottom": 60,
+    "spacingLeft": 80,
+    "spacingRight": 100,
     "style": {"fontFamily": "'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif"},
 }
 
 chart.options.title = {
     "text": "line-reaction-coordinate \u00b7 highcharts \u00b7 pyplots.ai",
     "style": {"fontSize": "48px", "fontWeight": "600", "color": "#1a1a2e"},
+    "margin": 40,
 }
 
 chart.options.x_axis = {
     "title": {
         "text": "Reaction Coordinate",
         "style": {"fontSize": "38px", "fontWeight": "600", "color": "#333333"},
-        "margin": 30,
+        "margin": 20,
     },
     "labels": {"enabled": False},
     "min": -0.05,
     "max": 1.05,
-    "lineColor": "#999999",
+    "lineColor": "#666666",
     "lineWidth": 2,
     "tickLength": 0,
     "gridLineWidth": 0,
@@ -97,18 +97,20 @@ chart.options.y_axis = {
     "title": {
         "text": "Potential Energy (kJ/mol)",
         "style": {"fontSize": "36px", "fontWeight": "600", "color": "#333333"},
-        "margin": 24,
+        "margin": 20,
     },
     "labels": {"style": {"fontSize": "28px", "color": "#444444"}},
     "min": 0,
     "max": 140,
+    "startOnTick": False,
+    "endOnTick": False,
     "gridLineWidth": 0,
-    "lineColor": "#999999",
+    "lineColor": "#666666",
     "lineWidth": 2,
-    "tickColor": "#999999",
+    "tickColor": "#666666",
     "plotLines": [
-        {"value": reactant_energy, "color": "#aaaaaa", "width": 2, "dashStyle": "Dash", "zIndex": 1},
-        {"value": product_energy, "color": "#aaaaaa", "width": 2, "dashStyle": "Dash", "zIndex": 1},
+        {"value": reactant_energy, "color": "#bbbbbb", "width": 2, "dashStyle": "Dash", "zIndex": 1},
+        {"value": product_energy, "color": "#bbbbbb", "width": 2, "dashStyle": "Dash", "zIndex": 1},
     ],
 }
 
@@ -117,7 +119,8 @@ chart.options.credits = {"enabled": False}
 chart.options.tooltip = {"enabled": False}
 
 chart.options.plot_options = {
-    "spline": {"lineWidth": 5, "marker": {"enabled": False}, "states": {"hover": {"lineWidth": 6}}}
+    "spline": {"lineWidth": 5, "marker": {"enabled": False}, "states": {"hover": {"lineWidth": 6}}},
+    "line": {"marker": {"enabled": False}, "enableMouseTracking": False, "states": {"hover": {"lineWidth": 5}}},
 }
 
 # Energy curve series
@@ -129,97 +132,100 @@ energy_series.color = "#306998"
 energy_series.line_width = 5
 chart.add_series(energy_series)
 
-# Generate JS literal
-html_str = chart.to_js_literal()
-
-# Build annotations config as a Python dict, then serialize to JS
-annotations_config = [
+# Ea arrow as a spline series with triangle markers for arrowheads
+ea_arrow = SplineSeries()
+ea_arrow.data = [
     {
-        "draggable": "",
-        "labelOptions": {"allowOverlap": True, "overflow": "allow", "crop": False},
-        "labels": [
-            {
-                "point": {"xAxis": 0, "yAxis": 0, "x": ts_rc, "y": ts_energy},
-                "text": "Transition State (\u2021)",
-                "style": {"fontSize": "32px", "fontWeight": "700", "color": "#d35400"},
-                "backgroundColor": "rgba(255,255,255,0.92)",
-                "borderColor": "#d35400",
-                "borderWidth": 2,
-                "borderRadius": 8,
-                "padding": 14,
-                "y": -55,
-            },
-            {
-                "point": {"xAxis": 0, "yAxis": 0, "x": 0.06, "y": reactant_energy},
-                "text": "Reactants",
-                "style": {"fontSize": "34px", "fontWeight": "700", "color": "#306998"},
-                "backgroundColor": "rgba(255,255,255,0)",
-                "borderWidth": 0,
-                "y": -40,
-            },
-            {
-                "point": {"xAxis": 0, "yAxis": 0, "x": 0.94, "y": product_energy},
-                "text": "Products",
-                "style": {"fontSize": "34px", "fontWeight": "700", "color": "#306998"},
-                "backgroundColor": "rgba(255,255,255,0)",
-                "borderWidth": 0,
-                "y": -40,
-            },
-            {
-                "point": {"xAxis": 0, "yAxis": 0, "x": ea_arrow_x, "y": ea_mid_y},
-                "text": f"E\u2090 = {int(activation_energy)} kJ/mol",
-                "style": {"fontSize": "30px", "fontWeight": "700", "color": "#d35400"},
-                "backgroundColor": "rgba(255,255,255,0.95)",
-                "borderColor": "#d35400",
-                "borderWidth": 2,
-                "borderRadius": 8,
-                "padding": 12,
-                "x": -200,
-                "y": 0,
-            },
-            {
-                "point": {"xAxis": 0, "yAxis": 0, "x": dh_arrow_x, "y": dh_mid_y},
-                "text": f"\u0394H = {int(delta_h)} kJ/mol",
-                "style": {"fontSize": "30px", "fontWeight": "700", "color": "#2980b9"},
-                "backgroundColor": "rgba(255,255,255,0.95)",
-                "borderColor": "#2980b9",
-                "borderWidth": 2,
-                "borderRadius": 8,
-                "padding": 12,
-                "x": 140,
-                "y": 0,
-            },
-        ],
-        "shapes": [
-            {
-                "type": "path",
-                "points": [
-                    {"xAxis": 0, "yAxis": 0, "x": ea_arrow_x, "y": reactant_energy},
-                    {"xAxis": 0, "yAxis": 0, "x": ea_arrow_x, "y": ts_energy},
-                ],
-                "stroke": "#d35400",
-                "strokeWidth": 5,
-                "markerEnd": "arrow",
-                "markerStart": "arrow",
-            },
-            {
-                "type": "path",
-                "points": [
-                    {"xAxis": 0, "yAxis": 0, "x": dh_arrow_x, "y": product_energy},
-                    {"xAxis": 0, "yAxis": 0, "x": dh_arrow_x, "y": reactant_energy},
-                ],
-                "stroke": "#2980b9",
-                "strokeWidth": 5,
-                "markerEnd": "arrow",
-                "markerStart": "arrow",
-            },
-        ],
-    }
+        "x": ea_arrow_x,
+        "y": reactant_energy,
+        "marker": {"enabled": True, "symbol": "triangle", "radius": 10, "rotation": 180},
+    },
+    {"x": ea_arrow_x, "y": ts_energy, "marker": {"enabled": True, "symbol": "triangle", "radius": 10}},
 ]
+ea_arrow.name = "Ea Arrow"
+ea_arrow.color = "#d35400"
+ea_arrow.line_width = 4
+ea_arrow.show_in_legend = False
+chart.add_series(ea_arrow)
 
-# Inject annotations as serialized JSON into the chart options
-annotations_js = "annotations: " + json.dumps(annotations_config)
-html_str = html_str.replace("credits: {", annotations_js + ",\n  credits: {")
+# ΔH arrow as a spline series with triangle markers for arrowheads
+dh_arrow = SplineSeries()
+dh_arrow.data = [
+    {
+        "x": dh_arrow_x,
+        "y": product_energy,
+        "marker": {"enabled": True, "symbol": "triangle", "radius": 10, "rotation": 180},
+    },
+    {"x": dh_arrow_x, "y": reactant_energy, "marker": {"enabled": True, "symbol": "triangle", "radius": 10}},
+]
+dh_arrow.name = "dH Arrow"
+dh_arrow.color = "#2980b9"
+dh_arrow.line_width = 4
+dh_arrow.show_in_legend = False
+chart.add_series(dh_arrow)
+
+# Annotations for labels via proper Highcharts-core API
+chart.options.annotations = [
+    Annotation.from_dict(
+        {
+            "draggable": "",
+            "labelOptions": {"allowOverlap": True, "overflow": "none", "crop": False},
+            "labels": [
+                {
+                    "point": {"xAxis": 0, "yAxis": 0, "x": ts_rc, "y": ts_energy},
+                    "text": "Transition State (\u2021)",
+                    "style": {"fontSize": "32px", "fontWeight": "700", "color": "#c0392b"},
+                    "backgroundColor": "rgba(255,255,255,0.95)",
+                    "borderColor": "#c0392b",
+                    "borderWidth": 2,
+                    "borderRadius": 8,
+                    "padding": 14,
+                    "y": -55,
+                },
+                {
+                    "point": {"xAxis": 0, "yAxis": 0, "x": 0.06, "y": reactant_energy},
+                    "text": "Reactants",
+                    "style": {"fontSize": "34px", "fontWeight": "700", "color": "#306998"},
+                    "backgroundColor": "rgba(255,255,255,0)",
+                    "borderWidth": 0,
+                    "y": -40,
+                },
+                {
+                    "point": {"xAxis": 0, "yAxis": 0, "x": 0.94, "y": product_energy},
+                    "text": "Products",
+                    "style": {"fontSize": "34px", "fontWeight": "700", "color": "#306998"},
+                    "backgroundColor": "rgba(255,255,255,0)",
+                    "borderWidth": 0,
+                    "y": -40,
+                },
+                {
+                    "point": {"xAxis": 0, "yAxis": 0, "x": ea_arrow_x, "y": ea_mid_y},
+                    "text": f"E\u2090 = {int(activation_energy)} kJ/mol",
+                    "style": {"fontSize": "30px", "fontWeight": "700", "color": "#d35400"},
+                    "backgroundColor": "rgba(255,255,255,0.95)",
+                    "borderColor": "#d35400",
+                    "borderWidth": 2,
+                    "borderRadius": 8,
+                    "padding": 12,
+                    "x": -200,
+                    "y": 0,
+                },
+                {
+                    "point": {"xAxis": 0, "yAxis": 0, "x": dh_arrow_x, "y": dh_mid_y},
+                    "text": f"\u0394H = {int(delta_h)} kJ/mol",
+                    "style": {"fontSize": "30px", "fontWeight": "700", "color": "#2980b9"},
+                    "backgroundColor": "rgba(255,255,255,0.95)",
+                    "borderColor": "#2980b9",
+                    "borderWidth": 2,
+                    "borderRadius": 8,
+                    "padding": 12,
+                    "x": 140,
+                    "y": 0,
+                },
+            ],
+        }
+    )
+]
 
 # Download Highcharts JS and annotations module
 highcharts_url = "https://cdn.jsdelivr.net/npm/highcharts@11/highcharts.js"
@@ -231,6 +237,9 @@ annotations_url = "https://cdn.jsdelivr.net/npm/highcharts@11/modules/annotation
 ann_req = urllib.request.Request(annotations_url, headers={"User-Agent": "Mozilla/5.0"})
 with urllib.request.urlopen(ann_req, timeout=30) as resp:
     annotations_module_js = resp.read().decode("utf-8")
+
+# Generate JS literal with annotations included via proper API
+html_str = chart.to_js_literal()
 
 # Build HTML with inline scripts
 html_content = f"""<!DOCTYPE html>
