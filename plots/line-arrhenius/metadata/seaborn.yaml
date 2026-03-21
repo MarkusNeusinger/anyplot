@@ -1,0 +1,222 @@
+library: seaborn
+specification_id: line-arrhenius
+created: '2026-03-21T22:06:53Z'
+updated: '2026-03-21T22:28:03Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23389777995
+issue: 4408
+python_version: 3.14.3
+library_version: 0.13.2
+preview_url: https://storage.googleapis.com/pyplots-images/plots/line-arrhenius/seaborn/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/line-arrhenius/seaborn/plot_thumb.png
+preview_html: null
+quality_score: 90
+review:
+  strengths:
+  - 'Perfect spec compliance: all required features (regression line, R², Eₐ, secondary
+    axis, markers) implemented correctly'
+  - Excellent use of sns.regplot with confidence interval — idiomatic seaborn with
+    a distinctive feature
+  - Clean visual design with removed spines, subtle grid, and well-styled annotation
+    box
+  - Realistic chemistry data with physically meaningful parameters
+  - All font sizes explicitly set for high-resolution output
+  weaknesses:
+  - Design Excellence could be slightly higher with more refined typography or distinctive
+    color treatment
+  - Feature coverage could include a slight outlier point to demonstrate robustness
+    of the fit
+  image_description: The plot displays an Arrhenius plot with 1/T (K⁻¹) on the x-axis
+    and ln(k) on the y-axis. Eight blue circular markers (#306998) with white edges
+    are plotted along a linear regression line with a light blue 95% confidence interval
+    band. A secondary x-axis at the top shows temperature in Kelvin (600 K down to
+    300 K). An annotation box in the lower-left corner with a rounded border displays
+    R² = 0.9980, Slope = -9112 K, and Eₐ = 75.8 kJ/mol. The title reads "line-arrhenius
+    · seaborn · pyplots.ai" in medium-weight font. Top and right spines are removed.
+    A subtle y-axis grid (alpha 0.15) provides reference lines. The plot fills the
+    16:9 canvas well with balanced margins.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt,
+          annotation 18pt'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text; secondary axis labels well-spaced
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Markers s=280 appropriate for 8 data points, white edges provide
+          separation
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Single-color series, no colorblind issues
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 16:9 canvas well-utilized with tight_layout
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Labels with units on both axes
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Custom Python Blue, white marker edges, styled annotation box, confidence
+          band
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines removed, subtle y-only grid, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Annotation box with R², slope, Ea tells kinetic story; CI guides
+          interpretation
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct Arrhenius plot: ln(k) vs 1/T'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: regression, R², Ea, secondary axis, markers'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=1/T, Y=ln(k) correctly mapped
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct, no legend needed for single series
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: 8 data points across 300-600K with realistic scatter
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: First-order decomposition with physically meaningful parameters
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Temperature range and Ea realistic for chemical kinetics
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports, data, plot, style, save'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-organized, appropriate complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png at 300 dpi, current API
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: sns.regplot is idiomatic for regression + scatter; sns.set_theme
+          for styling
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: sns.regplot with ci=95 confidence interval is a distinctive seaborn
+          feature
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - scipy
+  techniques:
+  - twin-axes
+  - annotations
+  - manual-ticks
+  patterns:
+  - data-generation
+  - explicit-figure
+  dataprep:
+  - regression
+  styling:
+  - edge-highlighting
+  - grid-styling
