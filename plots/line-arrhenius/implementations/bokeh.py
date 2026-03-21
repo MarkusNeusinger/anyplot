@@ -1,6 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 line-arrhenius: Arrhenius Plot for Reaction Kinetics
 Library: bokeh 3.9.0 | Python 3.14.3
+Quality: 92/100 | Created: 2026-03-21
 """
 
 import numpy as np

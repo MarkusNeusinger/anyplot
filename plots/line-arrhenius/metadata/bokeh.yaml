@@ -1,7 +1,7 @@
 library: bokeh
 specification_id: line-arrhenius
 created: '2026-03-21T22:08:25Z'
-updated: '2026-03-21T22:12:23Z'
+updated: '2026-03-21T22:30:34Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23389778059
 issue: 4408
@@ -10,102 +10,98 @@ library_version: 3.9.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/line-arrhenius/bokeh/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/line-arrhenius/bokeh/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/line-arrhenius/bokeh/plot.html
-quality_score: 82
+quality_score: 92
 review:
   strengths:
-  - 'Excellent use of Bokeh-specific features: HoverTool with formatted tooltips,
-    dual HTML+PNG export, ColumnDataSource pattern'
-  - Scientifically accurate data generation with realistic Arrhenius parameters
-  - 'Good visual refinement: subtle grid, custom background, edge-highlighted markers'
-  - Clean, well-structured code with proper seed for reproducibility
+  - Perfect spec compliance with all required features (regression line, R², Ea annotation,
+    secondary axis)
+  - Cohesive navy/blue color scheme with custom background and styled annotation box
+  - Excellent data quality with realistic chemistry context and appropriate experimental
+    noise
+  - Good use of Bokeh-distinctive features (HoverTool, HTML export, ColumnDataSource)
+  - All font sizes explicitly set at appropriate scales for 4800×2700 canvas
   weaknesses:
-  - Bottom x-axis tick labels and axis label render extremely small and are barely
-    readable
-  - Slope annotation line appears missing or cut off in the rendered image
-  - Bokeh toolbar renders on the right edge consuming canvas space
-  - Design could be elevated further toward publication quality
-  image_description: The plot displays an Arrhenius plot with the title "line-arrhenius
-    · bokeh · pyplots.ai" centered at the top. A secondary x-axis at the top shows
-    Temperature (K) values from ~600 down to ~300. The primary y-axis shows ln(k)
-    ranging from approximately -2 to 13. The bottom x-axis shows 1/T (K⁻¹) values,
-    though these tick labels and the axis label are extremely small and barely readable.
-    Thirteen blue circular data points with white edge borders are plotted along a
-    dark navy blue regression line. An annotation in the upper-right area displays
-    "Eₐ = 74.6 kJ/mol" and "R² = 0.9995" (the slope line appears cut off or missing
-    from the visible annotation). A legend in the bottom-left corner shows "Linear
-    Fit" (line) and "Experimental Data" (circle). The background is light gray (#F7F9FC)
-    with subtle dashed grid lines. The Bokeh toolbar is visible on the right edge
-    of the plot.
+  - 'Minor: secondary axis tick labels use manual Label annotations as a workaround
+    (Bokeh limitation, handled well)'
+  image_description: The plot displays an Arrhenius plot with ln(k) on the y-axis
+    and 1/T (K⁻¹) on the x-axis. A dark navy regression line (#1A3C5E) runs diagonally
+    from upper-left to lower-right, with 13 blue circular data points (#306998) with
+    white edges scattered tightly along it. A secondary x-axis at the top shows Temperature
+    (K) values (600, 500, 400, 350, 300) in decreasing order. An annotation box with
+    a white background and subtle border displays "Slope = −Eₐ/R = -8970.0 K", "Eₐ
+    = 74.6 kJ/mol", and "R² = 0.9995" in bold navy text. The legend at bottom-left
+    identifies "Linear Fit (ln k = ln A − Eₐ/RT)" and "Experimental Data". The background
+    is light gray (#F5F7FA) with subtle dashed grid lines. Title reads "line-arrhenius
+    · bokeh · pyplots.ai" in bold navy at the top.
   criteria_checklist:
     visual_quality:
-      score: 24
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 5
+        score: 8
         max: 8
-        passed: false
-        comment: Bottom x-axis tick labels and axis label render extremely small despite
-          explicit font sizes set in code
+        passed: true
+        comment: 'All font sizes explicitly set: title 42pt, axis labels 30pt, tick
+          labels 24pt, annotation 36pt, legend 26pt'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: No overlapping text elements, temperature labels well-spaced
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Markers well-sized (size=32) with white edge highlighting
+        comment: Markers size 34 with white edge clearly visible for 13 data points
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Blue monochromatic palette is colorblind-safe
+        comment: Cohesive blue palette, colorblind-safe, good contrast
       - id: VQ-05
         name: Layout & Canvas
-        score: 1
+        score: 4
         max: 4
-        passed: false
-        comment: Bokeh toolbar visible on right edge, bottom axis labels barely visible,
-          annotation partially cut off
+        passed: true
+        comment: Plot fills canvas well at 4800x2700 with generous margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: 1/T (K⁻¹) and ln(k)'
+        comment: 'Descriptive labels with units: 1/T (K⁻¹), ln(k), Temperature (K)'
     design_excellence:
-      score: 12
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Custom colors, styled legend, white-edged markers — above default
-          but not publication-ready
+        comment: Cohesive navy/blue scheme, styled annotation box, custom background,
+          white marker edges
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Subtle dashed grid, outline removed, axis lines thinned, minor ticks
-          removed
+        comment: Subtle dashed grid (alpha 0.35), outline removed, generous whitespace,
+          styled legend
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Ea and R² annotation provides scientific context, clear linear trend
-          visible
+        comment: Annotation box with slope/Ea/R² creates focal point, secondary axis
+          adds context
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -113,49 +109,49 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct ln(k) vs 1/T line plot with scatter
+        comment: 'Correct Arrhenius plot: ln(k) vs 1/T with linear regression'
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: All features present in code but slope annotation not fully visible
-          in output
+        passed: true
+        comment: 'All features present: regression line, R², Ea annotation, secondary
+          axis, visible markers'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=1/T, Y=ln(k) correctly mapped
+        comment: X = 1/T, Y = ln(k), axes show full data range
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend labels descriptive
+        comment: Correct title format, descriptive legend labels
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 13 data points spanning 300-600K showing clear Arrhenius relationship
-          with scatter
+        comment: 13 data points spanning 300-600K with realistic experimental scatter
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: First-order decomposition with realistic Ea=75 kJ/mol
+        comment: First-order organic decomposition with physically realistic Ea and
+          rate constants
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: All values physically realistic
+        comment: Temperature range and activation energy values are physically sensible
     code_quality:
       score: 10
       max: 10
@@ -165,31 +161,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean linear flow
+        comment: 'Linear flow: imports, data, regression, plot, styling, save'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set before noise generation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: 'All imports used: numpy, bokeh models, scipy.stats'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized code
+        comment: Clean, well-organized code with necessary Bokeh workarounds
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png via export_png
+        comment: Saves plot.png via export_png and plot.html via save
     library_mastery:
       score: 8
       max: 10
@@ -199,19 +195,22 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: ColumnDataSource, figure, Label, extra_x_ranges — idiomatic Bokeh
+        comment: ColumnDataSource, LinearAxis, FixedTicker, NumeralTickFormatter,
+          Label annotations
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: HoverTool with custom tooltips, HTML export, ColumnDataSource pattern
-  verdict: REJECTED
+        comment: HoverTool with custom tooltips, HTML export with CDN, ColumnDataSource
+          with formatted hover fields
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - scipy
   techniques:
   - annotations
+  - manual-ticks
   - hover-tooltips
   - html-export
   patterns:
