@@ -1,7 +1,7 @@
 library: highcharts
 specification_id: line-reaction-coordinate
 created: '2026-03-21T20:47:55Z'
-updated: '2026-03-21T20:52:36Z'
+updated: '2026-03-21T21:00:01Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23388404577
 issue: 4409
@@ -13,35 +13,36 @@ preview_html: https://storage.googleapis.com/pyplots-images/plots/line-reaction-
 quality_score: 83
 review:
   strengths:
-  - Excellent spec compliance — all required features (labels, arrows, dashed lines)
-    are present and well-positioned
-  - Strong data storytelling through color-coded annotations (red Ea, green DH) with
-    bordered labels
-  - Clean, minimal design with removed grid lines and subtle reference lines
-  - Good use of Highcharts SplineSeries for smooth curve rendering
+  - Perfect spec compliance with all required features (labels, Ea arrow, ΔH arrow,
+    dashed lines) present and correctly positioned
+  - Effective color-coded annotation system distinguishing activation energy (orange)
+    from thermodynamic quantities (blue)
+  - Clean scientific aesthetic with removed gridlines, appropriate font hierarchy,
+    and styled annotation boxes
+  - Smooth Hermite interpolation creates a physically plausible energy profile curve
   weaknesses:
-  - Unphysical dip in energy curve below reactant level between the plateau and transition
-    state peak
-  - Red-green color combination for Ea/DH arrows is not colorblind-safe
-  - Annotations injected via JS string replacement rather than Python API
-  - Y-axis range extends unnecessarily to 145 when peak is at 120
-  image_description: 'The plot displays a reaction coordinate energy diagram on a
-    white background. A smooth blue spline curve (#306998) starts at a flat plateau
-    at 50 kJ/mol (labeled "Reactants" in blue), dips slightly below 50 before rising
-    sharply to a peak at ~120 kJ/mol (labeled "Transition State (‡)" in a red-bordered
-    box), then descends to a flat plateau at 20 kJ/mol (labeled "Products" in blue).
-    Two horizontal dashed gray lines mark the reactant (50) and product (20) energy
-    levels. A red double-headed arrow on the left spans from 50 to 120 kJ/mol with
-    a bordered label "Eₐ = 70 kJ/mol". A green double-headed arrow on the right spans
-    from 20 to 50 kJ/mol with a bordered label "ΔH = -30 kJ/mol". The y-axis reads
-    "Potential Energy (kJ/mol)" (0–145), the x-axis reads "Reaction Coordinate" with
-    no tick labels. Title: "line-reaction-coordinate · highcharts · pyplots.ai". No
-    grid lines, no legend. The curve has a noticeable unphysical dip below the reactant
-    energy level (~42 kJ/mol) between the reactant plateau and the transition state
-    peak.'
+  - X-axis title Reaction Coordinate is not visible in the rendered output - likely
+    cut off due to insufficient bottom spacing
+  - Arrow markers on the Ea and ΔH annotation shapes are small relative to the large
+    canvas
+  - JS string injection for annotations is fragile - would be better to use the highcharts-core
+    Python API if possible
+  image_description: The plot shows a reaction coordinate energy diagram with a smooth
+    blue spline curve on a white background. The title reads "line-reaction-coordinate
+    · highcharts · pyplots.ai" at the top. The y-axis is labeled "Potential Energy
+    (kJ/mol)" with tick values from 0 to 135. The x-axis has no tick labels (appropriate
+    for reaction coordinate). The curve starts at a flat plateau around 50 kJ/mol
+    (labeled "Reactants" in blue text), rises smoothly through a transition state
+    peak at ~120 kJ/mol (labeled "Transition State (‡)" in an orange-bordered box),
+    then descends to a product plateau at ~20 kJ/mol (labeled "Products" in blue).
+    Two horizontal dashed gray lines mark the reactant and product energy levels.
+    An orange double-headed arrow on the left side shows Ea = 70 kJ/mol with an orange-bordered
+    label. A blue double-headed arrow on the right shows ΔH = -30 kJ/mol with a blue-bordered
+    label. The x-axis title "Reaction Coordinate" appears to be cut off or not visible
+    in the rendered output. No legend is shown. Overall clean, scientific appearance.
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 25
       max: 30
       items:
       - id: VQ-01
@@ -49,42 +50,41 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (48px title, 36px axis labels, 28px
-          ticks, 30-34px annotations). All readable.
+        comment: All font sizes explicitly set (title 48px, axes 36px, ticks 28px,
+          annotations 30-34px), all clearly readable
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements; all labels well-positioned.
+        comment: All labels well separated, no collisions
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Spline curve clearly visible at lineWidth 5. Arrow markers could
-          be more prominent.
+        comment: Curve line width 5 is good; annotation arrow markers are relatively
+          small compared to the large canvas
       - id: VQ-04
         name: Color Accessibility
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Red-green combination for Ea/DH arrows; mitigated by text labels
-          but not ideal for colorblind users.
+        comment: Blue/orange palette is colorblind-safe with good contrast
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 2
         max: 4
-        passed: true
-        comment: Good proportions but y-axis extends to 145 when max data is 120,
-          wasting vertical space.
+        passed: false
+        comment: X-axis title appears cut off or not visible in rendered output; bottom
+          spacing insufficient
       - id: VQ-06
         name: Axis Labels & Title
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Potential Energy (kJ/mol) includes units. Reaction Coordinate is
-          conventionally unitless.
+        passed: false
+        comment: Y-axis has descriptive label with units; x-axis title not visible
+          in rendered image
     design_excellence:
       score: 14
       max: 20
@@ -94,22 +94,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Clean professional appearance with custom font stack and color-coded
-          annotations. Above defaults but not exceptional.
+        comment: Custom blue/orange palette, clean typography, styled annotation boxes
+          — above defaults but not publication-level
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Grid removed, x-axis ticks removed, subtle dashed reference lines.
-          Good whitespace.
+        comment: Grid lines removed, clean axis styling with subtle line colors, generous
+          spacing
       - id: DE-03
         name: Data Storytelling
         score: 5
         max: 6
         passed: true
-        comment: Strong storytelling through color-coded Ea (red) and DH (green) annotations
-          with arrows. Viewer immediately grasps reaction energetics.
+        comment: Strong visual hierarchy with color-coded annotations distinguishing
+          energy barrier from thermodynamic quantities
     spec_compliance:
       score: 15
       max: 15
@@ -119,28 +119,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: smooth spline reaction coordinate energy diagram.'
+        comment: Correct smooth spline curve showing energy vs reaction coordinate
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: labels, Ea/DH arrows, dashed lines, smooth
-          curve, clean style.'
+        comment: 'All spec features present: labels, Ea arrow, ΔH arrow, dashed lines,
+          smooth curve with maximum'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = reaction coordinate, Y = potential energy. Correctly mapped.
+        comment: X = reaction coordinate, Y = potential energy, correct mapping
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows exact format. Legend correctly disabled for single-series.
+        comment: Title follows exact format, legend appropriately disabled for single
+          series
     data_quality:
-      score: 13
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -148,21 +149,20 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Shows exothermic reaction with activation barrier, plateaus, and
-          key quantities. Deduction for unphysical curve dip.
+        comment: Shows single-step exothermic reaction with key features; could show
+          multi-step for full coverage
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real chemistry context with physically reasonable energy values.
+        comment: Real chemistry context with plausible energy values
       - id: DQ-03
         name: Appropriate Scale
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Energy values realistic but curve has unphysical dip below reactant
-          energy between plateau and transition state.
+        comment: Reactant 50, TS 120, product 20 kJ/mol are realistic values
     code_quality:
       score: 9
       max: 10
@@ -172,32 +172,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat script: imports, data, plot, save. No functions or classes.'
+        comment: 'Linear flow: imports → data → plot config → render → save'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic data generation.
+        comment: Fully deterministic, no random elements
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 1
         max: 2
-        passed: true
-        comment: JS string injection approach is fragile. Smooth transition loop is
-          verbose.
+        passed: false
+        comment: JS string injection for annotations is a necessary workaround but
+          inelegant
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png via Selenium screenshot.
+        comment: Saves as plot.png, current API usage
     library_mastery:
       score: 6
       max: 10
@@ -207,15 +207,15 @@ review:
         score: 3
         max: 5
         passed: true
-        comment: Uses Chart, HighchartsOptions, SplineSeries correctly. Annotations
-          via JS string injection instead of Python API.
+        comment: Uses SplineSeries and HighchartsOptions correctly but resorts to
+          raw JS string manipulation for annotations
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses Highcharts annotations module, SplineSeries, and plotLines.
-          Deducted for JS injection approach.
+        comment: Leverages Highcharts annotations module with arrow markers and plotLines
+          for dashed reference lines
   verdict: REJECTED
 impl_tags:
   dependencies:
@@ -225,6 +225,7 @@ impl_tags:
   - html-export
   patterns:
   - data-generation
-  dataprep: []
+  dataprep:
+  - interpolation
   styling:
   - minimal-chrome

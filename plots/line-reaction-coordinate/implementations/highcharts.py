@@ -1,4 +1,4 @@
-"""pyplots.ai
+""" pyplots.ai
 line-reaction-coordinate: Reaction Coordinate Energy Diagram
 Library: highcharts unknown | Python 3.14.3
 Quality: 83/100 | Created: 2026-03-21
