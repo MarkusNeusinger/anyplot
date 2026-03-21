@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 line-arrhenius: Arrhenius Plot for Reaction Kinetics
 Library: letsplot 4.9.0 | Python 3.14.3
-Quality: 78/100 | Created: 2026-03-21
+Quality: 84/100 | Created: 2026-03-21
 """
 
 import numpy as np
