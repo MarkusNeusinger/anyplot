@@ -1,7 +1,7 @@
 library: plotnine
 specification_id: titration-curve
 created: '2026-03-21T22:11:31Z'
-updated: '2026-03-21T22:29:40Z'
+updated: '2026-03-21T22:38:37Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23389866067
 issue: 4407
@@ -10,35 +10,33 @@ library_version: 0.15.3
 preview_url: https://storage.googleapis.com/pyplots-images/plots/titration-curve/plotnine/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/titration-curve/plotnine/plot_thumb.png
 preview_html: null
-quality_score: 88
+quality_score: 93
 review:
   strengths:
-  - Excellent analytical chemistry implementation with proper calculations
-  - Strong visual design with custom color palette, refined grid styling, and clear
-    visual hierarchy
-  - Effective data storytelling through equivalence point highlighting and derivative
-    overlay
-  - Clean well-structured code with all font sizes explicitly set
-  - All imports are used and appropriate
+  - 'Excellent chemistry: vectorized analytical pH calculation produces a physically
+    accurate titration curve'
+  - Strong idiomatic plotnine usage with grammar-of-graphics layering (multiple data
+    frames, geom_area, geom_ribbon)
+  - Clear visual hierarchy with red diamond equivalence point marker as focal point
+  - Polished theme with subtle grid, refined panel background, and styled legend
+  - Custom blue/amber palette with good colorblind accessibility
   weaknesses:
-  - Derivative curve uses scaled single y-axis rather than a true secondary axis (plotnine
-    limitation)
-  - Ribbon shading around the curve is subtle and does not strongly convey buffer
-    region concept
-  - Could leverage more plotnine-distinctive features (stat layers, custom geoms)
-  image_description: The plot displays a strong acid-base titration curve (HCl + NaOH)
-    on a white background with subtle horizontal grid lines. A blue sigmoidal pH curve
-    rises from approximately 1 at 0 mL to approximately 13 at 50 mL, with the steep
-    transition centered at 25 mL. An orange derivative curve (dpH/dV, scaled) shows
-    a sharp spike reaching 12 at the equivalence point, remaining flat near zero elsewhere.
-    A red diamond marker sits at the equivalence point (25 mL, pH 7) with an italic
-    annotation reading "Equivalence Point (25 mL, pH 7)". A light blue semi-transparent
-    ribbon shades the transition region (23-27 mL) around the pH curve. The title
-    reads "titration-curve · plotnine · pyplots.ai" in bold at the top. X-axis labeled
-    "Volume of NaOH added (mL)" ranges from 0 to 50, Y-axis labeled "pH / dpH/dV (scaled)"
-    ranges from 0 to 14. Legend in upper-left shows "dpH/dV (scaled)" in orange and
-    "pH" in blue with a white background. An orange bold annotation at right reads
-    "Peak dpH/dV = 57.5 at 25 mL".
+  - Derivative area fill at alpha=0.12 is nearly invisible — could be slightly more
+    prominent
+  - No true secondary y-axis for the derivative (plotnine limitation, handled gracefully
+    with scaling)
+  image_description: 'The plot displays an acid-base titration curve with a bold blue
+    S-shaped pH line rising from ~1 at 0 mL to ~13 at 50 mL, with a sharp vertical
+    transition around 25 mL. An amber/gold derivative curve (dpH/dV scaled) spikes
+    sharply at 25 mL, with a faint amber area fill beneath it. A light blue semi-transparent
+    ribbon shades the transition region (~22–28 mL). A red diamond marker sits at
+    the equivalence point (25 mL, pH 7) with an italic annotation reading "Equivalence
+    Point (25 mL, pH 7)." A bold amber label in the upper right reads "Peak dpH/dV
+    = 57.5 at 25 mL." The legend in the upper left shows "pH" (blue) and "dpH/dV (scaled)"
+    (amber) with a white background box. The title reads "titration-curve · plotnine
+    · pyplots.ai" in bold. X-axis: "Volume of NaOH added (mL)" (0–50), Y-axis: "pH
+    / dpH/dV (scaled)" (0–14). Background is a subtle off-white (#FAFAFA) with faint
+    horizontal grid lines only. Clean, polished appearance.'
   criteria_checklist:
     visual_quality:
       score: 29
@@ -56,33 +54,34 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: No overlapping text elements, annotations well-separated
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Lines visible at size=1.5, ribbon subtle but readable
+        comment: Lines and markers clearly visible; derivative area fill at alpha=0.12
+          is very faint
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Blue and amber colorblind-safe combination
+        comment: Blue and amber palette is colorblind-safe with good contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good 16:9 proportions, balanced margins
+        comment: Good 16:9 layout with balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: X-axis has units (mL), y-axis descriptive
+        comment: Descriptive labels with units on both axes
     design_excellence:
-      score: 14
+      score: 16
       max: 20
       items:
       - id: DE-01
@@ -90,19 +89,22 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom palette, intentional typography, above defaults
+        comment: Custom blue/amber palette, styled legend, refined panel background,
+          clearly above defaults
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Subtle grid, axis lines styled, minor grid removed
+        comment: Subtle y-only grid, minor grid removed, styled axis lines, refined
+          panel background
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Clear focal point at equivalence, derivative reinforces transition
+        comment: Clear focal point at equivalence point with diamond marker, derivative
+          peak labeled, transition shaded
     spec_compliance:
       score: 14
       max: 15
@@ -112,47 +114,49 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct sigmoidal titration curve
+        comment: Correct S-shaped titration curve
       - id: SC-02
         name: Required Features
         score: 3
         max: 4
         passed: true
-        comment: Has equivalence point, derivative, shading; no true secondary axis
+        comment: Equivalence point marked, derivative overlay, transition shading.
+          Derivative scaled on primary axis (plotnine lacks twin axes)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Volume on x, pH on y, full 0-14 scale
+        comment: X=volume 0-50 mL, Y=pH 0-14, all data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format, legend labels match
+        comment: Title format correct, legend labels match data series
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows all titration regions and derivative peak
+        comment: Full S-curve with plateaus, sharp transition, derivative peak, and
+          equivalence point
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Real chemistry: HCl + NaOH titration'
+        comment: 'Real chemistry: 25 mL of 0.1 M HCl titrated with 0.1 M NaOH'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Realistic concentrations and volumes
+        comment: Realistic concentrations, correct equivalence at 25 mL and pH 7
     code_quality:
       score: 10
       max: 10
@@ -162,7 +166,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear flow, no functions/classes
+        comment: 'Linear flow: imports, data, plot, save. No functions or classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -174,46 +178,47 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: All imports are used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriate complexity
+        comment: Clean vectorized NumPy calculations, appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300
+        comment: Saves as plot.png with dpi=300, current API
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert grammar-of-graphics: ggplot + geom layers, aes mappings,
+          long-format data, guide_legend with override_aes'
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Good grammar-of-graphics composition with layered geoms
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: Uses geom_ribbon, guide_legend override_aes, multi-source layering
-  verdict: REJECTED
+        comment: Uses geom_area, geom_ribbon, multiple data frames, guide_legend with
+          override_aes — distinctively plotnine patterns
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - layer-composition
-  - custom-legend
   patterns:
   - data-generation
   dataprep:
   - normalization
   styling:
-  - grid-styling
   - alpha-blending
+  - grid-styling
