@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 line-arrhenius: Arrhenius Plot for Reaction Kinetics
 Library: pygal 3.1.0 | Python 3.14.3
 Quality: 86/100 | Created: 2026-03-21
@@ -34,21 +34,21 @@ x_pad = 0.04
 inv_T_fit = np.linspace(float(min(inv_T)) - x_pad, float(max(inv_T)) + x_pad, 80)
 ln_k_fit = slope * inv_T_fit + intercept
 
-# Style — refined palette: teal fit line, warm coral data points, clean typography
+# Style — colorblind-safe palette: deep blue fit line, amber/orange data points
 custom_style = Style(
     background="white",
-    plot_background="#fafafa",
+    plot_background="#f8f9fa",
     foreground="#2c3e50",
     foreground_strong="#1a252f",
-    foreground_subtle="#d5d8dc",
-    colors=("#1abc9c", "#e74c3c"),
-    guide_stroke_color="#ecf0f1",
-    major_guide_stroke_color="#d5d8dc",
-    guide_stroke_dasharray="4,4",
+    foreground_subtle="#dde1e4",
+    colors=("#306998", "#d4760a", "#8b5cf6"),
+    guide_stroke_color="#e8ecef",
+    major_guide_stroke_color="#cfd4d8",
+    guide_stroke_dasharray="6,3",
     title_font_size=68,
     label_font_size=44,
     major_label_font_size=40,
-    legend_font_size=40,
+    legend_font_size=38,
     value_font_size=32,
     tooltip_font_size=34,
     stroke_width=4,
@@ -82,14 +82,14 @@ chart = pygal.XY(
     show_x_guides=False,
     show_y_guides=True,
     legend_at_bottom=True,
-    legend_at_bottom_columns=2,
+    legend_at_bottom_columns=3,
     legend_box_size=28,
     truncate_legend=-1,
-    margin=50,
-    margin_top=80,
-    margin_bottom=200,
-    margin_left=180,
-    margin_right=100,
+    margin=40,
+    margin_top=70,
+    margin_bottom=160,
+    margin_left=170,
+    margin_right=80,
     tooltip_fancy_mode=True,
     tooltip_border_radius=10,
     x_value_formatter=lambda x: f"{x:.2f}",
@@ -104,7 +104,11 @@ chart = pygal.XY(
     css=[
         "file://style.css",
         "file://graph.css",
-        "inline:.axis > .line { stroke: transparent !important; } .plot .background { rx: 12; ry: 12; }",
+        "inline:"
+        ".axis > .line { stroke: transparent !important; } "
+        ".plot .background { rx: 14; ry: 14; } "
+        ".legends .legend text { font-weight: 500; } "
+        ".title { font-weight: 600; letter-spacing: 1px; }",
     ],
 )
 
@@ -116,24 +120,41 @@ chart.x_labels_major = [float(x) for x in x_label_positions]
 chart.x_label_rotation = 0
 chart.x_value_formatter = lambda x: f"{x:.2f} ({int(round(1000.0 / x))} K)"
 
-# Regression fit line — smooth teal line with Ea and R² encoded in legend
+# Regression fit line — smooth blue line
 fit_points = [
     {"value": (float(x), float(y)), "label": f"Fit: ln(k) = {slope:.2f} × (1000/T) + {intercept:.2f}"}
     for x, y in zip(inv_T_fit, ln_k_fit, strict=False)
 ]
 chart.add(
-    f"Linear Fit: R² = {r_squared:.3f} · Eₐ = {Ea_extracted / 1000:.1f} kJ/mol · slope = {slope:.1f}",
+    f"Linear Fit (R² = {r_squared:.3f})",
     fit_points,
     show_dots=False,
     stroke_style={"width": 6, "linecap": "round", "linejoin": "round"},
 )
 
-# Experimental data points — coral markers with rich tooltips
+# Experimental data points — amber markers with rich tooltips
 data_points = [
     {"value": (float(x), float(y)), "label": f"T = {int(t)} K\nk = {k:.3e} s⁻¹\nln(k) = {y:.2f}\n1000/T = {x:.3f}"}
     for x, y, t, k in zip(inv_T, ln_k, temperature_K, rate_constant_k, strict=False)
 ]
 chart.add("Experimental Data", data_points, stroke=False, dots_size=20)
+
+# Activation energy annotation — dedicated legend entry for Eₐ result
+# Uses a zero-opacity point on the regression line to anchor the tooltip
+mid_x = float(np.median(inv_T))
+mid_y = float(slope * mid_x + intercept)
+chart.add(
+    f"Eₐ = {Ea_extracted / 1000:.1f} kJ/mol  (−Eₐ/R = {slope:.1f} K⁻¹)",
+    [
+        {
+            "value": (mid_x, mid_y),
+            "label": f"Activation Energy: Eₐ = {Ea_extracted / 1000:.1f} kJ/mol\n"
+            f"Slope = {slope:.2f} · −Eₐ/R = {slope * 1000:.0f} K",
+        }
+    ],
+    dots_size=0,
+    stroke=False,
+)
 
 # Save — PNG for static output, HTML with pygal's interactive SVG tooltips
 chart.render_to_png("plot.png")
