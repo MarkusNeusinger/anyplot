@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 titration-curve: Acid-Base Titration Curve
 Library: letsplot 4.9.0 | Python 3.14.3
 Quality: 87/100 | Created: 2026-03-21
@@ -38,7 +38,7 @@ for i, v in enumerate(volume_naoh):
 # Derivative (dpH/dV) for secondary overlay
 dpH = np.gradient(ph, volume_naoh)
 
-# Equivalence point (strong acid/strong base → pH 7.0)
+# Equivalence point (strong acid/strong base -> pH 7.0)
 equiv_volume = volume_acid * concentration_acid / concentration_base
 equiv_ph = 7.0
 
@@ -46,7 +46,13 @@ equiv_ph = 7.0
 dpH_max = np.max(dpH)
 dpH_normalized = dpH / dpH_max * 6.0
 
-df = pd.DataFrame({"volume_ml": volume_naoh, "ph": ph, "dpH_normalized": dpH_normalized})
+# Buffer region: slow pH change area before the steep rise near equivalence
+buffer_mask = (volume_naoh >= 2) & (volume_naoh <= 20)
+df_buffer = pd.DataFrame({"volume_ml": volume_naoh[buffer_mask], "ph": ph[buffer_mask]})
+
+# Main data with series labels for legend
+df_ph = pd.DataFrame({"volume_ml": volume_naoh, "y": ph, "series": "pH Curve"})
+df_deriv = pd.DataFrame({"volume_ml": volume_naoh, "y": dpH_normalized, "series": "dpH/dV (scaled)"})
 
 # Equivalence point data
 equiv_point = pd.DataFrame(
@@ -68,25 +74,32 @@ plot = (
     ggplot()  # noqa: F405
     + geom_area(  # noqa: F405
         aes(x="volume_ml", y="ph"),  # noqa: F405
-        data=df[(df["volume_ml"] >= 0) & (df["volume_ml"] <= 50)],
+        data=df_buffer,
         fill=COLOR_BUFFER,
-        alpha=0.0,
+        alpha=0.12,
+        tooltips="none",
+    )
+    + geom_text(  # noqa: F405
+        aes(x="x", y="y", label="label"),  # noqa: F405
+        data=pd.DataFrame({"x": [11], "y": [2.2], "label": ["Buffer Region"]}),
+        size=13,
+        color=COLOR_BUFFER,
+        fontface="italic",
+        alpha=0.7,
     )
     + geom_line(  # noqa: F405
-        aes(x="volume_ml", y="ph"),  # noqa: F405
-        data=df,
-        color=COLOR_CURVE,
+        aes(x="volume_ml", y="y", color="series"),  # noqa: F405
+        data=df_ph,
         size=2.5,
         tooltips=layer_tooltips()  # noqa: F405
         .format("volume_ml", ".1f")
-        .format("ph", ".2f")
+        .format("y", ".2f")
         .line("Volume: @volume_ml mL")
-        .line("pH: @ph"),
+        .line("pH: @y"),
     )
     + geom_line(  # noqa: F405
-        aes(x="volume_ml", y="dpH_normalized"),  # noqa: F405
-        data=df,
-        color=COLOR_DERIV,
+        aes(x="volume_ml", y="y", color="series"),  # noqa: F405
+        data=df_deriv,
         size=1.5,
         linetype="dashed",
         alpha=0.8,
@@ -114,12 +127,8 @@ plot = (
         nudge_x=8,
         nudge_y=1.5,
     )
-    + geom_text(  # noqa: F405
-        aes(x="x", y="y", label="label"),  # noqa: F405
-        data=pd.DataFrame({"x": [42], "y": [4.5], "label": ["dpH/dV (scaled)"]}),
-        size=14,
-        color=COLOR_DERIV,
-        fontface="italic",
+    + scale_color_manual(  # noqa: F405
+        values=[COLOR_CURVE, COLOR_DERIV], name=""
     )
     + scale_x_continuous(  # noqa: F405
         limits=[0, 50], breaks=list(range(0, 55, 5))
@@ -135,6 +144,12 @@ plot = (
         axis_title=element_text(size=20, face="bold"),  # noqa: F405
         axis_text=element_text(size=16),  # noqa: F405
         plot_title=element_text(size=26, hjust=0.5, face="bold"),  # noqa: F405
+        legend_text=element_text(size=16),  # noqa: F405
+        legend_position=[0.85, 0.15],
+        legend_justification=[0.5, 0.5],
+        legend_background=element_rect(  # noqa: F405
+            fill="white", color="#CCCCCC", size=0.5
+        ),
         panel_grid_major_y=element_line(color="#E0E0E0", size=0.3),  # noqa: F405
         panel_grid_major_x=element_blank(),  # noqa: F405
         panel_grid_minor=element_blank(),  # noqa: F405
