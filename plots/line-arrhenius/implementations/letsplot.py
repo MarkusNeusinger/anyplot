@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 line-arrhenius: Arrhenius Plot for Reaction Kinetics
 Library: letsplot 4.9.0 | Python 3.14.3
 Quality: 84/100 | Created: 2026-03-21
@@ -26,16 +26,12 @@ ln_k = np.log(rate_constant_k) + noise
 
 inv_T = 1.0 / temperature_K
 
-# Linear regression: ln(k) = -Ea/R * (1/T) + ln(A)
+# Linear regression for annotation values only
 slope, intercept, r_value, p_value, std_err = stats.linregress(inv_T, ln_k)
 r_squared = r_value**2
 Ea_extracted = -slope * R / 1000  # Convert to kJ/mol
 
-# Fit line
-inv_T_fit = np.linspace(inv_T.min() * 0.97, inv_T.max() * 1.03, 200)
-ln_k_fit = slope * inv_T_fit + intercept
-
-# DataFrames
+# Main DataFrame
 df_points = pd.DataFrame(
     {
         "inv_T": inv_T,
@@ -45,64 +41,63 @@ df_points = pd.DataFrame(
     }
 )
 
-df_fit = pd.DataFrame({"inv_T": inv_T_fit, "ln_k": ln_k_fit})
-
 # Annotation
-eq_text = f"Slope = −Ea/R = {slope:.0f} K\nEa = {Ea_extracted:.1f} kJ/mol\nR² = {r_squared:.4f}"
+eq_text = f"Slope = \u2212Ea/R = {slope:.0f} K\nEa = {Ea_extracted:.1f} kJ/mol\nR\u00b2 = {r_squared:.4f}"
 y_range = ln_k.max() - ln_k.min()
-df_annotation = pd.DataFrame(
-    {"x": [inv_T.max() - (inv_T.max() - inv_T.min()) * 0.02], "y": [ln_k.min() + y_range * 0.25], "label": [eq_text]}
-)
+annot_x = inv_T.max() - (inv_T.max() - inv_T.min()) * 0.02
+annot_y = ln_k.min() + y_range * 0.25
 
 # Secondary x-axis: temperature labels at top of plot
 temp_ticks = np.array([600, 500, 450, 400, 350, 300])
 inv_T_ticks = 1.0 / temp_ticks
-y_top = ln_k.max() + y_range * 0.12
-df_temp_labels = pd.DataFrame(
-    {"inv_T": inv_T_ticks, "y": [y_top] * len(temp_ticks), "label": [f"{t} K" for t in temp_ticks]}
+y_top = ln_k.max() + y_range * 0.08
+df_sec_axis = pd.DataFrame(
+    {
+        "inv_T": np.concatenate([inv_T_ticks, [np.mean(inv_T_ticks)]]),
+        "y_label": np.concatenate([[y_top] * len(temp_ticks), [y_top + y_range * 0.06]]),
+        "y_tick_start": np.concatenate([[y_top - y_range * 0.02] * len(temp_ticks), [np.nan]]),
+        "y_tick_end": np.concatenate([[y_top - y_range * 0.04] * len(temp_ticks), [np.nan]]),
+        "label": [f"{t} K" for t in temp_ticks] + ["Temperature (K)"],
+        "is_title": [False] * len(temp_ticks) + [True],
+    }
 )
-df_temp_axis_label = pd.DataFrame(
-    {"inv_T": [np.mean(inv_T_ticks)], "y": [y_top + y_range * 0.08], "label": ["Temperature (K)"]}
-)
+df_ticks = df_sec_axis[~df_sec_axis["is_title"]].copy()
+df_title = df_sec_axis[df_sec_axis["is_title"]].copy()
 
-# Plot with lets-plot specific features: tooltips, flavor, geom_smooth
+# Plot with lets-plot specific features: geom_smooth, tooltips, flavor
 plot = (
     ggplot()
-    + geom_line(aes(x="inv_T", y="ln_k"), data=df_fit, color="#306998", size=1.8, alpha=0.6, linetype="solid")
+    # Regression line using lets-plot's geom_smooth
+    + geom_smooth(
+        aes(x="inv_T", y="ln_k"), data=df_points, method="lm", color="#306998", size=1.8, alpha=0.4, se=True, level=0.95
+    )
     + geom_point(
         aes(x="inv_T", y="ln_k"),
         data=df_points,
         fill="#306998",
         color="white",
-        size=6,
+        size=8,
         shape=21,
         stroke=1.2,
         tooltips=layer_tooltips().line("@temp_K").line("1/T = @inv_T").line("ln(k) = @ln_k").line("k = @k_val"),
     )
-    # Annotation with regression parameters (positioned at right side near data)
+    # Annotation with regression parameters
     + geom_text(
-        aes(x="x", y="y", label="label"), data=df_annotation, size=12, color="#333333", family="monospace", hjust=1
+        aes(x="x", y="y", label="label"),
+        data=pd.DataFrame({"x": [annot_x], "y": [annot_y], "label": [eq_text]}),
+        size=12,
+        color="#333333",
+        hjust=1,
     )
     # Secondary x-axis: temperature labels at top
-    + geom_text(aes(x="inv_T", y="y", label="label"), data=df_temp_labels, size=11, color="#777777")
+    + geom_text(aes(x="inv_T", y="y_label", label="label"), data=df_ticks, size=11, color="#777777")
     + geom_segment(
-        aes(x="inv_T", y="y", xend="inv_T", yend="yend"),
-        data=pd.DataFrame(
-            {
-                "inv_T": inv_T_ticks,
-                "y": [y_top - y_range * 0.02] * len(temp_ticks),
-                "yend": [y_top - y_range * 0.05] * len(temp_ticks),
-            }
-        ),
-        color="#BBBBBB",
-        size=0.5,
+        aes(x="inv_T", y="y_tick_start", xend="inv_T", yend="y_tick_end"), data=df_ticks, color="#BBBBBB", size=0.5
     )
-    + geom_text(
-        aes(x="inv_T", y="y", label="label"), data=df_temp_axis_label, size=13, color="#555555", fontface="italic"
-    )
-    + labs(x="1/T (K⁻¹)", y="ln(k)", title="line-arrhenius · letsplot · pyplots.ai")
+    + geom_text(aes(x="inv_T", y="y_label", label="label"), data=df_title, size=13, color="#555555", fontface="italic")
+    + labs(x="1/T (K\u207b\u00b9)", y="ln(k)", title="line-arrhenius \u00b7 letsplot \u00b7 pyplots.ai")
     + scale_x_continuous(breaks=inv_T_ticks.tolist(), labels=[f"{v:.2e}" for v in inv_T_ticks])
-    + scale_y_continuous(limits=[ln_k.min() - y_range * 0.08, y_top + y_range * 0.15])
+    + scale_y_continuous(limits=[ln_k.min() - y_range * 0.08, y_top + y_range * 0.10])
     + coord_cartesian(xlim=[inv_T.min() * 0.95, inv_T.max() * 1.05])
     + ggsize(1600, 900)
     + flavor_solarized_light()
