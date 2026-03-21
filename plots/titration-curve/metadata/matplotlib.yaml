@@ -1,0 +1,226 @@
+library: matplotlib
+specification_id: titration-curve
+created: '2026-03-21T22:13:07Z'
+updated: '2026-03-21T22:25:42Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23389865957
+issue: 4407
+python_version: 3.14.3
+library_version: 3.10.8
+preview_url: https://storage.googleapis.com/pyplots-images/plots/titration-curve/matplotlib/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/titration-curve/matplotlib/plot_thumb.png
+preview_html: null
+quality_score: 91
+review:
+  strengths:
+  - Chemically accurate data with proper strong acid-base calculations
+  - Excellent visual hierarchy with color-coded dual axes and prominent equivalence
+    point marker
+  - Thoughtful annotations that guide the viewer through the titration chemistry narrative
+  - Professional styling with custom color palette, subtle grid, and refined typography
+  - Clean, well-structured code with appropriate complexity
+  weaknesses:
+  - Equivalence point vertical line uses dotted style instead of dashed as specified
+  - Blue fill region for Gradual pH Change Region is slightly heavy visually
+  - Missing small legend to explicitly identify pH curve vs derivative curve
+  - pH calculation loop could be vectorized with np.where for more idiomatic numpy
+  image_description: The plot displays an acid-base titration curve for HCl + NaOH.
+    The main S-shaped curve is rendered in deep blue (#306998) plotting pH (left y-axis,
+    0-14) against volume of NaOH added (x-axis, 0-50 mL). A secondary orange (#E8875B)
+    derivative curve (dpH/dV) is plotted on the right y-axis, showing a sharp peak
+    at the equivalence point (25 mL). The equivalence point is marked with a prominent
+    red dot (white edge) at pH 7, with an annotated box connected by an arrow reading
+    "Equivalence Point / 25 mL · pH 7". A blue semi-transparent fill covers the "Gradual
+    pH Change Region" (2-20 mL). An annotation "Steep rise near equivalence" with
+    arrow points to the transition zone. A subtle dashed horizontal line marks neutral
+    pH 7. The background has a very faint pH color gradient. Top spine is removed,
+    left y-axis text is blue, right y-axis text is orange. Minor tick marks are visible.
+    Title reads "HCl + NaOH Titration · titration-curve · matplotlib · pyplots.ai".
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt,
+          annotations 13-15pt'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text, annotations well-positioned with white background
+          boxes
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Main curve linewidth=3.5, derivative linewidth=2, marker s=280, all
+          well-adapted
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue and orange easily distinguishable for colorblind viewers
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 16:9 aspect ratio, tight_layout, plot fills canvas well
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Volume of NaOH added (mL) with units, pH, dpH/dV descriptive
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom color palette, pH gradient background, styled annotation boxes,
+          color-coded axes
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Top spine removed, subtle grid alpha=0.12, minor ticks. Blue fill
+          region slightly heavy
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Strong visual hierarchy with annotations guiding viewer through chemistry
+          narrative
+    spec_compliance:
+      score: 13
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct S-shaped titration curve
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: 'All major features present. Minor: dotted line instead of dashed
+          at equivalence point'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=volume, Y=pH correctly mapped, pH axis spans 0-14
+      - id: SC-04
+        name: Title & Legend
+        score: 2
+        max: 3
+        passed: true
+        comment: Title includes required format with descriptive prefix. No explicit
+          legend for dual curves
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Complete titration curve with all regions and derivative peak
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Real chemistry: 25 mL of 0.1 M HCl titrated with 0.1 M NaOH'
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Chemically accurate pH values throughout
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports, data, plot, styling, save'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic from chemistry equations
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: plt, ticker, np, LinearSegmentedColormap'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake UI elements
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with dpi=300 and bbox_inches=tight
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Good ax-based API usage, twinx, annotate, fill_between. Minor: for
+          loop instead of vectorized numpy'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: LinearSegmentedColormap, imshow for gradient, advanced annotation
+          styling with connectionstyle
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - twin-axes
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - custom-colormap
+  - alpha-blending
+  - grid-styling
+  - edge-highlighting
