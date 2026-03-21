@@ -1,7 +1,7 @@
 library: pygal
 specification_id: line-reaction-coordinate
 created: '2026-03-21T20:46:01Z'
-updated: '2026-03-21T20:50:30Z'
+updated: '2026-03-21T21:00:49Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23388404498
 issue: 4409
@@ -10,40 +10,37 @@ library_version: 3.1.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/line-reaction-coordinate/pygal/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/line-reaction-coordinate/pygal/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/line-reaction-coordinate/pygal/plot.html
-quality_score: 76
+quality_score: 82
 review:
   strengths:
-  - Smooth, well-shaped energy profile curve with proper Gaussian barrier and Hermite
-    smoothstep transitions
-  - Custom y-axis labels at chemically meaningful energy values (20, 50, 120)
-  - Informative legend entries with computed Ea and ΔH values
-  - Clean layout with hidden x-labels and selective y-guides
-  - Deterministic data generation with realistic chemistry values
+  - Excellent data generation with smooth Gaussian + Hermite smoothstep curve
+  - Clean deterministic code with vectorized numpy operations
+  - Good colorblind-safe palette differentiating Ea (teal) vs ΔH (orange) indicators
+  - Custom y-axis labels at chemically meaningful energy values
+  - Descriptive legend labels with computed values (Ea=70, ΔH=-30)
   weaknesses:
-  - Red-green color pair for Ea/ΔH indicators fails colorblind accessibility
-  - Reactant/Product/Transition State labels only appear in legend, not directly on
-    the plot as spec requires
-  - Ea/ΔH indicators are simple dashed lines without arrowheads (spec requests double-headed
-    arrow)
-  - Monospace font throughout reduces visual sophistication
-  image_description: 'The plot displays a reaction coordinate energy diagram on a
-    white background. A smooth blue curve (#306998) traces the energy profile from
-    reactants at 50 kJ/mol through a Gaussian-shaped transition state peak at 120
-    kJ/mol, then descends to products at 20 kJ/mol. Two horizontal gray dashed lines
-    mark the reactant (50) and product (20) energy levels across the full width. A
-    red dashed vertical line at x≈3.2 indicates the activation energy (Ea) with dot
-    endpoints at 50 and 120 kJ/mol. A green dashed vertical line at x≈9.2 indicates
-    the enthalpy change (ΔH) with dot endpoints at 50 and 20 kJ/mol. A larger blue
-    dot marks the transition state at the curve peak. Smaller blue dots mark reactants
-    (left plateau) and products (right plateau). The y-axis shows "Potential Energy
-    (kJ/mol)" with custom labels at key energy values (0, 20, 50, 80, 100, 120, 140).
-    The x-axis shows "Reaction Coordinate" with no tick labels. The title reads "line-reaction-coordinate
-    · pygal · pyplots.ai" in monospace font. A bottom legend lists: Energy Profile,
-    Ea = 70 kJ/mol, ΔH = -30 kJ/mol, Transition State (‡), Reactants (50 kJ/mol),
-    Products (20 kJ/mol).'
+  - Ea vertical indicator placed at x=2.8 instead of at/near the transition state
+    peak (x=5.0), causing the top endpoint to float above the curve
+  - Wasted vertical space below 20 kJ/mol down to 0
+  - Legend with 6 items at bottom could be cleaner
+  image_description: 'The plot shows a reaction coordinate energy diagram rendered
+    as a pygal XY chart on a white background with a light gray (#FAFBFC) plot area.
+    The title "line-reaction-coordinate · pygal · pyplots.ai" appears at the top in
+    dark text. The y-axis is labeled "Potential Energy (kJ/mol)" with custom tick
+    values at 0, 20, 50, 80, 100, 120, and 140. The x-axis is labeled "Reaction Coordinate"
+    with no numeric tick labels. A smooth blue energy curve rises from ~50 kJ/mol
+    (reactant level) to a peak of ~120 kJ/mol (transition state) then descends to
+    ~20 kJ/mol (product level). Horizontal dashed gray lines mark the reactant (50)
+    and product (20) energy levels. A teal dashed vertical line with endpoint dots
+    at x≈2.8 shows the Ea indicator from 50 to 120. An orange dashed vertical line
+    with endpoint dots at x≈8.5 shows the ΔH indicator from 50 to 20. A large dark
+    blue dot marks the transition state at the peak. Smaller blue dots mark reactants
+    (left) and products (right). The legend at the bottom lists: Energy Profile, Ea
+    = 70 kJ/mol, ΔH = -30 kJ/mol, Transition State (‡), Reactants (50 kJ/mol), Products
+    (20 kJ/mol).'
   criteria_checklist:
     visual_quality:
-      score: 23
+      score: 26
       max: 30
       items:
       - id: VQ-01
@@ -51,67 +48,63 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title=60, label=40, major_label=36, legend=36).
-          All readable. Slight deduction for monospace rendering.
+        comment: All font sizes explicitly set (title=60, label=40, major_label=36,
+          legend=32, value=28). All text readable.
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Generally clean. Minor visual confusion where Ea/ΔH endpoint dots
-          coincide with horizontal dashed reference lines.
+        comment: No text overlap, but bottom legend with 6 items is slightly crowded.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Main curve clearly visible with stroke width 6. Marker dots appropriately
-          sized.
+        comment: Curve, markers, indicators visible. Ea top endpoint floats above
+          curve at x=2.8.
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 4
         max: 4
-        passed: false
-        comment: Red (#C0392B) and Green (#27AE60) for Ea and ΔH — classic red-green
-          colorblind failure.
+        passed: true
+        comment: Blue/teal/orange palette is colorblind-safe with good contrast.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good canvas utilization. Some excess whitespace at top/bottom extremes.
+        comment: Good margins but wasted vertical space below 20 kJ/mol down to 0.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis 'Potential Energy (kJ/mol)' with units. X-axis 'Reaction Coordinate'
-          appropriate.
+        comment: Y-axis includes units (kJ/mol), x-axis appropriate for reaction coordinate.
     design_excellence:
-      score: 11
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Clean white background, custom palette, explicit fonts. Well-configured
-          but typical pygal monospace output.
+        passed: true
+        comment: Custom palette, light gray plot background, custom margins. Above
+          defaults but not publication-level.
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: X-guides hidden, X-labels hidden, custom y-labels at key values.
-          Some refinement beyond defaults.
+        comment: Subtle grid colors, no x-guides, custom y-labels at meaningful values.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Good visual hierarchy with dominant curve, color-coded indicators,
-          and computed values in legend.
+        comment: Good hierarchy with labeled values, differentiated markers, color-coded
+          indicators.
     spec_compliance:
       score: 13
       max: 15
@@ -121,26 +114,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct XY line chart for reaction coordinate energy diagram.
+        comment: Correct XY line chart for energy vs reaction coordinate.
       - id: SC-02
         name: Required Features
         score: 3
         max: 4
         passed: false
-        comment: Most features present. Labels only in legend, not directly on plot.
-          Ea/ΔH lack arrowheads.
+        comment: Ea indicator mispositioned at x=2.8 instead of near transition state
+          peak at x=5.0.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = reaction coordinate, Y = potential energy. Correct mapping.
+        comment: X=reaction coordinate, Y=potential energy. Correct mapping.
       - id: SC-04
         name: Title & Legend
         score: 2
         max: 3
         passed: true
-        comment: Title format correct. Legend labels descriptive with values.
+        comment: Title format correct. Legend descriptive but squares don't distinguish
+          line vs point series.
     data_quality:
       score: 14
       max: 15
@@ -150,24 +144,23 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Shows single-step exothermic reaction with activation barrier, transition
-          state, and energy levels.
+        comment: Shows exothermic reaction with activation barrier, transition state,
+          Ea, and ΔH.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Chemistry context with plausible energy values for a simple chemical
-          reaction.
+        comment: Chemistry context with realistic terminology and scientific framing.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Energy values in kJ/mol are realistic. Y-axis range 0-140 accommodates
-          all data.
+        comment: Values (50, 120, 20 kJ/mol) are realistic for chemical reaction energy
+          profiles.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -175,7 +168,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → style → chart → series → save.'
+        comment: Clean imports → data → plot → save structure. No functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -187,21 +180,21 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: numpy, pygal, Style — all used.
+        comment: 'All imports used: numpy, pygal, Style.'
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Manual for-loops for smoothstep and tail flattening could be vectorized.
+        passed: true
+        comment: Clean vectorized numpy operations with elegant curve generation.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html. Current API.
+        comment: Saves as plot.png via render_to_png.
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -209,20 +202,21 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of pygal.XY, Style, stroke_style, node dict, custom y_labels.
+        comment: Good use of pygal.XY with custom Style, stroke_style, node customization,
+          show_dots control.
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Some pygal-specific features used but doesn't leverage interpolation
-          or other distinctive capabilities.
+        passed: true
+        comment: Uses pygal-specific node styling, stroke_style dasharray, tooltip_border_radius,
+          truncate_legend.
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
   - manual-ticks
-  - html-export
   patterns:
   - data-generation
   dataprep: []
