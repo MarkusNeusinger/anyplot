@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 bode-basic: Bode Plot for Frequency Response
-Library: bokeh | Python 3.13
-Quality: pending | Created: 2026-03-21
+Library: bokeh 3.9.0 | Python 3.14.3
+Quality: 78/100 | Created: 2026-03-21
 """
 
 import numpy as np
