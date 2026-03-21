@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 line-arrhenius: Arrhenius Plot for Reaction Kinetics
-Library: matplotlib | Python 3.13
-Quality: pending | Created: 2026-03-21
+Library: matplotlib 3.10.8 | Python 3.14.3
+Quality: 89/100 | Created: 2026-03-21
 """
 
 import matplotlib.pyplot as plt
