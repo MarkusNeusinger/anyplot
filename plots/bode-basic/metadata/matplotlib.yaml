@@ -1,0 +1,213 @@
+library: matplotlib
+specification_id: bode-basic
+created: '2026-03-21T20:47:36Z'
+updated: '2026-03-21T20:58:47Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23388395302
+issue: 4411
+python_version: 3.14.3
+library_version: 3.10.8
+preview_url: https://storage.googleapis.com/pyplots-images/plots/bode-basic/matplotlib/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/bode-basic/matplotlib/plot_thumb.png
+preview_html: null
+quality_score: 92
+review:
+  strengths:
+  - Excellent engineering data storytelling with annotated gain and phase margins
+    that immediately convey system stability
+  - Clean transfer function computation directly from poles producing realistic frequency
+    response
+  - Professional layout with tight panel spacing and well-placed annotations
+  - All spec requirements fully met including reference lines and grid
+  weaknesses:
+  - Red-green color pairing for GM/PM annotations is not optimal for colorblind accessibility
+  image_description: The plot shows a dual-panel Bode plot. The top panel displays
+    magnitude in decibels (dB) vs frequency (Hz) on a logarithmic scale, with a blue
+    curve starting at ~26 dB and rolling off to ~-100 dB. A dashed gray reference
+    line at 0 dB is present. A red vertical line and dot mark the phase crossover
+    point with an annotation "GM = 13.8 dB" and an arrow. The bottom panel shows phase
+    in degrees vs frequency, with a blue curve rolling from ~0° down to ~-270°. A
+    dashed gray -180° reference line is drawn. A green vertical line and dot mark
+    the gain crossover point with "PM = 34.8°" annotation and arrow. Both panels share
+    the frequency axis (10⁻¹ to 10³ Hz). Top and right spines are removed on both
+    panels. Subtle grid lines are visible. The title reads "bode-basic · matplotlib
+    · pyplots.ai". Phase y-axis has custom ticks at 0, -45, -90, -135, -180, -225,
+    -270.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title=24, labels=20, ticks=16, annotations=16'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: All text and elements fully readable with no collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Lines thick (linewidth=3), markers visible (markersize=10)
+      - id: VQ-04
+        name: Color Accessibility
+        score: 3
+        max: 4
+        passed: true
+        comment: Red-green pair for GM/PM mitigated by separate panels and text labels
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Excellent dual-panel layout with good proportions
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive labels with units: Magnitude (dB), Phase (°), Frequency
+          (Hz)'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Intentional color coding, professional polish, clearly above defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines removed, subtle grid, tight panel spacing, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Annotations with arrows guide viewer to key stability margins
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct dual-panel Bode plot
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: dual panel, GM/PM annotations, reference lines,
+          log scale, grid'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct frequency, magnitude, and phase mapping
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct, no legend needed for single-series
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Third-order system shows full rolloff, both margins, phase past -180°
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Realistic open-loop transfer function with three poles
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sensible pole frequencies and stability margins
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports, data, crossover computation, plot, style,
+          save'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic, no random data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only matplotlib.pyplot and numpy, both used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic, appropriate complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with dpi=300, current API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of axes methods, semilogx, annotate, gridspec_kw
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: semilogx, annotate with arrowprops, vlines, gridspec_kw, spines manipulation
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - subplots
+  - annotations
+  - manual-ticks
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - grid-styling
