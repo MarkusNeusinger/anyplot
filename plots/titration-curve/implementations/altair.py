@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 titration-curve: Acid-Base Titration Curve
 Library: altair 6.0.0 | Python 3.14.3
 Quality: 87/100 | Created: 2026-03-21
@@ -47,17 +47,15 @@ ph = np.insert(ph, equiv_idx, 7.0)
 dph_dv = np.gradient(ph, volume)
 dph_dv = np.nan_to_num(dph_dv, nan=0.0, posinf=0.0, neginf=0.0)
 
-# Normalize derivative to fit on same chart (scale to 0-14 range)
-dph_max = np.max(np.abs(dph_dv))
-dph_scaled = dph_dv / dph_max * 12.0
+df = pd.DataFrame({"volume_ml": volume, "ph": ph, "dph_dv": dph_dv})
 
-df = pd.DataFrame({"volume_ml": volume, "ph": ph, "dph_dv": dph_dv, "dph_scaled": dph_scaled})
+# Buffer region: for strong acid/base, shade the gradual-change regions (pH 3-5 and pH 9-11)
+# These represent zones where pH changes slowly, analogous to buffer regions
+buffer_df = df[(df["ph"] >= 3.0) & (df["ph"] <= 5.0)].copy()
 
 # Equivalence point data
 equiv_pt = pd.DataFrame({"volume_ml": [V_equiv], "ph": [7.0]})
-
 equiv_line = pd.DataFrame({"volume_ml": [V_equiv, V_equiv], "ph": [0, 14]})
-
 equiv_label = pd.DataFrame(
     {"volume_ml": [V_equiv + 0.8], "ph": [3.5], "label": [f"Equivalence Point\n{V_equiv:.0f} mL, pH 7.0"]}
 )
@@ -66,6 +64,7 @@ equiv_label = pd.DataFrame(
 CLR_CURVE = "#306998"
 CLR_DERIV = "#E8833A"
 CLR_EQUIV = "#7B2D8E"
+CLR_BUFFER = "#306998"
 CLR_BG = "#FAFBFC"
 CLR_TITLE = "#1a1a1a"
 CLR_SUBTITLE = "#555555"
@@ -73,8 +72,8 @@ CLR_AXIS = "#333333"
 CLR_TICK = "#555555"
 CLR_GRID = "#d0d0d0"
 
-# Axis styling
-axis_x = {
+# Shared axis styling
+axis_props = {
     "labelFontSize": 16,
     "titleFontSize": 20,
     "titleFontWeight": "bold",
@@ -90,46 +89,30 @@ axis_x = {
     "labelPadding": 6,
 }
 
-axis_y = {**axis_x, "titlePadding": 14}
-
 x_scale = alt.Scale(domain=[0, 50])
 y_scale = alt.Scale(domain=[0, 14])
 
-# Titration curve
-titration_line = (
-    alt.Chart(df)
-    .mark_line(strokeWidth=3.5, color=CLR_CURVE, interpolate="monotone")
-    .encode(
-        x=alt.X("volume_ml:Q", scale=x_scale, title="Volume of NaOH added (mL)", axis=alt.Axis(tickCount=10, **axis_x)),
-        y=alt.Y("ph:Q", scale=y_scale, title="pH", axis=alt.Axis(**axis_y)),
-        tooltip=[
-            alt.Tooltip("volume_ml:Q", title="Volume (mL)", format=".1f"),
-            alt.Tooltip("ph:Q", title="pH", format=".2f"),
-        ],
-    )
+# Buffer region shading
+buffer_area = (
+    alt.Chart(buffer_df)
+    .mark_area(opacity=0.12, color=CLR_BUFFER)
+    .encode(x=alt.X("volume_ml:Q", scale=x_scale), y=alt.Y("ph:Q", scale=y_scale))
 )
 
-# Derivative curve (dpH/dV) - scaled overlay
-deriv_line = (
-    alt.Chart(df)
-    .mark_line(strokeWidth=2, color=CLR_DERIV, strokeDash=[6, 4], interpolate="monotone", opacity=0.8)
-    .encode(
-        x=alt.X("volume_ml:Q", scale=x_scale),
-        y=alt.Y("dph_scaled:Q", scale=y_scale),
-        tooltip=[
-            alt.Tooltip("volume_ml:Q", title="Volume (mL)", format=".1f"),
-            alt.Tooltip("dph_dv:Q", title="dpH/dV", format=".2f"),
-        ],
-    )
-)
-
-# Derivative label
-deriv_label_df = pd.DataFrame({"volume_ml": [35.0], "ph": [2.5], "label": ["dpH/dV (scaled)"]})
-
-deriv_label = (
-    alt.Chart(deriv_label_df)
-    .mark_text(fontSize=14, fontWeight="bold", color=CLR_DERIV, align="left")
+# Buffer region label
+buffer_label_df = pd.DataFrame({"volume_ml": [8.0], "ph": [5.3], "label": ["Buffer Region"]})
+buffer_label = (
+    alt.Chart(buffer_label_df)
+    .mark_text(fontSize=13, fontStyle="italic", color=CLR_CURVE, opacity=0.7, align="left")
     .encode(x=alt.X("volume_ml:Q", scale=x_scale), y=alt.Y("ph:Q", scale=y_scale), text="label:N")
+)
+
+# pH 7 reference line
+ref_line_df = pd.DataFrame({"volume_ml": [0, 50], "ph": [7, 7]})
+ref_line = (
+    alt.Chart(ref_line_df)
+    .mark_line(strokeWidth=1, strokeDash=[4, 4], color="#aaaaaa", opacity=0.5)
+    .encode(x=alt.X("volume_ml:Q", scale=x_scale), y=alt.Y("ph:Q", scale=y_scale))
 )
 
 # Equivalence point vertical dashed line
@@ -153,17 +136,92 @@ equiv_annotation = (
     .encode(x=alt.X("volume_ml:Q", scale=x_scale), y=alt.Y("ph:Q", scale=y_scale), text="label:N")
 )
 
-# pH 7 reference line
-ref_line_df = pd.DataFrame({"volume_ml": [0, 50], "ph": [7, 7]})
-ref_line = (
-    alt.Chart(ref_line_df)
-    .mark_line(strokeWidth=1, strokeDash=[4, 4], color="#aaaaaa", opacity=0.5)
-    .encode(x=alt.X("volume_ml:Q", scale=x_scale), y=alt.Y("ph:Q", scale=y_scale))
+# Primary layer: titration curve + annotations (pH y-axis)
+titration_line = (
+    alt.Chart(df)
+    .mark_line(strokeWidth=3.5, interpolate="monotone")
+    .encode(
+        x=alt.X(
+            "volume_ml:Q", scale=x_scale, title="Volume of NaOH added (mL)", axis=alt.Axis(tickCount=10, **axis_props)
+        ),
+        y=alt.Y("ph:Q", scale=y_scale, title="pH", axis=alt.Axis(titlePadding=14, **axis_props)),
+        color=alt.value(CLR_CURVE),
+        tooltip=[
+            alt.Tooltip("volume_ml:Q", title="Volume (mL)", format=".1f"),
+            alt.Tooltip("ph:Q", title="pH", format=".2f"),
+        ],
+    )
 )
 
-# Combine chart
+primary_layer = buffer_area + buffer_label + ref_line + titration_line + equiv_vline + equiv_marker + equiv_annotation
+
+# Secondary layer: derivative curve (dpH/dV) with its own y-axis
+deriv_line = (
+    alt.Chart(df)
+    .mark_line(strokeWidth=2.5, strokeDash=[6, 4], interpolate="monotone", opacity=0.85)
+    .encode(
+        x=alt.X("volume_ml:Q", scale=x_scale),
+        y=alt.Y(
+            "dph_dv:Q",
+            title="dpH/dV (derivative)",
+            axis=alt.Axis(
+                titleColor=CLR_DERIV,
+                labelColor=CLR_DERIV,
+                titleFontSize=20,
+                titleFontWeight="bold",
+                labelFontSize=16,
+                gridOpacity=0,
+                domainColor=CLR_DERIV,
+                domainWidth=1.5,
+                tickColor=CLR_DERIV,
+                tickSize=6,
+                labelPadding=6,
+                titlePadding=14,
+            ),
+        ),
+        color=alt.value(CLR_DERIV),
+        tooltip=[
+            alt.Tooltip("volume_ml:Q", title="Volume (mL)", format=".1f"),
+            alt.Tooltip("dph_dv:Q", title="dpH/dV", format=".2f"),
+        ],
+    )
+)
+
+# Legend data: manual legend entries
+legend_df = pd.DataFrame(
+    {
+        "label": ["pH (titration curve)", "dpH/dV (derivative)"],
+        "color": [CLR_CURVE, CLR_DERIV],
+        "dash": ["solid", "dashed"],
+    }
+)
+
+legend_lines = (
+    alt.Chart(legend_df)
+    .mark_point(size=0, opacity=0)
+    .encode(
+        color=alt.Color(
+            "label:N",
+            scale=alt.Scale(domain=["pH (titration curve)", "dpH/dV (derivative)"], range=[CLR_CURVE, CLR_DERIV]),
+            legend=alt.Legend(
+                title=None,
+                orient="top-right",
+                labelFontSize=15,
+                symbolSize=200,
+                symbolStrokeWidth=3,
+                padding=12,
+                cornerRadius=4,
+                fillColor="white",
+                strokeColor="#dddddd",
+            ),
+        )
+    )
+)
+
+# Combine with dual y-axis using resolve_scale
 chart = (
-    (ref_line + titration_line + deriv_line + equiv_vline + equiv_marker + equiv_annotation + deriv_label)
+    alt.layer(primary_layer + legend_lines, deriv_line)
+    .resolve_scale(y="independent")
     .properties(
         width=1600,
         height=900,
