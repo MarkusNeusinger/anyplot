@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 line-reaction-coordinate: Reaction Coordinate Energy Diagram
-Library: pygal | Python 3.13
-Quality: pending | Created: 2026-03-21
+Library: pygal 3.1.0 | Python 3.14.3
+Quality: 76/100 | Created: 2026-03-21
 """
 
 import numpy as np
