@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 line-reaction-coordinate: Reaction Coordinate Energy Diagram
 Library: bokeh 3.9.0 | Python 3.14.3
 Quality: 88/100 | Created: 2026-03-21
@@ -44,7 +44,18 @@ p = figure(
     y_range=(-5, 155),
 )
 
+# Area fill under the curve
+fill_source = ColumnDataSource(data={"x": reaction_coord, "y": energy})
+p.varea(x="x", y1=0, y2="y", source=fill_source, fill_color="#306998", fill_alpha=0.08)
+
 p.line("x", "y", source=source, line_width=5, color="#306998")
+
+# Transition state emphasis — glowing highlight
+ts_idx = int(np.argmax(energy))
+ts_x_val = float(reaction_coord[ts_idx])
+ts_y_val = float(energy[ts_idx])
+p.scatter([ts_x_val], [ts_y_val], size=28, color="#306998", alpha=0.18, line_color=None)
+p.scatter([ts_x_val], [ts_y_val], size=14, color="#306998", alpha=0.9, line_color="white", line_width=2)
 
 # Horizontal dashed reference lines
 reactant_line = Span(
@@ -66,7 +77,7 @@ p.add_layout(ts_label)
 
 # Activation energy (Ea) double-headed arrow
 ea_x = 0.18
-arrow_color = "#D64045"
+arrow_color = "#E66100"
 head_size = 18
 
 p.add_layout(
@@ -106,7 +117,7 @@ p.add_layout(ea_label)
 
 # Enthalpy change (ΔH) double-headed arrow
 dh_x = 0.85
-dh_color = "#2E8B57"
+dh_color = "#5D3A9B"
 
 p.add_layout(
     Arrow(
@@ -145,10 +156,15 @@ p.add_layout(dh_label)
 
 # Style
 p.title.text_font_size = "28pt"
+p.title.text_color = "#2c3e50"
 p.xaxis.axis_label_text_font_size = "22pt"
 p.yaxis.axis_label_text_font_size = "22pt"
 p.xaxis.major_label_text_font_size = "18pt"
 p.yaxis.major_label_text_font_size = "18pt"
+p.xaxis.axis_label_text_color = "#444444"
+p.yaxis.axis_label_text_color = "#444444"
+p.xaxis.major_label_text_color = "#666666"
+p.yaxis.major_label_text_color = "#666666"
 
 p.xaxis.major_tick_line_color = None
 p.yaxis.major_tick_line_color = None
