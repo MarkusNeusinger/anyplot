@@ -1,7 +1,7 @@
 library: highcharts
 specification_id: titration-curve
 created: '2026-03-21T22:13:47Z'
-updated: '2026-03-21T22:18:08Z'
+updated: '2026-03-21T22:28:19Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23389866060
 issue: 4407
@@ -13,29 +13,33 @@ preview_html: https://storage.googleapis.com/pyplots-images/plots/titration-curv
 quality_score: 87
 review:
   strengths:
-  - Chemically accurate data generation with proper pH calculation for strong acid/strong
-    base system
-  - Excellent use of Highcharts plotLines for equivalence point vertical line with
-    label
-  - Good visual hierarchy with z-index layering across series
-  - Thoughtful blue/orange/red color coordination with good colorblind accessibility
-  - Clean deterministic code with appropriate complexity
+  - Excellent data storytelling with triple-cue equivalence point (dashed line + diamond
+    marker + text annotation)
+  - Strong aesthetic design with custom palette, subtle grid, and polished typography
+  - Scientifically accurate pH computation using proper strong acid/strong base chemistry
+  - Good use of Highcharts-specific features (plotBands, plotLines, shared tooltips,
+    text outlines)
+  - Clean, deterministic code with no unnecessary complexity
   weaknesses:
-  - Buffer region shading is missing (spec explicitly mentions this feature)
-  - Legend position crowds against right y-axis title and labels
-  - Design excellence could be pushed further toward publication quality
-  image_description: The plot displays an acid-base titration curve on a light gray
-    background (#fafbfc) with a white plot area. A blue S-shaped pH curve (line series)
-    rises from ~1 at 0 mL to ~13 at 50 mL, with the characteristic steep transition
-    around 25 mL. An orange derivative (dpH/dV) area series shows a sharp spike at
-    the equivalence point, with semi-transparent fill beneath. A red dashed vertical
-    line marks the equivalence point at 25 mL, with a red diamond marker at pH 7 and
-    a red label reading "Equivalence Point (25 mL, pH 7)". The title "titration-curve
-    · highcharts · pyplots.ai" appears at top center with an italic subtitle "25 mL
-    of 0.1 M HCl Titrated with 0.1 M NaOH". The left y-axis shows pH (0-14) in dark
-    text, the right y-axis shows dpH/dV (0-5) in orange. The legend is positioned
-    in the upper right with entries for pH, dpH/dV, and Equivalence (25.0 mL). Grid
-    lines are very subtle. X-axis labeled "Volume of NaOH Added (mL)".
+  - X-axis title Volume of NaOH Added (mL) appears cut off at bottom — marginBottom
+    (160) may be insufficient
+  - Right y-axis area is slightly cramped with dpH/dV title and labels competing for
+    space
+  - Buffer Region labels are chemically inaccurate for a strong acid/strong base system
+    — flat curve regions do not constitute true buffer zones
+  image_description: The plot displays an acid-base titration curve at 4800x2700 resolution
+    with a light gray (#fafbfc) background and white plot area. A blue (#306998) S-shaped
+    pH curve runs from ~pH 1 (left) to ~pH 13 (right), showing the characteristic
+    sigmoidal shape of a strong acid/strong base titration. An orange (#e67e22) area-filled
+    derivative curve (dpH/dV) spikes sharply at the equivalence point (25 mL), plotted
+    against a secondary y-axis on the right (0-5). A red (#c0392b) dashed vertical
+    line marks the equivalence point at 25 mL with a bold label "Equivalence Point
+    (25 mL, pH 7)" and a prominent red diamond marker. Two light green shaded bands
+    (0-20 mL and 30-50 mL) are labeled "Buffer Region" at the bottom. The title reads
+    "titration-curve · highcharts · pyplots.ai" with an italic subtitle "25 mL of
+    0.1 M HCl Titrated with 0.1 M NaOH". A legend in the top-left lists pH, dpH/dV,
+    and Equivalence (25.0 mL). The left y-axis shows pH (0-14), the right y-axis shows
+    dpH/dV (0-5), and a dotted horizontal reference line sits at pH 7.
   criteria_checklist:
     visual_quality:
       score: 27
@@ -46,43 +50,43 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 48px, axis titles 34px, ticks
-          26px, legend 28px). All readable at full size.
+        comment: All font sizes explicitly set (48px title, 34px axis titles, 26px
+          tick labels, 28px annotations). Buffer region labels at 22px are small.
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Legend in upper right crowds against right y-axis title and orange
-          tick labels.
+        comment: No significant overlap. Minor cramping near right y-axis where dpH/dV
+          labels and axis title compete.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: pH line (width 5) clearly visible, derivative area well-rendered,
-          equivalence diamond marker (radius 20) prominent.
+        comment: pH curve lineWidth=5 clearly visible. Derivative area fill appropriately
+          subtle. Equivalence marker prominent.
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Blue, orange, red are distinguishable for all forms of color blindness.
+        comment: Blue/orange/red palette is colorblind-safe with good contrast.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good margins and proportions. Slight imbalance with large right margin
-          for secondary axis.
+        comment: Good canvas utilization but x-axis title appears cut off at bottom.
+          Increase marginBottom.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Volume of NaOH Added (mL) with units, pH and dpH/dV on y-axes.
+        comment: Descriptive labels with units on all axes.
     design_excellence:
-      score: 14
+      score: 15
       max: 20
       items:
       - id: DE-01
@@ -90,22 +94,22 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Thoughtful color scheme, custom background, italic subtitle, letter
-          spacing. Above defaults but not publication-level.
+        comment: Custom background, curated color palette, custom font family, italic
+          subtitle, text outlines, letter spacing.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Subtle grid (0.06 opacity), plot border with low opacity, legend
-          with rounded corners. Good refinement.
+        comment: Subtle grid, tick marks removed, dotted pH 7 reference, area fill
+          at 0.12 opacity. Right side slightly cramped.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: 'Clear visual hierarchy: pH curve prominent, derivative supporting,
-          red equivalence point draws the eye.'
+        comment: Strong focal point with triple-cue equivalence point. Derivative
+          spike creates dramatic emphasis. Buffer shading adds context.
     spec_compliance:
       score: 14
       max: 15
@@ -115,50 +119,50 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: titration curve as line plot with characteristic S-shape.'
+        comment: Correct line chart for titration curve.
       - id: SC-02
         name: Required Features
         score: 3
         max: 4
         passed: true
-        comment: 'Missing buffer region shading. All other features present: equivalence
-          point, derivative, correct labels.'
+        comment: All features present but Buffer Region labels are chemically inaccurate
+          for strong acid/strong base system.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = volume, Y = pH, secondary Y = dpH/dV. All data correctly mapped.
+        comment: X=volume, Y=pH, secondary Y=dpH/dV. All correctly mapped.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Legend labels descriptive and match data.
+        comment: Title matches required format. Legend labels descriptive.
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Full S-curve with flat regions, steep transition, derivative spike.
-          Comprehensive.
+        comment: Shows S-curve, equivalence point, derivative spike, buffer-like regions.
+          Could annotate half-equivalence point.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Classic chemistry experiment: 25 mL of 0.1 M HCl with 0.1 M NaOH.
-          Neutral topic.'
+        comment: 'Real chemistry scenario: HCl/NaOH titration. Neutral educational
+          topic.'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: pH 0-14 correct, equivalence at 25 mL chemically correct, 0.1 M realistic.
+        comment: pH 0-14, volume 0-50 mL, 0.1 M concentrations. All realistic.
     code_quality:
       score: 10
       max: 10
@@ -168,32 +172,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, chart config, series, export. No functions
-          or classes.'
+        comment: 'Linear flow: imports, data, chart config, series, export.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: 'Fully deterministic: np.linspace and chemical equations, no randomness.'
+        comment: Fully deterministic, computed from chemistry formulas.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used.
+        comment: All imports used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriate complexity. No fake UI or over-engineering.
+        comment: Clean, well-organized, appropriate complexity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png via Selenium screenshot. Uses current API.
+        comment: Saves plot.png via selenium screenshot.
     library_mastery:
       score: 7
       max: 10
@@ -203,15 +206,15 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of HighchartsOptions, multiple series types, dual y-axes,
-          plotOptions. npm pack for offline JS.
+        comment: 'Good use of highcharts-core API: HighchartsOptions, series types,
+          plotLines, plotBands, dual y-axes.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses plotLines for equivalence line, shared tooltips with HTML formatting,
-          zIndex layering, diamond markers.
+        comment: Uses plotBands, plotLines, shared tooltips, text outlines, diamond
+          marker — Highcharts-specific features.
   verdict: REJECTED
 impl_tags:
   dependencies:
