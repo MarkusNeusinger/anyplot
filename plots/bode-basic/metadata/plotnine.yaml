@@ -1,7 +1,7 @@
 library: plotnine
 specification_id: bode-basic
 created: '2026-03-21T20:48:02Z'
-updated: '2026-03-21T21:09:59Z'
+updated: '2026-03-21T21:22:25Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23388395508
 issue: 4411
@@ -10,112 +10,104 @@ library_version: 0.15.3
 preview_url: https://storage.googleapis.com/pyplots-images/plots/bode-basic/plotnine/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/bode-basic/plotnine/plot_thumb.png
 preview_html: null
-quality_score: 86
+quality_score: 89
 review:
   strengths:
-  - Excellent spec compliance — all required features (dual panels, margin annotations,
-    reference lines, log axis, grid) present and correct
-  - Clean, well-organized code with deterministic data from a realistic transfer function
-  - Good use of plotnine grammar of graphics with facet_wrap for dual-panel layout
-  - Effective color-coded annotations (orange for gain margin, purple for phase margin)
-    with distinct marker shapes
-  - Thoughtful theme customization with custom text color hierarchy and subtle grid
+  - Full spec compliance with all required Bode plot features (dual panel, GM/PM,
+    reference lines, log scale)
+  - 'Excellent color coding system: Python Blue for response curve, orange for gain
+    margin, purple for phase margin'
+  - Strong text legibility with all font sizes explicitly set
+  - Clean, deterministic code with realistic transfer function data
+  - Good use of plotnine faceting for dual-panel layout
   weaknesses:
-  - Annotation text (geom_text size=14) slightly small relative to axis text (16)
-    — should be at least as large
-  - Magnitude panel has excessive vertical range extending to -70 dB when interesting
-    region is above -20 dB
-  - Could use wider frequency range to show full passband and asymptotic rolloff
-  - Not leveraging scale_y_continuous for custom axis formatting
-  image_description: The plot displays a Bode plot with two vertically stacked panels
-    on a light gray (#FAFAFA) background. The top panel is labeled "Magnitude (dB)"
-    with a light blue/purple strip header and shows a blue (#306998) curve starting
-    at ~+10 dB at 0.1 Hz, crossing 0 dB around 0.4 Hz, and declining to ~-70 dB at
-    10 Hz. A thick orange (#D35400) vertical segment marks the gain margin between
-    the magnitude at phase crossover (~-8 dB) and the 0 dB reference line, with an
-    orange "GM = 8.1 dB" label. A purple circle marks the gain crossover point, and
-    an orange square marks the phase crossover point on this panel. The bottom panel
-    labeled "Phase (degrees)" shows the phase curve starting at ~-55° and declining
-    to ~-260°. A thick purple (#7D3C98) vertical segment marks the phase margin between
-    the phase at gain crossover (~-148°) and the -180° reference line, with a purple
-    "PM = 32°" label. Dashed horizontal reference lines appear at 0 dB and -180°.
-    Dotted vertical guide lines mark both crossover frequencies across both panels.
-    The x-axis is logarithmic labeled "Frequency (Hz)" with ticks at 0.1, 1, and 10.
-    Title reads "bode-basic · plotnine · pyplots.ai" in dark navy bold text.
+  - Magnitude clipped at -30 dB creates an artificial flat line at bottom of top panel
+  - Square figure format (12x12) does not optimally serve the logarithmic frequency
+    axis
+  - 'Visual refinement good but not fully polished (DE-02: 4/6)'
+  image_description: The plot displays a dual-panel Bode plot with "bode-basic · plotnine
+    · pyplots.ai" as the title in dark navy bold text. The top panel is labeled "Magnitude
+    (dB)" with a light indigo strip background, showing a blue frequency response
+    curve starting at ~14 dB at 0.03 Hz, rolling off through 0 dB and flattening at
+    -30 dB (clipped). The bottom panel is labeled "Phase (degrees)" with the same
+    strip styling, showing phase rolling from ~-40° down past -250°. Both panels share
+    a logarithmic frequency axis labeled "Frequency (Hz)" with ticks at 0.1, 1, and
+    10. A dashed gray reference line marks 0 dB in the magnitude panel and -180° in
+    the phase panel. Dotted vertical guide lines mark the gain and phase crossover
+    frequencies. An orange vertical segment shows the gain margin (~8 dB) with a bold
+    orange "GM = 8.0 dB" label. A purple vertical segment shows the phase margin (~33°)
+    with a bold purple "PM = 33°" label. Purple circles mark gain crossover points,
+    orange squares mark phase crossover points. The background is light gray (#FAFAFA)
+    with white panel interiors and subtle two-level grid lines.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=24, axis_title=20, axis_text=16,
-          strip_text=20). Annotation text at size=14 is slightly small relative to
-          other elements.
+        comment: 'All font sizes explicitly set: title 24pt, axis_title 20pt, axis_text
+          16pt, strip_text 20pt'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions. Annotations positioned cleanly to the right of
-          margin segments.
+        comment: All text and markers clearly separated and readable
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Main line well-sized (size=2.2). Markers visible (size=6). Gain margin
-          segment is quite short making it less prominent.
+        comment: Line thickness 2.5, markers size 7, margin segments size 5.0 — all
+          well-adapted
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Blue, orange, and purple are distinguishable for all forms of color
-          vision deficiency. Good contrast.
+        comment: Blue/orange/purple palette is colorblind-safe with strong contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Square 3600x3600 format appropriate. Magnitude panel has significant
-          unused vertical space extending to -70 dB.
+        comment: Square format works but landscape would better serve log frequency
+          axis; magnitude clipped at -30 dB
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Frequency (Hz) with units, strip text serves as y-axis labels with
-          units.
+        comment: Frequency (Hz) with units; panel strips serve as y-labels with units
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Custom color palette, custom text color hierarchy, custom strip backgrounds.
-          Above defaults but not publication-showcase level.
+        comment: Custom color palette, custom backgrounds, intentional color coding,
+          good typography hierarchy
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: theme_minimal removes spines, subtle major grid, minor grid removed,
-          custom strip styling, panel spacing configured.
+        comment: theme_minimal, subtle two-level grid, custom backgrounds, generous
+          panel spacing — good but not every detail polished
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Gain and phase margins visually highlighted with colored segments
-          and bold labels creating clear focal points. Different marker shapes distinguish
-          crossover types.
+        comment: Color-coded GM/PM with distinct marker shapes create clear focal
+          points and visual hierarchy
     spec_compliance:
       score: 15
       max: 15
@@ -125,28 +117,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct dual-panel Bode plot with magnitude on top, phase on bottom.
+        comment: Correct dual-panel Bode plot with magnitude on top and phase on bottom
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: dual-panel, gain/phase margin annotations,
-          reference lines, log axis, grid.'
+        comment: 'All features present: dual-panel, GM/PM annotations, reference lines,
+          log scale, grid'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Frequency on log x-axis, magnitude in dB on top, phase in degrees
-          on bottom.
+        comment: Frequency on log x, magnitude in dB, phase in degrees
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows required format. No legend needed for single-series
-          with annotations.
+        comment: Title format correct; no legend needed for single-series with annotations
     data_quality:
       score: 14
       max: 15
@@ -156,23 +146,20 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Shows third-order system with gain/phase margins and crossover points.
-          Frequency range captures dynamics but is narrower than ideal for showing
-          full passband.
+        comment: Shows gain/phase rolloff, margins, crossover frequencies; could show
+          more prominent resonance peak
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic control systems transfer function with plausible stability
-          margins.
+        comment: Third-order transfer function is a realistic control systems scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values physically appropriate. GM=8.1 dB and PM=32 degrees are realistic
-          engineering values.
+        comment: Realistic frequency range, magnitude, and phase values
     code_quality:
       score: 10
       max: 10
@@ -182,33 +169,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data generation, DataFrame construction, plot,
-          save.'
+        comment: 'Linear flow: imports → data → plot → save'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic analytic transfer function.
+        comment: Fully deterministic transfer function computation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used in implementation.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized. Multiple DataFrames necessary for plotnine
-          grammar.
+        comment: Clean, well-structured code with appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300 using current API.
+        comment: Saves as plot.png with dpi=300
     library_mastery:
       score: 7
       max: 10
@@ -218,15 +203,15 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Good ggplot grammar usage: aes, geom layers, facet_wrap with free_y,
-          scale_x_log10, CategoricalDtype for panel ordering.'
+        comment: 'Good use of ggplot grammar: aes, geom layers, facet_wrap, scales,
+          theme'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: facet_wrap with free_y for dual panels is distinctively ggplot. Long-format
-          data with ordered categoricals is idiomatic.
+        comment: facet_wrap with free_y scales, CategoricalDtype ordering, layer composition
+          — distinctive to grammar-of-graphics
   verdict: REJECTED
 impl_tags:
   dependencies: []

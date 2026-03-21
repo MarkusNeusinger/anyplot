@@ -1,6 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 bode-basic: Bode Plot for Frequency Response
 Library: plotnine 0.15.3 | Python 3.14.3
+Quality: 89/100 | Created: 2026-03-21
 """
 
 import numpy as np
