@@ -1,7 +1,7 @@
 library: pygal
 specification_id: line-reaction-coordinate
 created: '2026-03-21T20:46:01Z'
-updated: '2026-03-21T21:07:06Z'
+updated: '2026-03-21T21:18:10Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23388404498
 issue: 4409
@@ -13,32 +13,36 @@ preview_html: https://storage.googleapis.com/pyplots-images/plots/line-reaction-
 quality_score: 85
 review:
   strengths:
-  - Excellent data quality with realistic chemistry context and proper units
-  - Clean, well-structured deterministic code with vectorized curve generation
-  - Good use of pygal-specific features (node customization, stroke_style dasharray)
-  - Custom y-labels at chemically meaningful energy values
-  - Colorblind-safe palette with clear visual hierarchy
+  - Excellent data quality with realistic chemistry context, proper units, and scientifically
+    accurate values
+  - Clean, well-structured deterministic code with vectorized numpy curve generation
+  - Good use of pygal-specific features (node customization, stroke_style dasharray,
+    HTML export)
+  - Custom y-labels at chemically meaningful energy values (20, 50, 80, 100, 120)
+  - Colorblind-safe palette with clear visual hierarchy and color-coded indicators
   weaknesses:
-  - Labels for reactants/products/transition state are in legend only, not directly
+  - Labels for reactants/products/transition state appear in legend only, not directly
     on the plot (pygal limitation)
   - Ea and ΔH indicators are dashed lines rather than double-headed arrows (pygal
     limitation)
-  - Some wasted whitespace in upper plot area
+  - Some wasted whitespace in upper plot area above the 120 kJ/mol mark
   image_description: 'The plot shows a reaction coordinate energy diagram rendered
-    as a pygal XY chart. A smooth blue curve traces the energy profile from left to
-    right, starting flat at ~50 kJ/mol (reactant level), rising steeply to a peak
-    at ~120 kJ/mol (transition state), then descending to ~20 kJ/mol (product level).
-    Two horizontal dashed gray lines span the full width at the reactant (50) and
-    product (20) energy levels. A vertical dashed teal/blue line connects the reactant
-    level to the transition state peak, representing Ea = 70 kJ/mol. A vertical dashed
-    orange line on the right side connects the reactant and product levels, representing
-    ΔH = -30 kJ/mol. A large dark blue dot marks the transition state at the peak.
-    Smaller blue dots mark the reactant and product positions. The y-axis shows "Potential
-    Energy (kJ/mol)" with labels at 20, 50, 80, 100, 120. The x-axis shows "Reaction
-    Coordinate" with no numeric labels. The title reads "line-reaction-coordinate
-    · pygal · pyplots.ai". A legend at the bottom lists: Energy Profile, Ea = 70 kJ/mol,
-    ΔH = -30 kJ/mol, Transition State (‡), Reactants (50 kJ/mol), Products (20 kJ/mol).
-    The background is white with a light gray (#FAFBFC) plot area.'
+    as a pygal XY chart on a white background with a light gray (#FAFBFC) plot area.
+    A smooth blue curve traces the energy profile from left to right, starting flat
+    at ~50 kJ/mol (reactant level), rising steeply to a peak at ~120 kJ/mol (transition
+    state), then descending smoothly to ~20 kJ/mol (product level). Two horizontal
+    dashed gray lines span the full width at the reactant (50) and product (20) energy
+    levels, providing reference. A vertical dashed teal line connects the reactant
+    energy level to the transition state peak, representing Ea = 70 kJ/mol, with dots
+    at both endpoints. A vertical dashed orange line on the right side connects the
+    reactant and product energy levels, representing ΔH = -30 kJ/mol, also with endpoint
+    dots. A large dark blue dot marks the transition state near the curve peak. Smaller
+    blue dots mark the reactant (left, 50 kJ/mol) and product (right, 20 kJ/mol) positions.
+    The y-axis shows "Potential Energy (kJ/mol)" with custom labels at 20, 50, 80,
+    100, 120. The x-axis shows "Reaction Coordinate" with no numeric labels. The title
+    reads "line-reaction-coordinate · pygal · pyplots.ai". A legend at the bottom
+    lists all series: Energy Profile, Ea = 70 kJ/mol, ΔH = -30 kJ/mol, Transition
+    State (‡), Reactants (50 kJ/mol), Products (20 kJ/mol).'
   criteria_checklist:
     visual_quality:
       score: 27
@@ -49,9 +53,9 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'Font sizes explicitly set (title=60, label=40, major_label=36, legend=32,
-          value=28). All text readable. Minor: monospace legend rendering slightly
-          less clean.'
+        comment: Font sizes explicitly set (title=60, label=40, major_label=36, legend=32,
+          value=28). All text readable. Legend text slightly small relative to chart
+          area.
       - id: VQ-02
         name: No Overlap
         score: 6
@@ -76,15 +80,15 @@ review:
         score: 3
         max: 4
         passed: true
-        comment: Plot fills reasonable portion of canvas. Some wasted whitespace at
-          top of plot area.
+        comment: Plot fills reasonable portion of canvas with explicit margins. Some
+          wasted whitespace above 120 mark.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis has units (kJ/mol). X-axis label appropriate for arbitrary
-          reaction progress.
+        comment: Y-axis has units (kJ/mol). X-axis appropriate for arbitrary reaction
+          progress.
     design_excellence:
       score: 13
       max: 20
@@ -101,8 +105,8 @@ review:
         score: 4
         max: 6
         passed: true
-        comment: X-axis labels hidden, subtle grid, custom y-labels at chemically
-          meaningful values.
+        comment: X-axis labels hidden, subtle grid via foreground_subtle, custom y-labels
+          at chemically meaningful values.
       - id: DE-03
         name: Data Storytelling
         score: 4
@@ -119,7 +123,8 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct reaction coordinate energy diagram with smooth curve.
+        comment: Correct reaction coordinate energy diagram with smooth curve and
+          clear maximum.
       - id: SC-02
         name: Required Features
         score: 3
@@ -138,7 +143,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Correct title format. Descriptive legend labels with values.
+        comment: Correct title format. Descriptive legend labels with energy values.
     data_quality:
       score: 14
       max: 15
@@ -216,7 +221,7 @@ review:
         passed: true
         comment: 'Uses pygal-specific: SVG-native with HTML export, node dict customization,
           stroke_style dasharray, tooltip_border_radius.'
-  verdict: APPROVED
+  verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
