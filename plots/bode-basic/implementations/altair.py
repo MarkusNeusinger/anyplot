@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 bode-basic: Bode Plot for Frequency Response
-Library: altair | Python 3.13
-Quality: pending | Created: 2026-03-21
+Library: altair 6.0.0 | Python 3.14.3
+Quality: 85/100 | Created: 2026-03-21
 """
 
 import altair as alt
