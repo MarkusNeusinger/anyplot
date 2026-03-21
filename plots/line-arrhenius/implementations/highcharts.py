@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 line-arrhenius: Arrhenius Plot for Reaction Kinetics
-Library: highcharts | Python 3.13
-Quality: pending | Created: 2026-03-21
+Library: highcharts unknown | Python 3.14.3
+Quality: 85/100 | Created: 2026-03-21
 """
 
 import tempfile
