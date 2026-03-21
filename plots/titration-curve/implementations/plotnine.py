@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 titration-curve: Acid-Base Titration Curve
-Library: plotnine | Python 3.13
-Quality: pending | Created: 2026-03-21
+Library: plotnine 0.15.3 | Python 3.14.3
+Quality: 80/100 | Created: 2026-03-21
 """
 
 import numpy as np
