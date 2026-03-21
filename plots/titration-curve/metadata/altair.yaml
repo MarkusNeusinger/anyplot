@@ -1,7 +1,7 @@
 library: altair
 specification_id: titration-curve
 created: '2026-03-21T22:13:02Z'
-updated: '2026-03-21T22:17:41Z'
+updated: '2026-03-21T22:25:32Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23389866023
 issue: 4407
@@ -10,33 +10,36 @@ library_version: 6.0.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/titration-curve/altair/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/titration-curve/altair/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/titration-curve/altair/plot.html
-quality_score: 87
+quality_score: 89
 review:
   strengths:
-  - Excellent scientific accuracy with proper titration chemistry calculations
-  - Custom color palette (blue/orange/purple) with good colorblind accessibility
-  - Clean, well-organized code with deterministic data generation
-  - Good use of Altair layer composition and interactive features
-  - Informative subtitle providing experimental context
+  - Scientifically accurate titration curve with proper chemistry calculations (no
+    random data)
+  - Excellent dual-axis implementation with resolve_scale for independent pH and derivative
+    axes
+  - Strong color palette with clear visual hierarchy (blue primary, orange derivative,
+    purple equivalence)
+  - 'All spec features implemented: equivalence point annotation, derivative overlay,
+    buffer region, correct axis labels'
+  - Interactive features (tooltips, zoom/pan) and HTML export leverage Altair strengths
   weaknesses:
-  - Buffer region shading is missing from the spec requirements
-  - Derivative curve is nearly invisible for most of its range (flat at 0 except for
-    narrow spike)
-  - No formal legend distinguishing the two curve series
-  - Derivative uses scaled overlay instead of secondary y-axis
+  - Buffer region shading is too faint at opacity 0.12 — barely visible in the rendered
+    plot
+  - Legend uses circle symbols instead of matching line styles (solid line vs dashed
+    line)
   image_description: The plot displays an acid-base titration curve for HCl (0.1 M,
-    25 mL) titrated with NaOH (0.1 M). The main curve is a solid blue line (#306998)
-    showing the characteristic S-shaped sigmoidal pH response, starting at pH ~1 and
-    rising steeply around 25 mL to reach pH ~12.5. A vertical dashed purple (#7B2D8E)
-    line marks the equivalence point at 25 mL, with a purple diamond marker at pH
-    7.0. An annotation in purple reads "Equivalence Point / 25 mL, pH 7.0" near the
-    marker. An orange (#E8833A) dashed line shows the scaled derivative (dpH/dV),
-    which hugs the x-axis for most of the range and spikes sharply at the equivalence
-    point. A faint horizontal dashed gray line at pH 7 provides a reference. The x-axis
-    is labeled "Volume of NaOH added (mL)" (0-50) and y-axis "pH" (0-14). Title reads
-    "titration-curve · altair · pyplots.ai" with subtitle "HCl (0.1 M, 25 mL) titrated
-    with NaOH (0.1 M) · Strong Acid / Strong Base". Background is light gray (#FAFBFC)
-    with white outer padding.
+    25 mL) titrated with NaOH (0.1 M). The title "titration-curve · altair · pyplots.ai"
+    appears top-left in bold black with a subtitle describing the chemistry. The main
+    blue (#306998) sigmoidal curve plots pH (left y-axis, 0–14) against Volume of
+    NaOH added in mL (x-axis, 0–50). An orange (#E8833A) dashed derivative curve (dpH/dV)
+    uses an independent right y-axis (0–~240), showing a sharp spike at the equivalence
+    point. A purple (#7B2D8E) vertical dashed line marks the equivalence point at
+    25 mL, with a purple diamond marker at pH 7.0 and a bold purple annotation reading
+    "Equivalence Point / 25 mL, pH 7.0". A very faint light-blue shaded area marks
+    the buffer region (pH 3–5) with an italic "Buffer Region" label. A horizontal
+    gray dashed reference line sits at pH 7. The legend in the top-right corner shows
+    circle symbols for "pH (titration curve)" in blue and "dpH/dV (derivative)" in
+    orange. The background is light gray (#FAFBFC) with white outer padding.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -47,8 +50,8 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 28pt, subtitle 18pt, axis titles
-          20pt, tick labels 16pt, annotations 14-15pt'
+        comment: 'All font sizes explicitly set: title 28pt, axis titles 20pt, tick
+          labels 16pt'
       - id: VQ-02
         name: No Overlap
         score: 6
@@ -60,20 +63,19 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Main curve visible but derivative curve barely visible for most of
-          its range
+        comment: Buffer region shading at opacity 0.12 is extremely faint
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Blue/orange/purple colorblind-safe palette with good contrast
+        comment: Blue/orange/purple palette is colorblind-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions with balanced margins
+        comment: Plot fills canvas well with balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -89,22 +91,24 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom palette, good typography, above defaults but not publication-ready
+        comment: Custom three-color palette, intentional hierarchy, custom background
+          and axis styling
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: View stroke removed, subtle grid, styled domain lines, custom padding
+        comment: View strokes removed, subtle grid, custom domain lines. Legend uses
+          generic circle symbols
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Equivalence point emphasized with marker, line, and annotation; subtitle
-          provides context
+        comment: Clear visual hierarchy with color-coded elements and highlighted
+          equivalence point
     spec_compliance:
-      score: 13
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -112,49 +116,50 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct line chart with S-shaped titration curve
+        comment: Correct sigmoidal line chart for titration curve
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: Missing buffer region shading; derivative uses scaled overlay instead
-          of secondary y-axis
+        passed: true
+        comment: 'All spec features present: equivalence point, derivative, buffer
+          region, correct labels'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=volume, Y=pH, full range shown
+        comment: Volume on x-axis, pH on y-axis, derivative on secondary y-axis
       - id: SC-04
         name: Title & Legend
         score: 2
         max: 3
-        passed: true
-        comment: Title format correct; inline labels instead of formal legend
+        passed: false
+        comment: Title correct but legend symbols are circles instead of matching
+          line styles
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Complete S-curve, equivalence point, and derivative; could show buffer
-          region context
+        comment: Complete titration curve with buffer region, transition zone, plateau,
+          and derivative peak
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Real chemistry: 0.1 M HCl titrated with 0.1 M NaOH'
+        comment: 'Real chemistry scenario: HCl titrated with NaOH'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Chemically accurate values throughout
+        comment: Realistic concentrations, volumes, and pH values
     code_quality:
       score: 10
       max: 10
@@ -164,13 +169,13 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean linear structure with no functions or classes
+        comment: Linear structure with no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic analytical chemistry equations
+        comment: Fully deterministic chemistry calculations
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -182,13 +187,13 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Well-organized with clear sections
+        comment: Appropriate complexity for dual-axis layered chart
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png and plot.html with current API
+        comment: Saves as plot.png and plot.html with current API
     library_mastery:
       score: 7
       max: 10
@@ -198,14 +203,14 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good declarative grammar usage with layer composition and proper
-          encoding types
+        comment: Good declarative API usage, manual legend workaround is not fully
+          idiomatic
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Interactive zoom/pan, tooltips, HTML export, monotone interpolation
+        comment: Uses resolve_scale, interactive(), tooltips, and HTML export
   verdict: REJECTED
 impl_tags:
   dependencies: []
@@ -214,10 +219,10 @@ impl_tags:
   - layer-composition
   - hover-tooltips
   - html-export
+  - custom-legend
   patterns:
   - data-generation
-  dataprep:
-  - normalization
+  dataprep: []
   styling:
-  - grid-styling
   - alpha-blending
+  - grid-styling
