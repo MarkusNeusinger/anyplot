@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 line-reaction-coordinate: Reaction Coordinate Energy Diagram
 Library: pygal 3.1.0 | Python 3.14.3
 Quality: 76/100 | Created: 2026-03-21
@@ -16,81 +16,69 @@ product_energy = 20.0  # kJ/mol
 activation_energy = transition_energy - reactant_energy  # Ea = 70 kJ/mol
 enthalpy_change = product_energy - reactant_energy  # ΔH = -30 kJ/mol
 
-# Generate smooth reaction coordinate curve using Gaussian-shaped barrier
+# Generate smooth energy profile
 n_points = 300
 reaction_coord = np.linspace(0, 10, n_points)
 
-# Build energy profile: reactant plateau → barrier → product plateau
+# Gaussian barrier centered at transition state
 sigma = 1.2
 peak_pos = 5.0
-barrier_height = transition_energy - reactant_energy
-base_curve = reactant_energy + barrier_height * np.exp(-0.5 * ((reaction_coord - peak_pos) / sigma) ** 2)
+base_curve = reactant_energy + (transition_energy - reactant_energy) * np.exp(
+    -0.5 * ((reaction_coord - peak_pos) / sigma) ** 2
+)
 
-# Smoothly transition to product energy on the right side
-transition_start = 6.5
-transition_end = 8.5
-for i in range(n_points):
-    x = reaction_coord[i]
-    if x > transition_start:
-        t = min((x - transition_start) / (transition_end - transition_start), 1.0)
-        smooth_t = t * t * (3 - 2 * t)  # Hermite smoothstep
-        base_curve[i] = base_curve[i] * (1 - smooth_t) + product_energy * smooth_t
+# Vectorized Hermite smoothstep transition to product energy
+t_raw = np.clip((reaction_coord - 6.5) / 2.0, 0.0, 1.0)
+smooth_t = t_raw * t_raw * (3 - 2 * t_raw)
+base_curve = base_curve * (1 - smooth_t) + product_energy * smooth_t
 
-# Flatten the tails
-for i in range(n_points):
-    x = reaction_coord[i]
-    if x < 1.5:
-        base_curve[i] = reactant_energy
-    elif x > 8.5:
-        base_curve[i] = product_energy
+# Vectorized tail flattening
+base_curve = np.where(reaction_coord < 1.5, reactant_energy, base_curve)
+base_curve = np.where(reaction_coord > 8.5, product_energy, base_curve)
 
-# Smooth the join regions with repeated moving average
-kernel_size = 17
-kernel = np.ones(kernel_size) / kernel_size
+# Smooth join regions with repeated convolution
+kernel = np.ones(17) / 17
 energy_curve = base_curve.copy()
 for _ in range(3):
-    padded = np.pad(energy_curve, kernel_size, mode="edge")
-    energy_curve = np.convolve(padded, kernel, mode="same")[kernel_size:-kernel_size]
+    padded = np.pad(energy_curve, 17, mode="edge")
+    energy_curve = np.convolve(padded, kernel, mode="same")[17:-17]
 
-# Convert to list of (x, y) tuples for pygal XY
-curve_points = [(float(reaction_coord[i]), float(energy_curve[i])) for i in range(n_points)]
+curve_points = list(zip(reaction_coord.tolist(), energy_curve.tolist(), strict=True))
 
-# Style
+# Colorblind-safe palette
+BLUE = "#306998"
+DARK_BLUE = "#1A4971"
+TEAL = "#2980B9"
+ORANGE = "#E67E22"
+GRAY = "#AAAAAA"
+
+# Style — y-guides at key energies serve as reference lines
 custom_style = Style(
     background="white",
-    plot_background="white",
-    foreground="#333",
-    foreground_strong="#333",
-    foreground_subtle="#ddd",
-    colors=(
-        "#306998",  # Main curve (Python Blue)
-        "#888888",  # Reactant dashed line
-        "#888888",  # Product dashed line
-        "#C0392B",  # Ea arrow
-        "#27AE60",  # ΔH arrow
-        "#306998",  # Transition state marker
-        "#306998",  # Reactant marker
-        "#306998",  # Product marker
-    ),
+    plot_background="#FAFBFC",
+    foreground="#2C3E50",
+    foreground_strong="#2C3E50",
+    foreground_subtle="#CCCCCC",
+    colors=(BLUE, GRAY, GRAY, TEAL, ORANGE, DARK_BLUE, BLUE, BLUE),
     title_font_size=60,
     label_font_size=40,
     major_label_font_size=36,
-    legend_font_size=36,
+    legend_font_size=32,
     value_font_size=28,
     stroke_width=5,
 )
 
-# Plot
+# Chart
 chart = pygal.XY(
     width=4800,
     height=2700,
     style=custom_style,
-    title="line-reaction-coordinate · pygal · pyplots.ai",
+    title="line-reaction-coordinate \u00b7 pygal \u00b7 pyplots.ai",
     x_title="Reaction Coordinate",
     y_title="Potential Energy (kJ/mol)",
     show_legend=True,
     legend_at_bottom=True,
-    legend_at_bottom_columns=5,
+    legend_at_bottom_columns=6,
     show_x_guides=False,
     show_y_guides=True,
     show_x_labels=False,
@@ -98,11 +86,11 @@ chart = pygal.XY(
     stroke=True,
     margin=80,
     margin_left=260,
-    margin_right=120,
-    margin_bottom=220,
+    margin_right=160,
+    margin_bottom=200,
     margin_top=120,
     range=(0, 145),
-    xrange=(0, 10),
+    xrange=(-0.2, 10.2),
     truncate_legend=-1,
     tooltip_border_radius=8,
 )
@@ -110,61 +98,61 @@ chart = pygal.XY(
 # Main energy curve
 chart.add("Energy Profile", curve_points, stroke_style={"width": 6}, show_dots=False, fill=False)
 
-# Reactant energy dashed line
+# Horizontal reference lines at reactant and product energy levels
 chart.add(
     None,
-    [{"value": (0.0, reactant_energy), "node": {"r": 0}}, {"value": (10.0, reactant_energy), "node": {"r": 0}}],
-    stroke_style={"width": 2, "dasharray": "12, 8"},
+    [(0.0, reactant_energy), (10.0, reactant_energy)],
+    stroke_style={"width": 3, "dasharray": "16, 8"},
+    show_dots=False,
+)
+chart.add(
+    None,
+    [(0.0, product_energy), (10.0, product_energy)],
+    stroke_style={"width": 3, "dasharray": "16, 8"},
     show_dots=False,
 )
 
-# Product energy dashed line
-chart.add(
-    None,
-    [{"value": (0.0, product_energy), "node": {"r": 0}}, {"value": (10.0, product_energy), "node": {"r": 0}}],
-    stroke_style={"width": 2, "dasharray": "12, 8"},
-    show_dots=False,
-)
-
-# Ea vertical indicator (reactant level to transition state)
-ea_x = 3.2
+# Ea vertical indicator (teal — colorblind-safe)
+ea_x = 2.8
 chart.add(
     f"Ea = {activation_energy:.0f} kJ/mol",
-    [{"value": (ea_x, reactant_energy), "node": {"r": 10}}, {"value": (ea_x, transition_energy), "node": {"r": 10}}],
-    stroke_style={"width": 4, "dasharray": "6, 4"},
+    [{"value": (ea_x, reactant_energy), "node": {"r": 14}}, {"value": (ea_x, transition_energy), "node": {"r": 14}}],
+    stroke_style={"width": 5, "dasharray": "8, 5"},
 )
 
-# ΔH vertical indicator (reactant level to product level)
-dh_x = 9.2
+# ΔH vertical indicator (orange — colorblind-safe)
+dh_x = 8.5
 chart.add(
-    f"ΔH = {enthalpy_change:.0f} kJ/mol",
-    [{"value": (dh_x, reactant_energy), "node": {"r": 10}}, {"value": (dh_x, product_energy), "node": {"r": 10}}],
-    stroke_style={"width": 4, "dasharray": "6, 4"},
+    f"\u0394H = {enthalpy_change:.0f} kJ/mol",
+    [{"value": (dh_x, reactant_energy), "node": {"r": 14}}, {"value": (dh_x, product_energy), "node": {"r": 14}}],
+    stroke_style={"width": 5, "dasharray": "8, 5"},
 )
 
-# Key point markers with labels
+# Transition state marker (larger, dark blue)
 chart.add(
-    "Transition State (‡)",
-    [{"value": (peak_pos, transition_energy), "node": {"r": 16}}],
+    "Transition State (\u2021)",
+    [{"value": (peak_pos, transition_energy), "node": {"r": 22}}],
+    stroke_style={"width": 0},
+    dots_size=22,
+)
+
+# Reactant marker
+chart.add(
+    f"Reactants ({reactant_energy:.0f} kJ/mol)",
+    [{"value": (1.0, reactant_energy), "node": {"r": 16}}],
     stroke_style={"width": 0},
     dots_size=16,
 )
 
-chart.add(
-    f"Reactants ({reactant_energy:.0f} kJ/mol)",
-    [{"value": (1.0, reactant_energy), "node": {"r": 14}}],
-    stroke_style={"width": 0},
-    dots_size=14,
-)
-
+# Product marker
 chart.add(
     f"Products ({product_energy:.0f} kJ/mol)",
-    [{"value": (9.0, product_energy), "node": {"r": 14}}],
+    [{"value": (9.5, product_energy), "node": {"r": 16}}],
     stroke_style={"width": 0},
-    dots_size=14,
+    dots_size=16,
 )
 
-# Custom y-axis labels
+# Custom y-axis labels at chemically meaningful values
 chart.y_labels = [
     {"label": "0", "value": 0},
     {"label": f"{product_energy:.0f}", "value": product_energy},
