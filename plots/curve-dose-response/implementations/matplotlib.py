@@ -1,4 +1,4 @@
-"""pyplots.ai
+""" pyplots.ai
 curve-dose-response: Pharmacological Dose-Response Curve
 Library: matplotlib 3.10.8 | Python 3.14.3
 Quality: 84/100 | Updated: 2026-03-23

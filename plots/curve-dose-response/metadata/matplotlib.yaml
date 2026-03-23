@@ -1,7 +1,7 @@
 library: matplotlib
 specification_id: curve-dose-response
 created: '2026-03-18T22:30:31Z'
-updated: '2026-03-23T20:51:05Z'
+updated: '2026-03-23T21:00:18Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23270128760
 issue: 4556
@@ -13,74 +13,77 @@ preview_html: null
 quality_score: 84
 review:
   strengths:
-  - Complete spec compliance with all required features (4PL fit, EC50 lines, error
-    bars, asymptotes, CI band, 2 compounds)
-  - Excellent code quality with proper reproducibility, clean structure, and justified
-    CI calculation complexity
-  - Good visual foundation with explicit font sizing, spine removal, and subtle grid
+  - All specification requirements fully implemented with no omissions
+  - EC50 annotations with arrow connectors create professional informative focal points
+  - 95% CI via delta method is technically sophisticated and visually effective
+  - Two-color palette with redundant shape encoding (circles vs squares) is accessible
+  - Custom legend ordering groups related elements logically
   weaknesses:
-  - Data point markers lack legend entries — only fitted curves appear in legend
-  - Four asymptote lines create visual clutter without adding interpretive value
-  - No EC50 value annotations — dashed reference lines lack labeled values, reducing
-    storytelling
-  - Generic library usage — could leverage annotate() or other distinctive matplotlib
-    features
+  - Legend fontsize (14pt) is below the recommended 16pt for this canvas size
+  - Hill slopes text at 13pt is slightly small for the output resolution
+  - Bottom asymptote lines at alpha=0.15 are nearly invisible
+  - Y-axis upper limit of 110 creates unused whitespace above data maximum
   image_description: The plot displays two sigmoidal dose-response curves on a logarithmic
-    x-axis (Concentration in M, from 10⁻⁹ to 10⁻⁴). Compound A (blue, circle markers)
-    rises steeply from ~5% to ~97% response with a 95% confidence interval band shown
-    in light blue shading. Compound B (coral/red, square markers) rises more gradually
-    from ~8% to ~80% response. Both compounds have dashed EC50 reference lines (horizontal
-    at half-maximal response, vertical dropping to x-axis) in their respective colors.
-    Dotted horizontal lines mark top and bottom asymptotes for both compounds. Error
-    bars (SEM) are visible on all data points with caps. The y-axis shows "Response
-    (%)" from -5 to 110. Top and right spines are removed, with a subtle y-axis grid
-    (alpha=0.2). Title reads "curve-dose-response · matplotlib · pyplots.ai" in the
-    correct format. Legend in upper left shows 95% CI (Compound A), Compound A (fit),
-    and Compound B (fit). The overall layout is clean with good proportions on a 16:9
-    canvas.
+    x-axis (Concentration in M) vs. linear y-axis (Response in %). Compound A is rendered
+    in steel blue (#306998) with circle markers and Compound B in terracotta (#C75233)
+    with square markers. Both compounds have fitted 4PL sigmoid curves with clearly
+    visible error bars (SEM) on each data point. A light blue 95% confidence interval
+    band envelopes Compound A's fitted curve. Dashed EC50 reference lines (horizontal
+    and vertical) intersect both curves at their half-maximal responses, with annotated
+    boxes showing EC50 = 299 nM for Compound A and EC50 = 6.7 µM for Compound B. Subtle
+    dotted asymptote lines mark the top and bottom plateaus for both compounds. Hill
+    slopes (A = 1.06, B = 0.81) are noted in italics at bottom-right. The legend in
+    the upper-left lists all five elements. Title reads "curve-dose-response · matplotlib
+    · pyplots.ai". Top and right spines are removed with a subtle y-axis grid.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 26
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title=24, labels=20, ticks=16, legend=16'
+        comment: Title 24pt, axis labels 20pt, ticks 16pt explicitly set. Legend at
+          14pt and Hill slopes at 13pt are below recommended minimums.
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No overlapping text; legend positioned cleanly in upper left
+        comment: No significant text overlap. Legend slightly overlaps CI band region
+          but remains readable.
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Markers well-sized, lines width=3, error bars with caps clearly visible
+        comment: Markers and lines clearly visible. Bottom asymptote lines at alpha=0.15
+          are nearly invisible.
       - id: VQ-04
         name: Color Accessibility
-        score: 3
-        max: 4
-        passed: true
-        comment: Blue and coral distinguishable but not optimal colorblind-safe pair
-      - id: VQ-05
-        name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 figure with tight_layout, good proportions
+        comment: Blue vs terracotta palette is colorblind-safe with redundant shape
+          encoding.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good 16:9 proportions. Y-axis extends to 110 creating some unused
+          space above data.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: Concentration (M), Response (%)'
+        comment: Concentration (M) and Response (%) with proper units. Correct title
+          format.
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -88,24 +91,23 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom palette, white marker edges, spine removal above defaults
-          but asymptote lines add visual noise
+        comment: Custom palette, white marker edges, rounded annotation boxes with
+          arrows. Above defaults but not publication-ready.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Spines removed, subtle y-grid, generous whitespace. Asymptote lines
-          could be more subtle
+        comment: Spines removed, subtle y-grid, graded alpha on asymptotes. Good refinement.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: EC50 reference lines create some narrative but no value annotations
-          to guide interpretation
+        comment: EC50 annotations create focal points. Two compounds with different
+          potencies tell a comparison story.
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -113,85 +115,90 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct sigmoidal dose-response curve with 4PL model
+        comment: Correct sigmoidal dose-response curves with 4PL logistic fits.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec requirements met: log x-axis, 4PL fit, EC50 lines, error
-          bars, asymptotes, 2 compounds, legend, CI band'
+        comment: 'All spec features present: log x-axis, 4PL fit, EC50 lines, error
+          bars, asymptotes, 2 compounds, legend, CI band.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=concentration (log scale), Y=response (%). Correct mapping
+        comment: X=concentration (log), Y=response (%). Full data range shown.
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Title format correct. Data point markers not labeled in legend
+        comment: Correct title format. Legend distinguishes all elements with clear
+          labels.
     data_quality:
-      score: 13
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Two compounds with different EC50, Hill slopes, and asymptotes. Good
-          variation
+        comment: Shows different potencies, Hill slopes, asymptotes, error bars, and
+          CI. Both curves span full sigmoidal range.
       - id: DQ-02
         name: Realistic Context
         score: 4
         max: 5
         passed: true
-        comment: Realistic pharmacological range but generic compound names
+        comment: Realistic pharmacological context. Generic compound names (A, B)
+          rather than real drug names.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Concentrations 1e-9 to 1e-4 M, response 0-100%, realistic EC50 values
+        comment: 8 concentration points over 5 log units. EC50 values in realistic
+          nM/µM range.
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: Linear flow with necessary function for curve_fit
+        comment: Has logistic4pl function (required for curve_fit) and format_ec50
+          helper. Justified but not pure flat structure.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set at top.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: All imports used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-structured, appropriate complexity
+        comment: Well-organized, appropriate complexity. Delta method for CI is sophisticated
+          but warranted.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300, bbox_inches=tight
+        comment: Saves as plot.png with dpi=300, bbox_inches=tight.
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -199,21 +206,21 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses ax methods throughout, errorbar, fill_between, hlines/vlines.
-          Idiomatic usage
+        comment: Consistent Axes methods, proper fig/ax pattern, legend handle reordering.
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: fill_between and errorbar styling but nothing highly distinctive
-          to matplotlib
+        passed: true
+        comment: Uses annotate with arrowprops/connectionstyle, fill_between, errorbar
+          with full styling, custom legend ordering.
   verdict: REJECTED
 impl_tags:
   dependencies:
   - scipy
   techniques:
-  - layer-composition
+  - annotations
+  - custom-legend
   patterns:
   - data-generation
   dataprep:
