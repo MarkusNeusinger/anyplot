@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 eye-diagram-basic: Signal Integrity Eye Diagram
-Library: seaborn | Python 3.13
-Quality: pending | Created: 2026-03-17
+Library: seaborn 0.13.2 | Python 3.14.3
+Quality: 84/100 | Updated: 2026-03-23
 """
 
 import matplotlib.colors as mcolors
