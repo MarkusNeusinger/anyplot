@@ -1,7 +1,7 @@
 library: seaborn
 specification_id: eye-diagram-basic
 created: '2026-03-17T23:35:29Z'
-updated: '2026-03-23T21:10:47Z'
+updated: '2026-03-23T21:22:24Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23221365116
 issue: 4561
@@ -10,100 +10,94 @@ library_version: 0.13.2
 preview_url: https://storage.googleapis.com/pyplots-images/plots/eye-diagram-basic/seaborn/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/eye-diagram-basic/seaborn/plot_thumb.png
 preview_html: null
-quality_score: 88
+quality_score: 82
 review:
   strengths:
-  - Excellent domain-appropriate dark theme design matching industry-standard eye
-    diagram aesthetics
-  - PowerNorm with gamma=0.35 provides excellent dynamic range in density visualization
-  - Realistic NRZ signal simulation with proper noise (5%), jitter (3%), and bandwidth-limiting
-    parameters
-  - Clean eye openings with well-defined crossing points from good data generation
-  - Subtle reference lines at 0V and 1V signal levels aid interpretation
+  - Excellent visual result with professional dark theme and inferno colormap
+  - Realistic NRZ signal data generation with proper jitter and noise simulation
+  - Good use of histogram2d with gaussian smoothing for density representation
+  - Clean well-structured code with proper seed and explicit font sizes
+  - Domain-appropriate design choices for signal integrity visualization
   weaknesses:
-  - No seaborn usage at all — implementation is entirely matplotlib/numpy/scipy
-  - Missing colorbar in code to explain density color mapping
-  - No eye height/width annotations (optional per spec)
-  image_description: The plot displays a signal integrity eye diagram on a dark/black
-    background using the inferno colormap. Two clear eye openings are visible spanning
-    0-1 UI and 1-2 UI on the horizontal axis. The horizontal axis is labeled "Time
-    (UI)" ranging from 0 to 2.0 with ticks at 0, 0.5, 1.0, 1.5, 2.0. The vertical
-    axis is labeled "Voltage (V)" ranging from approximately -0.05 to 1.2. Bright
-    yellow/orange bands at the 0V and 1V signal levels indicate high trace density,
-    while the dark eye openings show clean signal regions. Transitions between levels
-    appear as purple/magenta traces at approximately 0.5 UI and 1.5 UI, narrowing
-    into crossing points. Subtle dashed horizontal reference lines mark the 0V and
-    1V levels. A colorbar on the right shows "Trace Density" values. The title reads
-    "eye-diagram-basic · seaborn · pyplots.ai" in white text. Top and right spines
-    are removed; bottom and left spines are subtle gray.
+  - No seaborn import or usage at all - entire implementation is pure matplotlib +
+    scipy
+  - Missing optional eye height/width annotations from the spec
+  image_description: The plot displays a signal integrity eye diagram on a dark (near-black)
+    background using the inferno colormap. Two clear eye-shaped openings are visible
+    spanning 0-1 UI and 1-2 UI on the x-axis. Dense yellow/orange horizontal bands
+    at approximately 0.0V and 1.0V represent the high-density NRZ signal levels, with
+    transitions forming the vertical sides of the eye openings. The transitions show
+    a spread of purple/magenta traces indicating jitter and noise effects. A colorbar
+    on the right labeled "Trace Density" ranges from ~0 to ~14. The title reads "eye-diagram-basic
+    · seaborn · pyplots.ai", x-axis is "Time (UI)" with ticks at 0, 0.5, 1.0, 1.5,
+    2.0, and y-axis is "Voltage (V)" ranging from about -0.2 to 1.3. Subtle dashed
+    reference lines appear at 0V and 1V. Top and right spines are removed.
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt.
-          White on dark is crisp.'
+        comment: Font sizes explicitly set (title 24, labels 20, ticks 16). White-on-dark
+          readable. Colorbar text slightly small.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements.
+        comment: No overlapping text elements
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: PowerNorm gamma=0.35 ensures both low- and high-density regions visible.
-          Eye openings well-defined.
+        comment: Density heatmap well-rendered with good bin resolution
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Inferno colormap is perceptually uniform and colorblind-safe.
+        comment: Inferno is perceptually uniform and colorblind-safe
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: 16:9 figure fills canvas well with balanced margins.
+        comment: Good proportions, colorbar slightly cramped on right
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Time (UI) and Voltage (V) with appropriate units.
+        comment: Time (UI) and Voltage (V) with proper units
     design_excellence:
-      score: 16
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: Dark background is industry-standard for eye diagrams. Inferno with
-          PowerNorm creates striking professional visualization.
+        comment: Dark theme with inferno and PowerNorm is professional and domain-appropriate
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Top/right spines removed, subtle gray remaining spines, dashed reference
-          lines at signal levels.
+        comment: Spines removed, subtle reference lines, dark background with muted
+          colors
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Density heatmap immediately reveals signal quality through color
-          intensity.
+        comment: Density heatmap creates natural visual hierarchy, reference lines
+          guide interpretation
     spec_compliance:
       score: 14
       max: 15
@@ -113,50 +107,49 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct eye diagram using 2D histogram density heatmap.
+        comment: Correct eye diagram with density heatmap
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Density coloring, time in UI, voltage axis, synthetic NRZ data with
-          noise/jitter, smooth transitions.
+        comment: Has density coloring, NRZ, noise, jitter, smooth transitions. Missing
+          optional annotations.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Time on X (0-2 UI), voltage on Y. Full data range shown.
+        comment: X=Time in UI, Y=Voltage correctly mapped
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Title format correct. No colorbar in code to explain color mapping.
+        passed: true
+        comment: Title format correct, colorbar serves as legend
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: 'Shows all key eye diagram features: stable levels, transitions,
-          crossing points, jitter, noise spread.'
+        comment: Both eye openings visible, transitions show jitter spread, noise
+          visible in density variation
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: NRZ signal integrity is a real engineering scenario with domain-appropriate
-          parameters.
+        comment: NRZ signal integrity context is realistic and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 0-1V NRZ, 400 traces, 200 samples/UI, noise 5%, jitter 3% — all realistic.
+        comment: 0-1V NRZ levels with realistic noise and jitter parameters
     code_quality:
       score: 10
       max: 10
@@ -166,50 +159,50 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data generation, plot, style, save. No functions/classes.'
+        comment: Clean Imports-Data-Plot-Save flow
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set at top.
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: matplotlib.colors, matplotlib.pyplot, numpy, scipy.ndimage.'
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-structured. Appropriate complexity for NRZ simulation
-          and density heatmap.
+        comment: Appropriate complexity, clean histogram2d approach
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300, bbox_inches='tight'.
+        comment: Saves as plot.png, dpi=300
     library_mastery:
-      score: 3
+      score: 2
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 2
+        score: 1
         max: 5
         passed: false
-        comment: No seaborn import or usage. Entirely matplotlib/numpy/scipy.
+        comment: No seaborn import or usage at all. Entire implementation is pure
+          matplotlib + scipy.
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
         passed: false
-        comment: No seaborn-distinctive features. Could have used sns.heatmap(), sns.set_theme(),
-          or sns.color_palette().
-  verdict: APPROVED
+        comment: Zero seaborn features used. No statistical visualization, theming,
+          or data-oriented API.
+  verdict: REJECTED
 impl_tags:
   dependencies:
   - scipy
