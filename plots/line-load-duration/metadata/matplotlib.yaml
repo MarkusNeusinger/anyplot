@@ -1,0 +1,231 @@
+library: matplotlib
+specification_id: line-load-duration
+created: '2026-03-15T21:40:58Z'
+updated: '2026-03-15T22:04:50Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23119898933
+issue: 4586
+python_version: 3.14.3
+library_version: 3.10.8
+preview_url: https://storage.googleapis.com/pyplots-images/plots/line-load-duration/matplotlib/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/line-load-duration/matplotlib/plot_thumb.png
+preview_html: null
+quality_score: 92
+review:
+  strengths:
+  - Perfect spec compliance — every requirement implemented faithfully with engineering-appropriate
+    style
+  - Improved colorblind accessibility with well-separated red/amber/blue palette
+  - Strong data storytelling through color-coded regions, capacity tier lines, and
+    energy/peak callouts
+  - Effective use of path_effects for curve shadow and text stroke legibility
+  - Clean, simplified code compared to previous attempt
+  weaknesses:
+  - Capacity tier labels on the right are vertically close together, minor readability
+    concern
+  - Could push design further toward publication-ready with more typographic refinement
+  image_description: 'The plot displays a load duration curve for a mid-sized utility.
+    A thick dark curve (#1a1a2e) with a subtle drop-shadow monotonically decreases
+    from ~1,200 MW at the left to ~430 MW at the right across 8,760 hours. Three distinct
+    color-filled regions lie beneath the curve: red (#C62828, alpha 0.18) for Peak
+    Load on the far left (~0–800 h), amber/gold (#F9A825, alpha 0.18) for Intermediate
+    Load in the middle (~800–5,700 h), and blue (#1565C0, alpha 0.18) for Base Load
+    on the right (~5,700–8,760 h). Three horizontal dashed capacity tier lines are
+    drawn at 950 MW (red), 600 MW (amber), and 400 MW (blue), each labeled with capacity
+    name and MW value. Bold region labels ("PEAK LOAD", "INTERMEDIATE LOAD", "BASE
+    LOAD") sit within their respective fill areas. A boxed annotation reading "Total
+    Energy 6,052 GWh/year" with an arrow points to the curve midpoint. A red "Peak:
+    1,200 MW" callout marks the curve maximum. Legend in upper right with three colored
+    patches. Title: "line-load-duration · matplotlib · pyplots.ai". Background #fafafa,
+    top/right spines removed, subtle y-axis grid.'
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 24pt, axis labels 20pt, ticks
+          16pt, annotations 14-15pt. All perfectly readable.'
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Nearly all text well-separated. Minor: capacity tier labels vertically
+          close but readable.'
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Main curve at linewidth 2.8 with shadow clearly visible. Region fills
+          subtle but distinct.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Red/amber/blue well-separated for colorblind users. Improved from
+          previous attempt.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 16x9 figure with tight_layout. Plot fills canvas well, nothing cut
+          off.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive labels with units: Hours of Year (ranked by load), Power
+          Demand (MW).'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom palette, path effects, shadow, refined annotation boxes, custom
+          background. Professional polish above defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines removed, subtle grid, softened spine colors, FuncFormatter
+          for readable ticks, generous whitespace.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy with color-coded regions, capacity tiers,
+          peak callout, and energy annotation.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct load duration curve with monotonically decreasing sorted
+          values.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec requirements met: shaded regions, dashed tier lines, region
+          labels, energy annotation, professional style.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=ranked hours (0-8760), Y=load in MW sorted descending.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct. Legend with three colored patches matching
+          regions.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all aspects: peak/intermediate/base regions, capacity tiers,
+          total energy, realistic load profile.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Mid-sized utility with peak ~1200 MW and base ~400 MW. Neutral energy
+          systems context.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 8760 hours, 400-1200 MW range, ~6052 GWh/year. All sensible for domain.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Flat script: imports, data, plot, save. No functions or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) ensures deterministic output.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: patheffects, pyplot, ticker, numpy, Patch.'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-organized, appropriate complexity. No fake UI elements.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with dpi=300. Uses current API (np.trapezoid).
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Axes methods throughout, fill_between, axhline, annotate, FuncFormatter.
+          Idiomatic matplotlib.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: path_effects (SimpleLineShadow, withStroke), FuncFormatter, Patch
+          for custom legend. Distinctively matplotlib.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling

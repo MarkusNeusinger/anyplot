@@ -1,0 +1,234 @@
+library: matplotlib
+specification_id: psychrometric-basic
+created: '2026-03-15T21:52:01Z'
+updated: '2026-03-15T22:27:19Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23120046454
+issue: 4583
+python_version: 3.14.3
+library_version: 3.10.8
+preview_url: https://storage.googleapis.com/pyplots-images/plots/psychrometric-basic/matplotlib/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/psychrometric-basic/matplotlib/plot_thumb.png
+preview_html: null
+quality_score: 87
+review:
+  strengths:
+  - Full spec compliance with all psychrometric properties correctly computed and
+    displayed
+  - Strong data storytelling through HVAC process path with numbered state points
+    and descriptive annotation
+  - Professional color palette with line style differentiation for accessibility
+  - Clean deterministic code using proper psychrometric equations (Buck equation)
+  - Comfort zone and HVAC process create clear focal points in a complex chart
+  weaknesses:
+  - Some label crowding in the mid-chart region where wet-bulb and RH percentage labels
+    overlap around 15-25C
+  - Brown and orange-red colors for wet-bulb and enthalpy are close in hue, relying
+    on line style for differentiation
+  - Inline label fontsize of 13 is adequate but not generous for the information density
+  image_description: 'The plot displays a psychrometric chart with dry-bulb temperature
+    (°C) on the x-axis ranging from -10 to 50, and humidity ratio (g/kg dry air) on
+    the y-axis from 0 to 30. The saturation curve (100% RH) is drawn as a thick dark
+    blue line forming the upper boundary. Relative humidity curves from 10% to 90%
+    appear as thinner blue lines with percentage labels positioned along the right
+    side of each curve. Wet-bulb temperature lines (0°C to 30°C in 5°C steps) are
+    drawn as brown dashed diagonals with degree labels rotated at -45°. Enthalpy lines
+    (10 to 110 kJ/kg) appear as orange-red dash-dot diagonals with numeric labels
+    near the upper-left. Specific volume lines (0.78 to 0.94 m³/kg) are shown as light
+    purple dotted diagonals with decimal labels at the right edge. A shaded light-blue
+    comfort zone rectangle spans approximately 20-26°C with humidity ratios corresponding
+    to 30-60% RH, labeled "Comfort Zone" in bold blue text. A red HVAC process path
+    with arrows connects three numbered state points: 1 (35°C, ~17.5 g/kg) → 2 (13°C,
+    ~9 g/kg) → 3 (24°C, ~9.5 g/kg), with italic red text "Cool + Dehumidify → Reheat"
+    above. The legend in the upper-left identifies all five line types. Top and right
+    spines are removed, with subtle gridlines on both axes.'
+  criteria_checklist:
+    visual_quality:
+      score: 25
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All main font sizes explicitly set (title=24, labels=20, ticks=16,
+          legend=16). Inline chart labels at fontsize=13 adequate but slightly small
+          for dense regions.
+      - id: VQ-02
+        name: No Overlap
+        score: 4
+        max: 6
+        passed: false
+        comment: Some crowding where 50%/60% RH labels cluster; wet-bulb and enthalpy
+          labels overlap in mid-chart region around 15-25C.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Lines well-differentiated by style. Saturation curve visually prominent.
+          HVAC arrows and markers clear.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 3
+        max: 4
+        passed: true
+        comment: Brown and orange-red wet-bulb/enthalpy colors are somewhat close
+          in hue; line style differentiation compensates.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good 16:9 proportions, chart fills canvas well with balanced margins.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Both axes descriptive with units.
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Strong design with custom palette, intentional hierarchy, professional
+          engineering-diagram feel.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines removed, subtle grid (alpha=0.15), path effects for label
+          readability. Good refinement.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: HVAC process path with numbered state points tells clear engineering
+          narrative. Comfort zone provides context.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct psychrometric chart type.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: RH curves, wet-bulb, enthalpy, specific
+          volume, HVAC process, comfort zone.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct axis mapping. Range -10 to 50C as specified. Standard atmosphere.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct title format. Legend identifies all line types.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Comprehensive coverage of all psychrometric properties with multi-step
+          HVAC process.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real HVAC engineering scenario with proper psychrometric equations.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Standard psychrometric ranges with physically plausible HVAC state
+          points.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat script structure with no functions or classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic equation-based data.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean and well-organized code.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with dpi=300. No deprecated API.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of ax methods, FancyArrowPatch, Polygon, Line2D for custom
+          legend.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: FancyArrowPatch, patheffects, Polygon patches are distinctively matplotlib.
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  - patches
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling
+  - edge-highlighting

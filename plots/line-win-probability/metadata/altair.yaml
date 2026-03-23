@@ -1,0 +1,223 @@
+library: altair
+specification_id: line-win-probability
+created: '2026-03-20T12:32:22Z'
+updated: '2026-03-20T12:47:07Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23342814454
+issue: 4418
+python_version: 3.14.3
+library_version: 6.0.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/line-win-probability/altair/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/line-win-probability/altair/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/line-win-probability/altair/plot.html
+quality_score: 91
+review:
+  strengths:
+  - Excellent spec compliance with all required features implemented
+  - Strong data storytelling with annotated scoring events and game narrative
+  - Thoughtful team color palette (teal/muted red) avoiding accessibility issues
+  - Good use of Altair interactive features (selection, conditional encoding) for
+    HTML output
+  - Manual label positioning shows care in avoiding text collisions
+  weaknesses:
+  - TD Eagles 24-20 label positioned far from its data point creating visual disconnect
+  - Event annotation font size (15pt) could be slightly larger for better readability
+  image_description: 'The plot displays a win probability chart for an Eagles vs Cowboys
+    NFL game. The x-axis shows "Game Time (minutes)" from 0 to 60, and the y-axis
+    shows "Win Probability (%)" from 0 to 100. A dashed horizontal reference line
+    sits at 50%. The area above 50% is filled with a muted teal (Eagles) and below
+    50% with a muted brownish-red (Cowboys). A dark charcoal line traces the probability
+    over time. Gold/amber circle markers with dark outlines highlight 10 scoring events,
+    each labeled in bold text (e.g., "FG Cowboys 0-3", "TD Eagles 7-3"). Dashed vertical
+    lines mark quarter boundaries labeled "Kickoff", "Q2", "Q3", "Q4", "Final" at
+    the top. The title reads "Eagles vs Cowboys · line-win-probability · altair ·
+    pyplots.ai" with subtitle "Final Score: Eagles 27 - Cowboys 20". The chart tells
+    a story of a back-and-forth game with the Eagles ultimately pulling away in the
+    4th quarter.'
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set; event labels at 15pt slightly small
+          but readable
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Manual nudges prevent most overlap; TD Eagles 24-20 label positioned
+          far from data point
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Line 3.5px, area opacity 0.4, event markers size 220 with stroke
+          - all well adapted
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Teal vs brownish-red colorblind-safe, gold markers provide strong
+          contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 1600x900 canvas well-utilized with balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive with units: Game Time (minutes), Win Probability (%)'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Strong design with team color palette, gold markers, dark charcoal
+          line
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Grid disabled, view stroke removed, subtle dashed lines
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Annotated events, quarter markers, and subtitle guide viewer through
+          game narrative
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct win probability line chart with area fills
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: 50% line, team fills, annotations, final
+          score, quarter markers'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=game time, Y=win probability, full 0-100% range
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct title format with game context, no legend needed
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Momentum swings both ways, multiple event types, lead changes, decisive
+          ending
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: NFL game with realistic teams, scoring, and game flow
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Win probability 0-100%, 60-minute game, realistic scores
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear flow, no functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only altair, numpy, pandas - all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean code, interactive elements are native Altair features
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png and plot.html, current API
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert declarative grammar: layered composition, encoding types,
+          alt.datum, alt.Title'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: selection_point, alt.condition, voronoi hover - distinctive but only
+          visible in HTML
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  dataprep:
+  - interpolation
+  styling:
+  - alpha-blending

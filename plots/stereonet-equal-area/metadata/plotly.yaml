@@ -1,0 +1,238 @@
+library: plotly
+specification_id: stereonet-equal-area
+created: '2026-03-15T22:59:29Z'
+updated: '2026-03-15T23:34:00Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23121188861
+issue: 4576
+python_version: 3.14.3
+library_version: 6.6.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/stereonet-equal-area/plotly/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/stereonet-equal-area/plotly/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/stereonet-equal-area/plotly/plot.html
+quality_score: 88
+review:
+  strengths:
+  - Mathematically correct equal-area (Schmidt) projection implementation
+  - All spec requirements fully met (great circles, poles, density contours, grid,
+    tick marks, legend)
+  - Realistic geological data with four distinct feature types showing varied orientations
+  - Effective use of Plotly-specific features (interactive density toggle, hover tooltips,
+    HTML export)
+  - Clean annotation highlighting dominant bedding fabric cluster adds data storytelling
+  - Warm density contour gradient is visually appealing and informative
+  weaknesses:
+  - Design polish could be elevated further - color palette is good but not exceptional
+  - Some wasted canvas space on right side between stereonet and legend
+  - Markers could be slightly larger for optimal visibility at full resolution
+  image_description: 'The plot displays a lower-hemisphere equal-area (Schmidt) stereonet
+    projection on a white background. A black primitive circle defines the projection
+    boundary, with cardinal directions (N, S, E, W) labeled in bold black text and
+    degree marks (30°, 60°, 120°, 150°, 210°, 240°, 300°, 330°) in gray around the
+    perimeter. Tick marks appear every 10° around the circle edge, with longer ticks
+    at 30° intervals. Inside, subtle dotted gray grid lines show two concentric circles
+    (30° and 60° inclination) and N-S/E-W diameter lines. Four feature types are plotted
+    as colored circular markers with white borders: Bedding (dark blue, clustered
+    in the lower-center), Joint Set 1 (orange, clustered on the east side), Joint
+    Set 2 (teal, clustered in the south), and Fault (purple, scattered in the lower-left).
+    Color-coded great circles are drawn for representative planes of each type. Warm
+    yellow-orange-red density contours (Kamb-style KDE) highlight the bedding cluster
+    as the dominant concentration. An annotation with an arrow labels the bedding
+    cluster "Dominant NE-striking bedding fabric." A legend titled "Feature Type"
+    sits to the upper right outside the circle. Interactive toggle buttons ("Show
+    Density" / "Hide Density") appear at the bottom left. The title reads "stereonet-equal-area
+    · plotly · pyplots.ai" with subtitle "Lower Hemisphere, Equal-Area (Schmidt) Projection."'
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title=28, cardinal=22, degrees=15,
+          legend=20/18, annotation=14). All readable; annotation text slightly small.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or data elements
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Markers size 13 with white borders visible and distinguishable. Could
+          be slightly larger for optimal visibility.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue, orange, teal, purple palette is colorblind-safe with good contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Stereonet well-centered. Some empty space on right between circle
+          and legend.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive title with projection subtitle. Cardinal directions serve
+          as axis labels.
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Custom cohesive palette, warm density gradient, white marker edges.
+          Above defaults but not publication-level.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Axes hidden, subtle dotted grid, transparent contours, clean white
+          background.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Annotation highlights dominant bedding fabric. Density contours guide
+          eye. Clear feature type separation.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct equal-area Schmidt lower-hemisphere stereonet
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: great circles, poles, density contours,
+          grid, ticks, legend'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Strike/dip correctly converted to equal-area projection
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct title format and legend labels
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Four feature types with varied orientations, dip angles, and cluster
+          sizes
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Realistic geological field measurement scenario with plausible orientations
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Strike 0-360°, dip 0-90°, realistic distributions
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear flow, no functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean code. Interactive buttons are legitimate Plotly features.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png and plot.html with current API
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of go.Figure, go.Scatter, go.Contour, customdata, hovertemplate,
+          scaleanchor
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Interactive updatemenus buttons, customdata+hovertemplate, HTML export
+  verdict: REJECTED
+impl_tags:
+  dependencies:
+  - scipy
+  techniques:
+  - annotations
+  - hover-tooltips
+  - html-export
+  - polar-projection
+  - custom-legend
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - kde
+  styling:
+  - custom-colormap
+  - alpha-blending
+  - edge-highlighting
+  - grid-styling
+  - minimal-chrome

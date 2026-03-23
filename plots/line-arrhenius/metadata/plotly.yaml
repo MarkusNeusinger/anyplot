@@ -1,0 +1,226 @@
+library: plotly
+specification_id: line-arrhenius
+created: '2026-03-21T22:07:48Z'
+updated: '2026-03-21T22:11:48Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23389778034
+issue: 4408
+python_version: 3.14.3
+library_version: 6.6.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/line-arrhenius/plotly/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/line-arrhenius/plotly/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/line-arrhenius/plotly/plot.html
+quality_score: 90
+review:
+  strengths:
+  - All spec requirements fully implemented including secondary temperature axis and
+    Ea annotation
+  - Cohesive monochromatic blue color scheme with intentional design hierarchy
+  - Rich interactive hover tooltips showing all relevant quantities (T, 1000/T, ln(k),
+    k)
+  - Clean, well-structured code with appropriate complexity
+  - Realistic chemistry data with physically meaningful parameters
+  weaknesses:
+  - Markers could be slightly larger for maximum visual impact at this low data density
+  - Experimental noise is very low (R²=0.9999), making data appear almost perfectly
+    linear
+  image_description: The plot displays an Arrhenius plot with ln(k) on the y-axis
+    and 1000/T (K⁻¹) on the x-axis (reversed, so higher temperatures appear on the
+    right). Nine blue circular data points with white edges are plotted along a dark
+    navy regression line. A secondary x-axis at the top shows corresponding temperatures
+    from 300 K to 600 K. A styled annotation box near the center-top displays "Ea
+    = 75.0 kJ/mol" and "R² = 0.9999" with a light background and blue border. The
+    legend in the bottom-left shows "Linear Fit (R² = 0.9999)" and "Experimental Data".
+    The title reads "line-arrhenius · plotly · pyplots.ai" in dark blue. The background
+    is white with subtle dashed horizontal grid lines on the y-axis only. The overall
+    color scheme is a cohesive monochromatic dark-to-medium blue palette.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 28pt, axis labels 22pt, ticks
+          18pt, legend 16pt, annotation 20pt'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text; legend, annotation, and axis labels all well-positioned
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Markers size 14 with white edge clearly visible for 9 data points;
+          slightly small for optimal impact
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Monochromatic blue scheme is inherently colorblind-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills canvas well with balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive labels with units: 1000/T (K⁻¹) and ln(k)'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Cohesive dark blue palette, styled annotation box, white marker edges;
+          clearly above defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: plotly_white template, x-grid removed, subtle dashed y-grid, light
+          gray axis lines
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Annotation prominently displays Ea and R², secondary T axis provides
+          physical context
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct Arrhenius plot: ln(k) vs 1/T with linear regression'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: regression line, R², Ea annotation, secondary
+          T axis, visible markers'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=1000/T, Y=ln(k) correctly mapped with full data range
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct, legend labels appropriate
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear linear relationship with slight scatter; 9 points spanning
+          300-600K; minimal noise reduces variability demonstration
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: First-order decomposition with Ea=75 kJ/mol — physically realistic
+          chemistry
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Temperature 300-600K and rate constants spanning orders of magnitude
+          are sensible
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean imports → data → transform → plot → save, no functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set before noise generation
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only numpy and plotly.graph_objects imported, both used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity; invisible trace for secondary axis is necessary
+          Plotly workaround
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot.png at 4800x2700 and HTML with CDN
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Proper go.Figure() with go.Scatter traces, update_layout, secondary
+          overlaying axis
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Rich hovertemplate with customdata, HTML export, secondary overlaying
+          axis
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - hover-tooltips
+  - html-export
+  - manual-ticks
+  patterns:
+  - data-generation
+  dataprep:
+  - regression
+  styling:
+  - edge-highlighting
+  - grid-styling

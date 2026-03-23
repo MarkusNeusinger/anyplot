@@ -1,0 +1,240 @@
+library: highcharts
+specification_id: star-chart-constellation
+created: '2026-03-18T21:15:11Z'
+updated: '2026-03-18T21:52:02Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23267218114
+issue: 4560
+python_version: 3.14.3
+library_version: unknown
+preview_url: https://storage.googleapis.com/pyplots-images/plots/star-chart-constellation/highcharts/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/star-chart-constellation/highcharts/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/star-chart-constellation/highcharts/plot.html
+quality_score: 91
+review:
+  strengths:
+  - Exceptional design with radial gradient star markers creating realistic glow effect
+  - Real astronomical data with correct RA/Dec/magnitude values for 70+ named stars
+  - 'Comprehensive feature set: 15 constellations, ecliptic, Summer Triangle, background
+    stars, coordinate grid'
+  - Colorblind-safe palette with thoughtful color adjustments noted in comments
+  - Interactive HTML version exported alongside static PNG
+  - Strong data storytelling through magnitude-to-size/opacity mapping and Summer
+    Triangle highlight
+  weaknesses:
+  - Constellation lines at 0.4 opacity are quite faint — some constellations are hard
+    to trace visually
+  - Code is lengthy (~750 lines) due to inline star catalog data, though this is inherent
+    to the visualization
+  image_description: 'The plot displays a celestial star chart on a dark navy background
+    (#0a0e1a) with a radial gradient creating depth. Stars are rendered as white/pale
+    circular markers with radial gradient fills (bright center fading outward), where
+    brighter stars (lower magnitude) appear as larger markers — Sirius being the largest.
+    15 constellations are connected by thin, semi-transparent colored stick-figure
+    lines: Orion (sky blue), Ursa Major (gold), Cassiopeia (orchid purple), Leo (coral),
+    Cygnus (green), Lyra (teal), Gemini (lime), Taurus (taupe), Scorpius (red), Boötes
+    (mint), Aquila (blue), Canis Major (ice blue), Auriga (silver), Perseus (lavender),
+    and Andromeda (pink). Constellation names are labeled near their centroids in
+    matching colors with letter-spacing. A coordinate grid shows declination circles
+    at -30°, 0°, +30°, +60° as dotted circles and RA radial lines every 3 hours as
+    dotted lines. RA hour labels (0h–21h) appear around the circular boundary. A dashed
+    amber ecliptic line curves through the chart. The Summer Triangle asterism (Vega–Deneb–Altair)
+    is subtly indicated with dashed pale-yellow lines. Hundreds of faint background
+    stars add atmospheric depth. The title reads "star-chart-constellation · highcharts
+    · pyplots.ai" with a subtitle describing the projection and data scope.'
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Font sizes explicitly set (52px title, 30px subtitle, 26-28px labels,
+          24px grid labels). Subtitle slightly small relative to 3600px canvas.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Lyra label manually offset to avoid Cygnus overlap. Minor crowding
+          in Perseus/Auriga area.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Stars well-sized with magnitude differentiation. Constellation lines
+          at 0.4 opacity are intentionally faint but some hard to trace.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Explicitly designed colorblind-safe palette with documented color
+          adjustments.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square 3600x3600 appropriate for circular star chart. Good margins.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title in correct format. RA in hours, Dec in degrees with symbols.
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom 15-color colorblind-safe palette, radial gradient star markers,
+          dark theme with radial gradient background, amber ecliptic.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Axes hidden, dotted grid at 0.15 opacity, text outlines, letter-spacing
+          on title, generous margins.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Magnitude-to-size/opacity mapping, Summer Triangle asterism highlight,
+          ecliptic context, clear constellation identification.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct azimuthal equidistant projection from north celestial pole.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: magnitude sizing, constellation lines, labels,
+          coordinate grid, dark background, ecliptic.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: RA/Dec correctly projected. Magnitude inversely mapped to marker
+          size.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct. Legend disabled — constellations labeled directly
+          with colored text.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 70+ stars, 15 constellations, coordinate grid, ecliptic, background
+          stars, Summer Triangle.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real astronomical data with correct RA/Dec/magnitude values for named
+          stars.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Magnitude range -1.46 to ~3.7, declination -50 to +90, all astronomically
+          accurate.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat procedural structure, no functions or classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) and np.random.seed(99) for deterministic output.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-organized, no fake UI elements, appropriate complexity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png via Selenium. Current highcharts_core API.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Proper highcharts_core usage with Chart, HighchartsOptions, ScatterSeries/SplineSeries,
+          per-point marker customization.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Radial gradient fills, custom tooltip with HTML and point properties,
+          z-index layering, data labels, interactive HTML export.
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - annotations
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - normalization
+  styling:
+  - dark-theme
+  - gradient-fill
+  - alpha-blending
+  - grid-styling

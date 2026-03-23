@@ -1,0 +1,240 @@
+library: plotly
+specification_id: star-chart-constellation
+created: '2026-03-18T21:16:10Z'
+updated: '2026-03-18T22:00:00Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23267218428
+issue: 4560
+python_version: 3.14.3
+library_version: 6.6.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/star-chart-constellation/plotly/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/star-chart-constellation/plotly/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/star-chart-constellation/plotly/plot.html
+quality_score: 85
+review:
+  strengths:
+  - Excellent astronomical data quality with real star names, coordinates, and magnitudes
+    across 25+ constellations
+  - Strong thematic dark-sky design with cohesive color palette (warm star tones,
+    blue constellation lines, gold ecliptic)
+  - Good use of magnitude-to-size mapping creating natural visual hierarchy
+  - Clean, well-structured code with appropriate complexity
+  - Leverages Plotly Scattergl for performance and hover tooltips for interactivity
+  weaknesses:
+  - Label overlap in crowded regions (Orion area, Bootes/Arcturus, Canis Minor/Procyon)
+  - Uses flat Cartesian projection instead of the stereographic/azimuthal projection
+    specified in the spec
+  - Missing Milky Way band (noted as optional in spec but would enhance the chart)
+  image_description: The plot displays a star chart on a dark navy background (#0A0E1A)
+    with paper background (#060A14). Stars are rendered as cream/white circular markers
+    with sizes proportional to brightness (brighter stars like Sirius, Vega, and Rigel
+    appear as large dots; dimmer stars appear smaller). Approximately 90+ named stars
+    are plotted across 25+ constellations, with ~200 small background stars scattered
+    throughout. Constellation stick-figure lines are drawn in semi-transparent cornflower
+    blue connecting star pairs. Constellation names (e.g., "Orion", "Ursa Major",
+    "Cassiopeia", "Scorpius") appear in light blue text near each constellation's
+    centroid. The brightest stars (mag < 0.5) have individual name labels in faint
+    blue-white text. A dashed orange/gold ecliptic line curves across the chart. The
+    x-axis shows Right Ascension (reversed, 24h to 0h) and the y-axis shows Declination
+    (-75° to +75°). Grid lines are subtle dark blue. The title reads "star-chart-constellation
+    · plotly · pyplots.ai" in light blue at the top center.
+  criteria_checklist:
+    visual_quality:
+      score: 26
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 28pt, axis labels 22pt, ticks
+          16pt, constellation labels 14pt, star names 11pt). Star name annotations
+          slightly small but readable.
+      - id: VQ-02
+        name: No Overlap
+        score: 4
+        max: 6
+        passed: false
+        comment: 'Some label overlap: Bootes/Arcturus, Betelgeuse/Orion, Canis Minor/Procyon,
+          Perseus with nearby star marker.'
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Good magnitude-to-size mapping. Background stars appropriately subtle.
+          Constellation lines could be slightly more prominent.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: No colorblind issues. Warm whites on dark background with blue lines
+          provide excellent contrast.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good canvas utilization at 1600x900 with scale=3. Plot fills available
+          space with balanced margins.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Right Ascension with hour tick labels, Declination with degree suffix.
+          Descriptive and appropriate.
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Strong thematic design: dark navy sky, warm star colors by magnitude,
+          cornflower blue constellation lines. Clearly above defaults.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle low-opacity grid, dark theme, generous whitespace. Ecliptic
+          line adds refined detail.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Magnitude-based size hierarchy creates natural focal points. Constellation
+          lines guide the eye. Star color warm-grading adds visual depth.
+    spec_compliance:
+      score: 13
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct star chart with constellation lines. Uses flat Cartesian
+          rather than stereographic/azimuthal projection.
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: 'Most features present: stars, lines, labels, dark background, grid,
+          ecliptic. Missing projection and Milky Way band.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: RA correctly reversed on x-axis, Dec on y-axis. All data visible
+          within range.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title follows exact format. No legend needed for this chart type.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 90+ named stars across 25+ constellations, 200 background stars,
+          wide magnitude range.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real star names, coordinates, and magnitudes. Astronomically authentic
+          data.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All values astronomically accurate: Sirius at mag -1.46, correct
+          positions, realistic magnitude distribution.'
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean linear flow: imports, data, edges, processing, plotting, save.
+          No functions or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set before random background star generation.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: numpy, plotly.graph_objects, collections.defaultdict.'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-organized with None-separator pattern for constellation lines.
+          Appropriate complexity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot.png with correct dimensions. Also exports plot.html. Current
+          API.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of go.Figure with Scattergl traces, layout annotations,
+          and structured dict config.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses Scattergl for WebGL performance, custom hover tooltips, and
+          HTML export for interactivity.
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - hover-tooltips
+  - html-export
+  - manual-ticks
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - normalization
+  styling:
+  - dark-theme
+  - alpha-blending

@@ -1,0 +1,232 @@
+library: letsplot
+specification_id: curve-oc
+created: '2026-03-19T20:35:57Z'
+updated: '2026-03-19T21:13:02Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23315609119
+issue: 4553
+python_version: 3.14.3
+library_version: 4.9.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/curve-oc/letsplot/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/curve-oc/letsplot/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/curve-oc/letsplot/plot.html
+quality_score: 93
+review:
+  strengths:
+  - Excellent quality zone shading (green/yellow/pink) creates immediate visual context
+    for interpreting curves
+  - Four well-chosen sampling plans with independently varying n and c demonstrate
+    discrimination power differences
+  - Risk annotations (α=0.264, β=0.034) with styled red markers provide precise quantitative
+    storytelling
+  - Colorblind-safe Okabe-Ito palette with good luminance differentiation
+  - Clean refined theme with removed x-grid, subtle y-grid, and light axis lines
+  - layer_tooltips() with formatting leverages lets-plot distinctive interactive features
+  weaknesses:
+  - Manual construction of reference line dataframes instead of using geom_vline/geom_hline
+  - Zone labels could use slightly more refined positioning or sizing
+  image_description: 'The plot displays four Operating Characteristic (OC) curves
+    comparing acceptance sampling plans. The x-axis shows "Fraction Defective (p)"
+    ranging from 0 to 0.20, and the y-axis shows "Probability of Acceptance P(a)"
+    from 0 to 1. Three colored background zones divide the chart: a green "Acceptable
+    Quality" zone (0 to AQL=0.02), a pale yellow "Indifference Zone" (AQL to LTPD),
+    and a pink "Rejectable Quality" zone (LTPD=0.10 to 0.20). Four curves are plotted
+    in colorblind-safe colors: dark blue (n=50, c=1), vermillion/orange (n=100, c=2),
+    light blue (n=80, c=1), and teal (n=150, c=3). Two red circle markers with white
+    stroke highlight risk points on the n=50 c=1 curve: producer''s risk α=0.264 at
+    AQL and consumer''s risk β=0.034 at LTPD, with bold red labels. Dotted vertical
+    reference lines mark AQL and LTPD, with dashed horizontal lines connecting to
+    the y-axis. Bold "AQL" and "LTPD" labels are positioned near the bottom of the
+    chart. The title reads "curve-oc · letsplot · pyplots.ai" with an italic subtitle.
+    A legend box in the upper right lists all four sampling plans.'
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 24pt, axis titles 20pt, axis
+          text 16pt, legend text 16pt, legend title 18pt'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: All labels well-positioned with appropriate nudges, no overlapping
+          elements
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Lines at size=2.2 clearly distinguishable, risk markers at size=7
+          stand out
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Okabe-Ito inspired colorblind-safe palette with good luminance variation
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills canvas well, balanced margins, legend positioned in unused
+          space
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive labels with notation: Fraction Defective (p) and Probability
+          of Acceptance P(a)'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom palette, zone shading, styled risk markers, intentional typographic
+          hierarchy
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: X-grid removed, subtle y-grid, clean white background, light axis
+          lines, generous margins
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Quality zones create immediate context, risk markers as focal points,
+          subtitle contextualizes comparison
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct OC curve with smooth S-shaped curves
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features: binomial CDF, AQL/LTPD lines, alpha/beta markers,
+          4 curves, x 0-0.20'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=fraction defective, Y=probability of acceptance, correct ranges
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title follows exact format, legend labels match sampling plan descriptions
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Four plans with varying n and c, both risks annotated, full acceptance
+          range shown
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real-world quality inspection scenario with standard AQL/LTPD terminology
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Standard industry AQL=0.02, LTPD=0.10, realistic sample sizes 50-150
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean imports-data-plot-save flow, no functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic binomial CDF calculations
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: numpy, pandas, lets_plot, scipy.stats.binom'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, clean loop for curve computation
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot.png with scale=3 and plot.html, current API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Strong ggplot grammar usage, could use geom_vline/geom_hline instead
+          of manual line dataframes
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: layer_tooltips() with format/line chaining, dual PNG+HTML export,
+          scale_fill_identity()
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - scipy
+  techniques:
+  - annotations
+  - layer-composition
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling

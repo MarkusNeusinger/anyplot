@@ -1,0 +1,229 @@
+library: letsplot
+specification_id: scatter-pitch-events
+created: '2026-03-20T12:36:54Z'
+updated: '2026-03-20T13:06:11Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23342848969
+issue: 4417
+python_version: 3.14.3
+library_version: 4.9.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/scatter-pitch-events/letsplot/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/scatter-pitch-events/letsplot/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/scatter-pitch-events/letsplot/plot.html
+quality_score: 88
+review:
+  strengths:
+  - Excellent pitch rendering with all required FIFA markings including corner arcs
+    and penalty arcs
+  - Strong data storytelling through zone highlights, enlarged shot markers, and directional
+    arrows
+  - Custom legend and outcome key are clean and informative
+  - Colorblind-safe palette with good contrast against green pitch
+  - Perfect spec compliance with all required features implemented
+  weaknesses:
+  - Alpha difference between successful (0.92) and unsuccessful (0.85) events is negligible
+    — fill color carries the distinction but alpha provides no additional signal
+  - Zone highlight overlays are extremely subtle (alpha 0.06-0.08), barely perceptible
+  - Some marker congestion in the attacking penalty area where shots cluster
+  image_description: 'The plot displays a soccer pitch rendered on a green background
+    with white standard FIFA markings including penalty areas, goal areas, center
+    circle, halfway line, corner arcs, and goal posts. 100 match events are plotted
+    using distinct markers: yellow/gold circles for passes, red diamonds for shots,
+    orange triangles for tackles, and purple squares for interceptions. Directional
+    arrows in matching colors show pass and shot trajectories — passes distributed
+    across the pitch with a forward bias, shots originating from the attacking half
+    aimed at goal. Outcome encoding uses colored fill for successful events and white
+    fill for unsuccessful ones. Subtle zone highlights mark the Attacking Third and
+    Defensive Third with faint italic labels. A custom legend below the pitch shows
+    all four event types with their marker shapes, plus an outcome key. The title
+    reads "scatter-pitch-events · letsplot · pyplots.ai" with a descriptive subtitle,
+    all on a warm cream background.'
+  criteria_checklist:
+    visual_quality:
+      score: 26
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Font sizes explicitly set (title=26, subtitle=16, legend=15, zone=10,
+          outcome=12). All readable; zone annotations intentionally subtle.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: No text overlap. Minor marker clustering in attacking penalty area.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Distinct shapes and colors. Shots enlarged for emphasis. Slight crowding
+          near goal.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Gold, red, orange, purple palette with strong hue separation, colorblind-safe.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Pitch fills ~60% of canvas. Some vertical whitespace above and below.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: theme_void appropriate for pitch. Descriptive title and subtitle.
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom palette, cream background, typography hierarchy, zone highlights.
+          Above defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: theme_void, custom background, generous margins, clean legend. Well
+          polished.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Zone highlights, enlarged shots, directional arrows create tactical
+          narrative.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct scatter on accurately scaled soccer pitch.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: pitch markings, distinct markers, outcome
+          encoding, arrows, green background, correct aspect ratio.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y correctly mapped to pitch coordinates (0-105, 0-68).
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct title format and custom legend with all event types.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All 4 event types with realistic proportions and both outcome states.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Soccer match events with domain-appropriate positioning. Neutral
+          topic.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: FIFA-standard dimensions, 100 events within spec range, realistic
+          distributions.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear flow with no functions or classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used, explicit named imports.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-organized, appropriate complexity. No fake UI.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with scale=3. Current API.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good ggplot grammar with layered geoms, identity scales, coord_fixed,
+          theme_void.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Identity scale pattern, arrow(), dual HTML+PNG export show library-specific
+          knowledge.
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  - custom-legend
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - alpha-blending
+  - edge-highlighting

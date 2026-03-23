@@ -1,0 +1,223 @@
+library: matplotlib
+specification_id: line-win-probability
+created: '2026-03-20T12:30:49Z'
+updated: '2026-03-20T12:44:26Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23342814407
+issue: 4418
+python_version: 3.14.3
+library_version: 3.10.8
+preview_url: https://storage.googleapis.com/pyplots-images/plots/line-win-probability/matplotlib/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/line-win-probability/matplotlib/plot_thumb.png
+preview_html: null
+quality_score: 92
+review:
+  strengths:
+  - Excellent spec compliance — all required features (50% baseline, team color fills,
+    scoring annotations, quarter markers, final score) present and well-implemented
+  - Strong data storytelling through color fills, annotated scoring events, and natural
+    probability convergence
+  - Professional visual polish with path effects, custom team colors, and refined
+    typography
+  - Clean, reproducible code with appropriate complexity
+  weaknesses:
+  - Segment-by-segment line plotting loop is less efficient than using LineCollection
+  - Fill area visibility slightly reduced in narrow Cowboys-lead regions
+  image_description: The plot displays a win probability chart for an NFL game between
+    the Eagles and Cowboys. The x-axis shows "Play Number" (0–120) and the y-axis
+    shows "Win Probability" (0%–100%). A dashed horizontal line marks the 50% baseline.
+    The area above 50% is filled with a muted teal-green (Eagles) and below 50% with
+    navy blue (Cowboys). The main probability line changes color based on which team
+    leads. Six key scoring events are annotated with bold labels (FG 3-0, TD 7-3,
+    TD 10-7, TD 14-13, TD 20-14, TD 27-17) connected by thin lines to small dots on
+    the curve, each with a white stroke for readability. Quarter boundaries (Q1–Q4)
+    are shown as dotted vertical lines with labels at the bottom. The title reads
+    "Eagles 27 – Cowboys 20 · line-win-probability · matplotlib · pyplots.ai". A legend
+    in the upper left identifies the team color fills. The probability converges sharply
+    to 100% at game end. Top and right spines are removed; a subtle y-axis grid aids
+    reading.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt,
+          annotations 12pt, quarter labels 16pt'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: All annotations well-spaced with white path effects ensuring readability
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Line and markers clear; fill areas thin in narrow Cowboys-lead regions
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Teal green vs navy blue fully distinguishable for all color vision
+          types
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 16:9 figure with tight_layout, plot fills canvas well
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive labels with percentage formatting on y-axis
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Team-specific palette, color-changing line, path effects, approaching
+          broadcast quality
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines removed, subtle grid, dotted quarter dividers, white stroke
+          on annotations
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear game narrative through fills, annotations, and convergence
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct win probability line chart
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: baseline, fills, annotations, score,
+          quarters'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=play number, Y=win probability, full range shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title includes score and follows spec-id format; legend correct
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows FG/TD events, lead changes, momentum swings, convergence
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Eagles vs Cowboys NFL game with realistic 27-20 final score
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Realistic probability shifts and natural convergence
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean imports-data-plot-save flow, no functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with dpi=300
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good ax-based usage; segment loop less idiomatic than LineCollection
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: fill_between with interpolate, patheffects, FuncFormatter, mpatches
+          legend
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  - manual-ticks
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - cumulative-sum
+  styling:
+  - alpha-blending
+  - grid-styling
+  - edge-highlighting

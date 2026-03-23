@@ -1,0 +1,217 @@
+library: matplotlib
+specification_id: line-reaction-coordinate
+created: '2026-03-21T20:47:52Z'
+updated: '2026-03-21T20:51:34Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23388404489
+issue: 4409
+python_version: 3.14.3
+library_version: 3.10.8
+preview_url: https://storage.googleapis.com/pyplots-images/plots/line-reaction-coordinate/matplotlib/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/line-reaction-coordinate/matplotlib/plot_thumb.png
+preview_html: null
+quality_score: 91
+review:
+  strengths:
+  - Excellent spec compliance — all required features (Ea arrow, ΔH arrow, labeled
+    species, dashed reference lines) implemented precisely
+  - Strong color-coded visual storytelling with intentional color assignments for
+    each element
+  - Clean scientific diagram aesthetic with appropriate spine removal and subtle grid
+  - Deterministic, well-structured code with no unnecessary complexity
+  weaknesses:
+  - 'DQ-01: Only shows single-step reaction; could demonstrate richer feature coverage'
+  - 'DE-01: Could push further toward publication quality with more refined typography
+    or shading under the curve'
+  image_description: The plot displays a reaction coordinate energy diagram with a
+    smooth blue curve (#306998) tracing from reactants at 50 kJ/mol through a transition
+    state peak at ~122 kJ/mol down to products at 20 kJ/mol. The title reads "line-reaction-coordinate
+    · matplotlib · pyplots.ai" in medium-weight font. The y-axis is labeled "Potential
+    Energy (kJ/mol)" and the x-axis "Reaction Coordinate" (with no tick marks, appropriate
+    for arbitrary units). An orange double-headed arrow on the left shows Ea = 72
+    kJ/mol between reactant level and peak, with a white-background label. A green
+    double-headed arrow on the right shows ΔH = -30 kJ/mol between reactant and product
+    levels. A red dot marks the transition state with a label above. Dashed gray reference
+    lines extend at reactant (50) and product (20) energy levels. Top and right spines
+    are removed, subtle y-axis grid at alpha=0.2. Clean, professional scientific diagram.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 24pt, axis labels 20pt, tick
+          labels 16pt, annotations 16pt'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: All text labels well-positioned with no collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Line thickness 3.5, marker s=140, arrows linewidth=2 — all clearly
+          visible
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue, orange, green, red — four distinct hues, colorblind-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good canvas utilization, balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Y-axis with units, x-axis appropriate for arbitrary reaction progress
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Custom color palette with intentional color coding, white bbox backgrounds,
+          good typography hierarchy
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines removed, subtle grid, hidden x-ticks, clean whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Color-coded arrows communicate Ea and ΔH as key insights, transition
+          state highlighted
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct: smooth line plot for reaction coordinate energy diagram'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec requirements met: labels, arrows, dashed lines, smooth
+          curve'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=reaction coordinate, Y=potential energy, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct title format, no legend needed for annotated single-series
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows single-step exothermic reaction with all key features
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Chemistry domain, values from spec example, neutral educational context
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Realistic energy values for a chemical reaction
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports → data → plot → annotations → styling → save'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic data, no randomness
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All three imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-organized, appropriate complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with dpi=300, bbox_inches=tight
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of ax methods, FancyArrowPatch, proper hlines
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: FancyArrowPatch with arrowstyle is distinctively matplotlib, bbox
+          dict styling on text
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - patches
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - grid-styling
+  - edge-highlighting

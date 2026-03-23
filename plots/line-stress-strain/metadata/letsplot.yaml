@@ -1,0 +1,230 @@
+library: letsplot
+specification_id: line-stress-strain
+created: '2026-03-20T21:25:05Z'
+updated: '2026-03-20T21:53:26Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23363004980
+issue: 4413
+python_version: 3.14.3
+library_version: 4.9.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/line-stress-strain/letsplot/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/line-stress-strain/letsplot/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/line-stress-strain/letsplot/plot.html
+quality_score: 92
+review:
+  strengths:
+  - Excellent data storytelling with colored region bands that immediately communicate
+    the three deformation phases
+  - All spec requirements fully implemented including 0.2% offset line and elastic
+    modulus annotation
+  - Textbook-accurate mild steel properties with realistic noise
+  - Strong lets-plot idiomatic usage with distinctive tooltip features
+  - Clean, well-organized code with consolidated annotation DataFrames
+  weaknesses:
+  - Minor crowding of annotations in the elastic region (small area with multiple
+    labels)
+  - Red/purple color pair could be slightly improved for colorblind accessibility
+  image_description: 'The plot displays an engineering stress-strain curve for mild
+    steel on a light gray background. The x-axis shows "Engineering Strain" (0 to
+    0.35) and the y-axis shows "Engineering Stress (MPa)" (0 to 450). The main curve
+    is drawn as a thick blue line starting from the origin, rising steeply through
+    the elastic region, showing a brief yield plateau around 250 MPa, then curving
+    through strain hardening up to ~400 MPa (UTS), and finally declining through the
+    necking region to fracture at ~280 MPa. Three colored background bands distinguish
+    the regions: light blue for Elastic, light yellow for Strain Hardening, and light
+    pink for Necking, each labeled in gray italic text. Key points are marked with
+    filled circles: purple for Yield Point (250 MPa), red for UTS (400 MPa), and gray
+    for Fracture. A dashed pink line shows the 0.2% offset construction, and "E =
+    210 GPa" is annotated in blue italic. Dotted gray connector lines link points
+    to their labels. The title reads "line-stress-strain · letsplot · pyplots.ai"
+    in bold at the top. Only horizontal grid lines are shown, subtle and light.'
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All major text sizes explicitly set (title 24, axis title 20, axis
+          text 16). Annotation sizes 9-11 slightly small but readable.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Minor crowding in elastic region where multiple annotations are close
+          together, but all readable.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Main curve thick and visible. Key points use large filled circles
+          with white stroke. Offset line distinct.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 3
+        max: 4
+        passed: true
+        comment: Blue, purple, red, gray, pink palette avoids red-green. Red/purple
+          pair slightly challenging for some protanopia.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills canvas well with balanced margins at 1600x900 scaled 3x.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Engineering Strain and Engineering Stress (MPa) - descriptive with
+          units.
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom color palette, colored region bands, italic labels, connector
+          lines show design thought beyond defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Minimal theme, removed x-grid, subtle y-grid, removed ticks, custom
+          background, transparent panel.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Colored region bands communicate deformation phases. Annotated key
+          points guide viewer through material behavior.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct line plot showing stress-strain curve.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All required: region labels, critical points, elastic modulus, 0.2%
+          offset line.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=strain, Y=stress correctly mapped. Axes cover full range.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct. Legend suppressed in favor of direct annotations.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all regions: elastic, yield plateau, strain hardening, necking
+          to fracture.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Mild steel with accurate properties: E=210 GPa, yield=250 MPa, UTS=400
+          MPa.'
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: All values textbook-accurate for mild steel.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear flow with no functions or classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-organized, clear variable names, consolidated annotations DataFrame.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png via export_ggsave with scale=3.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert ggplot grammar with layered geoms, aes, scales, themes.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses layer_tooltips, geom_rect, geom_segment, HTML export. Missing
+          more advanced features.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - grid-styling
+  - alpha-blending
+  - edge-highlighting

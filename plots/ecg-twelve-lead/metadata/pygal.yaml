@@ -1,0 +1,225 @@
+library: pygal
+specification_id: ecg-twelve-lead
+created: '2026-03-19T20:07:49Z'
+updated: '2026-03-19T20:20:11Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23314441637
+issue: 4554
+python_version: 3.14.3
+library_version: 3.1.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/ecg-twelve-lead/pygal/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/ecg-twelve-lead/pygal/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/ecg-twelve-lead/pygal/plot.html
+quality_score: 92
+review:
+  strengths:
+  - Authentic ECG paper aesthetic with domain-appropriate color palette and grid styling
+  - Clinically correct 3x4 lead arrangement with proper waveform morphology per lead
+  - Black/blue color differentiation between limb and precordial leads adds visual
+    hierarchy
+  - 'Complete feature set: calibration pulses, rhythm strip, proper scale, lead labels'
+  - Clean, well-structured flat script with deterministic data generation
+  weaknesses:
+  - Redundant scale text (x_title and injected SVG annotation both show scale information)
+  - Scale annotation text (36px) is smaller than lead labels (48px)
+  image_description: 'The plot displays a 12-lead ECG on an authentic pink/salmon
+    ECG paper background with major (thicker, muted pink) and minor (thinner, lighter
+    pink) grid lines. The layout follows the standard clinical 3x4 grid: Row 1 shows
+    leads I, aVR, V1, V4; Row 2 shows II, aVL, V2, V5; Row 3 shows III, aVF, V3, V6.
+    A full-width Lead II rhythm strip spans the bottom. Limb leads (I, II, III, aVR,
+    aVL, aVF) are rendered in black, while precordial leads (V1-V6) are in deep blue,
+    creating a clear visual distinction. Each row has a 1mV calibration pulse at the
+    left margin. Lead labels are bold monospace text positioned above each waveform.
+    The title "ecg-twelve-lead · pygal · pyplots.ai" appears at the top center. Scale
+    annotations "25 mm/s | 10 mm/mV" and "25 mm/s · 10 mm/mV · 1 mV cal" appear at
+    the bottom. The waveforms show realistic P-QRS-T morphology with appropriate lead-specific
+    variations (inverted aVR, R-wave progression in V1-V6).'
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Font sizes explicitly set (title 48, labels 48, scale 36). All readable;
+          scale annotation slightly small.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text elements. Lead labels well-positioned.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Waveforms clearly visible with stroke widths 4-5px. Grid lines appropriately
+          subtle.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Black/blue distinction is colorblind-safe with excellent contrast
+          on pink background.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 3x4 grid plus rhythm strip fills canvas proportionally with tight
+          margins.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: x_title provides standard ECG scale with units, appropriate for domain.
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: Custom ECG paper palette, monospace font, black/blue lead differentiation.
+          Approaching publication quality.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Custom major/minor grid styling, no default axes. Minor redundancy
+          in scale text.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Color coding creates visual hierarchy between limb and precordial
+          leads. R-wave progression emphasized.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct multi-channel line plot in standard 3x4 clinical grid layout.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: grid layout, rhythm strip, ECG paper
+          grid, calibration pulses, scale, labels, realistic waveforms.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Time on X, voltage on Y, all 12 leads displayed with correct orientation.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title in correct format. Leads labeled directly on chart.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All 12 leads with distinct morphologies, inverted aVR, R-wave progression
+          V1-V6, multiple cardiac cycles.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Normal sinus rhythm ECG with realistic parameters. Neutral medical
+          context.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Amplitudes within realistic clinical ranges. Heart rate ~75 bpm.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat script with no functions or classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-organized. No fake functionality.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png via cairosvg. Current API.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of pygal.XY(), Style, allow_interruptions, stroke_style,
+          js=[].
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: allow_interruptions for line breaks, SVG post-processing, per-series
+          stroke_style.
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - cairosvg
+  techniques:
+  - annotations
+  - layer-composition
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - grid-styling

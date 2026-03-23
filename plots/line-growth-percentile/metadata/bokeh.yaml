@@ -1,0 +1,223 @@
+library: bokeh
+specification_id: line-growth-percentile
+created: '2026-03-19T19:52:46Z'
+updated: '2026-03-19T20:05:29Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23313901315
+issue: 4555
+python_version: 3.14.3
+library_version: 3.9.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/line-growth-percentile/bokeh/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/line-growth-percentile/bokeh/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/line-growth-percentile/bokeh/plot.html
+quality_score: 90
+review:
+  strengths:
+  - Excellent visual quality with all text sizes explicitly set and no overlap issues
+  - Graduated blue palette with appropriate clinical context (blue for boys)
+  - Strong data quality with realistic WHO-approximating growth curves
+  - Good use of Bokeh-specific features (varea, HoverTool, dual export)
+  - Clean KISS code structure with proper reproducibility
+  weaknesses:
+  - Title has descriptive prefix before the required spec-id format
+  - Design could be pushed further toward publication quality
+  image_description: The plot displays a pediatric growth chart for boys' weight-for-age
+    (0–36 months). Six graduated blue-toned percentile bands span from P3 to P97,
+    with darker blues (#1a5276) at the extremes (P3–P10, P90–P97) and lighter blues
+    (#85c1e9) near the median (P25–P50, P50–P75). The 50th percentile line is visually
+    emphasized with a thicker stroke. Percentile labels (P3, P10, P25, P50, P75, P90,
+    P97) appear on the right margin in dark blue. A red (#e74c3c) patient trajectory
+    line with white-bordered circle markers is overlaid, tracking from ~3.4 kg at
+    birth to ~14.8 kg at 36 months, roughly following the 25th–50th percentile range.
+    The x-axis reads "Age (months)" (0–36), y-axis reads "Weight (kg)" (0–21). A legend
+    in the top-left shows "Patient" and "Percentile bands (P3–P97)." The background
+    is light gray (#f8f9fa) with dashed subtle grid lines and refined axis styling
+    (no outline, no minor ticks).
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 36pt, axis labels 28pt, tick
+          labels 22pt, percentile labels 20pt'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or elements anywhere
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Bands clearly visible, patient markers size=18 with white border
+          stand out well
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue bands vs red patient line is colorblind-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good canvas utilization at 4800x2700 with generous margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Age (months) and Weight (kg) with proper units
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Thoughtful graduated blue palette, custom background, above defaults
+          but not publication-ready
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Outline removed, minor ticks hidden, dashed subtle grid, custom axis
+          colors
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Patient trajectory against percentile bands creates clear clinical
+          narrative with red focal point
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct: line chart with filled percentile bands and patient overlay'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: All 7 percentile curves, graduated colors, emphasized P50, right-margin
+          labels, blue for boys, patient overlay
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=age months, Y=weight kg, correct mapping
+      - id: SC-04
+        name: Title & Legend
+        score: 2
+        max: 3
+        passed: true
+        comment: Title has descriptive prefix before required format; legend labels
+          correct
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All percentile curves, bands, patient data spanning full range
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: WHO-style weight-for-age for boys, genuine clinical scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Birth weight ~3.4kg, 36-month ~14.8kg, matches WHO references
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports, data, plot, style, save'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-organized. HoverTool is legitimate Bokeh interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png via export_png, current API
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of ColumnDataSource, varea, figure, Label, Legend
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: HoverTool, varea, dual PNG+HTML export are distinctly Bokeh features
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - hover-tooltips
+  - html-export
+  - layer-composition
+  - custom-legend
+  patterns:
+  - data-generation
+  - columndatasource
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling
+  - edge-highlighting

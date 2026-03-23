@@ -1,0 +1,241 @@
+library: bokeh
+specification_id: area-elevation-profile
+created: '2026-03-15T21:51:53Z'
+updated: '2026-03-15T22:15:31Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23120069541
+issue: 4578
+python_version: 3.14.3
+library_version: 3.9.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/area-elevation-profile/bokeh/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/area-elevation-profile/bokeh/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/area-elevation-profile/bokeh/plot.html
+quality_score: 90
+review:
+  strengths:
+  - 'All previous review issues fully addressed: colorblind-safe Cividis palette,
+    increased right margin, multi_line segments replacing noisy scatter overlay'
+  - Professional layered fill creates convincing terrain depth effect
+  - Slope-colored profile line is both functional and aesthetically pleasing
+  - Full spec compliance including all optional features
+  - HoverTool for interactive HTML version leverages Bokeh core strength
+  - Realistic Swiss Alpine trail data with compelling terrain variation
+  weaknesses:
+  - Some dark Cividis segments slightly blend with blue fill in flat terrain sections
+  - Kandersteg label still marginally tight at right edge despite improvements
+  - Real place names with synthetic non-matching elevations is a minor data authenticity
+    concern
+  image_description: 'The plot displays an Alpine Trail Profile spanning 0-120 km
+    on the x-axis (Distance in km) and ~350-2100 m on the y-axis (Elevation in m).
+    The terrain silhouette is created by two layered varea fills — a lighter blue
+    (#306998 at 18% alpha) from the floor to the profile, and a darker blue (#1d3557
+    at 15% alpha) from the floor to the midpoint elevation, producing a subtle depth/gradient
+    effect. The profile line is rendered as multi_line segments colored by slope steepness
+    using the Cividis colormap: dark blue/teal for flat sections transitioning to
+    bright yellow for steep sections. Seven landmarks are annotated with dashed purple-gray
+    (#6d597a) vertical lines, solid dots with white borders, and bold dark text labels
+    showing name and elevation: Grindelwald (1358 m), Kleine Scheidegg (1822 m), Männlichen
+    (1043 m), Lauterbrunnen (1730 m), Mürren (907 m), Schilthorn Pass (863 m), and
+    Kandersteg (1077 m). The title reads "Alpine Trail Profile · area-elevation-profile
+    · bokeh · pyplots.ai" at 42pt. Two italic annotation notes appear in the upper
+    left: "Note: Vertical exaggeration ~10x" and "Profile color: dark (flat) → bright
+    (steep) [Cividis — colorblind-safe]". The background is off-white (#fafafa), x-grid
+    is hidden, y-grid is subtle dashed lines at low alpha. The toolbar is removed.'
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 42pt, axis labels 32pt, ticks
+          26pt, landmarks 22pt, notes 22-26pt. All readable.'
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Generally clean. Kandersteg label slightly tight at right edge despite
+          right-alignment and increased margin.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Profile multi_line (width 5) clearly visible. Layered varea fill
+          readable. Landmark dots (size 20) with white borders stand out. Some dark
+          Cividis colors slightly blend with blue fill.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Cividis palette is colorblind-safe. Good contrast. Major improvement
+          from attempt 2's green-to-red palette.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good canvas utilization with generous margins. Y-axis starts near
+          minimum elevation for efficient vertical space.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Distance (km) and Elevation (m) — descriptive with units.
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Layered dual-fill depth effect, Cividis slope coloring, custom background,
+          white-bordered landmark dots, intentional color hierarchy. Clearly above
+          defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: X-grid hidden, Y-grid subtle dashed (alpha 0.12), outline removed,
+          toolbar removed, axis lines customized, generous whitespace.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Swiss Alpine trail with named landmarks guides the viewer. Slope
+          coloring communicates terrain difficulty. Vertical exaggeration note provides
+          scientific context.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct area/line chart with filled terrain silhouette.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Filled area, labeled start/end, landmark annotations with vertical
+          markers, vertical exaggeration note, gradient slope coloring.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Distance on X, elevation on Y, correctly mapped.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title includes spec-id · library · pyplots.ai format. Slope color
+          annotation serves as inline legend.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Multiple peaks and valleys, varying steepness, 7 landmarks at diverse
+          elevations.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real Swiss Alpine locations. Neutral geographic topic.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 3
+        max: 4
+        passed: true
+        comment: Elevation range 450-2050m and 120km distance plausible for Alps.
+          Some landmark elevations don't match real locations.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean imports → data → plot → style → save. No functions or classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic. Good use of zip strict, list comprehensions, np.interp,
+          np.gradient.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png via export_png. Also exports HTML.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: ColumnDataSource, varea, multi_line, HoverTool, Label, Span — idiomatic
+          Bokeh patterns.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: HoverTool with vline mode, multi_line for colored segments, Cividis256,
+          dual PNG+HTML export — distinctively Bokeh.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - hover-tooltips
+  - html-export
+  - layer-composition
+  patterns:
+  - data-generation
+  - columndatasource
+  dataprep: []
+  styling:
+  - custom-colormap
+  - alpha-blending
+  - gradient-fill
+  - grid-styling

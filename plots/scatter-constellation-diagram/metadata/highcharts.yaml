@@ -1,0 +1,225 @@
+library: highcharts
+specification_id: scatter-constellation-diagram
+created: '2026-03-17T23:22:34Z'
+updated: '2026-03-17T23:53:09Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23220948648
+issue: 4562
+python_version: 3.14.3
+library_version: unknown
+preview_url: https://storage.googleapis.com/pyplots-images/plots/scatter-constellation-diagram/highcharts/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/scatter-constellation-diagram/highcharts/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/scatter-constellation-diagram/highcharts/plot.html
+quality_score: 86
+review:
+  strengths:
+  - Distance-based alpha blending on received symbols creates effective data storytelling
+    highlighting error magnitude
+  - Custom EVM annotation box with quality indicator bar using Highcharts renderer
+    API
+  - All spec requirements fully implemented including decision boundaries, equal aspect
+    ratio, and EVM annotation
+  - Realistic 16-QAM data with proper noise model and correct EVM calculation
+  - Clean well-structured code with proper reproducibility
+  weaknesses:
+  - EVM annotation box text appears small in rendered image despite explicit font
+    sizes
+  - Title adds extra prefix beyond required format
+  - Margins slightly generous reducing plot area utilization
+  image_description: The plot displays a 16-QAM constellation diagram on a white plot
+    area with a light gray canvas background. Sixteen orange diamond markers with
+    red borders represent ideal constellation points arranged in a 4x4 grid at ±1,
+    ±3 I/Q positions. 1000 blue semi-transparent circles represent received symbols
+    scattered around each ideal point, with varying opacity - points further from
+    their ideal position appear darker, creating a visual error-distance encoding.
+    Dashed gray decision boundary lines at -2, 0, and 2 on both axes divide the symbol
+    decision regions. The x-axis is labeled "In-Phase (I)" and y-axis "Quadrature
+    (Q)" with tick marks from -5 to 5. The title reads "16-QAM Constellation · scatter-constellation-diagram
+    · highcharts · pyplots.ai" with a subtitle showing SNR, symbol count, and constellation
+    point count. A legend in the top-right identifies the two series. An EVM annotation
+    box in the upper-left contains EVM and SNR values with a quality indicator bar.
+  criteria_checklist:
+    visual_quality:
+      score: 26
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: Font sizes explicitly set; main text readable but EVM box and boundary
+          labels appear small
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text elements
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Good marker sizing with distance-based alpha; slightly large for
+          1000 points but alpha compensates
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue/orange palette is colorblind-safe with strong contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Square canvas correct for aspect ratio; margins slightly generous
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: In-Phase (I) and Quadrature (Q) with standard notation
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom palette, visual hierarchy, shadow effects, quality bar - above
+          defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Grid replaced with decision boundaries, subtle plot border, legend
+          with shadow and rounded corners
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Distance-based alpha highlights errors, EVM metric provides context,
+          subtitle shows parameters
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct I/Q scatter constellation diagram
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: ideal markers, received dots, decision
+          boundaries, EVM, equal aspect'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: I/Q correctly mapped, symmetric axis limits at ±5
+      - id: SC-04
+        name: Title & Legend
+        score: 2
+        max: 3
+        passed: true
+        comment: Title contains required format with extra prefix; legend labels appropriate
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All 16 ideal points, 1000 received symbols, decision boundaries,
+          EVM metric
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real-world 16-QAM at SNR=20dB with correct EVM calculation
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Standard ±1, ±3 grid, realistic SNR operating point
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear flow with no functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean code, appropriate use of Highcharts renderer for custom annotations
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot.png via Selenium, also saves plot.html
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Proper use of Chart, ScatterSeries, plotLines, and renderer API
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Highcharts renderer API, addEvent, per-point color objects
+  verdict: REJECTED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - annotations
+  - html-export
+  - hover-tooltips
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting

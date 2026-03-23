@@ -1,0 +1,233 @@
+library: highcharts
+specification_id: bar-pareto
+created: '2026-03-20T07:23:31Z'
+updated: '2026-03-20T07:39:48Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23332978337
+issue: 4550
+python_version: 3.14.3
+library_version: unknown
+preview_url: https://storage.googleapis.com/pyplots-images/plots/bar-pareto/highcharts/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/bar-pareto/highcharts/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/bar-pareto/highcharts/plot.html
+quality_score: 90
+review:
+  strengths:
+  - Complete spec compliance with all required Pareto features (descending bars, cumulative
+    line, 80% threshold, secondary y-axis)
+  - Strong data storytelling through subtitle, Vital Few callout annotation, and 80%
+    threshold line
+  - Professional visual polish with shadows, rounded corners, and thoughtful typography
+    hierarchy
+  - Excellent realistic manufacturing defect data that perfectly suits the Pareto
+    chart concept
+  - Good use of Highcharts-specific features (annotations, plotLines, crosshair, shared
+    tooltip)
+  weaknesses:
+  - Minor data label overlap between cumulative percentage labels and bar count labels
+    near the first two bars
+  - Right y-axis title Cumulative % is slightly cramped against the chart edge
+  image_description: The plot displays a Pareto chart for manufacturing defect analysis.
+    Ten dark blue column bars are sorted in descending order from "Scratches" (187)
+    to "Oversize" (6), with data labels atop each bar. An orange spline cumulative
+    percentage line with circle markers rises from ~29.4% to 100%, plotted against
+    a secondary y-axis on the right (0-100%). A red dashed horizontal line marks the
+    80% threshold with an italic "80% threshold" label. A callout annotation at the
+    Discoloration point reads "Vital Few ← 5 types = 83.9%". The title reads "Manufacturing
+    Defect Analysis · bar-pareto · highcharts · pyplots.ai" with a subtitle "Top 4
+    defect types account for 75% of all quality issues — focus here first". The left
+    y-axis is labeled "Defect Count", the x-axis "Defect Type", and the right y-axis
+    "Cumulative %". A legend at the bottom shows "Defect Count" and "Cumulative %".
+    The bars have subtle shadows and rounded corners. Grid lines are dotted and subtle.
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 48px, axis titles 34px, tick
+          labels 26-28px, data labels 22-24px), all clearly readable
+      - id: VQ-02
+        name: No Overlap
+        score: 4
+        max: 6
+        passed: true
+        comment: Minor overlap between cumulative percentage labels and bar data labels
+          near the first two bars
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Bars well-sized, line markers with white border clearly visible,
+          data labels on both series
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue/orange palette is colorblind-safe with excellent contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good canvas utilization overall; right y-axis title somewhat cramped
+          against edge
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive labels: Defect Count, Cumulative %, Defect Type'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Strong design with custom palette, shadows, rounded corners, callout
+          annotation, professional typography
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Dotted grid lines, clean background, shadow effects, generous margins,
+          crosshair
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtitle communicates insight, Vital Few callout creates focal point,
+          80% threshold provides context
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Pareto chart with descending bars and cumulative line overlay
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: descending sort, cumulative line, 80%
+          threshold, markers at bar centers'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Categories on x-axis, counts on primary y-axis, cumulative % on secondary
+          y-axis
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title follows required format, legend labels are clear and accurate
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Full Pareto distribution with steep initial decline, clear 80/20
+          pattern
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Manufacturing defect analysis is a classic Pareto application, neutral
+          and domain-appropriate
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Defect counts 6-187 are realistic for manufacturing quality data
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports, data, chart config, series, export'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic hardcoded data, no randomness
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean and well-organized with practical regex workaround
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png via Selenium screenshot
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of highcharts-core Python API with from_dict pattern and
+          annotations module
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Annotations with callout, plotLines, shared tooltip, crosshair, shadows,
+          borderRadius
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - twin-axes
+  - annotations
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - cumulative-sum
+  styling:
+  - grid-styling
+  - edge-highlighting

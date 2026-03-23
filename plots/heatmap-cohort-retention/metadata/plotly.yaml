@@ -1,0 +1,232 @@
+library: plotly
+specification_id: heatmap-cohort-retention
+created: '2026-03-16T20:47:33Z'
+updated: '2026-03-16T20:59:38Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23165008247
+issue: 4570
+python_version: 3.14.3
+library_version: 6.6.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/heatmap-cohort-retention/plotly/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/heatmap-cohort-retention/plotly/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/heatmap-cohort-retention/plotly/plot.html
+quality_score: 91
+review:
+  strengths:
+  - Excellent triangular shape implementation with NaN masking for unavailable periods
+  - Custom 7-stop teal-green colorscale with good perceptual uniformity
+  - Smart conditional text coloring (dark on light cells, white on dark cells) for
+    universal readability
+  - Rich HTML hover tooltips showing cohort name, period, size, and retention — leveraging
+    Plotly interactivity
+  - Storytelling annotation guides viewer interpretation with improving trend across
+    cohorts
+  - Data shows realistic retention decay with plausible SaaS cohort sizes
+  weaknesses:
+  - Cell annotation font size (15) could be slightly larger for improved readability
+    at full resolution
+  - LM-01 could reach 5 by using plotly.express or more advanced Plotly patterns
+  image_description: 'The plot displays a triangular cohort retention heatmap with
+    10 monthly cohorts (Jan 2024 – Oct 2024) on the y-axis and Months 0–9 on the x-axis.
+    A custom teal-green sequential colorscale runs from very light green (low retention,
+    ~9%) to deep forest green (100% retention). Each cell contains a bold percentage
+    annotation with conditional text coloring — white text on dark cells, dark green
+    text on light cells. The y-axis labels include cohort sizes in parentheses (e.g.,
+    "Jan 2024 (n=1,200)"). The triangular shape is clearly visible: Jan 2024 spans
+    all 10 months while Oct 2024 has only Month 0. A colorbar on the right displays
+    "Retention Rate" with percentage ticks from 0–100%. A subtle green annotation
+    at the bottom reads "↑ Later cohorts retain better". The background is a soft
+    off-white (#fafafa) with the plotly_white template providing clean minimal chrome.
+    Cell gaps of 3px create clear visual separation between cells.'
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 28, axes 22, ticks 16-17, cell
+          text 15, colorbar 18/16). Cell annotation font slightly small.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text. Cell gaps and margins prevent collisions.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Heatmap cells well-sized with 3px gaps for clear separation.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Green sequential colorscale is colorblind-safe. Conditional text
+          coloring ensures readability.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills canvas well with balanced margins. Triangular white space
+          is inherent to data.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive labels: Months Since Signup, Signup Cohort.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom 7-stop teal-green colorscale, conditional text coloring, off-white
+          background, cell gaps. Clearly above defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: plotly_white template, 3px cell gaps, generous whitespace, custom
+          background color.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Storytelling annotation guides interpretation. Improving trend across
+          cohorts creates a clear narrative.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct triangular heatmap with NaN masking.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: triangular shape, 100% at period 0, cell
+          text, cohort sizes, colorbar, green colorscale.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=months since signup, Y=cohorts (reversed), Z=retention rate.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format. Colorbar serves as legend with Retention
+          Rate label.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows retention decay, triangular shape, cohort size variation, improving
+          trend, full range 9-100%.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: SaaS monthly cohort retention is a classic neutral business analytics
+          scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Realistic exponential decay, plausible cohort sizes (900-1450).
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean linear flow: imports, data, hover/annotations, plot, style,
+          save.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) ensures deterministic output.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only numpy and plotly.graph_objects, both fully utilized.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity. No fake UI or over-engineering.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot.png at 4800x2700 (1600x900 scale=3). Also exports HTML.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of go.Heatmap with proper parameters, fig.add_annotation,
+          update_layout.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Rich HTML hover tooltips, HTML export, colorbar customization — distinctly
+          Plotly capabilities.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - colorbar
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  - matrix-construction
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - custom-colormap
+  - edge-highlighting

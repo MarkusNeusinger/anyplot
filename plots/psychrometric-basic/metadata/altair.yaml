@@ -1,0 +1,241 @@
+library: altair
+specification_id: psychrometric-basic
+created: '2026-03-15T21:55:16Z'
+updated: '2026-03-15T22:32:05Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23120046544
+issue: 4583
+python_version: 3.14.3
+library_version: 6.0.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/psychrometric-basic/altair/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/psychrometric-basic/altair/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/psychrometric-basic/altair/plot.html
+quality_score: 86
+review:
+  strengths:
+  - Comprehensive psychrometric data computed from ASHRAE formulas with scientific
+    accuracy
+  - Excellent color-coded property line system with distinct hues, dash patterns,
+    and opacity hierarchy
+  - HVAC process path creates compelling visual focal point demonstrating practical
+    engineering application
+  - Comfort zone overlay adds real-world context for HVAC engineers
+  - Staggered RH label positions reduce overlap intelligently
+  - Interactive tooltips and point selection leverage Altair web-native strengths
+  - Full spec compliance with all required features present
+  weaknesses:
+  - Enthalpy and volume lines remain too faint (opacity 0.4-0.45) making them difficult
+    to trace across the chart
+  - Minor label crowding near the saturation curve where wet-bulb and enthalpy labels
+    converge
+  - Lambda with noqa suppression is a minor code smell
+  image_description: The plot displays a psychrometric chart with dry-bulb temperature
+    (°C) on the x-axis ranging from -10 to 50, and humidity ratio (g/kg) on the y-axis
+    from 0 to ~30. A thick dark blue saturation curve (100% RH) forms the upper boundary.
+    Nine additional RH curves (10%-90%) are drawn as lighter blue lines with percentage
+    labels staggered at various temperatures along the right side of the chart. Dashed
+    orange diagonal lines represent constant wet-bulb temperatures (0°C to 30°C in
+    5°C increments), labeled in bold orange near the saturation curve with slight
+    offsets. Dashed teal/cyan diagonal lines show constant enthalpy values, with labels
+    along the left edge. Dashed purple diagonal lines represent constant specific
+    volume (0.75-0.95 m³/kg), labeled near the bottom-right. A translucent green shaded
+    area marks the comfort zone (~20-26°C, approximately 6-13 g/kg) with an italic
+    "Comfort Zone" label. A bold red process path with filled circular markers connects
+    "Outdoor Air (35°C, 50% RH)" at the upper-right to "Supply Air (13°C, 100% RH)"
+    at the lower-left, illustrating a cooling and dehumidification process. The title
+    reads "psychrometric-basic · altair · pyplots.ai" with subtitle "Standard Atmosphere
+    (101.325 kPa) · HVAC Air Properties". Background is light gray (#fafbfc) with
+    very subtle gridlines.
+  criteria_checklist:
+    visual_quality:
+      score: 26
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Font sizes explicitly set (title 28pt, axis titles 22pt, ticks 18pt).
+          Property line labels at 11-13pt slightly small but readable with bold weight.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Staggered RH labels reduce overlap effectively. Minor crowding near
+          saturation curve where wet-bulb and enthalpy labels converge.
+      - id: VQ-03
+        name: Element Visibility
+        score: 4
+        max: 6
+        passed: true
+        comment: Saturation curve prominent. Enthalpy (0.45) and volume (0.4) lines
+          remain too faint to trace easily.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Colorblind-safe palette with distinct hues (blue, orange, teal, purple)
+          for each property type.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good canvas utilization at 1600x900 with balanced margins.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive labels with units on both axes.
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom color palette with intentional hierarchy. Professional technical
+          chart aesthetic above defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: View stroke removed, subtle grid (0.12 opacity), custom background,
+          domain color customized.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: HVAC process path creates focal point, comfort zone adds context,
+          opacity hierarchy guides viewer.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct psychrometric chart with all required curve types.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: RH curves, wet-bulb, enthalpy, volume, process
+          path, comfort zone, direct labels.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct x/y mapping with appropriate ranges.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct, property lines labeled directly on chart per
+          spec.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows all thermodynamic property types with full temperature range
+          coverage.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real HVAC engineering scenario with ASHRAE formulas at standard atmosphere.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Standard atmosphere, industry-standard ranges, physically correct
+          values.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear structure: imports, constants, data, plot, save.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic from thermodynamic equations.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only altair, numpy, pandas — all used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 1
+        max: 2
+        passed: false
+        comment: Lambda with noqa suppression, repeated humidity ratio calculations
+          in label positioning.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png and plot.html, current Altair 6.0 API.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good declarative API with layered composition, proper encoding channels,
+          configure methods.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Interactive selection, rich tooltips, HTML export, declarative layered
+          composition.
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - annotations
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - interpolation
+  styling:
+  - alpha-blending
+  - grid-styling

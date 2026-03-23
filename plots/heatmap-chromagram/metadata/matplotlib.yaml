@@ -1,0 +1,221 @@
+library: matplotlib
+specification_id: heatmap-chromagram
+created: '2026-03-17T22:25:13Z'
+updated: '2026-03-17T22:47:08Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23219179126
+issue: 4564
+python_version: 3.14.3
+library_version: 3.10.8
+preview_url: https://storage.googleapis.com/pyplots-images/plots/heatmap-chromagram/matplotlib/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/heatmap-chromagram/matplotlib/plot_thumb.png
+preview_html: null
+quality_score: 93
+review:
+  strengths:
+  - Excellent dark theme with cohesive music-inspired color palette (teal to gold)
+  - Outstanding data storytelling with chord region labels and transition effects
+  - Perfect spec compliance with all required features present
+  - Realistic chord progression (I-V-vi-IV) makes the visualization immediately meaningful
+  - PowerNorm effectively enhances contrast between active and quiet pitch classes
+  weaknesses:
+  - Custom colormap is not perceptually uniform (minor accessibility concern)
+  - Could leverage more distinctive matplotlib features for higher LM score
+  image_description: 'The plot displays a chromagram heatmap on a dark background
+    (#0a0a12). The Y-axis shows all 12 pitch classes (C through B) in monospace font.
+    The X-axis shows time from 0 to 8 seconds with major ticks at each second and
+    minor ticks at 0.25s intervals. The title reads "heatmap-chromagram · matplotlib
+    · pyplots.ai" in light gray. A colorbar on the right labeled "Energy" shows a
+    scale from 0.0 to 1.0. The custom colormap transitions from deep charcoal (low
+    energy) through teal to warm gold/yellow (high energy). Four chord regions are
+    labeled in italic at the top: "C maj" (0-2s), "G maj" (2-4s), "A min" (4-6s),
+    and "F maj" (6-8s), separated by subtle dashed vertical dividers. The chord patterns
+    are clearly visible — C major shows high energy in C, E, G rows; G major in G,
+    B, D; A minor in A, C, E; F major in F, A, C. Harmonic bleeding transitions are
+    visible at chord boundaries. All spines are removed and the colorbar outline is
+    hidden.'
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt,
+          colorbar 18pt, chord labels 15pt'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text anywhere
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: PowerNorm enhances contrast excellently between quiet and active
+          regions
+      - id: VQ-04
+        name: Color Accessibility
+        score: 3
+        max: 4
+        passed: true
+        comment: Good luminance variation but not a standard perceptually-uniform
+          colormap
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills canvas well with tight_layout and compact colorbar
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Time (seconds) with units, Pitch Class descriptive, Energy on colorbar
+    design_excellence:
+      score: 17
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: Custom dark theme, music-inspired colormap, intentional typography
+          hierarchy
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: All spines removed, colorbar outline hidden, subtle dividers, minor
+          ticks
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Chord labels and dividers immediately communicate harmonic structure
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct heatmap for chromagram
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: All 12 pitch classes, sequential colormap, colorbar, time axis, fine
+          resolution, realistic patterns
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=time, Y=pitch class, color=energy all correct
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct, colorbar serves as scale
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Chord changes, harmonic bleeding, background noise, varying energy
+          levels
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Classic I-V-vi-IV pop progression, realistic energy values
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Energy 0-1, time 0-8s, 120 frames all sensible
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear flow, no functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean and well-organized, no over-engineering
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png, dpi=300, current API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Proper ax methods, ticker module, fig.colorbar, spines management
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: LinearSegmentedColormap.from_list, PowerNorm, pcolormesh with rasterized
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - annotations
+  - manual-ticks
+  patterns:
+  - data-generation
+  - matrix-construction
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - custom-colormap
+  - dark-theme

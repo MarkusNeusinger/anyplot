@@ -1,0 +1,232 @@
+library: pygal
+specification_id: ma-differential-expression
+created: '2026-03-20T10:39:33Z'
+updated: '2026-03-20T11:13:09Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23339077886
+issue: 4420
+python_version: 3.14.3
+library_version: 3.1.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/ma-differential-expression/pygal/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/ma-differential-expression/pygal/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/ma-differential-expression/pygal/plot.html
+quality_score: 84
+review:
+  strengths:
+  - Excellent data quality with realistic RNA-seq context, real gene names, and biologically
+    appropriate proportions
+  - Thoughtful color scheme with clear visual hierarchy (muted non-significant vs
+    vibrant significant genes)
+  - Good use of pygal-specific features (per-series styling, tooltip labels, stroke_style)
+  - Clean well-structured code with smart subsampling for SVG rendering performance
+  - Complete spec compliance including LOESS smoothing, reference lines, and significance
+    highlighting
+  weaknesses:
+  - Non-significant points are too faint — nearly invisible against the light background
+  - Reference lines at plus-minus 1 fold-change are barely visible as dashed gray
+  - Legend with 8 entries in one row is crowded
+  image_description: 'The plot displays an MA plot (M-versus-A) for differential gene
+    expression analysis. The x-axis shows "Mean Expression (A)" ranging from 0 to
+    ~24, and the y-axis shows "Log₂ Fold Change (M)" ranging from approximately -4.5
+    to +5. Three groups of scatter points are visible: light steel blue (barely visible,
+    non-significant genes forming a dense cloud near M=0), red dots (upregulated genes,
+    p<0.05, spread above the zero line up to M≈5), and blue dots (downregulated genes,
+    p<0.05, spread below zero down to M≈-4.5). Large black dots mark the top 10 DE
+    genes (BRCA1, TP53, etc.). A solid charcoal horizontal line at M=0 serves as the
+    no-change reference. Very faint gray dashed lines at M=+1 and M=-1 mark 2-fold
+    change thresholds. An orange LOESS trend line with dots runs near M=0 across the
+    expression range. The legend at the bottom displays 8 entries in a single row.
+    The background is white with a very light blue-gray plot area (#FAFBFC). Title
+    reads "ma-differential-expression · pygal · pyplots.ai".'
+  criteria_checklist:
+    visual_quality:
+      score: 24
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Font sizes explicitly set (title=52, labels=40, major_labels=38,
+          legend=28). All readable; legend text slightly small.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: No data overlap. Legend row with 8 entries is tight but readable.
+      - id: VQ-03
+        name: Element Visibility
+        score: 4
+        max: 6
+        passed: true
+        comment: Significant dots well-sized. Non-significant points very faint. Reference
+          lines at ±1 barely visible.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 3
+        max: 4
+        passed: true
+        comment: Red vs blue distinguishable for most colorblind types. Non-significant
+          steel blue extremely muted.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Plot fills canvas well. Some wasted space on right (x extends to
+          24 with few points beyond 18).
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive labels with abbreviations: Mean Expression (A), Log₂
+          Fold Change (M).'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful custom palette with intentional visual hierarchy. Above
+          defaults but not quite publication-level.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Guides disabled, custom background, reference lines as meaningful
+          guides. Minimal pygal chrome.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Color-coded up/downregulation with prominent top DE genes and LOESS
+          trend creates clear narrative.
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct XY scatter for MA plot.
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: All features present. Gene labels only in tooltips (not visible in
+          static PNG), though spec says optionally.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=mean expression, Y=log fold change. Correct.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct. Legend labels descriptive and accurate.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows upregulated, downregulated, non-significant, LOESS trend, fold-change
+          thresholds, top DE genes.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Realistic RNA-seq with 15000 genes, real gene names (BRCA1, TP53,
+          MYC, etc.), biologically plausible proportions.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Expression values in realistic RNA-seq range, fold changes centered
+          at 0 with DE genes at ±2-3 log2FC.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports → data → style → chart → save. No functions/classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: numpy, pygal, Style — all used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-structured. Manual LOESS approximation necessarily verbose
+          but well-implemented.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png via render_to_png(). Current pygal API.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of pygal.XY, Style, per-series dots_size, stroke_style with
+          dasharray. Smart subsampling for SVG performance.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: 'Leverages pygal-specific: rich tooltip labels, dynamic_print_values,
+          per-series dot sizing, stroke_style dasharray, dual SVG+PNG output.'
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-legend
+  - layer-composition
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - binning
+  - rolling-window
+  styling:
+  - alpha-blending

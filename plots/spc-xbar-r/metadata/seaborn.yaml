@@ -1,0 +1,234 @@
+library: seaborn
+specification_id: spc-xbar-r
+created: '2026-03-19T21:46:31Z'
+updated: '2026-03-19T22:24:21Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23318370089
+issue: 4551
+python_version: 3.14.3
+library_version: 0.13.2
+preview_url: https://storage.googleapis.com/pyplots-images/plots/spc-xbar-r/seaborn/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/spc-xbar-r/seaborn/plot_thumb.png
+preview_html: null
+quality_score: 89
+review:
+  strengths:
+  - Perfect spec compliance with all required SPC features (control limits, warning
+    limits, OOC highlighting, standard constants A2/D3/D4)
+  - Excellent realistic data context (CNC shaft diameter measurements at 25.00 mm
+    target with plausible tolerances)
+  - Strong visual design with custom 4-color palette, shaded control zones, and removed
+    spines
+  - Effective data storytelling through red OOC point highlighting and dual-chart
+    layout
+  - Clean, well-structured code with proper reproducibility
+  weaknesses:
+  - Seaborn is underutilized — sns.lineplot serves as a thin wrapper while the bulk
+    of visualization is pure matplotlib
+  - No seaborn-distinctive features leveraged (sns.despine, sns.set_context, sns.color_palette)
+  image_description: The plot displays a two-panel SPC chart on a 16:9 canvas. The
+    top panel is an X̄ Chart showing sample means as a blue line (#306998) with circular
+    markers for 30 CNC shaft diameter samples centered around 25.00 mm. Three out-of-control
+    points are highlighted with large red diamond markers (#D64045) at approximately
+    samples 8 (above UCL), 19 (below LCL), and 25 (above UCL). A solid teal center
+    line (CL = 25.0005) runs horizontally, with red dashed UCL (25.0407) and LCL (24.9604)
+    lines, and yellow/gold dotted ±2σ warning limits (25.0273 and 24.9737). A light
+    teal shaded band fills between the warning limits. The bottom panel is an R Chart
+    with square markers showing sample ranges with the same control limit structure
+    (CL = 0.0696, UCL = 0.1472, LCL = 0.0000) and matching shaded zone. Bold "X̄ Chart"
+    and "R Chart" labels appear in the upper-left of each panel. Top/right spines
+    are removed, subtle y-axis grid lines are present, and legends with numeric values
+    appear in the upper right. The title reads "spc-xbar-r · seaborn · pyplots.ai"
+    in medium-weight font. Y-axis labels include units (mm). Overall layout is clean
+    and professional.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 24pt, axis labels 20pt, ticks
+          16pt, legend 13pt, chart type labels 18pt'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text; legends well-positioned in upper right
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Markers (markersize=8) and OOC highlights (s=200) well-adapted for
+          30 data points
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Custom palette with blue/teal/red/yellow; shape differentiation supplements
+          color
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Two panels fill canvas well with shared x-axis, 16:9 aspect ratio
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive labels with units: Sample Mean (mm), Sample Range (mm),
+          Sample Number'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom 4-color palette, shaded control zones, professional typography,
+          white-edged OOC markers
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines removed, subtle y-axis grid (alpha=0.2), generous whitespace,
+          legend framealpha=0.9
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: OOC points in red create clear focal points; dual-chart layout tells
+          SPC story effectively
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct X-bar chart on top, R chart on bottom, vertically stacked
+          with shared x-axis
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: UCL/LCL dashed, CL solid, OOC highlighted,
+          warning limits dotted, A2/D3/D4 constants used'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = sample number (1-30), Y = sample mean/range; axes show all data
+          correctly
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; legend labels show CL, UCL, LCL, ±2σ with numeric
+          values
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows in-control and out-of-control behavior; 3 OOC violations in
+          X̄ chart above and below limits
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: CNC shaft diameter measurements with 25.00 mm target; realistic manufacturing
+          scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 25 mm shaft with ±0.03 mm process std; realistic for CNC machining
+          tolerances
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean imports → data → plot → save structure, no functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set at start
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only plt, np, sns imported — all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity; parallel chart structure is inherent to the
+          visualization type
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with dpi=300, bbox_inches='tight'; current API
+          usage
+    library_mastery:
+      score: 4
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
+        max: 5
+        passed: false
+        comment: Uses sns.lineplot axes-level API but most work is matplotlib directly
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Generic usage; no seaborn-distinctive features leveraged
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - subplots
+  - annotations
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - edge-highlighting
+  - grid-styling

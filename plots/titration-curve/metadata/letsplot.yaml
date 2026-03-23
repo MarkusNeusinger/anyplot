@@ -1,0 +1,227 @@
+library: letsplot
+specification_id: titration-curve
+created: '2026-03-21T22:11:54Z'
+updated: '2026-03-21T22:34:38Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23389866106
+issue: 4407
+python_version: 3.14.3
+library_version: 4.9.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/titration-curve/letsplot/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/titration-curve/letsplot/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/titration-curve/letsplot/plot.html
+quality_score: 90
+review:
+  strengths:
+  - Excellent data storytelling with acidic/basic region shading providing immediate
+    chemical context
+  - Realistic, scientifically accurate titration data calculated from first principles
+  - 'Strong visual hierarchy: pH curve dominant, derivative secondary, equivalence
+    point annotated'
+  - Custom refined color palette with good colorblind accessibility
+  - Uses letsplot-specific interactive features (layer_tooltips) adding value beyond
+    static output
+  weaknesses:
+  - Buffer region shading (alpha=0.1) is barely visible in the final output
+  - Derivative curve uses same y-axis with scaling rather than a true secondary y-axis
+    as specified
+  image_description: 'The plot shows an acid-base titration curve with a dark navy
+    S-shaped pH curve plotting pH (y-axis, 0-14) against Volume of NaOH added in mL
+    (x-axis, 0-50). The background is divided into a soft pink acidic region (pH 0-7)
+    and a light blue basic region (pH 7-14), separated by a dotted horizontal line
+    at pH 7. An orange dashed derivative curve (dpH/dV, scaled) peaks sharply at ~25
+    mL. The equivalence point is marked with a red diamond and a labeled box reading
+    "Equivalence Point, 25 mL, pH 7.0" in red on a pink background. A subtle light
+    blue shaded buffer region spans approximately 2-20 mL with an italic "Buffer Region"
+    label. Faded bold labels "Acidic" and "Basic" appear in the right portion of each
+    region. The title "titration-curve · letsplot · pyplots.ai" is centered and bold,
+    with subtitle "Strong Acid-Base: 25 mL of 0.1 M HCl titrated with 0.1 M NaOH".
+    A legend in the lower right with white background shows "dpH/dV (scaled)" in orange
+    dashed and "pH Curve" in blue solid.'
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title=26, axis_title=20, axis_text=16,
+          legend_text=16'
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Legend slightly overlaps curve area but has white fill so text remains
+          readable
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Main curves clearly visible; buffer region shading at alpha=0.1 is
+          very faint
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Navy blue and orange are colorblind-safe with strong contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good proportions at 1600x900 with scale 3, balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive with units: Volume of NaOH added (mL) and pH'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom palette, acidic/basic region shading, refined typography hierarchy
+          with subtitle
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Panel border removed, x-grid removed, y-grid subtle, axis lines styled,
+          generous margins
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Acidic/basic regions provide context, buffer region labeled, equivalence
+          point prominent
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct titration curve with characteristic S-shape
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: All features present but derivative uses scaled same-axis instead
+          of true secondary y-axis
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=volume, Y=pH correctly assigned, full pH scale 0-14 shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct, legend labels clear and descriptive
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows complete S-curve with all characteristic regions and derivative
+          peak
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Real chemistry: 25 mL of 0.1 M HCl titrated with 0.1 M NaOH'
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Realistic concentrations, volumes, and pH range
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports, data, plot, save. No functions or classes'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic - pH calculated from chemistry equations
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: numpy, pandas, lets_plot, export_ggsave'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-organized with practical derivative scaling approach
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png via export_ggsave with scale=3
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good ggplot grammar with layered geoms, aes, scales, flavor theme
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses layer_tooltips(), flavor_high_contrast_light(), geom_label with
+          label_padding/label_r, HTML export
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  dataprep:
+  - normalization
+  styling:
+  - alpha-blending
+  - grid-styling

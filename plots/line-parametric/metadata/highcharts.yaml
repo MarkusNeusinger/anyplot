@@ -1,0 +1,229 @@
+library: highcharts
+specification_id: line-parametric
+created: '2026-03-20T10:38:45Z'
+updated: '2026-03-20T11:11:28Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23339035358
+issue: 4424
+python_version: 3.14.3
+library_version: unknown
+preview_url: https://storage.googleapis.com/pyplots-images/plots/line-parametric/highcharts/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/line-parametric/highcharts/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/line-parametric/highcharts/plot.html
+quality_score: 88
+review:
+  strengths:
+  - 'Perfect spec compliance: all required features implemented (two curves, color
+    gradients, start/end markers, equal aspect ratio)'
+  - Strong design with custom gradient color palettes that effectively communicate
+    parameter direction
+  - Deterministic mathematical data with excellent feature coverage showing contrasting
+    curve behaviors
+  - Clean, well-structured code with appropriate segment-based gradient technique
+  weaknesses:
+  - Minor label proximity near the origin where both curves start at (0, 0)
+  - Axis lines/spines still fully visible — removing or lightening them would improve
+    visual refinement
+  - LineSeries imported from area module rather than line module
+  image_description: The plot displays two parametric curves on a square canvas with
+    a light gray (#fafafa) background. The title "line-parametric · highcharts · pyplots.ai"
+    is prominently displayed at the top in bold dark text, with a subtitle explaining
+    both curves' equations. The Lissajous figure (x=sin(3t), y=sin(2t)) is rendered
+    as a smooth figure-eight-like shape with a color gradient transitioning from blue
+    to teal/cyan, showing the direction of increasing parameter t. The Archimedean
+    spiral (x=t·cos(t), y=t·sin(t)) starts near the origin and spirals outward, colored
+    with a gradient from purple to rose/pink. Both axes range from -1.5 to 1.5 with
+    tick intervals of 0.5, labeled "x(t) — horizontal position" and "y(t) — vertical
+    position". A subtle dotted grid is visible. Start/end markers are placed near
+    the origin with labels "Lissajous t=0,2π" and "Spiral start", plus a "Spiral end"
+    diamond marker near the outer edge of the spiral. The legend at the bottom shows
+    four entries in a styled box with rounded corners and subtle border.
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 64px, subtitle 36px, axis titles
+          40px, tick labels 30px, data labels 28px, legend 34px'
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Minor proximity between start-point labels near origin, both readable
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Lines clearly visible at width 5, markers prominent, gradient transitions
+          subtle in some areas
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue-to-teal and purple-to-rose palettes are colorblind-safe with
+          strong contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Square canvas with equal aspect ratio, some unused space at corners
+          from axis range padding
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive labels with context, units N/A for mathematical parametric
+          curves
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom gradient palettes, styled legend, explicit typography hierarchy,
+          above defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle dotted grid, tick marks removed, generous spacing, but axis
+          lines still present
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Color gradient communicates parameter direction, start/end markers
+          guide viewer, subtitle provides context
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct parametric curve plot
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: equal aspect ratio, color gradient, two
+          curves, markers, sufficient density'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X and Y correctly computed from parametric equations
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct title format, legend labels match curves with equations
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Two distinct curve types showing loops, self-intersections, and expanding
+          spirals
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Classical mathematical curves used in physics and signal analysis
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Lissajous bounded [-1,1], spiral normalized to same scale
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear flow with no functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic mathematical formulas
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Segment-based gradient approach is appropriate for Highcharts
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png via Selenium
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Proper use of Chart, series classes, linked_to for grouping. Import
+          from area module is unconventional.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses linked_to, plotOptions, turboThreshold, interactive tooltips
+  verdict: REJECTED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - annotations
+  - html-export
+  - custom-legend
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - gradient-fill
+  - grid-styling

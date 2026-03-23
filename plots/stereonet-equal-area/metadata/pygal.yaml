@@ -1,0 +1,233 @@
+library: pygal
+specification_id: stereonet-equal-area
+created: '2026-03-15T22:58:45Z'
+updated: '2026-03-15T23:36:19Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23121188964
+issue: 4576
+python_version: 3.14.3
+library_version: 3.1.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/stereonet-equal-area/pygal/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/stereonet-equal-area/pygal/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/stereonet-equal-area/pygal/plot.html
+quality_score: 78
+review:
+  strengths:
+  - 'Full spec compliance: all required stereonet features implemented (great circles,
+    poles, density contours, N label, tick marks, grid)'
+  - Correct equal-area projection mathematics with proper lower-hemisphere pole computation
+  - Visual hierarchy through differentiated stroke widths and dot sizes creates clear
+    feature distinction
+  - Colorblind-safe palette with good contrast
+  - Creative use of pygal allow_interruptions to render complex disconnected geometry
+  weaknesses:
+  - Density contours and grid lines use similar gray dashed styling, making them hard
+    to distinguish visually
+  - The trace_contour marching squares function adds ~116 lines of complexity, violating
+    KISS
+  - Legend has 9 entries including structural elements like Grid and Stereonet which
+    clutters the legend
+  - Only N cardinal direction labeled; E/S/W would improve orientation context
+  image_description: 'The plot displays a Schmidt equal-area (lower-hemisphere) stereonet
+    projection on a white background at 3600x3600 px. A circular primitive boundary
+    is drawn in dark gray with tick marks every 10 degrees around the perimeter. An
+    "N" letter is rendered at the top using connected line segments. Inside the circle,
+    three sets of great circles represent planar features: blue lines for bedding
+    planes (sweeping across the right side with ~NE strike), red/coral lines for fault
+    planes (lower-left area with ~ESE strike), and amber/gold lines for joint planes
+    (running roughly N-S through the center). Corresponding poles are plotted as colored
+    dots — blue dots clustered in the center-right area, red dots clustered in the
+    lower-left, and amber/gold dots along the right edge near the primitive circle.
+    Gray dashed density contours are overlaid highlighting pole concentrations. Subtle
+    gray dashed grid lines show small circles at 30 and 60 degree dip intervals plus
+    diametral lines every 30 degrees. The legend at the bottom shows 9 entries in
+    4 columns: Bedding (planes), Faults (planes), Joints (planes), Bedding (poles),
+    Faults (poles), Joints (poles), Density contours, Grid, and Stereonet. The title
+    reads "stereonet-equal-area · pygal · pyplots.ai" at the top.'
+  criteria_checklist:
+    visual_quality:
+      score: 23
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: Font sizes explicitly set (title=56, legend=36); title clear, legend
+          readable but small relative to 3600px canvas
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: No text overlap; density contours blend slightly with grid
+      - id: VQ-03
+        name: Element Visibility
+        score: 4
+        max: 6
+        passed: true
+        comment: Poles visible with size hierarchy; density contours hard to distinguish
+          from grid lines
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue/red/amber palette is colorblind-safe with good contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Square format appropriate; plot fills canvas well
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 1
+        max: 2
+        passed: true
+        comment: Title correct format; N label present; no other cardinal directions
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Custom palette, visual hierarchy through stroke widths and dot sizes;
+          above defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Axes hidden, grid subtle, whitespace balanced
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Visual hierarchy through line weights and dot sizes; three distinct
+          clusters visible
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Equal-area Schmidt net lower-hemisphere projection correctly implemented
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: great circles, poles, density contours,
+          N label, ticks, grid, legend'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Strike/dip correctly projected with equal-area formula
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; legend labels descriptive
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Three feature types with distinct orientations; good variation
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Geological field measurements from mapping campaign
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Strike 0-360, dip 5-89; realistic field data ranges
+    code_quality:
+      score: 7
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 1
+        max: 3
+        passed: false
+        comment: Two helper functions; marching squares contour implementation ~116
+          lines
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used (numpy, pygal, Style)
+      - id: CQ-04
+        name: Code Elegance
+        score: 1
+        max: 2
+        passed: false
+        comment: Marching squares necessary but adds significant complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png; also renders HTML
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses pygal XY, Style, allow_interruptions, stroke_style; much manual
+          computation outside pygal
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: allow_interruptions is pygal-specific; stroke_style with dasharray;
+          dual SVG+PNG output
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - polar-projection
+  - custom-legend
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  - matrix-construction
+  dataprep:
+  - kde
+  styling:
+  - alpha-blending
+  - grid-styling

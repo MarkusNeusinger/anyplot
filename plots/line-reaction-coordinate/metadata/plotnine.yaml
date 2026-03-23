@@ -1,0 +1,222 @@
+library: plotnine
+specification_id: line-reaction-coordinate
+created: '2026-03-21T20:48:24Z'
+updated: '2026-03-21T21:00:45Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23388404555
+issue: 4409
+python_version: 3.14.3
+library_version: 0.15.3
+preview_url: https://storage.googleapis.com/pyplots-images/plots/line-reaction-coordinate/plotnine/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/line-reaction-coordinate/plotnine/plot_thumb.png
+preview_html: null
+quality_score: 90
+review:
+  strengths:
+  - Excellent colorblind-safe palette using Okabe-Ito colors for annotation arrows
+  - Clean visual hierarchy with color-coded Ea and DH annotations
+  - Smooth cubic spline interpolation creates a professional energy curve
+  - All spec requirements fully met including dashed reference lines and double-headed
+    arrows
+  - 'Perfect code quality: deterministic, clean, linear structure'
+  weaknesses:
+  - Right-side labels (DH, Products) slightly tight near canvas edge
+  - Annotation font size (14) slightly smaller than axis text (16)
+  image_description: The plot displays a reaction coordinate energy diagram with a
+    smooth blue curve (#306998) tracing from reactants at 50 kJ/mol (left) through
+    a transition state peak at 120 kJ/mol (center) down to products at 20 kJ/mol (right).
+    Three blue dots mark these key points. A vermillion/orange double-headed arrow
+    on the left indicates the activation energy (Ea = 70 kJ/mol), while a blue double-headed
+    arrow on the right shows the enthalpy change (DH = -30 kJ/mol). Horizontal dashed
+    gray lines extend at the reactant and product energy levels. The title "line-reaction-coordinate
+    · plotnine · pyplots.ai" appears centered at the top in bold dark blue. Axes are
+    labeled "Reaction Coordinate" (x) and "Potential Energy (kJ/mol)" (y). The background
+    is clean white with subtle dotted y-axis gridlines only.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 24, axis titles 20, tick text
+          16, annotations 14). Annotations slightly smaller than ideal but fully readable.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text; all labels well-separated.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Main curve thick (size=2.5), key points clearly marked (size=5),
+          arrows visible with closed arrowheads.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Uses Okabe-Ito colorblind-safe palette: vermillion for Ea, blue
+          for DH.'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good proportions. Right-side labels slightly tight near canvas edge.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Potential Energy (kJ/mol) with units, Reaction Coordinate descriptive.
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Strong design with intentional color hierarchy and bold typography.
+          Clearly above defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: theme_minimal with x-grid removed, y-grid dotted, white background,
+          clean spines.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy guides viewer through chemistry concept with
+          color-coded annotations.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct: smooth reaction coordinate energy diagram with clear maximum
+          at transition state.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: All spec features present including labeled key points, Ea/DH arrows,
+          dashed reference lines.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = reaction coordinate, Y = potential energy. All data visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct. No legend needed for single-series.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Shows key features: smooth energy profile, transition state peak,
+          Ea barrier, exothermic DH.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real chemistry scenario with plausible energy values. Neutral scientific
+          topic.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Energy values (50, 120, 20 kJ/mol) realistic for chemical reactions.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports, data, plot, save. No functions or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic data, no random generation.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-organized. CubicSpline appropriate for smooth interpolation.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with dpi=300, current API.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Good use of grammar of graphics: aes, geom layers, annotate, theme
+          system.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses plotnine theme system extensively with element_text margins,
+          element_blank, element_line.
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - scipy
+  techniques:
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep:
+  - interpolation
+  styling:
+  - grid-styling

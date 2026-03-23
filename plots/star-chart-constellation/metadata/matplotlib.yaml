@@ -1,0 +1,245 @@
+library: matplotlib
+specification_id: star-chart-constellation
+created: '2026-03-18T21:15:07Z'
+updated: '2026-03-18T21:45:32Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23267218076
+issue: 4560
+python_version: 3.14.3
+library_version: 3.10.8
+preview_url: https://storage.googleapis.com/pyplots-images/plots/star-chart-constellation/matplotlib/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/star-chart-constellation/matplotlib/plot_thumb.png
+preview_html: null
+quality_score: 90
+review:
+  strengths:
+  - Excellent astronomical data quality with real star names, positions, and magnitudes
+    for 21 constellations
+  - Strong visual design with custom dark theme, star glow effects, and muted color
+    palette creating a professional planetarium aesthetic
+  - 'Good use of matplotlib-specific features: Aitoff projection, PathEffects, custom
+    LinearSegmentedColormap'
+  - 'Comprehensive feature coverage: constellation lines, ecliptic, coordinate grid,
+    magnitude-based sizing, labeled bright stars'
+  - Clean code structure with well-organized data and thoughtful label placement logic
+  weaknesses:
+  - Minor label overlap in crowded regions (around 6h RA, Gemini/Taurus area)
+  - Constellation and star name labels slightly below recommended font sizes (13-14pt
+    vs 16pt guideline)
+  - Aitoff projection used instead of spec-suggested stereographic or azimuthal equidistant
+  image_description: The plot displays a star chart using a dark navy (#0A0A2A) background
+    with an Aitoff all-sky projection. Stars are rendered as white/pale blue-white
+    circles with size proportional to brightness (brighter stars are larger). Constellation
+    stick-figure lines connect stars in thin semi-transparent blue lines. Twenty-one
+    constellations are labeled in italic muted blue-gray text near their centroids
+    (Orion, Ursa Major, Cassiopeia, Leo, Scorpius, Cygnus, Lyra, Gemini, Taurus, Canis
+    Major, Aquila, Bootes, Perseus, Auriga, Virgo, Corona Bor., Pegasus, Andromeda,
+    Draco, Hercules, Sagittarius). Brightest stars (mag < 1.0) are individually labeled
+    (Sirius, Vega, Arcturus, Capella, Rigel, Betelgeuse, Altair, Aldebaran, Spica,
+    Pollux). A dashed golden ecliptic line crosses the chart. The RA grid is labeled
+    in hours (0h-22h) and declination in degrees (-75 to +75). Background stars (~300)
+    appear as small dim gray dots. A legend in the lower-right identifies the ecliptic.
+    The title reads "star-chart-constellation · matplotlib · pyplots.ai" and a subtitle
+    at the bottom reads "Right Ascension (hours) — Aitoff Projection | Declination
+    (°)".
+  criteria_checklist:
+    visual_quality:
+      score: 26
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set. Title 24pt, subtitle 20pt, ticks 16pt
+          excellent. Star labels 14pt and constellation labels 13pt slightly below
+          guideline but readable with path effects.
+      - id: VQ-02
+        name: No Overlap
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Minor label crowding in several areas: around 6h RA (Orion/Canis
+          Major/Sirius), Gemini/Taurus region, and Corona Bor./Bootes area.'
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Stars well-sized with clear magnitude mapping. Bright stars prominent,
+          dim background stars appropriately subtle.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: White/blue-gray on dark navy provides excellent contrast. No red-green
+          issues.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Aitoff ellipse fills the 16:9 canvas well. Balanced margins with
+          title and subtitle framing the chart.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Subtitle provides units for RA (hours) and Dec (degrees). Grid ticks
+          labeled appropriately.
+    design_excellence:
+      score: 17
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: 'Genuinely polished: custom dark navy background, custom star temperature
+          colormap, PathEffect glow, muted italic constellation labels, golden dashed
+          ecliptic.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle dashed grid, background stars add depth, glow halos on brightest
+          stars. Grid could be slightly more subtle.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Strong visual hierarchy through magnitude-size mapping. Only brightest
+          stars labeled creates focus. Constellation lines guide pattern recognition.
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct star chart with constellation lines. Aitoff projection instead
+          of spec-suggested stereographic/azimuthal equidistant.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All required features present: constellation lines, magnitude sizing,
+          coordinate grid, dark background, labels, ecliptic.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: RA/Dec correctly mapped. RA increases right-to-left per astronomical
+          convention. Magnitude correctly inverted for sizing.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format. Ecliptic legend present with appropriate
+          styling.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 21 constellations, ~100 named stars, 300 background stars, wide variety
+          of constellation shapes.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real astronomical data with accurate star names, positions, and magnitudes.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: RA 0-24h, Dec -45 to +70 degrees, magnitudes -1.46 to ~5.0. All astronomically
+          correct.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean linear flow with no functions or classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set for background star generation.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: patheffects, pyplot, numpy, LinearSegmentedColormap.'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-organized, appropriate complexity. Label overlap avoidance logic
+          is practical.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with dpi=300, bbox_inches tight. No deprecated
+          API.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Good use of projection system, axes methods, figure-level text.
+          Minor: some pyplot-level calls.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Aitoff projection, PathEffects (withStroke, withSimplePatchShadow),
+          LinearSegmentedColormap.from_list().
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  - polar-projection
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - dark-theme
+  - custom-colormap
+  - alpha-blending
+  - edge-highlighting
+  - grid-styling

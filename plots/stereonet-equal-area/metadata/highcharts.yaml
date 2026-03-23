@@ -1,0 +1,234 @@
+library: highcharts
+specification_id: stereonet-equal-area
+created: '2026-03-15T23:05:23Z'
+updated: '2026-03-15T23:53:34Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23121188982
+issue: 4576
+python_version: 3.14.3
+library_version: unknown
+preview_url: https://storage.googleapis.com/pyplots-images/plots/stereonet-equal-area/highcharts/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/stereonet-equal-area/highcharts/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/stereonet-equal-area/highcharts/plot.html
+quality_score: 85
+review:
+  strengths:
+  - Excellent spec compliance with all required stereonet features correctly computed
+  - Strong geological data quality with three distinct realistic feature types
+  - Professional visual design with custom colorblind-safe palette and subtle dotted
+    grid
+  - Dual output (PNG + interactive HTML) leverages Highcharts strengths well
+  weaknesses:
+  - Python 2 except syntax on lines 305 and 324 should use tuple form
+  - LineSeries imported from area submodule instead of line submodule
+  - Legend slightly cramped with 7 items in a single horizontal row
+  image_description: 'The plot displays a lower-hemisphere equal-area (Schmidt) stereographic
+    projection on a square canvas with a light gray (#FAFAFA) background. A bold dark
+    primitive circle encloses the projection area, with tick marks every 10 degrees
+    around the perimeter (longer ticks at 30-degree intervals). Cardinal directions
+    (N, E, S, W) are labeled in bold around the outside, with intermediate degree
+    labels (30, 60, 120, 150, 210, 240, 300, 330) in regular weight. Subtle dotted
+    concentric circles and radial lines form the stereonet grid. Three geological
+    feature types are plotted: Bedding (blue #306998) with great circle arcs and scatter
+    poles clustered in the south-central area, Joints (orange #E5863D) with great
+    circles and poles concentrated in the NE quadrant, and Faults (purple #8B5CF6)
+    with great circles and poles scattered in the eastern portion. Green semi-transparent
+    density contours overlay the pole data, highlighting preferred orientations especially
+    in the NE and south-central clusters. The title reads "stereonet-equal-area ·
+    highcharts · pyplots.ai" with a subtitle "Lower Hemisphere Equal-Area (Schmidt)
+    Projection". A horizontal legend at the bottom lists all seven series: Bedding/Joints/Faults
+    (planes), Bedding/Joints/Faults (poles), and Density contours.'
+  criteria_checklist:
+    visual_quality:
+      score: 26
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Font sizes explicitly set (56px title, 38px subtitle, 30-38px labels).
+          All readable; degree labels slightly small but legible.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Legend has 7 items slightly cramped. Minor crowding in NE quadrant
+          where joint poles cluster.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Poles and great circles visible. Some pole markers overlap in dense
+          clusters.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue/orange/purple palette is colorblind-safe with strong contrast.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Square canvas appropriate for circular projection. Legend positioned
+          far from plot.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Cardinal directions serve as labels; subtitle describes projection
+          type.
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom palette, custom typography, intentional hierarchy. Clearly
+          above defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle dotted grid, axes hidden, clean background. Good refinement.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Three distinct feature types with different orientations create structural
+          narrative. Density contours highlight preferred orientations.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct equal-area Schmidt lower-hemisphere projection.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: great circles, poles, density contours,
+          color-coding, tick marks, grid.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Strike/dip correctly mapped to great circles and poles with equal-area
+          formula.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct. Legend labels distinguish planes and poles
+          per feature type.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Three distinct feature types with varying orientations, cluster tightness,
+          and populations.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Realistic geological field measurements with sensible strike/dip
+          distributions.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Geologically sensible values for all feature types.
+    code_quality:
+      score: 8
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports, data, chart, series, render, screenshot.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) ensures deterministic data.
+      - id: CQ-03
+        name: Clean Imports
+        score: 1
+        max: 2
+        passed: false
+        comment: LineSeries imported from area submodule instead of line submodule.
+      - id: CQ-04
+        name: Code Elegance
+        score: 1
+        max: 2
+        passed: false
+        comment: Python 2 except syntax on lines 305 and 324.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png via Selenium. Also generates plot.html.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Good use of highcharts_core API: Chart, series types, annotations,
+          to_js_literal().'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Annotations for labels, interactive tooltips, HTML export.
+  verdict: REJECTED
+impl_tags:
+  dependencies:
+  - scipy
+  - selenium
+  techniques:
+  - annotations
+  - polar-projection
+  - html-export
+  - custom-legend
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - kde
+  styling:
+  - alpha-blending
+  - grid-styling

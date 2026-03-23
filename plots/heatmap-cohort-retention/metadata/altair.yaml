@@ -1,0 +1,227 @@
+library: altair
+specification_id: heatmap-cohort-retention
+created: '2026-03-16T20:46:10Z'
+updated: '2026-03-16T21:04:16Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23165007983
+issue: 4570
+python_version: 3.14.3
+library_version: 6.0.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/heatmap-cohort-retention/altair/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/heatmap-cohort-retention/altair/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/heatmap-cohort-retention/altair/plot.html
+quality_score: 90
+review:
+  strengths:
+  - Custom 6-stop sequential palette with sophisticated color progression from light
+    to dark
+  - Separate % symbol layer at smaller font size adds typographic polish
+  - Informative subtitle that communicates the key data insight
+  - 'Expert-level Altair idioms: conditional text color, layer composition, declarative
+    encoding'
+  - Perfect spec compliance with all required features present
+  - Realistic SaaS retention data with plausible decay patterns
+  weaknesses:
+  - Chart width is 1400 instead of 1600, resulting in 4200px instead of the ideal
+    4800px output width
+  - The % suffix fontSize=10 (30px at 3x) is on the small side
+  image_description: The plot displays a triangular cohort retention heatmap with
+    10 monthly cohorts (Jan 2024 through Oct 2024) on the y-axis and months since
+    signup (Month 0 through Month 9) on the x-axis. The cells use a custom sequential
+    palette transitioning from light gray/white (low retention) through teals to dark
+    navy (high retention). Each cell contains a bold retention percentage with a smaller
+    "%" suffix. The triangular shape is correctly formed — Jan 2024 has all 10 periods
+    while Oct 2024 has only 1. Cohort sizes (e.g., n=1,926) appear in parentheses
+    next to each cohort label. A vertical color bar legend ("Retention %") is positioned
+    on the right. The title reads "heatmap-cohort-retention · altair · pyplots.ai"
+    with a subtitle "Monthly SaaS user retention — earliest cohorts show strongest
+    long-term engagement". Cell borders are subtle light gray with rounded corners.
+    The background is clean white.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title=28, axis titles=22, tick labels=17,
+          cell text=15). The % suffix at fontSize=10 is small but readable.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text. Separate % layer with dx offset avoids collision.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Rectangles well-sized with cornerRadius and subtle stroke borders.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Sequential teal-to-navy palette is colorblind-safe with good luminance
+          contrast.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Width=1400 (4200px at 3x) slightly narrower than ideal 4800px. Triangular
+          shape leaves inherent empty space.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive labels: Months Since Signup, Signup Cohort.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom 6-stop gradient palette, rounded cell corners, subtle borders,
+          separate % layer, informative subtitle.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: View stroke removed, axis domains/ticks hidden, generous padding,
+          subtle cell borders.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtitle communicates key insight. Color gradient guides the eye.
+          Triangular shape tells temporal story.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct triangular heatmap.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features: triangular shape, retention % in cells, cohort sizes,
+          colorbar, sequential colormap.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=periods, Y=cohorts. All data correctly mapped.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct. Color bar legend with Retention % label.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Realistic decay, period 0=100%, varying cohort sizes, different retention
+          curves, full triangular structure.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Monthly SaaS user retention — real, neutral business scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Retention decays 100% to ~19.5%. Cohort sizes 921-2438 plausible.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean linear flow: imports, data, layers, combine, save.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only altair, numpy, pandas — all used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean three-layer composition. Not over-engineered.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot.png and plot.html. Current Altair 6.0 API.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert Altair: mark_rect/mark_text, ordinal encoding with sort,
+          alt.condition, alt.layer, alt.Title, configure_view/axis.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: alt.condition for dynamic text color, tooltip interactivity, HTML
+          export, declarative layer composition.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - custom-colormap
+  - edge-highlighting

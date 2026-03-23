@@ -1,0 +1,230 @@
+library: pygal
+specification_id: scatter-constellation-diagram
+created: '2026-03-17T23:21:33Z'
+updated: '2026-03-17T23:52:33Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23220948643
+issue: 4562
+python_version: 3.14.3
+library_version: 3.1.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/scatter-constellation-diagram/pygal/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/scatter-constellation-diagram/pygal/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/scatter-constellation-diagram/pygal/plot.html
+quality_score: 84
+review:
+  strengths:
+  - Full spec compliance with all required features (16-QAM, cross markers, decision
+    boundaries, EVM annotation, equal aspect)
+  - Creative SVG post-processing for cross markers and styled annotation box leveraging
+    pygal SVG-native architecture
+  - EVM-based color classification creates meaningful visual hierarchy and data storytelling
+  - Realistic wireless communications data with appropriate noise and phase offset
+    modeling
+  - Colorblind-safe teal/purple/orange palette with good contrast
+  weaknesses:
+  - Function definition (replace_circle_with_cross) breaks KISS flat structure
+  - SVG regex replacement for markers is fragile and depends on specific pygal output
+    format
+  - Legend font size could be slightly larger for 3600px square canvas
+  image_description: 'The plot shows a 16-QAM constellation diagram on a square canvas
+    with a light gray-blue background (#f4f6f9). Sixteen clusters of received symbols
+    are arranged in a 4x4 grid at I/Q coordinates +/-1, +/-3. Each ideal constellation
+    point is marked with a red cross (+) marker. Received symbols are colored by EVM
+    magnitude: teal (low EVM, ~500 points), purple (mid EVM, ~350 points), and orange
+    (high EVM, ~150 points) with progressively larger dot sizes. Dashed gray decision
+    boundary lines divide the plane at I = -2, 0, +2 and Q = -2, 0, +2. The title
+    reads "scatter-constellation-diagram · pygal · pyplots.ai" at the top. Axes are
+    labeled "In-Phase (I)" (x) and "Quadrature (Q)" (y) with signed tick labels from
+    -4 to +4. An EVM annotation box in the upper-left reads "EVM = 12.5%". A four-column
+    legend at the bottom identifies Low EVM, Mid EVM, High EVM, and Ideal 16-QAM series.'
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Font sizes explicitly set (title=54, label=44, major_label=40, legend=36).
+          All readable. Legend entries slightly small.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text collisions anywhere; legend columns well-spaced.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Dot size differentiation (7/10/13) aids readability; some intra-cluster
+          overlap in dense regions.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Teal/purple/orange palette is colorblind-safe with strong contrast.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Square canvas appropriate for equal aspect ratio. Outer margins slightly
+          generous.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: In-Phase (I) and Quadrature (Q) are descriptive with standard notation.
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Custom palette, light background, SVG cross markers, styled EVM box.
+          Above defaults but not publication-level.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle dashed guide lines, light background differentiation, customized
+          margins.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: EVM-based color classification creates meaningful visual hierarchy
+          showing error distribution.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct XY scatter for constellation diagram.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: 16-QAM, cross markers, decision boundaries,
+          EVM annotation, equal aspect, correct labels.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: I/Q correctly mapped to x/y axes. All 16 constellation points visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format. Legend labels descriptive and match
+          data series.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows noise scatter, EVM classification, phase offset. Could demonstrate
+          additional impairment types.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real-world 16-QAM with SNR ~20 dB and phase offset.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Standard 16-QAM values at +/-1, +/-3. EVM of 12.5% realistic for
+          given SNR.
+    code_quality:
+      score: 8
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Mostly linear flow but includes replace_circle_with_cross function.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) ensures deterministic output.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: re, cairosvg, numpy, pygal, Style.'
+      - id: CQ-04
+        name: Code Elegance
+        score: 1
+        max: 2
+        passed: true
+        comment: SVG regex manipulation is fragile but necessary for pygal marker
+          customization.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png via cairosvg. No deprecated API.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of pygal.XY, dict-based labels, Style class, stroke_style,
+          legend config.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: SVG post-processing leverages pygal SVG-native architecture. Dict-based
+          label format is pygal-specific.
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - cairosvg
+  techniques:
+  - annotations
+  - custom-legend
+  - manual-ticks
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling

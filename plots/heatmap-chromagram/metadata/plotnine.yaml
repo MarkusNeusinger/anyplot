@@ -1,0 +1,218 @@
+library: plotnine
+specification_id: heatmap-chromagram
+created: '2026-03-17T22:24:43Z'
+updated: '2026-03-17T22:36:13Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23219179064
+issue: 4564
+python_version: 3.14.3
+library_version: 0.15.3
+preview_url: https://storage.googleapis.com/pyplots-images/plots/heatmap-chromagram/plotnine/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/heatmap-chromagram/plotnine/plot_thumb.png
+preview_html: null
+quality_score: 90
+review:
+  strengths:
+  - Excellent data generation with realistic chord progression (C→G→Am→F), harmonics,
+    and smooth transitions
+  - Strong grammar of graphics usage with clean layer composition (geom_tile + geom_vline
+    + geom_text)
+  - Good visual storytelling with chord labels, boundary lines, and descriptive subtitle
+  - Perfect spec compliance with all required features present
+  - Clean, well-structured code following KISS principles
+  weaknesses:
+  - Minor horizontal gaps visible between pitch class rows (inherent to discrete y
+    + geom_tile)
+  - Colorbar could be taller/more prominent for easier energy reading
+  image_description: 'The plot displays a heatmap-style chromagram with 12 pitch classes
+    (C through B) on the y-axis and time (0-8 seconds) on the x-axis. A plasma-like
+    sequential color gradient runs from deep indigo/purple (low energy ~0.25) through
+    magenta and orange to bright yellow (high energy ~1.00). White dashed vertical
+    lines at 2s, 4s, and 6s delineate four chord regions, each labeled in white bold
+    text at the bottom: "C maj", "G maj", "A min", "F maj". The chord patterns are
+    clearly visible — e.g., C/E/G rows light up during the C major section, G/B/D
+    during G major. A colorbar on the right shows the Energy scale. The title "heatmap-chromagram
+    · plotnine · pyplots.ai" is bold and centered, with a gray subtitle describing
+    the chord progression. Background is light gray, grid lines are removed, and the
+    layout is clean with good use of space.'
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 24pt, axis titles 20pt, tick
+          labels 16pt, legend text 14-16pt'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text anywhere
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Tiles well-sized, active pitch classes stand out sharply
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Plasma-like sequential colormap is perceptually uniform and colorblind-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good 16:9 layout, minor horizontal gaps between pitch class rows
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Time (s) with units, Pitch Class descriptive
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Custom 15-stop gradient, intentional typography hierarchy, above
+          defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Grid removed, theme_minimal, light gray background, chord boundary
+          lines
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Chord labels and boundary lines guide viewer through harmonic progression
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct heatmap using geom_tile
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: All 12 pitch classes, sequential colormap, colorbar, time axis in
+          seconds
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=time, Y=pitch class, fill=energy. Correct mapping
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct, legend labeled Energy with 0-1 scale
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Chord progressions, harmonics, noise floor, smooth transitions
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real C-G-Am-F progression, realistic chroma energy patterns
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Energy 0-1, 80 frames over 8 seconds, standard for MIR
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean linear flow, no functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, well-structured chord_regions
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with dpi=300, current API
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Excellent grammar of graphics composition with proper layering
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: scale_fill_gradientn, pd.Categorical integration, grammar of graphics
+          layering
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep:
+  - normalization
+  styling:
+  - custom-colormap

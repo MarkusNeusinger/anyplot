@@ -1,0 +1,220 @@
+library: matplotlib
+specification_id: line-growth-percentile
+created: '2026-03-19T19:55:06Z'
+updated: '2026-03-19T20:08:35Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23313901307
+issue: 4555
+python_version: 3.14.3
+library_version: 3.10.8
+preview_url: https://storage.googleapis.com/pyplots-images/plots/line-growth-percentile/matplotlib/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/line-growth-percentile/matplotlib/plot_thumb.png
+preview_html: null
+quality_score: 91
+review:
+  strengths:
+  - Excellent data storytelling with clinically meaningful patient trajectory and
+    annotated growth events
+  - Custom blue gradient palette with intentional color hierarchy creates a professional
+    clinical look
+  - Complete spec compliance — all 7 percentile curves, filled bands, right-margin
+    labels, patient overlay
+  - Deterministic, realistic WHO-like data with appropriate weight values
+  - Clean, well-organized code with no unnecessary complexity
+  weaknesses:
+  - Green annotation text alongside red creates a red-green color pairing that could
+    be improved for colorblind accessibility
+  - Right-margin percentile labels are slightly compressed at higher percentiles
+  image_description: The plot displays a pediatric growth chart (Weight-for-Age, Boys,
+    0-36 months) with WHO-style percentile curves. Seven percentile lines (P3, P10,
+    P25, P50, P75, P90, P97) are drawn in graduated blue tones, with the P50 median
+    line rendered thicker and darker. Filled bands between adjacent percentile curves
+    use a blue gradient with varying alpha — darker at the extremes (P3-P10, P90-P97),
+    lighter near the median. Percentile labels appear on the right margin, with P50
+    in bold. A red patient trajectory line with circular white-edged markers overlays
+    the bands, showing 12 data points from birth to 36 months. Two clinical annotations
+    with arrows highlight "Growth faltering" (around 9 months, red text) and "Catch-up
+    growth" (around 30 months, green text). The title follows the required format.
+    A subtitle reads "Weight-for-Age, Boys, 0-36 months - WHO Growth Standards". Axes
+    are labeled "Age (months)" and "Weight (kg)". Top and right spines are removed,
+    with a subtle y-axis grid. The legend shows "Patient (Boy)" in the upper left.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt,
+          annotations 16pt'
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Percentile labels slightly compressed at upper end but readable
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Patient markers well-sized with white edges, percentile lines differentiated
+      - id: VQ-04
+        name: Color Accessibility
+        score: 3
+        max: 4
+        passed: true
+        comment: Blue+red is colorblind-safe but green annotation alongside red is
+          problematic
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Excellent 16:9 layout, plot fills canvas well
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive with units: Age (months), Weight (kg)'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom blue gradient palette with intentional hierarchy, above defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines removed, subtle grid, minor ticks, thin spine lines
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Patient trajectory tells clinical story with annotated growth events
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct: line chart with filled percentile bands'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: All spec features present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Age on x-axis, weight on y-axis, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct title format and legend label
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All 7 percentiles with bands, clinically interesting patient trajectory
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: WHO weight-for-age for boys, neutral healthcare topic
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Realistic infant/toddler weight values matching WHO standards
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean imports-data-plot-save flow
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic data generation
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic, appropriate complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with dpi=300
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Consistent axes methods, fill_between, annotate with arrowprops
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: fill_between, annotation_clip=False, connectionstyle, MultipleLocator
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - manual-ticks
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - gradient-fill
+  - grid-styling
+  - edge-highlighting

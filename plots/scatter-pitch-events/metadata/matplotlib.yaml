@@ -1,0 +1,228 @@
+library: matplotlib
+specification_id: scatter-pitch-events
+created: '2026-03-20T12:32:48Z'
+updated: '2026-03-20T12:52:21Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23342848634
+issue: 4417
+python_version: 3.14.3
+library_version: 3.10.8
+preview_url: https://storage.googleapis.com/pyplots-images/plots/scatter-pitch-events/matplotlib/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/scatter-pitch-events/matplotlib/plot_thumb.png
+preview_html: null
+quality_score: 90
+review:
+  strengths:
+  - Excellent pitch rendering with accurate FIFA dimensions and all required markings
+  - Strong dark theme with colorblind-safe palette and good visual hierarchy
+  - Attacking Third zone highlight adds tactical storytelling context
+  - All spec requirements fully implemented including directional arrows and outcome
+    encoding
+  - Clean, well-structured code with good use of matplotlib-specific features
+  weaknesses:
+  - Minor marker overlap in dense areas (attacking third) could benefit from slight
+    size reduction for shots
+  - Pass arrow density is high in some midfield zones, slightly reducing clarity
+  image_description: 'The plot displays a soccer pitch event map on a dark navy background
+    (#1a1a2e) with a dark green (#2d6a4f) pitch surface. Standard FIFA pitch markings
+    (penalty areas, goal areas, center circle, halfway line, corner arcs, goals) are
+    drawn in light gray (#e0e0e0). Four event types are scattered across the pitch:
+    cyan circles with directional arrows for passes (distributed across the full pitch),
+    magenta/pink star markers with bold arrows for shots (concentrated in the attacking
+    third), gold triangle markers for tackles, and purple diamond markers for interceptions.
+    A subtle "Attacking Third" zone highlight with golden text labels the right third
+    of the pitch. Successful events appear bright (higher alpha) while unsuccessful
+    events are faded (lower alpha). The title "scatter-pitch-events · matplotlib ·
+    pyplots.ai" appears at the top with a text stroke effect. A 6-item legend at the
+    bottom identifies all event types plus the success/failure encoding. The pitch
+    maintains correct 105:68 aspect ratio.'
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title 24pt, legend 16pt, Attacking Third 18pt all explicitly set
+          and readable
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Minor overlap of arrows in dense areas, expected with 170 events
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Markers well-sized with good alpha distinction for success/failure
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Cyan, magenta, gold, purple palette is colorblind-safe with excellent
+          contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Pitch fills canvas well with correct aspect ratio and balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Axes appropriately hidden for pitch diagram, title in correct format
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Strong dark theme with custom palette, path effects, white edge highlights
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Axes off, dark background polished, path effects, FancyBboxPatch
+          zone highlight
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Attacking Third zone highlight creates focal point, alpha variation
+          conveys narrative
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Scatter plot on accurately scaled pitch diagram with event markers
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec requirements met: pitch markings, distinct markers, outcome
+          encoding, directional arrows'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X (0-105m) and Y (0-68m) correctly mapped to pitch coordinates
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct, legend identifies all event types plus success/failure
+          encoding
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All 4 event types with both successful and unsuccessful outcomes
+          shown
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Realistic soccer match event data with plausible distributions and
+          success rates
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 170 total events, FIFA pitch dimensions, realistic event counts
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports, data, pitch, events, styling, save'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set at the start
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: patches, patheffects, pyplot, numpy, to_rgba'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Vectorized scatter for tackles/interceptions, loops only where needed
+          for arrows
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with dpi=300, bbox_inches=tight
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses ax-level methods, patches API, annotate with arrowprops, scatter
+          with RGBA arrays
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Leverages patches, patheffects, annotate arrowprops, to_rgba for
+          per-point colors
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - patches
+  - custom-legend
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - dark-theme
+  - alpha-blending
+  - edge-highlighting
+  - minimal-chrome

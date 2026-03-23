@@ -1,0 +1,225 @@
+library: plotnine
+specification_id: line-parametric
+created: '2026-03-20T10:36:50Z'
+updated: '2026-03-20T10:58:58Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23339035321
+issue: 4424
+python_version: 3.14.3
+library_version: 0.15.3
+preview_url: https://storage.googleapis.com/pyplots-images/plots/line-parametric/plotnine/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/line-parametric/plotnine/plot_thumb.png
+preview_html: null
+quality_score: 92
+review:
+  strengths:
+  - 'Excellent spec compliance: all required features (equal aspect ratio, color gradient,
+    two curves, start/end markers) present and correct'
+  - Custom gradient palette creates visually appealing and informative progression
+    from navy to rose
+  - Idiomatic plotnine usage with proper grammar of graphics layering
+  - Clean deterministic code with no unnecessary complexity
+  weaknesses:
+  - 'Minor canvas utilization: spiral panel has some wasted whitespace due to coord_equal
+    with spiral smaller extent versus endpoint position'
+  image_description: The plot displays two parametric curves in a side-by-side faceted
+    layout on a white background. The left panel shows a Lissajous figure (x=sin(3t),
+    y=sin(2t)) — a self-intersecting figure-eight-like pattern spanning [-1, 1] on
+    both axes. The right panel shows a spiral curve (x=t·cos(t), y=t·sin(t)) that
+    winds outward from the origin. Both curves use a continuous color gradient from
+    deep navy (t=0) through teal, light cyan, gold/yellow, to vivid pink/rose (t=tmax)
+    to indicate the direction of parameter progression. Start points are marked with
+    dark blue filled circles, end points with pink diamonds. The title reads "line-parametric
+    · plotnine · pyplots.ai" in bold dark text. Axis labels are "Horizontal Position
+    x(t)" and "Vertical Position y(t)". A "Direction" legend on the right shows the
+    start/end marker shapes, and a "Parameter t" colorbar displays the full gradient
+    scale with labels 0, ¼, ½, ¾, tmax. Facet strip labels show the curve equations.
+    Subtle dashed grid lines appear on a clean white background.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title=26pt, axis_title=20pt, axis_text=16pt,
+          legend_title=17pt, strip_text=17pt'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text anywhere
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Curves at size=2.5 with alpha=0.94, markers at size=8 with stroke
+          clearly visible
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Navy-teal-gold-rose gradient is colorblind-friendly
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good two-panel layout, minor whitespace in spiral panel due to coord_equal
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive labels with mathematical notation appropriate for domain
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom 6-color gradient palette, thoughtful typography, intentional
+          color hierarchy
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: theme_void base with subtle dashed grid, custom legend styling, clean
+          backgrounds
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Color gradient tells progression story, start/end markers guide viewer,
+          equations in facet labels
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct parametric curve plot with two example curves
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Equal aspect ratio, color gradient, two curves, start/end markers,
+          sufficient density
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x(t) and y(t) correctly computed and mapped
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct title format, clear legend labels
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Self-intersecting closed curve and open expanding spiral demonstrate
+          key parametric behaviors
+      - id: DQ-02
+        name: Realistic Context
+        score: 4
+        max: 5
+        passed: true
+        comment: Well-known mathematical curves, neutral scientific context
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Mathematically correct values, appropriate t ranges
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean Imports-Data-Plot-Save structure, no functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic mathematical functions
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-organized, appropriate complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with dpi=300, current API
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert grammar of graphics usage: aes, geom_path, facet_wrap, scale_color_gradientn,
+          coord_equal'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: ggplot-specific layering, facet_wrap, guide_colorbar, scale_shape_manual
+          + scale_fill_manual
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - faceting
+  - layer-composition
+  - colorbar
+  patterns:
+  - data-generation
+  dataprep:
+  - normalization
+  styling:
+  - minimal-chrome
+  - custom-colormap
+  - alpha-blending
+  - grid-styling

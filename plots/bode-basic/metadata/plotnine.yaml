@@ -1,0 +1,238 @@
+library: plotnine
+specification_id: bode-basic
+created: '2026-03-21T20:48:02Z'
+updated: '2026-03-21T21:37:55Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23388395508
+issue: 4411
+python_version: 3.14.3
+library_version: 0.15.3
+preview_url: https://storage.googleapis.com/pyplots-images/plots/bode-basic/plotnine/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/bode-basic/plotnine/plot_thumb.png
+preview_html: null
+quality_score: 81
+review:
+  strengths:
+  - Excellent data storytelling with clearly annotated gain and phase margins using
+    distinct colors and marker shapes
+  - Strong aesthetic sophistication with custom color palette, themed backgrounds,
+    and refined grid styling
+  - Correct title format and complete spec compliance with all required features
+  - Clean, well-structured code with deterministic data generation
+  - Good use of plotnine grammar of graphics with faceted layout and layer composition
+  weaknesses:
+  - Severe layout imbalance between magnitude and phase panels — magnitude panel has
+    massive empty white space while phase panel is extremely compressed
+  - Phase panel crowding causes markers, annotations, and reference lines to cluster
+    together
+  - The facet_wrap equal-height allocation does not suit this plot where panels need
+    different vertical proportions
+  image_description: The plot shows a dual-panel Bode plot with the title "bode-basic
+    · plotnine · pyplots.ai" centered at the top in dark blue bold text. The top panel
+    is labeled "Magnitude (dB)" with a light lavender strip background, showing a
+    blue line (#306998) starting at approximately +14 dB at low frequencies, staying
+    relatively flat until about 0.3 Hz, then rolling off steeply to about -50 dB at
+    the right edge. The bottom panel is labeled "Phase (degrees)" with the same strip
+    styling, showing the phase curve starting near -30° and rolling off to approximately
+    -270°. Reference lines are drawn as dashed light gray at 0 dB and -180°. An orange
+    vertical segment marks the gain margin (GM = 8.0 dB) at the phase crossover frequency
+    (~0.5 Hz) with orange square markers, and a purple vertical segment marks the
+    phase margin (PM = 33°) at the gain crossover frequency with purple circle markers.
+    Dotted vertical guide lines indicate crossover frequencies in both panels. The
+    background is light gray (#FAFAFA) with white panel backgrounds and subtle grid
+    lines. The major layout issue is that the magnitude panel occupies roughly 65%
+    of the figure height with vast empty white space below the data, while the phase
+    panel is extremely compressed at the bottom, making its elements crowded and hard
+    to distinguish.
+  criteria_checklist:
+    visual_quality:
+      score: 22
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title=24, axis_title=20, axis_text=16,
+          strip=20, annotations=18). Readable throughout.
+      - id: VQ-02
+        name: No Overlap
+        score: 4
+        max: 6
+        passed: true
+        comment: Minor crowding in phase panel where tick labels and PM annotation
+          are close together.
+      - id: VQ-03
+        name: Element Visibility
+        score: 4
+        max: 6
+        passed: true
+        comment: Lines visible but phase panel compression makes margin segment and
+          markers hard to distinguish.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Colorblind-safe: blue, orange, purple are clearly distinguishable.'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 1
+        max: 4
+        passed: false
+        comment: 'Severe layout imbalance: magnitude panel has massive empty space,
+          phase panel extremely compressed.'
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Frequency (Hz) with units, strip labels serve as y-axis labels with
+          units.
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom color palette with intentional hierarchy, styled backgrounds,
+          above defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: theme_minimal, custom grid colors, subtle grid weights, custom tick
+          colors.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: GM/PM annotations with distinct colors and marker shapes create visual
+          hierarchy.
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct dual-panel Bode plot with magnitude and phase sharing log
+          frequency axis.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: GM/PM annotations, reference lines, log axis,
+          grid.'
+      - id: SC-03
+        name: Data Mapping
+        score: 2
+        max: 3
+        passed: true
+        comment: Correct mapping but phase panel compression makes it difficult to
+          read precise values.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct. No legend needed for single-system plot.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows 3rd-order TF with clear GM and PM. Both crossover frequencies
+          visible. No resonance peak.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Realistic control systems TF: G(s)=5/[(s+1)(0.5s+1)(0.2s+1)]. GM=8dB,
+          PM=33° are realistic.'
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Frequency range 0.03-30 Hz appropriate. Magnitude and phase values
+          physically correct.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean linear flow: imports, data, margins, DataFrame, plot, save.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic analytical transfer function.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-structured, appropriate complexity, no fake UI.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with dpi=300, current API.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Good grammar of graphics: facet_wrap, aes mappings, layer composition,
+          CategoricalDtype.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: facet_wrap with free_y, CategoricalDtype for panel ordering, ggplot2-style
+          layer composition.
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - faceting
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - grid-styling
+  - alpha-blending

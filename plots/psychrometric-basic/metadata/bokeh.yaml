@@ -1,0 +1,227 @@
+library: bokeh
+specification_id: psychrometric-basic
+created: '2026-03-15T21:52:32Z'
+updated: '2026-03-15T22:24:37Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23120046458
+issue: 4583
+python_version: 3.14.3
+library_version: 3.9.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/psychrometric-basic/bokeh/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/psychrometric-basic/bokeh/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/psychrometric-basic/bokeh/plot.html
+quality_score: 88
+review:
+  strengths:
+  - Comprehensive psychrometric chart with all required thermodynamic property lines
+    computed from ASHRAE formulas
+  - Excellent data storytelling through the HVAC process path with arrow and energy
+    change annotation
+  - 'Strong use of Bokeh-specific features: per-renderer HoverTool tooltips, Band
+    glyph for comfort zone, HTML export'
+  - Semantic color coding makes each property type instantly identifiable
+  - All property lines labeled directly on chart as spec requires
+  weaknesses:
+  - Some label crowding in the upper-left area where enthalpy labels stack and near
+    x-axis where specific volume labels compete with tick labels
+  - RH curve labels at higher percentages cluster in the upper-right area
+  - Grid could be more subtle for a cleaner engineering diagram aesthetic
+  image_description: The plot displays a psychrometric chart on a light gray-blue
+    background. The x-axis shows "Dry-Bulb Temperature (°C)" ranging from -10 to 50,
+    and the y-axis shows "Humidity Ratio (g/kg)" from 0 to 30. Blue curves represent
+    relative humidity lines from 10% to 100%, with the 100% saturation curve drawn
+    thicker and darker. Orange dashed diagonal lines show wet-bulb temperatures (0°C
+    to 35°C wb). Magenta/rose dotted diagonal lines show enthalpy values (10 to 80+
+    kJ/kg). Green dash-dot lines show specific volume (0.78 to 0.92 m³/kg). A light
+    blue shaded band marks the "Comfort Zone" (~20-26°C, 30-60% RH). A bold red process
+    path with arrowhead connects "Outdoor Air (35°C, 60% RH)" to "Supply Air (15°C,
+    90% RH)" representing cooling and dehumidification, with a Δh energy annotation.
+    Title reads "psychrometric-basic · bokeh · pyplots.ai" with subtitle "Standard
+    Atmosphere (101.325 kPa) · ASHRAE Psychrometric Properties".
+  criteria_checklist:
+    visual_quality:
+      score: 25
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 30pt, axis labels 22pt, ticks
+          18pt, curve labels 16-20pt). Some property line labels slightly small.
+      - id: VQ-02
+        name: No Overlap
+        score: 4
+        max: 6
+        passed: true
+        comment: Some label crowding in upper-left enthalpy region and specific volume
+          labels near x-axis.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Lines well-differentiated by color and dash pattern with good hierarchy.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 3
+        max: 4
+        passed: true
+        comment: Blue, orange, magenta, green scheme is colorblind-safe. Blue gradient
+          for RH curves may be hard to distinguish.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Chart fills canvas well with balanced margins.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive labels with proper units.
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom semantic color palette, custom background, intentional hierarchy
+          through line weight/alpha.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Outline removed, subtle dashed grid at alpha 0.3, minor ticks hidden,
+          custom colors.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: HVAC process path with arrow and energy annotation tells clear engineering
+          story.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct psychrometric chart with all curve types.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: RH curves, wet-bulb, enthalpy, specific volume,
+          comfort zone, process path.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct mapping of dry-bulb temperature and humidity ratio.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct. Direct labeling used appropriately.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All psychrometric properties shown comprehensively.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real HVAC scenario using ASHRAE formulas at standard atmosphere.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Standard psychrometric chart range with realistic state points.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear flow, no functions/classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic from ASHRAE equations.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-organized, vectorized calculations.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png and plot.html.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Consistent ColumnDataSource usage, figure API, Label/Title layouts,
+          Band glyph.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Per-renderer HoverTool tooltips, Band glyph, dual HTML+PNG export.
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - hover-tooltips
+  - html-export
+  - patches
+  patterns:
+  - data-generation
+  - columndatasource
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling

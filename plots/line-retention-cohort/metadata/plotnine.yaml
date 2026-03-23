@@ -1,0 +1,226 @@
+library: plotnine
+specification_id: line-retention-cohort
+created: '2026-03-16T20:44:50Z'
+updated: '2026-03-16T20:57:58Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23164943107
+issue: 4572
+python_version: 3.14.3
+library_version: 0.15.3
+preview_url: https://storage.googleapis.com/pyplots-images/plots/line-retention-cohort/plotnine/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/line-retention-cohort/plotnine/plot_thumb.png
+preview_html: null
+quality_score: 91
+review:
+  strengths:
+  - Excellent data storytelling with improvement gap ribbon, endpoint labels, and
+    20% threshold annotation
+  - Graduated alpha and line width effectively emphasize recent cohorts
+  - Custom color palette with intentional blue-to-orange progression
+  - All spec requirements fully implemented including cohort sizes in legend
+  - Expert use of plotnine grammar of graphics with identity scales
+  weaknesses:
+  - Minor overlap of endpoint labels (17% and 19%) for the two oldest cohorts at week
+    12
+  - Three blue shades for Jan/Feb/Mar cohorts could be more distinct
+  image_description: The plot displays 5 user retention curves for monthly signup
+    cohorts (Jan–May 2025), each starting at 100% and decaying over 12 weeks. Colors
+    progress from light steel blue (oldest cohort, Jan) through medium blue (Mar)
+    to dark burnt orange/red (newest, May). Lines use graduated alpha (0.6–1.0) and
+    thickness (1.0–2.0pt) to visually emphasize recent cohorts. A subtle blue-shaded
+    ribbon spans the area between the oldest and newest cohort curves, labeled "Improvement
+    gap" in a boxed annotation. A horizontal dashed gray line marks the 20% retention
+    threshold with an italic annotation. Endpoint percentage labels appear at week
+    12 for each cohort (17%, 19%, 34%, 40%, 57%). The legend on the right shows cohort
+    labels with sample sizes (e.g., "Jan 2025 (n=1,245)") inside a light gray box
+    with border. Title reads "line-retention-cohort · plotnine · pyplots.ai" in bold.
+    Y-axis labeled "Retained Users" with percentage gridlines; X-axis labeled "Weeks
+    Since Signup" with integer ticks 0–12.
+  criteria_checklist:
+    visual_quality:
+      score: 26
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title=24, axis_title=20, axis_text=16,
+          legend_title=18, legend_text=14'
+      - id: VQ-02
+        name: No Overlap
+        score: 4
+        max: 6
+        passed: true
+        comment: Minor overlap of 19% and 17% endpoint labels at week 12
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Lines and points well-sized with graduated thickness and alpha
+      - id: VQ-04
+        name: Color Accessibility
+        score: 3
+        max: 4
+        passed: true
+        comment: Blue-to-orange progression generally colorblind-safe, three blue
+          shades could be more distinct
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good layout, slight crowding on right side near legend
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive labels: Weeks Since Signup, Retained Users'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom palette with color progression, refined typography, graduated
+          alpha/size for emphasis
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: X-grid removed, Y-grid subtle, legend styled, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Improvement gap ribbon, endpoint labels, threshold line, alpha/size
+          graduation create clear narrative
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct line chart with multiple cohort retention curves
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features implemented: 100% start, distinct colors, legend
+          with sizes, gridlines, threshold line, emphasis'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=weeks since signup, Y=retention percentage, correctly mapped
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title follows exact format, legend labels show cohort name with sample
+          size
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 5 cohorts with different decay rates, plateau levels, and sizes showing
+          clear progression
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real-world product analytics with monthly cohorts and plausible user
+          counts
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Realistic exponential decay with sensible plateau levels and cohort
+          sizes
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean imports-data-plot-save flow, no functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports are used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-organized with appropriate complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with dpi=300, current API
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert grammar of graphics usage with layered geoms, identity scales,
+          guide overrides
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: scale_*_identity with data-mapped columns, annotate label, geom_ribbon,
+          guide_legend override_aes
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  - custom-legend
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling

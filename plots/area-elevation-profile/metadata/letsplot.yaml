@@ -1,0 +1,238 @@
+library: letsplot
+specification_id: area-elevation-profile
+created: '2026-03-15T21:51:50Z'
+updated: '2026-03-15T22:32:52Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23120069378
+issue: 4578
+python_version: 3.14.3
+library_version: 4.9.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/area-elevation-profile/letsplot/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/area-elevation-profile/letsplot/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/area-elevation-profile/letsplot/plot.html
+quality_score: 85
+review:
+  strengths:
+  - Excellent spec compliance — all required features implemented including slope-based
+    coloring, landmarks, vertical exaggeration note
+  - Strong colorblind-safe palette (blue/amber/purple) with good contrast
+  - Thoughtful design with off-white background, subtle horizontal-only grid, and
+    well-styled landmark markers
+  - Slope-based line coloring adds effective data storytelling about terrain difficulty
+  - Clean, well-organized code with good reproducibility
+  weaknesses:
+  - Label overlap in the 20-65 km region where four landmarks cluster — staggering
+    helps but does not fully resolve it
+  - X-axis extends to 150 for label accommodation, creating dead space on the right
+    side
+  - Landmark labels at 40-degree angle with size 14 are at the lower bound of readability
+  image_description: 'The plot shows an Alpine trail elevation profile spanning 120
+    km. The x-axis displays "Distance (km)" from 0 to 120 with ticks every 20 km,
+    and the y-axis shows "Elevation (m)" ranging from about 1,200 m to 2,800 m. A
+    light blue filled area creates a terrain silhouette beneath the profile line.
+    The profile line itself is colored by slope steepness using three colors: blue
+    (Flat/Gentle), amber/gold (Moderate), and deep purple (Steep). Eight landmarks
+    are marked with white-filled circles with blue borders, connected by dotted lines
+    to angled bold text labels: Talbach Village (0 km, ~1,200 m), Steinberg Pass (~20
+    km), Grünsee Lake (~38 km), Hochwand Summit (~50 km, highest point ~2,300 m),
+    Felsentor Saddle (~65 km), Alpenhof Hut (~80 km), Gipfelkreuz Peak (~95 km), and
+    Bergdorf Village (120 km, ~1,200 m). Dashed vertical lines drop from each landmark
+    to the bottom. The title reads "Alpine Trail Elevation Profile · area-elevation-profile
+    · letsplot · pyplots.ai" with a subtitle noting vertical exaggeration ~10x. A
+    legend at the bottom shows the three slope categories. The background is a soft
+    off-white (#FAFAFA) with subtle horizontal grid lines only.'
+  criteria_checklist:
+    visual_quality:
+      score: 24
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set. Landmark labels at size 14 with 40°
+          angle slightly less legible but readable.
+      - id: VQ-02
+        name: No Overlap
+        score: 3
+        max: 6
+        passed: false
+        comment: Labels in 20-65 km region closely spaced with some tail overlap despite
+          staggering.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Profile line at size 2.5 clearly visible, landmark points at size
+          7 stand out well.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue/amber/purple colorblind-safe palette with strong contrast.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: X-axis extends to 150 while data ends at 120, creating dead space
+          on the right.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Distance (km) and Elevation (m) — descriptive with units.
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom colorblind-safe palette, thoughtful typography hierarchy,
+          themed markers, off-white background. Clearly above defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Minimal theme, horizontal-only grid, custom background, generous
+          margins, dotted connector lines.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Slope-based coloring creates terrain difficulty narrative. Landmarks
+          guide viewer through the trail.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct area/line plot with filled terrain silhouette.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: filled area, landmarks, vertical markers,
+          slope coloring, vertical exaggeration note.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Distance on x-axis, elevation on y-axis, correct throughout.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title follows spec-id · library · pyplots.ai format. Legend correctly
+          labels slope categories.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Multiple peaks, valleys, varying slopes, 8 diverse landmarks. Good
+          variety.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Alpine hiking trail with plausible German-language landmark names.
+          Neutral, engaging.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Elevations 1200-2300 m realistic for Alpine trails. 120 km plausible
+          for multi-day hike.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports, data, plot, save. No functions or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set at start.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-organized. Manual nudge arrays appropriate for label
+          positioning.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png via export_ggsave with scale=3.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Good ggplot grammar usage: aes, geom layering, scale_color_manual,
+          theme customization, inherit_aes.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses layer_tooltips() for interactive hover, ggsize(), export_ggsave
+          with scale. HTML export also generated.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  dataprep:
+  - rolling-window
+  - binning
+  styling:
+  - alpha-blending
+  - grid-styling
+  - edge-highlighting

@@ -1,0 +1,235 @@
+library: letsplot
+specification_id: stereonet-equal-area
+created: '2026-03-15T23:03:21Z'
+updated: '2026-03-15T23:40:09Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23121189167
+issue: 4576
+python_version: 3.14.3
+library_version: 4.9.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/stereonet-equal-area/letsplot/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/stereonet-equal-area/letsplot/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/stereonet-equal-area/letsplot/plot.html
+quality_score: 88
+review:
+  strengths:
+  - Mathematically correct equal-area projection with proper Lambert azimuthal formulas
+  - 'Comprehensive feature set: great circles, poles, density contours, confidence
+    ellipses, mean annotations'
+  - Excellent colorblind-safe palette following Okabe-Ito conventions
+  - Smart label nudge logic to avoid overlap with cardinal direction labels
+  - Interactive tooltips on poles showing strike/dip values (lets-plot distinctive
+    feature)
+  - Clean, professional visual design with appropriate use of alpha blending and layering
+  weaknesses:
+  - Density contours (geom_density2d) extend beyond the primitive circle boundary,
+    creating visual noise outside the stereonet
+  - Mean annotation label font size (14) is slightly small relative to other text
+    elements
+  - Joint cluster labels crowd near the E cardinal label despite nudge logic
+  image_description: 'The plot displays a Schmidt equal-area (lower-hemisphere) stereonet
+    projection on a white/light gray circular canvas. Four geological feature types
+    are plotted as colored poles (dots): Bedding (blue, clustered in the lower-center),
+    Joint (pink, clustered on the right near E), Fault (amber/orange, in the lower-left),
+    and Foliation (teal/green, near the top-center). Great circles are drawn as thin,
+    semi-transparent colored arcs for each measurement. Gray density contours (geom_density2d)
+    overlay the pole data showing clustering patterns. Each cluster has a semi-transparent
+    confidence ellipse fill and a dark diamond-shaped mean pole marker with italic
+    annotation showing mean strike/dip (Bedding 43/33, Joint 356/78, Fault 151/55,
+    Foliation 268/28). The primitive circle boundary is drawn in dark gray with tick
+    marks every 10 degrees (longer every 30 degrees). Cardinal directions N, E, S,
+    W are labeled in bold. Dashed reference cross lines mark N-S and E-W axes. A legend
+    in the lower-right corner shows Feature Type with all four categories. Title reads
+    stereonet-equal-area letsplot pyplots.ai in bold at the top.'
+  criteria_checklist:
+    visual_quality:
+      score: 26
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title=26, cardinal=20, legend title=18,
+          legend text=16). Mean annotation labels at size=14 slightly small.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Joint label close to E cardinal label. Density contours extend beyond
+          primitive circle.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Poles visible (size=5, alpha=0.85). Great circles appropriately subtle.
+          Mean diamonds prominent.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Excellent colorblind-safe palette following Okabe-Ito conventions.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Square canvas appropriate for stereonet. Density contours bleed beyond
+          primitive circle boundary.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Axes correctly blank for stereonet. Cardinal directions serve as
+          orientation markers.
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom colorblind-safe palette, confidence ellipses, italic mean
+          annotations, diamond markers, clean legend.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: All axes/ticks/grid removed. Subtle dashed reference lines. Custom
+          perimeter ticks. Clean background.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Mean annotations with strike/dip guide interpretation. Confidence
+          ellipses show spread. Clear visual groupings.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Schmidt equal-area lower-hemisphere stereonet with Lambert
+          azimuthal math.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All required features present: great circles, poles, density contours,
+          color-coding, legend, tick marks, N label.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Strike/dip correctly converted to equal-area projection coordinates.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title in correct format. Legend shows all four feature types.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Four distinct structural features with different orientations and
+          dip angles.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Realistic geological structural data from a field mapping campaign.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Strike 0-360 degrees, dip values appropriate per feature type.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports, data, projection, plot, save. No functions/classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set at beginning.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used. Clean explicit imports.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-organized with clear comments. Smart label nudge logic.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png via ggsave with scale=3. Current API.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good ggplot2 grammar with layered geom_* calls, aes(), scale_*_manual(),
+          coord_fixed().
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses layer_tooltips() for interactive hover, HTML export, geom_density2d
+          with kernel/adjust.
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - polar-projection
+  - annotations
+  - layer-composition
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - alpha-blending

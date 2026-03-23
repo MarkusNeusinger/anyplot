@@ -1,0 +1,230 @@
+library: letsplot
+specification_id: ecg-twelve-lead
+created: '2026-03-19T20:10:00Z'
+updated: '2026-03-19T20:23:29Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23314441859
+issue: 4554
+python_version: 3.14.3
+library_version: 4.9.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/ecg-twelve-lead/letsplot/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/ecg-twelve-lead/letsplot/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/ecg-twelve-lead/letsplot/plot.html
+quality_score: 90
+review:
+  strengths:
+  - Authentic ECG paper simulation with three-level grid hierarchy and medical-standard
+    pink color scheme
+  - All 12 leads have physiologically accurate, lead-specific P-QRS-T morphologies
+  - 'Complete spec compliance: calibration pulses, rhythm strip, clinical layout,
+    scale annotation'
+  - Clean dictionary-driven lead configuration makes the code maintainable
+  - Uses genuine lets-plot interactive features (layer_tooltips) for added value
+  weaknesses:
+  - 'DE-03 could be stronger: the display shows data without emphasizing any particular
+    clinical insight'
+  - Scale annotation text (size=9) is slightly small relative to other text elements
+  image_description: 'The plot displays a 12-lead ECG in standard clinical 3×4 grid
+    format on simulated ECG paper. The background is light pink/peach (#fff5f0) with
+    two levels of grid lines: fine light pink minor grid lines at 1mm-equivalent intervals
+    and darker salmon major grid lines at 5mm-equivalent intervals. Darker column
+    separator lines divide the display into four 2.5-second columns. Three rows show
+    the standard leads: Row 1 (I, aVR, V1, V4), Row 2 (II, aVL, V2, V5), Row 3 (III,
+    aVF, V3, V6). A full-length Lead II rhythm strip spans the bottom across all 10
+    seconds. Each lead is labeled in bold dark text at the upper-left of its cell.
+    Dark navy (#1a1a2e) traces show realistic P-QRS-T morphology with lead-appropriate
+    variations: aVR is inverted, V1 has a deep S-wave, V4 has the tallest R-wave.
+    Calibration pulses (1mV brackets) appear at the left margin of each row. A "25
+    mm/s | 10 mm/mV" scale annotation is in the bottom-right corner. The title "ecg-twelve-lead
+    · letsplot · pyplots.ai" appears in bold at the top-left.'
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title size=26, labels size=11 bold, all explicitly set. Scale annotation
+          (size=9) slightly small.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping elements. Labels positioned well above traces.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Dark navy traces clearly visible against light pink background. Three-level
+          grid hierarchy well-differentiated.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Monochrome display (dark traces on pink paper). Fully colorblind-safe.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 4800x2700 output. 3x4 grid plus rhythm strip fills canvas well with
+          balanced margins.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Axes appropriately hidden for ECG. Scale annotation provides units.
+          Title present.
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Strong ECG paper simulation with custom three-level grid colors and
+          dark navy traces. Clearly above defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: All axes/spines/ticks removed. Custom grid system. Styled backgrounds.
+          Near-perfect polish.
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Clinical layout provides structure but no particular insight is emphasized.
+          Standard display format.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct multi-channel ECG waveform display in clinical format.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: 3x4 grid, rhythm strip, minor/major grid,
+          calibration pulses, scale annotation, lead labels, synthetic data.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Time on x-axis, voltage on y-axis with proper offsets.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct. No legend needed for single-color traces.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All 12 leads with distinct lead-appropriate morphologies. P-QRS-T
+          visible. aVR inverted, V1 deep S, V4 tallest R.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Normal sinus rhythm at 72 bpm. Healthcare domain, neutral and educational.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: P-waves 0.1-0.2mV, QRS 0.22-1.35mV, T-waves 0.06-0.32mV. All within
+          normal ranges.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear flow with no functions or classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set at start.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used. Specific imports from lets_plot.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-organized, clear variable names. Dictionary-driven lead config.
+          No fake UI.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png via ggsave with scale=3. Also saves HTML.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Proper ggplot grammar with layered geoms, aes mappings, theme system.
+          Good inherit_aes=False usage.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: layer_tooltips for interactive hover, geom_rect with tooltips, HTML
+          export alongside PNG.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - grid-styling
+  - minimal-chrome

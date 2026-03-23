@@ -1,0 +1,223 @@
+library: altair
+specification_id: heatmap-risk-matrix
+created: '2026-03-17T22:03:07Z'
+updated: '2026-03-17T22:21:29Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23217984762
+issue: 4567
+python_version: 3.14.3
+library_version: 6.0.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/heatmap-risk-matrix/altair/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/heatmap-risk-matrix/altair/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/heatmap-risk-matrix/altair/plot.html
+quality_score: 90
+review:
+  strengths:
+  - 'Excellent spec compliance: all required features implemented faithfully'
+  - Strong data storytelling through green-to-red gradient and risk zone labels
+  - Smart jitter algorithm that systematically spreads overlapping markers
+  - Idiomatic Altair usage with layered composition and interactive tooltips
+  - Professional polish with rounded cell corners, white borders, and semi-transparent
+    score watermarks
+  weaknesses:
+  - Risk item labels at 13pt could be slightly larger for optimal readability
+  - Green-to-red heatmap gradient, while domain-standard, is not ideal for colorblind
+    users
+  image_description: 'The plot displays a 5x5 risk assessment matrix with "Impact"
+    on the x-axis (Negligible, Minor, Moderate, Major, Catastrophic) and "Likelihood"
+    on the y-axis (Rare at top, Almost Certain at bottom). Background cells are colored
+    with a continuous green-yellow-orange-red gradient based on risk score (product
+    of likelihood x impact), with semi-transparent score numbers (1-25) watermarked
+    in each cell. 15 risk items appear as colored circular markers: blue (Technical),
+    gold/orange (Financial), and purple (Operational), each labeled above the marker.
+    White borders with rounded corners separate cells. A "Risk Category" legend sits
+    in the bottom-right corner. The title reads "heatmap-risk-matrix · altair · pyplots.ai"
+    with subtitles describing the 15 risks and risk zone definitions (Low 1-4, Medium
+    5-9, High 10-16, Critical 20-25).'
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set; risk item labels at 13pt slightly
+          small but readable
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Smart jitter prevents most overlap; minor crowding in multi-risk
+          cells
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Markers well-sized with white stroke, score watermarks subtle but
+          legible
+      - id: VQ-04
+        name: Color Accessibility
+        score: 3
+        max: 4
+        passed: true
+        comment: Category colors colorblind-safe; heatmap green-red gradient is domain
+          standard but not ideal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square layout fills canvas well, balanced margins, legend fits neatly
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive domain terms with ordinal tick labels as scale context
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom gradient with LAB interpolation, white borders with corner
+          radius, intentional category colors
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: View stroke removed, axis domain/tick widths zero, rounded corners,
+          generous padding
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Color gradient communicates severity, risk zone labels orient viewer,
+          category coloring adds dimension
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct 5x5 grid heatmap risk matrix
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: gradient, labels, markers, zones, grid'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Impact on X, Likelihood on Y, all 15 risks visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct title format, Risk Category legend with matching labels
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 15 items across low/medium/high/critical zones, three categories,
+          varied cell occupancy
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real-world project risk management scenario, neutral business context
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 1-5 ordinal ratings with realistic risk distributions
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear flow, no functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only altair, numpy, pandas — all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-organized, known Altair patterns
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png and plot.html
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Excellent declarative grammar: layered composition, encodings, scales,
+          alt.Title'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Tooltips, labelExpr, alt.condition, alt.layer, HTML export
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  - custom-legend
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - custom-colormap
+  - edge-highlighting

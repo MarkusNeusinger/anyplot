@@ -1,0 +1,224 @@
+library: seaborn
+specification_id: lightcurve-transit
+created: '2026-03-18T21:22:16Z'
+updated: '2026-03-18T21:41:12Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23267445758
+issue: 4559
+python_version: 3.14.3
+library_version: 0.13.2
+preview_url: https://storage.googleapis.com/pyplots-images/plots/lightcurve-transit/seaborn/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/lightcurve-transit/seaborn/plot_thumb.png
+preview_html: null
+quality_score: 91
+review:
+  strengths:
+  - Excellent two-panel scientific layout (light curve + residuals) with shared x-axis
+    and tight spacing
+  - Physically realistic transit model with quadratic limb darkening
+  - Custom blue/amber color palette with strong contrast and colorblind accessibility
+  - Informative annotation highlighting the key scientific measurement (transit depth)
+  - All font sizes explicitly set for high-resolution output
+  weaknesses:
+  - Rugplot on residuals panel creates a dense blue bar artifact at the left y-axis
+    edge
+  - Error bars add slight visual clutter in dense out-of-transit regions
+  image_description: 'The plot displays a two-panel layout. The top panel shows an
+    astronomical light curve: blue scatter points (#306998) with vertical error bars
+    plotted against orbital phase (0.0-1.0) on the x-axis and relative flux (~0.988-1.005)
+    on the y-axis. An amber/orange (#C8702A) transit model curve overlays the data,
+    showing a characteristic V-shaped dip centered at phase 0.5 with ~1% depth. An
+    annotation arrow points to the transit minimum labeled "Transit depth 1.0%". The
+    legend in the lower right reads "Transit model". The bottom panel shows residuals
+    (flux minus model) as smaller blue scatter points around a dashed amber zero-line,
+    with a subtle rug plot on the left y-axis edge. Title reads "lightcurve-transit
+    · seaborn · pyplots.ai". Top and right spines are removed on both panels. Subtle
+    y-axis gridlines are present. The overall appearance is clean and scientific.'
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 24pt, labels 20/16pt, ticks
+          16pt, annotation 14pt, legend 15pt'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text; annotation well-positioned
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: 500 points with s=35, alpha=0.45 within guidelines; error bars add
+          slight visual clutter
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue/amber palette is colorblind-safe with strong contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Two-panel layout fills canvas well, 16x9 figsize, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive labels; phase and relative flux are unitless quantities
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom palette, professional scientific typography, clearly above
+          defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines removed, subtle grid, tight panel spacing; rugplot creates
+          minor artifact
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Transit dip as focal point, annotation highlights key measurement,
+          residuals add scientific rigor
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct time-series scatter plot with transit
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Error bars, model overlay, phase-folded data, scatter points, clean
+          style all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=orbital phase, Y=relative flux, transit dip downward as specified
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct title format and accurate legend label
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Transit dip, baseline, error bars, limb-darkened model, residuals
+          all shown
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Simulated exoplanet transit with quadratic limb darkening, realistic
+          for space photometry
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 1% transit depth, flux near 1.0, errors 0.0008-0.0015 realistic for
+          Kepler/TESS
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear flow, no functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All four imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean and well-organized, appropriate complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png, dpi=300, bbox_inches=tight, current API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic axes-level API with scatterplot, lineplot, rugplot, despine,
+          set_context
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: sns.rugplot for density, sns.set_context for scaling, sns.despine
+          are distinctive features
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - subplots
+  - annotations
+  patterns:
+  - data-generation
+  - explicit-figure
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
+  - grid-styling

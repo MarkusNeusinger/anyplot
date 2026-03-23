@@ -1,0 +1,228 @@
+library: plotly
+specification_id: area-elevation-profile
+created: '2026-03-15T21:51:30Z'
+updated: '2026-03-15T22:15:08Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23120069459
+issue: 4578
+python_version: 3.14.3
+library_version: 6.6.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/area-elevation-profile/plotly/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/area-elevation-profile/plotly/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/area-elevation-profile/plotly/plot.html
+quality_score: 94
+review:
+  strengths:
+  - Excellent use of Plotly fillgradient for terrain silhouette effect — a distinctive
+    feature
+  - Slope-colored line segments provide effective data storytelling about terrain
+    difficulty
+  - Real-world Swiss hiking data with accurate place names and elevations
+  - Clean, well-positioned annotations with custom offsets to avoid overlaps at edges
+  - Vertical exaggeration note adds professional cartographic context
+  - HTML export preserves full Plotly interactivity
+  weaknesses: []
+  image_description: 'The plot displays a terrain elevation profile of the Bernese
+    Oberland Traverse along a 120 km hiking route. The x-axis shows "Distance (km)"
+    from 0 to 120, and the y-axis shows "Elevation (m)" from 0 to ~3200. The area
+    beneath the profile line is filled with a vertical gradient transitioning from
+    very light translucent blue at the bottom to a deeper blue near the profile line,
+    creating an attractive terrain silhouette. The profile line itself is color-coded
+    by slope steepness: blue segments for gentle slopes, orange for moderate, and
+    purple for steep sections. Seven landmarks are annotated with bold names and elevation
+    values (Grindelwald 1,034 m, Bachalpsee 2,265 m, Faulhorn 2,681 m, Schynige Platte
+    2,076 m, Männlichen 1,100 m, Kleine Scheidegg 2,061 m, Wengen 1,274 m), each with
+    dotted vertical reference lines and dark blue circle markers with white borders.
+    A slope legend at bottom-left uses colored block characters. A vertical exaggeration
+    note (~20x) appears at bottom-right. The title reads "Bernese Oberland Traverse
+    · area-elevation-profile · plotly · pyplots.ai". The background is clean white
+    with very subtle y-axis gridlines.'
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 28pt, axis labels 22pt, ticks
+          18pt, annotations 16pt'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text. Custom y-offsets and x-anchors prevent collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Line width 3-3.5, markers size 16 with white border, all clearly
+          visible
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue/orange/purple palette is colorblind-safe with good contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good canvas utilization with balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Distance (km) and Elevation (m) with units
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom gradient fill, slope-colored segments, refined annotations,
+          cohesive blue palette
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: plotly_white template, x-grid removed, y-grid very subtle (0.06 opacity),
+          clean whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Slope coloring tells terrain difficulty story, landmarks guide viewer,
+          Faulhorn as focal point
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct area/line chart for elevation profile with filled terrain
+          silhouette
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: filled area, landmarks with vertical lines,
+          vertical exaggeration note, slope coloring'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=distance (km), Y=elevation (m), correct mapping
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title follows format with descriptive prefix. Slope legend annotation
+          present
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows peaks, valleys, varied terrain, multiple landmark types
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real Bernese Oberland hiking route with actual Swiss place names
+          and realistic elevations
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 120 km traverse, 1000-2700m elevation range, realistic for Swiss
+          Alps
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports, data, plot, style, save. No functions or classes'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set for noise generation
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only numpy and plotly.graph_objects, both fully used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-organized, appropriate complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png (1600x900, scale=3) and plot.html. Current API
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of go.Scatter, update_layout, add_shape, annotations, hovertemplate
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: fillgradient is Plotly-distinctive, HTML export with interactivity,
+          hovertemplate
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - interpolation
+  styling:
+  - gradient-fill
+  - grid-styling

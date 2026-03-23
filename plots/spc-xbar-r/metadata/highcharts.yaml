@@ -1,0 +1,239 @@
+library: highcharts
+specification_id: spc-xbar-r
+created: '2026-03-19T21:49:14Z'
+updated: '2026-03-19T22:31:05Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23318370430
+issue: 4551
+python_version: 3.14.3
+library_version: unknown
+preview_url: https://storage.googleapis.com/pyplots-images/plots/spc-xbar-r/highcharts/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/spc-xbar-r/highcharts/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/spc-xbar-r/highcharts/plot.html
+quality_score: 84
+review:
+  strengths:
+  - Perfect spec compliance (15/15) with all SPC chart features correctly implemented
+    including X-bar/R stacked layout, control limits, warning limits, and OOC highlighting
+  - Excellent data quality (15/15) with realistic CNC machining scenario, appropriate
+    scale, and complete feature coverage
+  - Strong design with custom palette, refined markers, and clear visual hierarchy
+    between normal and out-of-control points
+  - Good use of Highcharts-specific plotLines for labeled horizontal reference lines
+  - Interactive HTML output alongside PNG provides additional value
+  weaknesses:
+  - Right-side control limit labels slightly cramped near canvas edge despite generous
+    spacing allocation
+  - Helper function make_plot_line breaks flat KISS structure
+  - Hybrid API usage (Python objects for series, raw dicts for config) is pragmatic
+    but not fully idiomatic highcharts_core
+  image_description: 'The plot displays two vertically stacked Highcharts line charts
+    on a light gray (#FAFBFC) background. The top chart shows X-bar (Sample Mean)
+    values for CNC shaft diameter measurements across 30 samples, plotted as a blue
+    line with circular markers (white-bordered). Three out-of-control points are highlighted
+    as large red diamond markers — one above UCL around sample 9, one below LCL around
+    sample 19, and one above UCL around sample 25. Horizontal reference lines include:
+    a solid teal center line (CL approximately 24.999), dashed red UCL (approximately
+    25.013) and LCL (approximately 24.987), and dotted amber UWL/LWL warning limits.
+    The bottom chart shows R (Sample Range) values with the same blue line style,
+    a teal CL (approximately 0.023), dashed red UCL (approximately 0.048), and dotted
+    amber UWL. The title reads "CNC Shaft Diameter Monitoring · spc-xbar-r · highcharts
+    · pyplots.ai". A legend at the top shows three entries: X-bar (Sample Mean), Out
+    of Control, and R (Sample Range). All axis labels include units (mm). The x-axis
+    shows sample numbers 1 through 30.'
+  criteria_checklist:
+    visual_quality:
+      score: 24
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 42px, axis titles 26px, tick
+          labels 20-22px, plotLine labels 20px). Minor right-side label cramping near
+          canvas edge.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: No major overlap. Labels positioned on opposite sides to avoid collision.
+          Minor crowding where UCL and UWL lines are close.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Markers well-sized (radius 7 normal, 13 OOC). Lines clear at width
+          3. Could be slightly larger for 4800px canvas.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 3
+        max: 4
+        passed: true
+        comment: Blue/red/teal/amber palette distinguishable for most colorblind types.
+          Red used for both OOC points and UCL/LCL lines.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 2
+        max: 4
+        passed: false
+        comment: Charts use vertical space well but large right spacing causes control
+          limit labels to sit close to canvas edge.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive with units: X-bar (Sample Mean, mm), R (Sample Range,
+          mm), Sample Number.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom color palette, custom font family, light background, white-bordered
+          markers. Clearly above defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid (low-opacity rgba), clean background, custom spacing.
+          Good refinement but not fully polished.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: OOC points as red diamonds create clear focal points. Warning zones
+          guide attention. Clear SPC narrative.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct X-bar chart on top, R chart on bottom, vertically stacked
+          pair sharing x-axis.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: UCL/LCL dashed and labeled, CL solid, OOC
+          highlighted, warning limits shown, standard constants used.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Sample number on X, means on top Y, ranges on bottom Y. Correct mapping.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title follows required format. Legend labels match data series.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows OOC above and below limits, normal variation, R chart variation.
+          Complete coverage.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: CNC shaft diameter measurements - realistic manufacturing QC scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 25mm target with thousandths-of-mm variation - realistic for precision
+          machining.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: false
+        comment: Helper function make_plot_line breaks flat structure rule, though
+          pragmatic for 8 plotLine definitions.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set at the top.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used. No unused imports.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-structured code with appropriate complexity. Hybrid approach
+          is pragmatic.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png via Selenium. Also saves interactive plot.html.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
+        max: 5
+        passed: true
+        comment: 'Hybrid approach: Python API for series, dict for full config. Pragmatic
+          but not purely idiomatic.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses Highcharts-specific plotLines, multiple y-axes with height/top
+          positioning, interactive tooltips with formatting.
+  verdict: REJECTED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - html-export
+  - hover-tooltips
+  - custom-legend
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - grid-styling
+  - edge-highlighting

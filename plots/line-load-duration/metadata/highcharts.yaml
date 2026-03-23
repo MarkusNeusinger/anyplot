@@ -1,0 +1,232 @@
+library: highcharts
+specification_id: line-load-duration
+created: '2026-03-15T21:43:26Z'
+updated: '2026-03-15T22:09:06Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23119898927
+issue: 4586
+python_version: 3.14.3
+library_version: unknown
+preview_url: https://storage.googleapis.com/pyplots-images/plots/line-load-duration/highcharts/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/line-load-duration/highcharts/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/line-load-duration/highcharts/plot.html
+quality_score: 91
+review:
+  strengths:
+  - Perfect spec compliance with all required features well-implemented (shaded regions,
+    capacity tier lines, region labels, total energy)
+  - Professional coordinated color scheme with gradient fills adding visual depth
+  - Realistic synthetic data with seasonal/daily patterns producing a believable load
+    duration curve
+  - Y-axis tick density fixed — clean 100 MW intervals reduce visual noise
+  - Good use of Highcharts-specific features (plotBands, plotLines, linearGradient)
+  weaknesses:
+  - Capacity line labels overlap slightly with filled area regions, reducing contrast
+  - Could further refine with spine removal or custom renderer annotations
+  image_description: 'The plot displays a load duration curve on an off-white (#fafafa)
+    background at 4800x2700 px. The title reads "line-load-duration · highcharts ·
+    pyplots.ai" in bold Georgia serif at the top, with an italic subtitle "Annual
+    Load Duration Curve — Total Energy: 6,207 GWh". The x-axis shows "Hours of Year
+    (Ranked)" from 0 to 8,760 with 1,000-hour tick intervals. The y-axis shows "Power
+    Demand (MW)" from 300 to 1,400 with 100 MW intervals and subtle dotted grid lines.
+    Three area series with gradient fills form a smoothly monotonically decreasing
+    curve from ~1,300 MW to ~350 MW: red/coral Peak Load (0–322 hrs), purple Intermediate
+    Load (322–3,716 hrs), and steel-blue Base Load (3,716–8,760 hrs). Three horizontal
+    dashed capacity lines mark tiers: Peak Capacity at 1,100 MW (red), Intermediate
+    Capacity at 750 MW (purple), Base Capacity at 500 MW (blue), each with left-aligned
+    labels. Plot band labels at the top identify each region with hour counts. A vertical
+    legend in the upper right with semi-transparent background identifies the three
+    series.'
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 64px, subtitle 44px, axis titles
+          44px, tick labels 34px, capacity labels 30px, legend 32px, region labels
+          34px'
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Most text well-separated; minor legibility reduction where capacity
+          line labels sit on top of gradient-filled areas
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Area fills clearly visible with well-tuned gradient opacity; y-axis
+          tick interval fixed to 100 MW creating clean axis
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Red, purple, blue distinguishable across common color vision deficiencies
+          with good luminance contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Margins tightened yielding ~76% canvas utilization; balanced whitespace
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive labels with units: Power Demand (MW), Hours of Year
+          (Ranked)'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom coordinated red/purple/blue palette, Georgia serif typography,
+          off-white background, gradient fills — above library defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Y-axis ticks cleaned to 100 MW, subtle dotted grid, gradient fills
+          add depth; small improvement possible in spine treatment
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Three colored regions tell peak/intermediate/base story; capacity
+          lines and total energy provide engineering context
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct area chart type for load duration curve, monotonically decreasing
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: shaded regions, dashed capacity lines,
+          region labels, total energy annotation'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = ranked hours (0-8760), Y = load in MW, correctly mapped
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title follows required format; legend labels match data series
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows all three load regions with clear differentiation; realistic
+          curve shape with smooth transitions
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Mid-sized utility scenario with plausible values: peak ~1300 MW,
+          base ~400 MW, total ~6,207 GWh'
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Values appropriate: 400-1300 MW range, 8760 hours, capacity tiers
+          at 500/750/1100 MW'
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports, data generation, chart config, series creation,
+          export'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set at the start
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports are used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-structured code with appropriate complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png via Selenium; uses current highcharts_core API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of HighchartsOptions, AreaSeries, plotOptions configuration
+          pattern
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses plotBands, plotLines, and linearGradient fills — distinctive
+          Highcharts features
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - annotations
+  - gradient-fill
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - gradient-fill
+  - grid-styling

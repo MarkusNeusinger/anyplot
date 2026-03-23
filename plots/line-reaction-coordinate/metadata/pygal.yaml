@@ -1,0 +1,234 @@
+library: pygal
+specification_id: line-reaction-coordinate
+created: '2026-03-21T20:46:01Z'
+updated: '2026-03-21T21:18:10Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23388404498
+issue: 4409
+python_version: 3.14.3
+library_version: 3.1.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/line-reaction-coordinate/pygal/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/line-reaction-coordinate/pygal/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/line-reaction-coordinate/pygal/plot.html
+quality_score: 85
+review:
+  strengths:
+  - Excellent data quality with realistic chemistry context, proper units, and scientifically
+    accurate values
+  - Clean, well-structured deterministic code with vectorized numpy curve generation
+  - Good use of pygal-specific features (node customization, stroke_style dasharray,
+    HTML export)
+  - Custom y-labels at chemically meaningful energy values (20, 50, 80, 100, 120)
+  - Colorblind-safe palette with clear visual hierarchy and color-coded indicators
+  weaknesses:
+  - Labels for reactants/products/transition state appear in legend only, not directly
+    on the plot (pygal limitation)
+  - Ea and ΔH indicators are dashed lines rather than double-headed arrows (pygal
+    limitation)
+  - Some wasted whitespace in upper plot area above the 120 kJ/mol mark
+  image_description: 'The plot shows a reaction coordinate energy diagram rendered
+    as a pygal XY chart on a white background with a light gray (#FAFBFC) plot area.
+    A smooth blue curve traces the energy profile from left to right, starting flat
+    at ~50 kJ/mol (reactant level), rising steeply to a peak at ~120 kJ/mol (transition
+    state), then descending smoothly to ~20 kJ/mol (product level). Two horizontal
+    dashed gray lines span the full width at the reactant (50) and product (20) energy
+    levels, providing reference. A vertical dashed teal line connects the reactant
+    energy level to the transition state peak, representing Ea = 70 kJ/mol, with dots
+    at both endpoints. A vertical dashed orange line on the right side connects the
+    reactant and product energy levels, representing ΔH = -30 kJ/mol, also with endpoint
+    dots. A large dark blue dot marks the transition state near the curve peak. Smaller
+    blue dots mark the reactant (left, 50 kJ/mol) and product (right, 20 kJ/mol) positions.
+    The y-axis shows "Potential Energy (kJ/mol)" with custom labels at 20, 50, 80,
+    100, 120. The x-axis shows "Reaction Coordinate" with no numeric labels. The title
+    reads "line-reaction-coordinate · pygal · pyplots.ai". A legend at the bottom
+    lists all series: Energy Profile, Ea = 70 kJ/mol, ΔH = -30 kJ/mol, Transition
+    State (‡), Reactants (50 kJ/mol), Products (20 kJ/mol).'
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Font sizes explicitly set (title=60, label=40, major_label=36, legend=32,
+          value=28). All text readable. Legend text slightly small relative to chart
+          area.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping elements. Legend items well-spaced at bottom.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Main curve clearly visible with stroke_width=6. Transition state
+          marker prominent. Ea dashed line somewhat subtle against curve.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue/teal/orange palette is colorblind-safe with good contrast.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Plot fills reasonable portion of canvas with explicit margins. Some
+          wasted whitespace above 120 mark.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Y-axis has units (kJ/mol). X-axis appropriate for arbitrary reaction
+          progress.
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Custom color palette, light gray plot background, explicitly styled
+          fonts. Above defaults but not publication-quality.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: X-axis labels hidden, subtle grid via foreground_subtle, custom y-labels
+          at chemically meaningful values.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy with large transition state marker as focal
+          point, color-coded Ea and ΔH indicators.
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct reaction coordinate energy diagram with smooth curve and
+          clear maximum.
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: All key features present. Labels in legend rather than directly on
+          plot; lines rather than double-headed arrows (pygal limitation).
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = reaction coordinate, Y = potential energy. Full data range shown.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct title format. Descriptive legend labels with energy values.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows single-step exothermic reaction with reactants, transition
+          state, products, Ea, and ΔH.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Chemistry reaction coordinate with proper kJ/mol units. Scientifically
+          accurate.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values (50, 120, 20 kJ/mol) realistic for typical exothermic reaction.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean imports → data → curve → style → chart → save flow. No functions/classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic data generation.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: numpy, pygal, Style.'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-organized with vectorized operations. Smoothing approach
+          appropriate.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png and plot.html. Current pygal API.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good pygal.XY usage with Style, stroke_style dasharray, custom node
+          sizes, legend_at_bottom_columns.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: 'Uses pygal-specific: SVG-native with HTML export, node dict customization,
+          stroke_style dasharray, tooltip_border_radius.'
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - manual-ticks
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - grid-styling

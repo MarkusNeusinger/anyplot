@@ -1,0 +1,234 @@
+library: altair
+specification_id: line-growth-percentile
+created: '2026-03-19T19:54:02Z'
+updated: '2026-03-19T20:13:01Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23313901673
+issue: 4555
+python_version: 3.14.3
+library_version: 6.0.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/line-growth-percentile/altair/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/line-growth-percentile/altair/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/line-growth-percentile/altair/plot.html
+quality_score: 91
+review:
+  strengths:
+  - Excellent spec compliance — all 7 percentile bands, P50 emphasis, right-margin
+    labels, patient overlay, blue tones for boys
+  - Strong design with graduated opacity bands creating natural visual depth and hierarchy
+  - Idiomatic Altair code using transform_fold, transform_filter, and layer composition
+  - Interactive hover feature (selection_point) leverages Altair distinctive capabilities
+  - Clean, realistic data that approximates WHO growth standards
+  weaknesses:
+  - Right-margin percentile labels are slightly crowded despite nudging (P10/P25 and
+    P50/P75 spacing)
+  - Color accessibility could be improved — red/coral vs blue is generally safe but
+    not optimal for all CVD types
+  image_description: The plot displays a pediatric growth chart for boys' weight-for-age
+    (0–36 months) in WHO reference style. Blue-toned percentile bands span from P3
+    to P97 with graduated opacity — darker/more saturated near the center (P25–P75
+    band) and lighter at the extremes (P3–P10, P90–P97). A thick dark navy P50 (median)
+    line is prominently emphasized through the center of the bands. Thinner semi-transparent
+    blue lines mark each individual percentile curve. Percentile labels (P3, P10,
+    P25, P50, P75, P90, P97) appear on the right margin with vertical nudging to reduce
+    crowding. A red/coral patient trajectory ("Patient A") with connected circular
+    markers overlays the bands, tracking from birth (~3.5 kg) to 36 months (~15.6
+    kg), sitting consistently between P50 and P75. The background is a subtle light
+    blue-gray (#f7f9fb), Y-axis has dashed grid lines, X-axis has no grid. Title reads
+    "line-growth-percentile · altair · pyplots.ai" with two subtitle lines. Axes are
+    labeled "Age (months)" and "Weight (kg)".
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 28pt, axes 22/18pt, labels 15pt
+          bold). Subtitle at 16pt slightly small but readable.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Percentile labels on right margin have manual nudging; P10/P25 and
+          P50/P75 are close but distinguishable.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Graduated band opacity creates clear visual layering. Patient markers
+          well-sized.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 3
+        max: 4
+        passed: true
+        comment: Blue bands vs red patient line provides good luminance contrast.
+          Not optimal for all CVD types.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Chart fills canvas well. Right margin reserved for labels is good
+          use of space.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Age (months) and Weight (kg) — descriptive with units.
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom blue palette with graduated opacity, Helvetica Neue typography,
+          dark navy accent, coral patient line, custom background. Clearly above defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: View stroke removed, subtle dashed Y-grid only, X-grid disabled,
+          muted domain/tick colors, custom background fill.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Patient trajectory creates clear narrative against percentile bands.
+          Graduated opacity draws eye to median zone.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct: growth chart with smooth percentile curves and individual
+          patient overlay.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: All 7 percentiles as filled bands, P50 emphasized, blue tones, right-margin
+          labels, patient overlay with contrasting color.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = age_months, Y = weight (kg). All data visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct. Percentile labels serve as legend; Patient
+          A label identifies overlay.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All 7 percentile curves, bands between each pair, patient trajectory
+          crossing multiple zones.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: WHO-style weight-for-age reference for boys. Pediatric healthcare
+          is neutral, real-world context.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Birth weight ~3.3 kg, 36-month weight ~14-16 kg. Realistic values.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports, data, bands, lines, labels, patient, compose,
+          save. No functions or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only altair, numpy, pandas — all used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean iteration for bands, transform_fold for lines, well-organized
+          composition.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png and plot.html. Current API.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert use of transform_fold, transform_filter, alt.layer, mark_area
+          with y/y2, alt.Title, configure_axis/view.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: selection_point with nearest for interactive hover, tooltips, .interactive()
+          HTML export — distinctive Altair features.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - annotations
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling

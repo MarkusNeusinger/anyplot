@@ -1,0 +1,233 @@
+library: letsplot
+specification_id: psychrometric-basic
+created: '2026-03-15T21:50:52Z'
+updated: '2026-03-15T22:37:41Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23120046652
+issue: 4583
+python_version: 3.14.3
+library_version: 4.9.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/psychrometric-basic/letsplot/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/psychrometric-basic/letsplot/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/psychrometric-basic/letsplot/plot.html
+quality_score: 81
+review:
+  strengths:
+  - Accurate ASHRAE-based psychrometric equations producing physically correct curves
+  - 'Excellent colorblind-safe palette: grayscale RH gradient, blue wet-bulb, vermillion
+    enthalpy, purple volume'
+  - Effective visual hierarchy with orange process path as focal point and blue comfort
+    zone
+  - All spec features fully implemented including labeled property lines with units
+  - Clean code with no dead code — label dataframes properly integrated
+  weaknesses:
+  - Some label overlap in the central-upper region where RH%, wet-bulb, and volume
+    labels converge
+  - Enthalpy and volume lines at alpha=0.45 are somewhat faint, reducing readability
+  - Library mastery is generic — could leverage more lets-plot distinctive features
+  image_description: The plot displays a psychrometric chart with dry-bulb temperature
+    (°C) on the x-axis (-10 to 50) and humidity ratio (g/kg) on the y-axis (0 to 30).
+    Relative humidity curves from 10% to 100% are rendered as smooth curves using
+    a grayscale gradient (light gray for 10% to dark gray for 90%), with the 100%
+    saturation curve prominently drawn in dark blue (#306998). Wet-bulb temperature
+    lines (0°C to 35°C) appear as light blue diagonal lines with labels near the saturation
+    curve. Enthalpy lines (10 to 110 kJ/kg) in vermillion/orange run diagonally from
+    upper-left to lower-right, labeled on the left edge with units (kJ/kg). Specific
+    volume lines (0.78 to 0.94 m³/kg) in purple run at a slightly different diagonal
+    angle, labeled on the right edge with units. A comfort zone is highlighted as
+    a light blue shaded polygon (~20-26°C, 30-60% RH) with a dashed border and bold
+    "Comfort Zone" label. An HVAC process path is shown as a thick orange arrow from
+    ~32°C/50%RH to ~24°C/50%RH with bold "Cooling & Dehumidification" label connected
+    by an annotation line. The title reads "psychrometric-basic · letsplot · pyplots.ai"
+    in bold. White background with light gray (#fafafa) panel and subtle gridlines.
+  criteria_checklist:
+    visual_quality:
+      score: 24
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'Font sizes explicitly set: title=24, axis_title=20, axis_text=16.
+          On-chart labels at size 7-10 slightly small but readable.'
+      - id: VQ-02
+        name: No Overlap
+        score: 4
+        max: 6
+        passed: false
+        comment: 'Moderate overlap in central-upper region: RH%, wet-bulb, and volume
+          labels converge near saturation curve.'
+      - id: VQ-03
+        name: Element Visibility
+        score: 4
+        max: 6
+        passed: true
+        comment: Lines distinguishable but enthalpy and volume at alpha=0.45 are faint.
+          Process path prominent at size=2.5.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Excellent colorblind-safe palette: grayscale RH, blue wet-bulb,
+          vermillion enthalpy, purple volume. No red-green conflicts.'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good canvas utilization at 1600x900 with scale=3. Some edge labels
+          slightly cramped.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive with units: Dry-Bulb Temperature (°C) and Humidity Ratio
+          (g/kg).'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Thoughtful color scheme with grayscale gradient for RH curves. Professional
+          engineering chart beyond defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: theme_minimal, subtle grid, custom panel background. Good refinement
+          visible.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Comfort zone and HVAC process path create clear focal points with
+          effective visual hierarchy.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct psychrometric chart with all required curve families.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: RH curves, wet-bulb, enthalpy, volume,
+          comfort zone, process path, on-chart labels with units.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=dry-bulb temperature, Y=humidity ratio. Full range covered at 101.325
+          kPa.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title follows exact format. No legend needed with on-chart labels.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows all psychrometric property types. Could show additional process
+          paths for fuller coverage.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: ASHRAE-based equations at standard atmosphere. Real-world HVAC engineering
+          context.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Standard psychrometric chart ranges with physically realistic values.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: false
+        comment: Uses helper functions for psychrometric equations. Justified by domain
+          complexity but deviates from flat structure.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic — all data from equations.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-organized. No dead code. Appropriate complexity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with scale=3 per library guidelines.
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Proper ggplot grammar with extensive layer composition and scale_color_identity.
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Uses arrow in geom_path and HTML export. Generic usage overall.
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling

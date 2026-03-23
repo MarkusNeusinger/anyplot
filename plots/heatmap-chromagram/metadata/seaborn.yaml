@@ -1,0 +1,217 @@
+library: seaborn
+specification_id: heatmap-chromagram
+created: '2026-03-17T22:25:11Z'
+updated: '2026-03-17T22:35:27Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23219179088
+issue: 4564
+python_version: 3.14.3
+library_version: 0.13.2
+preview_url: https://storage.googleapis.com/pyplots-images/plots/heatmap-chromagram/seaborn/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/heatmap-chromagram/seaborn/plot_thumb.png
+preview_html: null
+quality_score: 92
+review:
+  strengths:
+  - Cohesive dark theme creates a visually striking, professional presentation
+  - Realistic chord progression data (C→G→Am→C→F) with passing tones and convolution
+    smoothing
+  - All font sizes explicitly set for consistent readability at high resolution
+  - Clean, well-structured code with appropriate complexity
+  weaknesses:
+  - Library mastery could leverage more seaborn-specific features
+  - Dark theme follows a common pattern rather than being truly distinctive
+  image_description: 'The plot displays a chromagram heatmap on a dark navy background
+    (#0f0f23). The Y-axis lists all 12 pitch classes from C at the top to B at the
+    bottom, each clearly labeled in light gray text. The X-axis shows time from 0
+    to 8 seconds with integer tick labels. The magma colormap renders energy intensity
+    from near-black (0.0) through purple and orange to bright yellow/white (1.0).
+    A vertical colorbar on the right indicates the Energy scale from 0.0 to 1.0. The
+    title reads "heatmap-chromagram · seaborn · pyplots.ai" in bold white text. The
+    chord progression is clearly visible: C major (C, E, G lit up at 0-2s), G major
+    (G, B, D bright at 2-4s), A minor (A, C, E at 4-6s), C major return (6-7s), and
+    F major (F, A, C at 7-8s). Passing tones appear as brief purple/orange flickers
+    at transition points. Smooth blending via convolution creates realistic gradual
+    chord transitions.'
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title=24, labels=20, ticks=16, colorbar=18/14'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: All 12 pitch class labels well-spaced, time labels non-overlapping
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Heatmap cells clearly visible with strong contrast between active/inactive
+          pitch classes
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Magma is perceptually uniform and colorblind-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills canvas well in 16:9 ratio with balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Time (seconds) with units, Pitch Class descriptive, Energy on colorbar
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Cohesive dark theme with magma colormap, styled spines, custom text
+          colors
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines removed, subtle colors, zero tick length, no grid, generous
+          whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Chord progression creates clear musical narrative visible at a glance
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct heatmap showing chromagram data
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: 12 pitch classes, magma colormap, colorbar,
+          time axis, fine resolution'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=time, Y=pitch class, color=energy correctly mapped
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct, no legend needed for single-colormap heatmap
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 4 different chords, passing tones, convolution smoothing
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real-world MIR scenario with musically valid chord progressions
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Energy 0-1, 160 frames over 8s, 12 pitch classes all appropriate
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports, style, data, plot, save'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All four imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean code with convolution smoothing adding realism without over-engineering
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png, dpi=300, no deprecated API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good sns.heatmap with DataFrame input, set_style, set_context usage
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: sns.heatmap cbar_kws, DataFrame label integration, set_style with
+          custom params
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - manual-ticks
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep:
+  - normalization
+  styling:
+  - dark-theme
+  - custom-colormap

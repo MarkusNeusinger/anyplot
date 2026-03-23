@@ -1,0 +1,228 @@
+library: seaborn
+specification_id: line-growth-percentile
+created: '2026-03-19T19:54:31Z'
+updated: '2026-03-19T20:12:17Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23313901218
+issue: 4555
+python_version: 3.14.3
+library_version: 0.13.2
+preview_url: https://storage.googleapis.com/pyplots-images/plots/line-growth-percentile/seaborn/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/line-growth-percentile/seaborn/plot_thumb.png
+preview_html: null
+quality_score: 95
+review:
+  strengths:
+  - 'Excellent clinical data storytelling: patient trajectory drifting below P25 creates
+    an immediately readable narrative'
+  - Professional graduated blue palette with strong red patient contrast
+  - Full spec compliance with all 7 percentile bands, right-margin labels, and emphasized
+    P50
+  - Strong seaborn-idiomatic code using set_theme, set_context, palette generation,
+    lineplot with hue/size, and despine
+  - Realistic WHO-approximate reference data with appropriate values
+  weaknesses:
+  - 'Minor: inner percentile bands near P50 are quite subtle due to low alpha (0.20),
+    though arguably appropriate for the clinical chart aesthetic'
+  image_description: The plot displays a pediatric weight-for-age growth chart for
+    boys aged 0-36 months. Graduated blue-toned percentile bands span from P3 (outermost
+    bottom) through P97 (outermost top), with darker shading at the extremes and lighter
+    near the median. The P50 median line is emphasized in dark navy blue with increased
+    thickness. All seven percentile labels (P3, P10, P25, P50, P75, P90, P97) appear
+    on the right margin, with P50 in bold. An individual patient trajectory is overlaid
+    in red with large circular markers connected by a line, starting near the 50th
+    percentile at birth and gradually dropping below P25 by 36 months — telling a
+    clear clinical story of growth faltering. The title reads "line-growth-percentile
+    · seaborn · pyplots.ai". X-axis shows "Age (months)" with ticks every 3 months,
+    Y-axis shows "Weight (kg)" starting from 0. Top and right spines are removed,
+    x-axis grid is disabled, y-axis grid is subtle. Layout is clean with good use
+    of canvas space.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt,
+          percentile labels 16pt'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: All text clearly readable, percentile labels well-spaced on right
+          margin
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Patient markers s=200 appropriate for 12 points, bands visible with
+          graduated opacity
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue monochromatic bands with red patient line; colorblind-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 16:9 canvas well-utilized, balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive with units: Age (months), Weight (kg)'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom blue palette via sns.light_palette/dark_palette, graduated
+          band opacity, professional clinical chart appearance
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: sns.despine, subtle grid alpha=0.15, x-grid disabled, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Patient trajectory drifting below P25 creates clear clinical narrative,
+          red-on-blue focal point
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct growth chart with percentile bands and overlaid patient trajectory
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: All 7 percentile bands, P50 emphasized, right-margin labels, connected
+          patient markers, blue tones
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=age_months, Y=weight correctly mapped
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct title format, right-margin percentile labels serve as legend
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All 7 percentile curves, graduated bands, patient trajectory crossing
+          percentile lines
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: WHO weight-for-age boys 0-36 months, neutral medical topic
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Birth weight ~3.3-3.5 kg, 36-month P50 ~14.3 kg — matches real WHO
+          values
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean imports → data → plot → save flow
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All four imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, idiomatic long-format DataFrame
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png at dpi=300
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert use of set_theme, set_context, lineplot with hue/size, scatterplot,
+          long-format DataFrame
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: sns.light_palette/dark_palette, sns.despine, sns.set_context — distinctly
+          seaborn features
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - manual-ticks
+  - layer-composition
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - interpolation
+  styling:
+  - alpha-blending
+  - edge-highlighting
+  - grid-styling

@@ -1,0 +1,233 @@
+library: pygal
+specification_id: titration-curve
+created: '2026-03-21T22:13:06Z'
+updated: '2026-03-21T22:49:45Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23389866036
+issue: 4407
+python_version: 3.14.3
+library_version: 3.1.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/titration-curve/pygal/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/titration-curve/pygal/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/titration-curve/pygal/plot.html
+quality_score: 83
+review:
+  strengths:
+  - Excellent data quality with realistic chemistry data computed from first principles
+    (stoichiometric calculation)
+  - Two-panel composition effectively communicates both the titration curve and its
+    derivative
+  - Cohesive custom color palette with accessible blue/orange/red scheme
+  - Interactive HTML output leverages pygal SVG-native strengths
+  - Clear data storytelling through annotation box, transition zone shading, and derivative
+    panel
+  weaknesses:
+  - Derivative curve as separate panel rather than secondary y-axis overlay (spec
+    preference)
+  - PIL-based pixel coordinate overlay for transition zone shading is fragile and
+    hardcoded
+  - Transition Zone label partially obscured by equivalence point dashed line
+  - Helper function data_to_px breaks flat script convention
+  image_description: 'The plot displays a two-panel composition for an acid-base titration
+    curve. The upper panel shows the characteristic S-shaped pH curve (blue, #306998)
+    plotting pH (0–14, left y-axis) against Volume of NaOH added (0–50 mL, x-axis).
+    A vertical dashed red line marks the equivalence point at 25.0 mL. A horizontal
+    gray dashed line marks pH 7 as a reference. A light blue semi-transparent rectangle
+    shades the "Transition Zone" between ~20–30 mL. A white rounded annotation box
+    in the upper right reads "Equivalence: 25.0 mL, pH 7.0" with the subtitle "25
+    mL of 0.1 M HCl titrated with 0.1 M NaOH." The lower panel shows the derivative
+    curve (dpH/dV) in orange (#D35400) with a sharp peak at the equivalence point,
+    with its own red dashed vertical line. The background is light blue-white (#FAFCFF)
+    with a slightly tinted plot area (#F0F4F8). The title reads "titration-curve ·
+    pygal · pyplots.ai". A combined legend at the bottom lists all five series across
+    both panels.'
+  criteria_checklist:
+    visual_quality:
+      score: 26
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 56, labels 34, major labels
+          32, legend 40). Annotation box text slightly small but readable.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Transition Zone label partially obscured by equivalence point dashed
+          line.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Titration curve clearly visible with stroke width 6. Derivative peak
+          is extremely narrow/sharp.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue/orange/red/gray palette is colorblind-safe with good contrast.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Two-panel layout uses space well. Combined legend with 5 items slightly
+          cluttered.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive labels with units: Volume of NaOH added (mL), pH, dpH/dV.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Custom cohesive color palette, custom backgrounds, rounded annotation
+          box. Above defaults but not publication-level.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Custom backgrounds, y-guides only, generous margins, panel divider,
+          annotation overlay.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Annotation box highlights equivalence point, transition zone shading
+          guides viewer, derivative panel reinforces key insight.
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct XY line chart showing sigmoidal titration curve.
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: All features present. Derivative as separate panel rather than secondary
+          y-axis overlay.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = volume (0-50 mL), Y = pH (0-14). Correct mapping with full pH
+          scale.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format. Legend labels are descriptive.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows S-curve, transition zone, equivalence point, derivative peak,
+          pH 7 reference.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Real chemistry: 25 mL of 0.1 M HCl titrated with 0.1 M NaOH.'
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: pH 0-14 full scale, volume 0-50 mL, 0.1 M standard concentrations.
+    code_quality:
+      score: 8
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Follows imports-data-plot-save flow but defines helper function data_to_px.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic analytical calculation, no randomness.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: io, cairosvg, numpy, pygal, PIL.'
+      - id: CQ-04
+        name: Code Elegance
+        score: 1
+        max: 2
+        passed: true
+        comment: PIL overlay with hardcoded pixel coordinates is fragile and verbose.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png and plot.html. Current API.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of pygal.XY, Style, stroke_style, legend positioning, tooltip
+          settings, value formatters.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Interactive HTML with native SVG tooltips, dual PNG+HTML output leverages
+          pygal strengths.
+  verdict: REJECTED
+impl_tags:
+  dependencies:
+  - pillow
+  techniques:
+  - annotations
+  - subplots
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling

@@ -1,0 +1,233 @@
+library: altair
+specification_id: ma-differential-expression
+created: '2026-03-20T10:41:52Z'
+updated: '2026-03-20T10:55:26Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23339077618
+issue: 4420
+python_version: 3.14.3
+library_version: 6.0.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/ma-differential-expression/altair/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/ma-differential-expression/altair/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/ma-differential-expression/altair/plot.html
+quality_score: 91
+review:
+  strengths:
+  - Excellent spec compliance with all required features (LOESS, reference lines,
+    gene labels, significance highlighting)
+  - Strong visual hierarchy with faded non-significant genes and colored/shaped significant
+    genes
+  - Good accessibility with redundant shape + color encoding and red-blue palette
+  - Fold-change background band elegantly contextualizes the ±1 thresholds
+  - Realistic RNA-seq data with real gene names and appropriate scales
+  - Clean well-structured Altair layer composition
+  weaknesses:
+  - MYC gene label may be partially hidden among dense data points
+  - Gene label font size (16pt) could be slightly larger for better readability
+  image_description: 'The plot displays an MA plot for differential gene expression
+    analysis. The title reads "ma-differential-expression · altair · pyplots.ai" in
+    dark text (~28pt) with a gray subtitle "RNA-seq differential expression: upregulated
+    (red) and downregulated (blue) genes". The x-axis is labeled "Mean Expression
+    (A)" (0-16) and the y-axis "Log₂ Fold Change (M)" (approximately -5 to 5). Non-significant
+    genes appear as very small, faint gray dots clustered around y=0. Upregulated
+    genes are shown as red triangles scattered above the y=1 dashed threshold line,
+    and downregulated genes as blue squares below the y=-1 dashed threshold. A light
+    blue-gray band shades the region between y=-1 and y=1. A solid dark line marks
+    y=0, and an orange LOESS smoothing curve runs nearly flat near y=0. Six genes
+    are labeled in italic bold: BRCA1 and EGFR among upregulated genes, and RB1, PTEN,
+    KRAS among downregulated genes. The legend in the upper right shows "Upregulated"
+    (red triangle) and "Downregulated" (blue square) with no border. The layout fills
+    the canvas well with balanced margins.'
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 28, axes 22, ticks 18, labels
+          16). Gene labels at 16pt adequate but slightly small.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Mostly clean. MYC label may be partially obscured by surrounding
+          data points.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Non-significant genes appropriately faded (size=20, opacity=0.25)
+          for 15K points. Significant genes visible at size=80 with shapes.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Red-blue palette avoids red-green issue. Shape encoding provides
+          redundant accessibility channel.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills canvas well with balanced margins.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive labels with notation: Mean Expression (A), Log₂ Fold
+          Change (M).'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom palette, shape encoding, fold-change band, white stroke on
+          markers. Above configured defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Domains removed, view border removed, subtle dotted grid (opacity=0.12),
+          generous whitespace.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Strong hierarchy: faded non-sig, colored/shaped sig, fold-change
+          band, LOESS curve, labeled top DE genes.'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct MA plot.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: highlighting, reference lines, LOESS,
+          transparency, gene labels.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=mean expression, Y=log fold change, correctly mapped.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct. Legend labels match data.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows up/downregulated genes, varying expression levels, LOESS bias
+          pattern.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: RNA-seq context with real gene names. Scientific, neutral domain.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 15K genes, log2 FC in ±5 range, mean expression 0-16. Realistic for
+          RNA-seq.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat script structure.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only altair, numpy, pandas — all used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, clean layer composition.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot.png with scale_factor=3.0. Current API.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good declarative grammar usage, encoding channels, layer composition,
+          configure methods.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: transform_loess, selection_point hover, tooltips, shape encoding,
+          layer composition.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - annotations
+  - hover-tooltips
+  - html-export
+  - custom-legend
+  patterns:
+  - data-generation
+  dataprep:
+  - loess
+  styling:
+  - alpha-blending
+  - grid-styling
+  - edge-highlighting

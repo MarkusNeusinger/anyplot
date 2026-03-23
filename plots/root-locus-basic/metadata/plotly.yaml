@@ -1,0 +1,233 @@
+library: plotly
+specification_id: root-locus-basic
+created: '2026-03-20T21:23:37Z'
+updated: '2026-03-20T21:41:53Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23362981898
+issue: 4414
+python_version: 3.14.3
+library_version: 6.6.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/root-locus-basic/plotly/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/root-locus-basic/plotly/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/root-locus-basic/plotly/plot.html
+quality_score: 92
+review:
+  strengths:
+  - Excellent spec compliance with all required features including damping ratio lines,
+    natural frequency circles, real axis segments, and direction arrows
+  - Strong data storytelling with annotated critical points (breakaway, jω crossing)
+    and prominent stability boundary
+  - Rich Plotly interactivity via customdata hover templates showing gain values per
+    branch
+  - Clean deterministic code with appropriate complexity for the mathematical computation
+  - Professional color palette and visual hierarchy
+  weaknesses:
+  - Minor label crowding near s=-1 and the breakaway point annotation
+  - Reference line labels (zeta, omega_n) at 11pt are slightly small relative to other
+    text
+  image_description: 'The plot displays a root locus diagram for the transfer function
+    G(s) = 1/s(s+1)(s+3), shown as a subtitle in monospace font. The title reads "root-locus-basic
+    · plotly · pyplots.ai" centered at the top. Three locus branches are plotted:
+    Branch 1 (blue, from s=0) curves downward into the lower-half complex plane, Branch
+    2 (orange, from s=-1) curves upward into the upper-half plane, and Branch 3 (green,
+    from s=-3) extends leftward along the negative real axis. Open-loop poles are
+    marked with large dark X markers at s=0, s=-1, and s=-3 with text labels. Red
+    diamond markers indicate the jω-axis crossings at ±j√3 with a "K=12" annotation
+    in red. A purple star marks the breakaway point near s=-0.451 with "K≈0.63" label.
+    Dashed gray lines show constant damping ratios (ζ=0.4, 0.6, 0.8) and dotted gray
+    arcs show constant natural frequency circles (ωn=1, 2, 3). A translucent pink/red
+    vertical band highlights the stability boundary (imaginary axis) with a "Stability
+    Boundary" label. Direction arrows on each branch indicate increasing gain. The
+    background is white with a light gray paper background. Real axis segments of
+    the root locus are shown as subtle blue-shaded horizontal bands between [-1, 0]
+    and [-5.5, -3]. The legend is positioned in the upper-left corner listing all
+    trace types.'
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All major font sizes explicitly set (title 28pt, labels 22pt, ticks
+          18pt). Reference line labels at 11pt slightly small.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Minor crowding near s=-1 pole label and breakaway annotation; all
+          text readable.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All markers well-sized, branch lines clearly visible, direction arrows
+          prominent.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue, orange, green palette distinguishable for common colorblind
+          types.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good canvas utilization, equal axis scaling, balanced margins.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Real Axis (σ) and Imaginary Axis (jω) with proper mathematical notation.
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Strong design with custom palette, translucent stability band, professional
+          typography hierarchy.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle grid at 5% opacity, light paper background, well-styled reference
+          lines.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear stability narrative with annotated critical points and prominent
+          stability boundary.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct root locus plot with branches in complex plane.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: pole markers, direction arrows, real
+          axis segments, jω crossings, damping/frequency grid, equal scaling.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Real part on x-axis, imaginary on y-axis, gain as customdata.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct title format and descriptive legend labels.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all root locus features: three branch behaviors, breakaway,
+          jω crossing, real axis segments.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Classic control systems textbook example, neutral educational context.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Mathematically correct values, appropriate gain range and axis limits.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear flow, no functions or classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic polynomial root computation.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only numpy and plotly.graph_objects, both used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-structured with appropriate complexity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot.png at 4800x2700 and plot.html.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of go.Figure, go.Scatter, add_trace, add_annotation, add_shape,
+          update_layout.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Leverages scaleanchor, customdata with hovertemplate, legendgroup,
+          HTML export.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - grid-styling
+  - alpha-blending
