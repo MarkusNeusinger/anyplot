@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 scatter-connected-temporal: Connected Scatter Plot with Temporal Path
-Library: highcharts | Python 3.13
-Quality: pending | Created: 2026-03-13
+Library: highcharts unknown | Python 3.14.3
+Quality: 84/100 | Updated: 2026-03-23
 """
 
 import json
