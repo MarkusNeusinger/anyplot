@@ -1,7 +1,7 @@
 library: matplotlib
 specification_id: curve-dose-response
 created: '2026-03-18T22:30:31Z'
-updated: '2026-03-23T21:11:33Z'
+updated: '2026-03-23T21:20:34Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23270128760
 issue: 4556
@@ -10,85 +10,78 @@ library_version: 3.10.8
 preview_url: https://storage.googleapis.com/pyplots-images/plots/curve-dose-response/matplotlib/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/curve-dose-response/matplotlib/plot_thumb.png
 preview_html: null
-quality_score: 86
+quality_score: 92
 review:
   strengths:
-  - Perfect spec compliance - all 8 required features implemented without omission
-  - EC50 annotations with arrow connectors and rounded boxes create professional informative
-    focal points
-  - 95% CI via delta method is technically sophisticated and visually effective
-  - Colorblind-safe palette with redundant shape encoding ensures accessibility
-  - Custom legend ordering groups related elements logically
-  - Hill slope annotation provides additional pharmacological context
+  - Excellent pharmacological realism with real drug names (Erlotinib, Lapatinib)
+    and plausible EC50 values
+  - 'Complete spec compliance: all 8 required features implemented correctly'
+  - Strong data storytelling through EC50 annotations with arrows and Hill slope notation
+  - Proper 95% CI calculation using delta method with covariance propagation
+  - Clean visual design with removed spines, subtle grid, and well-organized legend
   weaknesses:
-  - Legend fontsize (14pt) and Hill slopes text (13pt) below recommended 16pt minimum
-  - Bottom asymptote lines at alpha=0.15 are nearly invisible
-  - Y-axis upper limit of 110 creates unused whitespace above data maximum
-  - Generic compound names rather than plausible drug-like names reduce contextual
-    immersion
-  image_description: The plot displays two sigmoidal dose-response curves on a logarithmic
-    x-axis (Concentration in M) versus a linear y-axis (Response in %). Compound A
-    is rendered in steel blue (#306998) with circle markers and Compound B in terracotta
-    (#C75233) with square markers. Both compounds have fitted 4PL sigmoid curves with
-    clearly visible error bars (SEM) on each data point. A light blue 95% confidence
-    interval band envelopes Compound A's fitted curve. Dashed EC50 reference lines
-    (horizontal and vertical) intersect both curves at their half-maximal responses,
-    with annotated boxes showing EC50 = 299 nM for Compound A and EC50 = 6.7 µM for
-    Compound B, connected by styled arrows with arc connection styles. Subtle dotted
-    asymptote lines mark the top and bottom plateaus for both compounds. A potency
-    comparison annotation appears in the lower-right area alongside italic Hill slope
-    values (A = 1.06, B = 0.81). The legend in the upper-left lists all five elements
-    with logical grouping. Title reads "curve-dose-response · matplotlib · pyplots.ai".
-    Top and right spines are removed with a subtle y-axis-only grid.
+  - Helper functions (logistic4pl, format_ec50) slightly break KISS structure, though
+    justified by reuse
+  - Library mastery could be higher with more distinctive matplotlib features (e.g.,
+    custom tick formatters for concentration units, PathEffects for text)
+  image_description: 'The plot displays two sigmoidal dose-response curves on a logarithmic
+    x-axis (Concentration in M) vs Response (%). Erlotinib is shown in steel blue
+    (#306998) with circle markers, and Lapatinib in coral red (#C75233) with square
+    markers. Both compounds have fitted 4PL curves with data points overlaid with
+    SEM error bars. A light blue 95% confidence interval band surrounds the Erlotinib
+    fit. Dashed horizontal and vertical reference lines in matching colors mark the
+    EC50 positions for each compound: Erlotinib EC50 = 299 nM (annotated with an arrow
+    in blue) and Lapatinib EC50 = 6.7 µM (annotated with an arrow in red). Dotted
+    horizontal asymptote lines mark the top and bottom plateaus for both compounds.
+    Hill slopes are noted in italic gray text at the bottom-right (Erlotinib = 1.06,
+    Lapatinib = 0.81). Top and right spines are removed, a subtle y-axis grid is present,
+    and the legend is well-organized in the upper left with data/fit entries logically
+    grouped. Title reads "curve-dose-response · matplotlib · pyplots.ai".'
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Title 24pt, labels 20pt, ticks 16pt explicitly set. Legend at 14pt
-          and Hill slopes at 13pt are below recommended 16pt minimum.
+        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt,
+          legend 16pt, annotations 16pt'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text. EC50 annotations well-positioned with offset.
-          Legend does not obscure critical data.
+        comment: All text fully readable, EC50 annotations well-positioned with arrows
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Markers and lines clearly visible. Bottom asymptote lines at alpha=0.15
-          are nearly invisible.
+        comment: Markers size 10 with white edges, linewidth 3 curves, well adapted
+          to 8 points per compound
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Blue vs terracotta palette is colorblind-safe with redundant shape
-          encoding (circles vs squares).
+        comment: Blue vs coral is colorblind-safe, good contrast
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good 16:9 proportions. Y-axis extends to 110 creating some unused
-          whitespace above data maximum.
+        comment: 16:9 aspect ratio with tight_layout, good canvas utilization
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Concentration (M) and Response (%) with proper units. Correct title
-          format.
+        comment: Concentration (M) and Response (%) — descriptive with units
     design_excellence:
-      score: 14
+      score: 16
       max: 20
       items:
       - id: DE-01
@@ -96,24 +89,22 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom two-color palette, white marker edges, rounded annotation
-          boxes with arrow connectors and arc connection styles. Clearly above defaults
-          with professional polish.
+        comment: Custom palette, white marker edges, styled annotation boxes with
+          arrows, reordered legend
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Top/right spines removed, subtle y-grid (alpha=0.2), graded alpha
-          on asymptotes. Good refinement but bottom asymptotes too subtle.
+        comment: Spines removed, subtle y-axis grid, minor tick formatting, generous
+          whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: EC50 annotations with arrows create focal points. Two compounds with
-          different potencies tell a comparison story. Hill slope annotation adds
-          context.
+        comment: EC50 annotations communicate key comparison, asymptote lines and
+          Hill slopes provide context
     spec_compliance:
       score: 15
       max: 15
@@ -123,30 +114,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct sigmoidal dose-response curves with 4PL logistic fits.
+        comment: Correct sigmoidal dose-response curve with 4PL logistic fit
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: log x-axis, 4PL fit, EC50 lines, error
-          bars, asymptotes, 2 compounds, legend, CI band.'
+        comment: 'All 8 required features present: log x-axis, 4PL fit, EC50 lines,
+          error bars, asymptotes, 2 compounds, legend, 95% CI'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=concentration (log), Y=response (%). Full data range shown across
-          5 log units.
+        comment: X = concentration (log scale), Y = response (%), correctly mapped
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format. Legend distinguishes all elements with clear
-          descriptive labels.
+        comment: Title format correct, legend labels match data with logical grouping
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -154,22 +143,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows different EC50 values, Hill slopes, asymptotes, error bars,
-          and CI. Both curves span full sigmoidal range.
+        comment: Two compounds with different EC50, Hill slopes, asymptotes — shows
+          all aspects
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Realistic pharmacological context with plausible concentrations.
-          Generic compound names (A, B) rather than specific drug names.
+        comment: Real EGFR inhibitors Erlotinib and Lapatinib with realistic pharmacological
+          ranges
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 8 concentration points over 5 log units. EC50 values in realistic
-          nM/µM range.
+        comment: EC50 values in nM-µM range, Hill slopes ~1 biologically plausible
     code_quality:
       score: 9
       max: 10
@@ -179,33 +167,33 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Has logistic4pl function (required for curve_fit) and format_ec50
-          helper. Justified but not pure flat structure.
+        comment: Has logistic4pl and format_ec50 functions — minor KISS deviation
+          but mathematically justified
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set at top.
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All four imports used.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-organized with appropriate complexity. Delta method for CI is
-          sophisticated but warranted.
+        comment: Clean, well-organized, appropriate complexity for scientific curve
+          fitting
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300, bbox_inches=tight.
+        comment: Saves as plot.png with dpi=300, bbox_inches=tight
     library_mastery:
       score: 7
       max: 10
@@ -215,16 +203,16 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Consistent Axes methods, proper fig/ax pattern, legend handle reordering
-          via get_legend_handles_labels().
+        comment: Consistent Axes methods, proper fig/ax pattern, LogLocator for minor
+          ticks
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses annotate with arrowprops/connectionstyle, fill_between, errorbar
-          with full styling, custom legend ordering.
-  verdict: REJECTED
+        comment: annotate with arrowprops/connectionstyle, LogLocator custom subs,
+          fill_between, legend handle reordering, transAxes
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - scipy
