@@ -1,7 +1,7 @@
 library: matplotlib
 specification_id: curve-dose-response
 created: '2026-03-18T22:30:31Z'
-updated: '2026-03-23T21:00:18Z'
+updated: '2026-03-23T21:11:33Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23270128760
 issue: 4556
@@ -10,34 +10,39 @@ library_version: 3.10.8
 preview_url: https://storage.googleapis.com/pyplots-images/plots/curve-dose-response/matplotlib/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/curve-dose-response/matplotlib/plot_thumb.png
 preview_html: null
-quality_score: 84
+quality_score: 86
 review:
   strengths:
-  - All specification requirements fully implemented with no omissions
-  - EC50 annotations with arrow connectors create professional informative focal points
+  - Perfect spec compliance - all 8 required features implemented without omission
+  - EC50 annotations with arrow connectors and rounded boxes create professional informative
+    focal points
   - 95% CI via delta method is technically sophisticated and visually effective
-  - Two-color palette with redundant shape encoding (circles vs squares) is accessible
+  - Colorblind-safe palette with redundant shape encoding ensures accessibility
   - Custom legend ordering groups related elements logically
+  - Hill slope annotation provides additional pharmacological context
   weaknesses:
-  - Legend fontsize (14pt) is below the recommended 16pt for this canvas size
-  - Hill slopes text at 13pt is slightly small for the output resolution
+  - Legend fontsize (14pt) and Hill slopes text (13pt) below recommended 16pt minimum
   - Bottom asymptote lines at alpha=0.15 are nearly invisible
   - Y-axis upper limit of 110 creates unused whitespace above data maximum
+  - Generic compound names rather than plausible drug-like names reduce contextual
+    immersion
   image_description: The plot displays two sigmoidal dose-response curves on a logarithmic
-    x-axis (Concentration in M) vs. linear y-axis (Response in %). Compound A is rendered
-    in steel blue (#306998) with circle markers and Compound B in terracotta (#C75233)
-    with square markers. Both compounds have fitted 4PL sigmoid curves with clearly
-    visible error bars (SEM) on each data point. A light blue 95% confidence interval
-    band envelopes Compound A's fitted curve. Dashed EC50 reference lines (horizontal
-    and vertical) intersect both curves at their half-maximal responses, with annotated
-    boxes showing EC50 = 299 nM for Compound A and EC50 = 6.7 µM for Compound B. Subtle
-    dotted asymptote lines mark the top and bottom plateaus for both compounds. Hill
-    slopes (A = 1.06, B = 0.81) are noted in italics at bottom-right. The legend in
-    the upper-left lists all five elements. Title reads "curve-dose-response · matplotlib
-    · pyplots.ai". Top and right spines are removed with a subtle y-axis grid.
+    x-axis (Concentration in M) versus a linear y-axis (Response in %). Compound A
+    is rendered in steel blue (#306998) with circle markers and Compound B in terracotta
+    (#C75233) with square markers. Both compounds have fitted 4PL sigmoid curves with
+    clearly visible error bars (SEM) on each data point. A light blue 95% confidence
+    interval band envelopes Compound A's fitted curve. Dashed EC50 reference lines
+    (horizontal and vertical) intersect both curves at their half-maximal responses,
+    with annotated boxes showing EC50 = 299 nM for Compound A and EC50 = 6.7 µM for
+    Compound B, connected by styled arrows with arc connection styles. Subtle dotted
+    asymptote lines mark the top and bottom plateaus for both compounds. A potency
+    comparison annotation appears in the lower-right area alongside italic Hill slope
+    values (A = 1.06, B = 0.81). The legend in the upper-left lists all five elements
+    with logical grouping. Title reads "curve-dose-response · matplotlib · pyplots.ai".
+    Top and right spines are removed with a subtle y-axis-only grid.
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -45,15 +50,15 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title 24pt, axis labels 20pt, ticks 16pt explicitly set. Legend at
-          14pt and Hill slopes at 13pt are below recommended minimums.
+        comment: Title 24pt, labels 20pt, ticks 16pt explicitly set. Legend at 14pt
+          and Hill slopes at 13pt are below recommended 16pt minimum.
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: No significant text overlap. Legend slightly overlaps CI band region
-          but remains readable.
+        comment: No overlapping text. EC50 annotations well-positioned with offset.
+          Legend does not obscure critical data.
       - id: VQ-03
         name: Element Visibility
         score: 5
@@ -67,14 +72,14 @@ review:
         max: 4
         passed: true
         comment: Blue vs terracotta palette is colorblind-safe with redundant shape
-          encoding.
+          encoding (circles vs squares).
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
         comment: Good 16:9 proportions. Y-axis extends to 110 creating some unused
-          space above data.
+          whitespace above data maximum.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -83,29 +88,32 @@ review:
         comment: Concentration (M) and Response (%) with proper units. Correct title
           format.
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Custom palette, white marker edges, rounded annotation boxes with
-          arrows. Above defaults but not publication-ready.
+        comment: Custom two-color palette, white marker edges, rounded annotation
+          boxes with arrow connectors and arc connection styles. Clearly above defaults
+          with professional polish.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Spines removed, subtle y-grid, graded alpha on asymptotes. Good refinement.
+        comment: Top/right spines removed, subtle y-grid (alpha=0.2), graded alpha
+          on asymptotes. Good refinement but bottom asymptotes too subtle.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: EC50 annotations create focal points. Two compounds with different
-          potencies tell a comparison story.
+        comment: EC50 annotations with arrows create focal points. Two compounds with
+          different potencies tell a comparison story. Hill slope annotation adds
+          context.
     spec_compliance:
       score: 15
       max: 15
@@ -128,14 +136,15 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: X=concentration (log), Y=response (%). Full data range shown.
+        comment: X=concentration (log), Y=response (%). Full data range shown across
+          5 log units.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
         comment: Correct title format. Legend distinguishes all elements with clear
-          labels.
+          descriptive labels.
     data_quality:
       score: 14
       max: 15
@@ -145,15 +154,15 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows different potencies, Hill slopes, asymptotes, error bars, and
-          CI. Both curves span full sigmoidal range.
+        comment: Shows different EC50 values, Hill slopes, asymptotes, error bars,
+          and CI. Both curves span full sigmoidal range.
       - id: DQ-02
         name: Realistic Context
         score: 4
         max: 5
         passed: true
-        comment: Realistic pharmacological context. Generic compound names (A, B)
-          rather than real drug names.
+        comment: Realistic pharmacological context with plausible concentrations.
+          Generic compound names (A, B) rather than specific drug names.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
@@ -183,14 +192,14 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports used.
+        comment: All four imports used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-organized, appropriate complexity. Delta method for CI is sophisticated
-          but warranted.
+        comment: Well-organized with appropriate complexity. Delta method for CI is
+          sophisticated but warranted.
       - id: CQ-05
         name: Output & API
         score: 1
@@ -206,7 +215,8 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Consistent Axes methods, proper fig/ax pattern, legend handle reordering.
+        comment: Consistent Axes methods, proper fig/ax pattern, legend handle reordering
+          via get_legend_handles_labels().
       - id: LM-02
         name: Distinctive Features
         score: 3
