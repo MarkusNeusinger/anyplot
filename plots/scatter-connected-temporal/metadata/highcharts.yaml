@@ -1,7 +1,7 @@
 library: highcharts
 specification_id: scatter-connected-temporal
 created: '2026-03-13T15:27:34Z'
-updated: '2026-03-23T21:00:54Z'
+updated: '2026-03-23T21:11:20Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 23057665833
 issue: 4675
@@ -10,32 +10,40 @@ library_version: unknown
 preview_url: https://storage.googleapis.com/pyplots-images/plots/scatter-connected-temporal/highcharts/plot.png
 preview_thumb: https://storage.googleapis.com/pyplots-images/plots/scatter-connected-temporal/highcharts/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/scatter-connected-temporal/highcharts/plot.html
-quality_score: 84
+quality_score: 90
 review:
   strengths:
-  - 'Excellent data choice: US Phillips Curve is a classic real-world application
-    perfectly suited for connected temporal scatter'
-  - Strong temporal encoding with blue gradient from light (1990) to dark (2023)
-  - Key year annotations at meaningful economic milestones (2009 recession, 2020 COVID)
-  - Clean code structure with deterministic hardcoded data
-  - Interactive HTML version adds genuine value via Highcharts tooltips
+  - Excellent data storytelling with directional indicators and key year annotations
+    guiding the viewer through 34 years of US economic history
+  - Beautiful color gradient from light steel blue to dark navy encoding temporal
+    progression
+  - 'All spec features fully implemented: chronological connections, annotations,
+    direction indicators, visible markers, color gradient'
+  - Realistic educational dataset with strong feature coverage showing recessions,
+    recoveries, and economic disruptions
+  - Clean code with deterministic data and proper Highcharts export pattern including
+    interactive HTML
   weaknesses:
-  - Connecting line opacity (0.30) is too faint — the temporal path is hard to trace
-  - No directional arrow to indicate time flow along the path
-  - Y-axis range extends too high leaving wasted vertical space
-  - Hybrid dict/API approach for series is not fully idiomatic Highcharts-core usage
+  - Series built as raw dicts rather than using highcharts-core Series classes — functional
+    but not fully idiomatic
+  - Some point density in the 4-6% unemployment range makes adjacent markers slightly
+    hard to distinguish
+  - Axis lines could be removed or further refined for a more polished look
   image_description: The plot displays a connected scatter plot tracing US unemployment
-    rate (x-axis, 3-11%) vs inflation rate (y-axis, -2-10%) from 1990 to 2023. Points
-    are connected by thin, semi-transparent blue lines in chronological order. A color
-    gradient runs from light steel blue (1990) to dark navy (2023), encoding temporal
-    progression. Five key years (1990, 2000, 2009, 2020, 2023) are annotated with
-    bold text labels and larger markers with white borders. The background is light
-    gray with subtle dotted grid lines. The title reads "scatter-connected-temporal
-    · highcharts · pyplots.ai" with a descriptive subtitle about the Phillips Curve.
-    Axis labels include units (%).
+    rate (x-axis) vs. inflation rate (y-axis) from 1990 to 2023. Data points are connected
+    by a semi-transparent blue line in chronological order, forming a temporal path.
+    Points use a color gradient from light steel blue (early years) to dark navy (recent
+    years) to encode temporal progression. Key years (1990, 2000, 2009, 2020, 2023)
+    are annotated with bold text labels and have larger markers with white borders.
+    A start badge appears near the 1990 point and a time badge near the 2023 point,
+    indicating the direction of time. The background has a subtle vertical gradient
+    from light blue-white to pale gray. Axes show Unemployment Rate (%) ranging from
+    about 3 to 11 and Inflation Rate (%) ranging from about -2 to 9 with subtle dotted
+    grid lines. The title reads scatter-connected-temporal · highcharts · pyplots.ai
+    with a descriptive subtitle.
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -43,68 +51,69 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 58px, subtitle 36px, axis titles
-          42px, tick labels 32px, data labels 32px'
+        comment: All font sizes explicitly set (58px title, 36px subtitle, 42px axis
+          titles, 32px tick labels, 34px data labels). Perfectly readable.
       - id: VQ-02
         name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text. Data labels positioned with custom x/y offsets
+          per key year.
+      - id: VQ-03
+        name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Minor congestion in central cluster but all labels readable
-      - id: VQ-03
-        name: Element Visibility
-        score: 4
-        max: 6
-        passed: false
-        comment: Markers well-sized but connecting line at 0.30 opacity is too faint
-          to trace the temporal path
+        comment: Markers visible with white borders (radius 10, key years 16). Some
+          density in 4-6% unemployment range.
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Blue gradient is colorblind-safe with excellent contrast
+        comment: Single blue hue gradient is colorblind-safe with good contrast.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good proportions with explicit margins, some unused space at top
-          of y-axis
+        comment: Good canvas utilization with explicit margins. Plot fills appropriate
+          portion.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
         comment: 'Descriptive labels with units: Unemployment Rate (%), Inflation
-          Rate (%)'
+          Rate (%).'
     design_excellence:
-      score: 13
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Custom blue gradient, intentional typography hierarchy, white marker
-          borders. Above defaults but not publication-level
+        comment: 'Strong design: custom blue gradient palette, styled annotation badges,
+          subtle background gradient, refined typography.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Subtle dotted grid with low opacity, custom background, generous
-          margins
+        comment: Dotted subtle grid, custom colors at low opacity, background gradient,
+          generous margins.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Color gradient communicates progression, key year annotations highlight
-          economic milestones, subtitle contextualizes Phillips Curve
+        comment: Key year annotations, directional indicators, color gradient, and
+          informative subtitle create strong narrative.
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -112,52 +121,51 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct connected scatter plot with temporal path
+        comment: 'Correct: connected scatter plot with temporal path.'
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Has gradient, annotations, markers. Missing arrow for direction of
-          time
+        comment: 'All spec features present: chronological connections, annotations,
+          direction indicators, visible markers, color gradient.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=unemployment, Y=inflation, connected temporally
+        comment: X=unemployment, Y=inflation correctly mapped. Full data range shown.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format, legend appropriately disabled for single-series
-          path
+        comment: Title follows exact format. Legend appropriately disabled for single-path
+          visualization.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows cyclical patterns, regime changes, good variety of directional
-          movements
+        comment: Shows cyclical behavior, recession spikes, COVID disruption, inflation
+          surge, and recoveries.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: US Phillips Curve - classic real-world economic analysis, neutral
-          topic
+        comment: 'Classic economics dataset: US unemployment vs inflation over 34
+          years. Neutral, educational.'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Unemployment 3.6-9.6%, inflation -0.4-8.0% - realistic US economic
-          data
+        comment: Realistic ranges consistent with actual US economic data.
     code_quality:
       score: 10
       max: 10
@@ -167,50 +175,52 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear flow with no functions or classes
+        comment: 'Linear flow: imports, data, chart config, series, export. No functions
+          or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic with hardcoded data arrays
+        comment: Fully deterministic with hardcoded data arrays.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: All imports used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean dict-based series injection, well-structured point data loop
+        comment: Clean, appropriate complexity for the visualization.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png via container screenshot, also saves interactive plot.html
+        comment: Saves as plot.png via container.screenshot(). Also generates interactive
+          plot.html.
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: Proper Chart/HighchartsOptions usage, hybrid dict injection is pragmatic
-          but not fully idiomatic
+        comment: Uses Chart + HighchartsOptions correctly but manually builds series
+          as dicts via to_dict() rather than Series classes.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Interactive tooltips in HTML version, per-point marker/color customization,
-          data labels with text outline
-  verdict: REJECTED
+        comment: Leverages Highcharts annotations module, per-point marker styling,
+          data labels, hover halos, and styled tooltips.
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
@@ -219,10 +229,9 @@ impl_tags:
   - hover-tooltips
   - html-export
   patterns:
-  - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
-  - edge-highlighting
   - gradient-fill
+  - edge-highlighting
   - grid-styling
