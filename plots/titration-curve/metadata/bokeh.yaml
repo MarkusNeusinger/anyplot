@@ -1,0 +1,224 @@
+library: bokeh
+specification_id: titration-curve
+created: '2026-03-21T22:12:50Z'
+updated: '2026-03-21T22:34:41Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23389866006
+issue: 4407
+python_version: 3.14.3
+library_version: 3.9.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/titration-curve/bokeh/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/titration-curve/bokeh/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/titration-curve/bokeh/plot.html
+quality_score: 91
+review:
+  strengths:
+  - Chemically accurate stoichiometric calculations produce a realistic titration
+    curve
+  - Excellent use of Bokeh model system (BoxAnnotation, Span, Label, HoverTool, extra_y_ranges)
+  - Colorblind-safe Wong palette with intentional color assignments
+  - Clean visual hierarchy with shaded regions, equivalence point annotation, and
+    derivative overlay
+  - Dual output (PNG + interactive HTML) leverages Bokeh strengths
+  weaknesses:
+  - Derivative spike is extremely narrow due to data nature, slightly hard to appreciate
+    visually
+  - Design could reach publication-level with more typographic refinement
+  image_description: The plot displays an acid-base titration curve (HCl + NaOH) with
+    a characteristic S-shaped sigmoidal curve in blue (#306998) plotting pH (y-axis,
+    0-14) against volume of NaOH added in mL (x-axis, 0-50). A secondary y-axis on
+    the right shows the derivative dpH/dV (mL⁻¹) in orange (#D55E00) as a dot-dash
+    line, with a sharp spike at the equivalence point. The equivalence point at 25
+    mL, pH 7.0 is marked with a green diamond marker and a vertical dashed green line,
+    accompanied by a bold annotation label. Two semi-transparent shaded regions indicate
+    the "Excess HCl Region" (0-15 mL, yellow tint) and "Excess NaOH Region" (35-50
+    mL, blue tint) with italic labels. A subtle dotted gray line marks pH 7. The legend
+    in the top-left corner shows entries for dpH/dV and pH with a white background
+    and thin gray border. The background is light gray (#F7F7F7) with subtle dashed
+    gridlines. Title reads "titration-curve · bokeh · pyplots.ai" in dark gray.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set well above minimums (title 36pt, labels
+          26pt, ticks 20pt, legend 22pt)
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text elements, legend and annotations well positioned
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Main curve and derivative visible, derivative spike inherently narrow
+          due to sharp pH transition
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Colorblind-safe Wong palette with good contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Generous borders, plot fills canvas well, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive labels with units on all axes
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom colorblind-safe palette, custom background, professional typography,
+          above defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Ticks removed, subtle dashed grid, outline removed, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Shaded regions and annotations create visual hierarchy, guides reader
+          to equivalence point
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct S-shaped titration curve
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: equivalence point, derivative, shaded
+          regions, correct data'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=volume, Y=pH, full 0-14 scale
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct title format, clear legend labels
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Complete S-curve with all regions, derivative spike, excess acid/base
+          regions
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Real chemistry: 25 mL 0.1 M HCl titrated with 0.1 M NaOH'
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Chemically accurate values throughout
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean linear flow, no functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic stoichiometric calculations
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, clean chemistry calculations
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot.png and plot.html, current Bokeh API
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert Bokeh usage with ColumnDataSource, extra_y_ranges, BoxAnnotation,
+          Label, Span, LinearAxis
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: HoverTool with vline mode, HTML export with CDN, BoxAnnotation for
+          declarative region shading
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - twin-axes
+  - annotations
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  - columndatasource
+  dataprep: []
+  styling:
+  - grid-styling
+  - alpha-blending

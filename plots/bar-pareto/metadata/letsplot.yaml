@@ -1,0 +1,232 @@
+library: letsplot
+specification_id: bar-pareto
+created: '2026-03-20T07:27:26Z'
+updated: '2026-03-20T07:41:27Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23332978607
+issue: 4550
+python_version: 3.14.3
+library_version: 4.9.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/bar-pareto/letsplot/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/bar-pareto/letsplot/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/bar-pareto/letsplot/plot.html
+quality_score: 90
+review:
+  strengths:
+  - 'Excellent semantic color coding: dark teal bars for 80% threshold categories,
+    light blue for rest — immediately communicates the Pareto insight'
+  - Professional cumulative line with white-filled circle markers and percentage annotations
+    on first 3 points
+  - Perfect spec compliance with all required elements (descending sort, cumulative
+    line, 80% threshold, dual axes)
+  - Realistic manufacturing defect data that perfectly demonstrates the Pareto principle
+  - Interactive tooltips (layer_tooltips) add value for the HTML export
+  weaknesses:
+  - Simulated secondary y-axis via floating geom_text labels lacks the polish of a
+    true dual axis (no axis line, labels float)
+  - Right margin padding (130px) to accommodate secondary labels consumes canvas space
+  image_description: 'The plot displays a Pareto chart with 8 manufacturing defect
+    categories on the x-axis (Scratches, Dents, Misalignment, Cracks, Discoloration,
+    Burrs, Warping, Contamination) sorted in descending order by frequency. Bars use
+    a two-tone color scheme: dark teal (#1B3A4B) for categories contributing to the
+    80% threshold and light blue (#7EB8DA) for the rest. An orange cumulative percentage
+    line with white-filled circle markers overlays the bars, connecting each category.
+    The first three cumulative points are annotated with percentage labels (29%, 52%,
+    67%). A dashed gray horizontal line marks the 80% threshold with a label. Simulated
+    secondary y-axis labels on the right display percentage values (20%, 40%, 60%,
+    80%, 100%) in bold orange. Title reads "bar-pareto · letsplot · pyplots.ai" centered
+    at top. X-axis labels are rotated 45 degrees. Caption explains "Orange line =
+    Cumulative % · Dashed line = 80% threshold". White background with subtle horizontal
+    grid lines only.'
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title=24, axis_title=20, axis_text=16,
+          caption=14'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: X-axis labels rotated 45° avoid collision, cumulative annotations
+          well-spaced
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Bars clearly visible with good width, orange line thick with appropriately
+          sized markers
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Dark teal/light blue bars plus orange line provide excellent colorblind-safe
+          contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good layout but right margin for simulated secondary axis labels
+          consumes noticeable canvas space
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive labels with units: Defect Type and Frequency (Count)'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom two-tone palette with semantic meaning, professional orange
+          cumulative line with white-filled markers
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: theme_minimal removes spines, subtle y-grid, x-grid removed. Simulated
+          secondary axis via floating text is a necessary but less polished workaround
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Dark/light bar color split communicates 80% threshold. Dashed line
+          and first-3 annotations guide viewer through Pareto principle
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Pareto chart with descending bars and cumulative line overlay
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec requirements present: descending sort, cumulative line,
+          80% threshold, dual axes, markers centered on bars'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Categories on x-axis, counts on y-axis, cumulative percentage correctly
+          calculated
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct, caption explains visual encoding in lieu of
+          legend
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 8 categories with clear Pareto distribution, 80% threshold falls
+          between 4th and 5th categories
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Manufacturing defect data with plausible categories — classic Six
+          Sigma scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Counts 16-186, realistic for manufacturing quality dataset
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean imports-data-plot-save structure, no functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic with hardcoded data arrays
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: numpy, pandas, lets_plot, export_ggsave'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Segment-based cumulative line and text-based secondary axis are justified
+          workarounds
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png and plot.html via export_ggsave with scale=3
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good ggplot grammar with aes(), geom layers, scales, themes. Proper
+          use of scale_fill_identity() and inherit_aes=False
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses lets-plot-specific layer_tooltips() with title/line/format,
+          HTML export, and theme margin as list
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  - hover-tooltips
+  - html-export
+  patterns: []
+  dataprep:
+  - cumulative-sum
+  styling:
+  - grid-styling

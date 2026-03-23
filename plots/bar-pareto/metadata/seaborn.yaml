@@ -1,0 +1,228 @@
+library: seaborn
+specification_id: bar-pareto
+created: '2026-03-20T07:21:08Z'
+updated: '2026-03-20T07:30:38Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23332978304
+issue: 4550
+python_version: 3.14.3
+library_version: 0.13.2
+preview_url: https://storage.googleapis.com/pyplots-images/plots/bar-pareto/seaborn/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/bar-pareto/seaborn/plot_thumb.png
+preview_html: null
+quality_score: 92
+review:
+  strengths:
+  - Excellent two-tone color palette visually communicates the 80/20 Pareto split
+  - All spec requirements fully implemented including 80% reference line and cumulative
+    markers
+  - Strong visual hierarchy through color intensity, bold annotations, and colored
+    secondary axis
+  - Clean well-structured code with appropriate seaborn API usage
+  - Realistic manufacturing defect data that naturally demonstrates the Pareto principle
+  weaknesses:
+  - Library mastery could be higher - cumulative line, annotations, and twin axes
+    are pure matplotlib with minimal seaborn involvement
+  - DE-01 could reach 7-8 with more typographic refinement such as a subtitle or source
+    annotation
+  image_description: 'The plot displays a Pareto chart with 8 manufacturing defect
+    categories on the x-axis sorted in descending frequency order (Scratches=142,
+    Dents=118, Misalignment=84, Cracks=67, Discoloration=45, Burrs=31, Warping=22,
+    Contamination=11). Bars use a two-tone blue palette: the first 4 categories (contributing
+    to ~80% of defects) are dark blue (#306998), while the remaining 4 are lighter
+    blue-gray (#A3BFCF). An orange/red cumulative percentage line with white-edged
+    circle markers rises across the chart on a secondary y-axis (0-100%). A dashed
+    80% horizontal reference line with label marks the Pareto threshold. Bold count
+    annotations appear above each bar, colored to match bar intensity. The title reads
+    "bar-pareto · seaborn · pyplots.ai". Left y-axis shows "Frequency (Count)", right
+    y-axis shows "Cumulative %" in orange. Top and right spines are removed from the
+    bar axis; the right spine on the secondary axis is colored orange.'
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt,
+          annotations 14pt bold'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text, bar labels well-spaced, x-axis categories fit
+          cleanly
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Bars clearly visible, cumulative line thick with large white-edged
+          markers
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue/orange palette is colorblind-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 16x9 canvas well-utilized with subplots_adjust tuning
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive labels with units: Frequency (Count), Cumulative %,
+          Defect Type'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Intentional two-tone palette highlighting 80/20 split, orange secondary
+          axis with matching spine color
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines removed, subtle grid alpha=0.2, colored secondary spine, generous
+          whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Dark/light bar color split communicates 80/20 threshold, reference
+          line guides viewer
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Pareto chart with descending bars and cumulative line overlay
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: descending sort, cumulative line, 80%
+          reference, dual y-axes'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Categories on x, counts on primary y, cumulative percentage on secondary
+          y
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct, no legend needed for this chart type
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 8 categories with clear Pareto distribution, dominant categories
+          and long tail
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Manufacturing defect data matching spec domain with realistic defect
+          types
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Defect counts 11-142 realistic for manufacturing QC context
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean flow: imports, data, compute, plot, style, save'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hardcoded data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All four imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean list comprehension for conditional palette, appropriate complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png, dpi=300, current seaborn API with hue parameter
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses sns.barplot with hue, set_context, set_style, despine, color_palette
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Seaborn theming and despine leveraged, but twin-axis and annotations
+          are pure matplotlib
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - twin-axes
+  - annotations
+  patterns:
+  - data-generation
+  - explicit-figure
+  dataprep:
+  - cumulative-sum
+  styling:
+  - grid-styling
+  - edge-highlighting

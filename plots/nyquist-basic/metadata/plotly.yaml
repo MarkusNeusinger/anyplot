@@ -1,0 +1,230 @@
+library: plotly
+specification_id: nyquist-basic
+created: '2026-03-20T22:47:22Z'
+updated: '2026-03-20T23:01:42Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23365453284
+issue: 4412
+python_version: 3.14.3
+library_version: 6.6.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/nyquist-basic/plotly/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/nyquist-basic/plotly/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/nyquist-basic/plotly/plot.html
+quality_score: 93
+review:
+  strengths:
+  - Perfect spec compliance with all six specification requirements implemented correctly
+  - Excellent data storytelling with gain/phase margin annotations at crossover frequencies
+  - Strong use of Plotly interactive features (customdata, hovertemplate, HTML export)
+  - Clean deterministic code with named color constants and no unnecessary complexity
+  - 'Addressed all feedback from attempt 1: fixed color accessibility, repositioned
+    labels, improved axis labels'
+  weaknesses:
+  - Minor visual busyness near the origin where multiple markers and annotations converge
+  - Library mastery could reach 5/5 by leveraging Plotly built-in shape drawing for
+    the unit circle
+  image_description: The plot displays a Nyquist diagram titled "nyquist-basic · plotly
+    · pyplots.ai" with a subtitle "G(s) = 2 / (s+1)³" in monospace font. The main
+    Nyquist curve is a solid blue (#306998) line labeled "G(jω), ω ≥ 0" that starts
+    near (2, 0) at low frequency and spirals clockwise through the lower half-plane,
+    passing through the gain crossover region before approaching the origin. A dotted
+    blue mirror curve "G(jω), ω < 0" traces the conjugate path in the upper half-plane
+    with reduced opacity. A dashed gray unit circle is centered at the origin for
+    reference. The critical point (-1, 0) is marked with a large dark X. A blue filled
+    circle marks the gain crossover at approximately (-0.3, -1.0) with annotation
+    "ω=0.76 PM=68°" in blue. An orange diamond marks the phase crossover near (-0.25,
+    0) with annotation "ω=1.73 GM=12.0 dB" in orange. Frequency labels (ω=0.1, ω=0.5,
+    ω=1.0, ω=3.0) appear in gray along the curve at well-separated positions. Three
+    blue direction arrows indicate increasing frequency along the curve. Axes are
+    labeled "Real Axis" and "Imaginary Axis". Background is white with light gray
+    (#F7F8FB) paper background. Legend is in the upper-left corner with semi-transparent
+    white background.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 28pt, axis labels 22pt, ticks
+          18pt, annotations 13-14pt'
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Frequency labels repositioned to reduce crowding; minor busyness
+          near origin but all text readable
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Lines thick (3.5px), markers well-sized (15-24px), arrows clearly
+          visible
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Colorblind-safe: blue/orange/red with distinct marker shapes for
+          double-encoding'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 1:1 aspect ratio via scaleanchor, well-chosen axis range, balanced
+          margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Standard labels Real Axis / Imaginary Axis for dimensionless complex
+          plane
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom palette, plotly_white with custom paper bg, intentional typography
+          hierarchy
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle grid (4% opacity), refined zero lines, light paper vs white
+          plot, dashed unit circle at 30% opacity
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear stability narrative with annotated GM/PM, frequency progression
+          arrows, system identification subtitle
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Nyquist plot on complex plane
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All six spec requirements present: critical point, unit circle,
+          frequency annotations, arrows, 1:1 ratio, axis labels'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Real on X, imaginary on Y, correct G(jω) evaluation
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct title format, descriptive legend labels
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows gain/phase crossover, GM/PM, mirror curve, unit circle, critical
+          point, frequency progression
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Standard third-order control systems transfer function with realistic
+          parameters
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 800 log-spaced points from 0.01 to 100 rad/s, DC gain 2, realistic
+          margins
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean linear flow with no functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic analytical transfer function
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only numpy and plotly.graph_objects, both used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Named color constants, elegant loops for arrows and labels, concise
+          crossover detection
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot.png at 4800x2700 and plot.html, current API
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of go.Figure, customdata + hovertemplate pattern
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Interactive hover, HTML export, scaleanchor, hoverlabel customization
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - grid-styling

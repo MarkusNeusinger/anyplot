@@ -1,0 +1,223 @@
+library: plotnine
+specification_id: line-arrhenius
+created: '2026-03-21T22:06:52Z'
+updated: '2026-03-21T22:25:09Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23389777968
+issue: 4408
+python_version: 3.14.3
+library_version: 0.15.3
+preview_url: https://storage.googleapis.com/pyplots-images/plots/line-arrhenius/plotnine/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/line-arrhenius/plotnine/plot_thumb.png
+preview_html: null
+quality_score: 90
+review:
+  strengths:
+  - Excellent spec compliance — all five required features present and well-executed
+  - Strong visual hierarchy in annotations with typography differentiation (bold/italic)
+  - Custom blue color palette with intentional hierarchy across all elements
+  - Confidence ribbon adds statistical depth beyond minimum requirements
+  - Dual x-axis labels (1/T + temperature in K) greatly aid interpretation
+  - Clean, deterministic code with appropriate complexity
+  weaknesses:
+  - Minor empty space on right side of canvas between last two x-axis ticks
+  - Data is extremely clean (R²=0.9968) — slightly more scatter would better showcase
+    the regression fit
+  image_description: 'The plot displays an Arrhenius plot with 1/T (K⁻¹) on the x-axis
+    and ln(k) on the y-axis. Seven dark navy-blue circular data points are plotted
+    along a medium-blue regression line (size 2.0) with a subtle light-blue confidence
+    ribbon. The title "line-arrhenius · plotnine · pyplots.ai" appears in bold dark
+    navy at the top. Three stacked annotations in the upper-left show: "R² = 0.9968"
+    in a white semi-transparent label box (bold), "Eₐ = 40.6 kJ/mol" (bold, dark blue),
+    and "slope = −Eₐ/R = -4878 K" (italic, gray). The x-axis has 4 tick labels showing
+    both scientific notation and temperature in K (e.g., "1.67e-03 (600 K)"). Background
+    is a warm light gray (#f7f7f7) with subtle dashed horizontal grid lines on the
+    y-axis only. No x-axis grid. The overall design is clean and polished.'
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 26pt, axis titles 20pt, tick
+          text 16pt'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text, annotations well-spaced, 4 x-axis ticks avoids
+          crowding
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 7 data points at size=7 with stroke=1.4 clearly visible above regression
+          line
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Single-series blue palette, no colorblind issues
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good 16:9 proportions, slight gap on right side
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive with units: 1/T (K⁻¹) and ln(k)'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom blue palette with intentional hierarchy, typography differentiation
+          in annotations
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: 'theme_minimal customized: x-grid removed, y-grid subtle dashed,
+          warm gray background'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Annotation hierarchy guides viewer from R² to Ea to slope, confidence
+          band communicates fit quality
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct Arrhenius plot: ln(k) vs 1/T with linear regression'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: regression line, R², Ea/R slope, secondary
+          temp labels, visible points'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=1/T, Y=ln(k), correctly assigned
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct, no legend needed for single series
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: 7 data points spanning 300-600K showing clear linear Arrhenius relationship
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: First-order decomposition reaction, genuine chemistry scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Temperature 300-600K, rate constants 0.0013-4.2, Ea=40.6 kJ/mol all
+          realistic
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean imports-data-computation-plot-save flow, no functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic data, no random components
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used including scipy.stats.t for CI
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-organized, appropriate complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png at 300 DPI, current API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good grammar-of-graphics layering with inherit_aes=False for separate
+          data frames
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses annotate label type, grammar-of-graphics composition, extensive
+          theme customization
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - scipy
+  techniques:
+  - annotations
+  - layer-composition
+  - manual-ticks
+  patterns:
+  - data-generation
+  dataprep:
+  - regression
+  styling:
+  - alpha-blending
+  - grid-styling

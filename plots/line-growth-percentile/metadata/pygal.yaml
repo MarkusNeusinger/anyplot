@@ -1,0 +1,235 @@
+library: pygal
+specification_id: line-growth-percentile
+created: '2026-03-19T19:54:03Z'
+updated: '2026-03-19T20:28:08Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23313901356
+issue: 4555
+python_version: 3.14.3
+library_version: 3.1.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/line-growth-percentile/pygal/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/line-growth-percentile/pygal/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/line-growth-percentile/pygal/plot.html
+quality_score: 85
+review:
+  strengths:
+  - Excellent clinical data realism with WHO-approximating weight-for-age values
+  - Band color gradient correctly matches spec (darker at extremes, lighter near median)
+  - Right-margin percentile labels implemented as native SVG text elements — more
+    idiomatic than PIL approach
+  - Patient data clearly visible with prominent red dots and connecting line
+  - Thoughtful graduated blue palette with custom backgrounds and typography
+  - Creative polygon fill technique for percentile bands using pygal XY
+  weaknesses:
+  - 'Minor dead code: ns dict and plot_group variable assigned but never used (lines
+    173-174)'
+  image_description: The plot displays a WHO Weight-for-Age growth chart for boys
+    aged 0–36 months. Six graduated blue percentile bands (P3–P10, P10–P25, P25–P50,
+    P50–P75, P75–P90, P90–P97) fan outward from a narrow origin near birth weight
+    ~2–4 kg to a wider spread at 36 months (~11–17.5 kg). The bands correctly use
+    darker blue (#2E86C1) at the extremes (P3–P10, P90–P97), medium blue (#85C1E9)
+    for intermediate bands (P10–P25, P75–P90), and lightest blue (#D6EAF8) near the
+    median (P25–P50, P50–P75), all at 0.55 opacity. A dashed dark navy (#154360) P50
+    median line with stroke width 7 runs through the center. Red (#C0392B) connected
+    dots (dots_size=12, stroke 5.5) clearly show an individual patient's weight trajectory
+    tracking between the 25th and 50th percentiles. Right-margin percentile labels
+    (P3, P10, P25, P50, P75, P90, P97) are rendered as native SVG text elements in
+    gray/navy. The x-axis shows "Age (months)" from 0 to 36 with major labels every
+    6 months, and the y-axis shows "Weight (kg)" from 0 to 18. The title reads "WHO
+    Weight-for-Age (Boys) · line-growth-percentile · pygal · pyplots.ai". A bottom
+    legend in two rows of four items identifies all 8 series. The background is white
+    with a subtle off-white (#FAFCFF) plot area and dashed horizontal grid lines.
+  criteria_checklist:
+    visual_quality:
+      score: 26
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set in Style (title=58, labels=40, major=42,
+          legend=36). Right-margin SVG labels at font-size 38. All readable.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Right-margin percentile labels P25/P10/P3 vertically close but distinct.
+          No other overlaps.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Patient dots prominent at size 12 with red stroke. P50 dashed line
+          visible. Bands clearly differentiated.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue-red palette is colorblind-safe with excellent contrast.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good canvas utilization. Y-range 0-18 tighter than before. Minor
+          unused space above data max ~17.5.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Age (months) and Weight (kg) — descriptive with units.
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom graduated blue palette, off-white plot background, thoughtful
+          typography. Above defaults but not publication-level.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Dashed guide strokes, hidden x-guides, custom margins, subtle grid
+          styling. Good refinement.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Patient trajectory between P25-P50 creates clear focal point. Red
+          against blue creates strong visual hierarchy.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct growth chart with filled percentile bands and patient overlay.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: graduated bands (darker at extremes), emphasized
+          P50, blue tones, right-margin labels, patient connected markers.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=age months, Y=weight kg. Correctly mapped.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title follows required format. Legend labels match data series.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: All 7 percentile levels, filled bands, median emphasis, patient tracking
+          across full range.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: WHO weight-for-age boys — real clinical scenario, neutral medical
+          data.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Birth weight ~3.3 kg, 36-month ~14.3 kg. Closely approximates WHO
+          standards.
+    code_quality:
+      score: 8
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear imports → data → style → chart → render → save. No functions
+          or classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 1
+        max: 2
+        passed: false
+        comment: 'Dead code: ns dict and plot_group variable assigned but never used
+          (lines 173-174).'
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with DPI. Also renders HTML.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good pygal.XY usage with fill, Style customization, stroke_style,
+          x_labels_major, legend_at_bottom_columns.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Creative polygon fill for bands, native SVG text injection for labels
+          (improved from PIL), HTML export, js=[] for static.
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - pillow
+  - cairosvg
+  techniques:
+  - annotations
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling
+  - gradient-fill

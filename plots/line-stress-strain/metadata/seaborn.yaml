@@ -1,0 +1,229 @@
+library: seaborn
+specification_id: line-stress-strain
+created: '2026-03-20T21:23:55Z'
+updated: '2026-03-20T21:38:51Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23363004930
+issue: 4413
+python_version: 3.14.3
+library_version: 0.13.2
+preview_url: https://storage.googleapis.com/pyplots-images/plots/line-stress-strain/seaborn/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/line-stress-strain/seaborn/plot_thumb.png
+preview_html: null
+quality_score: 90
+review:
+  strengths:
+  - 'Excellent color coordination: annotation colors match their respective region
+    colors throughout'
+  - Complete spec compliance with all required features (regions, critical points,
+    offset line, modulus annotation)
+  - Realistic mild steel data with accurate material properties
+  - Clean data storytelling through annotations and region shading that guide the
+    viewer through the mechanical behavior narrative
+  - Well-structured code with clear linear flow
+  weaknesses:
+  - Elastic region is extremely compressed on the x-axis, making the 0.2% offset line
+    nearly indistinguishable from the elastic line at this scale
+  - Heavy reliance on matplotlib for annotations and shading rather than seaborn-specific
+    features
+  image_description: 'The plot displays an engineering stress-strain curve for mild
+    steel with the title "line-stress-strain · seaborn · pyplots.ai". The x-axis shows
+    "Engineering Strain" (0 to ~0.38) and the y-axis shows "Engineering Stress (MPa)"
+    (0 to ~450). Three distinct regions are rendered as colored line segments: Elastic
+    (blue, #306998), Strain Hardening (orange, #E07B39), and Necking (dark red, #C0392B).
+    Subtle background shading in matching colors distinguishes each region. Critical
+    points are marked with distinct markers: Yield Point (orange circle), UTS (dark
+    red circle at 400 MPa), and Fracture (dark X marker). Annotated arrows point to
+    each critical point with bold colored text. A dashed gray line shows the 0.2%
+    offset method. An italic annotation reads "E = 200 GPa" with an arrow to the elastic
+    region midpoint. The legend on the center-right shows both region lines and critical
+    point markers. Top and right spines are removed, x-grid is off, y-grid is subtle.'
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set via sns.set_context with rc overrides:
+          title 24pt, labels 20pt, ticks 16pt, legend 13pt, annotations 14pt'
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Minor crowding near yield point area where elastic line, 0.2% offset
+          line, and yield marker converge in narrow x-range
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Lines thick (3.5), markers large (s=200); elastic region extremely
+          compressed on x-axis making offset line hard to distinguish
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue/orange/dark-red palette is colorblind-distinguishable
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 16:9 canvas well-utilized, balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive labels with units: Engineering Strain, Engineering Stress
+          (MPa)'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom coordinated palette, annotation colors match region colors,
+          region shading ties visual language together
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines removed, x-grid disabled, y-grid subtle (alpha 0.15), region
+          shading at alpha 0.06
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Annotations guide viewer through mechanical behavior narrative, region
+          shading creates visual hierarchy
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct line plot showing stress-strain curve
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: regions, critical points, offset line,
+          modulus annotation'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=strain, Y=stress correctly mapped
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct, legend shows regions and critical points
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all key regions: elastic, strain hardening, necking, fracture'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Mild steel tensile test with realistic parameters
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Young's modulus 200 GPa, yield 250 MPa, UTS 400 MPa — realistic for
+          mild steel
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports, data, plot, save'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-organized, appropriate complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with dpi=300
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of sns.lineplot/scatterplot with hue, set_style, set_context,
+          despine; some matplotlib fallback
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Hue-based line segmentation is seaborn-like but most visual impact
+          from matplotlib calls
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  - layer-composition
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling
+  - edge-highlighting

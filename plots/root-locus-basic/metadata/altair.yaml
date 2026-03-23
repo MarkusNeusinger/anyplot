@@ -1,0 +1,220 @@
+library: altair
+specification_id: root-locus-basic
+created: '2026-03-20T21:26:28Z'
+updated: '2026-03-20T22:11:12Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23362981953
+issue: 4414
+python_version: 3.14.3
+library_version: 6.0.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/root-locus-basic/altair/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/root-locus-basic/altair/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/root-locus-basic/altair/plot.html
+quality_score: 86
+review:
+  strengths:
+  - Excellent spec compliance — all required root locus features present and correctly
+    implemented
+  - Strong data storytelling with labeled crossings, breakaway point, and transfer
+    function in subtitle
+  - Clean layered architecture with well-separated concerns per chart layer
+  - Proper engineering notation on axes and annotations
+  - Deterministic, mathematically correct root computation with appropriate gain range
+  weaknesses:
+  - Right half-plane is mostly empty, wasting some canvas space
+  - Damping ratio labels only shown for two of four guide lines
+  - Axis spines still present; removing top/right would improve visual refinement
+  image_description: 'The plot displays a root locus diagram on a square canvas with
+    equal axis scaling from -6 to 6 on both axes. Three branches are shown in distinct
+    colors: Branch 1 (blue) runs along the negative real axis from the origin leftward
+    toward negative infinity, Branch 2 (orange) curves upward into the upper half-plane,
+    and Branch 3 (green) curves downward into the lower half-plane. Open-loop poles
+    are marked with red cross markers at s=0, s=-1, and s=-2 on the real axis. Red
+    diamond markers indicate imaginary axis crossings at jω = ±j√2 (K=6) with bold
+    red labels. A gray square marks the breakaway point near s ≈ -0.42. Light dashed
+    gray lines show constant damping ratio guide lines radiating from the origin (ζ=0.4
+    and ζ=0.8 labeled) and natural frequency arcs (semicircles for ωn=1,2,3,4). Real
+    axis segments of the root locus are shown as thick semi-transparent blue lines
+    between (-1, 0) and from -2 leftward. Triangle markers indicate direction of increasing
+    gain on the complex branches. Title reads "root-locus-basic · altair · pyplots.ai"
+    with subtitle showing the transfer function and description.'
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Font sizes explicitly set throughout; damping labels slightly small
+          at 12pt
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: All text elements clearly separated
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: All elements visible; guide lines intentionally subtle
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue/orange/green colorblind-safe palette
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Square canvas correct for root locus; right half mostly empty
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive with engineering notation
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Custom palette, thoughtful typography, above defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: View stroke removed, grid disabled, subtle guide lines
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear engineering story with labeled crossings and breakaway
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct root locus plot
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: All spec features present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct real/imaginary mapping
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct title format and legend
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows breakaway, complex branches, crossing, real axis segments
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Classic textbook transfer function
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Appropriate gain range and pole locations
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat structure, no functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic polynomial roots
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only altair, numpy, pandas — all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-organized code
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png and plot.html
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good declarative grammar usage with layers, encodings, tooltips
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Layer composition, interactive exploration, tooltip encoding
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - annotations
+  - hover-tooltips
+  - custom-legend
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - grid-styling
+  - alpha-blending

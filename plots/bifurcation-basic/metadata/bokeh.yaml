@@ -1,0 +1,230 @@
+library: bokeh
+specification_id: bifurcation-basic
+created: '2026-03-20T20:28:57Z'
+updated: '2026-03-20T20:56:02Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23361206273
+issue: 4415
+python_version: 3.14.3
+library_version: 3.9.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/bifurcation-basic/bokeh/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/bifurcation-basic/bokeh/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/bifurcation-basic/bokeh/plot.html
+quality_score: 87
+review:
+  strengths:
+  - Perfect spec compliance with all required features (bifurcation points labeled,
+    transients discarded, correct parameter range)
+  - Regime-based color encoding (blue to purple to red) effectively tells the chaos
+    story
+  - Clean visual refinement with removed axis lines, subtle grid, and Helvetica typography
+  - Dual output (PNG + interactive HTML) leverages Bokeh strengths
+  - Fully deterministic computation with appropriate resolution (3000 r-values x 150
+    states)
+  weaknesses:
+  - Chaotic region (red, alpha=0.15) has low contrast against light background
+  - Onset of chaos annotation placed at y=0.05 feels visually disconnected from the
+    chaotic structure
+  - Element-by-element color/alpha loop could be vectorized for cleaner code
+  image_description: The plot displays a classic logistic map bifurcation diagram
+    with the title "bifurcation-basic · bokeh · pyplots.ai". The x-axis shows "Growth
+    Rate (r)" from 2.5 to 4.0, and the y-axis shows "Steady-State Population (x)"
+    from 0 to 1. From r=2.5 to ~3.0, a single dark blue stable fixed point line curves
+    downward slightly then rises. At r≈3.0 the line splits into two branches (period-2,
+    labeled in red). The branches continue in lighter blue, splitting again at r≈3.449
+    (period-4, labeled in red at top). Beyond r≈3.57 (labeled "Onset of chaos" at
+    bottom), the diagram explodes into the characteristic chaotic fractal structure
+    rendered in faint red/pink points. Dashed red vertical lines mark each bifurcation
+    point. The background is light gray (#FAFAFA) with subtle grid lines. Typography
+    uses Helvetica with axis lines and ticks removed for a clean look. The regime-based
+    color transition from blue (stable) to purple (higher period) to red (chaotic)
+    provides effective visual storytelling.
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: 72pt title, 48pt axis labels, 36pt
+          tick labels, 36pt annotations'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Annotations well-spaced at different y-positions, no text collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Point size 1.5 appropriate for 450K points; chaotic region alpha=0.15
+          slightly faint
+      - id: VQ-04
+        name: Color Accessibility
+        score: 3
+        max: 4
+        passed: false
+        comment: Blue-purple-red avoids red-green issue but light red alpha=0.15 has
+          low contrast on light background
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: false
+        comment: Good proportions; data points at far right edge slightly compressed
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive labels with parameter notation: Growth Rate (r), Steady-State
+          Population (x)'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Regime-based color palette, Helvetica typography, removed axis/tick
+          lines, custom background
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Axis lines removed, subtle grid alpha=0.12, clean background; grid
+          could be more subtle
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Regime coloring creates visual hierarchy; Onset of chaos annotation
+          at y=0.05 feels disconnected
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct bifurcation diagram showing logistic map behavior
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: small points, low alpha, cascade, labels,
+          transients discarded'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=parameter r, Y=steady-state x, correct ranges
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title follows exact format, no legend needed for this plot type
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows stable fixed point, period-2, period-4, chaos, and periodicity
+          windows
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Logistic map is the canonical example with proper scientific terminology
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: r in [2.5, 4.0] and x in [0, 1] are mathematically correct ranges
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports, data generation, plot, styling, save'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Fully deterministic: logistic map with fixed x0=0.5'
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 1
+        max: 2
+        passed: false
+        comment: Per-element color/alpha loop could be vectorized with np.select
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png via export_png, current API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Proper ColumnDataSource, figure API, Label/Span models; could use
+          Bokeh transforms
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: HoverTool, HTML export with CDN, Span, active_scroll; hover only
+          visible in HTML
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  - columndatasource
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling

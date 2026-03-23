@@ -1,0 +1,228 @@
+library: matplotlib
+specification_id: bifurcation-basic
+created: '2026-03-20T20:28:45Z'
+updated: '2026-03-20T21:08:54Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23361206203
+issue: 4415
+python_version: 3.14.3
+library_version: 3.10.8
+preview_url: https://storage.googleapis.com/pyplots-images/plots/bifurcation-basic/matplotlib/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/bifurcation-basic/matplotlib/plot_thumb.png
+preview_html: null
+quality_score: 94
+review:
+  strengths:
+  - Density heatmap approach (histogram2d + pcolormesh + PowerNorm) is far superior
+    to scatter for revealing bifurcation structure including periodic windows within
+    chaos
+  - Excellent data storytelling with regime labels, bifurcation annotations, and Onset
+    of chaos arrow creating a clear narrative
+  - Cohesive design with cividis colormap, consistent annotation styling, and subtle
+    regime background shading
+  - All spec requirements fully satisfied with appropriate parameter choices
+  - Clean, deterministic, well-structured code
+  weaknesses:
+  - Regime background shading (axvspan) is largely invisible in the periodic and chaotic
+    regions because the heatmap covers it
+  image_description: 'The plot displays a bifurcation diagram of the logistic map
+    using a density-based heatmap (pcolormesh) with the cividis colormap on a dark
+    blue background. The x-axis shows "Growth Rate (r)" ranging from 2.5 to 4.0, and
+    the y-axis shows "Steady-State Population (x)" from 0 to 1.0. The title reads
+    "bifurcation-basic · matplotlib · pyplots.ai" in large text at the top. The stable
+    fixed-point branch appears as a bright yellowish line from r=2.5 to r=3.0, then
+    period-doubling cascades are clearly visible as the branches split. Three regime
+    background shadings are subtly applied (light blue for stable, light purple for
+    periodic, light red for chaotic). Dashed vertical lines mark key bifurcation points
+    with annotations: "Period-2 r ≈ 3.0", "Period-4 r ≈ 3.449", "Period-8 r ≈ 3.544",
+    and "Onset of chaos r ≈ 3.57" (with an arrow). Regime labels ("Stable", "Periodic",
+    "Chaotic") appear at the bottom in italic with white rounded boxes. Top and right
+    spines are removed. The chaotic region shows rich density structure including
+    periodic windows.'
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt,
+          annotations 14pt'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: All annotations well-spaced, no text collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Density heatmap with PowerNorm reveals structure excellently across
+          full range
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Cividis is perceptually uniform and colorblind-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 16:9 figsize with bbox_inches tight, balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive labels with variable names: Growth Rate (r), Steady-State
+          Population (x)'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Strong design with density heatmap, cividis colormap, regime shading,
+          cohesive annotation styling
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines removed, no grid, subtle dashed lines, consistent bbox styling.
+          Regime shading partially hidden under heatmap
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear narrative from stability to chaos with regime labels, bifurcation
+          annotations, and onset-of-chaos arrow
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct bifurcation diagram using density heatmap
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec requirements met: logistic map, transient discard, labeled
+          bifurcation points'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=parameter r, Y=state x, full range 2.5-4.0
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct title format, no legend needed for single-series density
+          plot
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows stable fixed point, period-doubling cascade, chaos, and periodic
+          windows
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Logistic map is the canonical example, real scientific context
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Standard parameter ranges: r 2.5-4.0, x 0-1, 2000 r values, 200
+          transient, 100 iterations'
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean linear structure with no functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Fully deterministic: logistic map from fixed x=0.5'
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All three imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Elegant histogram2d approach for density, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with dpi=300, current API
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Consistent Axes methods, proper fig/ax pattern, object-oriented API
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: PowerNorm, pcolormesh, axvspan, annotate with mixed coordinate systems
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep:
+  - binning
+  styling:
+  - custom-colormap
+  - alpha-blending

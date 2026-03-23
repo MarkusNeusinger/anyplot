@@ -1,0 +1,232 @@
+library: pygal
+specification_id: bode-basic
+created: '2026-03-21T20:48:39Z'
+updated: '2026-03-21T21:22:28Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23388395518
+issue: 4411
+python_version: 3.14.3
+library_version: 3.1.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/bode-basic/pygal/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/bode-basic/pygal/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/bode-basic/pygal/plot.html
+quality_score: 88
+review:
+  strengths:
+  - Excellent dual-panel composition using PIL to combine two pygal charts with a
+    refined divider
+  - Rich engineering annotations with color-coded margin indicators and stability
+    assessment
+  - Creative use of pygal native SVG interactivity in HTML export alongside static
+    PNG
+  - Perfect spec compliance with all required features plus bonus references (-3 dB,
+    -90°)
+  - Realistic third-order transfer function data with clear resonance behavior
+  weaknesses:
+  - Legend entries are lengthy, creating slight density at the bottom of each panel
+  - The -3 dB bandwidth line could be slightly more visible while remaining subtle
+  - Two helper functions (formatters) are a minor KISS deviation
+  image_description: 'The plot displays a dual-panel Bode plot for a third-order system
+    frequency response. The top panel shows magnitude (dB) vs frequency (Hz) on a
+    logarithmic scale from 0.1 to 1000 Hz. A blue curve starts near 0 dB, rises to
+    a resonance peak of ~8.1 dB around 4.8 Hz, then rolls off steeply. A red dashed
+    0 dB reference line and a subtle gray -3 dB bandwidth line are drawn horizontally.
+    A purple dashed vertical line marks the gain margin at ~11.1 Hz. An annotation
+    panel in the upper right with a white rounded-rectangle background shows: "Resonance
+    Peak: 8.1 dB @ 4.8 Hz", "Gain Margin: 12.2 dB @ 11.1 Hz", and "H(s): 3rd-order,
+    ωn=5 Hz, ζ=0.2". The bottom panel shows phase (°) vs frequency (Hz). A blue phase
+    curve starts near 0° and rolls off to approximately -270°. Red dashed -180° and
+    subtle gray -90° reference lines are drawn. A teal dashed vertical line with dots
+    marks the phase margin at ~6.7 Hz. An annotation panel shows "Phase Margin: 26.0°
+    @ 6.7 Hz" and "System Status: Stable (PM > 0°)". Background is light blue-white,
+    plot backgrounds are light gray-blue. Legends at the bottom of each panel list
+    series names. A thin divider separates the two panels.'
+  criteria_checklist:
+    visual_quality:
+      score: 26
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Font sizes explicitly set (title 56, labels 30, major labels 28,
+          legend 30). All readable. value_font_size=18 slightly small.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: No significant overlaps. Long legend entries create slight density.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Main curves visible at stroke width 5. -3 dB line intentionally subtle
+          but could be slightly more visible.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue, red, purple, teal palette is colorblind-friendly with good
+          contrast.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Dual-panel fills canvas well. Annotation boxes occupy some plot area
+          but add value.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Magnitude (dB), Phase (°), Frequency (Hz) — descriptive with units.
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom color palette, annotation panels with rounded rectangles,
+          refined typography. Above defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Custom backgrounds, subtle grid, refined margins, gradient panel
+          divider.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Annotation panels highlight key engineering metrics. Color-coded
+          margins guide viewer to critical frequencies.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct dual-panel Bode plot with magnitude on top, phase on bottom.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: All spec features present plus bonus references.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct frequency/magnitude/phase mapping with log-transformed x-axis.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title in correct format. Legend labels descriptive and match data.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows resonance peak, gain/phase margins, rolloff, bandwidth. Complete
+          coverage.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Third-order system with realistic engineering parameters. Neutral
+          technical domain.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sensible frequency range, magnitude, and phase values for the system.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Mostly linear flow. Two small helper functions are minor KISS deviation.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic mathematical transfer function.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-structured. PIL overlay is creative solution for pygal annotation
+          limitations.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with 300 DPI. Also generates plot.html.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of pygal.XY, Style, x_labels_major, stroke_style, interpolate,
+          tooltips.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Native SVG interactivity via HTML, tooltip_fancy_mode, x_labels_major/minor,
+          interpolate cubic.
+  verdict: REJECTED
+impl_tags:
+  dependencies:
+  - pillow
+  techniques:
+  - annotations
+  - manual-ticks
+  - html-export
+  - hover-tooltips
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - grid-styling

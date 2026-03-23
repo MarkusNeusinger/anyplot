@@ -1,0 +1,234 @@
+library: letsplot
+specification_id: line-win-probability
+created: '2026-03-20T12:32:06Z'
+updated: '2026-03-20T12:44:04Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23342814729
+issue: 4418
+python_version: 3.14.3
+library_version: 4.9.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/line-win-probability/letsplot/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/line-win-probability/letsplot/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/line-win-probability/letsplot/plot.html
+quality_score: 92
+review:
+  strengths:
+  - Excellent data storytelling with narrative subtitle and well-placed event annotations
+    guiding viewer through game arc
+  - Clean visual design with muted team-colored area fills, minimal grid, and high-contrast
+    light theme
+  - 'Full spec compliance with all required features: area fills, 50% reference line,
+    quarter markers, event annotations, final score'
+  - Realistic NFL game data with plausible scoring progression and multiple momentum
+    shifts
+  - Good use of letsplot-specific features (interactive tooltips, flavor theming,
+    geom_label customization)
+  weaknesses:
+  - Away team gray fill could use a slightly more distinctive team color for stronger
+    two-team visual identity
+  - The 50% baseline dashed line could be slightly more prominent to better anchor
+    the visual
+  - Could explore additional letsplot-distinctive features for higher library mastery
+  image_description: 'The plot displays a win probability chart for an Eagles vs Cowboys
+    NFL game. A bold dark line traces the Eagles'' win probability from Q1 through
+    the end of the game across 120 plays. The x-axis shows game progress with quarter
+    labels (Q1, Q2, Q3, Q4, End) separated by dotted vertical dividers. The y-axis
+    ranges from 0% to 100% with a dashed horizontal reference line at 50%. The area
+    above 50% is filled with a muted dark teal (Eagles green) and the area below 50%
+    is filled with a subtle gray. Five key scoring events are annotated with white
+    circle markers and labeled boxes: Cowboys TD 3-7, Eagles TD 10-7, Cowboys TD 13-14,
+    Eagles TD 20-14, and Eagles TD 27-17. Labels alternate above and below the line
+    to avoid overlap. The title reads "line-win-probability · letsplot · pyplots.ai"
+    with a narrative subtitle "Eagles 27 – Cowboys 17 · Eagles recover from Q3 deficit
+    for convincing finish". The plot uses a high-contrast light theme with only subtle
+    horizontal grid lines, no x-axis grid, and generous whitespace.'
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title=24, subtitle=16, axis_title=20,
+          axis_text=16'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Annotation labels use alternating vertical nudge to avoid collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Line width 1.8, markers size=6 with white fill and dark stroke, area
+          fills at alpha=0.35
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Dark teal vs gray is colorblind-safe with strong luminance contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good proportions; minor empty space at bottom of y-range (0-25% unused)
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive labels: Eagles Win Probability, Game Progress'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful team-colored palette, narrative subtitle, high-contrast
+          light flavor. Above defaults but gray away-team fill lacks strong identity
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Minimal grid (y-major only), x-grid removed, generous margins, clean
+          theme
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Narrative subtitle, annotations highlight key momentum shifts, clear
+          game arc visible
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct line chart with area fill for win probability
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: area fills, 50% line, quarter markers,
+          annotations, final score'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=play number (game progression), Y=win probability as percentage
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct, no legend needed for single-line with area
+          fills
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Multiple lead changes, momentum swings, scoring from both teams,
+          final convergence
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: NFL Eagles vs Cowboys game with realistic scoring events and plausible
+          final score
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 120 plays realistic for NFL, probability bounds and scoring progression
+          plausible
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean linear flow: imports, data, plot, save. No functions/classes'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set at start
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used, wildcard with noqa is idiomatic for letsplot
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-organized, no fake UI or over-engineering
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png via export_ggsave with scale=3
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Fluent ggplot grammar: aes, geom_ribbon, geom_label, scale_*, coord_cartesian,
+          theme composition'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses layer_tooltips(), flavor_high_contrast_light(), geom_label with
+          padding/radius params, HTML export
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  dataprep:
+  - cumulative-sum
+  styling:
+  - alpha-blending
+  - grid-styling

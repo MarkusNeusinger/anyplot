@@ -1,0 +1,225 @@
+library: letsplot
+specification_id: bifurcation-basic
+created: '2026-03-20T20:31:53Z'
+updated: '2026-03-20T20:57:00Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23361206404
+issue: 4415
+python_version: 3.14.3
+library_version: 4.9.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/bifurcation-basic/letsplot/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/bifurcation-basic/letsplot/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/bifurcation-basic/letsplot/plot.html
+quality_score: 93
+review:
+  strengths:
+  - Excellent density visualization with appropriate point size and alpha for 220k+
+    data points
+  - Strong data storytelling through color gradient, staggered bifurcation labels,
+    and Feigenbaum annotation
+  - Polished visual refinement with custom background, selective grid, and styled
+    axis elements
+  - Higher resolution sampling in chaotic regime (1600 vs 600 points) shows attention
+    to data quality
+  - Clean, deterministic code with appropriate use of letsplot-specific features
+  weaknesses:
+  - DE-01 could reach 7-8 with more distinctive typography or additional design polish
+  - LM-01 could leverage more advanced letsplot grammar patterns
+  image_description: 'The plot shows a bifurcation diagram of the logistic map with
+    "Growth Rate (r)" on the x-axis (2.50–4.00) and "Population (x)" on the y-axis
+    (0.0–1.0). Points are colored using a viridis-based gradient transitioning from
+    dark purple (low r) through teal to bright green (high r). The diagram clearly
+    shows the period-doubling cascade: a single stable fixed point for r < 3.0, period-2
+    bifurcation at r ≈ 3.0, period-4 at r ≈ 3.449, period-8 at r ≈ 3.544, and then
+    chaos. Dashed vertical gray lines mark each bifurcation point. Text labels "Period-2",
+    "Period-4", "Period-8", and "Chaos" are staggered at different y positions to
+    avoid overlap. An italic annotation "δ ≈ 4.669 (Feigenbaum)" appears near the
+    bottom right. The title reads "bifurcation-basic · letsplot · pyplots.ai" in bold.
+    A caption provides the logistic map equation. The background is a light off-white
+    (#FAFAFA), with subtle vertical-only grid lines. Overall the plot is clean, professional,
+    and clearly communicates the route to chaos.'
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title=24, axis_title=20, axis_text=16,
+          caption=13, labels=13/11'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Labels staggered at different y positions, no text collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Point size=0.4 with alpha=0.35 optimal for 220k-point density visualization
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Viridis-based gradient is colorblind-safe with excellent contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills canvas well with balanced margins, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive labels with parameter notation: Growth Rate (r), Population
+          (x)'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom viridis gradient, custom background, intentional typography
+          hierarchy, clearly above defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Y-grid removed, subtle x-only grid, custom background, styled axis
+          elements, generous margins
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Color gradient reinforces parameter progression, staggered labels
+          guide viewer, Feigenbaum annotation adds depth
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct bifurcation diagram
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: small points, alpha, full cascade, labeled
+          bifurcation points, transients discarded'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=r (parameter), Y=x (state), correct mapping
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct, no legend needed for continuous color
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows stable fixed point, period-2/4/8, chaos, windows of stability,
+          higher resolution in chaotic regime
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Logistic map is canonical example with real ecology applications
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Standard parameter range r=[2.5, 4.0], x=[0, 1]
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean linear flow: imports, data generation, plot, save'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic with fixed initial condition, no randomness
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no over-engineering
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png via export_ggsave with scale=3
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Proper ggplot grammar with aes, layered geoms, scales, themes, sampling_pick
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses sampling_pick, tooltips control, export_ggsave with scale, ggsize,
+          HTML export
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - custom-colormap
+  - alpha-blending
+  - grid-styling

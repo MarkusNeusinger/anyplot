@@ -1,0 +1,236 @@
+library: highcharts
+specification_id: scatter-pitch-events
+created: '2026-03-20T12:40:34Z'
+updated: '2026-03-20T13:11:41Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23342848945
+issue: 4417
+python_version: 3.14.3
+library_version: unknown
+preview_url: https://storage.googleapis.com/pyplots-images/plots/scatter-pitch-events/highcharts/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/scatter-pitch-events/highcharts/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/scatter-pitch-events/highcharts/plot.html
+quality_score: 89
+review:
+  strengths:
+  - Excellent pitch rendering with all FIFA-standard markings via Highcharts renderer
+    API
+  - Colorblind-safe Tol qualitative palette with strong contrast against green pitch
+  - Professional dark theme with gradient pitch, marker shadows, and refined typography
+  - Directional arrows with success/failure differentiation add tactical depth
+  - Zone labels enhance storytelling with tactical context
+  - Complete spec compliance with every requirement addressed
+  - Realistic soccer analytics data with plausible event distributions
+  weaknesses:
+  - Subtitle text (30px) slightly small for 4800px canvas
+  - Zone labels nearly touch bottom edge of canvas
+  - White unsuccessful markers can blend with white pitch lines
+  - Highcharts.chart monkey-patching pattern could be cleaner
+  image_description: 'The plot displays a soccer pitch event map on a dark navy background
+    (#1a1a2e) with a green gradient pitch surface. White pitch markings are accurately
+    rendered including the outline, halfway line, center circle with center spot,
+    both penalty areas, goal areas, penalty arcs, corner arcs, and goal outlines.
+    Four event types are shown with distinct markers: Pass (blue circles), Shot (coral/red
+    triangles, enlarged), Tackle (olive/yellow downward triangles), and Interception
+    (magenta diamonds). Filled markers indicate successful events while white/hollow
+    markers indicate unsuccessful ones. Directional arrows connect pass and shot origins
+    to endpoints — successful arrows are thicker and more opaque, unsuccessful ones
+    are thinner and faint. Zone labels ("DEFENSIVE THIRD", "MIDDLE THIRD", "ATTACKING
+    THIRD") appear at the bottom of the pitch. A floating legend with dark backdrop
+    sits in the top-left corner. The title reads "scatter-pitch-events · highcharts
+    · pyplots.ai" and a subtitle explains the visual encoding.'
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 46px, subtitle 30px, legend
+          30px, zone labels 28px). Subtitle slightly small for 4800px canvas.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or markers. Legend positioned cleanly.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Markers well-sized (radius 13-18). White unsuccessful markers occasionally
+          blend with white pitch lines.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Tol's qualitative palette, explicitly colorblind-safe with good contrast
+          against green pitch.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Pitch fills canvas well. Zone labels sit very close to bottom edge.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Axes appropriately hidden for pitch diagram. Zone labels provide
+          context.
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Strong design: dark theme with gradient pitch, Tol''s palette, custom
+          typography, marker shadows, rounded legend with backdrop.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: No unnecessary chrome. Clean pitch lines, backdrop legend, marker
+          shadows, generous whitespace.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Shots enlarged for emphasis, zone labels provide tactical context,
+          arrows differentiate success/failure.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct scatter plot on accurately scaled pitch diagram.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec requirements met: pitch markings, distinct markers, outcome
+          encoding, directional arrows, green pitch, correct aspect ratio.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X maps to horizontal (0-105m), Y to vertical (0-68m). Events distributed
+          appropriately.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title follows exact format. Legend labels match event types.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All 4 event types with realistic counts. Both outcomes shown. Directional
+          arrows on passes and shots.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Soccer match events with plausible distributions and realistic success
+          rates.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 120 total events realistic for match segment. FIFA pitch dimensions
+          correct.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear flow, no functions or classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set at start.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 1
+        max: 2
+        passed: false
+        comment: Monkey-patching Highcharts.chart in JS is functional but hacky.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot.png via Selenium. Also saves plot.html. Current API.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good Python API usage for chart config and series. Heavy JS injection
+          necessary but partially bypasses Python API.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Renderer API for custom SVG pitch, interactive tooltips, HTML export,
+          z-index layering — distinctly Highcharts features.
+  verdict: REJECTED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - hover-tooltips
+  - html-export
+  - custom-legend
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - dark-theme
+  - gradient-fill
+  - alpha-blending
+  - edge-highlighting

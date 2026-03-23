@@ -1,0 +1,233 @@
+library: bokeh
+specification_id: curve-dose-response
+created: '2026-03-18T22:32:22Z'
+updated: '2026-03-18T23:00:12Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23270128837
+issue: 4556
+python_version: 3.14.3
+library_version: 3.9.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/curve-dose-response/bokeh/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/curve-dose-response/bokeh/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/curve-dose-response/bokeh/plot.html
+quality_score: 90
+review:
+  strengths:
+  - 'Excellent spec compliance: every required feature (4PL fit, EC50 lines, error
+    bars, asymptotes, CI band, 2 compounds, legend) present and well-executed'
+  - Strong data storytelling with EC50 annotations, potency fold-comparison, and Hill
+    slopes communicates pharmacological insight immediately
+  - Clean visual design with removed spines, subtle grid, custom background, and color-matched
+    annotations
+  - Good use of Bokeh-specific models (Band, Whisker, Span) for polished result
+  - Realistic pharmacological data with appropriate scales and plausible EC50 values
+  weaknesses:
+  - Legend placement in top-right slightly crowded near plateau data points
+  - y_range extends to 115 creating some unused vertical space
+  - logistic_4pl function slightly breaks flat script structure
+  image_description: The plot displays two sigmoidal dose-response curves on a light
+    gray (#F8F9FA) background. Compound A is rendered in blue (#306998) and Compound
+    B in orange (#E8833A), each with fitted 4PL sigmoid lines (line_width=5) and scatter
+    data points (size=18) with white edge outlines. Error bars (whiskers) are shown
+    for both compounds. A translucent blue 95% confidence band surrounds Compound
+    A's fitted curve. Dashed vertical and horizontal reference lines mark the EC50
+    for each compound, colored to match. Dotted gray horizontal lines indicate the
+    top asymptote (~93%) and bottom asymptote (~5%), with italic labels at the left
+    edge. Bold EC50 annotations read "EC50 = 1.1e-07 M" (blue) and "EC50 = 9.4e-07
+    M" (orange). An italic potency comparison note in the lower-right states "Compound
+    A is 8x more potent." The legend in the top-right shows "Compound A (Hill = 1.5)"
+    and "Compound B (Hill = 1.5)" with a white background. The x-axis is logarithmic
+    labeled "Concentration (M)" and the y-axis is labeled "Response (%)". Spines and
+    ticks are removed; grid lines are subtle dashed gray at low alpha. Title reads
+    "curve-dose-response · bokeh · pyplots.ai" in bold 36pt.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 36pt, axis labels 26pt, ticks
+          20pt, annotations 20-26pt'
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Legend in top-right slightly encroaches on data region near plateau
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Markers size=18, line_width=5, whiskers visible. Well-adapted for
+          density
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue and orange provide excellent contrast and are colorblind-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good proportions but y_range to 115 creates unused space above top
+          asymptote
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Concentration (M) and Response (%) are descriptive with units
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Strong design with custom palette, removed spines, custom background,
+          color-matched annotations
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines removed, subtle grid alpha 0.15, custom background, outline
+          removed
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: EC50 annotations, potency fold-comparison, asymptote labels, Hill
+          slopes create clear narrative
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct sigmoidal dose-response curve with 4PL logistic fit
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: log x-axis, 4PL fit, EC50 lines, error bars,
+          asymptotes, CI band, 2 compounds, legend'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=concentration (log), Y=response (%). Full data range shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct title format and descriptive legend labels with Hill slopes
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Two compounds with different EC50s, Hill slopes, full sigmoid, error
+          bars, CI
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Realistic pharmacological context with molar concentrations and percent
+          response
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Concentrations 1e-9 to 1e-4 M, EC50 ~100 nM and ~1 uM are plausible
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Mostly linear flow but includes logistic_4pl function (needed for
+          curve_fit)
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set at start
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used including save for HTML export
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-organized. CI via parameter covariance sampling is elegant
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot.png via export_png, also produces plot.html
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of ColumnDataSource, Band, Whisker, Span, Label, Legend/LegendItem
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Bokeh-specific Band for CI, Whisker for error bars, HTML export alongside
+          PNG
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - scipy
+  techniques:
+  - annotations
+  - custom-legend
+  - html-export
+  patterns:
+  - data-generation
+  - columndatasource
+  dataprep:
+  - regression
+  styling:
+  - alpha-blending
+  - edge-highlighting
+  - grid-styling

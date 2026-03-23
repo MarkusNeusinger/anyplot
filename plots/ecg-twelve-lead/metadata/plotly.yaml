@@ -1,0 +1,237 @@
+library: plotly
+specification_id: ecg-twelve-lead
+created: '2026-03-19T20:06:39Z'
+updated: '2026-03-19T20:28:25Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23314441221
+issue: 4554
+python_version: 3.14.3
+library_version: 6.6.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/ecg-twelve-lead/plotly/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/ecg-twelve-lead/plotly/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/ecg-twelve-lead/plotly/plot.html
+quality_score: 91
+review:
+  strengths:
+  - 'Excellent domain authenticity: ECG paper color, two-tone grid system, calibration
+    pulses, and clinical annotation create a recognizable medical display'
+  - All 12 leads correctly derived from a base Lead II signal with physiologically
+    appropriate transforms
+  - 'Strong Plotly feature utilization: interactive hover tooltips, spike lines, and
+    HTML export add real value for ECG inspection'
+  - Clean, well-structured code with the lead_transforms dictionary pattern
+  - Perfect spec compliance with all required features implemented
+  weaknesses:
+  - Precordial R-wave progression (V1-V6) could show more dramatic morphological changes,
+    particularly deeper S-waves in V1-V2
+  - Subplot title font size (20pt) could be slightly larger for a medical display
+    where lead identification is critical
+  image_description: 'The plot displays a 12-lead ECG arranged in the standard clinical
+    3x4 grid layout with a full-width Lead II rhythm strip at the bottom. The background
+    uses a warm pinkish-cream ECG paper color (#FFF5F0) with two-tone grid lines —
+    light salmon lines at minor intervals and slightly bolder lines at major intervals,
+    authentically mimicking real ECG recording paper. Each of the 12 leads (I, aVR,
+    V1, V4 / II, aVL, V2, V5 / III, aVF, V3, V6) shows dark navy (#1A1A2E) ECG waveforms
+    with clearly visible P-QRS-T complexes. Lead labels are rendered in blue (Python
+    Blue #306998) above each subplot. The bottom rhythm strip spans all four columns
+    showing continuous Lead II. A 1mV calibration pulse appears at the left edge of
+    each subplot. The title "ecg-twelve-lead · plotly · pyplots.ai" is centered at
+    the top in dark gray, with "HR: 75 bpm | Normal Sinus Rhythm" annotation below
+    it. Y-axes show "mV" labels on the first column and rhythm strip; the x-axis shows
+    "Time (s)" on the rhythm strip. Approximately 3 heartbeats are visible per lead
+    strip at 75 bpm over 2.5 seconds.'
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 28pt, labels 22pt, ticks 16pt,
+          subplot titles 20pt). All readable. Annotation at 16pt adequate but not
+          generous.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text. Lead labels, axes, and annotations well-separated.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: ECG traces clearly visible with appropriate line widths (2-2.5px).
+          Calibration pulses distinct.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Single dark navy signal on light cream background. Excellent contrast,
+          no colorblind concerns.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 3x4 grid plus rhythm strip fills canvas well. Good proportions with
+          balanced margins.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: mV and Time (s) labels with proper units on relevant axes.
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Strong domain-appropriate design: custom ECG paper color, two-tone
+          grid system, dark navy traces, blue lead labels, clinical annotation. Clearly
+          above defaults.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Custom minor/major grid lines at ECG-appropriate intervals, hidden
+          tick labels on non-edge subplots, subtle zeroline styling, generous whitespace.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clinical context via HR/rhythm annotation, calibration pulses add
+          authenticity, standard clinical layout tells a story. Different lead morphologies
+          guide the viewer.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct 12-lead ECG in clinical 3x4 grid format with rhythm strip.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: 3x4 grid, rhythm strip, ECG paper grid,
+          calibration pulses, labeled leads, realistic P-QRS-T, synthetic data.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Time on x-axis, voltage (mV) on y-axis. Y range shows typical ECG
+          amplitudes.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct. No legend needed (single signal per subplot
+          with lead labels).
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: 'All 12 leads with different morphologies. Inverted aVR, precordial
+          progression. Minor: V1-V3 S-wave transition could be more pronounced.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Medical ECG context is highly realistic and neutral. Normal sinus
+          rhythm at 75 bpm.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Realistic amplitudes: P-wave ~0.15mV, QRS ~1.2mV, T-wave ~0.3mV.
+          Heart rate 75 bpm. All within normal ranges.'
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean imports, data, plot, save structure. No functions or classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set at the start.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only numpy, plotly.graph_objects, and make_subplots — all used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-organized with lead_transforms dictionary. Appropriate complexity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png (4800x2700) and plot.html. Current API.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of make_subplots with specs, go.Scatter, batch axis updates
+          with minor grid support, update_annotations.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Plotly-specific: custom hovertemplate, spike lines, minor gridlines,
+          HTML export, hoverlabel customization.'
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - subplots
+  - annotations
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - grid-styling
