@@ -1,6 +1,7 @@
 """SEO endpoints (sitemap, bot-optimized pages)."""
 
 import html
+from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import HTMLResponse, Response
@@ -12,6 +13,11 @@ from core.database import SpecRepository
 
 
 router = APIRouter(tags=["seo"])
+
+
+def _lastmod(dt: datetime | None) -> str:
+    """Format datetime as <lastmod> XML element, or empty string if None."""
+    return f"<lastmod>{dt.strftime('%Y-%m-%d')}</lastmod>" if dt else ""
 
 
 # Minimal HTML template for social media bots (meta tags are what matters)
@@ -83,11 +89,13 @@ async def get_sitemap(db: AsyncSession | None = Depends(optional_db)):
             if spec.impls:  # Only include specs with implementations
                 spec_id = html.escape(spec.id)
                 # Overview page
-                xml_lines.append(f"  <url><loc>https://pyplots.ai/{spec_id}</loc></url>")
+                xml_lines.append(f"  <url><loc>https://pyplots.ai/{spec_id}</loc>{_lastmod(spec.updated)}</url>")
                 # Individual implementation pages
                 for impl in spec.impls:
                     library_id = html.escape(impl.library_id)
-                    xml_lines.append(f"  <url><loc>https://pyplots.ai/{spec_id}/{library_id}</loc></url>")
+                    xml_lines.append(
+                        f"  <url><loc>https://pyplots.ai/{spec_id}/{library_id}</loc>{_lastmod(impl.updated)}</url>"
+                    )
 
     xml_lines.append("</urlset>")
     xml = "\n".join(xml_lines)
