@@ -1,0 +1,220 @@
+library: plotnine
+specification_id: scatter-constellation-diagram
+created: '2026-03-17T23:19:58Z'
+updated: '2026-03-17T23:31:53Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23220948629
+issue: 4562
+python_version: 3.14.3
+library_version: 0.15.3
+preview_url: https://storage.googleapis.com/pyplots-images/plots/scatter-constellation-diagram/plotnine/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/scatter-constellation-diagram/plotnine/plot_thumb.png
+preview_html: null
+quality_score: 91
+review:
+  strengths:
+  - Checkerboard decision region shading adds visual depth without clutter
+  - Error vectors connecting ideal to received points tell the signal impairment story
+    effectively
+  - Complete spec compliance with all required 16-QAM features
+  - Clean well-structured code with proper SNR-based noise modeling
+  - EVM and SNR annotations provide quantitative engineering context
+  weaknesses:
+  - Error vector segments are quite subtle and hard to see at normal viewing distance
+  - Received symbol markers could be slightly larger for better visibility
+  image_description: The plot displays a 16-QAM constellation diagram on a square
+    canvas with equal aspect ratio. Sixteen ideal constellation points are shown as
+    large red X markers at grid positions ±1 and ±3 on both I and Q axes. One thousand
+    received symbols appear as semi-transparent blue dots (alpha ~0.35) clustered
+    around each ideal point. A subtle checkerboard pattern in alternating light gray
+    (#F0F4F8) and white shades the 4×4 decision regions. Dashed gray decision boundary
+    lines are drawn at -2, 0, and 2 on both axes. Twelve red semi-transparent error
+    vector segments connect ideal points to their corresponding received symbols.
+    The title "scatter-constellation-diagram · plotnine · pyplots.ai" is bold and
+    centered at top. Axes are labeled "In-Phase (I)" (x) and "Quadrature (Q)" (y)
+    with tick marks at -3, -1, 0, 1, 3. Bold annotation "EVM = 9.9%" appears in the
+    bottom-right, with smaller gray text "SNR = 20 dB · 1000 symbols" beneath it.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title=24pt, axis_title=20pt, axis_text=16pt,
+          annotations at 16 and 11'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text elements
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Received symbols appropriate for density but could be marginally
+          larger
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue vs red provides strong colorblind-safe contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square canvas with coord_fixed, good margins, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive domain-appropriate labels: In-Phase (I) and Quadrature
+          (Q)'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Strong design with checkerboard regions, custom palette, intentional
+          hierarchy
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Grid removed, custom axis lines, checkerboard provides subtle structure
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Error vectors and EVM annotation create clear visual hierarchy and
+          narrative
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct I/Q scatter constellation diagram
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: 16-QAM, ideal markers, received symbols,
+          decision boundaries, EVM'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=I, Y=Q correctly mapped with symmetric limits
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct title format, no legend needed
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All 16 constellation points, noise scatter, error vectors, decision
+          regions, EVM
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Standard 16-QAM telecommunications scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Standard grid, realistic SNR and symbol count
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean linear structure with no functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity with clean SNR-based noise modeling
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with dpi=300
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good grammar-of-graphics usage with layered geoms, identity scales,
+          coord_fixed
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses plotnine-specific scale_x/y_continuous breaks, geom_rect, geom_segment,
+          identity scales
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - minimal-chrome

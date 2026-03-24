@@ -1,0 +1,224 @@
+library: plotnine
+specification_id: titration-curve
+created: '2026-03-21T22:11:31Z'
+updated: '2026-03-21T22:38:37Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23389866067
+issue: 4407
+python_version: 3.14.3
+library_version: 0.15.3
+preview_url: https://storage.googleapis.com/pyplots-images/plots/titration-curve/plotnine/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/titration-curve/plotnine/plot_thumb.png
+preview_html: null
+quality_score: 93
+review:
+  strengths:
+  - 'Excellent chemistry: vectorized analytical pH calculation produces a physically
+    accurate titration curve'
+  - Strong idiomatic plotnine usage with grammar-of-graphics layering (multiple data
+    frames, geom_area, geom_ribbon)
+  - Clear visual hierarchy with red diamond equivalence point marker as focal point
+  - Polished theme with subtle grid, refined panel background, and styled legend
+  - Custom blue/amber palette with good colorblind accessibility
+  weaknesses:
+  - Derivative area fill at alpha=0.12 is nearly invisible — could be slightly more
+    prominent
+  - No true secondary y-axis for the derivative (plotnine limitation, handled gracefully
+    with scaling)
+  image_description: 'The plot displays an acid-base titration curve with a bold blue
+    S-shaped pH line rising from ~1 at 0 mL to ~13 at 50 mL, with a sharp vertical
+    transition around 25 mL. An amber/gold derivative curve (dpH/dV scaled) spikes
+    sharply at 25 mL, with a faint amber area fill beneath it. A light blue semi-transparent
+    ribbon shades the transition region (~22–28 mL). A red diamond marker sits at
+    the equivalence point (25 mL, pH 7) with an italic annotation reading "Equivalence
+    Point (25 mL, pH 7)." A bold amber label in the upper right reads "Peak dpH/dV
+    = 57.5 at 25 mL." The legend in the upper left shows "pH" (blue) and "dpH/dV (scaled)"
+    (amber) with a white background box. The title reads "titration-curve · plotnine
+    · pyplots.ai" in bold. X-axis: "Volume of NaOH added (mL)" (0–50), Y-axis: "pH
+    / dpH/dV (scaled)" (0–14). Background is a subtle off-white (#FAFAFA) with faint
+    horizontal grid lines only. Clean, polished appearance.'
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title=24, axis_title=20, axis_text=16,
+          legend_text=16'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text elements, annotations well-separated
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Lines and markers clearly visible; derivative area fill at alpha=0.12
+          is very faint
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue and amber palette is colorblind-safe with good contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good 16:9 layout with balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive labels with units on both axes
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom blue/amber palette, styled legend, refined panel background,
+          clearly above defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle y-only grid, minor grid removed, styled axis lines, refined
+          panel background
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear focal point at equivalence point with diamond marker, derivative
+          peak labeled, transition shaded
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct S-shaped titration curve
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: Equivalence point marked, derivative overlay, transition shading.
+          Derivative scaled on primary axis (plotnine lacks twin axes)
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=volume 0-50 mL, Y=pH 0-14, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct, legend labels match data series
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Full S-curve with plateaus, sharp transition, derivative peak, and
+          equivalence point
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Real chemistry: 25 mL of 0.1 M HCl titrated with 0.1 M NaOH'
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Realistic concentrations, correct equivalence at 25 mL and pH 7
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports, data, plot, save. No functions or classes'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic analytical calculation
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports are used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean vectorized NumPy calculations, appropriate complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with dpi=300, current API
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert grammar-of-graphics: ggplot + geom layers, aes mappings,
+          long-format data, guide_legend with override_aes'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses geom_area, geom_ribbon, multiple data frames, guide_legend with
+          override_aes — distinctively plotnine patterns
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep:
+  - normalization
+  styling:
+  - alpha-blending
+  - grid-styling

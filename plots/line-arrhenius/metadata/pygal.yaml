@@ -1,0 +1,231 @@
+library: pygal
+specification_id: line-arrhenius
+created: '2026-03-21T22:08:23Z'
+updated: '2026-03-21T22:42:22Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23389777964
+issue: 4408
+python_version: 3.14.3
+library_version: 3.1.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/line-arrhenius/pygal/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/line-arrhenius/pygal/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/line-arrhenius/pygal/plot.html
+quality_score: 90
+review:
+  strengths:
+  - Excellent visual quality with all font sizes explicitly set and colorblind-safe
+    blue/amber palette
+  - Strong CSS customization leveraging pygal unique SVG styling capabilities (transparent
+    axes, rounded corners, custom font weights)
+  - Realistic chemistry data with proper Arrhenius equation parameters and experimental
+    noise
+  - Clean code structure with good reproducibility (seed=42)
+  - Dual x-axis labels showing both 1000/T and temperature in K aid interpretation
+  weaknesses:
+  - Activation energy annotation conveyed through legend entry rather than on-plot
+    annotation (pygal limitation)
+  - Data storytelling could be enhanced with more emphasis on the key insight
+  image_description: 'The plot displays an Arrhenius plot with "1000/T (K⁻¹)" on the
+    x-axis and "ln(k)" on the y-axis. A blue linear regression line runs from the
+    upper-left (~12.5 at 1.67 K⁻¹) to lower-right (~-2.5 at 3.33 K⁻¹). Nine amber/orange
+    circular data points are scattered along the fit line showing realistic experimental
+    scatter. The x-axis labels include both 1000/T values and corresponding temperatures
+    in parentheses (e.g., "1.67 (600 K)", "3.33 (300 K)"). The y-axis shows integer
+    values from -3 to 13 with subtle dashed horizontal grid lines. The plot background
+    is light gray with a white page background, and the plot area has rounded corners.
+    The title "line-arrhenius · pygal · pyplots.ai" appears at the top in bold. A
+    bottom legend shows three entries: "Linear Fit (R² = 0.999)" (blue), "Experimental
+    Data" (amber), and "Eₐ = 74.9 kJ/mol (−Eₐ/R = -9.0 K⁻¹)" (purple). Axis lines
+    are hidden, giving a clean appearance.'
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title=68, label=44, major_label=40,
+          legend=38). Clearly readable at full resolution.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping elements. X-axis labels well-spaced. Legend fits cleanly
+          at bottom.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Amber data points at dots_size=20 are prominent. Well-suited for
+          9 data points.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue and amber is an excellent colorblind-safe combination with strong
+          contrast.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills canvas well with explicit margins. Good proportions at
+          4800x2700.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive labels with units: 1000/T (K⁻¹) and ln(k).'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Strong custom design: blue/amber palette, custom font weights, letter-spacing,
+          distinct backgrounds. Above configured defaults.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Axis lines removed via CSS, dashed guide lines, rounded corners,
+          custom guide stroke colors.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Clear hierarchy: blue line as primary, amber scatter shows experimental
+          noise, R² and Eₐ in legend. Dual x-axis labels aid interpretation.'
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct Arrhenius plot: ln(k) vs 1/T with linear regression.'
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: 'All features present. Minor: Eₐ annotation in legend rather than
+          on-plot (pygal limitation).'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=1000/T, Y=ln(k) correctly mapped. Full data range displayed.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches format. Legend labels are descriptive and accurate.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: 9 data points spanning 300-600K, regression fit, scatter, R², and
+          Eₐ extraction shown.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: First-order decomposition with Eₐ=75 kJ/mol, realistic physical chemistry
+          scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Temperature 300-600K, Eₐ=75 kJ/mol, rate constants spanning orders
+          of magnitude — all physically realistic.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean Imports → Data → Transform → Style → Chart → Save flow.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set before noise generation.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: numpy, pygal, Style, scipy.stats all used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-organized with clear comments. Clever zero-opacity legend entry
+          for Eₐ.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot.png and plot.html. Current pygal API.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of pygal.XY, Style, CSS injection, tooltip config, value
+          formatters, legend positioning.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: CSS injection for axis removal and rounded corners, tooltip_fancy_mode,
+          HTML export with interactive SVG tooltips.
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - scipy
+  techniques:
+  - custom-legend
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  dataprep:
+  - regression
+  styling:
+  - grid-styling

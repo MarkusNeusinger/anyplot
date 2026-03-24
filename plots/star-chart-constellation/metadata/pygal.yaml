@@ -1,0 +1,229 @@
+library: pygal
+specification_id: star-chart-constellation
+created: '2026-03-18T21:26:00Z'
+updated: '2026-03-18T22:07:15Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23267218068
+issue: 4560
+python_version: 3.14.3
+library_version: 3.1.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/star-chart-constellation/pygal/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/star-chart-constellation/pygal/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/star-chart-constellation/pygal/plot.html
+quality_score: 84
+review:
+  strengths:
+  - Atmospheric dark night-sky theme with thoughtful color hierarchy (white to gold
+    to cyan to gray)
+  - Real astronomical data with accurate star names, positions, and magnitudes
+  - Constellation stick-figure lines and labeled centroids with manual offset adjustments
+  - Ecliptic line adds authentic astronomical context
+  - Clean SVG post-processing approach for constellation name labels
+  - Full code quality score with deterministic output
+  weaknesses:
+  - Legend cluttered with 8 constellation series entries redundant with on-chart labels
+  - No true sky projection due to pygal limitation (flat RA/Dec mapping)
+  - Faintest background stars could be slightly larger for better visibility
+  image_description: 'The plot displays a star chart on a dark navy background (#04041a/#060820).
+    Stars are rendered as circles of varying sizes and colors based on magnitude tiers:
+    large white circles for brightest stars (mag < 1, e.g., Sirius, Capella), gold/yellow
+    for mag 1-2, light blue/cyan for mag 2-3, and small gray dots for faintest stars
+    (mag 3-5). Eight constellations are shown with blue stick-figure lines connecting
+    their stars: Orion (lower-left with distinctive belt), Ursa Major (upper-right
+    Big Dipper shape), Taurus, Gemini, Canis Major (lower center), Leo (center-right),
+    Auriga (upper-left pentagon), and Canis Minor. Constellation names appear in italic
+    pale blue text near each group''s centroid. An orange ecliptic curve sweeps across
+    the chart. The x-axis shows Right Ascension (3h-14h), y-axis shows Declination
+    (-30° to 60°+). Title reads "star-chart-constellation · pygal · pyplots.ai". Legend
+    at bottom displays magnitude tiers and ecliptic with colored squares.'
+  criteria_checklist:
+    visual_quality:
+      score: 26
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Font sizes explicitly set (title 34, labels 20, legend 17). All readable.
+          Legend text slightly small with 13 series.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Minor overlap: Orion label near star markers; legend entries slightly
+          crowded.'
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Good magnitude-based sizing (32/22/14/6 px). Faintest stars slightly
+          small but visible.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: White/gold/cyan/gray palette is colorblind-safe with excellent contrast
+          against dark background.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Plot fills ~65% of canvas. Good proportions. Slight margin imbalance.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Right Ascension (hours) and Declination (°) — descriptive with units.
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Strong design: dark night-sky theme with intentional color hierarchy
+          and custom font family.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid against dark background, custom foreground colors for
+          grid opacity control.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Magnitude-based sizing creates visual hierarchy. Constellation lines
+          guide the eye.
+    spec_compliance:
+      score: 13
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 4
+        max: 5
+        passed: true
+        comment: XY scatter with constellation lines correct for star chart. Missing
+          true sky projection (pygal limitation).
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All required features present: magnitude sizing, constellation lines,
+          labels, dark background, grid, ecliptic.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: RA on x-axis, Dec on y-axis, all data visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 2
+        max: 3
+        passed: true
+        comment: Title format correct. Legend cluttered with redundant constellation
+          series entries.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: 8 constellations, background stars, magnitude tiers, constellation
+          lines, ecliptic.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real astronomical data with accurate star names, positions, and magnitudes.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: RA 3-14h, Dec -30 to 65 degrees. Magnitudes match known values.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear flow with no functions or classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-organized with clever SVG post-processing for labels.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png via cairosvg.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of pygal.XY(), Style class, per-series dots_size, tooltip
+          labels.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Leverages pygal tooltips, SVG-native rendering, per-series styling,
+          Style class theming.
+  verdict: REJECTED
+impl_tags:
+  dependencies:
+  - cairosvg
+  techniques:
+  - annotations
+  - html-export
+  - hover-tooltips
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - dark-theme
+  - alpha-blending

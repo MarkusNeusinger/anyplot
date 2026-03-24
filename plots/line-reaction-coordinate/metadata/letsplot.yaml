@@ -1,0 +1,222 @@
+library: letsplot
+specification_id: line-reaction-coordinate
+created: '2026-03-21T20:46:14Z'
+updated: '2026-03-21T20:58:02Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23388404622
+issue: 4409
+python_version: 3.14.3
+library_version: 4.9.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/line-reaction-coordinate/letsplot/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/line-reaction-coordinate/letsplot/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/line-reaction-coordinate/letsplot/plot.html
+quality_score: 91
+review:
+  strengths:
+  - 'Excellent color-coded annotation system: orange badges for Ea, blue badges for
+    ΔH create immediate visual distinction'
+  - Smooth, scientifically accurate energy curve using Gaussian+sigmoid construction
+  - Clean, educational layout with all spec-required features present and well-positioned
+  - Thoughtful use of lets-plot features (flavor system, geom_label parameters)
+  weaknesses:
+  - 'Minor: geom_label text sizes (15) are slightly smaller than ideal — could be
+    16-18 for maximum legibility'
+  image_description: The plot displays a reaction coordinate energy diagram with a
+    smooth blue curve (#306998) tracing the energy profile from reactants (50 kJ/mol)
+    on the left, rising through a Gaussian-shaped transition state peak (120 kJ/mol)
+    near center, then descending to products (20 kJ/mol) on the right. A subtle light
+    blue shaded area fills beneath the curve. An orange double-headed arrow on the
+    left shows Ea = 70 kJ/mol with a bold white-on-orange label. A steel blue double-headed
+    arrow on the right shows ΔH = -30 kJ/mol with a white-on-blue label. Reactants,
+    Transition State, and Products are labeled in rounded boxes with light gray fill.
+    Two horizontal dashed gray lines mark the 50 and 20 kJ/mol energy levels. The
+    x-axis reads "Reaction Coordinate" with no tick marks, the y-axis reads "Potential
+    Energy (kJ/mol)" with values 0-140. The title "line-reaction-coordinate · letsplot
+    · pyplots.ai" is centered and bold. The panel background is subtle off-white with
+    faint horizontal gridlines.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title=24, axis_title=20, axis_text=16,
+          geom_label=15-16). All text clearly readable.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: All labels well-separated with no collisions.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Main curve prominent at size=2.5, arrows visible at size=1.3, label
+          boxes stand out with fill backgrounds.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Colorblind-safe: orange for Ea, steel blue for ΔH. No red-green
+          distinction.'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good canvas utilization. Curve fills central area well.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Potential Energy (kJ/mol) with units, Reaction Coordinate descriptive.
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Strong design with intentional color coding. Color-filled annotation
+          badges are a professional touch.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle y-axis grid, x-axis ticks removed, custom panel background,
+          light axis lines.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Color-coded annotations create clear visual hierarchy. Energy landscape
+          immediately comprehensible.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct reaction coordinate energy diagram with smooth curve.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All required features present: labels, arrows, dashed lines, smooth
+          curve.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=reaction coordinate, Y=potential energy. Correct mapping.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title in correct format. No legend needed for single series.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows activation barrier, enthalpy change, transition state. Matches
+          spec example.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Chemistry educational context with realistic energy values. Neutral
+          topic.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Reactants 50, TS 120, Products 20 kJ/mol — realistic chemical reaction
+          values.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean Imports → Data → Plot → Save. No functions or classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic data generation.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Gaussian+sigmoid approach is clean and effective.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with scale=3.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good ggplot2-style grammar with proper layer composition.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses flavor_high_contrast_light(), geom_label with label_padding/label_r/label_size,
+          ggsize().
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling

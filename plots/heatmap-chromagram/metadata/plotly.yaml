@@ -1,0 +1,222 @@
+library: plotly
+specification_id: heatmap-chromagram
+created: '2026-03-17T22:25:49Z'
+updated: '2026-03-17T22:36:38Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23219179221
+issue: 4564
+python_version: 3.14.3
+library_version: 6.6.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/heatmap-chromagram/plotly/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/heatmap-chromagram/plotly/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/heatmap-chromagram/plotly/plot.html
+quality_score: 91
+review:
+  strengths:
+  - Excellent data storytelling with chord progression labels, bracket line, and dotted
+    separator lines creating clear visual hierarchy
+  - Custom colorscale matching the dark plot background creates a cohesive, professional
+    aesthetic
+  - Musically accurate chord profiles with smooth blending transitions between sections
+  - Clean, well-structured code with appropriate complexity for the visualization
+  - Plotly-specific features (hovertemplate, HTML export) add value
+  weaknesses:
+  - 'Minor: axis line colors could be even more subtle for additional visual refinement'
+  - LM-01 could be higher with more advanced Plotly patterns
+  image_description: The plot displays a heatmap chromagram with all 12 pitch classes
+    (C through B) on the y-axis and time in seconds (0 to ~5.95) on the x-axis. A
+    custom sequential colorscale runs from dark navy (#0d0628) through deep purple
+    and hot magenta to warm orange and bright gold (#fcffa4), representing energy
+    intensity from 0 to 1.2. Four chord sections are labeled above the heatmap — "C
+    maj", "G maj", "A min", "F maj" — separated by white dotted vertical lines, with
+    a thin horizontal bracket line connecting them. The C major section clearly lights
+    up C, E, and G pitch classes; G major highlights G, B, and D; A minor shows A,
+    E, and C; F major activates F, A, and C. Transitions between chords show smooth
+    blending. The colorbar on the right is labeled "Energy" with tick values at 0,
+    0.3, 0.6, 0.9, 1.2. The dark plot background matches the low end of the colorscale,
+    while the paper background is light gray. Small gaps between heatmap cells add
+    visual clarity.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 28pt, axis labels 22pt, ticks
+          16pt, colorbar title 20pt'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text, chord labels well-spaced above heatmap
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Heatmap cells clearly visible with strong color contrast and cell
+          gaps
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Sequential colorscale from dark navy to bright gold, fully colorblind-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Heatmap fills canvas well with balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Time (seconds) with units, Pitch Class descriptive
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Strong design with custom colorscale, dark plot background, professional
+          typography, chord annotations with bracket line
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Grid removed, subtle axis borders, cell gaps, generous whitespace,
+          bracket line detail
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Chord progression labels and separators create clear visual hierarchy
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct heatmap type for chromagram
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: 12 pitch classes, sequential colormap,
+          colorbar, time axis, chord transitions'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=time, Y=pitch class, Z=energy correctly mapped
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct title format, colorbar serves as legend
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 4 different chords, smooth transitions, noise for realism
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: C-G-Am-F is a common chord progression, musically accurate
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Energy 0-1.2, 120 frames at 50ms, realistic parameters
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean linear flow, no functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only numpy and plotly.graph_objects, both used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean Pythonic code with elegant chord blending
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with correct dimensions, also HTML
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of go.Heatmap, add_annotation, add_shape, update_layout
+          with template
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Custom hovertemplate, HTML export, interactive annotations are Plotly-specific
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - annotations
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  - matrix-construction
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - custom-colormap

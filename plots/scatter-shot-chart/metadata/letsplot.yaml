@@ -1,0 +1,225 @@
+library: letsplot
+specification_id: scatter-shot-chart
+created: '2026-03-20T20:27:40Z'
+updated: '2026-03-20T21:02:20Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23361193053
+issue: 4416
+python_version: 3.14.3
+library_version: 4.9.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/scatter-shot-chart/letsplot/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/scatter-shot-chart/letsplot/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/scatter-shot-chart/letsplot/plot.html
+quality_score: 89
+review:
+  strengths:
+  - Excellent court drawing with accurate NBA dimensions and all required elements
+  - Warm cohesive beige color scheme with colorblind-safe blue/orange shot markers
+  - Zone FG% annotations with shot counts add analytical storytelling value
+  - geom_density2d contours showcase distinctive lets-plot feature
+  - Interactive tooltips leverage lets-plot interactive capabilities
+  - Perfect data quality with realistic basketball shot distribution
+  weaknesses:
+  - Zone annotations in dense areas partially obscure underlying data points
+  - Uses blue/orange instead of spec-specified green/red for made/missed
+  - Data storytelling could be stronger with visual emphasis on efficiency contrasts
+  image_description: 'The plot displays a basketball half-court shot chart on a warm
+    beige/tan background (#E8DCC8 court, #F5F0E8 outer). The court features standard
+    NBA markings: three-point arc, paint/key rectangle (16 ft wide), free-throw circle
+    with dashed lower half, restricted area arc, backboard, and rim. Shot attempts
+    are plotted as blue filled circles (made, #1F77B4) and orange X marks (missed,
+    #E87D2F). Zone FG% annotations with semi-transparent backgrounds show: Paint 51%
+    (86 shots), Mid-Range 45% (147), 3PT 29% (76), Corner 3 31% (29). An overall FG
+    header reads "FG: 43.4% · 152/350" near the top of the court. Blue density contours
+    (geom_density2d) highlight made-shot clustering in the paint area. A manual legend
+    at the bottom shows "Made (152)" with a blue circle and "Missed (198)" with an
+    orange X. The title "scatter-shot-chart · letsplot · pyplots.ai" appears at the
+    top in bold. The plot uses a 1:1 aspect ratio at 900x900 scaled 4x.'
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Font sizes explicitly set (title=26, annotations=16, legend=15);
+          all text clearly readable
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Zone annotations in dense areas partially obscure data points despite
+          semi-transparent backgrounds
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: 350 points with alpha=0.45 and differentiated shapes; some blending
+          in dense clusters
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue/orange colorblind-safe palette with strong contrast against
+          beige
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Court fills canvas well with 1:1 aspect ratio, balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No axis labels appropriate per spec; title and zone labels provide
+          context
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom warm beige scheme, intentional blue/orange palette, density
+          contours add depth
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: theme_void eliminates chrome, court provides structure, dashed free-throw
+          detail
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Zone FG% annotations create narrative, density contours show hot
+          zones; could strengthen efficiency contrast
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct basketball shot chart with shots overlaid on half-court
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: All court elements present; uses blue/orange instead of spec green/red
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y correctly assigned, NBA dimensions accurate
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct, legend shows Made/Missed with counts
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows all shot types across all zones with made and missed
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Realistic basketball shooting data with plausible distribution
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: NBA court dimensions correct, FG% values realistic
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports, data, court geometry, plot, save'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, well-organized
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with ggsave
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good ggplot grammar with layered geoms, identity scales, coord_fixed
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses geom_density2d, layer_tooltips, HTML export — distinctive lets-plot
+          features
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  - custom-legend
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  dataprep:
+  - kde
+  styling:
+  - minimal-chrome
+  - alpha-blending

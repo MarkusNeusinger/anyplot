@@ -1,0 +1,237 @@
+library: letsplot
+specification_id: bode-basic
+created: '2026-03-21T20:47:57Z'
+updated: '2026-03-21T21:39:23Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23388395540
+issue: 4411
+python_version: 3.14.3
+library_version: 4.9.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/bode-basic/letsplot/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/bode-basic/letsplot/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/bode-basic/letsplot/plot.html
+quality_score: 90
+review:
+  strengths:
+  - Excellent spec compliance with all required Bode plot features (dual panels, margins,
+    reference lines, annotations)
+  - 'Strong design choices: color-coded stability margins (orange GM, blue PM) with
+    labeled backgrounds create clear visual hierarchy'
+  - Realistic 3rd-order transfer function with meaningful engineering parameters
+  - Expert lets-plot usage with distinctive features (flavor_high_contrast_light,
+    layer_tooltips, ggbunch)
+  - Clean, deterministic code with well-structured interpolation for precise crossover
+    calculations
+  weaknesses:
+  - GM/PM arrow segments are small relative to plot scale due to narrow margins, reducing
+    their visual impact
+  - Right portion of log-scale frequency axis has less data density, creating some
+    visual imbalance
+  - Could benefit from slightly more whitespace between the two panels
+  image_description: The plot displays a Bode plot with two vertically aligned panels
+    on a white background. The top panel shows magnitude (dB) vs frequency (Hz) on
+    a logarithmic x-axis. A thick dark navy blue line starts flat near 0 dB, exhibits
+    a subtle resonance peak around 0.5-0.8 Hz, then drops steeply through -35 dB.
+    A dashed gray reference line marks 0 dB. The gain margin (GM = 5.4 dB) is annotated
+    with an orange label on a light peach background, with orange diamond markers
+    at the phase crossover frequency and a vertical arrow segment between 0 dB and
+    the magnitude at that frequency. A blue diamond marks the gain crossover on the
+    0 dB line. The bottom panel shows phase (degrees) vs frequency (Hz) on the same
+    log scale. The dark blue line starts near 0 degrees and rolls off steeply through
+    -180 degrees to below -250 degrees. A dashed gray reference line marks -180 degrees.
+    The phase margin (PM = 15.8 degrees) is annotated with a blue label on a light
+    blue background, with diamond markers and a vertical arrow segment. An orange
+    diamond marks the phase crossover point at -180 degrees. Dotted vertical lines
+    connect the crossover frequencies across both panels. The title "bode-basic ·
+    letsplot · pyplots.ai" is centered at the top in bold.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title=26pt, axis_title=20pt bold,
+          axis_text=16pt, labels=18pt bold'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text. GM/PM labels well-positioned away from data
+          and markers
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Main curve thick and visible. GM/PM arrow segments small due to narrow
+          margins but still visible
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Colorblind-safe palette: dark navy, orange, blue. No red-green dependency'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: 'Dual-panel layout fills canvas well. Minor: magnitude y-axis truncated
+          at -35 dB'
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Magnitude (dB), Phase (°), Frequency (Hz) — all descriptive with
+          units
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom colorblind-safe palette with color coding, flavor_high_contrast_light
+          base, colored label backgrounds, diamond markers
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Panel border removed, subtle grid, minor grid hidden, light axis
+          lines, generous margins
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: GM/PM annotations serve as focal points, color-coded to distinguish
+          margins. Viewer immediately understands stability characteristics
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Bode plot with dual-panel layout
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: dual panels, shared log axis, reference lines,
+          margin annotations, grid'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Frequency on X (log), magnitude/phase on Y. All data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct, centered, bold. No legend needed
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows resonance peak, rolloff, gain/phase crossover, gain margin,
+          phase margin, asymptotic behavior
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: 3rd-order transfer function with complex poles, realistic control
+          systems scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Realistic frequency range, physically meaningful margins (GM=5.4
+          dB, PM=15.8°)
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear script structure, no functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Fully deterministic: analytical transfer function, no random data'
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-structured. No fake UI or over-engineering
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png via export_ggsave with scale=3
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Expert gg grammar usage, ggbunch for multi-panel layout
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: flavor_high_contrast_light, layer_tooltips builder, ggbunch with
+          regions, export_ggsave with scale
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - scipy
+  techniques:
+  - subplots
+  - annotations
+  - layer-composition
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - grid-styling

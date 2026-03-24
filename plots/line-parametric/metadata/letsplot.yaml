@@ -1,0 +1,226 @@
+library: letsplot
+specification_id: line-parametric
+created: '2026-03-20T10:36:59Z'
+updated: '2026-03-20T10:57:06Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23339035363
+issue: 4424
+python_version: 3.14.3
+library_version: 4.9.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/line-parametric/letsplot/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/line-parametric/letsplot/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/line-parametric/letsplot/plot.html
+quality_score: 90
+review:
+  strengths:
+  - 'Excellent spec compliance with all required features: equal aspect ratio, color
+    gradient, two curves, start/end markers'
+  - Strong visual refinement with removed spines, subtle grid, custom teal-to-gold
+    palette, off-white panel background
+  - Good data storytelling through descriptive subtitles and contrasting curve types
+    (closed vs open)
+  - 'Effective use of letsplot-specific features: gggrid, layer_tooltips, HTML export'
+  - Clean deterministic code with explicit font sizing throughout
+  weaknesses:
+  - Start/end markers on Lissajous curve overlap at origin since the curve is closed
+  - Spiral panel has slightly more whitespace than ideal due to fixed axis limits
+  image_description: The plot displays two side-by-side panels on a white background
+    with an overall title "line-parametric · letsplot · pyplots.ai" at the top. The
+    left panel shows a Lissajous figure titled "Lissajous Figure · closed, self-intersecting"
+    with x(t) = sin(3t) on the x-axis and y(t) = sin(2t) on the y-axis. The curve
+    traces a self-intersecting figure-eight-like pattern with a color gradient from
+    dark teal (t=0) to golden yellow (t≈6.3). A dark teal circle marks the start and
+    a red triangle marks the end, both at the origin since the curve is closed. The
+    right panel shows an "Archimedean Spiral · expanding outward" with x(t) = t·cos(t)
+    and y(t) = t·sin(t). The spiral expands from center outward, colored from dark
+    teal to gold. Start (dark circle) is at origin, end (red triangle) at the outer
+    edge around x≈12. Both panels have light gray subtle grids, no axis spines or
+    ticks, and separate "t (rad)" color legends. Axis text is gray, titles are bold
+    dark.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 22-24pt, axis titles 20pt,
+          axis text 16pt, legend text 16pt'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text, legends positioned outside panels
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Curves well visible; start/end markers on Lissajous overlap at origin
+          since curve is closed
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Teal-to-gold gradient is colorblind-safe; markers use both color
+          and shape differentiation
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good two-panel layout; spiral panel has slight extra whitespace from
+          fixed axis limits
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive labels with mathematical notation
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom teal-to-gold palette, intentional text color hierarchy, off-white
+          panel background
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines removed, subtle grid, minor grid blank, refined panel and
+          legend borders
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Descriptive subtitles provide narrative; contrasting curve types
+          create natural comparison
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct parametric curve plot with two distinct curves
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec requirements met: equal aspect ratio, color gradient, two
+          curves, start/end markers, 1000 points'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y correctly computed from parametric equations
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct title format and descriptive legend labels
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows closed self-intersecting and open expanding curves
+      - id: DQ-02
+        name: Realistic Context
+        score: 4
+        max: 5
+        passed: true
+        comment: Well-known mathematical curves used in physics and engineering
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Mathematically exact values for both curves
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean linear flow with no functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic trigonometric functions
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean and well-organized, appropriate complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with ggsave at scale=3
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Proper ggplot grammar with letsplot idioms
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses gggrid, layer_tooltips, and HTML export - distinctive letsplot
+          features
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - subplots
+  - layer-composition
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - custom-colormap
+  - alpha-blending
+  - grid-styling

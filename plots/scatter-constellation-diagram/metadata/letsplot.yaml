@@ -1,0 +1,222 @@
+library: letsplot
+specification_id: scatter-constellation-diagram
+created: '2026-03-17T23:19:48Z'
+updated: '2026-03-17T23:31:14Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23220948743
+issue: 4562
+python_version: 3.14.3
+library_version: 4.9.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/scatter-constellation-diagram/letsplot/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/scatter-constellation-diagram/letsplot/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/scatter-constellation-diagram/letsplot/plot.html
+quality_score: 91
+review:
+  strengths:
+  - Excellent alternating shaded decision regions adding visual depth beyond spec
+    requirements
+  - Perfect spec compliance with all required features implemented
+  - Realistic telecommunications data with proper SNR and EVM calculations
+  - Professional muted color palette with clear visual hierarchy
+  - Clean well-structured code with proper reproducibility
+  weaknesses:
+  - Red ideal point markers could be more colorblind-accessible (orange/yellow preferred)
+  - Library mastery could leverage more lets-plot-specific features
+  image_description: The plot displays a 16-QAM constellation diagram on a square
+    canvas. Sixteen red cross markers are positioned at the ideal constellation points
+    on a 4x4 grid at ±1, ±3 on both axes. Approximately 1000 semi-transparent blue-gray
+    dots represent received symbols scattered around each ideal point with Gaussian
+    noise. The background features alternating light blue and slightly darker shaded
+    rectangles forming a checkerboard pattern for decision regions. Dashed gray boundary
+    lines at -2, 0, and 2 separate symbol regions, with solid darker gray axis lines
+    through the origin. The title reads "16-QAM Constellation · scatter-constellation-diagram
+    · letsplot · pyplots.ai" in bold. Axes are labeled "In-Phase (I)" and "Quadrature
+    (Q)". An EVM annotation box with rounded corners in the upper right reads "EVM
+    = 9.9%". The plot uses equal aspect ratio with symmetric limits. The overall color
+    scheme is a muted, professional blue-gray palette with red accents for ideal points.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title=24, axis_title=20, axis_text=16,
+          EVM label=15'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text anywhere
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Received symbols size=3 alpha=0.4 appropriate for 1000 points; ideal
+          crosses clearly visible
+      - id: VQ-04
+        name: Color Accessibility
+        score: 3
+        max: 4
+        passed: true
+        comment: Blue and red distinguishable for most colorblind types; orange would
+          be more accessible
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square canvas with coord_fixed fills well with balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive domain-appropriate labels: In-Phase (I) and Quadrature
+          (Q)'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful custom palette with muted blue-gray tones and alternating
+          decision regions
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Grid removed, custom decision boundaries, styled panel background,
+          good whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy from regions to boundaries to symbols to crosses
+          to EVM annotation
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct I/Q scatter plot constellation diagram
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: 16-QAM, ideal crosses, received symbols, decision
+          boundaries, EVM annotation'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=In-Phase, Y=Quadrature correctly mapped with symmetric limits
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title follows exact required format
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All 16 constellation points, noise scatter, decision boundaries,
+          EVM metric
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: 16-QAM with SNR ~20dB is standard real-world telecommunications scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Standard normalized 16-QAM grid values, realistic EVM for given SNR
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean linear flow with no functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, appropriate complexity, no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png via export_ggsave with scale=3
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Proper grammar-of-graphics layering with idiomatic lets-plot patterns
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: geom_label with lets-plot-specific styling, geom_rect with scale_fill_identity,
+          HTML export
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  - manual-ticks
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling

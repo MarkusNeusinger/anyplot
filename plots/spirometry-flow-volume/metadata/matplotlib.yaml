@@ -1,0 +1,225 @@
+library: matplotlib
+specification_id: spirometry-flow-volume
+created: '2026-03-18T22:18:03Z'
+updated: '2026-03-18T22:30:15Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23269660561
+issue: 4557
+python_version: 3.14.3
+library_version: 3.10.8
+preview_url: https://storage.googleapis.com/pyplots-images/plots/spirometry-flow-volume/matplotlib/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/spirometry-flow-volume/matplotlib/plot_thumb.png
+preview_html: null
+quality_score: 90
+review:
+  strengths:
+  - Creative obstruction gap fill between measured and predicted loops adds clinical
+    insight beyond spec requirements
+  - Directional FancyArrowPatch arrows help orient the viewer through the breathing
+    cycle
+  - Well-formatted monospace clinical text box with predicted comparisons
+  - Cohesive blue/gray/red color scheme with clear visual hierarchy
+  - Strong data storytelling through the measured vs predicted comparison
+  weaknesses:
+  - Inspiratory fill_between interpolation logic could be cleaner (double np.interp)
+  - Layout slightly tight with clinical text box near canvas edge
+  image_description: The plot displays a spirometry flow-volume loop on a 16:9 landscape
+    canvas. The measured loop is drawn as a solid blue (#306998) line at 3.5pt width,
+    showing a sharp rise to Peak Expiratory Flow (8.5 L/s) followed by a gradual decline
+    in the expiratory limb, and a symmetric U-shaped inspiratory limb below zero.
+    A dashed gray (#999) predicted normal loop overlays the measured data, with a
+    light red/pink shaded area between the two highlighting the "Obstruction gap."
+    The PEF point is marked with a blue dot (s=250) and annotated with an arrow. Directional
+    labels ("EXPIRATION →" / "← INSPIRATION") in semi-transparent blue orient the
+    viewer. A monospace clinical text box in the upper right displays FVC=4.2L (pred
+    4.8), FEV₁=3.1L (pred 4.0), FEV₁/FVC=74%, PEF=8.5 L/s (pred 10.2). Three directional
+    arrows appear on the measured loop. Legend in lower left shows Obstruction gap,
+    Predicted Normal, and Measured. Top/right spines removed, subtle y-axis grid at
+    alpha=0.15. Title reads "spirometry-flow-volume · matplotlib · pyplots.ai".
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title=24, axis labels=20, ticks=16,
+          legend=16, annotations=16'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text elements anywhere
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Lines well-adapted (3.5/2.5), PEF marker prominent, fills intentionally
+          subtle
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue vs gray colorblind-safe, red fill supplementary
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good canvas usage, clinical text box slightly tight at edge
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Volume (L) and Flow (L/s) with proper units
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Strong design with custom palette, monospace clinical box, directional
+          arrows, obstruction gap fill
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines removed, subtle y-grid, zero reference line, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Obstruction gap fill creates focal point, clinical values provide
+          diagnostic context
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct flow-volume loop with expiratory and inspiratory limbs
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: PEF annotation, clinical values, predicted
+          overlay, closed loop'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=Volume(L), Y=Flow(L/s) correctly assigned
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct title format, legend labels match data
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows both limbs, PEF, measured vs predicted, clinical values with
+          mild obstruction
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real clinical spirometry scenario, neutral healthcare domain
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Realistic values: FVC=4.2L, PEF=8.5 L/s, FEV1=3.1L, FEV1/FVC=74%'
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean linear structure, no functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 1
+        max: 2
+        passed: false
+        comment: Double interpolation for inspiratory fill is somewhat convoluted
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png, dpi=300, bbox_inches=tight
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of Axes methods, FancyArrowPatch, fill_between, annotate
+          with arrowprops
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: FancyArrowPatch with mutation_scale, fill_between with interpolation,
+          annotate with connectionstyle
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - patches
+  - layer-composition
+  patterns:
+  - data-generation
+  - explicit-figure
+  dataprep:
+  - interpolation
+  styling:
+  - alpha-blending
+  - edge-highlighting
+  - grid-styling

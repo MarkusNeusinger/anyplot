@@ -1,0 +1,232 @@
+library: highcharts
+specification_id: line-win-probability
+created: '2026-03-20T12:35:59Z'
+updated: '2026-03-20T12:59:46Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23342814834
+issue: 4418
+python_version: 3.14.3
+library_version: unknown
+preview_url: https://storage.googleapis.com/pyplots-images/plots/line-win-probability/highcharts/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/line-win-probability/highcharts/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/line-win-probability/highcharts/plot.html
+quality_score: 92
+review:
+  strengths:
+  - Excellent dual-color area fill using Highcharts threshold/negative_color pattern
+  - Thoughtful annotation placement with custom y-offsets and right-edge alignment
+    adjustment
+  - Strong data storytelling with clear game narrative
+  - Complete spec compliance with all required features present
+  - 'Polished visual refinement: subtle grid, removed axis lines, low-opacity plot
+    bands, text outlines'
+  weaknesses:
+  - Minor annotation crowding in mid-game region near 50% line (plays 28-55)
+  - Right margin slightly tight for 50% label and final annotation
+  image_description: The plot displays a win probability chart for a simulated NFL
+    game between the Eagles (Home) and Chiefs (Away). The title reads "line-win-probability
+    · highcharts · pyplots.ai" in bold dark text, with a subtitle "Eagles 27 – Chiefs
+    20 • Simulated NFL Game Win Probability" in gray. The y-axis shows "Win Probability
+    (%)" from 0% to 100% with tick marks at 25% intervals. The x-axis shows "Play
+    Number" from ~5 to 120 with ticks every 10 plays. A prominent 50% horizontal reference
+    line divides the chart. The area above 50% is filled with semi-transparent blue
+    (Eagles), and below 50% with semi-transparent orange (Chiefs). A dark line traces
+    the probability curve. Dashed vertical lines mark quarter boundaries (Q1|Q2, Q2|Q3,
+    Q3|Q4). Nine scoring events are annotated with open circle markers and bold text
+    labels color-coded by team (blue for Eagles scores, orange for Chiefs scores).
+    Subtle "Eagles Favored" and "Chiefs Favored" italic labels appear in their respective
+    zones. The legend at top-left shows "Eagles (Home)" and "Chiefs (Away)" entries.
+    The background is a light off-white (#FAFAFA).
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 64px, subtitle 42px, axis titles
+          44px, tick labels 34px, annotations 28px, quarter labels 26px'
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Most annotations well-spaced with custom y-offsets; minor crowding
+          in mid-game region near 50% line
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Area fills clearly visible, main line distinct, scatter markers well-sized
+          with white fill and colored borders
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Dark blue vs orange is colorblind-safe with strong contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Chart fills canvas well; right margin slightly tight for 50% label
+          and final annotation
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive labels with units: Win Probability (%) and Play Number'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom team-themed palette, off-white background, letter-spacing,
+          text outlines, styled circle markers. Clearly above defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle grid at 6% opacity, axis lines and ticks removed, dashed quarter
+          markers, 4% opacity plot bands
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Dual-color fill conveys momentum, scoring annotations tell game story,
+          subtitle gives final score, quarter markers add temporal structure
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct: win probability line chart with area fill'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: 50% reference line, dual-color fill,
+          annotations, final score, quarter markers'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=play number, Y=win probability, correctly mapped
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct, legend labels match data
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Multiple momentum swings, mix of TDs and FGs, lead changes, dramatic
+          finish
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: NFL game with realistic play count, plausible scoring events, neutral
+          sports context
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 120 plays realistic for NFL, sensible probability values and scoring
+          impact magnitudes
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports, data, chart config, series, export. No functions/classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-organized with custom annotation offsets and right-edge
+          alignment adjustment
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png via Selenium screenshot, current API
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of HighchartsOptions, AreaSeries, LineSeries, ScatterSeries
+          with high-level API
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Leverages threshold/negative_color for dual-color fill, plotBands,
+          plotLines, per-point dataLabels
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - annotations
+  - html-export
+  - layer-composition
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - cumulative-sum
+  styling:
+  - alpha-blending
+  - grid-styling

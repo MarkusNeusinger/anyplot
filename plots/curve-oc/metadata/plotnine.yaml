@@ -1,0 +1,228 @@
+library: plotnine
+specification_id: curve-oc
+created: '2026-03-19T20:37:44Z'
+updated: '2026-03-19T21:09:05Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23315608678
+issue: 4553
+python_version: 3.14.3
+library_version: 0.15.3
+preview_url: https://storage.googleapis.com/pyplots-images/plots/curve-oc/plotnine/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/curve-oc/plotnine/plot_thumb.png
+preview_html: null
+quality_score: 92
+review:
+  strengths:
+  - Excellent data storytelling with shaded accept/reject zones and discrimination
+    envelope ribbon
+  - Full spec compliance with all required features (AQL, LTPD, alpha, beta, multiple
+    plans)
+  - Clean idiomatic plotnine grammar-of-graphics code with no unnecessary complexity
+  - Colorblind-safe palette with dual encoding (color + linetype) for accessibility
+  - Deterministic binomial CDF data with realistic quality control parameters
+  weaknesses:
+  - Zone labels (Accept Zone, Reject Zone) are somewhat faint at alpha=0.6 and size=10
+  - Legend overlaps slightly with the reject zone shading
+  image_description: 'The plot displays three Operating Characteristic (OC) curves
+    on a light gray (#fafafa) background. The title reads "curve-oc · plotnine · pyplots.ai"
+    in bold dark text at the top. Three S-shaped curves descend from left to right:
+    n=50,c=1 (solid blue #306998), n=100,c=2 (dashed orange #E0652B), and n=150,c=3
+    (dashdot purple #9467BD). The x-axis shows "Fraction Defective (p)" from 0% to
+    15% and the y-axis shows "Probability of Acceptance P(a)" from 0.0 to 1.0. Two
+    vertical dashed gray lines mark AQL (1%) and LTPD (8%). A light blue shaded "Accept
+    Zone" appears on the left, a light pink/red shaded "Reject Zone" on the right.
+    A blue ribbon fills the discrimination envelope between the steepest and most
+    gradual curves. Two open orange circle markers indicate producer''s risk (alpha=0.08)
+    and consumer''s risk (beta=0.01) for the n=100,c=2 plan, with bold orange labels.
+    The legend is positioned in the upper right with a semi-transparent white background,
+    showing all three sampling plans with color and linetype encoding. Horizontal-only
+    subtle gray gridlines are present.'
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 24pt, axis titles 20pt bold,
+          ticks 16pt, legend 16pt/18pt'
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Minor: legend box sits atop reject zone shading, slightly busy.
+          All text readable.'
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Lines thick (size=2), risk points large open circles (size=6), three
+          linetypes distinguishable
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue/orange/purple palette is colorblind-safe with good contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 16:9 layout well-utilized, balanced margins, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive labels with notation: Fraction Defective (p), Probability
+          of Acceptance P(a)'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom colorblind-safe palette, shaded zones, ribbon envelope, open
+          circle markers, intentional hierarchy
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Horizontal-only gridlines, removed minor/x-major grid, custom axis
+          lines, subtle background. Zone labels faint.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Shaded zones frame narrative, risk annotations explain trade-offs,
+          envelope highlights plan impact
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct OC curves with smooth S-shaped binomial CDF profiles
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features: multiple plans, AQL/LTPD lines, risk markers,
+          smooth curves, 0-0.15 range'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Fraction defective on x, probability of acceptance on y, correctly
+          mapped
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches format, legend labeled Sampling Plan with correct labels
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Three plans with varying n/c, AQL, LTPD, producer/consumer risk all
+          shown
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Quality control acceptance sampling, real-world engineering domain
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: AQL=1%, LTPD=8% are standard values, practical sample sizes
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean linear flow: imports, data, plot, save'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic binomial CDF with fixed parameters
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, clean Pythonic code, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with dpi=300, current API
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Excellent grammar-of-graphics: layered geoms, aes mappings, pd.Categorical,
+          scale_manual, guide_legend'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: geom_ribbon for envelope, dual aesthetic encoding, guide_legend override_aes
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - scipy
+  techniques:
+  - annotations
+  - layer-composition
+  - custom-legend
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling

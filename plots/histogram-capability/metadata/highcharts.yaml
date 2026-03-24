@@ -1,0 +1,239 @@
+library: highcharts
+specification_id: histogram-capability
+created: '2026-03-19T21:49:22Z'
+updated: '2026-03-19T22:22:38Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23318228739
+issue: 4552
+python_version: 3.14.3
+library_version: unknown
+preview_url: https://storage.googleapis.com/pyplots-images/plots/histogram-capability/highcharts/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/histogram-capability/highcharts/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/histogram-capability/highcharts/plot.html
+quality_score: 88
+review:
+  strengths:
+  - Excellent visual design with custom color palette, typography, and subtle refinements
+    (dotted grid, rounded corners, shadow legend)
+  - Complete spec compliance with all required features including Cp/Cpk annotations,
+    spec limit lines, normal curve overlay
+  - Strong data storytelling with green in-spec zone, process capability interpretation,
+    and comprehensive subtitle statistics
+  - Clean well-organized code with clear section comments and deterministic seed
+  - Good use of Highcharts-specific features (plotBands, plotLines, AreaSplineSeries)
+  weaknesses:
+  - Minor label crowding between Target and Mean plotLine labels due to close proximity
+  - USL label positioning tight against right margin
+  - Could push design excellence further with additional Highcharts-specific polish
+  image_description: The plot displays a process capability histogram for shaft diameter
+    measurements (mm). The chart has a light off-white background with a bold title
+    "Shaft Diameter Process Capability · histogram-capability · highcharts · pyplots.ai".
+    Below the title is a subtitle showing key statistics (n=200, Cp, Cpk, Mean, σ).
+    Deep blue (#306998) histogram bars show the measurement distribution centered
+    around 10.00 mm, overlaid with an orange (#d35400) fitted normal distribution
+    curve and a subtle orange area fill beneath it. Red dashed vertical lines mark
+    LSL=9.95 and USL=10.05 with bold red labels. A purple dotted line marks the target
+    value (10.0) and a blue dashed line marks the mean (~10.008). A light green shaded
+    band spans the in-spec zone between LSL and USL. A Process Capability annotation
+    box in the upper left displays Cp=1.63 and Cpk=1.38 with a note about off-center
+    process. The legend in the upper right shows Measurement Distribution and Fitted
+    Normal Curve entries with a subtle shadow and rounded border. Y-axis shows Frequency
+    with dotted gridlines; X-axis shows Shaft Diameter (mm) with tick intervals of
+    0.01.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 54px, subtitle 36px, axis titles
+          42px, tick labels 32px, plotLine labels 28-32px'
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Minor crowding between Target and Mean plotLine labels due to proximity;
+          USL label tight at right edge
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Histogram bars clearly sized, normal curve bold 5px spline in contrasting
+          orange, area fill adds depth
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue/orange colorblind-safe palette, red spec limits and purple target
+          all distinguishable
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good canvas utilization ~55% with explicit margins, USL label slightly
+          tight at right margin
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Shaft Diameter (mm) with units, Frequency appropriate for histogram
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom Python Blue palette, intentional typography with letter-spacing,
+          subtle background, rounded borders, shadow legend
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Dotted grid lines, subtle green in-spec plotBand, rounded legend
+          with shadow, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Green in-spec zone communicates tolerance, red spec limits draw attention,
+          subtitle provides key statistics, capability annotation guides insight
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct histogram with fitted normal curve overlay and specification
+          lines
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: histogram, normal curve, LSL/USL, target,
+          mean, Cp/Cpk annotations'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X-axis maps measurement values, Y-axis maps frequency counts
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title follows spec-id · library · pyplots.ai format, legend labels
+          descriptive and accurate
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows bell distribution, off-center process, measurements within
+          spec limits; could show more edge cases
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Shaft diameter manufacturing scenario - classic neutral quality engineering
+          context
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 200 measurements, LSL=9.95, USL=10.05, target=10.00 - realistic for
+          precision machining
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean linear flow: imports, data, calculation, chart config, series,
+          export, screenshot'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) ensures deterministic output
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: numpy, scipy, highcharts types, selenium, tempfile,
+          time, urllib, Path'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-structured with clear section comments, appropriate complexity,
+          no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot.png via Selenium and plot.html for interactive version,
+          current API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of typed series classes, plotLines/plotBands, plot_options
+          configuration
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses plotBands, plotLines with labels, AreaSplineSeries, tooltip
+          config, shadow legend - distinctly Highcharts
+  verdict: REJECTED
+impl_tags:
+  dependencies:
+  - scipy
+  - selenium
+  techniques:
+  - html-export
+  patterns:
+  - data-generation
+  dataprep:
+  - binning
+  styling:
+  - grid-styling
+  - edge-highlighting

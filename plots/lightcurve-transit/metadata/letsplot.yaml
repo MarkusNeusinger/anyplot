@@ -1,0 +1,219 @@
+library: letsplot
+specification_id: lightcurve-transit
+created: '2026-03-18T21:18:08Z'
+updated: '2026-03-18T21:35:38Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23267445826
+issue: 4559
+python_version: 3.14.3
+library_version: 4.9.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/lightcurve-transit/letsplot/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/lightcurve-transit/letsplot/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/lightcurve-transit/letsplot/plot.html
+quality_score: 91
+review:
+  strengths:
+  - Excellent spec compliance with all required features (error bars, model overlay,
+    phase-folding, limb darkening)
+  - Strong scientific data storytelling with informative subtitle and clear transit
+    dip focal point
+  - 'Clean visual refinement: subtle grid, removed chrome, custom background'
+  - Good use of lets-plot distinctive layer_tooltips feature with formatted output
+  - Realistic astronomical data with appropriate noise levels and transit parameters
+  weaknesses:
+  - Error bars slightly faint (alpha=0.35) on light background — could benefit from
+    slightly higher opacity
+  - Library mastery could be pushed further with additional lets-plot features
+  image_description: 'The plot displays a phase-folded exoplanet transit light curve
+    on a light gray (#FAFAFA) background. The x-axis shows "Orbital Phase" (0.0-1.0)
+    and the y-axis shows "Relative Flux" (~0.984-1.010). Blue scatter points (#306998)
+    with light blue vertical error bars represent photometric observations (400 points,
+    alpha=0.45). A bold red (#C44E52) transit model line shows a characteristic ~1%
+    flux dip centered at phase 0.5, with a semi-transparent pink uncertainty ribbon
+    (Model ±1.5σ). The title "lightcurve-transit · letsplot · pyplots.ai" appears
+    top-left in bold, with a gray subtitle "Phase-folded exoplanet transit · Depth:
+    ~1% · Quadratic limb darkening model". A top-center legend identifies three series:
+    Model ±1.5σ (filled red), Observations (blue dots), and Transit Model (red line).
+    The overall aesthetic is clean and scientific with minimal chrome.'
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title=24, subtitle=16, axis_title=20,
+          axis_text=16, legend_text=16'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or data elements
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Points visible at appropriate density; error bars slightly faint
+          at alpha=0.35
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue vs red is colorblind-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good layout, plot fills canvas well at 1600x900 base
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive labels; quantities are inherently dimensionless
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom palette, informative subtitle, coordinated color scheme, professional
+          appearance
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle y-grid only, ticks removed, custom background, spines removed
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Transit dip as focal point, red model against blue scatter, informative
+          subtitle
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct scatter + model overlay for transit photometry
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Error bars, model curve, phase-folding, limb darkening, uncertainty
+          band all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=phase, Y=flux, correct mapping
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct title format, descriptive legend labels
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows baseline, ingress/egress, transit bottom, noise, and model
+          fit
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Realistic exoplanet transit photometry scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Realistic flux values and error bars for space-based photometry
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear flow, no functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used, explicit named imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, vectorized transit model computation
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with ggsave, current API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good ggplot grammar usage with layered geoms, scales, theme composition
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: layer_tooltips with .line() and .format() is distinctive to lets-plot
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling

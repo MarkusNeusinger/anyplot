@@ -1,0 +1,239 @@
+library: bokeh
+specification_id: star-chart-constellation
+created: '2026-03-18T21:14:48Z'
+updated: '2026-03-18T21:50:55Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23267218063
+issue: 4560
+python_version: 3.14.3
+library_version: 3.9.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/star-chart-constellation/bokeh/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/star-chart-constellation/bokeh/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/star-chart-constellation/bokeh/plot.html
+quality_score: 87
+review:
+  strengths:
+  - Excellent astronomical data with real star coordinates, magnitudes, and constellation
+    assignments
+  - Beautiful dark sky aesthetic with carefully chosen color palette (warm-to-cool
+    star colors)
+  - Proper stereographic projection with correct astronomical conventions
+  - Comprehensive coverage of 23 constellations with accurate stick-figure lines
+  - Interactive hover tooltips leveraging Bokeh strengths
+  - Custom magnitude legend with size examples
+  - Label offset dictionaries to minimize overlaps
+  weaknesses:
+  - Some label overlaps persist (Auriga/Capella, Lyra area, Aquila/Altair)
+  - RA/Dec grid labels and magnitude legend text could be slightly larger
+  - Southern portion of chart is sparse due to projection geometry
+  image_description: The plot displays a star chart on a dark navy background (#0a0e2a)
+    using a stereographic projection centered on the north celestial pole. Stars are
+    rendered as circles with magnitude-dependent sizing — bright stars like Sirius,
+    Vega, Capella, and Arcturus appear as large pale-yellow/white dots while dimmer
+    stars are smaller blue-grey points. Constellation stick-figure lines connect stars
+    in thin semi-transparent blue lines across 23 constellations including Orion,
+    Ursa Major, Cassiopeia, Cygnus, Scorpius, Leo, and others. Constellation names
+    appear in italic muted blue-grey text near their centroids. Bright star names
+    (mag < 1.0) are individually labeled. A dotted RA/Dec coordinate grid overlays
+    the chart with RA labels in hours and Dec labels in degrees. A magnitude scale
+    legend in the bottom-left shows circles of decreasing size for magnitudes 0-5.
+    The title "star-chart-constellation · bokeh · pyplots.ai" appears centered at
+    the top in light blue-grey text.
+  criteria_checklist:
+    visual_quality:
+      score: 25
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Font sizes explicitly set throughout (title 36pt, constellation labels
+          18pt, star labels 15pt, RA 14pt, Dec 16pt). All readable, some grid/legend
+          labels slightly small for 3600x3600.
+      - id: VQ-02
+        name: No Overlap
+        score: 4
+        max: 6
+        passed: false
+        comment: 'Some label overlaps: Auriga/Capella, Lyra area, Aquila/Altair, 21h
+          RA label near magnitude legend.'
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Star sizing well-adapted to magnitude range. Good differentiation
+          between bright and dim. Constellation lines could be slightly more visible.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Excellent contrast on dark background. Yellow-white to blue-grey
+          scheme is colorblind-safe.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Square format appropriate for sky projection. Chart fills most of
+          canvas. Southern portion somewhat sparse.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: RA labeled in hours, Dec in degrees. Title in correct format.
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Strong design with dark sky theme, custom color palette, professional
+          astronomical chart aesthetic above defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Axes hidden, custom dotted RA/Dec grid, styled outline, carefully
+          chosen backgrounds. Minimal chrome.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Magnitude-based sizing creates visual hierarchy. Named star labels
+          and constellation patterns guide the viewer. Color coding adds information.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct: star chart with stereographic projection and constellation
+          stick-figure lines.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All required features present: projection, magnitude sizing, constellation
+          lines/labels, dark background, RA/Dec grid.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: RA/Dec correctly projected. X-axis flipped for astronomical convention.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct title format. Magnitude scale legend present with size examples.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: ~90 named stars, 23 constellations, 200 background stars. Wide magnitude
+          range. Northern and southern coverage.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real star names, real RA/Dec coordinates, real apparent magnitudes.
+          Astronomically accurate.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Realistic values: magnitudes -1.46 to 5.5, RA 0-24h, Dec -70 to
+          +65 degrees.'
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: data → projection → plot → save. No functions or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set for background star generation.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-structured. Custom offset dictionaries show attention
+          to detail.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot.png via export_png. Also saves HTML. Current API.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of ColumnDataSource, LabelSet, Label, figure with match_aspect.
+          Idiomatic patterns.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Hover tooltips, HTML export, ColumnDataSource-driven LabelSet with
+          per-label offsets.
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - hover-tooltips
+  - html-export
+  - custom-legend
+  patterns:
+  - data-generation
+  - columndatasource
+  - iteration-over-groups
+  dataprep:
+  - normalization
+  styling:
+  - dark-theme
+  - alpha-blending
+  - minimal-chrome

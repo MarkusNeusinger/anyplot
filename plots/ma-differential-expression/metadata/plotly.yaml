@@ -1,0 +1,228 @@
+library: plotly
+specification_id: ma-differential-expression
+created: '2026-03-20T10:39:17Z'
+updated: '2026-03-20T10:52:41Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23339077617
+issue: 4420
+python_version: 3.14.3
+library_version: 6.6.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/ma-differential-expression/plotly/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/ma-differential-expression/plotly/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/ma-differential-expression/plotly/plot.html
+quality_score: 90
+review:
+  strengths:
+  - Excellent data storytelling with clear visual hierarchy (faded non-sig, prominent
+    sig, labeled top genes)
+  - Custom color palette with thoughtful contrast and colorblind safety
+  - All spec features fully implemented including smoothing curve and gene labels
+  - Realistic RNA-seq data with real gene names and appropriate scales
+  - Clean, well-structured code with named color constants
+  weaknesses:
+  - Threshold annotations (2-fold up/down) at right edge are slightly small and could
+    be better positioned
+  - Marker sizes could be slightly larger for the 4800x2700 canvas
+  - Gene labels could use offset arrows to avoid proximity issues with data points
+  image_description: The plot displays an MA plot with Mean Expression (A) on the
+    x-axis (range 0-16) and Log2 Fold Change (M) on the y-axis (range approximately
+    -6 to 6). Non-significant genes appear as light gray-blue semi-transparent dots
+    (alpha ~0.25), while significant genes (padj < 0.05) are rendered as larger teal
+    dots with higher opacity. A dark blue LOESS trend line runs near y=0 across the
+    full expression range. A dotted gray reference line sits at y=0, and dashed gray
+    lines at y=+/-1 mark the 2-fold change thresholds, with "2-fold up" and "2-fold
+    down" annotations at the right edge. Ten top differentially expressed genes are
+    labeled in bold (BRCA1, TP53, STAT3, TNF, VEGFA, IL6, CDK2, EGFR, KRAS). The title
+    reads "ma-differential-expression · plotly · pyplots.ai". A legend in the upper
+    right shows "Not significant", "Significant (padj < 0.05)", and "LOESS trend".
+    The background is white with very subtle horizontal grid lines on the y-axis.
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All main text sizes explicitly set (title 28, axes 22, ticks 18,
+          gene labels 16). Threshold annotations at size 14 slightly small.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Most text well-positioned. Minor overlap potential near gene labels
+          and threshold annotations at right edge.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Marker sizes well-adapted to 15k-point density. Non-sig appropriately
+          faded, sig genes stand out clearly.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Gray vs teal is colorblind-safe with excellent contrast.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Correct 4800x2700 output. Margins explicitly set. Plot fills canvas
+          well.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis labels with standard MA plot notation (A) and (M).
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom color palette with intentional hierarchy. plotly_white template.
+          Refined typography. Clearly above defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines removed via template, x-grid disabled, y-grid extremely subtle,
+          generous margins, white marker edges add polish.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Strong visual hierarchy: non-sig recedes, sig pops, top genes labeled.
+          LOESS reveals bias. Threshold lines add context.'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct MA plot with M vs A.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: highlighting, reference lines, smoothing
+          curve, transparency, gene labels.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = mean expression (A), Y = log2 fold change (M). Correct mapping.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct. Legend labels descriptive and match data.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows up/down-regulated genes, non-sig background, expression-dependent
+          variance, bimodal distribution, labeled outliers.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: RNA-seq DE with real gene names (BRCA1, TP53, etc.). Scientific,
+          neutral context.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 15k genes, log2 FC ±6, mean expression 0-16. All realistic for RNA-seq.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports, data, plot, save. No functions or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set at top.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: numpy, plotly.graph_objects, scipy.signal.savgol_filter.'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-organized. Named color constants. No fake functionality.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot.png and plot.html. Current Plotly API.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of go.Figure, go.Scatter, add_hline, add_annotation, update_layout.
+          Idiomatic graph_objects pattern.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses hovertemplate for custom tooltips, HTML export with CDN, plotly_white
+          template. Distinctive Plotly features.
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - scipy
+  techniques:
+  - annotations
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
+  - grid-styling

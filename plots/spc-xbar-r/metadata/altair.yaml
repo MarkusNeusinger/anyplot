@@ -1,0 +1,227 @@
+library: altair
+specification_id: spc-xbar-r
+created: '2026-03-19T21:47:30Z'
+updated: '2026-03-19T22:12:19Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23318370349
+issue: 4551
+python_version: 3.14.3
+library_version: 6.0.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/spc-xbar-r/altair/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/spc-xbar-r/altair/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/spc-xbar-r/altair/plot.html
+quality_score: 90
+review:
+  strengths:
+  - 'Excellent spec compliance with all required SPC features: control limits, warning
+    limits, OOC highlighting, standard constants (A2, D3, D4)'
+  - Professional zone shading bands that convey sigma regions visually
+  - Strong colorblind-safe palette (teal/vermillion/amber) with good visual separation
+  - Color-coded inline labels eliminate the need for a separate legend
+  - Realistic CNC machining data with meaningful out-of-control shifts in both directions
+  weaknesses:
+  - Inline labels could use slightly larger font size for maximum legibility at full
+    resolution
+  - Code has repetitive chart construction for X-bar and R charts (acceptable given
+    KISS constraint)
+  image_description: The plot displays a vertically stacked pair of SPC charts for
+    CNC shaft diameter monitoring. The top chart is the X-bar (sample means) chart
+    centered around 25.00 mm, and the bottom is the R (sample range) chart. Both charts
+    use a teal (#306998) line with filled circular markers for in-control points and
+    red (#C03030) diamond markers for out-of-control points. A solid black center
+    line (CL) runs through each chart, with red dashed UCL/LCL lines and amber dashed
+    ±2σ warning limits. Light blue-gray zone shading bands highlight the ±1σ and ±2σ
+    regions. Inline colored text labels (UCL, +2σ, CL, −2σ, LCL) appear on the left
+    side of each chart. The X-bar chart shows three OOC points at samples 8 (above
+    UCL), 17 (below LCL), and 24 (above UCL). The R chart shows all points within
+    control limits. The title reads "CNC Shaft Diameter Monitoring · spc-xbar-r ·
+    altair · pyplots.ai". Axes are labeled "X̄ (mm)", "Range R (mm)", and "Sample
+    Number" with units.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'Font sizes explicitly set: title 28pt, axis titles 20pt, tick/inline
+          labels 16pt. All readable.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or elements. Labels well-positioned.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Points well-sized (120/220), lines clear at strokeWidth=2.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Teal/vermillion colorblind-safe palette with amber warnings.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Two stacked charts fill canvas well with balanced proportions.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: X̄ (mm), Range R (mm) with units, Sample Number on x-axis.
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom palette, zone shading, diamond OOC markers, colored inline
+          labels. Above defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: View stroke removed, subtle dashed y-grid, no x-grid, zone shading,
+          clean spacing.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: OOC highlighted with color+shape, zone bands convey severity, clear
+          visual hierarchy.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct X-bar and R charts stacked vertically sharing x-axis.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features: UCL/LCL dashed+labeled, CL solid, OOC highlighted,
+          warning limits, standard constants.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Correct mapping: sample number on x, means/ranges on y.'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title includes spc-xbar-r · altair · pyplots.ai with descriptive
+          prefix. Inline labels replace legend.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: In-control and OOC behavior, shifts in both directions, 3 OOC points
+          in X-bar.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: CNC shaft diameter monitoring is real-world neutral manufacturing
+          scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 25mm shaft with 0.05mm std is realistic for CNC machining.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Flat script: imports → data → chart → save. No functions/classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) ensures deterministic output.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports (altair, numpy, pandas) are used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 1
+        max: 2
+        passed: false
+        comment: Repetitive construction for X-bar and R charts, acceptable given
+          KISS constraint.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot.png and plot.html. Current Altair API.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Good declarative grammar: encoding, layering, vconcat, mark types,
+          scale/axis config.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Tooltips, HTML export, vconcat, layered composition, mark_rect zone
+          shading.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - grid-styling
+  - edge-highlighting

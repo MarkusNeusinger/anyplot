@@ -1,0 +1,233 @@
+library: highcharts
+specification_id: titration-curve
+created: '2026-03-21T22:13:47Z'
+updated: '2026-03-21T22:36:06Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23389866060
+issue: 4407
+python_version: 3.14.3
+library_version: unknown
+preview_url: https://storage.googleapis.com/pyplots-images/plots/titration-curve/highcharts/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/titration-curve/highcharts/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/titration-curve/highcharts/plot.html
+quality_score: 90
+review:
+  strengths:
+  - Excellent data storytelling with clear focal point at equivalence point (diamond
+    marker + dashed line + bold label + derivative peak)
+  - Chemically accurate pH calculations for strong acid/strong base titration
+  - Effective use of Highcharts plotLines and plotBands for annotations and regions
+  - Professional typography hierarchy with explicitly set font sizes throughout
+  - Dual y-axis implementation cleanly shows both pH curve and derivative
+  weaknesses:
+  - Buffer region shading adapted to acid/base excess regions since strong acid/base
+    has no pKa — could note this distinction in the plot
+  - Bottom area slightly crowded with region labels competing with axis labels
+  image_description: The plot displays an acid-base titration curve on a light gray
+    background with a white plot area. A blue S-shaped pH curve rises from ~1 at 0
+    mL to ~13 at 50 mL, showing the characteristic sigmoidal shape of a strong acid/strong
+    base titration. An orange filled area series shows the dpH/dV derivative on a
+    secondary right y-axis, with a sharp peak at the equivalence point (25 mL). A
+    red dashed vertical line marks the equivalence point at 25 mL with a red diamond
+    marker and a bold red label reading "Equivalence Point (25 mL, pH 7)". Two light
+    green shaded bands mark "Acid Excess Region" (0-20 mL) and "Base Excess Region"
+    (30-50 mL). The title reads "titration-curve · highcharts · pyplots.ai" with an
+    italic subtitle "25 mL of 0.1 M HCl Titrated with 0.1 M NaOH". A legend in the
+    top-left lists pH (blue), dpH/dV (orange), and Equivalence (25.0 mL) (red diamond).
+    The left y-axis shows pH (0-14), the right y-axis shows dpH/dV (0-5) in orange,
+    and the x-axis shows "Volume of NaOH Added (mL)" from 0-50. A dotted horizontal
+    line at pH 7 provides a neutral reference. Grid lines are subtle with low opacity.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 48px, axis titles 34px, tick
+          labels 26px, legend 28px. All exceed minimum thresholds.'
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: No significant collisions. Legend has semi-transparent background
+          in low-data region. Minor overlap with curve path.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: pH curve lineWidth 5, derivative area lineWidth 3 with fill, equivalence
+          marker radius 20. All clearly visible.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue, orange, red, green — all distinguishable for colorblind viewers.
+          No red-green as sole distinguisher.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good canvas utilization ~60%. Minor bottom crowding with region labels
+          and axis labels.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Volume of NaOH Added (mL) with units, pH and dpH/dV are descriptive
+          scientific labels.
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom palette, intentional typography hierarchy, differentiated
+          backgrounds, text outlines. Above defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid (0.06 opacity), plot border removed, dotted pH 7 reference,
+          tick width 0. Good but not perfect.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Strong focal point at equivalence with diamond marker, dashed line,
+          bold label, and derivative peak reinforcement.
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct line plot of pH vs volume showing sigmoidal titration curve.
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: All features present. Buffer region adapted to acid/base excess regions
+          for strong acid/base system.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = volume, Y = pH, secondary Y = dpH/dV. All axes show full data
+          range.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format. Legend labels are descriptive and
+          accurate.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Complete S-curve, derivative peak, acid/base excess regions. Covers
+          all titration curve aspects.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Real chemistry: 25 mL of 0.1 M HCl titrated with 0.1 M NaOH. Standard
+          analytical experiment.'
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: pH 0-14, volume 0-50 mL, equivalence at 25 mL and pH 7. All physically
+          correct.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean Imports → Data → Chart → Series → Export flow. No functions/classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic chemistry calculations.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, appropriately complex. No fake UI elements.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png via Selenium. Current API.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Proper use of typed series classes, dual y-axis, HighchartsOptions,
+          npm pack for offline JS.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: plotLines, plotBands, shared tooltips with HTML, zIndex layering,
+          marker customization — distinctive Highcharts features.
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - twin-axes
+  - annotations
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - grid-styling
+  - alpha-blending

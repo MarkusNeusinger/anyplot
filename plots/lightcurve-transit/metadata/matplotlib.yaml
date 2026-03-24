@@ -1,0 +1,226 @@
+library: matplotlib
+specification_id: lightcurve-transit
+created: '2026-03-18T21:18:37Z'
+updated: '2026-03-18T21:32:52Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23267445288
+issue: 4559
+python_version: 3.14.3
+library_version: 3.10.8
+preview_url: https://storage.googleapis.com/pyplots-images/plots/lightcurve-transit/matplotlib/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/lightcurve-transit/matplotlib/plot_thumb.png
+preview_html: null
+quality_score: 92
+review:
+  strengths:
+  - Two-panel layout (main + zoom) is scientifically appropriate and tells a clear
+    story
+  - Quadratic limb-darkened transit model with realistic parameters
+  - 'Strong visual hierarchy: in-transit points differentiated by size, color, and
+    opacity'
+  - ΔF annotation with FancyArrowPatch provides quantitative insight in zoom panel
+  - Clean, publication-quality aesthetic with removed spines, subtle grid, and refined
+    typography
+  weaknesses: []
+  image_description: The plot features a two-panel layout (16:9 landscape). The left
+    main panel shows a full phase-folded light curve with "Orbital Phase" (0.0–1.0)
+    on the x-axis and "Relative Flux" on the y-axis. ~500 blue data points with vertical
+    error bars scatter around flux=1.000, with a clear U-shaped dip centered at phase
+    0.5 reaching down to ~0.985. A bold red transit model curve overlays the data,
+    flat at 1.0 outside transit and dipping smoothly through the transit. In-transit
+    points are rendered darker and larger than out-of-transit points. Vertical dotted
+    lines mark contact points t1 and t4. A light blue/gray shaded band highlights
+    the transit region. A dashed gray baseline at flux=1.0 provides reference. The
+    legend shows "Transit model" (red line) and "Photometry" (blue dot). The right
+    panel is a zoomed "Transit Detail" view of the transit region (~0.42–0.58 phase),
+    with a red double-headed arrow annotating "ΔF = 1.0%". The fill between baseline
+    and model is shown in light pink. Top/right spines removed, subtle y-axis grid.
+    Title reads "lightcurve-transit · matplotlib · pyplots.ai".
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt,
+          legend 16pt, annotations 13-14pt'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text elements, contact labels and legend positioned
+          cleanly
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: 500 points with appropriate marker sizes and alpha; in-transit points
+          differentiated. Slight density in main panel
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue/red palette is colorblind-safe with good luminance contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Two-panel layout with 3:1.2 ratio makes excellent use of canvas
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Domain-appropriate labels: Orbital Phase, Relative Flux'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom blue/red palette with intentional hierarchy, white marker
+          edges, light fills. Above defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines removed, subtle y-axis grid, dashed baseline, axvspan shading,
+          generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Two-panel main+zoom layout, visual differentiation of in-transit
+          points, ΔF annotation provides quantitative insight
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct: phase-folded time-series scatter with model overlay'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: error bars, model overlay, phase-folded,
+          relative flux, downward dip, minimal scientific style'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=orbital phase, Y=relative flux. Correct mapping
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches format, legend labels Photometry and Transit model
+          are clear
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Transit dip with limb darkening, varying error bars, baseline scatter,
+          model fit
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Simulated exoplanet transit with realistic limb-darkening coefficients
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Transit depth ~1%, flux errors 0.08-0.2%, 500 points - realistic
+          for space photometry
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports, data, plot, save. No functions/classes'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set at start
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: matplotlib.pyplot, numpy, FancyArrowPatch'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-organized code. Panel repetition is inherent to two-panel
+          design
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with dpi=300, bbox_inches=tight
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Proper Axes-method usage, correct subplots with gridspec_kw
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: FancyArrowPatch, gridspec_kw width ratios, axvspan region highlighting
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - subplots
+  - annotations
+  - patches
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
+  - grid-styling

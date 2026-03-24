@@ -1,0 +1,239 @@
+library: plotly
+specification_id: scatter-pitch-events
+created: '2026-03-20T12:39:22Z'
+updated: '2026-03-20T13:07:15Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23342848809
+issue: 4417
+python_version: 3.14.3
+library_version: 6.6.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/scatter-pitch-events/plotly/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/scatter-pitch-events/plotly/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/scatter-pitch-events/plotly/plot.html
+quality_score: 89
+review:
+  strengths:
+  - Comprehensive pitch rendering with all FIFA-standard markings including penalty
+    arcs, corner arcs, and goal posts
+  - Excellent marker differentiation with 8 distinct symbol/fill combinations and
+    clear size hierarchy
+  - Danger Zone annotation adds tactical storytelling and creates a visual focal point
+  - Dual output (PNG + interactive HTML) maximizes Plotly strengths
+  - Perfect spec compliance with all required features implemented
+  - Realistic football analytics data with plausible success rates and spatial distributions
+  weaknesses:
+  - Unsuccessful pass direction lines at opacity 0.08 are nearly invisible in the
+    static PNG render
+  - Annotation font size (14pt) is slightly small relative to the 4800x2700 output
+    resolution
+  - Legend slightly overlaps the left pitch boundary
+  image_description: 'The plot displays a soccer pitch event map on a medium green
+    field (#3A9D5C) set against a darker green surround (#1B5E20). White pitch markings
+    are clearly drawn including the outline, halfway line, penalty areas, goal areas,
+    center circle, penalty arcs, corner arcs, and goal posts (with semi-transparent
+    fill). Eight event categories are plotted with distinct markers: filled light-blue
+    circles for successful passes, open light-blue circles for unsuccessful passes,
+    filled yellow triangles for successful tackles, open yellow triangles for unsuccessful
+    tackles, filled pink/purple diamonds for successful interceptions, open pink/purple
+    diamonds for unsuccessful interceptions, filled orange-red stars for shots on
+    target, and open orange-red stars for shots off target. Faint blue directional
+    lines connect pass origins to endpoints, while more prominent orange-red lines
+    trace shot trajectories toward the right goal. A "Danger Zone" annotation in the
+    upper-right area highlights the shot cluster in the final third. The legend sits
+    in the upper-left on a semi-transparent dark background. The title "scatter-pitch-events
+    · plotly · pyplots.ai" appears centered at the top in white.'
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 28pt, legend 18pt, annotation
+          14pt). Annotation slightly small for 4800x2700.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Legend overlaps slightly with pitch left boundary but remains readable
+          due to dark background.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Event markers well-sized. Unsuccessful pass lines at 0.08 opacity
+          nearly invisible in static render.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue, orange, yellow, purple palette avoids red-green confusion.
+          Good contrast against green.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Pitch fills canvas well with proper aspect ratio via scaleanchor.
+          Balanced margins.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Axes appropriately hidden for pitch map. Title present and descriptive.
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Two-tone green theme, custom event palette, semi-transparent overlays,
+          white-bordered markers. Professional tactical analysis aesthetic.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Axes/grid hidden, edge highlighting, semi-transparent backgrounds.
+          Unsuccessful pass lines too faint.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Danger Zone annotation creates focal point. Shot stars visually dominant.
+          Marker size hierarchy guides viewer.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct scatter plot on accurately scaled pitch diagram.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: pitch markings, distinct markers, outcome
+          encoding, directional lines, green background, correct aspect ratio.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y correctly mapped to pitch coordinates (0-105 x 0-68).
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title follows exact format. Legend labels identify all 8 event type/outcome
+          combinations.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All 4 event types with both outcomes shown. Directional lines for
+          passes and shots.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Realistic soccer match data with plausible success rates. Neutral
+          sports domain.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: FIFA-standard dimensions. Realistic event counts and spatial distributions.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear flow with no functions or classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set at the top.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only numpy and plotly.graph_objects imported, both used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Efficient None-separator batching for direction lines. Well-organized.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot.png with correct dimensions. Also exports HTML. Current
+          API.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of go.Figure, go.Scatter, add_shape, add_annotation, update_layout,
+          hovertemplate.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses layer=below, hovertemplate, scaleanchor/scaleratio, fixedrange,
+          write_html, itemsizing=constant.
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - hover-tooltips
+  - html-export
+  - custom-legend
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - dark-theme
+  - minimal-chrome
+  - alpha-blending
+  - edge-highlighting

@@ -1,0 +1,238 @@
+library: pygal
+specification_id: root-locus-basic
+created: '2026-03-20T21:28:09Z'
+updated: '2026-03-20T22:02:24Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23362982102
+issue: 4414
+python_version: 3.14.3
+library_version: 3.1.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/root-locus-basic/pygal/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/root-locus-basic/pygal/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/root-locus-basic/pygal/plot.html
+quality_score: 82
+review:
+  strengths:
+  - 'Excellent data engineering: variable-density gain sweep, nearest-neighbor pole
+    tracking, and numerical breakaway/crossing detection'
+  - 'Rich feature set: guide lines for zeta and omega_n, real-axis locus segments,
+    breakaway point, stability boundary - all spec requirements addressed'
+  - 'Thoughtful color hierarchy: background guides in gray, locus in blue, critical
+    points in distinct warm colors (green, amber, red)'
+  - Clean, well-commented code with appropriate complexity for the mathematical content
+  weaknesses:
+  - Legend is crowded with 9 series in 4 columns at bottom - some entries hard to
+    distinguish at small legend font size
+  - Marker shapes limited to circles (pygal limitation) - spec requests x for poles
+    and o for zeros
+  - Gain direction arrows are just dots - no actual directional indication visible
+    in PNG output
+  - Some clustering of markers near the real axis makes individual elements harder
+    to distinguish
+  image_description: The plot shows a root locus diagram on a square canvas with title
+    "root-locus-basic · pygal · pyplots.ai". The x-axis is labeled "Real Axis (σ)"
+    ranging from -6.0 to 4.0, and the y-axis "Imaginary Axis (jω)" from -5.0 to 5.0.
+    Light gray dashed guide lines radiate from the origin representing constant damping
+    ratio (ζ) values, and gray dashed semicircles in the left half-plane represent
+    constant natural frequency (ωn) values. A vivid blue root locus curve traces pole
+    migration — two symmetric branches depart from the real axis and curve through
+    the right half-plane. A dark red/orange horizontal line marks real-axis locus
+    segments. Red circular dots mark open-loop poles at s = 0, -1, -2, -4. A violet/purple
+    dot marks the open-loop zero at s = -3. A large green dot highlights the breakaway
+    point between s = -1 and s = -2. Two amber/orange dots mark jω-axis crossings
+    (stability boundary) at approximately ±1.5j. Small blue dots along the locus indicate
+    gain direction markers. The legend at the bottom shows 9 series in 4 columns.
+    The background is a subtle off-white (#fafafa).
+  criteria_checklist:
+    visual_quality:
+      score: 24
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Font sizes explicitly set (title=52, labels=40, major_labels=36,
+          legend=26). All readable, legend text slightly small.
+      - id: VQ-02
+        name: No Overlap
+        score: 4
+        max: 6
+        passed: true
+        comment: Legend crowded with 9 series in 4 columns. Markers cluster near real
+          axis.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Locus branches clear. Distinct sizes and colors for markers. Gain
+          direction dots blend with locus.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 3
+        max: 4
+        passed: true
+        comment: Good palette with blue, red, violet, green, amber. Red vs violet
+          could challenge protanopia.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Square 3600x3600 appropriate for symmetric plot. Minor wasted space
+          on right side.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Real Axis (σ) and Imaginary Axis (jω) with proper notation.
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Custom color palette with intentional hierarchy. Above defaults but
+          not publication-quality.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle dashed guide lines, off-white background tones, custom stroke
+          widths, allow_interruptions for clean breaks.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Clear story: pole migration, breakaway in green, stability boundary
+          in amber. Color and size hierarchy guide viewer.'
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct root locus plot in complex plane.
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: All major features present. Markers are circles instead of x/o (pygal
+          limitation). No arrow direction indicators.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Real/imaginary axes correct. Equal axis scaling preserved.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format. Legend labels descriptive with Poles
+          (x), Zero (o) notation.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: '4 poles and 1 zero provides rich behavior: multiple branches, breakaway,
+          stability crossing, asymptotes.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 4
+        max: 5
+        passed: true
+        comment: Standard control systems transfer function. Neutral engineering context.
+          Slightly generic textbook example.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Poles at 0, -1, -2, -4 and zero at -3 sensible. Gain range 0-500
+          captures all important behavior.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear flow with no functions or classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic polynomial root computation.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: numpy, pygal, Style all used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-structured with clear comments. Necessary complexity for pole
+          tracking.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png via render_to_png.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of XY chart, Style, allow_interruptions, stroke_style, dots_size,
+          label dicts.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses allow_interruptions, tooltip labels, HTML export, legend_at_bottom_columns,
+          truncate_legend.
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-legend
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  - matrix-construction
+  dataprep:
+  - interpolation
+  styling:
+  - grid-styling

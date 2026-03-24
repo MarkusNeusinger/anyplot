@@ -1,0 +1,231 @@
+library: bokeh
+specification_id: eye-diagram-basic
+created: '2026-03-17T23:36:15Z'
+updated: '2026-03-18T00:08:54Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23221365313
+issue: 4561
+python_version: 3.14.3
+library_version: 3.9.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/eye-diagram-basic/bokeh/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/eye-diagram-basic/bokeh/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/eye-diagram-basic/bokeh/plot.html
+quality_score: 91
+review:
+  strengths:
+  - Domain-appropriate dark theme with Inferno colormap creates a professional oscilloscope-like
+    aesthetic
+  - Eye height and eye width measurements with annotated values add real engineering
+    insight
+  - Complete spec compliance with all required features including density heatmap,
+    sigmoid transitions, noise, and jitter
+  - Clean 2D histogram approach with log-scale density provides excellent visual separation
+  - Dual output (PNG + interactive HTML) leverages Bokeh distinctive capability
+  weaknesses:
+  - Colorbar title and labels are somewhat small relative to the canvas size
+  - Layout slightly cramped on the right side near the colorbar
+  image_description: The plot displays an eye diagram on a black background using
+    the Inferno colormap for density representation. High-density trace regions appear
+    in bright orange/yellow, while low-density areas show dark purple/black. Two horizontal
+    dashed cyan lines mark the Logic 1 (1.0 V) and Logic 0 (0.0 V) reference levels,
+    with corresponding labels in the upper-left and lower-left corners. A green rectangular
+    box annotation highlights the eye opening region in the center. Green crosshair
+    lines with end caps indicate eye height (0.78 V, vertical) and eye width (0.94
+    UI, horizontal) measurements. The X-axis reads "Time (UI)" spanning 0.0 to 2.0,
+    the Y-axis reads "Voltage (V)" from roughly -0.2 to 1.2. A colorbar on the right
+    shows "Log10 Density" ranging from 0 to about 3.5. The title reads "eye-diagram-basic
+    · bokeh · pyplots.ai". The characteristic eye shape is wide open, clearly showing
+    good signal integrity with concentrated traces at the 0V and 1V levels and clean
+    transition regions.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (30pt title, 22pt axis labels, 18pt
+          ticks, 20pt annotations). Colorbar title/labels slightly small.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text elements. Background fills ensure readability.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Heatmap density well-represented. Green annotations and cyan reference
+          lines clearly visible.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Inferno256 is perceptually uniform and colorblind-safe. Good contrast
+          throughout.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Plot fills canvas well. Colorbar area slightly cramped.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Time (UI) and Voltage (V) are descriptive with units.
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Domain-appropriate dark theme mimicking oscilloscope displays. Inferno
+          palette excellent for density. Clearly above defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Grid removed, outline removed, minor ticks suppressed. Light border
+          contrasts with black plot. Well-polished.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Eye measurements communicate signal quality. Reference lines provide
+          context. Density heatmap creates natural visual hierarchy.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct density heatmap-based eye diagram with overlaid NRZ signal
+          traces.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: density heatmap, UI time axis, signal
+          levels, NRZ data, sigmoid transitions, eye annotations.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = Time (0-2 UI), Y = Voltage (-0.3 to 1.3V). Correct.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format. Colorbar serves as density legend.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows transitions, noise, jitter, density variation. Eye opening
+          clearly visible.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: NRZ signal integrity is a real engineering context with realistic
+          parameters.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 0-1V levels, 2 UI window, 400 traces at 150 samples/UI. All appropriate.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat structure with no functions or classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-structured. Appropriate complexity for the domain.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot.png and plot.html. Current Bokeh API.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of figure, image, ColumnDataSource, Span, BoxAnnotation,
+          Label, ColorBar, LinearColorMapper.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: BoxAnnotation, Span, dual PNG+HTML output, LinearColorMapper with
+          Inferno256.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - annotations
+  - html-export
+  patterns:
+  - data-generation
+  - matrix-construction
+  - iteration-over-groups
+  - columndatasource
+  dataprep:
+  - binning
+  styling:
+  - dark-theme
+  - custom-colormap

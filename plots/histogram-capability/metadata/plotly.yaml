@@ -1,0 +1,230 @@
+library: plotly
+specification_id: histogram-capability
+created: '2026-03-19T21:46:39Z'
+updated: '2026-03-19T21:58:58Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23318228503
+issue: 4552
+python_version: 3.14.3
+library_version: 6.6.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/histogram-capability/plotly/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/histogram-capability/plotly/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/histogram-capability/plotly/plot.html
+quality_score: 90
+review:
+  strengths:
+  - Excellent spec compliance with all required features correctly implemented
+  - Professional annotation card with process capability summary and pass/fail interpretation
+  - Strong color accessibility with intentional orange/blue colorblind-safe palette
+  - 'Good use of Plotly-distinctive features: shaded rejection regions, hover templates,
+    HTML export'
+  - Clean well-structured code with appropriate complexity
+  weaknesses:
+  - Shaded rejection regions outside spec limits are very faint (alpha 0.12) and barely
+    visible
+  - Process data is well-centered missing opportunity to demonstrate Cp vs Cpk difference
+  - Some unused x-axis range beyond the spec limits
+  image_description: 'The plot displays a histogram of 200 shaft diameter measurements
+    in steel-blue bars with white edge highlights, overlaid with a dark navy normal
+    distribution curve. The x-axis shows "Shaft Diameter (mm)" ranging from ~9.94
+    to ~10.06, and the y-axis shows "Frequency" from 0 to ~36. Two orange dashed vertical
+    lines mark the Lower Specification Limit (LSL = 9.95) and Upper Specification
+    Limit (USL = 10.05), with bold labels above. A blue dash-dot vertical line marks
+    the Target value (10.0). A styled annotation card in the upper right displays
+    process capability metrics: Cp = 1.49, Cpk = 1.45, μ = 10.0015 mm, σ = 0.0112
+    mm, with "Capable (Cpk ≥ 1.33 = PASS)" status. Very faint shaded regions appear
+    outside the spec limits. The background is a subtle off-white, with a clean legend
+    in the upper left showing "Measurements" and "Normal Fit". The title reads "Shaft
+    Diameter Process Capability" with subtitle "histogram-capability · plotly · pyplots.ai".'
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 26pt, axis labels 22pt, ticks
+          18pt, annotations 15pt'
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Target label slightly crowds histogram peak area; minor visual congestion
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Histogram bars well-sized, normal curve clearly visible at width
+          3.5, spec limit lines prominent
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Orange/blue palette is colorblind-safe with strong contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good layout but some unused space on far left/right beyond spec limits
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Shaft Diameter (mm) with units, Frequency appropriate for histogram
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom palette, professional annotation card, shaded rejection regions,
+          white bar edges, intentional hierarchy
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: plotly_white template, x-grid removed, subtle dotted y-grid, custom
+          background, clean legend
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Capability card with pass/fail status, spec limit framing, shaded
+          rejection zones create clear narrative
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct histogram with normal curve overlay, spec limits, and capability
+          indices
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: histogram, normal curve, LSL/USL dashed, target
+          dash-dot, Cp/Cpk annotations'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Measurements on x-axis, frequency on y-axis, normal curve scaled
+          to histogram area
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct subtitle format, legend labels match data
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows distribution, normal fit, spec limits, capability indices;
+          process well-centered, could show Cp vs Cpk difference
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Shaft diameter measurements in mm — real manufacturing quality control
+          scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 10mm shaft with ±0.05mm tolerance, σ≈0.012mm, 200 measurements —
+          realistic for precision machining
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean imports → data → plot → save structure, no functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: numpy, plotly.graph_objects, scipy.stats'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-organized, appropriate complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot.png at 4800x2700 via scale=3, also exports HTML
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Good use of Plotly GO: go.Figure, go.Histogram, go.Scatter, add_shape,
+          add_annotation, update_layout'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Plotly-distinctive: fill=toself for rejection regions, hovertemplate,
+          HTML export, spline line shape'
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - scipy
+  techniques:
+  - annotations
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  dataprep:
+  - binning
+  styling:
+  - alpha-blending
+  - edge-highlighting
+  - grid-styling

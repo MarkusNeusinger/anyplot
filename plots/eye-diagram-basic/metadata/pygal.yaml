@@ -1,0 +1,239 @@
+library: pygal
+specification_id: eye-diagram-basic
+created: '2026-03-17T23:35:46Z'
+updated: '2026-03-18T00:08:51Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 23221365490
+issue: 4561
+python_version: 3.14.3
+library_version: 3.1.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/eye-diagram-basic/pygal/plot.png
+preview_thumb: https://storage.googleapis.com/pyplots-images/plots/eye-diagram-basic/pygal/plot_thumb.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/eye-diagram-basic/pygal/plot.html
+quality_score: 83
+review:
+  strengths:
+  - Oscilloscope-themed dark background with viridis palette is domain-appropriate
+    and visually striking
+  - Complete spec compliance including optional eye height/width measurement annotations
+  - Realistic NRZ signal simulation with proper engineering parameters (400 traces,
+    5% noise, 3% jitter)
+  - Interactive HTML export with per-point density percentage tooltips leverages pygal
+    native SVG capabilities
+  - 10-band density gradient with 4-pass smoothing filter produces reasonable color
+    gradation
+  weaknesses:
+  - Dot-matrix rendering inherent to pygal XY scatter creates visible discrete grid
+    rather than smooth continuous density
+  - Eye measurement annotation dots/lines are barely visible against the density field
+  - Legend with 12 items in 2 rows is somewhat crowded
+  - Most computation is numpy-based with pygal used primarily as a final renderer
+  image_description: The plot renders an eye diagram on a dark navy/indigo (#0a0a2e)
+    background with oscilloscope-style aesthetics. The title "eye-diagram-basic ·
+    pygal · pyplots.ai" is displayed at the top in light text using monospace (Courier
+    New) font. The X-axis labeled "Time (UI)" spans 0 to 2 with ticks at 0.25 increments.
+    The Y-axis labeled "Voltage (V)" ranges from -0.2 to 1.2. The eye pattern is rendered
+    as a fine grid of colored dots (240x140 resolution, dots_size=5) using a 10-stop
+    viridis-inspired palette from dark purple (#440154, minimal density) through blue,
+    teal, green to bright yellow (#fde725, peak density). Two clear eye openings are
+    visible centered at ~0.5 UI and ~1.5 UI. High-density yellow/green bands concentrate
+    at the 0V and 1V NRZ signal levels, with lower-density purple/blue at transition
+    edges. Small eye measurement annotation dots are visible for eye height and eye
+    width, rendered with dashed stroke lines. A 2-row legend at the bottom shows 10
+    density band names (Minimal through Peak) plus Eye Height and Eye Width labels
+    across 6 columns. The overall aesthetic is professional and domain-appropriate,
+    resembling an oscilloscope display.
+  criteria_checklist:
+    visual_quality:
+      score: 25
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Font sizes explicitly set (title=56, labels=36, legend=32). All readable.
+          Monospace font thematic but slightly less legible.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: No overlap in data area. Legend with 12 items in 6 columns is somewhat
+          crowded with long labels.
+      - id: VQ-03
+        name: Element Visibility
+        score: 4
+        max: 6
+        passed: true
+        comment: 240x140 grid with dots_size=5 produces visible eye pattern. Discrete
+          dot-matrix pattern still somewhat coarse. Eye annotation dots barely visible.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Viridis-inspired 10-stop palette is colorblind-safe. Excellent contrast
+          against dark background.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Plot fills ~60% of canvas with balanced margins. Some unused space
+          from margin settings.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Time (UI) and Voltage (V) are descriptive with units.
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Dark oscilloscope theme is domain-specific and intentional. Viridis
+          10-stop palette, monospace font. Clearly above defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Grid guides disabled, dark background for contrast, consistent font
+          family, organized legend, stroke_width=0 removes visual noise.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Color density gradient communicates signal integrity. Eye annotations
+          add measurement context. Viewer immediately understands signal quality.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct eye diagram with density-colored overlaid traces as XY scatter
+          heatmap.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: density coloring, NRZ, noise, jitter, sigmoid
+          transitions, eye annotations.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=Time(UI), Y=Voltage(V), color=density. All correct.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct. Legend shows density bands and eye measurements.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows NRZ levels, transitions, noise, jitter, eye openings, eye measurements.
+          Could show more eye closure variation.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: NRZ signal integrity analysis is a real engineering application.
+          Neutral technical domain.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 400 traces, 0-1V NRZ, 5% noise, 3% jitter, 200 samples/UI. All realistic.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports, data generation, density, smoothing, chart,
+          save. No functions/classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used. sys/importlib needed for name collision workaround.
+      - id: CQ-04
+        name: Code Elegance
+        score: 1
+        max: 2
+        passed: false
+        comment: sys.path manipulation is hacky but necessary. Per-cell label formatting
+          in nested loop is verbose.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot.png and plot.html. Current pygal API.
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses pygal.XY with Style, chart.add(), per-series overrides. But
+          density computation is numpy-based with pygal as renderer.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Custom Style, per-point labels, stroke_style dasharray, allow_interruptions,
+          legend_at_bottom_columns, HTML SVG export, js=[].
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - html-export
+  - custom-legend
+  patterns:
+  - data-generation
+  - matrix-construction
+  - iteration-over-groups
+  dataprep:
+  - binning
+  styling:
+  - dark-theme
+  - custom-colormap
