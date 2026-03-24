@@ -146,6 +146,19 @@ async def seo_legal():
     )
 
 
+@router.get("/seo-proxy/mcp")
+async def seo_mcp():
+    """Bot-optimized MCP page with correct og:tags."""
+    return HTMLResponse(
+        BOT_HTML_TEMPLATE.format(
+            title="MCP Server | pyplots.ai",
+            description="Connect your AI assistant to pyplots via the Model Context Protocol (MCP).",
+            image=DEFAULT_HOME_IMAGE,
+            url="https://pyplots.ai/mcp",
+        )
+    )
+
+
 @router.get("/seo-proxy/{spec_id}")
 async def seo_spec_overview(spec_id: str, db: AsyncSession | None = Depends(optional_db)):
     """Bot-optimized spec overview page with collage og:image."""
