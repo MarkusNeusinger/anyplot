@@ -34,9 +34,9 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     setHomeState((prev) => ({ ...prev, scrollY: window.scrollY }));
   }, []);
 
-  // Load shared data on mount
+  // Load shared data after browser is idle — gives /plots/filter bandwidth priority
   useEffect(() => {
-    const fetchData = async () => {
+    const id = requestIdleCallback(async () => {
       try {
         const [specsRes, libsRes, statsRes] = await Promise.all([
           fetch(`${API_URL}/specs`),
@@ -61,8 +61,8 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       } catch (err) {
         console.error('Error loading initial data:', err);
       }
-    };
-    fetchData();
+    });
+    return () => cancelIdleCallback(id);
   }, []);
 
   return (
