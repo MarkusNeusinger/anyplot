@@ -155,6 +155,10 @@ class TestClearSpecCache:
         set_cache("specs_list", "all specs")
         set_cache("filter:lib=matplotlib", "filter result")
         set_cache("stats", "stats data")
+        set_cache("sitemap_xml", "sitemap")
+        set_cache("seo:scatter-basic", "seo overview")
+        set_cache("seo:scatter-basic:matplotlib", "seo impl")
+        set_cache("og:scatter-basic:matplotlib", "og image")
         set_cache("unrelated:key", "unrelated")
 
         # Clear spec cache
@@ -167,6 +171,10 @@ class TestClearSpecCache:
         assert get_cache("specs_list") is None
         assert get_cache("filter:lib=matplotlib") is None
         assert get_cache("stats") is None
+        assert get_cache("sitemap_xml") is None
+        assert get_cache("seo:scatter-basic") is None
+        assert get_cache("seo:scatter-basic:matplotlib") is None
+        assert get_cache("og:scatter-basic:matplotlib") is None
 
         # Unrelated should still be there
         assert get_cache("unrelated:key") is not None
@@ -191,6 +199,7 @@ class TestClearLibraryCache:
         set_cache("libraries", "all libraries")
         set_cache("filter:lib=matplotlib", "filter result")
         set_cache("stats", "stats data")
+        set_cache("sitemap_xml", "sitemap")
         set_cache("unrelated:key", "unrelated")
 
         # Clear library cache
@@ -202,6 +211,7 @@ class TestClearLibraryCache:
         assert get_cache("libraries") is None
         assert get_cache("filter:lib=matplotlib") is None
         assert get_cache("stats") is None
+        assert get_cache("sitemap_xml") is None
 
         # Unrelated should still be there
         assert get_cache("unrelated:key") is not None

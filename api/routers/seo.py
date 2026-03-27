@@ -7,9 +7,11 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import HTMLResponse, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from api.cache import cache_key, get_cache, set_cache
+from api.cache import cache_key, get_cache, get_or_set_cache, set_cache
 from api.dependencies import optional_db
+from core.config import settings
 from core.database import SpecRepository
+from core.database.connection import get_db_context
 
 
 router = APIRouter(tags=["seo"])
@@ -18,6 +20,42 @@ router = APIRouter(tags=["seo"])
 def _lastmod(dt: datetime | None) -> str:
     """Format datetime as <lastmod> XML element, or empty string if None."""
     return f"<lastmod>{dt.strftime('%Y-%m-%d')}</lastmod>" if dt else ""
+
+
+def _build_sitemap_xml(specs: list) -> str:
+    """Build sitemap XML string from specs."""
+    xml_lines = [
+        '<?xml version="1.0" encoding="UTF-8"?>',
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+        "  <url><loc>https://pyplots.ai/</loc></url>",
+        "  <url><loc>https://pyplots.ai/catalog</loc></url>",
+        "  <url><loc>https://pyplots.ai/mcp</loc></url>",
+        "  <url><loc>https://pyplots.ai/legal</loc></url>",
+    ]
+
+    for spec in specs:
+        if spec.impls:
+            spec_id = html.escape(spec.id)
+            xml_lines.append(f"  <url><loc>https://pyplots.ai/{spec_id}</loc>{_lastmod(spec.updated)}</url>")
+            for impl in spec.impls:
+                library_id = html.escape(impl.library_id)
+                xml_lines.append(
+                    f"  <url><loc>https://pyplots.ai/{spec_id}/{library_id}</loc>{_lastmod(impl.updated)}</url>"
+                )
+
+    xml_lines.append("</urlset>")
+    return "\n".join(xml_lines)
+
+
+_STATIC_SITEMAP = _build_sitemap_xml([])
+
+
+async def _refresh_sitemap() -> str:
+    """Standalone factory for background sitemap refresh (creates own DB session)."""
+    async with get_db_context() as db:
+        repo = SpecRepository(db)
+        specs = await repo.get_all()
+    return _build_sitemap_xml(specs)
 
 
 # Minimal HTML template for social media bots (meta tags are what matters)
@@ -66,41 +104,17 @@ async def get_sitemap(db: AsyncSession | None = Depends(optional_db)):
 
     Includes root, catalog page, and all specs with implementations.
     """
-    key = cache_key("sitemap_xml")
-    cached = get_cache(key)
-    if cached:
-        return Response(content=cached, media_type="application/xml")
+    if db is None:
+        return Response(content=_STATIC_SITEMAP, media_type="application/xml")
 
-    # Build XML lines
-    xml_lines = [
-        '<?xml version="1.0" encoding="UTF-8"?>',
-        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
-        "  <url><loc>https://pyplots.ai/</loc></url>",
-        "  <url><loc>https://pyplots.ai/catalog</loc></url>",
-        "  <url><loc>https://pyplots.ai/mcp</loc></url>",
-        "  <url><loc>https://pyplots.ai/legal</loc></url>",
-    ]
-
-    # Add spec URLs (overview + all implementations)
-    if db is not None:
+    async def _fetch() -> str:
         repo = SpecRepository(db)
         specs = await repo.get_all()
-        for spec in specs:
-            if spec.impls:  # Only include specs with implementations
-                spec_id = html.escape(spec.id)
-                # Overview page
-                xml_lines.append(f"  <url><loc>https://pyplots.ai/{spec_id}</loc>{_lastmod(spec.updated)}</url>")
-                # Individual implementation pages
-                for impl in spec.impls:
-                    library_id = html.escape(impl.library_id)
-                    xml_lines.append(
-                        f"  <url><loc>https://pyplots.ai/{spec_id}/{library_id}</loc>{_lastmod(impl.updated)}</url>"
-                    )
+        return _build_sitemap_xml(specs)
 
-    xml_lines.append("</urlset>")
-    xml = "\n".join(xml_lines)
-
-    set_cache(key, xml)
+    xml = await get_or_set_cache(
+        cache_key("sitemap_xml"), _fetch, refresh_after=settings.cache_refresh_after, refresh_factory=_refresh_sitemap
+    )
     return Response(content=xml, media_type="application/xml")
 
 

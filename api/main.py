@@ -116,18 +116,18 @@ async def add_cache_headers(request: Request, call_next):
 
     path = request.url.path
 
-    # Static data that rarely changes (5 min cache, stale-while-revalidate for 1 hour)
+    # Static data — changes only on deploy (10 min cache, 1h stale-while-revalidate)
     if path in ("/libraries", "/stats"):
-        response.headers["Cache-Control"] = "public, max-age=300, stale-while-revalidate=3600"
-    # Specs list - moderate caching (2 min cache)
+        response.headers["Cache-Control"] = "public, max-age=600, stale-while-revalidate=3600"
+    # Specs list (5 min cache, 1h stale-while-revalidate)
     elif path == "/specs":
-        response.headers["Cache-Control"] = "public, max-age=120, stale-while-revalidate=600"
-    # Filter endpoint - short cache (30 sec) with stale-while-revalidate
+        response.headers["Cache-Control"] = "public, max-age=300, stale-while-revalidate=3600"
+    # Filter endpoint — most dynamic, moderate cache (1 min, 10 min stale)
     elif path == "/plots/filter":
-        response.headers["Cache-Control"] = "public, max-age=30, stale-while-revalidate=300"
-    # Individual spec details
+        response.headers["Cache-Control"] = "public, max-age=60, stale-while-revalidate=600"
+    # Individual spec details (5 min cache, 1h stale-while-revalidate)
     elif path.startswith("/specs/"):
-        response.headers["Cache-Control"] = "public, max-age=120, stale-while-revalidate=600"
+        response.headers["Cache-Control"] = "public, max-age=300, stale-while-revalidate=3600"
 
     return response
 

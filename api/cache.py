@@ -149,6 +149,9 @@ def clear_spec_cache(spec_id: str) -> int:
     count += clear_cache_by_pattern("specs_list")  # List might have changed
     count += clear_cache_by_pattern("filter:")  # Filters might be affected
     count += clear_cache_by_pattern("stats")  # Stats might have changed
+    count += clear_cache_by_pattern("sitemap")  # Sitemap includes spec URLs
+    count += clear_cache_by_pattern(f"seo:{spec_id}")  # SEO proxy pages for this spec
+    count += clear_cache_by_pattern(f"og:{spec_id}")  # OG images for this spec
     return count
 
 
@@ -172,6 +175,7 @@ def clear_library_cache(library_id: str) -> int:
     count += clear_cache_by_pattern("libraries")  # List might have changed
     count += clear_cache_by_pattern("filter:")  # Filters might be affected
     count += clear_cache_by_pattern("stats")  # Stats might have changed
+    count += clear_cache_by_pattern("sitemap")  # Sitemap includes library URLs
     return count
 
 
