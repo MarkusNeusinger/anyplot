@@ -14,9 +14,9 @@
 @font-face {
   font-family: 'MonoLisa Fallback';
   src: local('Consolas'), local('Menlo'), local('Monaco'), local('DejaVu Sans Mono');
-  size-adjust: 100%;
-  ascent-override: 95%;
-  descent-override: 25%;
+  size-adjust: 105%;
+  ascent-override: 92%;
+  descent-override: 22%;
   line-gap-override: 0%;
 }
 

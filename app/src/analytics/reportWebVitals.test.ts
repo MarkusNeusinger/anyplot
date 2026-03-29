@@ -45,10 +45,6 @@ describe('reportWebVitals', () => {
     window.plausible = vi.fn();
 
     // Mock the dynamic import
-    const mockOnLCP = vi.fn();
-    const mockOnCLS = vi.fn();
-    const mockOnINP = vi.fn();
-
     vi.mock('web-vitals', () => ({
       onLCP: (cb: (m: { value: number; rating: string }) => void) => cb({ value: 2500, rating: 'good' }),
       onCLS: (cb: (m: { value: number; rating: string }) => void) => cb({ value: 0.15, rating: 'needs-improvement' }),

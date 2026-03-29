@@ -36,7 +36,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
 
   // Load shared data after browser is idle — gives /plots/filter bandwidth priority
   useEffect(() => {
-    const id = requestIdleCallback(async () => {
+    const id = window.requestIdleCallback(async () => {
       try {
         const [specsRes, libsRes, statsRes] = await Promise.all([
           fetch(`${API_URL}/specs`),
@@ -62,7 +62,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
         console.error('Error loading initial data:', err);
       }
     });
-    return () => cancelIdleCallback(id);
+    return () => window.cancelIdleCallback(id);
   }, []);
 
   return (

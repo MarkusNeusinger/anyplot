@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, lazy, Suspense } from 'react';
 import Box from '@mui/material/Box';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
@@ -15,11 +15,8 @@ import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import CheckIcon from '@mui/icons-material/Check';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
-import SyntaxHighlighter from 'react-syntax-highlighter/dist/esm/prism-light';
-import { oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism';
-import python from 'react-syntax-highlighter/dist/esm/languages/prism/python';
 
-SyntaxHighlighter.registerLanguage('python', python);
+const CodeHighlighter = lazy(() => import('./CodeHighlighter'));
 
 // Map tag category names to URL parameter names
 const SPEC_TAG_PARAM_MAP: Record<string, string> = {
@@ -217,24 +214,16 @@ export function SpecTabs({
     }
   };
 
-  // Memoize syntax-highlighted code
-  const highlightedCode = useMemo(() => {
-    if (!code) return null;
-    return (
-      <SyntaxHighlighter
-        language="python"
-        style={oneLight}
-        customStyle={{
-          margin: 0,
-          fontSize: '0.85rem',
-          fontFamily: '"MonoLisa", "MonoLisa Fallback", monospace',
-          background: 'transparent',
-        }}
-      >
+  // Lazy-loaded syntax highlighter - only loads when Code tab is opened
+  const highlightedCode = code ? (
+    <Suspense fallback={
+      <Box sx={{ fontFamily: '"MonoLisa", "MonoLisa Fallback", monospace', fontSize: '0.85rem', whiteSpace: 'pre-wrap', color: '#4b5563' }}>
         {code}
-      </SyntaxHighlighter>
-    );
-  }, [code]);
+      </Box>
+    }>
+      <CodeHighlighter code={code} />
+    </Suspense>
+  ) : null;
 
   // Format date
   const formatDate = (dateStr?: string) => {

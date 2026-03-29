@@ -150,6 +150,7 @@ export const ImageCard = memo(function ImageCard({
         <CardMedia
           component="img"
           loading={index < BATCH_SIZE ? 'eager' : 'lazy'}
+          fetchPriority={index === 0 ? 'high' : undefined}
           image={image.thumb || image.url}
           alt={viewMode === 'library' ? `${image.spec_id} - ${image.library}` : `${selectedSpec} - ${image.library}`}
           sx={{

@@ -55,6 +55,7 @@ export default [
         MessageEvent: 'readonly',
         // APIs
         AbortController: 'readonly',
+        AbortSignal: 'readonly',
         RequestInit: 'readonly',
         Response: 'readonly',
         ResizeObserver: 'readonly',
@@ -80,6 +81,23 @@ export default [
       'no-unused-vars': 'off',
       // Allow ref updates during render (common pattern for keeping refs in sync)
       'react-hooks/refs': 'off',
+    },
+  },
+  {
+    files: ['src/**/*.test.{ts,tsx}'],
+    languageOptions: {
+      globals: {
+        // Vitest globals
+        describe: 'readonly',
+        it: 'readonly',
+        expect: 'readonly',
+        vi: 'readonly',
+        beforeEach: 'readonly',
+        afterEach: 'readonly',
+        beforeAll: 'readonly',
+        afterAll: 'readonly',
+        globalThis: 'readonly',
+      },
     },
   },
   {
