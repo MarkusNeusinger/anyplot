@@ -18,6 +18,7 @@ import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import CheckIcon from '@mui/icons-material/Check';
 
 import type { Implementation } from '../types';
+import { buildSrcSet } from '../utils/responsiveImage';
 
 interface LibraryMeta {
   id: string;
@@ -141,18 +142,46 @@ function ImplementationCard({
           },
         }}
       >
-        {impl.preview_thumb || impl.preview_url ? (
+        {impl.preview_url ? (
           <Box
-            component="img"
-            src={impl.preview_thumb || impl.preview_url}
-            alt={`${specTitle} - ${impl.library_id}`}
+            component="picture"
             sx={{
+              display: 'block',
               width: '100%',
               aspectRatio: '16/10',
-              objectFit: 'contain',
               bgcolor: '#fff',
             }}
-          />
+          >
+            <source
+              type="image/webp"
+              srcSet={buildSrcSet(impl.preview_url, 'webp')}
+              sizes="(max-width: 600px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            />
+            <source
+              type="image/png"
+              srcSet={buildSrcSet(impl.preview_url, 'png')}
+              sizes="(max-width: 600px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            />
+            <Box
+              component="img"
+              src={`${impl.preview_url.replace(/\.png$/, '')}_800.png`}
+              alt={`${specTitle} - ${impl.library_id}`}
+              width={800}
+              height={500}
+              sx={{
+                width: '100%',
+                aspectRatio: '16/10',
+                objectFit: 'contain',
+              }}
+              onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
+                const target = e.target as HTMLImageElement;
+                if (!target.dataset.fallback) {
+                  target.dataset.fallback = '1';
+                  target.src = impl.preview_url!;
+                }
+              }}
+            />
+          </Box>
         ) : (
           <Skeleton variant="rectangular" sx={{ width: '100%', aspectRatio: '16/10' }} />
         )}

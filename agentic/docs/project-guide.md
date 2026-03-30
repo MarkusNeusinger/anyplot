@@ -219,7 +219,6 @@ library_version: "3.10.0"
 
 # Previews
 preview_url: https://storage.googleapis.com/pyplots-images/plots/scatter-basic/matplotlib/plot.png
-preview_thumb: https://storage.googleapis.com/pyplots-images/plots/scatter-basic/matplotlib/plot_thumb.png
 preview_html: null
 
 # Quality

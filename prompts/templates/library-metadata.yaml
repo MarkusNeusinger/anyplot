@@ -6,7 +6,6 @@ specification_id: {specification-id}
 
 # Preview URLs (GCS - filled by workflow)
 preview_url: https://storage.googleapis.com/pyplots-images/plots/{specification-id}/{library}/plot.png
-preview_thumb: https://storage.googleapis.com/pyplots-images/plots/{specification-id}/{library}/plot_thumb.png
 preview_html: null     # For interactive libraries: plotly, bokeh, altair, highcharts, pygal, letsplot
 
 # Current live version

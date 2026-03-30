@@ -75,7 +75,7 @@ async def get_library_images(library_id: str, db: AsyncSession = Depends(require
         library_id: The library ID (e.g., 'matplotlib', 'seaborn')
 
     Returns:
-        List of images with spec_id, preview_url, thumb, and html
+        List of images with spec_id, preview_url, and html
     """
 
     # Validate library_id
@@ -99,7 +99,6 @@ async def get_library_images(library_id: str, db: AsyncSession = Depends(require
                         "spec_id": spec.id,
                         "library": impl.library_id,
                         "url": impl.preview_url,
-                        "thumb": impl.preview_thumb,
                         "html": impl.preview_html,
                         "code": strip_noqa_comments(impl.code),
                     }

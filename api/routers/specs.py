@@ -94,7 +94,6 @@ async def get_spec(spec_id: str, db: AsyncSession = Depends(require_db)):
             library_id=impl.library_id,
             library_name=impl.library.name if impl.library else impl.library_id,
             preview_url=impl.preview_url,
-            preview_thumb=impl.preview_thumb,
             preview_html=impl.preview_html,
             quality_score=impl.quality_score,
             code=strip_noqa_comments(impl.code),
@@ -135,7 +134,7 @@ async def get_spec_images(spec_id: str, db: AsyncSession = Depends(require_db)):
     """
     Get plot images for a specification across all libraries.
 
-    Returns preview_url, preview_thumb, and preview_html from database.
+    Returns preview_url and preview_html from database.
     """
 
     key = cache_key("spec_images", spec_id)
@@ -153,7 +152,7 @@ async def get_spec_images(spec_id: str, db: AsyncSession = Depends(require_db)):
         raise_not_found("Spec with implementations", spec_id)
 
     images = [
-        {"library": impl.library_id, "url": impl.preview_url, "thumb": impl.preview_thumb, "html": impl.preview_html}
+        {"library": impl.library_id, "url": impl.preview_url, "html": impl.preview_html}
         for impl in spec.impls
         if impl.preview_url  # Only include if there's a preview
     ]

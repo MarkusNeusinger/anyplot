@@ -391,7 +391,6 @@ jobs:
               'python_version': py_ver,
               'library_version': lib_ver,
               'preview_url': f'https://storage.googleapis.com/pyplots-images/plots/{spec}/{lib}/plot.png',
-              'preview_thumb': f'https://storage.googleapis.com/pyplots-images/plots/{spec}/{lib}/plot_thumb.png',
               'preview_html': preview_html if preview_html != 'null' else None,
               'quality_score': None,
               'review': {'strengths': [], 'weaknesses': []}
@@ -448,13 +447,15 @@ jobs:
 
           source .venv/bin/activate
 
-          # Process PNG: optimize and create thumbnail
+          # Optimize PNG and generate responsive variants (400/800/1200 x png/webp + full webp)
           python -m core.images process \
             "$IMPL_DIR/plot.png" \
+            "$IMPL_DIR/plot.png"
+          python -m core.images responsive \
             "$IMPL_DIR/plot.png" \
-            "$IMPL_DIR/plot_thumb.png"
+            "$IMPL_DIR/"
 
-          echo "::notice::Processed images: optimized + thumbnail created"
+          echo "::notice::Processed images: optimized + responsive variants created"
           ls -la "$IMPL_DIR/"
 
       # ========================================================================
@@ -532,23 +533,16 @@ jobs:
           echo "$GCS_CREDENTIALS" > /tmp/gcs-key.json
           gcloud auth activate-service-account --key-file=/tmp/gcs-key.json
 
-          # Upload PNG (with watermark)
+          # Upload all plot images (original + responsive variants)
           if [ -f "$IMPL_DIR/plot.png" ]; then
-            gsutil -h "Cache-Control:public, max-age=604800" cp "$IMPL_DIR/plot.png" "${STAGING_PATH}/plot.png"
-            gsutil acl ch -u AllUsers:R "${STAGING_PATH}/plot.png" 2>/dev/null || true
+            gsutil -m -h "Cache-Control:public, max-age=604800" cp "$IMPL_DIR"/plot*.png "$IMPL_DIR"/plot*.webp "${STAGING_PATH}/"
+            gsutil -m acl ch -u AllUsers:R "${STAGING_PATH}/plot*" 2>/dev/null || true
             echo "png_url=${PUBLIC_URL}/plot.png" >> $GITHUB_OUTPUT
             echo "uploaded=true" >> $GITHUB_OUTPUT
+            echo "::notice::Uploaded plot.png + responsive variants (PNG + WebP)"
           else
             echo "::error::No plot.png found - cannot continue without image"
             exit 1
-          fi
-
-          # Upload thumbnail
-          if [ -f "$IMPL_DIR/plot_thumb.png" ]; then
-            gsutil -h "Cache-Control:public, max-age=604800" cp "$IMPL_DIR/plot_thumb.png" "${STAGING_PATH}/plot_thumb.png"
-            gsutil acl ch -u AllUsers:R "${STAGING_PATH}/plot_thumb.png" 2>/dev/null || true
-            echo "thumb_url=${PUBLIC_URL}/plot_thumb.png" >> $GITHUB_OUTPUT
-            echo "::notice::Uploaded thumbnail"
           fi
 
           # Upload HTML (interactive libraries)

@@ -118,7 +118,6 @@ CREATE TABLE impls
 
     -- Preview URLs (GCS)
     preview_url     VARCHAR,                    -- Full PNG: gs://pyplots-images/plots/.../plot.png
-    preview_thumb   VARCHAR,                    -- Thumbnail: gs://pyplots-images/plots/.../plot_thumb.png
     preview_html    VARCHAR,                    -- Interactive: gs://pyplots-images/plots/.../plot.html
 
     -- Version info
@@ -219,7 +218,6 @@ INSERT INTO libraries (id, name, version, documentation_url) VALUES
 - `library_id` - Which library
 - `code` - Full Python source code
 - `preview_url` - GCS URL to full-size image
-- `preview_thumb` - GCS URL to thumbnail
 - `preview_html` - GCS URL to interactive HTML (optional)
 - `quality_score` - AI quality score (0-100)
 - `python_version` - Python version used for generation
@@ -233,7 +231,6 @@ INSERT INTO libraries (id, name, version, documentation_url) VALUES
   "library_id": "matplotlib",
   "code": "import matplotlib.pyplot as plt\n...",
   "preview_url": "https://storage.googleapis.com/pyplots-images/plots/scatter-basic/matplotlib/plot.png",
-  "preview_thumb": "https://storage.googleapis.com/pyplots-images/plots/scatter-basic/matplotlib/plot_thumb.png",
   "preview_html": null,
   "python_version": "3.13",
   "library_version": "3.9.0",

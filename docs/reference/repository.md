@@ -257,7 +257,6 @@ library_version: "3.10.0"
 
 # Previews
 preview_url: https://storage.googleapis.com/pyplots-images/plots/scatter-basic/matplotlib/plot.png
-preview_thumb: https://storage.googleapis.com/pyplots-images/plots/scatter-basic/matplotlib/plot_thumb.png
 preview_html: null
 
 # Quality
@@ -331,7 +330,6 @@ Preview images are stored in Google Cloud Storage (not in repo):
 gs://pyplots-images/
 ├── plots/{spec-id}/{library}/           # Production (after merge)
 │   ├── plot.png                         # Full-size optimized image
-│   ├── plot_thumb.png                   # Thumbnail (600px width)
 │   └── plot.html                        # Optional (interactive libraries)
 │
 └── staging/{spec-id}/{library}/         # Temp (during review)

@@ -27,7 +27,6 @@ CONNECTION_TIMEOUT = 10  # seconds - skip tests if DB unreachable
 
 # Test data constants
 TEST_IMAGE_URL = "https://storage.googleapis.com/pyplots-images/test/plot.png"
-TEST_THUMB_URL = "https://storage.googleapis.com/pyplots-images/test/thumb.png"
 
 
 def _get_database_url():
@@ -181,7 +180,6 @@ async def pg_db_with_data(pg_session):
         library_id="matplotlib",
         code="import matplotlib.pyplot as plt\n# scatter plot code",
         preview_url=TEST_IMAGE_URL.replace("plot", "scatter-matplotlib"),
-        preview_thumb=TEST_THUMB_URL.replace("thumb", "scatter-matplotlib-thumb"),
         quality_score=92.5,
         generated_by="claude",
         python_version="3.13",
@@ -192,7 +190,6 @@ async def pg_db_with_data(pg_session):
         library_id="seaborn",
         code="import seaborn as sns\n# scatter plot code",
         preview_url=TEST_IMAGE_URL.replace("plot", "scatter-seaborn"),
-        preview_thumb=TEST_THUMB_URL.replace("thumb", "scatter-seaborn-thumb"),
         quality_score=95.0,
         generated_by="claude",
         python_version="3.13",

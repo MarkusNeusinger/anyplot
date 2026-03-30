@@ -14,7 +14,7 @@ from fastapi.testclient import TestClient
 
 from api.main import app, fastapi_app
 from core.database import get_db
-from tests.conftest import TEST_IMAGE_URL, TEST_THUMB_URL
+from tests.conftest import TEST_IMAGE_URL
 
 
 @pytest.fixture
@@ -30,7 +30,6 @@ def mock_db_client():
     mock_impl = MagicMock()
     mock_impl.library_id = "matplotlib"
     mock_impl.preview_url = TEST_IMAGE_URL
-    mock_impl.preview_thumb = TEST_THUMB_URL
     mock_impl.preview_html = None
 
     mock_spec1 = MagicMock()

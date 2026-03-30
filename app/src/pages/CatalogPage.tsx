@@ -8,6 +8,7 @@ import Fab from '@mui/material/Fab';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 
 import { API_URL, GITHUB_URL } from '../constants';
+import { buildSrcSet, getFallbackSrc } from '../utils/responsiveImage';
 import { useAnalytics } from '../hooks';
 import { useAppData, useHomeState } from '../hooks';
 import { Breadcrumb, Footer } from '../components';
@@ -246,15 +247,39 @@ export function CatalogPage() {
                 >
                   {currentImage && (
                     <Box
-                      component="img"
-                      src={currentImage.thumb || currentImage.url}
-                      alt={spec.title}
-                      sx={{
-                        width: '100%',
-                        height: '100%',
-                        objectFit: 'cover',
-                      }}
-                    />
+                      component="picture"
+                      sx={{ display: 'block', width: '100%', height: '100%' }}
+                    >
+                      <source
+                        type="image/webp"
+                        srcSet={buildSrcSet(currentImage.url, 'webp')}
+                        sizes="(max-width: 600px) 50vw, 25vw"
+                      />
+                      <source
+                        type="image/png"
+                        srcSet={buildSrcSet(currentImage.url, 'png')}
+                        sizes="(max-width: 600px) 50vw, 25vw"
+                      />
+                      <Box
+                        component="img"
+                        src={getFallbackSrc(currentImage.url)}
+                        alt={spec.title}
+                        width={800}
+                        height={500}
+                        sx={{
+                          width: '100%',
+                          height: '100%',
+                          objectFit: 'cover',
+                        }}
+                        onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
+                          const target = e.target as HTMLImageElement;
+                          if (!target.dataset.fallback) {
+                            target.dataset.fallback = '1';
+                            target.src = currentImage.url;
+                          }
+                        }}
+                      />
+                    </Box>
                   )}
 
                   {/* Rotation hint badge */}

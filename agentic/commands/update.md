@@ -268,11 +268,10 @@ For each library, copy the preview images to the implementations directory for G
 
 ```bash
 cp plots/{spec_id}/implementations/.update-preview/{library}/plot.png plots/{spec_id}/implementations/plot.png
-# Process images (thumbnail + optimization)
+# Process images (optimization)
 uv run python -m core.images process \
   plots/{spec_id}/implementations/plot.png \
-  plots/{spec_id}/implementations/plot.png \
-  plots/{spec_id}/implementations/plot_thumb.png
+  plots/{spec_id}/implementations/plot.png
 ```
 
 Note: Since we process one library at a time for GCS upload, handle sequentially.
@@ -288,10 +287,6 @@ STAGING_PATH="gs://pyplots-images/staging/{spec_id}/{library}"
 gsutil cp plots/{spec_id}/implementations/plot.png "${STAGING_PATH}/plot.png"
 gsutil acl ch -u AllUsers:R "${STAGING_PATH}/plot.png" 2>/dev/null || true
 
-# Upload thumbnail
-gsutil cp plots/{spec_id}/implementations/plot_thumb.png "${STAGING_PATH}/plot_thumb.png"
-gsutil acl ch -u AllUsers:R "${STAGING_PATH}/plot_thumb.png" 2>/dev/null || true
-
 # Upload HTML if it exists (interactive libraries: plotly, bokeh, altair, highcharts, pygal, letsplot)
 if [ -f "plots/{spec_id}/implementations/.update-preview/{library}/plot.html" ]; then
   gsutil cp "plots/{spec_id}/implementations/.update-preview/{library}/plot.html" "${STAGING_PATH}/plot.html"
@@ -299,12 +294,11 @@ if [ -f "plots/{spec_id}/implementations/.update-preview/{library}/plot.html" ];
 fi
 ```
 
-Update `preview_url` and `preview_thumb` in the metadata YAML to point to the **production** URLs
+Update `preview_url` in the metadata YAML to point to the **production** URL
 (matching `impl-generate.yml` — production URLs are set from the start, `impl-merge.yml` promotes
 GCS files from staging to production on merge):
 
 - `preview_url`: `https://storage.googleapis.com/pyplots-images/plots/{spec_id}/{library}/plot.png`
-- `preview_thumb`: `https://storage.googleapis.com/pyplots-images/plots/{spec_id}/{library}/plot_thumb.png`
 
 #### 6f. Clean Up Preview Directory
 
@@ -637,8 +631,7 @@ Generate thumbnail and optimize:
 ```bash
 uv run python -m core.images process \
   plots/{SPEC_ID}/implementations/.update-preview/{LIBRARY}/plot.png \
-  plots/{SPEC_ID}/implementations/.update-preview/{LIBRARY}/plot.png \
-  plots/{SPEC_ID}/implementations/.update-preview/{LIBRARY}/plot_thumb.png
+  plots/{SPEC_ID}/implementations/.update-preview/{LIBRARY}/plot.png
 ```
 
 ### Step 7: Quality Evaluation & Local Repair Loop

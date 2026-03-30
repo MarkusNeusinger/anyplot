@@ -15,7 +15,6 @@ class ImplementationResponse(BaseModel):
     library_id: str
     library_name: str
     preview_url: str | None = None
-    preview_thumb: str | None = None
     preview_html: str | None = None
     quality_score: float | None = None
     code: str | None = None
@@ -66,7 +65,6 @@ class ImageResponse(BaseModel):
     spec_id: str
     library: str
     url: str | None = None
-    thumb: str | None = None
     html: str | None = None
     code: str | None = None
 
@@ -93,7 +91,7 @@ class FilteredPlotsResponse(BaseModel):
     """Response for filtered plots endpoint."""
 
     total: int
-    images: list[dict[str, Any]]  # Image dicts with spec_id, library, url, thumb, etc.
+    images: list[dict[str, Any]]  # Image dicts with spec_id, library, url, etc.
     counts: dict[str, dict[str, int]]  # Category -> value -> count
     globalCounts: dict[str, dict[str, int]]  # Same structure for global counts
     orCounts: list[dict[str, int]]  # Per-group OR counts

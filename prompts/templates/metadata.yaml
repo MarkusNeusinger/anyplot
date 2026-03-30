@@ -18,8 +18,7 @@ python_version: null   # e.g., "3.13.4"
 library_version: null  # e.g., "3.9.0"
 
 # Preview URLs (GCS, filled by workflow)
-preview_url: null      # Full PNG
-preview_thumb: null    # Thumbnail PNG
+preview_url: null      # Full PNG (responsive variants derived by convention)
 preview_html: null     # Interactive HTML (plotly, bokeh, altair, etc.)
 
 # Quality score (0-100, filled by impl-review)

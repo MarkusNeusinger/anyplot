@@ -32,7 +32,6 @@ IMPL_UPDATABLE_FIELDS = frozenset(
     {
         "code",
         "preview_url",
-        "preview_thumb",
         "preview_html",
         "python_version",
         "library_version",

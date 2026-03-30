@@ -327,7 +327,6 @@ def scan_plot_directory(plot_dir: Path) -> dict | None:
                     "code": code,
                     # Preview URLs (from metadata YAML, filled by workflow)
                     "preview_url": impl_meta.get("preview_url"),
-                    "preview_thumb": impl_meta.get("preview_thumb"),
                     "preview_html": impl_meta.get("preview_html"),
                     # Versions (from metadata YAML, filled by workflow)
                     "python_version": current.get("python_version") or impl_meta.get("python_version"),
@@ -371,7 +370,6 @@ _BATCH_CHUNK_SIZE = 500
 _IMPL_UPDATE_FIELDS = [
     "code",
     "preview_url",
-    "preview_thumb",
     "preview_html",
     "python_version",
     "library_version",

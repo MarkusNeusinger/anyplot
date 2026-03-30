@@ -66,7 +66,6 @@ The pyplots API is a **FastAPI-based REST API** serving plot data to the fronten
       "library_id": "matplotlib",
       "library_name": "Matplotlib",
       "preview_url": "https://storage.googleapis.com/pyplots-images/plots/scatter-basic/matplotlib/plot.png",
-      "preview_thumb": "https://storage.googleapis.com/pyplots-images/plots/scatter-basic/matplotlib/plot_thumb.png",
       "preview_html": null,
       "quality_score": 92.0,
       "code": "import matplotlib.pyplot as plt...",
@@ -98,7 +97,6 @@ The pyplots API is a **FastAPI-based REST API** serving plot data to the fronten
     {
       "library": "matplotlib",
       "url": "https://storage.googleapis.com/.../plot.png",
-      "thumb": "https://storage.googleapis.com/.../plot_thumb.png",
       "html": null
     }
   ]
@@ -143,7 +141,6 @@ The pyplots API is a **FastAPI-based REST API** serving plot data to the fronten
       "spec_id": "scatter-basic",
       "library": "matplotlib",
       "url": "https://storage.googleapis.com/.../plot.png",
-      "thumb": "https://storage.googleapis.com/.../plot_thumb.png",
       "html": null,
       "code": "import matplotlib.pyplot as plt..."
     }
@@ -191,7 +188,6 @@ The pyplots API is a **FastAPI-based REST API** serving plot data to the fronten
       "library": "matplotlib",
       "quality": 92,
       "url": "https://storage.googleapis.com/.../plot.png",
-      "thumb": "https://storage.googleapis.com/.../plot_thumb.png",
       "html": null
     }
   ],

@@ -68,15 +68,24 @@ def _get_http_client() -> httpx.AsyncClient:
     global _http_client
     if _http_client is None or _http_client.is_closed:
         _http_client = httpx.AsyncClient(
-            timeout=30.0,
-            limits=httpx.Limits(max_connections=10, max_keepalive_connections=5),
+            timeout=30.0, limits=httpx.Limits(max_connections=10, max_keepalive_connections=5)
         )
     return _http_client
 
 
 async def _fetch_image(url: str) -> bytes:
-    """Fetch an image from a URL using the shared HTTP client."""
-    response = await _get_http_client().get(url)
+    """Fetch an image from a URL, trying the 800px variant first for efficiency."""
+    client = _get_http_client()
+    # Prefer smaller responsive variant for OG collage (each slot is ~400px wide)
+    if url and url.endswith("/plot.png"):
+        small_url = url.replace("/plot.png", "/plot_800.png")
+        try:
+            response = await client.get(small_url)
+            response.raise_for_status()
+            return response.content
+        except Exception:
+            pass  # Fall back to original
+    response = await client.get(url)
     response.raise_for_status()
     return response.content
 
@@ -167,10 +176,8 @@ async def get_spec_collage_image(
     selected_impls = sorted_impls[:6]
 
     try:
-        # Fetch all images in parallel — prefer thumbnails (smaller, faster)
-        images = list(
-            await asyncio.gather(*[_fetch_image(impl.preview_thumb or impl.preview_url) for impl in selected_impls])
-        )
+        # Fetch all images in parallel
+        images = list(await asyncio.gather(*[_fetch_image(impl.preview_url) for impl in selected_impls]))
         labels = [f"{spec_id} · {impl.library_id}" for impl in selected_impls]
 
         # Create collage

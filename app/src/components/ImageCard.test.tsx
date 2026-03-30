@@ -37,17 +37,10 @@ describe('ImageCard', () => {
     expect(screen.getByText('matplotlib')).toBeInTheDocument();
   });
 
-  it('renders the plot image', () => {
+  it('renders the plot image with responsive fallback src', () => {
     render(<ImageCard {...defaultProps} />);
     const img = screen.getByRole('img');
-    expect(img).toHaveAttribute('src', 'https://example.com/plot.png');
-  });
-
-  it('uses thumb URL when available', () => {
-    const imageWithThumb = { ...baseImage, thumb: 'https://example.com/thumb.png' };
-    render(<ImageCard {...defaultProps} image={imageWithThumb} />);
-    const img = screen.getByRole('img');
-    expect(img).toHaveAttribute('src', 'https://example.com/thumb.png');
+    expect(img).toHaveAttribute('src', 'https://example.com/plot_800.png');
   });
 
   it('calls onClick when card is clicked', async () => {

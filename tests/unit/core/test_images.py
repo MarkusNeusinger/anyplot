@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 from PIL import Image
 
-from core.images import create_thumbnail, optimize_png, process_plot_image
+from core.images import create_responsive_variants, create_thumbnail, optimize_png, process_plot_image
 
 
 @pytest.fixture
@@ -282,6 +282,108 @@ class TestImageFormats:
 
         assert width == 400
         assert height == 300  # Maintains 4:3 ratio
+
+
+class TestCreateResponsiveVariants:
+    """Tests for create_responsive_variants function."""
+
+    def test_creates_all_variants(self, sample_image: Path, tmp_path: Path) -> None:
+        """Should create all 7 responsive variants."""
+        output_dir = tmp_path / "variants"
+        results = create_responsive_variants(sample_image, output_dir, optimize=False)
+
+        # 800px source: only 400px sized variant is smaller, so 2 formats for 400 + full webp = 3
+        # Actually 800 >= 800 so 800 is skipped, 1200 >= 800 so skipped too, only 400 < 800
+        expected_files = {"plot_400.png", "plot_400.webp", "plot.webp"}
+        actual_files = {f.name for f in output_dir.iterdir()}
+        assert actual_files == expected_files
+        assert len(results) == 3
+
+    def test_creates_all_sizes_for_large_image(self, tmp_path: Path) -> None:
+        """Should create all sized variants when source is large enough."""
+        img_path = tmp_path / "large.png"
+        Image.new("RGB", (4000, 3000), color=(100, 150, 200)).save(img_path)
+
+        output_dir = tmp_path / "variants"
+        results = create_responsive_variants(img_path, output_dir, optimize=False)
+
+        expected_files = {
+            "plot_1200.png",
+            "plot_1200.webp",
+            "plot_800.png",
+            "plot_800.webp",
+            "plot_400.png",
+            "plot_400.webp",
+            "plot.webp",
+        }
+        actual_files = {f.name for f in output_dir.iterdir()}
+        assert actual_files == expected_files
+        assert len(results) == 7
+
+    def test_correct_dimensions(self, tmp_path: Path) -> None:
+        """Resized variants should have correct width and maintained aspect ratio."""
+        img_path = tmp_path / "plot.png"
+        Image.new("RGB", (2000, 1000), color=(50, 100, 150)).save(img_path)
+
+        output_dir = tmp_path / "variants"
+        create_responsive_variants(img_path, output_dir, optimize=False)
+
+        img_800 = Image.open(output_dir / "plot_800.png")
+        assert img_800.width == 800
+        assert img_800.height == 400  # 2:1 ratio maintained
+
+        img_400 = Image.open(output_dir / "plot_400.png")
+        assert img_400.width == 400
+        assert img_400.height == 200
+
+    def test_webp_variants_created(self, tmp_path: Path) -> None:
+        """WebP variants should be valid WebP files."""
+        img_path = tmp_path / "plot.png"
+        Image.new("RGB", (2000, 1000), color=(50, 100, 150)).save(img_path)
+
+        output_dir = tmp_path / "variants"
+        create_responsive_variants(img_path, output_dir, optimize=False)
+
+        webp = Image.open(output_dir / "plot_800.webp")
+        assert webp.format == "WEBP"
+        assert webp.width == 800
+
+        full_webp = Image.open(output_dir / "plot.webp")
+        assert full_webp.format == "WEBP"
+        assert full_webp.width == 2000
+
+    def test_skips_sizes_larger_than_source(self, tmp_path: Path) -> None:
+        """Should not create variants larger than the source image."""
+        img_path = tmp_path / "small.png"
+        Image.new("RGB", (500, 300), color=(100, 100, 100)).save(img_path)
+
+        output_dir = tmp_path / "variants"
+        create_responsive_variants(img_path, output_dir, optimize=False)
+
+        # 500px source: only 400 < 500, so 400 variants + full webp
+        filenames = {f.name for f in output_dir.iterdir()}
+        assert "plot_1200.png" not in filenames
+        assert "plot_800.png" not in filenames
+        assert "plot_400.png" in filenames
+        assert "plot.webp" in filenames
+
+    def test_handles_rgba_input(self, tmp_path: Path) -> None:
+        """Should convert RGBA images to RGB."""
+        img_path = tmp_path / "rgba.png"
+        Image.new("RGBA", (2000, 1000), color=(100, 150, 200, 128)).save(img_path)
+
+        output_dir = tmp_path / "variants"
+        results = create_responsive_variants(img_path, output_dir, optimize=False)
+
+        assert len(results) > 0
+        img = Image.open(output_dir / "plot_800.png")
+        assert img.mode == "RGB"
+
+    def test_creates_output_dir(self, sample_image: Path, tmp_path: Path) -> None:
+        """Should create output directory if it doesn't exist."""
+        output_dir = tmp_path / "new" / "nested" / "dir"
+        create_responsive_variants(sample_image, output_dir, optimize=False)
+        assert output_dir.exists()
 
 
 class TestCLI:

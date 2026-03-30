@@ -18,7 +18,7 @@ from api.routers.plots import (
     _image_matches_groups,
 )
 from core.database import get_db
-from tests.conftest import TEST_IMAGE_URL, TEST_THUMB_URL
+from tests.conftest import TEST_IMAGE_URL
 
 
 # Path to patch is_db_configured - it's now in api.dependencies
@@ -72,7 +72,6 @@ def mock_spec():
     mock_impl.library = MagicMock()
     mock_impl.library.name = "Matplotlib"
     mock_impl.preview_url = TEST_IMAGE_URL
-    mock_impl.preview_thumb = TEST_THUMB_URL
     mock_impl.preview_html = None
     mock_impl.quality_score = 92.5
     mock_impl.code = "import matplotlib.pyplot as plt"
@@ -874,7 +873,6 @@ class TestPlotsRouter:
         mock_impl2 = MagicMock()
         mock_impl2.library_id = "seaborn"
         mock_impl2.preview_url = TEST_IMAGE_URL
-        mock_impl2.preview_thumb = TEST_THUMB_URL
         mock_impl2.preview_html = None
         mock_impl2.quality_score = 85.0
         mock_impl2.impl_tags = {}
@@ -901,7 +899,6 @@ class TestPlotsRouter:
         mock_impl2 = MagicMock()
         mock_impl2.library_id = "seaborn"
         mock_impl2.preview_url = TEST_IMAGE_URL
-        mock_impl2.preview_thumb = TEST_THUMB_URL
         mock_impl2.preview_html = None
         mock_impl2.quality_score = 85.0
         mock_impl2.impl_tags = {}
@@ -927,14 +924,12 @@ class TestPlotsRouter:
         mock_impl2 = MagicMock()
         mock_impl2.library_id = "seaborn"
         mock_impl2.preview_url = TEST_IMAGE_URL
-        mock_impl2.preview_thumb = TEST_THUMB_URL
         mock_impl2.preview_html = None
         mock_impl2.quality_score = 85.0
         mock_impl2.impl_tags = {}
         mock_impl3 = MagicMock()
         mock_impl3.library_id = "plotly"
         mock_impl3.preview_url = TEST_IMAGE_URL
-        mock_impl3.preview_thumb = TEST_THUMB_URL
         mock_impl3.preview_html = None
         mock_impl3.quality_score = 80.0
         mock_impl3.impl_tags = {}

@@ -3,7 +3,6 @@
 export interface PlotImage {
   library: string;
   url: string;
-  thumb?: string;
   html?: string;
   code?: string;
   spec_id?: string;
@@ -118,7 +117,6 @@ export interface Implementation {
   library_id: string;
   library_name: string;
   preview_url: string;
-  preview_thumb?: string;
   preview_html?: string;
   quality_score: number | null;
   code: string | null;

@@ -159,13 +159,15 @@ jobs:
 
           source .venv/bin/activate
 
-          # Process PNG: optimize and create thumbnail
+          # Optimize PNG and generate responsive variants
           python -m core.images process \
             "$IMPL_DIR/plot.png" \
+            "$IMPL_DIR/plot.png"
+          python -m core.images responsive \
             "$IMPL_DIR/plot.png" \
-            "$IMPL_DIR/plot_thumb.png"
+            "$IMPL_DIR/"
 
-          echo "::notice::Processed images: optimized + thumbnail created"
+          echo "::notice::Processed images: optimized + responsive variants created"
           ls -la "$IMPL_DIR/"
 
       - name: Upload repaired plot to GCS staging
@@ -186,14 +188,10 @@ jobs:
           echo "$GCS_CREDENTIALS" > /tmp/gcs-key.json
           gcloud auth activate-service-account --key-file=/tmp/gcs-key.json
 
+          # Upload all plot images (original + responsive variants)
           if [ -f "$IMPL_DIR/plot.png" ]; then
-            gsutil -h "Cache-Control:public, max-age=604800" cp "$IMPL_DIR/plot.png" "${STAGING_PATH}/plot.png"
-            gsutil acl ch -u AllUsers:R "${STAGING_PATH}/plot.png" 2>/dev/null || true
-          fi
-
-          if [ -f "$IMPL_DIR/plot_thumb.png" ]; then
-            gsutil -h "Cache-Control:public, max-age=604800" cp "$IMPL_DIR/plot_thumb.png" "${STAGING_PATH}/plot_thumb.png"
-            gsutil acl ch -u AllUsers:R "${STAGING_PATH}/plot_thumb.png" 2>/dev/null || true
+            gsutil -m -h "Cache-Control:public, max-age=604800" cp "$IMPL_DIR"/plot*.png "$IMPL_DIR"/plot*.webp "${STAGING_PATH}/"
+            gsutil -m acl ch -u AllUsers:R "${STAGING_PATH}/plot*" 2>/dev/null || true
           fi
 
           if [ -f "$IMPL_DIR/plot.html" ]; then

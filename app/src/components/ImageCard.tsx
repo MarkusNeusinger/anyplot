@@ -1,7 +1,6 @@
 import { memo, useState, useCallback } from 'react';
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
-import CardMedia from '@mui/material/CardMedia';
 import Typography from '@mui/material/Typography';
 import Tooltip from '@mui/material/Tooltip';
 import Link from '@mui/material/Link';
@@ -15,6 +14,7 @@ import { useTheme } from '@mui/material/styles';
 import type { PlotImage } from '../types';
 import { BATCH_SIZE, type ImageSize } from '../constants';
 import { useCodeFetch } from '../hooks';
+import { buildSrcSet, getResponsiveSizes, getFallbackSrc } from '../utils/responsiveImage';
 
 // Library abbreviations for compact mode
 const LIBRARY_ABBR: Record<string, string> = {
@@ -147,23 +147,50 @@ export const ImageCard = memo(function ImageCard({
           },
         }}
       >
-        <CardMedia
-          component="img"
-          loading={index < BATCH_SIZE ? 'eager' : 'lazy'}
-          fetchPriority={index === 0 ? 'high' : undefined}
-          image={image.thumb || image.url}
-          alt={viewMode === 'library' ? `${image.spec_id} - ${image.library}` : `${selectedSpec} - ${image.library}`}
+        <Box
+          component="picture"
           sx={{
+            display: 'block',
             width: '100%',
             aspectRatio: '16 / 10',
-            objectFit: 'contain',
             bgcolor: '#fff',
           }}
-          onError={(e) => {
-            const target = e.target as HTMLImageElement;
-            target.style.display = 'none';
-          }}
-        />
+        >
+          <source
+            type="image/webp"
+            srcSet={buildSrcSet(image.url, 'webp')}
+            sizes={getResponsiveSizes(imageSize)}
+          />
+          <source
+            type="image/png"
+            srcSet={buildSrcSet(image.url, 'png')}
+            sizes={getResponsiveSizes(imageSize)}
+          />
+          <Box
+            component="img"
+            loading={index < BATCH_SIZE ? 'eager' : 'lazy'}
+            fetchPriority={index === 0 ? 'high' : undefined}
+            src={getFallbackSrc(image.url)}
+            alt={viewMode === 'library' ? `${image.spec_id} - ${image.library}` : `${selectedSpec} - ${image.library}`}
+            width={800}
+            height={500}
+            sx={{
+              width: '100%',
+              aspectRatio: '16 / 10',
+              objectFit: 'contain',
+            }}
+            onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
+              const target = e.target as HTMLImageElement;
+              // Fallback to original plot.png if responsive variant not available
+              if (!target.dataset.fallback) {
+                target.dataset.fallback = '1';
+                target.src = image.url;
+              } else {
+                target.style.display = 'none';
+              }
+            }}
+          />
+        </Box>
         {/* Copy button - appears on hover */}
         <IconButton
           onClick={handleCopyCode}

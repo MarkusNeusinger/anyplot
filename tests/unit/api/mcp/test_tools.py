@@ -41,7 +41,6 @@ def mock_spec():
     mock_impl.library.name = "Matplotlib"
     mock_impl.code = "import matplotlib.pyplot as plt"
     mock_impl.preview_url = "https://example.com/plot.png"
-    mock_impl.preview_thumb = "https://example.com/plot_thumb.png"
     mock_impl.preview_html = None
     mock_impl.quality_score = 92
     mock_impl.created = None
