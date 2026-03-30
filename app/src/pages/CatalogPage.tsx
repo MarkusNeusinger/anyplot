@@ -264,9 +264,8 @@ export function CatalogPage() {
                         component="img"
                         src={getFallbackSrc(currentImage.url)}
                         alt={spec.title}
-                        width={800}
-                        height={500}
                         sx={{
+                          display: 'block',
                           width: '100%',
                           height: '100%',
                           objectFit: 'cover',

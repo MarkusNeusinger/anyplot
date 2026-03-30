@@ -105,9 +105,8 @@ export function SpecDetailView({
               src={`${currentImpl.preview_url.replace(/\.png$/, '')}_1200.png`}
               alt={`${specTitle} - ${selectedLibrary}`}
               onLoad={onImageLoad}
-              width={1200}
-              height={750}
               sx={{
+                display: 'block',
                 width: '100%',
                 height: '100%',
                 objectFit: 'contain',

@@ -164,9 +164,8 @@ export const ImageCard = memo(function ImageCard({
             fetchPriority={index === 0 ? 'high' : undefined}
             src={getFallbackSrc(image.url)}
             alt={viewMode === 'library' ? `${image.spec_id} - ${image.library}` : `${selectedSpec} - ${image.library}`}
-            width={800}
-            height={500}
             sx={{
+              display: 'block',
               width: '100%',
               aspectRatio: '16 / 10',
               objectFit: 'contain',

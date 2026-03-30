@@ -158,9 +158,8 @@ function ImplementationCard({
               component="img"
               src={`${impl.preview_url.replace(/\.png$/, '')}_800.png`}
               alt={`${specTitle} - ${impl.library_id}`}
-              width={800}
-              height={500}
               sx={{
+                display: 'block',
                 width: '100%',
                 aspectRatio: '16/10',
                 objectFit: 'contain',
