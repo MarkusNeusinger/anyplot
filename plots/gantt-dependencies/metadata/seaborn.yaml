@@ -8,7 +8,6 @@ issue: 3830
 python_version: '3.14'
 library_version: 0.13.2
 preview_url: https://storage.googleapis.com/pyplots-images/plots/gantt-dependencies/seaborn/plot.png
-preview_thumb: https://storage.googleapis.com/pyplots-images/plots/gantt-dependencies/seaborn/plot_thumb.png
 preview_html: null
 quality_score: 89
 review:

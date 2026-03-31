@@ -8,7 +8,6 @@ issue: 4407
 python_version: 3.14.3
 library_version: 0.15.3
 preview_url: https://storage.googleapis.com/pyplots-images/plots/titration-curve/plotnine/plot.png
-preview_thumb: https://storage.googleapis.com/pyplots-images/plots/titration-curve/plotnine/plot_thumb.png
 preview_html: null
 quality_score: 93
 review:

@@ -8,7 +8,6 @@ issue: 4553
 python_version: 3.14.3
 library_version: 3.9.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/curve-oc/bokeh/plot.png
-preview_thumb: https://storage.googleapis.com/pyplots-images/plots/curve-oc/bokeh/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/curve-oc/bokeh/plot.html
 quality_score: 90
 review:

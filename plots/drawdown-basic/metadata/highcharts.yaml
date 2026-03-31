@@ -8,7 +8,6 @@ issue: 3752
 python_version: 3.13.11
 library_version: unknown
 preview_url: https://storage.googleapis.com/pyplots-images/plots/drawdown-basic/highcharts/plot.png
-preview_thumb: https://storage.googleapis.com/pyplots-images/plots/drawdown-basic/highcharts/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/drawdown-basic/highcharts/plot.html
 quality_score: 91
 review:

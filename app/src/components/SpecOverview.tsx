@@ -18,7 +18,7 @@ import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import CheckIcon from '@mui/icons-material/Check';
 
 import type { Implementation } from '../types';
-import { buildSrcSet } from '../utils/responsiveImage';
+import { buildSrcSet, OVERVIEW_SIZES } from '../utils/responsiveImage';
 
 interface LibraryMeta {
   id: string;
@@ -147,12 +147,12 @@ function ImplementationCard({
             <source
               type="image/webp"
               srcSet={buildSrcSet(impl.preview_url, 'webp')}
-              sizes="(max-width: 600px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              sizes={OVERVIEW_SIZES}
             />
             <source
               type="image/png"
               srcSet={buildSrcSet(impl.preview_url, 'png')}
-              sizes="(max-width: 600px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              sizes={OVERVIEW_SIZES}
             />
             <Box
               component="img"

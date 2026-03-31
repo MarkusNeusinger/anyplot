@@ -8,7 +8,6 @@ issue: 3830
 python_version: '3.14'
 library_version: 1.10.3
 preview_url: https://storage.googleapis.com/pyplots-images/plots/gantt-dependencies/highcharts/plot.png
-preview_thumb: https://storage.googleapis.com/pyplots-images/plots/gantt-dependencies/highcharts/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/gantt-dependencies/highcharts/plot.html
 quality_score: 91
 review:

@@ -8,7 +8,6 @@ issue: 4561
 python_version: 3.14.3
 library_version: 4.9.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/eye-diagram-basic/letsplot/plot.png
-preview_thumb: https://storage.googleapis.com/pyplots-images/plots/eye-diagram-basic/letsplot/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/eye-diagram-basic/letsplot/plot.html
 quality_score: 91
 review:

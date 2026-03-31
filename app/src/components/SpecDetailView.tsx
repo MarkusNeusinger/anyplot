@@ -15,7 +15,7 @@ import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import CheckIcon from '@mui/icons-material/Check';
 
 import type { Implementation } from '../types';
-import { buildSrcSet } from '../utils/responsiveImage';
+import { buildDetailSrcSet, DETAIL_SIZES } from '../utils/responsiveImage';
 
 interface SpecDetailViewProps {
   specId: string;
@@ -92,13 +92,13 @@ export function SpecDetailView({
           >
             <source
               type="image/webp"
-              srcSet={buildSrcSet(currentImpl.preview_url, 'webp')}
-              sizes="(max-width: 600px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              srcSet={buildDetailSrcSet(currentImpl.preview_url, 'webp')}
+              sizes={DETAIL_SIZES}
             />
             <source
               type="image/png"
-              srcSet={buildSrcSet(currentImpl.preview_url, 'png')}
-              sizes="(max-width: 600px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              srcSet={buildDetailSrcSet(currentImpl.preview_url, 'png')}
+              sizes={DETAIL_SIZES}
             />
             <Box
               component="img"

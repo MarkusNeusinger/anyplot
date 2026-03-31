@@ -8,7 +8,7 @@ import Fab from '@mui/material/Fab';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 
 import { API_URL, GITHUB_URL } from '../constants';
-import { buildSrcSet, getFallbackSrc } from '../utils/responsiveImage';
+import { buildSrcSet, getFallbackSrc, CATALOG_SIZES } from '../utils/responsiveImage';
 import { useAnalytics } from '../hooks';
 import { useAppData, useHomeState } from '../hooks';
 import { Breadcrumb, Footer } from '../components';
@@ -253,12 +253,12 @@ export function CatalogPage() {
                       <source
                         type="image/webp"
                         srcSet={buildSrcSet(currentImage.url, 'webp')}
-                        sizes="(max-width: 600px) 50vw, 25vw"
+                        sizes={CATALOG_SIZES}
                       />
                       <source
                         type="image/png"
                         srcSet={buildSrcSet(currentImage.url, 'png')}
-                        sizes="(max-width: 600px) 50vw, 25vw"
+                        sizes={CATALOG_SIZES}
                       />
                       <Box
                         component="img"

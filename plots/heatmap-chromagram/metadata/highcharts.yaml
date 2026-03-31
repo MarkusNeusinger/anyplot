@@ -8,7 +8,6 @@ issue: 4564
 python_version: 3.14.3
 library_version: unknown
 preview_url: https://storage.googleapis.com/pyplots-images/plots/heatmap-chromagram/highcharts/plot.png
-preview_thumb: https://storage.googleapis.com/pyplots-images/plots/heatmap-chromagram/highcharts/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/heatmap-chromagram/highcharts/plot.html
 quality_score: 92
 review:

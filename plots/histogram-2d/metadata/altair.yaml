@@ -8,7 +8,6 @@ issue: 2012
 python_version: 3.13.11
 library_version: 6.0.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/histogram-2d/altair/plot.png
-preview_thumb: https://storage.googleapis.com/pyplots-images/plots/histogram-2d/altair/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/histogram-2d/altair/plot.html
 quality_score: 91
 impl_tags:

@@ -8,7 +8,6 @@ issue: 0
 python_version: 3.13.11
 library_version: 3.8.1
 preview_url: https://storage.googleapis.com/pyplots-images/plots/bar-error/bokeh/plot.png
-preview_thumb: https://storage.googleapis.com/pyplots-images/plots/bar-error/bokeh/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/bar-error/bokeh/plot.html
 quality_score: 92
 impl_tags:

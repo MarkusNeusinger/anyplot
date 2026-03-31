@@ -8,7 +8,6 @@ issue: 4414
 python_version: 3.14.3
 library_version: 3.1.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/root-locus-basic/pygal/plot.png
-preview_thumb: https://storage.googleapis.com/pyplots-images/plots/root-locus-basic/pygal/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/root-locus-basic/pygal/plot.html
 quality_score: 82
 review:

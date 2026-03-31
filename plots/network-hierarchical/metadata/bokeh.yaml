@@ -8,7 +8,6 @@ issue: 3343
 python_version: 3.13.11
 library_version: 3.8.2
 preview_url: https://storage.googleapis.com/pyplots-images/plots/network-hierarchical/bokeh/plot.png
-preview_thumb: https://storage.googleapis.com/pyplots-images/plots/network-hierarchical/bokeh/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/network-hierarchical/bokeh/plot.html
 quality_score: 90
 review:

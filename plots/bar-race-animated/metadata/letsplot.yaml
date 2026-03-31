@@ -8,7 +8,6 @@ issue: 3653
 python_version: 3.13.11
 library_version: 4.8.2
 preview_url: https://storage.googleapis.com/pyplots-images/plots/bar-race-animated/letsplot/plot.png
-preview_thumb: https://storage.googleapis.com/pyplots-images/plots/bar-race-animated/letsplot/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/bar-race-animated/letsplot/plot.html
 quality_score: 91
 review:

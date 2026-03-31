@@ -8,7 +8,6 @@ issue: 3756
 python_version: 3.13.11
 library_version: 6.0.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/map-tile-background/altair/plot.png
-preview_thumb: https://storage.googleapis.com/pyplots-images/plots/map-tile-background/altair/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/map-tile-background/altair/plot.html
 quality_score: 90
 review:

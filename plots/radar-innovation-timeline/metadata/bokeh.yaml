@@ -8,7 +8,6 @@ issue: 4301
 python_version: 3.14.3
 library_version: 3.8.2
 preview_url: https://storage.googleapis.com/pyplots-images/plots/radar-innovation-timeline/bokeh/plot.png
-preview_thumb: https://storage.googleapis.com/pyplots-images/plots/radar-innovation-timeline/bokeh/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/radar-innovation-timeline/bokeh/plot.html
 quality_score: 90
 review:

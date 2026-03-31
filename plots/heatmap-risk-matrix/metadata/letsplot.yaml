@@ -8,7 +8,6 @@ issue: 4567
 python_version: 3.14.3
 library_version: 4.9.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/heatmap-risk-matrix/letsplot/plot.png
-preview_thumb: https://storage.googleapis.com/pyplots-images/plots/heatmap-risk-matrix/letsplot/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/heatmap-risk-matrix/letsplot/plot.html
 quality_score: 80
 review:

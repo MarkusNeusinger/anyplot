@@ -92,7 +92,6 @@ class Impl(Base):
 
     # Previews (filled by workflow, synced from metadata YAML)
     preview_url: Mapped[Optional[str]] = mapped_column(String, nullable=True)  # Full PNG
-    preview_thumb: Mapped[Optional[str]] = mapped_column(String, nullable=True)  # Thumbnail PNG
     preview_html: Mapped[Optional[str]] = mapped_column(String, nullable=True)  # Interactive HTML
 
     # Creation versions (filled by workflow)

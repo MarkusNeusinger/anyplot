@@ -8,7 +8,6 @@ issue: 4429
 python_version: 3.14.3
 library_version: 4.8.2
 preview_url: https://storage.googleapis.com/pyplots-images/plots/bar-diverging-likert/letsplot/plot.png
-preview_thumb: https://storage.googleapis.com/pyplots-images/plots/bar-diverging-likert/letsplot/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/bar-diverging-likert/letsplot/plot.html
 quality_score: 92
 review:

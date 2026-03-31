@@ -8,7 +8,6 @@ issue: 0
 python_version: '3.14'
 library_version: 3.8.2
 preview_url: https://storage.googleapis.com/pyplots-images/plots/scatter-basic/bokeh/plot.png
-preview_thumb: https://storage.googleapis.com/pyplots-images/plots/scatter-basic/bokeh/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/scatter-basic/bokeh/plot.html
 quality_score: 94
 impl_tags:

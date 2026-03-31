@@ -8,7 +8,6 @@ issue: 3770
 python_version: 3.13.11
 library_version: 6.5.2
 preview_url: https://storage.googleapis.com/pyplots-images/plots/map-drilldown-geographic/plotly/plot.png
-preview_thumb: https://storage.googleapis.com/pyplots-images/plots/map-drilldown-geographic/plotly/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/map-drilldown-geographic/plotly/plot.html
 quality_score: 91
 review:

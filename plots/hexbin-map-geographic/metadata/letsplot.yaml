@@ -8,7 +8,6 @@ issue: 3767
 python_version: 3.13.11
 library_version: 4.8.2
 preview_url: https://storage.googleapis.com/pyplots-images/plots/hexbin-map-geographic/letsplot/plot.png
-preview_thumb: https://storage.googleapis.com/pyplots-images/plots/hexbin-map-geographic/letsplot/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/hexbin-map-geographic/letsplot/plot.html
 quality_score: 91
 review:

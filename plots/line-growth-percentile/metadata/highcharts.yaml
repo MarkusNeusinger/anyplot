@@ -8,7 +8,6 @@ issue: 4555
 python_version: 3.14.3
 library_version: unknown
 preview_url: https://storage.googleapis.com/pyplots-images/plots/line-growth-percentile/highcharts/plot.png
-preview_thumb: https://storage.googleapis.com/pyplots-images/plots/line-growth-percentile/highcharts/plot_thumb.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/line-growth-percentile/highcharts/plot.html
 quality_score: 91
 review:
