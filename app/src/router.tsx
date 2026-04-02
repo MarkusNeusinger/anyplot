@@ -17,6 +17,7 @@ const router = createBrowserRouter([
   {
     path: '/',
     element: <Layout />,
+    HydrateFallback: LazyFallback,
     children: [
       { index: true, element: <HomePage /> },
       { path: 'catalog', lazy: () => import('./pages/CatalogPage').then(m => ({ Component: m.CatalogPage, HydrateFallback: LazyFallback })) },
@@ -39,7 +40,7 @@ export function AppRouter() {
     <HelmetProvider>
       <ErrorBoundary>
         <AppDataProvider>
-          <RouterProvider router={router} fallbackElement={<LazyFallback />} />
+          <RouterProvider router={router} />
         </AppDataProvider>
       </ErrorBoundary>
     </HelmetProvider>

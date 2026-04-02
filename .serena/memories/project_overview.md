@@ -8,7 +8,7 @@ matplotlib, seaborn, plotly, bokeh, altair, plotnine, pygal, highcharts, lets-pl
 
 ## Tech Stack
 - **Backend**: Python 3.14+, FastAPI, SQLAlchemy async, asyncpg, PostgreSQL
-- **Frontend**: React 19, Vite 7, TypeScript 5, MUI 7, Emotion CSS-in-JS
+- **Frontend**: React 19, Vite 8, TypeScript 6, MUI 7, Emotion CSS-in-JS
 - **Package Managers**: uv (Python), yarn (frontend)
 - **Infrastructure**: Google Cloud Run, Cloud SQL, Cloud Storage (GCS)
 - **AI**: Claude (code generation, quality review, spec creation)

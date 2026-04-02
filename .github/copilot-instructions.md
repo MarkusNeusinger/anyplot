@@ -112,7 +112,7 @@ Examples: `scatter-basic`, `scatter-color-mapped`, `bar-grouped-horizontal`, `he
   - **`core/database/types.py`**: Custom SQLAlchemy types (PostgreSQL + SQLite compatibility)
   - **`core/database/repositories.py`**: Data access layer
 - **`api/`**: FastAPI backend (routers, schemas, dependencies, cache, analytics, MCP server)
-- **`app/`**: React frontend (React 19 + TypeScript 5 + Vite 7 + MUI 7)
+- **`app/`**: React frontend (React 19 + TypeScript 6 + Vite 8 + MUI 7)
 - **`agentic/`**: AI workflow layer (composable phases, prompt templates, runtime state)
 - **`automation/`**: CI/CD helper scripts (workflow_cli, label_manager, sync_to_postgres)
 - **`tests/unit/`**: Unit tests with mocked dependencies
@@ -213,7 +213,7 @@ plt.savefig('plot.png', dpi=300, bbox_inches='tight')
 ## Tech Stack
 
 - **Backend**: FastAPI, SQLAlchemy (async), PostgreSQL, Python 3.14+
-- **Frontend**: React 19, TypeScript 5, Vite 7, MUI 7
+- **Frontend**: React 19, TypeScript 6, Vite 8, MUI 7
 - **Package Manager**: uv (Python), yarn (Node.js)
 - **Linting**: Ruff (Python), ESLint (TypeScript)
 

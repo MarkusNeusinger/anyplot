@@ -163,7 +163,7 @@ Example: `plots/scatter-basic/` contains everything for the basic scatter plot.
   - **`core/database/types.py`**: Custom SQLAlchemy types (PostgreSQL + SQLite compatibility)
   - **`core/database/repositories.py`**: Data access layer
 - **`api/`**: FastAPI backend (routers, schemas, dependencies, cache, analytics, MCP server)
-- **`app/`**: React frontend (Vite 7 + TypeScript 5 + MUI 7)
+- **`app/`**: React frontend (Vite 8 + TypeScript 6 + MUI 7)
 - **`agentic/`**: AI workflow layer (composable phases, prompt templates, runtime state)
   - **`agentic/workflows/`**: Click CLI scripts (plan, build, test, review + orchestrators)
   - **`agentic/commands/`**: Markdown prompt templates
@@ -316,7 +316,7 @@ gs://pyplots-images/
 ## Tech Stack
 
 - **Backend**: FastAPI, SQLAlchemy (async), PostgreSQL, Python 3.14+
-- **Frontend**: React 19, Vite 7, TypeScript 5, MUI 7
+- **Frontend**: React 19, Vite 8, TypeScript 6, MUI 7
 - **Plotting**: matplotlib, seaborn, plotly, bokeh, altair, plotnine, pygal, highcharts, lets-plot
 - **Package Manager**: uv (fast Python installer)
 - **Infrastructure**: Google Cloud Run, Cloud SQL, Cloud Storage
