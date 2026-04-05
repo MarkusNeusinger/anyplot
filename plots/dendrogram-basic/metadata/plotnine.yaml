@@ -1,167 +1,184 @@
 library: plotnine
 specification_id: dendrogram-basic
 created: '2025-12-23T10:00:38Z'
-updated: '2025-12-23T10:06:36Z'
-generated_by: claude-opus-4-5-20251101
+updated: '2026-04-05T21:11:21Z'
+generated_by: claude-opus-4-6
 workflow_run: 20457534445
 issue: 0
-python_version: 3.13.11
-library_version: 0.15.2
+python_version: 3.14.3
+library_version: 0.15.3
 preview_url: https://storage.googleapis.com/pyplots-images/plots/dendrogram-basic/plotnine/plot.png
 preview_html: null
-quality_score: 91
+quality_score: 89
 impl_tags:
   dependencies:
   - scipy
-  techniques: []
+  - sklearn
+  techniques:
+  - annotations
+  - layer-composition
+  - custom-legend
   patterns:
-  - data-generation
+  - dataset-loading
   - iteration-over-groups
   dataprep:
   - hierarchical-clustering
-  styling: []
+  styling:
+  - grid-styling
 review:
   strengths:
-  - Excellent use of scipy dendrogram() with no_plot=True to extract coordinates,
-    then rendering with plotnine native geom_segment
-  - Clean two-color scheme using Python branding colors that distinguishes high-level
-    from low-level merges
-  - Proper 45-degree label rotation prevents overlap while maintaining readability
-  - Well-structured code following KISS principle with clear data generation for three
-    iris species
-  - Appropriate figure sizing (16x9) and font scaling for high-resolution output
+  - Excellent data storytelling with threshold annotation and species intermixing
+    note — creates immediate narrative
+  - Species-purity branch coloring is a sophisticated touch that adds real analytical
+    value
+  - Very idiomatic plotnine grammar of graphics usage with well-layered geoms
+  - Clean, polished visual design with custom palette, subtle grid, and styled legend
+  - Real iris dataset provides authentic scientific context
   weaknesses:
-  - Y-axis label could include units or clarify the distance metric more explicitly
-  - The color threshold logic (0.7 * max) is somewhat arbitrary and unexplained visually
-  - Bottom margin has extra whitespace due to rotated labels extending into the plot
-    area
-  image_description: 'The plot displays a hierarchical dendrogram visualizing clustering
-    of 15 iris flower samples (5 each of Setosa, Versicolor, and Virginica). The tree
-    structure uses a two-color scheme: Python Blue (#306998) for high-level merges
-    at the top and Python Yellow (#FFD43B) for lower-level merges. The Y-axis shows
-    "Distance (Ward)" ranging from 0 to 12, and the X-axis is labeled "Sample". Sample
-    labels are displayed at 45-degree angles at the bottom (e.g., Setosa-4, Setosa-3,
-    Versicolor-1, Virginica-1, etc.). The title reads "dendrogram-basic · plotnine
-    · pyplots.ai". The layout is clean with subtle dashed grid lines on the Y-axis.
-    The dendrogram correctly shows Setosa samples clustering together on the left,
-    while Versicolor and Virginica samples cluster on the right side, reflecting their
-    biological similarity.'
+  - Leaf label font size (13) is slightly below the recommended 16pt minimum for tick-level
+    text
+  - Title format prepends descriptive text before the standard {spec-id} · {library}
+    · pyplots.ai format
+  image_description: 'The plot shows a dendrogram (hierarchical clustering tree) of
+    15 iris flower samples on a light gray (#FAFAFA) background. The y-axis is labeled
+    "Ward Linkage Distance" ranging from 0 to ~11. Leaf labels at the bottom are rotated
+    45° showing sample names (Setosa-1 through Setosa-5, Virginica-3 through Virginica-5,
+    Versicolor-1 through Versicolor-5, Virginica-1, Virginica-2). Branches are color-coded:
+    blue (#306998) for pure Setosa clusters, orange (#E8833A) for pure Versicolor
+    clusters, green (#55A868) for pure Virginica clusters, and gray (#888888) for
+    mixed-species merges. A dashed horizontal threshold line at ~4.5 is annotated
+    with "Setosa separates" in italic gray text. Above it, "Versicolor & Virginica
+    intermixed" annotation adds context. Merge node dots appear at cluster join points.
+    A legend on the right shows "Branch Type" with four categories. The title reads
+    "Iris Species Clustering · dendrogram-basic · plotnine · pyplots.ai" in bold,
+    with a subtitle describing the method.'
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 28
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 7
+        max: 8
         passed: true
-        comment: Title at 24pt, axis labels at 20pt, tick labels at 16pt, all perfectly
-          readable
+        comment: Font sizes explicitly set (title 24pt, axis title 20pt, ticks 16pt).
+          Leaf labels at size 13 slightly below 16pt guideline but readable.
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text, labels are well-spaced with 45-degree rotation
+        comment: No overlapping text. Rotated leaf labels well-spaced, annotations
+          don't collide.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Dendrogram branches clearly visible with size=1.8
+        comment: Segments at size 2.2 clearly visible. Merge dots adequate but could
+          be slightly more prominent.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Blue/yellow color scheme is colorblind-safe
+        comment: Blue/orange/green/gray palette is colorblind-safe with good contrast.
       - id: VQ-05
-        name: Layout Balance
-        score: 3
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Good proportions but slight extra whitespace at bottom due to label
-          rotation
+        comment: Good 16:9 proportions, plot fills canvas well, legend positioned
+          cleanly.
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Y-axis has descriptive label with method "Distance (Ward)" but no
-          units; X-axis just "Sample"
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
-        max: 2
+        comment: Y-axis 'Ward Linkage Distance' is descriptive. X-axis intentionally
+          blank with sample names as labels.
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
         passed: true
-        comment: Grid is subtle with alpha=0.3 and dashed style; no legend needed
-          but color meaning unexplained
+        comment: 'Custom color palette, #FAFAFA background, styled legend with border.
+          Clearly above defaults.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: theme_minimal removes spines, subtle y-grid (alpha=0.2), custom background,
+          generous whitespace.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Threshold annotation and intermixing note create clear narrative.
+          Color-coded branches guide viewer.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 14
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct dendrogram/hierarchical clustering visualization
+        comment: Correct dendrogram showing hierarchical clustering tree.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Branch heights correctly represent merge distances
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Shows hierarchical structure, merge distances, labeled leaves
-      - id: SC-04
-        name: Data Range
+        comment: Ward's method, proportional branch heights, species-colored branches,
+          labeled leaves.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis shows full range of distances
-      - id: SC-05
-        name: Legend Accuracy
+        comment: X positions from dendrogram coords, Y shows linkage distance. All
+          15 samples visible.
+      - id: SC-04
+        name: Title & Legend
         score: 2
-        max: 2
+        max: 3
         passed: true
-        comment: No legend needed; color distinction is decorative
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correctly uses "dendrogram-basic · plotnine · pyplots.ai"
+        comment: Title contains required elements but prepends descriptive text. Legend
+          labels are correct.
     data_quality:
-      score: 18
-      max: 20
+      score: 14
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Shows species clustering well; could show more variation in merge
-          heights within species
+        comment: Shows pure and mixed clusters at different distance levels. Clear
+          Setosa separation vs Versicolor/Virginica intermixing.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Iris flower classification is a classic, realistic ML scenario
+        comment: Real iris dataset from sklearn — classic, neutral, scientific dataset.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Ward distances are reasonable; values make sense for normalized data
+        comment: Ward linkage distances realistic for iris measurements.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -169,41 +186,49 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → linkage → plot → save'
+        comment: 'Linear flow: imports → data → clustering → coordinate extraction
+          → plot → save.'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) set for sample selection.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used, no unused imports.
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-structured, appropriate complexity. Height-to-merge mapping
+          is clean.
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current plotnine API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Missing bbox_inches equivalent for tight layout
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot.png with dpi=300 and bbox_inches='tight'.
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Excellent ggplot grammar: layered geoms, aes mappings, scale_color_manual,
+          coord_cartesian, guide_legend.'
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Good use of geom_segment, geom_text, theme customization, and scale_color_manual.
-          However, relies heavily on scipy for dendrogram coordinates rather than
-          showcasing more plotnine-specific grammar of graphics features.
-  verdict: APPROVED
+        comment: pd.Categorical for legend ordering, guide_legend with override_aes,
+          annotate(), show_legend=False — distinctly plotnine patterns.
+  verdict: REJECTED
