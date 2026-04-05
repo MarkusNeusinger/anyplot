@@ -1,7 +1,7 @@
 library: altair
 specification_id: dendrogram-basic
 created: '2025-12-23T10:01:58Z'
-updated: '2026-04-05T20:52:26Z'
+updated: '2026-04-05T21:01:34Z'
 generated_by: claude-opus-4-6
 workflow_run: 20457533018
 issue: 0
@@ -9,15 +9,15 @@ python_version: 3.14.3
 library_version: 6.0.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/dendrogram-basic/altair/plot.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/dendrogram-basic/altair/plot.html
-quality_score: 83
+quality_score: 87
 impl_tags:
   dependencies:
   - scipy
   - sklearn
   techniques:
   - hover-tooltips
-  - custom-legend
   - layer-composition
+  - custom-legend
   - html-export
   patterns:
   - dataset-loading
@@ -29,97 +29,103 @@ impl_tags:
   - edge-highlighting
 review:
   strengths:
-  - Excellent cluster-based branch coloring that visually communicates the hierarchical
-    grouping structure
-  - Interactive legend selection allowing species-level focus is a distinctive Altair
-    feature
-  - Proper use of scipy dendrogram with no_plot=True for data extraction then faithful
-    Altair rendering
-  - Clean species-colored leaf markers with white stroke for visual separation
-  - Threshold reference line with label adds interpretive context
+  - Excellent cluster-based branch coloring that propagates through the linkage hierarchy
+    — makes species groupings immediately visible
+  - Interactive legend selection (click to highlight species) leverages Altair declarative
+    interactivity
+  - Threshold reference line with annotation adds interpretive context
+  - Clean, well-structured code that handles the complexity of building a dendrogram
+    from scratch in Altair
+  - Real Iris dataset provides meaningful, neutral scientific context
   weaknesses:
-  - Leaf label font size (13pt) is too small for the canvas size — should be at least
-    15-16pt
-  - Some leaf labels in the middle section overlap due to density and rotation angle
-  - Bottom margin is tight for the rotated leaf labels
-  image_description: 'The plot shows a dendrogram of 15 iris flower samples (5 each
-    of Setosa, Versicolor, Virginica) clustered using Ward''s method. Branches are
-    colored by cluster assignment: blue (#306998) for Setosa, gold (#D4A017) for Versicolor/Virginica
-    sub-clusters, and gray (#888888) for the top-level merge connecting the two major
-    groups. A red dashed line at distance 5.0 marks the cluster threshold with an
-    italic "cluster threshold" label. Leaf labels are rotated at ~45 degrees, colored
-    by species, with filled circular markers at the base. The y-axis reads "Distance
-    (Ward''s method)" with subtle dashed gridlines. A legend on the right shows three
-    species with colored circles. Title reads "dendrogram-basic · altair · pyplots.ai"
-    in the top-left. The Setosa group clearly separates at a high distance (~10.3)
-    from the Versicolor/Virginica group, which itself splits around distance ~4.8.'
+  - Leaf label font size (13pt) is slightly small for the canvas dimensions — could
+    be 15-16pt
+  - Design could push further with background color, more dramatic spine treatment,
+    or annotation of key merge points
+  - Some lower-distance merges have very short line segments that are harder to distinguish
+  image_description: 'The plot displays a dendrogram of 15 iris flower samples clustered
+    using Ward''s linkage method. The tree structure shows branches colored by cluster
+    membership: blue (#306998) for Setosa (5 samples on the left), gold (#D4A017)
+    for Versicolor (5 samples in the middle), and purple (#7B68AE) for Virginica (5
+    samples on the right). Gray branches appear where mixed clusters merge at the
+    top (~10.3 distance). A dashed red horizontal line at distance 5.0 marks the cluster
+    threshold, labeled "cluster threshold" in italic red text. Leaf labels are rotated
+    ~315 degrees at the bottom, colored by species, with filled circular markers at
+    each leaf position. A subtitle reads "Ward''s linkage on Iris measurements — Setosa
+    separates clearly from Versicolor/Virginica". The y-axis shows "Distance (Ward''s
+    method)" from 0 to 12. A legend on the right identifies the three species with
+    colored dots. The overall layout is clean with subtle grid lines and no axis frame.'
   criteria_checklist:
     visual_quality:
-      score: 24
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set for title/axis/legend but leaf labels at
-          fontSize=13 are small for 4800px canvas
+        comment: Title 28pt, axis labels 18pt, axis title 22pt excellent. Leaf labels
+          at 13pt slightly small but readable.
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Leaf labels rotated at 315° but some overlap in dense middle section
+        comment: Leaf labels well-spaced with rotation. Minor tightness between some
+          adjacent labels.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Branch lines and leaf dots well-visible, threshold line could be
-          more prominent
+        comment: Branch lines at strokeWidth=2.5 clearly visible. Leaf dots distinctive.
+          Some short low-distance segments less prominent.
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Blue/gold/purple palette is colorblind-safe with good contrast
+        comment: Blue/gold/purple palette is colorblind-safe with good luminance contrast.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good canvas utilization but bottom leaf labels slightly cramped
+        comment: Plot fills canvas well at 1600x900. Legend positioned cleanly. Balanced
+          margins.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis 'Distance (Ward's method)' is descriptive with context
+        comment: Y-axis labeled Distance (Ward's method). X-axis appropriately unlabeled
+          for dendrogram.
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Custom cluster-based branch coloring, coordinated palette, above
-          defaults but not publication-level
+        comment: Custom palette, cluster-based branch coloring, threshold line, subtitle
+          narrative. Above defaults.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: View stroke removed, subtle grid, custom legend styling
+        comment: View stroke removed, subtle grid, custom legend styling. Good but
+          could push further.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Cluster coloring creates visual hierarchy, threshold line adds interpretive
-          context
+        comment: Subtitle communicates key insight. Cluster coloring and threshold
+          line guide interpretation.
     spec_compliance:
       score: 15
       max: 15
@@ -129,26 +135,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct dendrogram with hierarchical tree structure
+        comment: Correct dendrogram showing hierarchical clustering.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: hierarchical clustering, proportional
-          branch heights, labels, iris data'
+        comment: All spec features present plus bonus threshold line and species coloring.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X positions from scipy dendrogram, Y represents merge distance
+        comment: X from scipy dendrogram layout, Y from computed distances. All 15
+          samples visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format, legend shows species with appropriate labels
+        comment: Title matches required format. Legend correctly labels species.
     data_quality:
       score: 14
       max: 15
@@ -158,57 +164,57 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Shows 3 species with varying merge distances and clear hierarchical
-          structure
+        comment: Multiple merge levels, clear species separation, varying within-cluster
+          distances.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real iris dataset, classic neutral scientific example
+        comment: Classic Iris dataset - real, well-known, neutral scientific data.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Ward's distance values realistic for iris feature measurements
+        comment: 15 samples from Iris with real computed Ward distances.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Linear flow but necessarily complex manual segment extraction for
-          Altair
+        comment: 'Linear flow: imports, data, clustering, segments, chart, save. No
+          functions/classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic with load_iris() and fixed indices
+        comment: Deterministic data from specific Iris indices.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: All imports used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-organized, appropriate complexity
+        comment: Necessarily complex for building dendrogram in Altair. Well-commented.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png and plot.html, current API
+        comment: Saves as plot.png and plot.html.
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -216,12 +222,12 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of mark_rule, mark_point, mark_text, alt.layer, proper encodings
+        comment: Good layered composition, mark_rule for lines, proper encoding types.
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: Interactive legend selection, tooltips, HTML export are distinctive
-          Altair features
+        comment: Interactive legend selection, tooltips, HTML export are distinctly
+          Altair features.
   verdict: REJECTED
