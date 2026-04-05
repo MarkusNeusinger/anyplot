@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 dendrogram-basic: Basic Dendrogram
 Library: plotnine 0.15.3 | Python 3.14.3
 Quality: 89/100 | Updated: 2026-04-05
@@ -15,10 +15,12 @@ from plotnine import (
     element_rect,
     element_text,
     geom_hline,
+    geom_point,
     geom_segment,
     geom_text,
     ggplot,
     guide_legend,
+    guides,
     labs,
     scale_color_manual,
     scale_x_continuous,
@@ -108,6 +110,15 @@ color_map = {
 segments_df["branch_type"] = pd.Categorical(segments_df["branch_type"], categories=category_order, ordered=True)
 label_df["branch_type"] = pd.Categorical(label_df["branch_type"], categories=category_order, ordered=True)
 
+# Merge node points - highlight where clusters join (plotnine geom_point layer)
+merge_nodes = []
+for xs, ys, btype in zip(dend["icoord"], dend["dcoord"], merge_branch_types, strict=True):
+    cx = (xs[1] + xs[2]) / 2
+    cy = max(ys)
+    merge_nodes.append({"x": cx, "y": cy, "branch_type": btype})
+merge_df = pd.DataFrame(merge_nodes)
+merge_df["branch_type"] = pd.Categorical(merge_df["branch_type"], categories=category_order, ordered=True)
+
 # Key merge threshold: where Setosa separates from the rest
 setosa_sep_height = linkage_matrix[-2, 2]
 threshold_df = pd.DataFrame({"yintercept": [setosa_sep_height]})
@@ -130,8 +141,19 @@ plot = (
         x=x_max - x_pad,
         y=setosa_sep_height + 0.35,
         label="Setosa separates",
-        size=10,
-        color="#666666",
+        size=13,
+        color="#555555",
+        fontstyle="italic",
+        ha="right",
+    )
+    # Intermixing annotation - data storytelling for Versicolor/Virginica
+    + annotate(
+        "text",
+        x=x_max - x_pad,
+        y=linkage_matrix[-1, 2] * 0.55,
+        label="Versicolor & Virginica intermixed",
+        size=12,
+        color="#888888",
         fontstyle="italic",
         ha="right",
     )
@@ -142,11 +164,14 @@ plot = (
         angle=45,
         ha="right",
         va="top",
-        size=11,
+        size=13,
         nudge_y=-0.3,
         show_legend=False,
     )
-    + scale_color_manual(values=color_map, name="Branch Type", guide=guide_legend(override_aes={"size": 4}))
+    # Merge node markers - emphasize join points
+    + geom_point(aes(x="x", y="y", color="branch_type"), data=merge_df, size=3.5, show_legend=False)
+    + scale_color_manual(values=color_map, name="Branch Type")
+    + guides(color=guide_legend(override_aes={"size": 4, "alpha": 1}))
     + scale_x_continuous(breaks=[], expand=(0.04, 0))
     + scale_y_continuous(breaks=np.arange(0, y_max, 2).tolist(), expand=(0.10, 0))
     + coord_cartesian(xlim=(x_min - x_pad, x_max + x_pad), ylim=(-2.5, y_max))
