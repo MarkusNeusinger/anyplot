@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 dendrogram-basic: Basic Dendrogram
 Library: matplotlib 3.10.8 | Python 3.14.3
 Quality: 88/100 | Updated: 2026-04-05
@@ -66,14 +66,18 @@ ax.set_facecolor("#FAFAFA")
 cluster_colors = ["#306998", "#D4722A", "#3A8A5C"]
 set_link_color_palette(cluster_colors)
 
+# Set threshold between the 2nd and 3rd highest merge distances to reveal 3 clusters
+sorted_distances = sorted(linkage_matrix[:, 2])
+color_threshold = (sorted_distances[-2] + sorted_distances[-3]) / 2
+
 dendro = dendrogram(
     linkage_matrix,
     labels=labels,
     ax=ax,
-    leaf_rotation=35,
-    leaf_font_size=15,
+    leaf_rotation=40,
+    leaf_font_size=16,
     above_threshold_color="#AAAAAA",
-    color_threshold=0.7 * max(linkage_matrix[:, 2]),
+    color_threshold=color_threshold,
 )
 
 # Post-render enhancement: adjust line widths via LineCollection traversal
@@ -94,7 +98,7 @@ ax.set_title(
     color="#333333",
 )
 ax.tick_params(axis="both", labelsize=16, colors="#555555")
-ax.tick_params(axis="x", labelsize=15, rotation=35)
+ax.tick_params(axis="x", labelsize=16, rotation=40)
 
 ax.spines["top"].set_visible(False)
 ax.spines["right"].set_visible(False)
