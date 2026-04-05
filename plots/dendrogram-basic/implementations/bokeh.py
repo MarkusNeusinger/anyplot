@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 dendrogram-basic: Basic Dendrogram
 Library: bokeh 3.8.2 | Python 3.14.3
 Quality: 84/100 | Updated: 2026-04-05
@@ -6,7 +6,7 @@ Quality: 84/100 | Updated: 2026-04-05
 
 import numpy as np
 from bokeh.io import export_png
-from bokeh.models import ColumnDataSource, Label
+from bokeh.models import ColumnDataSource, HoverTool, Label
 from bokeh.plotting import figure, output_file, save
 from scipy.cluster.hierarchy import leaves_list, linkage
 
@@ -70,15 +70,28 @@ node_positions = {}
 for idx, leaf_idx in enumerate(leaf_order):
     node_positions[leaf_idx] = idx
 
+# Track cluster members for hover info
+cluster_members = {}
+for i in range(n_samples):
+    cluster_members[i] = [labels[i]]
+
 # Color threshold for distinguishing clusters
 max_dist = linkage_matrix[:, 2].max()
 color_threshold = 0.7 * max_dist
 
-# Collect line segments grouped by color for multi_line rendering
-above_xs, above_ys = [], []
-below_xs, below_ys = [], []
+# Colorblind-safe palette
+colors_within = "#0F7B6C"  # teal for within-cluster
+colors_between = "#444444"  # dark gray for between-cluster (cross-species merges)
 
-for i, (left, right, dist, _) in enumerate(linkage_matrix):
+# Collect line segments with hover metadata
+all_xs, all_ys = [], []
+all_colors = []
+all_distances = []
+all_left_items = []
+all_right_items = []
+all_cluster_sizes = []
+
+for i, (left, right, dist, count) in enumerate(linkage_matrix):
     left, right = int(left), int(right)
     new_node = n_samples + i
 
@@ -90,44 +103,91 @@ for i, (left, right, dist, _) in enumerate(linkage_matrix):
     new_x = (left_x + right_x) / 2
     node_positions[new_node] = new_x
 
+    # Track members
+    left_members = cluster_members[left]
+    right_members = cluster_members[right]
+    cluster_members[new_node] = left_members + right_members
+
     # U-shaped connector: left vertical, horizontal, right vertical
     xs = [left_x, left_x, right_x, right_x]
     ys = [left_y, dist, dist, right_y]
 
-    if dist > color_threshold:
-        above_xs.append(xs)
-        above_ys.append(ys)
-    else:
-        below_xs.append(xs)
-        below_ys.append(ys)
+    color = colors_between if dist > color_threshold else colors_within
+
+    all_xs.append(xs)
+    all_ys.append(ys)
+    all_colors.append(color)
+    all_distances.append(f"{dist:.2f}")
+    all_left_items.append(", ".join(left_members[:3]) + ("..." if len(left_members) > 3 else ""))
+    all_right_items.append(", ".join(right_members[:3]) + ("..." if len(right_members) > 3 else ""))
+    all_cluster_sizes.append(str(int(count)))
+
+# Apply sqrt scaling to y-axis for better visibility of lower merges
+sqrt_max = np.sqrt(max_dist)
+
+all_ys_scaled = []
+for ys in all_ys:
+    all_ys_scaled.append([np.sqrt(y) for y in ys])
 
 # Plot
 p = figure(
     width=4800,
     height=2700,
-    title="Iris Species Clustering · dendrogram-basic · bokeh · pyplots.ai",
+    title="Iris Species Clustering \u00b7 dendrogram-basic \u00b7 bokeh \u00b7 pyplots.ai",
     x_axis_label="Iris Sample",
-    y_axis_label="Distance (Ward's Method)",
+    y_axis_label="Distance (Ward\u2019s Method, \u221a scale)",
     x_range=(-0.8, n_samples - 0.2),
-    y_range=(-max_dist * 0.16, max_dist * 1.08),
+    y_range=(-sqrt_max * 0.16, sqrt_max * 1.08),
     toolbar_location=None,
 )
 
-# Draw dendrogram branches using multi_line with ColumnDataSource
-if below_xs:
-    source_below = ColumnDataSource(data={"xs": below_xs, "ys": below_ys})
-    p.multi_line(
-        xs="xs", ys="ys", source=source_below, line_width=4, line_color="#D4A017", legend_label="Within-cluster"
-    )
+# Draw dendrogram branches using multi_line with ColumnDataSource and hover data
+source = ColumnDataSource(
+    data={
+        "xs": all_xs,
+        "ys": all_ys_scaled,
+        "color": all_colors,
+        "distance": all_distances,
+        "left_cluster": all_left_items,
+        "right_cluster": all_right_items,
+        "cluster_size": all_cluster_sizes,
+    }
+)
 
-source_above = ColumnDataSource(data={"xs": above_xs, "ys": above_ys})
-p.multi_line(xs="xs", ys="ys", source=source_above, line_width=4, line_color="#306998", legend_label="Between-cluster")
+branch_renderer = p.multi_line(
+    xs="xs",
+    ys="ys",
+    source=source,
+    line_width=4,
+    line_color="color",
+    line_alpha=0.85,
+    hover_line_width=7,
+    hover_line_alpha=1.0,
+    hover_line_color="#E74C3C",
+)
+
+# Add HoverTool for interactive branch inspection
+hover = HoverTool(
+    renderers=[branch_renderer],
+    tooltips=[
+        ("Merge Distance", "@distance"),
+        ("Cluster Size", "@cluster_size items"),
+        ("Left", "@left_cluster"),
+        ("Right", "@right_cluster"),
+    ],
+    line_policy="interp",
+)
+p.add_tools(hover)
+
+# Legend entries via invisible scatter points
+p.scatter([], [], color=colors_within, legend_label="Within-cluster", size=0)
+p.scatter([], [], color=colors_between, legend_label="Between-cluster", size=0)
 
 # Leaf labels
 for idx, label in enumerate(ordered_labels):
     label_obj = Label(
         x=idx,
-        y=-max_dist * 0.02,
+        y=-sqrt_max * 0.02,
         text=label,
         text_font_size="20pt",
         text_color="#444444",
