@@ -1,7 +1,7 @@
 """ pyplots.ai
 dendrogram-basic: Basic Dendrogram
 Library: plotnine 0.15.3 | Python 3.14.3
-Quality: 87/100 | Updated: 2026-04-05
+Quality: 85/100 | Updated: 2026-04-05
 """
 
 import numpy as np
