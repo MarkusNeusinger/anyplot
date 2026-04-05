@@ -1,7 +1,7 @@
 library: letsplot
 specification_id: dendrogram-basic
 created: '2025-12-23T10:01:23Z'
-updated: '2026-04-05T20:56:31Z'
+updated: '2026-04-05T21:10:32Z'
 generated_by: claude-opus-4-6
 workflow_run: 20457536578
 issue: 0
@@ -15,9 +15,9 @@ impl_tags:
   - scipy
   - sklearn
   techniques:
+  - layer-composition
   - hover-tooltips
   - html-export
-  - layer-composition
   patterns:
   - dataset-loading
   - iteration-over-groups
@@ -28,32 +28,29 @@ impl_tags:
   - grid-styling
 review:
   strengths:
-  - Clean color-coded dendrogram with meaningful species-based palette effectively
-    communicates cluster structure
-  - Real Iris dataset provides excellent neutral scientific context for clustering
-  - Good use of lets-plot tooltips for interactive exploration of merge distances
-  - Well-structured code with clean linkage matrix traversal and clear variable naming
-  - Strong visual refinement with removed axes chrome and subtle grid
+  - Excellent species-based color coding creates immediate visual understanding of
+    cluster structure
+  - Real Iris dataset provides meaningful, neutral scientific context
+  - Interactive tooltips (layer_tooltips) leverage letsplot distinctive features
+  - Clean theme with removed x-axis chrome and subtle grid styling
+  - Well-structured segment-building logic despite lack of native dendrogram support
   weaknesses:
-  - Color legend suppressed and color aesthetic mapped to raw hex values — viewers
-    cannot determine what colors represent
-  - Leaf label font size slightly small for optimal readability at export resolution
-  - Y-axis extends to -1 creating unnecessary negative space below dendrogram
-  - Could better leverage lets-plot aesthetic mapping to generate meaningful legend
-    automatically
-  image_description: 'The plot displays a vertical dendrogram with 15 leaf nodes representing
-    Iris flower samples from three species (Setosa, Versicolor, Virginica), with 5
-    samples per species. Branches are color-coded: green (#4DAF4A) for Setosa intra-cluster
-    merges, orange (#FF7F00) for Versicolor, purple (#984EA3) for Virginica, and dark
-    blue (#306998) for inter-cluster merges. The y-axis shows "Ward Linkage Distance"
-    ranging from -1 to 11, with subtle horizontal grid lines. Leaf labels are rotated
-    approximately 40 degrees in gray text. The title "dendrogram-basic · letsplot
-    · pyplots.ai" appears in bold at the top left. A dashed horizontal threshold line
-    appears near y=7.4 with annotation "color threshold (7.4)". A legend on the right
-    side shows the four cluster categories. The Setosa cluster merges at low distances
-    (below 1.0), while Versicolor and Virginica merge at moderate distances, and the
-    final inter-cluster merge connecting Setosa to the Versicolor-Virginica group
-    occurs near distance 10.5. The background is clean white with a minimal theme.'
+  - Leaf label text size (10) could be slightly larger for better readability at full
+    resolution
+  - Some low-distance merge segments are very short and hard to distinguish visually
+  - Legend and plot area could be better balanced to use canvas space more efficiently
+  - Design polish could be pushed further for publication-quality appearance
+  image_description: 'The plot displays a vertical dendrogram of 15 iris flower samples
+    (5 each from Setosa, Versicolor, Virginica) clustered using Ward''s method. The
+    tree structure uses color-coding: green segments for Setosa within-cluster merges,
+    orange for Versicolor, purple for Virginica, and blue for inter-cluster merges
+    above the color threshold. A dashed horizontal line marks the color threshold
+    at approximately y=7.3. Leaf labels (Set-1 through Set-5, Ver-6 through Ver-10,
+    Vir-11 through Vir-15) are angled ~40 degrees at the bottom. The y-axis is labeled
+    "Ward Linkage Distance" with ticks from 0 to 10. A legend on the right shows the
+    four cluster categories. The title reads "dendrogram-basic · letsplot · pyplots.ai"
+    in bold at the top. The background is clean white with subtle horizontal grid
+    lines. The layout is 16:9 landscape format.'
   criteria_checklist:
     visual_quality:
       score: 26
@@ -64,42 +61,40 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title=24, axis=20, text=16). Leaf labels
-          geom_text size=10 slightly small.
+        comment: Font sizes explicitly set (title 24, axis 20, ticks 16). Leaf labels
+          at size=10 slightly small for 4800x2700.
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Leaf labels rotated 40 degrees avoid overlap well, slightly crowded
-          with 15 items.
+        comment: Leaf labels angled at 40 degrees avoid overlap. Some adjacent labels
+          close but readable.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Segments at size=1.8 clearly visible. Smallest merges could be slightly
-          more prominent.
+        comment: Segments at size=1.8 are clear. Some low-distance merges produce
+          very short segments.
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Green, orange, purple, blue palette is colorblind-friendly with good
-          contrast.
+        comment: Green/orange/purple/blue palette is colorblind-safe with good contrast.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good canvas use at 1600x900. Y-axis extends to -1 creating unnecessary
-          negative space.
+        comment: Good 16:9 proportions. Legend area creates some unused space on right.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Ward Linkage Distance is descriptive. Title follows required format.
+        comment: Ward Linkage Distance is descriptive. X-axis appropriately blank.
     design_excellence:
       score: 13
       max: 20
@@ -109,24 +104,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom species-based color palette. Theme_minimal with customizations.
-          Above defaults but not publication-level.
+        comment: Custom species-based color palette, theme refined beyond defaults.
+          Above well-configured default but not publication-level.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Removed x-axis chrome, subtle y-grid, custom margins, styled y-axis
-          line.
+        comment: X-axis chrome removed, subtle y-grid, minor grids removed, generous
+          margins.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Color-coded clusters create visual hierarchy showing species similarity
-          differences.
+        comment: Color-coding by species creates clear visual hierarchy showing Setosa
+          is most distinct.
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -134,27 +129,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct dendrogram visualization built from linkage matrix.
+        comment: Correct dendrogram with proper tree structure.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Uses scipy linkage (Ward), vertical orientation, proportional heights,
-          15 items, Iris data.
+        comment: 'All features present: clustering, labels, proportional heights,
+          color-coded clusters, tooltips.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = leaf positions, Y = linkage distances. Correct hierarchical mapping.
+        comment: X positions and Y merge distances correctly mapped.
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Title format correct. Legend suppressed with guide=none and color
-          mapped to hex values.
+        comment: Title format correct. Legend shows cluster categories.
     data_quality:
       score: 14
       max: 15
@@ -164,57 +158,56 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Shows three distinct species clusters at different merge distances
-          with varying within-cluster similarity.
+        comment: Shows hierarchical merging at various distances, 3 distinct clusters
+          with different internal structures.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Uses real Iris flower dataset from sklearn, classic neutral scientific
-          dataset.
+        comment: Real Iris dataset - classic, neutral scientific context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Ward linkage distances are realistic for Iris measurement data.
+        comment: Ward linkage distances realistic for Iris measurements.
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports, data, clustering, coordinates, plot,
-          save.'
+        comment: Follows imports-data-plot-save. Loop for segment building is necessary
+          but adds complexity.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set before random sample selection.
+        comment: np.random.seed(42) set for sample selection.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used. Explicit named imports from lets_plot.
+        comment: All imports used. Explicit imports from lets_plot.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Manual dendrogram construction from linkage matrix is necessarily
-          complex but clean.
+        comment: Clean, well-structured. Manual segment building justified for library
+          without dendrogram geom.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with ggsave(scale=3) and HTML export.
+        comment: Saves as plot.png via ggsave with scale=3.
     library_mastery:
       score: 7
       max: 10
@@ -224,13 +217,13 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good ggplot grammar usage with geom_segment, geom_text, proper aesthetics.
-          Could better leverage aesthetic mapping for legend.
+        comment: Good grammar-of-graphics approach with geom_segment + geom_text +
+          scales + themes.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses layer_tooltips() for interactive hover and HTML export, distinctive
-          lets-plot features.
+        comment: Uses layer_tooltips() for interactive hover and HTML export - distinctive
+          to letsplot.
   verdict: REJECTED
