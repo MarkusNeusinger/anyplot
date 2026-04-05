@@ -6,7 +6,7 @@ title: Basic Dendrogram
 
 # Specification tracking
 created: 2025-12-15T20:43:34Z
-updated: 2025-12-15T20:43:34Z
+updated: 2026-04-05T12:00:00Z
 issue: 986
 suggested: MarkusNeusinger
 
@@ -17,6 +17,7 @@ tags:
     - tree
   data_type:
     - hierarchical
+    - numeric
   domain:
     - statistics
     - science
