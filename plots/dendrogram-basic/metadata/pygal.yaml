@@ -1,170 +1,179 @@
 library: pygal
 specification_id: dendrogram-basic
 created: '2025-12-23T10:01:20Z'
-updated: '2026-04-05T20:00:00+00:00'
+updated: '2026-04-05T20:44:58Z'
 generated_by: claude-opus-4-6
 workflow_run: 20457534249
 issue: 0
-python_version: '3.14.3'
+python_version: 3.14.3
 library_version: 3.1.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/dendrogram-basic/pygal/plot.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/dendrogram-basic/pygal/plot.html
-quality_score: null
+quality_score: 80
 impl_tags:
   dependencies:
-    - scipy
+  - scipy
   techniques:
-    - html-export
+  - manual-ticks
   patterns:
-    - data-generation
-    - iteration-over-groups
-    - matrix-construction
+  - data-generation
+  - iteration-over-groups
   dataprep:
-    - hierarchical-clustering
-  styling: []
+  - hierarchical-clustering
+  styling:
+  - grid-styling
 review:
   strengths:
-  - Excellent manual implementation of dendrogram using XY chart segments - creative
-    solution for a library without native dendrogram support
-  - Clean hierarchical clustering clearly separates the three iris species visually
-  - Proper use of scipy linkage function with Ward method for accurate clustering
-  - Well-configured custom Style with appropriate font sizes for 4800x2700 canvas
-  - X-axis label rotation (45 degrees) prevents overlap while maintaining readability
-  - Correct title format following pyplots convention
+  - Excellent manual dendrogram construction — correctly implements U-shaped segments,
+    leaf ordering, and node positioning from scratch since pygal lacks native dendrogram
+    support
+  - Perfect spec compliance with proper title format, realistic iris data, and correct
+    hierarchical clustering
+  - Clean, well-structured code with proper seed and explicit font sizing for the
+    canvas dimensions
+  - Good data choice — iris species create naturally meaningful clusters
   weaknesses:
-  - Grid lines (y-guides) could be slightly more subtle - currently visible dotted
-    lines are acceptable but could use lower opacity
-  - The dendrogram branches in the lower portion are somewhat cramped compared to
-    the upper sparse area - inherent to the data distribution
-  image_description: The plot displays a well-formed dendrogram showing hierarchical
-    clustering of 15 iris flower samples across three species (Setosa, Versicolor,
-    Virginica). The visualization uses Python Blue (#306998) for all dendrogram branches
-    against a clean white background. The title "dendrogram-basic · pygal · pyplots.ai"
-    appears at the top in a readable font. The y-axis is labeled "Distance (Ward's
-    Method)" ranging from 0 to ~10, and the x-axis is labeled "Sample" with 15 rotated
-    sample labels (45°). The tree structure clearly shows three main clusters corresponding
-    to the three iris species, with Setosa samples clustering together on the left,
-    followed by Versicolor in the middle, and Virginica on the right. Branch heights
-    accurately reflect merge distances from Ward's method, with the final merge at
-    distance ~10 connecting the Setosa cluster to the Versicolor-Virginica supercluster.
-    Horizontal grid lines (y-guides) are subtle and aid in reading distance values.
+  - No color differentiation between species clusters — all branches are the same
+    blue, missing an opportunity for visual storytelling
+  - Design is clean but generic — no visual hierarchy or emphasis to guide the viewer
+    to the key Setosa separation
+  - Library mastery is limited — mostly using basic XY plotting without leveraging
+    distinctive pygal features
+  - Right edge slightly crowded with the last label
+  image_description: The plot displays a vertical dendrogram on a white background
+    with blue (#306998) U-shaped branch lines. The title reads "Iris Species Clustering
+    · dendrogram-basic · pygal · pyplots.ai" at the top. The x-axis labeled "Sample"
+    shows 15 rotated labels (Setosa-1 through Setosa-5, Virginica-1 through Virginica-5,
+    Versicolor-1 through Versicolor-5) in dendrogram leaf order. The y-axis labeled
+    "Distance (Ward's Method)" ranges from 0 to 10. The hierarchical structure clearly
+    shows Setosa samples clustering together on the left, then Virginica and Versicolor
+    intermixing on the right, with a final merge at distance ~10 joining Setosa to
+    the Virginica/Versicolor supercluster. Subtle horizontal gray grid lines appear
+    on y-axis guides only. Branch heights are proportional to merge distances.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 26
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 7
+        max: 8
         passed: true
-        comment: Title and axis labels are clearly readable; x-axis tick labels are
-          well-sized with appropriate rotation
+        comment: Font sizes explicitly set and scaled for 4800x2700 canvas. All text
+          readable.
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: No overlapping text; 45° rotation prevents label collisions
+        comment: X-axis labels rotated 45 degrees, mostly no overlap. Rightmost label
+          slightly crowded.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Dendrogram branches are clearly visible with good stroke width (5px)
+        comment: Dendrogram branches visible with stroke_width=5. Structure legible
+          at all levels.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Single color scheme (Python Blue) is colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Good proportions; slight excess whitespace in upper portion but acceptable
+        comment: Single blue color with strong contrast against white background.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good utilization overall. Right edge slightly tight, some wasted
+          vertical space.
       - id: VQ-06
-        name: Axis Labels
+        name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis has descriptive label with method "Distance (Ward's Method)";
-          X-axis labeled "Sample"
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
-        max: 2
+        comment: Descriptive labels with method specification.
+    design_excellence:
+      score: 10
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
         passed: false
-        comment: No legend needed for this plot type; y-guides are subtle but the
-          horizontal dotted lines could be slightly more subtle (alpha appears ~0.4-0.5)
+        comment: Clean professional look but visually indistinguishable from well-configured
+          default.
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Y-guides only, white background, subtle grid. Some refinement but
+          not fully polished.
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Natural species clustering provides some storytelling but no color
+          differentiation or visual emphasis.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct dendrogram/hierarchical clustering visualization
+        comment: Correct dendrogram type built manually with U-shaped segments.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Samples on x-axis, merge distances on y-axis correctly mapped
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Shows hierarchical structure, merge heights, and sample labels as
-          specified
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: hierarchical clustering, proportional heights,
+          vertical orientation, labels.'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data points visible, appropriate y-axis range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Correct X=samples, Y=distance mapping.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: N/A for dendrogram (no legend required)
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "dendrogram-basic · pygal · pyplots.ai"'
+        comment: Title follows required format. Legend correctly hidden.
     data_quality:
-      score: 17
-      max: 20
+      score: 14
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Shows hierarchical clustering with clear species separation; could
-          show more varied merge distances within clusters
+        comment: Shows within-species and between-species clustering. Could show more
+          variation.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Iris flower measurements - classic, realistic dataset for clustering
+        comment: Iris flower species - classic, neutral, real-world dataset.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Ward's method distances are reasonable; values appropriate for normalized
-          biological measurements
+        comment: 15 samples with realistic iris measurement ranges.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -172,41 +181,47 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → linkage → plot → save'
+        comment: Follows imports, data, compute, plot, save structure.
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports (numpy, pygal, scipy)
+        comment: All imports used.
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean manual dendrogram implementation, necessarily complex for pygal.
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Current pygal API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves both plot.png and plot.html (correct outputs)
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot.png with current API.
+    library_mastery:
+      score: 5
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 3
         max: 5
-        passed: true
-        comment: Creative use of XY chart with manual segment drawing; custom Style
-          configuration; however, this is a workaround since pygal lacks native dendrogram
-          support
-  verdict: APPROVED
+        passed: false
+        comment: Uses pygal.XY with custom Style and x_value_formatter. Correct but
+          basic XY usage.
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Uses x_value_formatter lambda and SVG-native rendering. Some pygal-specific
+          features but not distinctive.
+  verdict: REJECTED

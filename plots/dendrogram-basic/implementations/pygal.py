@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 dendrogram-basic: Basic Dendrogram
 Library: pygal 3.1.0 | Python 3.14.3
-Quality: /100 | Updated: 2026-04-05
+Quality: 80/100 | Updated: 2026-04-05
 """
 
 import numpy as np
