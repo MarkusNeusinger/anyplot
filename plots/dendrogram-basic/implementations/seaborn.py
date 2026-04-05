@@ -1,7 +1,7 @@
 """ pyplots.ai
 dendrogram-basic: Basic Dendrogram
 Library: seaborn 0.13.2 | Python 3.14.3
-Quality: 88/100 | Updated: 2026-04-05
+Quality: 89/100 | Updated: 2026-04-05
 """
 
 import matplotlib.pyplot as plt
