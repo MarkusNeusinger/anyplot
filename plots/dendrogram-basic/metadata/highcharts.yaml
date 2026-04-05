@@ -1,204 +1,233 @@
 library: highcharts
 specification_id: dendrogram-basic
 created: 2025-12-17 07:55:57+00:00
-updated: '2026-04-05T20:00:00+00:00'
+updated: '2026-04-05T20:43:51Z'
 generated_by: claude-opus-4-6
 workflow_run: 20295462355
 issue: 986
-python_version: '3.14.3'
+python_version: 3.14.3
 library_version: 1.10.3
 preview_url: https://storage.googleapis.com/pyplots-images/plots/dendrogram-basic/highcharts/plot.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/dendrogram-basic/highcharts/plot.html
-quality_score: null
+quality_score: 80
 impl_tags:
   dependencies:
-    - scipy
-    - selenium
+  - scipy
+  - selenium
   techniques:
-    - html-export
+  - html-export
+  - manual-ticks
   patterns:
-    - data-generation
-    - iteration-over-groups
+  - data-generation
+  - iteration-over-groups
   dataprep:
-    - hierarchical-clustering
-  styling: []
+  - hierarchical-clustering
+  styling:
+  - grid-styling
 review:
-  strengths: []
-  weaknesses: []
+  strengths:
+  - Perfect spec compliance — all required features present with correct title format
+  - Excellent data choice — iris species clustering is a classic, meaningful use case
+    for dendrograms
+  - Custom color palette with Python Blue anchor and cohesive warm/cool tones
+  - Subtle grid styling and clean visual refinement
+  - Proper reproducibility with seed(42)
+  weaknesses:
+  - LineSeries imported from wrong module (area instead of line)
+  - Versicolor and Virginica clusters share the same green color, reducing visual
+    differentiation
+  - JS formatter injection via string replacement is fragile
+  - No visual emphasis on key insights like the major Setosa split
+  - Limited use of Highcharts-specific features — library used mostly as generic line
+    renderer
   improvements: []
-  image_description: 'The plot displays a dendrogram (hierarchical clustering tree)
-    with a white background. The title "dendrogram-basic · highcharts · pyplots.ai"
-    appears at the top center. The Y-axis is labeled "Distance (Ward)" ranging from
-    0 to approximately 10.75, and the X-axis is labeled "Sample". The dendrogram shows
-    15 leaf nodes at the bottom representing iris flower samples: Setosa-4, Setosa-3,
-    Setosa-5, Setosa-1, Setosa-2, Versicolor-1, Versicolor-4, Versicolor-5, Versicolor-2,
-    Versicolor-3, Virginica-1, Virginica-3, Virginica-2, Virginica-4, and Virginica-5.
-    The tree structure is drawn in Python Blue (#306998) with clear U-shaped connections
-    showing the hierarchical merging pattern. The Setosa samples cluster together
-    on the left, while Versicolor and Virginica samples form a separate major cluster
-    on the right, with the two main clusters merging at the highest distance (~10).
-    The branch heights correctly represent the Ward linkage distances. Labels are
-    rotated at 45 degrees for readability.'
+  image_description: The plot displays a dendrogram showing hierarchical clustering
+    of 15 iris flower samples (5 Setosa, 5 Versicolor, 5 Virginica). The tree structure
+    uses U-shaped branches with heights proportional to Ward linkage distances. The
+    Setosa cluster (left side) is colored in warm orange, the Versicolor and Virginica
+    clusters (right side) are both in muted green, and the top-level merge connecting
+    the two main groups appears in Python Blue (#306998) at approximately distance
+    10. The X-axis shows rotated sample labels (e.g., "Setosa-4", "Versicolor-1")
+    at 45 degrees, and the Y-axis labeled "Distance (Ward)" ranges from 0 to 11 with
+    subtle grid lines. The title reads "Iris Species Clustering · dendrogram-basic
+    · highcharts · pyplots.ai". The background is white, and the layout fills the
+    canvas well with generous bottom margin for the rotated labels.
   criteria_checklist:
     visual_quality:
-      score: 32
-      max: 35
+      score: 25
+      max: 30
       items:
       - id: VQ-01
-        name: Meaningful axis labels
+        name: Text Legibility
         score: 7
-        max: 7
+        max: 8
         passed: true
-        comment: '"Distance (Ward)" and "Sample" are descriptive'
+        comment: All font sizes explicitly set (title 44px, axis titles 32px, ticks
+          24-26px). Readable at full resolution.
       - id: VQ-02
-        name: No overlapping text
+        name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Labels readable but slightly crowded at bottom
+        comment: X-axis labels at 45° rotation are readable but slightly crowded between
+          adjacent samples.
       - id: VQ-03
-        name: Color choice
+        name: Element Visibility
         score: 5
-        max: 5
+        max: 6
         passed: true
-        comment: Python Blue (#306998) is colorblind-safe
+        comment: Branch lines at width 4 are clearly visible. U-shaped connections
+          well-formed.
       - id: VQ-04
-        name: Clear data elements
-        score: 5
-        max: 5
+        name: Color Accessibility
+        score: 3
+        max: 4
         passed: true
-        comment: Lines are thick (4px) and clearly visible
+        comment: Blue/orange/green palette is colorblind-safe but Versicolor and Virginica
+          share the same green.
       - id: VQ-05
-        name: Layout balance
-        score: 4
-        max: 5
+        name: Layout & Canvas
+        score: 3
+        max: 4
         passed: true
-        comment: Good overall but large bottom margin
+        comment: Good canvas utilization with appropriate margins. Minor wasted vertical
+          space above top merge.
       - id: VQ-06
-        name: Grid subtlety
-        score: 3
-        max: 3
-        passed: true
-        comment: Subtle grid lines with low alpha
-      - id: VQ-07
-        name: Legend placement
+        name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Legend correctly disabled
-      - id: VQ-08
-        name: Image size
-        score: 1
-        max: 2
-        passed: true
-        comment: 4785x2646, close to but not exactly 4800x2700
-    spec_compliance:
-      score: 33
-      max: 35
+        comment: Y-axis 'Distance (Ward)' is descriptive with method. Title correctly
+          formatted.
+    design_excellence:
+      score: 12
+      max: 20
       items:
-      - id: SC-01
-        name: Correct plot type
-        score: 10
-        max: 10
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
         passed: true
-        comment: Dendrogram correctly rendered with tree structure
-      - id: SC-02
-        name: Data mapped correctly
-        score: 7
-        max: 7
-        passed: true
-        comment: Linkage matrix properly converted to visual coordinates
-      - id: SC-03
-        name: Required features present
-        score: 7
-        max: 7
-        passed: true
-        comment: Shows hierarchical clustering, merge distances, labels
-      - id: SC-04
-        name: Data range appropriate
+        comment: Custom color palette anchored on Python Blue. Clean typography. Above
+          defaults but not publication-showcase.
+      - id: DE-02
+        name: Visual Refinement
         score: 4
-        max: 4
+        max: 6
         passed: true
-        comment: Y-axis shows full distance range with padding
-      - id: SC-05
-        name: Legend accuracy
-        score: 2
-        max: 4
-        passed: true
-        comment: No legend needed for this plot type, but N/A
-      - id: SC-06
-        name: Title format correct
+        comment: Subtle grid (rgba 0.08 opacity), markers disabled, clean line styling.
+          Good whitespace.
+      - id: DE-03
+        name: Data Storytelling
         score: 3
-        max: 3
+        max: 6
         passed: true
-        comment: Uses correct format
-    data_quality:
+        comment: Color coding reveals cluster structure but no visual emphasis on
+          key insights like the main species split.
+    spec_compliance:
       score: 15
       max: 15
       items:
-      - id: DQ-01
-        name: Feature coverage
-        score: 6
-        max: 6
-        passed: true
-        comment: Shows multiple cluster levels, varying merge distances
-      - id: DQ-02
-        name: Realistic context
+      - id: SC-01
+        name: Plot Type
         score: 5
         max: 5
         passed: true
-        comment: Iris flower species is a classic clustering example
-      - id: DQ-03
-        name: Appropriate scale
+        comment: Correct dendrogram with hierarchical tree structure.
+      - id: SC-02
+        name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 15 samples, 3 species groups, sensible measurements
-    code_quality:
-      score: 13
+        comment: Labels, linkage, vertical orientation, proportional heights, color-coded
+          clusters all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X-axis shows samples, Y-axis shows merge distances. All data visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct. Legend appropriately disabled for dendrogram.
+    data_quality:
+      score: 14
       max: 15
       items:
-      - id: CQ-01
-        name: KISS structure
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows hierarchical merging at multiple distance levels with clear
+          cluster separation.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Iris flower species measurements — classic, neutral, real-world scientific
+          dataset.
+      - id: DQ-03
+        name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Linear flow: imports → data → plot → save'
+        comment: Realistic iris measurements. Ward distances are sensible.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports → data → linkage → chart → export. No functions/classes.'
       - id: CQ-02
-        name: Reproducible
-        score: 3
-        max: 3
+        name: Reproducibility
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) set.
       - id: CQ-03
-        name: Library idioms
-        score: 3
-        max: 3
+        name: Clean Imports
+        score: 2
+        max: 2
         passed: true
-        comment: Proper use of highcharts-core API
+        comment: All imports used. LineSeries from area module is non-ideal but functional.
       - id: CQ-04
-        name: Clean imports
+        name: Code Elegance
         score: 1
         max: 2
         passed: true
-        comment: LineSeries imported from area module (unusual but works)
+        comment: JS formatter via string replacement is fragile but necessary for
+          Highcharts label mapping.
       - id: CQ-05
-        name: Helpful comments
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Data generation sections documented
-      - id: CQ-06
-        name: No deprecated API
-        score: 1
-        max: 1
+        comment: Saves as plot.png via Selenium screenshot. Also saves plot.html.
+    library_mastery:
+      score: 5
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
+        max: 5
         passed: true
-        comment: Current API usage
-      - id: CQ-07
-        name: Output correct
-        score: 0
-        max: 1
-        passed: true
-        comment: Saves plot.png AND plot.html (html is fine, but screenshot method
-          differs from standard)
-  verdict: APPROVED
+        comment: Uses Chart, HighchartsOptions, LineSeries correctly. Standard highcharts-python
+          workflow.
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Used primarily as generic line renderer. No Highcharts-specific features
+          like plotLines, data labels, or drilldown.
+  verdict: REJECTED
