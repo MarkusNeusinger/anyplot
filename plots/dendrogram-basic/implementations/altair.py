@@ -1,7 +1,6 @@
-""" pyplots.ai
+"""pyplots.ai
 dendrogram-basic: Basic Dendrogram
 Library: altair 6.0.0 | Python 3.14.3
-Quality: 87/100 | Updated: 2026-04-05
 """
 
 import altair as alt
@@ -81,7 +80,14 @@ species_palette = {"Setosa": "#306998", "Versicolor": "#D4A017", "Virginica": "#
 # Axis domain
 x_min = min(s["x"] for s in segments) - 8
 x_max = max(s["x2"] for s in segments) + 8
-y_max = Z[:, 2].max() * 1.12
+y_max = Z[:, 2].max() * 1.15
+
+# Annotation for the final merge (top of tree) — key storytelling element
+top_merge_y = Z[-1, 2]
+top_merge_x = (dendro["icoord"][-1][1] + dendro["icoord"][-1][2]) / 2
+annotation_df = pd.DataFrame(
+    {"x": [top_merge_x], "y": [top_merge_y], "text": ["Setosa diverges\nfrom Versicolor + Virginica"]}
+)
 
 # Interactive selection: click legend to highlight a species
 species_selection = alt.selection_point(fields=["species"], bind="legend")
@@ -89,21 +95,21 @@ species_selection = alt.selection_point(fields=["species"], bind="legend")
 # Dendrogram branches with cluster-based coloring and tooltips
 branches = (
     alt.Chart(segments_df)
-    .mark_rule(strokeWidth=2.5)
+    .mark_rule(strokeWidth=3)
     .encode(
         x=alt.X("x:Q", scale=alt.Scale(domain=[x_min, x_max]), axis=None),
         x2="x2:Q",
         y=alt.Y("y:Q", title="Distance (Ward's method)", scale=alt.Scale(domain=[0, y_max])),
         y2="y2:Q",
         color=alt.Color("color:N", scale=None),
-        tooltip=[alt.Tooltip("distance:Q", title="Merge Distance")],
+        tooltip=[alt.Tooltip("distance:Q", title="Merge Distance", format=".2f")],
     )
 )
 
 # Leaf markers at base of dendrogram colored by species
 leaf_dots = (
     alt.Chart(leaf_df)
-    .mark_point(size=160, filled=True, strokeWidth=1.5, stroke="white")
+    .mark_point(size=180, filled=True, strokeWidth=1.5, stroke="white")
     .encode(
         x=alt.X("x:Q", scale=alt.Scale(domain=[x_min, x_max]), axis=None),
         y=alt.Y("y_base:Q", scale=alt.Scale(domain=[0, y_max])),
@@ -111,19 +117,27 @@ leaf_dots = (
             "species:N",
             scale=alt.Scale(domain=list(species_palette.keys()), range=list(species_palette.values())),
             legend=alt.Legend(
-                title="Species", titleFontSize=18, labelFontSize=16, symbolSize=200, orient="right", offset=10
+                title="Species",
+                titleFontSize=18,
+                titleFontWeight="bold",
+                labelFontSize=16,
+                symbolSize=220,
+                orient="right",
+                offset=10,
+                titleColor="#333333",
+                labelColor="#444444",
             ),
         ),
         tooltip=[alt.Tooltip("label:N", title="Sample"), alt.Tooltip("species:N", title="Species")],
-        opacity=alt.condition(species_selection, alt.value(1.0), alt.value(0.2)),
+        opacity=alt.condition(species_selection, alt.value(1.0), alt.value(0.15)),
     )
     .add_params(species_selection)
 )
 
-# Leaf labels colored by species with improved spacing
+# Leaf labels colored by species
 leaf_text = (
     alt.Chart(leaf_df)
-    .mark_text(angle=315, align="right", baseline="top", fontSize=13, fontWeight="bold", dx=-4, dy=4)
+    .mark_text(angle=315, align="right", baseline="top", fontSize=16, fontWeight="bold", dx=-4, dy=4)
     .encode(
         x=alt.X("x:Q", scale=alt.Scale(domain=[x_min, x_max]), axis=None),
         y=alt.value(870),
@@ -133,40 +147,67 @@ leaf_text = (
             scale=alt.Scale(domain=list(species_palette.keys()), range=list(species_palette.values())),
             legend=None,
         ),
-        opacity=alt.condition(species_selection, alt.value(1.0), alt.value(0.2)),
+        opacity=alt.condition(species_selection, alt.value(1.0), alt.value(0.15)),
     )
 )
 
 # Distance threshold reference line
 threshold_df = pd.DataFrame({"y": [distance_threshold]})
 threshold_line = (
-    alt.Chart(threshold_df).mark_rule(strokeDash=[8, 6], strokeWidth=1.5, color="#CC4444", opacity=0.6).encode(y="y:Q")
+    alt.Chart(threshold_df).mark_rule(strokeDash=[8, 6], strokeWidth=1.8, color="#CC4444", opacity=0.7).encode(y="y:Q")
 )
 
 threshold_label = (
     alt.Chart(threshold_df)
-    .mark_text(align="left", baseline="bottom", fontSize=13, color="#CC4444", fontStyle="italic", dx=5, dy=-4)
-    .encode(x=alt.value(10), y="y:Q", text=alt.value("cluster threshold"))
+    .mark_text(align="left", baseline="bottom", fontSize=14, color="#CC4444", fontStyle="italic", dx=5, dy=-5)
+    .encode(x=alt.value(10), y="y:Q", text=alt.value("cluster threshold (d = 5.0)"))
+)
+
+# Annotation at top merge point
+top_annotation = (
+    alt.Chart(annotation_df)
+    .mark_text(align="left", baseline="middle", fontSize=14, fontWeight="bold", color="#555555", lineBreak="\n", dx=12)
+    .encode(x="x:Q", y="y:Q", text="text:N")
+)
+
+top_arrow = (
+    alt.Chart(annotation_df)
+    .mark_point(shape="triangle-left", size=80, filled=True, color="#888888")
+    .encode(x="x:Q", y="y:Q")
 )
 
 # Combine layers
 chart = (
-    alt.layer(branches, threshold_line, threshold_label, leaf_dots, leaf_text)
+    alt.layer(branches, threshold_line, threshold_label, leaf_dots, leaf_text, top_arrow, top_annotation)
     .properties(
         width=1600,
         height=900,
-        title=alt.Title("dendrogram-basic · altair · pyplots.ai", fontSize=28, anchor="start", offset=20),
+        title=alt.Title(
+            "dendrogram-basic · altair · pyplots.ai",
+            subtitle="Ward's linkage on Iris measurements — Setosa separates clearly from Versicolor / Virginica",
+            fontSize=28,
+            subtitleFontSize=18,
+            subtitleColor="#666666",
+            anchor="start",
+            offset=20,
+        ),
     )
     .configure_axis(
         labelFontSize=18,
         titleFontSize=22,
-        gridOpacity=0.15,
-        gridDash=[4, 4],
-        domainColor="#999999",
+        titleColor="#333333",
+        labelColor="#555555",
+        gridOpacity=0.12,
+        gridDash=[3, 5],
+        gridColor="#cccccc",
+        domainColor="#aaaaaa",
+        domainWidth=1.5,
         tickColor="#bbbbbb",
+        tickSize=6,
     )
-    .configure_view(strokeWidth=0)
-    .configure_legend(padding=20, cornerRadius=4, strokeColor="#dddddd")
+    .configure_view(strokeWidth=0, fill="#FAFBFC")
+    .configure_legend(padding=20, cornerRadius=6, strokeColor="#dddddd", fillColor="#FAFBFC")
+    .configure_title(subtitlePadding=8)
 )
 
 # Save
