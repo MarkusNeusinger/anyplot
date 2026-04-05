@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 dendrogram-basic: Basic Dendrogram
 Library: plotnine 0.15.3 | Python 3.14.3
 Quality: 85/100 | Updated: 2026-04-05
@@ -8,13 +8,17 @@ import numpy as np
 import pandas as pd
 from plotnine import (
     aes,
+    annotate,
     coord_cartesian,
     element_blank,
     element_line,
+    element_rect,
     element_text,
+    geom_hline,
     geom_segment,
     geom_text,
     ggplot,
+    guide_legend,
     labs,
     scale_color_manual,
     scale_x_continuous,
@@ -56,14 +60,15 @@ for i, row in enumerate(linkage_matrix):
     left, right = int(row[0]), int(row[1])
     node_species[n + i] = node_species[left] | node_species[right]
 
-# Color each U-shape: species color if pure, grey if mixed
-merge_colors = []
+# Branch type label for each merge: species name if pure, "Mixed" if mixed
+branch_type_labels = {"Setosa": "Setosa (pure)", "Versicolor": "Versicolor (pure)", "Virginica": "Virginica (pure)"}
+merge_branch_types = []
 for i in range(len(linkage_matrix)):
     sp = node_species[n + i]
     if len(sp) == 1:
-        merge_colors.append(palette[next(iter(sp))])
+        merge_branch_types.append(branch_type_labels[next(iter(sp))])
     else:
-        merge_colors.append("#888888")
+        merge_branch_types.append("Mixed species")
 
 # Map dendrogram order to linkage order via merge heights
 height_to_merge = {}
@@ -76,12 +81,12 @@ for xs, ys in zip(dend["icoord"], dend["dcoord"], strict=True):
     h = round(max(ys), 10)
     if h in height_to_merge and height_to_merge[h]:
         merge_idx = height_to_merge[h].pop(0)
-        color = merge_colors[merge_idx]
+        btype = merge_branch_types[merge_idx]
     else:
-        color = "#888888"
-    segments.append({"x": xs[0], "xend": xs[1], "y": ys[0], "yend": ys[1], "color": color})
-    segments.append({"x": xs[1], "xend": xs[2], "y": ys[1], "yend": ys[2], "color": color})
-    segments.append({"x": xs[2], "xend": xs[3], "y": ys[2], "yend": ys[3], "color": color})
+        btype = "Mixed species"
+    segments.append({"x": xs[0], "xend": xs[1], "y": ys[0], "yend": ys[1], "branch_type": btype})
+    segments.append({"x": xs[1], "xend": xs[2], "y": ys[1], "yend": ys[2], "branch_type": btype})
+    segments.append({"x": xs[2], "xend": xs[3], "y": ys[2], "yend": ys[3], "branch_type": btype})
 
 segments_df = pd.DataFrame(segments)
 
@@ -89,46 +94,91 @@ segments_df = pd.DataFrame(segments)
 n_leaves = len(dend["ivl"])
 leaf_positions = [(i + 1) * 10 - 5 for i in range(n_leaves)]
 leaf_labels = dend["ivl"]
-leaf_colors = [palette[leaf_species[lbl]] for lbl in leaf_labels]
-label_df = pd.DataFrame({"x": leaf_positions, "label": leaf_labels, "y": [0.0] * n_leaves, "color": leaf_colors})
+leaf_btypes = [branch_type_labels[leaf_species[lbl]] for lbl in leaf_labels]
+label_df = pd.DataFrame({"x": leaf_positions, "label": leaf_labels, "y": [0.0] * n_leaves, "branch_type": leaf_btypes})
 
-# Unique colors for scale
-unique_colors = sorted(set(segments_df["color"].tolist() + leaf_colors))
-color_identity = {c: c for c in unique_colors}
+# Ordered category for consistent legend
+category_order = ["Setosa (pure)", "Versicolor (pure)", "Virginica (pure)", "Mixed species"]
+color_map = {
+    "Setosa (pure)": palette["Setosa"],
+    "Versicolor (pure)": palette["Versicolor"],
+    "Virginica (pure)": palette["Virginica"],
+    "Mixed species": "#888888",
+}
+segments_df["branch_type"] = pd.Categorical(segments_df["branch_type"], categories=category_order, ordered=True)
+label_df["branch_type"] = pd.Categorical(label_df["branch_type"], categories=category_order, ordered=True)
+
+# Key merge threshold: where Setosa separates from the rest
+setosa_sep_height = linkage_matrix[-2, 2]
+threshold_df = pd.DataFrame({"yintercept": [setosa_sep_height]})
 
 # Plot
-y_max = max(linkage_matrix[:, 2]) * 1.05
+y_max = max(linkage_matrix[:, 2]) * 1.08
+x_min = min(segments_df["x"].min(), segments_df["xend"].min())
+x_max = max(segments_df["x"].max(), segments_df["xend"].max())
+x_pad = (x_max - x_min) * 0.06
+
 plot = (
     ggplot()
-    + geom_segment(aes(x="x", xend="xend", y="y", yend="yend", color="color"), data=segments_df, size=1.6)
+    # Dendrogram branches - thicker for HD visibility
+    + geom_segment(aes(x="x", xend="xend", y="y", yend="yend", color="branch_type"), data=segments_df, size=2.2)
+    # Threshold line using idiomatic geom_hline
+    + geom_hline(aes(yintercept="yintercept"), data=threshold_df, linetype="dashed", color="#AAAAAA", size=0.8)
+    # Threshold annotation using plotnine annotate
+    + annotate(
+        "text",
+        x=x_max - x_pad,
+        y=setosa_sep_height + 0.35,
+        label="Setosa separates",
+        size=10,
+        color="#666666",
+        fontstyle="italic",
+        ha="right",
+    )
+    # Leaf labels - larger for readability
     + geom_text(
-        aes(x="x", y="y", label="label", color="color"),
+        aes(x="x", y="y", label="label", color="branch_type"),
         data=label_df,
         angle=45,
         ha="right",
         va="top",
-        size=9,
+        size=11,
         nudge_y=-0.3,
+        show_legend=False,
     )
-    + scale_color_manual(values=color_identity, guide=None)
-    + scale_x_continuous(breaks=[], expand=(0.08, 0))
-    + scale_y_continuous(breaks=np.arange(0, y_max, 2).tolist(), expand=(0.12, 0))
-    + coord_cartesian(ylim=(-2.5, y_max))
-    + labs(x="", y="Ward Linkage Distance", title="Iris Species Clustering · dendrogram-basic · plotnine · pyplots.ai")
+    + scale_color_manual(values=color_map, name="Branch Type", guide=guide_legend(override_aes={"size": 4}))
+    + scale_x_continuous(breaks=[], expand=(0.04, 0))
+    + scale_y_continuous(breaks=np.arange(0, y_max, 2).tolist(), expand=(0.10, 0))
+    + coord_cartesian(xlim=(x_min - x_pad, x_max + x_pad), ylim=(-2.5, y_max))
+    + labs(
+        x="",
+        y="Ward Linkage Distance",
+        title="Iris Species Clustering · dendrogram-basic · plotnine · pyplots.ai",
+        subtitle="Hierarchical clustering of 15 iris samples using Ward's minimum variance method",
+    )
     + theme_minimal()
     + theme(
         figure_size=(16, 9),
-        text=element_text(size=14),
+        text=element_text(size=14, family="sans-serif"),
         axis_title_x=element_blank(),
-        axis_title_y=element_text(size=20),
-        axis_text=element_text(size=16),
+        axis_title_y=element_text(size=20, margin={"r": 12}),
+        axis_text=element_text(size=16, color="#444444"),
         axis_text_x=element_blank(),
         axis_ticks_major_x=element_blank(),
-        plot_title=element_text(size=24),
+        plot_title=element_text(size=24, weight="bold", margin={"b": 4}),
+        plot_subtitle=element_text(size=15, color="#666666", margin={"b": 12}),
+        plot_background=element_rect(fill="#FAFAFA", color="none"),
+        panel_background=element_rect(fill="#FAFAFA", color="none"),
         panel_grid_major_x=element_blank(),
         panel_grid_minor_x=element_blank(),
         panel_grid_minor_y=element_blank(),
-        panel_grid_major_y=element_line(alpha=0.15, size=0.4),
+        panel_grid_major_y=element_line(alpha=0.2, size=0.5, color="#CCCCCC"),
+        legend_title=element_text(size=16, weight="bold"),
+        legend_text=element_text(size=14),
+        legend_position="right",
+        legend_background=element_rect(fill="#FAFAFA", color="#DDDDDD", size=0.5),
+        legend_key=element_rect(fill="none", color="none"),
+        plot_margin=0.02,
     )
 )
 
