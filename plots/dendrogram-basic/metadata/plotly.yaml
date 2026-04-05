@@ -1,164 +1,170 @@
 library: plotly
 specification_id: dendrogram-basic
 created: '2025-12-23T10:01:00Z'
-updated: '2026-04-05T20:00:00+00:00'
+updated: '2026-04-05T20:43:05Z'
 generated_by: claude-opus-4-6
 workflow_run: 20457532080
 issue: 0
-python_version: '3.14.3'
+python_version: 3.14.3
 library_version: 6.5.2
 preview_url: https://storage.googleapis.com/pyplots-images/plots/dendrogram-basic/plotly/plot.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/dendrogram-basic/plotly/plot.html
-quality_score: null
+quality_score: 83
 impl_tags:
   dependencies:
-    - scipy
+  - scipy
   techniques:
-    - html-export
+  - hover-tooltips
+  - html-export
   patterns:
-    - data-generation
-    - iteration-over-groups
+  - data-generation
   dataprep:
-    - hierarchical-clustering
-  styling: []
+  - hierarchical-clustering
+  styling:
+  - grid-styling
 review:
   strengths:
-  - Clean, professional visualization with clear hierarchical structure
-  - Excellent color-coded clusters that are colorblind-accessible
-  - Good use of Plotly figure_factory for dendrogram creation
-  - Realistic Iris flower dataset example that matches spec suggestion
-  - Well-formatted title following pyplots.ai convention
-  - Appropriate line width (3) for visibility at high resolution
+  - Excellent spec compliance with all required features implemented
+  - Clean, well-structured code with proper reproducibility
+  - Realistic iris flower data with meaningful clustering results
+  - Good use of Plotly's figure_factory dendrogram API with custom linkage function
+  - Interactive hover tooltips showing merge distances leverage Plotly's strengths
+  - Custom color palette with meaningful threshold-based coloring
   weaknesses:
-  - Missing legend to explain what the cluster colors represent
-  - Unconventional inline lambda import for scipy linkage function
-  - Could add hover information to display sample details interactively
-  image_description: 'The plot displays a dendrogram (hierarchical clustering tree)
-    with a clean white background. The title "dendrogram-basic · plotly · pyplots.ai"
-    is centered at the top in black text. The y-axis shows "Distance (Ward)" ranging
-    from 0 to ~10, and the x-axis is labeled "Iris Flower Samples" with 15 sample
-    names rotated at -45 degrees. The dendrogram uses three distinct colors to highlight
-    clusters: green for Setosa samples (leftmost cluster), red/coral for Virginica
-    samples (middle), and cyan/teal for Versicolor samples (rightmost). The tree structure
-    clearly shows how samples merge at different distance levels, with the Setosa
-    cluster being most distinct (joining the others at distance ~10), while Virginica
-    and Versicolor clusters merge at distance ~4. Line widths are thick enough for
-    good visibility.'
+  - Color palette includes green/coral combination that may challenge colorblind users
+  - Rightmost x-axis label appears clipped at canvas edge
+  - Design could be elevated with stronger visual hierarchy or storytelling elements
+  - X-axis tick font slightly small relative to other text elements
+  image_description: 'The plot displays a dendrogram of 15 iris flower samples (5
+    each of Setosa, Versicolor, Virginica) clustered using Ward linkage. The x-axis
+    shows angled sample labels ("Setosa-1" through "Virginica-5"), and the y-axis
+    shows "Distance (Ward linkage)" ranging from 0 to ~10.5. Branches are color-coded:
+    green for Setosa sub-clusters, coral/red for Virginica, orange/amber for Versicolor,
+    and dark blue for above-threshold merges (threshold ~3.5). The background is white
+    with very subtle horizontal gridlines. The title reads "dendrogram-basic · plotly
+    · pyplots.ai" centered at top. Species cluster correctly together, with Setosa
+    merging separately from the Virginica+Versicolor group.'
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 25
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 7
+        max: 8
         passed: true
-        comment: Title and axis labels are clearly readable; tick labels slightly
-          small but acceptable
+        comment: Font sizes explicitly set (title 28, labels 22, ticks 16-18). X-axis
+          ticks slightly small at 16pt.
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: No overlapping text; rotated x-axis labels are well-spaced
+        comment: Labels angled at -35 avoid overlap, but rightmost label clipped at
+          edge.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Line width of 3 makes branches clearly visible
+        comment: Branch lines at width 3 are visible. Lower-level merges slightly
+          hard to distinguish.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 3
+        max: 4
         passed: true
-        comment: Three distinct colors (green, red, cyan) are colorblind-friendly
+        comment: Green/coral combination may challenge red-green colorblind users.
       - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
+        name: Layout & Canvas
+        score: 3
+        max: 4
         passed: true
-        comment: Good proportions; bottom margin accommodates rotated labels well
+        comment: Good proportions. Right margin slightly tight causing label clipping.
       - id: VQ-06
-        name: Axis Labels
+        name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels: "Distance (Ward)" and "Iris Flower Samples"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
-        max: 2
+        comment: Descriptive labels with method specified.
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Custom palette, plotly_white template, threshold-based coloring.
+          Above defaults but not publication-level.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid at 6% opacity, zeroline removed, clean white background.
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
         passed: false
-        comment: No grid visible (acceptable for dendrogram), but no legend explaining
-          cluster colors
+        comment: Color threshold creates visual grouping but no additional emphasis
+          or annotation highlights key insights.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct dendrogram/hierarchical clustering visualization
+        comment: Correct dendrogram visualization.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Labels on x-axis, distances on y-axis correctly mapped
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Shows hierarchical structure, merge distances, proper tree layout
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: labels, Ward linkage, vertical orientation,
+          proportional heights, hover tooltips.'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 15 samples visible, full distance range shown
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X=samples, Y=distance. All data visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Cluster coloring is self-explanatory from labels
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: "dendrogram-basic · plotly · pyplots.ai"'
+        comment: Correct title format. No legend needed.
     data_quality:
-      score: 18
-      max: 20
+      score: 14
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Shows clear clustering hierarchy with three distinct groups; could
-          show more variation in merge distances within clusters
+        comment: Three distinct species with different inter/intra-cluster distances.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Iris flower dataset is a classic clustering example; species names
-          are realistic
+        comment: Iris flower dataset — classic, real-world, neutral scientific context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Ward distances are reasonable; measurements simulate real iris dimensions
+        comment: Realistic iris flower dimensions with appropriate random perturbation.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -166,40 +172,45 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear flow: imports → data → plot → save'
+        comment: Clean linear flow.
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy and plotly.figure_factory imported
+        comment: All imports used.
       - id: CQ-04
-        name: No Deprecated API
-        score: 0
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses inline lambda import which is unconventional
+        comment: Well-organized, appropriate complexity.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot.png at 4800x2700.
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses plotly's ff.create_dendrogram
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of ff.create_dendrogram with linkagefun parameter.
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Good use of figure_factory, but could leverage more interactivity
-          features or hover info
-  verdict: APPROVED
+        comment: Hover templates and HTML export are Plotly-distinctive.
+  verdict: REJECTED
