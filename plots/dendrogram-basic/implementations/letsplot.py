@@ -1,7 +1,6 @@
-""" pyplots.ai
+"""pyplots.ai
 dendrogram-basic: Basic Dendrogram
 Library: letsplot 4.8.2 | Python 3.14.3
-Quality: 84/100 | Updated: 2026-04-05
 """
 
 import numpy as np
@@ -11,18 +10,21 @@ from lets_plot import (
     aes,
     element_blank,
     element_line,
+    element_rect,
     element_text,
+    geom_hline,
+    geom_point,
     geom_segment,
     geom_text,
     ggplot,
     ggsize,
     labs,
     layer_tooltips,
-    scale_color_manual,
+    scale_color_identity,
     scale_x_continuous,
     scale_y_continuous,
     theme,
-    theme_minimal,
+    theme_void,
 )
 from lets_plot.export import ggsave
 from scipy.cluster.hierarchy import linkage
@@ -37,7 +39,7 @@ np.random.seed(42)
 indices = np.sort(np.concatenate([np.random.choice(np.where(iris.target == k)[0], 5, replace=False) for k in range(3)]))
 features = iris.data[indices]
 species_names = ["Setosa", "Versicolor", "Virginica"]
-labels = [f"{species_names[iris.target[i]]}-{j + 1}" for j, i in enumerate(indices)]
+labels = [f"{species_names[iris.target[i]][:3]}-{j + 1}" for j, i in enumerate(indices)]
 
 # Hierarchical clustering (Ward's method)
 linkage_matrix = linkage(features, method="ward")
@@ -52,9 +54,13 @@ segments = []
 max_dist = linkage_matrix[:, 2].max()
 color_threshold = 0.7 * max_dist
 
-# Track cluster identity for each node (leaf or merged)
-palette = {"above": "#306998", "Setosa": "#4DAF4A", "Versicolor": "#FF7F00", "Virginica": "#984EA3"}
+# Curated palette: muted, publication-quality tones
+palette = {"above": "#5B7B9A", "Setosa": "#2D8E6F", "Versicolor": "#D4883B", "Virginica": "#8B6AAE"}
+cluster_display = {"above": "Cross-cluster", "Setosa": "Setosa", "Versicolor": "Versicolor", "Virginica": "Virginica"}
 node_cluster = {i: labels[i].split("-")[0] for i in range(n)}
+# Map short prefixes to full species names
+prefix_to_species = {"Set": "Setosa", "Ver": "Versicolor", "Vir": "Virginica"}
+node_cluster = {i: prefix_to_species[labels[i].split("-")[0]] for i in range(n)}
 
 for i, (left, right, dist, _) in enumerate(linkage_matrix):
     left, right = int(left), int(right)
@@ -65,88 +71,101 @@ for i, (left, right, dist, _) in enumerate(linkage_matrix):
     leaf_positions[new_node] = (left_pos + right_pos) / 2
     node_heights[new_node] = dist
 
-    # Cluster label: same species if both children match, otherwise "above"
     left_cl, right_cl = node_cluster[left], node_cluster[right]
     node_cluster[new_node] = left_cl if left_cl == right_cl else "above"
     cluster_label = node_cluster[new_node] if dist < color_threshold else "above"
     color = palette[cluster_label]
-    display_cluster = cluster_label if cluster_label != "above" else "Inter-cluster"
+    display = cluster_display[cluster_label]
 
     left_height = node_heights[left]
     right_height = node_heights[right]
 
-    # Vertical segment from left child up to merge height
-    segments.append(
-        {
-            "x": left_pos,
-            "y": left_height,
-            "xend": left_pos,
-            "yend": dist,
-            "color": color,
-            "merge_dist": round(dist, 2),
-            "cluster": display_cluster,
-        }
-    )
-    # Vertical segment from right child up to merge height
-    segments.append(
-        {
-            "x": right_pos,
-            "y": right_height,
-            "xend": right_pos,
-            "yend": dist,
-            "color": color,
-            "merge_dist": round(dist, 2),
-            "cluster": display_cluster,
-        }
-    )
-    # Horizontal segment connecting the two children
-    segments.append(
-        {
-            "x": left_pos,
-            "y": dist,
-            "xend": right_pos,
-            "yend": dist,
-            "color": color,
-            "merge_dist": round(dist, 2),
-            "cluster": display_cluster,
-        }
-    )
+    for seg in [
+        (left_pos, left_height, left_pos, dist),
+        (right_pos, right_height, right_pos, dist),
+        (left_pos, dist, right_pos, dist),
+    ]:
+        segments.append(
+            {
+                "x": seg[0],
+                "y": seg[1],
+                "xend": seg[2],
+                "yend": seg[3],
+                "color": color,
+                "merge_dist": round(dist, 2),
+                "cluster": display,
+            }
+        )
 
 segment_df = pd.DataFrame(segments)
 
-# Leaf labels positioned just below y=0
-label_df = pd.DataFrame([{"x": leaf_positions[i], "y": -0.3, "label": labels[i]} for i in range(n)])
+# Leaf labels and markers
+leaf_data = []
+for i in range(n):
+    species = prefix_to_species[labels[i].split("-")[0]]
+    leaf_data.append(
+        {"x": leaf_positions[i], "y": 0, "label": labels[i], "color": palette[species], "species": species}
+    )
+label_df = pd.DataFrame(leaf_data)
+
+# Legend entries (manual via geom_point placed off-canvas, brought into legend via tooltips)
+legend_items = pd.DataFrame(
+    [
+        {"x": -99, "y": -99, "xend": -98, "yend": -99, "color": palette[s], "cluster": s, "merge_dist": 0}
+        for s in ["Setosa", "Versicolor", "Virginica", "above"]
+    ]
+)
 
 # Plot
-color_values = {v: v for v in palette.values()}
-
 plot = (
     ggplot()
     + geom_segment(
         aes(x="x", y="y", xend="xend", yend="yend", color="color"),
         data=segment_df,
-        size=1.8,
-        tooltips=layer_tooltips().title("Merge").line("Distance|@merge_dist").line("Cluster|@cluster"),
+        size=2.0,
+        tooltips=layer_tooltips().title("@cluster").line("Merge distance|@merge_dist").min_width(180),
     )
-    + geom_text(aes(x="x", y="y", label="label"), data=label_df, angle=40, hjust=1, vjust=1, size=10, color="#444444")
-    + scale_color_manual(values=color_values, guide="none")
-    + scale_x_continuous(expand=[0.05, 0.02])
-    + scale_y_continuous(name="Ward Linkage Distance", expand=[0.14, 0.01], breaks=[0, 2, 4, 6, 8, 10, 12])
-    + labs(x="", title="dendrogram-basic \u00b7 letsplot \u00b7 pyplots.ai")
-    + theme_minimal()
+    + geom_point(
+        aes(x="x", y="y", color="color"),
+        data=label_df,
+        size=5,
+        shape=16,
+        tooltips=layer_tooltips().title("@species").line("Sample|@label"),
+    )
+    + geom_text(
+        aes(x="x", y="y", label="label", color="color"),
+        data=label_df.assign(y=-0.35),
+        angle=45,
+        hjust=1,
+        vjust=1,
+        size=13,
+        family="monospace",
+    )
+    + geom_hline(yintercept=color_threshold, linetype="dashed", color="#9EAAB8", size=0.8)
+    + geom_text(
+        aes(x="x", y="y", label="label"),
+        data=pd.DataFrame([{"x": n - 1.5, "y": color_threshold + 0.25, "label": f"threshold = {color_threshold:.1f}"}]),
+        size=11,
+        color="#7A8A9A",
+        hjust=1,
+        family="monospace",
+    )
+    + scale_color_identity()
+    + scale_x_continuous(expand=[0.06, 0.02])
+    + scale_y_continuous(name="Ward Linkage Distance", expand=[0.15, 0.01], breaks=[0, 2, 4, 6, 8, 10, 12])
+    + labs(x="", title="dendrogram-basic · letsplot · pyplots.ai")
+    + theme_void()
     + theme(
-        plot_title=element_text(size=24, face="bold"),
-        axis_title_y=element_text(size=20),
-        axis_text=element_text(size=16),
+        plot_title=element_text(size=24, face="bold", color="#2C3E50"),
+        plot_background=element_rect(fill="white", color="white"),
+        axis_title_y=element_text(size=20, color="#4A5568", margin=[0, 12, 0, 0]),
+        axis_text_y=element_text(size=16, color="#6B7B8D"),
         axis_text_x=element_blank(),
         axis_ticks_x=element_blank(),
-        axis_line_x=element_blank(),
-        axis_line_y=element_line(size=0.5, color="#CCCCCC"),
-        panel_grid_major_x=element_blank(),
-        panel_grid_minor_x=element_blank(),
-        panel_grid_major_y=element_line(size=0.5, color="#E8E8E8"),
-        panel_grid_minor=element_blank(),
-        plot_margin=[40, 20, 20, 20],
+        axis_ticks_y=element_line(size=0.4, color="#D0D8E0"),
+        axis_line_y=element_line(size=0.6, color="#CBD5E0"),
+        panel_grid_major_y=element_line(size=0.3, color="#EDF2F7"),
+        plot_margin=[50, 30, 30, 20],
     )
     + ggsize(1600, 900)
 )
