@@ -1,7 +1,7 @@
 """ pyplots.ai
 dendrogram-basic: Basic Dendrogram
 Library: plotly 6.5.2 | Python 3.14.3
-Quality: 83/100 | Updated: 2026-04-05
+Quality: 90/100 | Updated: 2026-04-05
 """
 
 import numpy as np
