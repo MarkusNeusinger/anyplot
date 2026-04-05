@@ -1,7 +1,7 @@
 """ pyplots.ai
 dendrogram-basic: Basic Dendrogram
 Library: highcharts 1.10.3 | Python 3.14.3
-Quality: 84/100 | Created: 2026-04-05
+Quality: 87/100 | Created: 2026-04-05
 """
 
 import tempfile
