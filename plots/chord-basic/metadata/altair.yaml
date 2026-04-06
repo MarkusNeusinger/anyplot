@@ -1,7 +1,7 @@
 library: altair
 specification_id: chord-basic
 created: '2025-12-23T10:01:05Z'
-updated: '2026-04-06T20:59:38Z'
+updated: '2026-04-06T21:08:38Z'
 generated_by: claude-opus-4-6
 workflow_run: 20457533097
 issue: 0
@@ -9,48 +9,50 @@ python_version: '3.14'
 library_version: 6.0.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/chord-basic/altair/plot.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/chord-basic/altair/plot.html
-quality_score: 86
+quality_score: 87
 impl_tags:
   dependencies: []
   techniques:
   - bezier-curves
   - layer-composition
-  - custom-legend
   - hover-tooltips
+  - custom-legend
+  - annotations
   - html-export
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
-  - minimal-chrome
   - alpha-blending
+  - minimal-chrome
 review:
   strengths:
-  - Excellent chord diagram construction from Altair primitives with proper bezier
-    curves and polygon rendering
-  - Strong data storytelling through opacity-based visual hierarchy with informative
-    subtitle
-  - Perfect spec compliance with all required features including bidirectional flows
-    and interactive tooltips
-  - Clean well-organized code with vectorized numpy operations and clear comments
-  - Colorblind-safe palette with good contrast between all 6 entities
+  - Excellent data storytelling with major/minor chord opacity hierarchy and Top Flows
+    callout annotation
+  - Full spec compliance including interactive tooltips and bidirectional flows
+  - Clean, polished visual design with custom palette, informative subtitle, and manual
+    legend
+  - Dual output (PNG + HTML) leveraging Altair interactive capabilities
   weaknesses:
-  - Library mastery limited by Altair lack of native chord diagram support — implementation
-    uses Altair as low-level drawing tool
-  - Visual refinement could be improved — chord overlaps in center area reduce traceability
-    of individual flows
-  image_description: 'The plot displays a chord diagram showing migration flows between
-    6 continents arranged around a circle. Each continent has a distinct color: Europe
-    (dark blue), North America (golden yellow), Asia (teal), Africa (orange-red),
-    South America (purple), and Oceania (light teal). Colored arcs along the perimeter
-    represent each entity, with arc width proportional to total flow. Chords connect
-    entities across the circle interior, with width proportional to flow magnitude.
-    Major flows (top 30%) appear at higher opacity while minor flows are more transparent,
-    creating clear visual hierarchy. The title reads "chord-basic · altair · pyplots.ai"
-    with subtitle "Dominant migration corridors highlighted — Africa→Europe and S.
-    America→N. America lead". A manual legend on the right shows all 6 regions with
-    colored squares. Labels are positioned outside the arcs with correct text alignment.'
+  - 'Asia and Oceania colors (#2A9D8F and #4ECDC4) are too similar — both teal variants
+    that may confuse viewers'
+  - Minor chord opacity (0.3) makes some flows hard to see against the background
+  - Heavy manual geometry computation limits idiomatic Altair usage (unavoidable for
+    chord diagrams)
+  image_description: 'The plot displays a chord diagram with 6 continents (Europe,
+    North America, Asia, Africa, South America, Oceania) arranged around a circle
+    on a light gray (#FAFAFA) background. Each continent has a colored outer arc segment
+    proportional to its total flow: Europe (blue #306998), North America (yellow #FFD43B),
+    Asia (teal #2A9D8F), Africa (coral #E76F51), South America (purple #7B2D8E), Oceania
+    (light teal #4ECDC4). Chords connect entities with width proportional to flow
+    magnitude, colored by source. Major flows (top 30%) render at higher opacity than
+    minor flows. The title reads "chord-basic · altair · pyplots.ai" with subtitle
+    "Dominant migration corridors highlighted — Africa→Europe and S. America→N. America
+    lead". A "Top Flows" annotation in the top-left shows Africa→Europe: 55k and S.
+    America→N. America: 50k. A manual legend in the bottom-right lists all 6 regions
+    with colored squares. Entity labels appear outside the ring with total flow values
+    in parentheses.'
   criteria_checklist:
     visual_quality:
       score: 27
@@ -61,41 +63,45 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 28pt, subtitle 16pt, labels
-          20pt, legend 18-20pt'
+        comment: Font sizes explicitly set (title 28pt, labels 20pt, annotations 14-16pt).
+          Annotation text at 14pt slightly small.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text, labels well-positioned outside arcs
+        comment: No overlapping text. Labels well-positioned outside ring with proper
+          alignment.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Chords visible with good opacity differentiation, some overlap in
-          center inherent to chart type
+        comment: Major chords clearly visible. Minor chords at 0.3 opacity somewhat
+          faint but discernible.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
-        passed: true
-        comment: Six distinct colorblind-safe colors with good contrast
-      - id: VQ-05
-        name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Well-centered diagram with legend nearby, some unused space at bottom-left
+        comment: Most colors distinct, but Asia and Oceania are both teal variants
+          that could be confused.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square canvas ideal for chord diagram. Fills space well with balanced
+          margins.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive title and subtitle, no axes needed for chord diagram
+        comment: Entity labels with flow totals and units (k). Title and subtitle
+          descriptive.
     design_excellence:
-      score: 14
+      score: 16
       max: 20
       items:
       - id: DE-01
@@ -103,21 +109,22 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom palette, intentional typography hierarchy, major/minor chord
-          distinction
+        comment: Custom palette, warm background, informative subtitle, manual legend.
+          Polished, above-default design.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Clean background, no axes/spines, view stroke removed, generous whitespace
+        comment: No axes/spines, clean background, view stroke removed, generous padding.
+          High polish.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Opacity-based hierarchy highlights dominant flows, subtitle names
-          the insight
+        comment: Major/minor opacity hierarchy, Top Flows callout, informative subtitle.
+          Strong storytelling.
     spec_compliance:
       score: 15
       max: 15
@@ -127,25 +134,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct chord diagram with entities on perimeter and connecting chords
+        comment: Correct chord diagram with entities on perimeter connected by chords.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Distinct colors, proportional chord width, bidirectional flows, tooltips
+        comment: Distinct colors, proportional widths, tooltips, bidirectional flows
+          all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Source/target/value correctly mapped, all 15 connections visible
+        comment: Source, target, value correctly mapped. All 15 flows visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format, legend labels match entities
+        comment: Title format correct. Manual legend with all 6 regions and matching
+          colors.
     data_quality:
       score: 14
       max: 15
@@ -155,53 +164,56 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Bidirectional flows, varying magnitudes, 6 entities with 15 connections
+        comment: Bidirectional flows, varying magnitudes, 6 entities. Could show more
+          asymmetric pairs.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Migration flows between continents - real-world neutral scenario
+        comment: Migration flows between continents — real-world, neutral, classic
+          chord use case.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values in thousands (12-55), sensible for intercontinental migration
+        comment: Migration values in thousands plausible for inter-continental flows.
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: Flat script structure with no functions or classes
+        comment: Linear flow, no functions/classes. Necessarily long due to manual
+          polygon construction.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic with hardcoded data
+        comment: Fully deterministic with hardcoded data.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: altair, numpy, pandas'
+        comment: Only altair, numpy, pandas — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Complex but appropriate, vectorized operations, well-commented
+        comment: Complex but appropriate for chord diagram. No fake functionality.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with scale_factor=3.0 and plot.html
+        comment: Saves as plot.png with scale_factor=3.0 and plot.html. Current API.
     library_mastery:
       score: 6
       max: 10
@@ -211,12 +223,13 @@ review:
         score: 3
         max: 5
         passed: true
-        comment: Uses declarative grammar correctly but chord diagrams require low-level
-          primitives
+        comment: Uses selections, tooltips, layer composition, encodings. Core is
+          manual geometry (necessary — no native chord mark).
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Interactive tooltips, HTML export, declarative layer composition
+        comment: Interactive hover selection, tooltip encoding, dual PNG+HTML export
+          are distinctively Altair features.
   verdict: REJECTED
