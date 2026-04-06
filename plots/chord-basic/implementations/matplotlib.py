@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 chord-basic: Basic Chord Diagram
 Library: matplotlib 3.10.8 | Python 3.14
 Quality: 87/100 | Created: 2026-04-06
@@ -137,18 +137,59 @@ for src_start, src_end, tgt_start, tgt_end, color, flow in chord_params:
     verts.extend([arc2[-1] * ctrl_factor, arc1[0] * ctrl_factor, arc1[0]])
     codes.extend([Path.CURVE4, Path.CURVE4, Path.CURVE4])
 
-    # Scale alpha by flow magnitude for visual depth
-    alpha = 0.40 + 0.30 * (flow / flow_matrix.max())
-    patch = mpatches.PathPatch(Path(verts, codes), facecolor=color, edgecolor=color, linewidth=0.5, alpha=alpha)
+    # Scale alpha and linewidth by flow magnitude for clear visual hierarchy
+    flow_ratio = flow / flow_matrix.max()
+    alpha = 0.15 + 0.65 * flow_ratio**0.7
+    lw = 0.3 + 1.2 * flow_ratio
+    patch = mpatches.PathPatch(Path(verts, codes), facecolor=color, edgecolor=color, linewidth=lw, alpha=alpha)
     ax.add_patch(patch)
 
-# Title
+# Annotate the top 3 flows to create a clear data story
+top_flows = sorted(
+    [(i, j, flow_matrix[i, j]) for i in range(n) for j in range(n) if i != j and flow_matrix[i, j] > 0],
+    key=lambda f: f[2],
+    reverse=True,
+)[:3]
+
+ann_positions = [(-0.55, -1.28), (0.55, 1.20), (-0.95, 0.60)]
+for rank, (i, j, flow) in enumerate(top_flows):
+    ax_x, ax_y = ann_positions[rank]
+    label = f"{entities[i]} → {entities[j]}: {flow}M"
+    fs = 14 if rank == 0 else 12
+    ax.annotate(
+        label,
+        xy=(ax_x, ax_y),
+        fontsize=fs,
+        fontweight="bold" if rank == 0 else "medium",
+        ha="center",
+        va="center",
+        color="#333333",
+        bbox={
+            "boxstyle": "round,pad=0.3",
+            "facecolor": "white",
+            "edgecolor": colors[i],
+            "alpha": 0.92,
+            "linewidth": 1.5,
+        },
+    )
+
+# Title and subtitle
 ax.set_title(
     "Continental Migration Flows · chord-basic · matplotlib · pyplots.ai",
     fontsize=24,
     fontweight="medium",
-    pad=30,
+    pad=40,
     color="#333333",
+)
+ax.text(
+    0,
+    1.38,
+    "Asia–Europe corridor dominates global flows",
+    fontsize=16,
+    ha="center",
+    va="center",
+    color="#666666",
+    fontstyle="italic",
 )
 
 plt.tight_layout()
