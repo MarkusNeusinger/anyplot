@@ -1,7 +1,7 @@
 library: bokeh
 specification_id: chord-basic
 created: '2025-12-23T10:02:12Z'
-updated: '2026-04-06T20:26:19+00:00'
+updated: '2026-04-06T20:33:03Z'
 generated_by: claude-opus-4-6
 workflow_run: 20457532478
 issue: 0
@@ -9,200 +9,218 @@ python_version: '3.14'
 library_version: 3.8.2
 preview_url: https://storage.googleapis.com/pyplots-images/plots/chord-basic/bokeh/plot.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/chord-basic/bokeh/plot.html
-quality_score: null
+quality_score: 81
 impl_tags:
   dependencies: []
   techniques:
   - bezier-curves
   - patches
   - hover-tooltips
-  - columndatasource
+  - custom-legend
+  - html-export
   patterns:
   - data-generation
   - matrix-construction
   - iteration-over-groups
+  - columndatasource
   dataprep: []
   styling:
+  - minimal-chrome
   - alpha-blending
+  - edge-highlighting
 review:
   strengths:
-  - Excellent implementation of chord diagram from scratch using Bokeh primitives
-    (patches, bezier curves)
-  - 'Perfect use of Bokeh-specific features: HoverTool with custom tooltips showing
-    flow details, interactive toolbar'
-  - Colorblind-safe palette with Python-themed colors
-  - Well-positioned legend that does not obstruct the visualization
-  - Clean arc segments with proportional sizing based on total flows
-  - Smooth bezier curves for chords with appropriate transparency
+  - 'Perfect spec compliance: all required features present including bidirectional
+    flows and hover tooltips'
+  - Clean, well-structured code with deterministic data and no unnecessary complexity
+  - Realistic migration data with appropriate scale values
+  - Good visual refinement with hidden axes, subtle background, and white arc borders
   weaknesses:
-  - Contains helper function bezier_chord() which violates KISS structure
-  - Bidirectional flows are combined rather than shown as separate chords (spec mentions
-    both directions should be visible separately)
-  image_description: 'The plot displays a chord diagram visualizing migration flows
-    between 6 continents arranged in a circle. Each continent is represented by a
-    colored arc segment: Africa (blue #306998), Asia (yellow #FFD43B), Europe (orange
-    #E69F00), N. America (light blue #56B4E9), S. America (green #009E73), and Oceania
-    (pink #CC79A7). Bezier-curved chords connect the entities with widths proportional
-    to flow magnitude. The title "chord-basic · bokeh · pyplots.ai" appears at the
-    top center. A legend titled "Migration Flows" is positioned on the right side
-    with colored boxes for each continent. Entity labels are placed outside their
-    respective arcs in matching colors. The Bokeh interactive toolbar (hover, pan,
-    wheel_zoom, reset) is visible in the top-right corner. The plot uses a square
-    3600×3600 format.'
+  - Data storytelling is weak — all flows appear with equal visual emphasis, no focal
+    point guides the viewer
+  - Yellow and orange colors are too similar, risking confusion for colorblind viewers
+  - Some thin chords (especially Oceania's small flows) are barely visible at current
+    alpha
+  - Library mastery could be improved with more Bokeh-specific features (e.g., color
+    mapper, callbacks)
+  image_description: 'The plot displays a chord diagram with 6 continents (Africa,
+    Asia, Europe, N. America, S. America, Oceania) arranged around a circle. Each
+    entity has a colored arc segment on the perimeter: Africa (dark blue), Asia (yellow),
+    Europe (orange), N. America (light blue), S. America (green), Oceania (pink).
+    Semi-transparent chords connect entities showing migration flows, with width proportional
+    to flow magnitude. Chords are colored by source entity. A legend titled "Migration
+    Flows" sits on the right with colored squares for each continent. The title reads
+    "chord-basic · bokeh · pyplots.ai" at the top. Background is light gray (#FAFAFA)
+    with no axes or grid visible. The diagram is rendered at 3600x3600 square format.'
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 25
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title at 36pt, labels at 26pt, legend at 20-22pt - all clearly readable
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text, labels well-positioned outside arcs
-      - id: VQ-03
-        name: Element Visibility
         score: 7
         max: 8
         passed: true
-        comment: Chords clearly visible with good alpha (0.55), arc segments distinct
+        comment: All font sizes explicitly set (title 36pt, labels 26pt, legend 20-22pt),
+          all readable
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Text labels clean, chord crossings inherent to chart type but some
+          areas visually busy
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Most chords visible at alpha=0.45, thinner chords harder to distinguish
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 3
+        max: 4
         passed: true
-        comment: Uses colorblind-safe palette with good differentiation
+        comment: Reasonable palette but yellow and orange too similar for some colorblind
+          viewers
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 3
+        max: 4
         passed: true
-        comment: Good proportions, chord diagram well-centered with legend on right
+        comment: Good use of canvas, diagram fills ~55%, legend well-positioned
       - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: true
-        comment: N/A for chord diagrams (no traditional axes)
-      - id: VQ-07
-        name: Grid & Legend
+        name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No grid (appropriate), legend well-placed and clear
+        comment: Title in correct format, no axes needed for chord diagram
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Thoughtful palette, white arc borders, light background, above defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Axes/grid hidden, outline removed, subtle background, polished arc
+          borders
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: No visual emphasis or hierarchy to guide viewer to key insights
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct chord diagram with arcs and bezier curves
+        comment: Correct chord diagram with entities on perimeter and connecting chords
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Source/target entities correctly mapped around perimeter
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Chord width proportional to flow, distinct colors, hover tooltips
-      - id: SC-04
-        name: Data Range
+        comment: Distinct colors, proportional width, hover tooltips, bidirectional
+          flows
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 6 continents visible with all connections shown
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Flow matrix correctly mapped to chord widths and arc proportions
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly shows all entities with matching colors
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: chord-basic · bokeh · pyplots.ai'
+        comment: Title format correct, legend with all entity labels present
     data_quality:
-      score: 17
-      max: 20
+      score: 14
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Shows bidirectional flows combined, varying flow magnitudes, but
-          individual bidirectional flows not separately visible
+        comment: Bidirectional flows, varying magnitudes, asymmetric relationships
+          shown
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Migration between continents is a perfect real-world scenario
+        comment: Migration flows between continents — real-world neutral scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Flow values in millions are sensible, though some values could show
-          more variation
+        comment: Values in millions plausible for intercontinental migration
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 1
-        max: 3
-        passed: false
-        comment: Contains helper function `bezier_chord()` which violates KISS principle
-      - id: CQ-02
-        name: Reproducibility
         score: 3
         max: 3
         passed: true
-        comment: Uses `np.random.seed(42)` (though data is hardcoded)
+        comment: 'Clean linear flow: imports, data, figure, arcs, labels, chords,
+          legend, save'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic hardcoded flow matrix
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: No deprecated functions
+        comment: Appropriately complex for manual chord construction
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves as plot.png via export_png
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 5
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
         max: 5
         passed: true
-        comment: HoverTool with custom tooltips, ColumnDataSource, patches glyph,
-          interactive tools
-  verdict: APPROVED
+        comment: Uses ColumnDataSource and patches correctly, but chord construction
+          is entirely manual
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: HoverTool with custom tooltips is a distinctive Bokeh feature
+  verdict: REJECTED
