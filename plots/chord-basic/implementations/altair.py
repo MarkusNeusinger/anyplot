@@ -1,7 +1,7 @@
 """ pyplots.ai
 chord-basic: Basic Chord Diagram
-Library: altair 6.0.0 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-23
+Library: altair 6.0.0 | Python 3.14
+Quality: 87/100 | Updated: 2026-04-06
 """
 
 import altair as alt
@@ -9,7 +9,7 @@ import numpy as np
 import pandas as pd
 
 
-# Data - Migration flows between continents (bidirectional)
+# Data - Migration flows between continents (thousands of people, bidirectional)
 flows_data = [
     {"source": "Europe", "target": "North America", "value": 45},
     {"source": "North America", "target": "Europe", "value": 30},
@@ -30,294 +30,298 @@ flows_data = [
 
 df = pd.DataFrame(flows_data)
 
-# Target output: 4800x2700 px (16:9 aspect ratio) with scale_factor=3.0
-# Internal canvas: 1600x900 pixels
-width = 1600
-height = 900
-center_x = width / 2
-center_y = height / 2
+# Square canvas for chord diagram (3600x3600 at scale_factor=3)
+W, H = 1200, 1200
+CX, CY = W / 2, H / 2 + 20
+R_OUTER, R_INNER, R_CHORD = 440, 410, 398
 
-# Circle parameters
-outer_radius = 350
-inner_radius = 320
-chord_inner_radius = 310
+# Entity ordering and color palette (colorblind-safe, maximally distinct hues)
+entities = ["Europe", "North America", "Asia", "Africa", "South America", "Oceania"]
+colors = ["#306998", "#FFD43B", "#2A9D8F", "#E76F51", "#7B2D8E", "#4ECDC4"]
+color_scale = alt.Scale(domain=entities, range=colors)
 
-# Get unique entities and compute totals
-entities = list(pd.concat([df["source"], df["target"]]).unique())
-entity_totals = {}
-for entity in entities:
-    entity_totals[entity] = df[df["source"] == entity]["value"].sum() + df[df["target"] == entity]["value"].sum()
-
+# Compute entity totals and angular positions
+entity_totals = {e: df[df["source"] == e]["value"].sum() + df[df["target"] == e]["value"].sum() for e in entities}
 total_flow = sum(entity_totals.values())
-
-# Color palette for entities
-colors = {
-    "Europe": "#306998",
-    "North America": "#FFD43B",
-    "Asia": "#4ECDC4",
-    "Africa": "#FF6B6B",
-    "South America": "#95E1D3",
-    "Oceania": "#A86EDB",
-}
-
-# Calculate arc positions for each entity
-# Gap between entities in radians
 gap = 0.04
-total_gap = gap * len(entities)
-available_angle = 2 * np.pi - total_gap
+available_angle = 2 * np.pi - gap * len(entities)
 
-# Starting angle (top of circle)
-start_angle = -np.pi / 2
-
-# Calculate entity arc positions
 entity_arcs = {}
-current_angle = start_angle
+angle = -np.pi / 2
+for e in entities:
+    arc_len = (entity_totals[e] / total_flow) * available_angle
+    entity_arcs[e] = (angle, angle + arc_len, arc_len)
+    angle += arc_len + gap
 
-for entity in entities:
-    arc_angle = (entity_totals[entity] / total_flow) * available_angle
-    entity_arcs[entity] = {"start": current_angle, "end": current_angle + arc_angle, "angle": arc_angle}
-    current_angle += arc_angle + gap
+# Build outer arc polygons
+arcs_rows = []
+for e in entities:
+    start, end, _ = entity_arcs[e]
+    angles = np.linspace(start, end, 50)
+    xs = np.concatenate([CX + R_OUTER * np.cos(angles), CX + R_INNER * np.cos(angles[::-1])])
+    ys = np.concatenate([CY + R_OUTER * np.sin(angles), CY + R_INNER * np.sin(angles[::-1])])
+    for i, (x, y) in enumerate(zip(xs, ys, strict=True)):
+        arcs_rows.append({"entity": e, "x": x, "y": y, "order": i})
 
-# Create outer arc segments data
-num_arc_points = 50
-arcs_data = []
+arcs_df = pd.DataFrame(arcs_rows)
 
-for entity in entities:
-    arc = entity_arcs[entity]
-    angles = np.linspace(arc["start"], arc["end"], num_arc_points)
+# Track chord offsets within each entity arc
+source_off = {}
+target_off = {}
+for e in entities:
+    start, _, arc_len = entity_arcs[e]
+    frac = df[df["source"] == e]["value"].sum() / entity_totals[e] if entity_totals[e] > 0 else 0.5
+    source_off[e] = start
+    target_off[e] = start + frac * arc_len
 
-    # Outer arc (clockwise)
-    for i, angle in enumerate(angles):
-        arcs_data.append(
-            {
-                "entity": entity,
-                "x": center_x + outer_radius * np.cos(angle),
-                "y": center_y + outer_radius * np.sin(angle),
-                "order": i,
-                "color": colors[entity],
-            }
-        )
+# Visual hierarchy: top 30% of flows are "major"
+value_threshold = df["value"].quantile(0.7)
 
-    # Inner arc (counter-clockwise to close the shape)
-    for i, angle in enumerate(reversed(angles)):
-        arcs_data.append(
-            {
-                "entity": entity,
-                "x": center_x + inner_radius * np.cos(angle),
-                "y": center_y + inner_radius * np.sin(angle),
-                "order": num_arc_points + i,
-                "color": colors[entity],
-            }
-        )
-
-arcs_df = pd.DataFrame(arcs_data)
-
-# Track offset within each entity's arc for chord placement
-source_offsets = {entity: entity_arcs[entity]["start"] for entity in entities}
-target_offsets = {entity: entity_arcs[entity]["start"] for entity in entities}
-
-# Pre-calculate chord widths for each entity
-# Source flows take first half of arc, target flows take second half
-entity_source_total = {entity: df[df["source"] == entity]["value"].sum() for entity in entities}
-entity_target_total = {entity: df[df["target"] == entity]["value"].sum() for entity in entities}
-
-# Reset offsets with proper split
-for entity in entities:
-    arc = entity_arcs[entity]
-    source_fraction = entity_source_total[entity] / entity_totals[entity] if entity_totals[entity] > 0 else 0.5
-    source_offsets[entity] = arc["start"]
-    target_offsets[entity] = arc["start"] + source_fraction * arc["angle"]
-
-# Create chord paths
-num_chord_points = 40
-chords_data = []
-chord_id = 0
+# Build chord polygons with quadratic bezier curves
+N_BEZ = 35
+chords_rows = []
+center = np.array([CX, CY])
 
 for _, row in df.iterrows():
-    src = row["source"]
-    tgt = row["target"]
-    val = row["value"]
+    src, tgt, val = row["source"], row["target"], row["value"]
+    _, _, s_len = entity_arcs[src]
+    _, _, t_len = entity_arcs[tgt]
 
-    # Calculate chord width at source
-    src_arc = entity_arcs[src]
-    src_width = (val / entity_totals[src]) * src_arc["angle"] if entity_totals[src] > 0 else 0
+    sw = (val / entity_totals[src]) * s_len
+    tw = (val / entity_totals[tgt]) * t_len
+    sa = source_off[src]
+    source_off[src] += sw
+    ta = target_off[tgt]
+    target_off[tgt] += tw
 
-    # Calculate chord width at target
-    tgt_arc = entity_arcs[tgt]
-    tgt_width = (val / entity_totals[tgt]) * tgt_arc["angle"] if entity_totals[tgt] > 0 else 0
+    t_param = np.linspace(0, 1, N_BEZ)
+    angles_s = np.linspace(sa, sa + sw, 10)
+    angles_t = np.linspace(ta, ta + tw, 10)
 
-    # Source arc positions
-    src_start_angle = source_offsets[src]
-    src_end_angle = src_start_angle + src_width
-    source_offsets[src] = src_end_angle
+    arc_s = np.column_stack([CX + R_CHORD * np.cos(angles_s), CY + R_CHORD * np.sin(angles_s)])
+    arc_t = np.column_stack([CX + R_CHORD * np.cos(angles_t), CY + R_CHORD * np.sin(angles_t)])
 
-    # Target arc positions
-    tgt_start_angle = target_offsets[tgt]
-    tgt_end_angle = tgt_start_angle + tgt_width
-    target_offsets[tgt] = tgt_end_angle
+    t1 = (1 - t_param) ** 2
+    t2 = 2 * (1 - t_param) * t_param
+    t3 = t_param**2
+    p_se = np.array([CX + R_CHORD * np.cos(sa + sw), CY + R_CHORD * np.sin(sa + sw)])
+    p_ts = np.array([CX + R_CHORD * np.cos(ta), CY + R_CHORD * np.sin(ta)])
+    p_te = np.array([CX + R_CHORD * np.cos(ta + tw), CY + R_CHORD * np.sin(ta + tw)])
+    p_ss = np.array([CX + R_CHORD * np.cos(sa), CY + R_CHORD * np.sin(sa)])
+    bez_1 = np.outer(t1, p_se) + np.outer(t2, center) + np.outer(t3, p_ts)
+    bez_2 = np.outer(t1, p_te) + np.outer(t2, center) + np.outer(t3, p_ss)
+    pts = np.vstack([arc_s, bez_1, arc_t, bez_2])
 
-    # Create chord shape using quadratic bezier curves
-    # Path: src_start -> center -> tgt_start -> tgt_end -> center -> src_end -> src_start
-
-    chord_points = []
-
-    # Source arc (small arc at the source entity)
-    src_angles = np.linspace(src_start_angle, src_end_angle, 10)
-    for angle in src_angles:
-        chord_points.append(
-            (center_x + chord_inner_radius * np.cos(angle), center_y + chord_inner_radius * np.sin(angle))
-        )
-
-    # Bezier from source end to target start
-    src_mid = (src_start_angle + src_end_angle) / 2
-    tgt_mid = (tgt_start_angle + tgt_end_angle) / 2
-
-    # Curve from src_end to tgt_start through center
-    for i in range(num_chord_points):
-        t = i / (num_chord_points - 1)
-        # Quadratic bezier with control point at center
-        x = (
-            (1 - t) ** 2 * (center_x + chord_inner_radius * np.cos(src_end_angle))
-            + 2 * (1 - t) * t * center_x
-            + t**2 * (center_x + chord_inner_radius * np.cos(tgt_start_angle))
-        )
-        y = (
-            (1 - t) ** 2 * (center_y + chord_inner_radius * np.sin(src_end_angle))
-            + 2 * (1 - t) * t * center_y
-            + t**2 * (center_y + chord_inner_radius * np.sin(tgt_start_angle))
-        )
-        chord_points.append((x, y))
-
-    # Target arc (small arc at the target entity)
-    tgt_angles = np.linspace(tgt_start_angle, tgt_end_angle, 10)
-    for angle in tgt_angles:
-        chord_points.append(
-            (center_x + chord_inner_radius * np.cos(angle), center_y + chord_inner_radius * np.sin(angle))
-        )
-
-    # Curve from tgt_end back to src_start through center
-    for i in range(num_chord_points):
-        t = i / (num_chord_points - 1)
-        x = (
-            (1 - t) ** 2 * (center_x + chord_inner_radius * np.cos(tgt_end_angle))
-            + 2 * (1 - t) * t * center_x
-            + t**2 * (center_x + chord_inner_radius * np.cos(src_start_angle))
-        )
-        y = (
-            (1 - t) ** 2 * (center_y + chord_inner_radius * np.sin(tgt_end_angle))
-            + 2 * (1 - t) * t * center_y
-            + t**2 * (center_y + chord_inner_radius * np.sin(src_start_angle))
-        )
-        chord_points.append((x, y))
-
-    # Add points to dataframe
-    for pt_idx, (x, y) in enumerate(chord_points):
-        chords_data.append(
+    chord_id = f"{src}->{tgt}"
+    is_major = val >= value_threshold
+    for i in range(len(pts)):
+        chords_rows.append(
             {
-                "chord_id": f"{src}-{tgt}-{chord_id}",
+                "chord_id": chord_id,
                 "source": src,
                 "target": tgt,
-                "value": val,
-                "x": x,
-                "y": y,
-                "order": pt_idx,
+                "value": int(val),
+                "x": pts[i, 0],
+                "y": pts[i, 1],
+                "order": i,
+                "major": is_major,
+                "flow_label": f"{src} → {tgt}: {int(val)}k",
             }
         )
 
-    chord_id += 1
+chords_df = pd.DataFrame(chords_rows)
 
-chords_df = pd.DataFrame(chords_data)
-
-# Create entity labels data
-labels_data = []
-for entity in entities:
-    arc = entity_arcs[entity]
-    mid_angle = (arc["start"] + arc["end"]) / 2
-    label_radius = outer_radius + 40
-
-    # Adjust text angle for readability
-    text_angle = np.degrees(mid_angle)
-    if -90 < text_angle < 90 or text_angle > 270 or text_angle < -270:
-        align = "left"
-    else:
-        align = "right"
-
-    labels_data.append(
+# Label positions outside arcs
+labels_rows = []
+for e in entities:
+    start, end, _ = entity_arcs[e]
+    mid = (start + end) / 2
+    r_label = R_OUTER + 45
+    deg = np.degrees(mid) % 360
+    labels_rows.append(
         {
-            "entity": entity,
-            "x": center_x + label_radius * np.cos(mid_angle),
-            "y": center_y + label_radius * np.sin(mid_angle),
-            "angle": text_angle if -90 <= text_angle <= 90 else text_angle + 180,
-            "align": align,
+            "entity": e,
+            "x": CX + r_label * np.cos(mid),
+            "y": CY + r_label * np.sin(mid),
+            "align": "right" if 90 < deg < 270 else "left",
+            "total": f"({entity_totals[e]}k)",
         }
     )
 
-labels_df = pd.DataFrame(labels_data)
+labels_df = pd.DataFrame(labels_rows)
 
-# Create outer arc chart
-arcs_chart = (
+# Shared scales
+x_scale = alt.Scale(domain=[0, W])
+y_scale = alt.Scale(domain=[0, H])
+
+# Interactive selection: hover over a chord to highlight it
+hover = alt.selection_point(fields=["chord_id"], on="pointerover", empty="all")
+
+# Outer arc ring
+arcs_layer = (
     alt.Chart(arcs_df)
     .mark_line(filled=True, strokeWidth=0)
     .encode(
-        x=alt.X("x:Q", scale=alt.Scale(domain=[0, width]), axis=None),
-        y=alt.Y("y:Q", scale=alt.Scale(domain=[0, height]), axis=None),
-        color=alt.Color(
-            "entity:N",
-            scale=alt.Scale(domain=list(colors.keys()), range=list(colors.values())),
-            legend=alt.Legend(title="Region", titleFontSize=18, labelFontSize=14, orient="right", symbolSize=200),
-        ),
+        x=alt.X("x:Q", scale=x_scale, axis=None),
+        y=alt.Y("y:Q", scale=y_scale, axis=None),
+        color=alt.Color("entity:N", scale=color_scale, legend=None),
         detail="entity:N",
         order="order:Q",
     )
 )
 
-# Create chords chart
-chords_chart = (
-    alt.Chart(chords_df)
-    .mark_line(filled=True, opacity=0.6, strokeWidth=0)
+# Chord encoding with interactive hover highlighting
+chord_base_encode = {
+    "x": alt.X("x:Q", scale=x_scale, axis=None),
+    "y": alt.Y("y:Q", scale=y_scale, axis=None),
+    "color": alt.Color("source:N", scale=color_scale, legend=None),
+    "detail": "chord_id:N",
+    "order": "order:Q",
+    "tooltip": [
+        alt.Tooltip("source:N", title="From"),
+        alt.Tooltip("target:N", title="To"),
+        alt.Tooltip("value:Q", title="Flow (thousands)"),
+    ],
+}
+
+# Major chords (dominant flows) - higher opacity, highlighted on hover
+major_chords = (
+    alt.Chart(chords_df[chords_df["major"]])
+    .mark_line(filled=True, strokeWidth=0)
+    .encode(**chord_base_encode, opacity=alt.condition(hover, alt.value(0.82), alt.value(0.55)))
+    .add_params(hover)
+)
+
+# Minor chords - lower opacity, highlighted on hover
+minor_chords = (
+    alt.Chart(chords_df[~chords_df["major"]])
+    .mark_line(filled=True, strokeWidth=0)
+    .encode(**chord_base_encode, opacity=alt.condition(hover, alt.value(0.65), alt.value(0.3)))
+    .add_params(hover)
+)
+
+# Labels split by alignment
+label_enc = {
+    "x": alt.X("x:Q", scale=x_scale, axis=None),
+    "y": alt.Y("y:Q", scale=y_scale, axis=None),
+    "text": "entity:N",
+    "color": alt.Color("entity:N", scale=color_scale, legend=None),
+}
+
+labels_left = (
+    alt.Chart(labels_df[labels_df["align"] == "left"])
+    .mark_text(fontSize=20, fontWeight="bold", align="left")
+    .encode(**label_enc)
+)
+
+labels_right = (
+    alt.Chart(labels_df[labels_df["align"] == "right"])
+    .mark_text(fontSize=20, fontWeight="bold", align="right")
+    .encode(**label_enc)
+)
+
+# Flow total annotations under entity labels
+total_enc = {
+    "x": alt.X("x:Q", scale=x_scale, axis=None),
+    "y": alt.Y("y:Q", scale=y_scale, axis=None),
+    "text": "total:N",
+}
+
+totals_left = (
+    alt.Chart(labels_df[labels_df["align"] == "left"])
+    .mark_text(fontSize=14, align="left", dy=18, color="#777777")
+    .encode(**total_enc)
+)
+
+totals_right = (
+    alt.Chart(labels_df[labels_df["align"] == "right"])
+    .mark_text(fontSize=14, align="right", dy=18, color="#777777")
+    .encode(**total_enc)
+)
+
+# Top-flow callout (top-left corner)
+top2 = df.nlargest(2, "value")
+annot_rows = []
+for i, (_, r) in enumerate(top2.iterrows()):
+    annot_rows.append({"x": 40, "y": H - 60 - i * 26, "text": f"{r['source']} \u2192 {r['target']}: {r['value']}k"})
+
+annot_df = pd.DataFrame(annot_rows)
+annot_title = (
+    alt.Chart(pd.DataFrame([{"x": 40, "y": H - 28, "text": "Top Flows"}]))
+    .mark_text(fontSize=16, fontWeight="bold", align="left", color="#444444")
+    .encode(x=alt.X("x:Q", scale=x_scale, axis=None), y=alt.Y("y:Q", scale=y_scale, axis=None), text="text:N")
+)
+center_annot = (
+    alt.Chart(annot_df)
+    .mark_text(fontSize=14, align="left", color="#555555")
+    .encode(x=alt.X("x:Q", scale=x_scale, axis=None), y=alt.Y("y:Q", scale=y_scale, axis=None), text="text:N")
+)
+
+# Manual legend (bottom-right corner)
+legend_y_top = 250
+legend_spacing = 38
+legend_x = W - 130
+legend_items = pd.DataFrame(
+    [
+        {"entity": e, "color": c, "x": legend_x, "y": legend_y_top - i * legend_spacing}
+        for i, (e, c) in enumerate(zip(entities, colors, strict=True))
+    ]
+)
+
+legend_title = (
+    alt.Chart(pd.DataFrame([{"x": legend_x, "y": legend_y_top + 35, "text": "Region"}]))
+    .mark_text(fontSize=20, fontWeight="bold", align="left", baseline="middle")
+    .encode(x=alt.X("x:Q", scale=x_scale, axis=None), y=alt.Y("y:Q", scale=y_scale, axis=None), text="text:N")
+)
+
+legend_squares = (
+    alt.Chart(legend_items)
+    .mark_square(size=250, stroke=None)
     .encode(
-        x=alt.X("x:Q", scale=alt.Scale(domain=[0, width]), axis=None),
-        y=alt.Y("y:Q", scale=alt.Scale(domain=[0, height]), axis=None),
-        color=alt.Color(
-            "source:N", scale=alt.Scale(domain=list(colors.keys()), range=list(colors.values())), legend=None
-        ),
-        detail="chord_id:N",
-        order="order:Q",
-        tooltip=[
-            alt.Tooltip("source:N", title="From"),
-            alt.Tooltip("target:N", title="To"),
-            alt.Tooltip("value:Q", title="Flow"),
-        ],
+        x=alt.X("x:Q", scale=x_scale, axis=None),
+        y=alt.Y("y:Q", scale=y_scale, axis=None),
+        color=alt.Color("entity:N", scale=color_scale, legend=None),
     )
 )
 
-# Create labels chart
-labels_chart = (
-    alt.Chart(labels_df)
-    .mark_text(fontSize=18, fontWeight="bold")
-    .encode(
-        x=alt.X("x:Q", scale=alt.Scale(domain=[0, width])),
-        y=alt.Y("y:Q", scale=alt.Scale(domain=[0, height])),
-        text="entity:N",
-        color=alt.Color(
-            "entity:N", scale=alt.Scale(domain=list(colors.keys()), range=list(colors.values())), legend=None
-        ),
-    )
+legend_labels = (
+    alt.Chart(legend_items)
+    .mark_text(fontSize=18, align="left", dx=14, baseline="middle")
+    .encode(x=alt.X("x:Q", scale=x_scale, axis=None), y=alt.Y("y:Q", scale=y_scale, axis=None), text="entity:N")
 )
 
-# Combine all layers
+# Compose all layers
 chart = (
-    alt.layer(chords_chart, arcs_chart, labels_chart)
+    alt.layer(
+        minor_chords,
+        major_chords,
+        arcs_layer,
+        labels_left,
+        labels_right,
+        totals_left,
+        totals_right,
+        annot_title,
+        center_annot,
+        legend_squares,
+        legend_labels,
+        legend_title,
+    )
     .properties(
-        width=width,
-        height=height,
-        title=alt.Title(text="chord-basic · altair · pyplots.ai", fontSize=28, anchor="middle"),
-        autosize=alt.AutoSizeParams(type="fit", contains="padding"),
+        width=W,
+        height=H,
+        title=alt.Title(
+            text="chord-basic · altair · pyplots.ai",
+            subtitle="Dominant migration corridors highlighted — Africa→Europe and S. America→N. America lead",
+            fontSize=28,
+            subtitleFontSize=16,
+            subtitleColor="#666666",
+            anchor="middle",
+            offset=20,
+        ),
     )
     .configure_view(strokeWidth=0)
-    .configure_legend(padding=10, cornerRadius=5, fillColor="#FFFFFF", strokeColor="#DDDDDD")
+    .configure(background="#FAFAFA", padding={"left": 30, "right": 30, "top": 10, "bottom": 30})
 )
 
-# Save as PNG (4800x2700 px with scale_factor=3.0)
 chart.save("plot.png", scale_factor=3.0)
 chart.save("plot.html")

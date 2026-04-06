@@ -1,7 +1,7 @@
 """ pyplots.ai
 dendrogram-basic: Basic Dendrogram
-Library: highcharts 1.10.3 | Python 3.13.11
-Quality: 93/100 | Created: 2025-12-17
+Library: highcharts 1.10.3 | Python 3.14.3
+Quality: 84/100 | Created: 2026-04-05
 """
 
 import tempfile
@@ -66,92 +66,100 @@ data = np.array(data)
 # Compute linkage matrix using Ward's method
 linkage_matrix = linkage(data, method="ward")
 
-# Get dendrogram structure
-dend = dendrogram(linkage_matrix, labels=labels, no_plot=True)
+# Get dendrogram structure with color threshold to show clusters
+dend = dendrogram(linkage_matrix, labels=labels, no_plot=True, color_threshold=0.7 * max(linkage_matrix[:, 2]))
 
-# Extract coordinates for drawing
-icoord = dend["icoord"]  # x coordinates
-dcoord = dend["dcoord"]  # y coordinates (distances)
-ivl = dend["ivl"]  # leaf labels in order
+# Extract coordinates
+icoord = dend["icoord"]
+dcoord = dend["dcoord"]
+ivl = dend["ivl"]
+color_list = dend["color_list"]
 
-# Create line series data for each U-shape in the dendrogram
-line_series_data = []
-for xs, ys in zip(icoord, dcoord, strict=True):
-    # Each U-shape has 4 points
-    points = [[xs[j], ys[j]] for j in range(4)]
-    line_series_data.append(
-        {"data": points, "color": "#306998", "lineWidth": 3, "marker": {"enabled": False}, "enableMouseTracking": False}
-    )
+# Map scipy default colors to a cohesive palette anchored on Python Blue
+color_map = {
+    "C0": "#306998",  # Python Blue - primary cluster
+    "C1": "#E07A3A",  # Warm orange - secondary cluster
+    "C2": "#5BA05B",  # Muted green - tertiary cluster
+    "C3": "#8B6EB8",  # Soft purple
+    "C4": "#C75A5A",  # Muted red
+    "b": "#306998",  # Default blue mapped to Python Blue
+}
 
 # Create chart
 chart = Chart(container="container")
 chart.options = HighchartsOptions()
 
-# Configure chart
 chart.options.chart = {
     "type": "line",
     "width": 4800,
     "height": 2700,
     "backgroundColor": "#ffffff",
-    "marginBottom": 300,
-    "spacingBottom": 50,
+    "marginBottom": 280,
+    "spacingTop": 30,
+    "spacingLeft": 80,
+    "spacingRight": 80,
 }
 
 # Title
 chart.options.title = {
-    "text": "dendrogram-basic · highcharts · pyplots.ai",
-    "style": {"fontSize": "56px", "fontWeight": "bold"},
+    "text": "Iris Species Clustering \u00b7 dendrogram-basic \u00b7 highcharts \u00b7 pyplots.ai",
+    "style": {"fontSize": "44px", "fontWeight": "600", "color": "#2c3e50"},
+    "margin": 40,
 }
 
 # X-axis with sample labels
-# Dendrogram x-coords are at 5, 15, 25, ... for leaves
 x_positions = [(i * 10) + 5 for i in range(len(ivl))]
 chart.options.x_axis = {
-    "title": {"text": "Sample", "style": {"fontSize": "44px"}},
+    "title": {"text": "Sample", "style": {"fontSize": "32px", "color": "#555"}},
     "tickPositions": x_positions,
-    "labels": {"style": {"fontSize": "24px"}, "rotation": 45},
+    "labels": {"style": {"fontSize": "26px", "color": "#444"}, "rotation": 45},
     "min": 0,
     "max": len(ivl) * 10,
     "gridLineWidth": 0,
     "lineWidth": 2,
+    "lineColor": "#cccccc",
+    "tickWidth": 0,
 }
 
 # Y-axis for distance
 chart.options.y_axis = {
-    "title": {"text": "Distance (Ward)", "style": {"fontSize": "44px"}},
-    "labels": {"style": {"fontSize": "32px"}},
-    "gridLineColor": "rgba(0,0,0,0.1)",
+    "title": {"text": "Distance (Ward)", "style": {"fontSize": "32px", "color": "#555"}},
+    "labels": {"style": {"fontSize": "24px", "color": "#444"}},
+    "gridLineColor": "rgba(0,0,0,0.08)",
     "gridLineWidth": 1,
+    "lineWidth": 2,
+    "lineColor": "#cccccc",
     "min": 0,
+    "tickInterval": 1,
 }
 
 # Hide legend
 chart.options.legend = {"enabled": False}
 
-# Plot options for lines
+# Plot options
 chart.options.plot_options = {
     "line": {"lineWidth": 4, "marker": {"enabled": False}, "states": {"hover": {"enabled": False}}}
 }
 
-# Add each line segment as a series
-for series_data in line_series_data:
+# Add each dendrogram branch as a colored series
+for xs, ys, color_key in zip(icoord, dcoord, color_list, strict=True):
     series = LineSeries()
-    series.data = series_data["data"]
-    series.color = series_data["color"]
+    series.data = [[xs[j], ys[j]] for j in range(4)]
+    series.color = color_map.get(color_key, "#306998")
     series.line_width = 4
     series.marker = {"enabled": False}
     series.enable_mouse_tracking = False
     chart.add_series(series)
 
 # Download Highcharts JS for inline embedding
-highcharts_url = "https://code.highcharts.com/highcharts.js"
+highcharts_url = "https://cdn.jsdelivr.net/npm/highcharts@11/highcharts.js"
 with urllib.request.urlopen(highcharts_url, timeout=30) as response:
     highcharts_js = response.read().decode("utf-8")
 
-# Generate HTML with inline scripts
+# Generate JavaScript literal
 html_str = chart.to_js_literal()
 
-# Create JavaScript formatter function for x-axis labels
+# Create formatter function for x-axis labels
 labels_js = str(ivl).replace("'", '"')
 formatter_js = f"""function() {{
     var labels = {labels_js};
@@ -159,13 +167,8 @@ formatter_js = f"""function() {{
     return (idx >= 0 && idx < labels.length) ? labels[idx] : '';
 }}"""
 
-# Inject formatter into the xAxis labels configuration
-# Find the rotation property in labels and add formatter after it
-html_str = html_str.replace(
-    "rotation: 45,",
-    "rotation: 45,\nformatter: " + formatter_js + ",",
-    1,  # Replace only first occurrence
-)
+# Inject formatter into xAxis labels configuration
+html_str = html_str.replace("rotation: 45,", "rotation: 45,\nformatter: " + formatter_js + ",", 1)
 
 html_content = f"""<!DOCTYPE html>
 <html>
@@ -179,11 +182,11 @@ html_content = f"""<!DOCTYPE html>
 </body>
 </html>"""
 
-# Save HTML file
+# Save HTML
 with open("plot.html", "w", encoding="utf-8") as f:
     f.write(html_content)
 
-# Write temp HTML and take screenshot
+# Screenshot via headless Chrome
 with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False, encoding="utf-8") as f:
     f.write(html_content)
     temp_path = f.name
@@ -199,7 +202,6 @@ driver = webdriver.Chrome(options=chrome_options)
 driver.get(f"file://{temp_path}")
 time.sleep(5)
 
-# Get container element and screenshot it for exact dimensions
 container = driver.find_element("id", "container")
 container.screenshot("plot.png")
 driver.quit()

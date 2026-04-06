@@ -1,162 +1,190 @@
 library: plotly
 specification_id: chord-basic
 created: '2025-12-23T10:01:12Z'
-updated: '2025-12-23T10:06:59Z'
-generated_by: claude-opus-4-5-20251101
+updated: '2026-04-06T21:00:11Z'
+generated_by: claude-opus-4-6
 workflow_run: 20457530538
 issue: 0
-python_version: 3.13.11
-library_version: 6.5.0
+python_version: '3.14'
+library_version: 6.5.2
 preview_url: https://storage.googleapis.com/pyplots-images/plots/chord-basic/plotly/plot.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/chord-basic/plotly/plot.html
-quality_score: 91
+quality_score: 88
 impl_tags:
   dependencies: []
   techniques:
   - bezier-curves
-  - html-export
+  - annotations
   - hover-tooltips
+  - html-export
   patterns:
   - data-generation
   - matrix-construction
   - iteration-over-groups
   dataprep: []
   styling:
+  - minimal-chrome
   - alpha-blending
+  - edge-highlighting
 review:
   strengths:
-  - Excellent chord diagram implementation from scratch using Plotly low-level primitives
-  - Clean visual design with well-chosen colorblind-safe color palette
-  - Proper bidirectional flow handling with chord widths proportional to flow values
-  - Good use of SVG path shapes for chord ribbons with bezier curves through center
-  - Informative hover tooltips on outer arcs showing total flow per continent
-  - Well-positioned rotated labels around the perimeter
-  - Dual output format (PNG + interactive HTML) leverages Plotly strength
+  - Excellent data storytelling with dominant corridor highlighting and informative
+    subtitle
+  - Professional layered arc effect with depth perception
+  - Full spec compliance including all 4 required features (colors, proportional widths,
+    tooltips, bidirectional flows)
+  - Colorblind-safe palette with intentional green-to-teal replacement
+  - Clean, well-structured code with appropriate complexity
+  - Dual output (PNG + interactive HTML) leverages Plotly strengths
   weaknesses:
-  - Some smaller flow chords are difficult to distinguish due to overlapping
-  - Interactive hover on individual chords would enhance the HTML version
-  image_description: 'The chord diagram displays migration flows between 6 continents
-    arranged in a circular layout. The outer ring shows colored arcs for each continent:
-    Africa (blue, #306998), Asia (yellow, #FFD43B), Europe (green, #2E8B57), N. America
-    (red, #DC143C), S. America (purple, #9370DB), and Oceania (orange, #FF8C00). Continent
-    labels are positioned around the perimeter with rotated text for readability.
-    Chords connect the continents with widths proportional to migration flow values,
-    using semi-transparent fills (opacity 0.6) to show overlapping flows. The title
-    "Migration Flows Between Continents · chord-basic · plotly · pyplots.ai" appears
-    at the top. A legend on the right identifies each continent. The layout is clean
-    with a white background.'
+  - Some thin chords between minor flows are hard to visually distinguish from each
+    other
+  - Vertical layout balance could be improved (more whitespace at top than bottom)
+  - Low-level construction is necessary but limits idiomatic library usage score
+  image_description: 'The plot displays a chord diagram with 6 continents arranged
+    around a circle. Each continent has a layered arc segment (outer translucent ring
+    + inner solid ring) with distinct colors: Africa (dark blue #306998), Asia (yellow
+    #FFD43B), Europe (teal #00B4D8), N. America (crimson #DC143C), S. America (purple
+    #9370DB), Oceania (orange #FF8C00). Continent labels with total flow values (e.g.,
+    "Europe 205M", "Asia 175M") are positioned around the perimeter in matching colors.
+    Chords of varying widths connect continents, with the Europe-Asia corridor visually
+    emphasized through higher opacity. The title reads "Migration Flows Between Continents
+    · chord-basic · plotly · pyplots.ai" with a subtitle noting "Europe–Asia corridor
+    dominates at 65M combined flow · Chord width proportional to flow magnitude".
+    A legend in the bottom-right lists all continents. Background is clean white (#FAFAFA
+    paper).'
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 27
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title and legend are clear; perimeter labels are readable but some
-          rotation angles could be improved
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text elements
-      - id: VQ-03
-        name: Element Visibility
         score: 7
         max: 8
         passed: true
-        comment: Chords are well-sized with good opacity; some thin flows harder to
-          see
+        comment: All font sizes explicitly set (title 28pt, labels 20pt, subtitle
+          17pt, legend 18pt). All text clearly readable. Subtitle slightly small but
+          acceptable.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text elements. Labels well-positioned around perimeter
+          with proper anchoring.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Chords clearly visible with minimum width enforcement. Dominant corridor
+          stands out via opacity. Some thinner chords hard to distinguish.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Distinct colors for all 6 continents, colorblind-friendly palette
+        comment: Palette explicitly avoids green, replacing with teal for deuteranopia
+          safety. Six distinct hues well-separated.
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 3
+        max: 4
         passed: true
-        comment: Well-centered circle with good margins and legend placement
-      - id: VQ-07
-        name: Grid & Legend
+        comment: 1:1 aspect ratio ideal for circular diagram. Slight vertical imbalance
+          with more whitespace at top.
+      - id: VQ-06
+        name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No grid (appropriate), legend well-positioned on right
+        comment: Axes appropriately hidden for chord diagram. Labels include units
+          (M for millions).
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom palette, layered arc effect, styled hover labels, intentional
+          typography hierarchy. Clearly above defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: All grid/axes hidden. Clean white background. White line borders
+          on arcs. Outer ring glow effect adds polish.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Dominant corridor highlighted with higher opacity. Subtitle calls
+          out insight. Continent totals displayed. Strong visual hierarchy.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct chord diagram implementation
+        comment: Correct chord diagram with entities on circle perimeter connected
+          by proportional-width chords.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Source/target/value correctly mapped to arcs and chords
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: distinct colors, proportional widths,
-          bidirectional flows'
-      - id: SC-04
-        name: Data Range
+        comment: Distinct colors, proportional chord widths, hover tooltips, bidirectional
+          flows all present.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within the circular layout
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Flow matrix correctly maps sources to targets. Arc sizes proportional
+          to totals.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies all 6 continents
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "Migration Flows Between Continents · chord-basic
-          · plotly · pyplots.ai"'
+        comment: Title follows exact format. Legend shows all 6 continents with correct
+          colors.
     data_quality:
-      score: 18
-      max: 20
+      score: 13
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Shows bidirectional flows with varying magnitudes; good variety in
-          flow sizes
+        comment: 6 entities with varying connection strengths. Both strong and weak
+          flows present. Some weaker flows hard to visually distinguish.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Migration flows between continents is a realistic and comprehensible
-          scenario
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Values are plausible migration units; largest flows from Europe/Asia
-          align with reality
+        comment: Migration flows between continents is real-world, comprehensible,
+          neutral scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 3
+        max: 4
+        passed: true
+        comment: Values in millions, individual flows range 2-35M. Total ~704M is
+          slightly high but acceptable for demonstration.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -164,40 +192,49 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear structure: imports → data → plot → save'
+        comment: 'Linear flow: imports, data, calculations, figure creation, save.
+          No functions or classes.'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42) (though data is actually hardcoded matrix)
+        comment: Fully deterministic with hardcoded flow matrix.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy and plotly.graph_objects imported
+        comment: Only numpy and plotly.graph_objects imported, both used.
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-structured with clear sections. Appropriate complexity. No fake
+          UI.
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current Plotly API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: true
-        comment: Saves as plot.png but also plot.html (minor)
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot.png and plot.html. Uses current Plotly API.
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 3
         max: 5
         passed: true
-        comment: Uses go.Scatter with SVG paths for chords; could leverage hover interactivity
-          more in the HTML output
-  verdict: APPROVED
+        comment: Plotly lacks native chord diagram. Manual go.Scatter construction
+          necessary. Good use of available features.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Leverages hovertemplate, hoveron=fills, HTML export, hoverlabel customization.
+          Genuinely distinctive Plotly capabilities.
+  verdict: REJECTED
