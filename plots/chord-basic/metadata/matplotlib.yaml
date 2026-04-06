@@ -1,31 +1,232 @@
 library: matplotlib
 specification_id: chord-basic
 created: 2025-12-14 19:45:02+00:00
-updated: 2025-12-14 19:45:02+00:00
-generated_by: claude-opus-4-5-20251101
+updated: '2026-04-06T20:47:55Z'
+generated_by: claude-opus-4-6
 workflow_run: 20213174710
 issue: 858
-python_version: 3.13.11
+python_version: '3.14'
 library_version: 3.10.8
 preview_url: https://storage.googleapis.com/pyplots-images/plots/chord-basic/matplotlib/plot.png
 preview_html: null
-quality_score: 98
+quality_score: 90
 impl_tags:
   dependencies: []
   techniques:
   - bezier-curves
   - patches
-  - manual-ticks
+  - annotations
   patterns:
   - data-generation
   - matrix-construction
   - iteration-over-groups
   dataprep: []
   styling:
-  - alpha-blending
   - minimal-chrome
+  - alpha-blending
+  - edge-highlighting
 review:
-  strengths: []
-  weaknesses: []
+  strengths:
+  - Excellent data storytelling with subtitle, annotated top flows, and alpha/linewidth
+    hierarchy
+  - Custom Bezier chord rendering with proper angular positioning and pre-computed
+    cursor tracking
+  - Colorblind-safe palette with color-coordinated entity labels
+  - Clean, well-structured code with smart geometry calculations
+  weaknesses:
+  - Annotation boxes float without visual connection (arrows/lines) to the specific
+    chords they describe
+  - Smallest chords (Oceania connections) are very faint at ~0.15 alpha
   improvements: []
   verdict: APPROVED
+  image_description: 'The plot displays a chord diagram on a light gray (#FAFAFA)
+    background with 6 continents arranged clockwise from the top: Africa (dark blue),
+    Asia (amber/gold), Europe (teal/green), N. America (burnt orange), S. America
+    (light blue), and Oceania (pink/mauve). Each entity has a colored outer arc segment
+    proportional to its total flow, with white edge separators between segments and
+    3-degree gaps. Chords connect entities through the interior using cubic Bezier
+    curves, colored by source entity with alpha and linewidth scaled by flow magnitude
+    — the largest chords (Asia→Europe at 15M) are bold and opaque while smaller flows
+    (Oceania connections) are faint and thin. Three annotation boxes with rounded
+    corners highlight the top flows: "Asia → Europe: 15M" at bottom, "Africa → Asia:
+    12M" at upper right, and "N. America → Europe: 12M" at left. A subtitle in italic
+    gray reads "Asia–Europe corridor dominates global flows." The title follows the
+    required format: "Continental Migration Flows · chord-basic · matplotlib · pyplots.ai".'
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 24pt, labels 20pt bold, subtitle
+          16pt). Annotations at 12-14pt slightly small but readable.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Entity labels well-positioned with smart alignment logic. No text
+          overlap. Chord crossings inherent to chart type.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Alpha/linewidth scaling creates good hierarchy. Minimum chord degree
+          ensures small flows visible, though Oceania connections quite faint.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Colorblind-safe Wong palette with good contrast on light background.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square 12x12 canvas ideal for circular diagram. Chart fills canvas
+          well.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Axes correctly hidden for chord diagram. Title descriptive with context.
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom colorblind-safe palette, color-matched entity labels, warm
+          background, white edge separators, alpha/linewidth scaling. Clearly above
+          defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Axes off, custom background, white edge lines, 3-degree gap spacing,
+          generous whitespace.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Strong subtitle, annotated top 3 flows with styled callout boxes,
+          alpha/linewidth hierarchy for visual emphasis.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct chord diagram with perimeter arcs and Bezier-curve chords.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Distinct colors, proportional chord width, bidirectional flows, 6
+          continents.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Flow matrix correctly maps source to target with proper angular allocation.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title follows required format. Color-matched entity labels serve
+          as legend.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows bidirectional asymmetric flows, varying magnitudes 1-15M, all
+          6 entities interconnected.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Continental migration flows in millions — realistic, neutral, comprehensible.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values 1-15M plausible for continental migration flows.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports, data, geometry, plot, save. No functions or
+          classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic with hardcoded flow matrix.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: matplotlib.patches, pyplot, numpy, Path.'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Smart pre-computation of chord positions. Clean Bezier path construction.
+          Appropriate complexity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png with dpi=300, bbox_inches=tight.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Proper use of matplotlib low-level rendering API (fig/ax, add_patch)
+          — correct approach for custom chord diagram.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Leverages Path with CURVE4 Bezier curves, mpatches.Wedge, PathPatch
+          — distinctive matplotlib geometry features.

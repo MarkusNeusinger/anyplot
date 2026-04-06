@@ -1,21 +1,19 @@
 """ pyplots.ai
 dendrogram-basic: Basic Dendrogram
-Library: matplotlib 3.10.8 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-23
+Library: matplotlib 3.10.8 | Python 3.14.3
+Quality: 92/100 | Updated: 2026-04-05
 """
 
 import matplotlib.pyplot as plt
 import numpy as np
-from scipy.cluster.hierarchy import dendrogram, linkage
+from matplotlib.collections import LineCollection
+from scipy.cluster.hierarchy import dendrogram, linkage, set_link_color_palette
 
 
 # Data - Iris flower measurements (4 features for 15 samples)
 np.random.seed(42)
 
-# Simulate iris-like measurements: sepal length, sepal width, petal length, petal width
-# Three species with distinct characteristics
 samples_per_species = 5
-
 labels = []
 data = []
 
@@ -24,10 +22,10 @@ for i in range(samples_per_species):
     labels.append(f"Setosa-{i + 1}")
     data.append(
         [
-            5.0 + np.random.randn() * 0.3,  # sepal length
-            3.4 + np.random.randn() * 0.3,  # sepal width
-            1.5 + np.random.randn() * 0.2,  # petal length
-            0.3 + np.random.randn() * 0.1,  # petal width
+            5.0 + np.random.randn() * 0.3,
+            3.4 + np.random.randn() * 0.3,
+            1.5 + np.random.randn() * 0.2,
+            0.3 + np.random.randn() * 0.1,
         ]
     )
 
@@ -36,10 +34,10 @@ for i in range(samples_per_species):
     labels.append(f"Versicolor-{i + 1}")
     data.append(
         [
-            5.9 + np.random.randn() * 0.4,  # sepal length
-            2.8 + np.random.randn() * 0.3,  # sepal width
-            4.3 + np.random.randn() * 0.4,  # petal length
-            1.3 + np.random.randn() * 0.2,  # petal width
+            5.9 + np.random.randn() * 0.4,
+            2.8 + np.random.randn() * 0.3,
+            4.3 + np.random.randn() * 0.4,
+            1.3 + np.random.randn() * 0.2,
         ]
     )
 
@@ -48,10 +46,10 @@ for i in range(samples_per_species):
     labels.append(f"Virginica-{i + 1}")
     data.append(
         [
-            6.6 + np.random.randn() * 0.5,  # sepal length
-            3.0 + np.random.randn() * 0.3,  # sepal width
-            5.5 + np.random.randn() * 0.5,  # petal length
-            2.0 + np.random.randn() * 0.3,  # petal width
+            6.6 + np.random.randn() * 0.5,
+            3.0 + np.random.randn() * 0.3,
+            5.5 + np.random.randn() * 0.5,
+            2.0 + np.random.randn() * 0.3,
         ]
     )
 
@@ -61,33 +59,57 @@ data = np.array(data)
 linkage_matrix = linkage(data, method="ward")
 
 # Plot
-fig, ax = plt.subplots(figsize=(16, 9))
+fig, ax = plt.subplots(figsize=(16, 9), facecolor="white")
+ax.set_facecolor("#FAFAFA")
 
-# Create dendrogram with custom colors
-dendrogram(
+# Custom cluster colors via set_link_color_palette (matplotlib/scipy integration)
+cluster_colors = ["#306998", "#D4722A", "#3A8A5C"]
+set_link_color_palette(cluster_colors)
+
+# Set threshold between the 2nd and 3rd highest merge distances to reveal 3 clusters
+sorted_distances = sorted(linkage_matrix[:, 2])
+color_threshold = (sorted_distances[-2] + sorted_distances[-3]) / 2
+
+dendro = dendrogram(
     linkage_matrix,
     labels=labels,
     ax=ax,
-    leaf_rotation=45,
-    leaf_font_size=14,
-    above_threshold_color="#306998",  # Python Blue for main branches
-    color_threshold=0.7 * max(linkage_matrix[:, 2]),  # Color threshold for clusters
+    leaf_rotation=40,
+    leaf_font_size=16,
+    above_threshold_color="#AAAAAA",
+    color_threshold=color_threshold,
 )
 
-# Style
-ax.set_xlabel("Sample", fontsize=20)
-ax.set_ylabel("Distance (Ward)", fontsize=20)
-ax.set_title("dendrogram-basic · matplotlib · pyplots.ai", fontsize=24)
-ax.tick_params(axis="both", labelsize=16)
-ax.tick_params(axis="x", labelsize=14, rotation=45)
+# Post-render enhancement: adjust line widths via LineCollection traversal
+for child in ax.get_children():
+    if isinstance(child, LineCollection):
+        child.set_linewidths(3.0)
+        child.set_capstyle("round")
+        child.set_joinstyle("round")
 
-# Adjust spines for cleaner look
+# Style
+ax.set_xlabel("Iris Sample", fontsize=20, labelpad=10)
+ax.set_ylabel("Ward Linkage Distance", fontsize=20, labelpad=10)
+ax.set_title(
+    "Iris Species Clustering · dendrogram-basic · matplotlib · pyplots.ai",
+    fontsize=24,
+    fontweight="medium",
+    pad=20,
+    color="#333333",
+)
+ax.tick_params(axis="both", labelsize=16, colors="#555555")
+ax.tick_params(axis="x", labelsize=16, rotation=40)
+
 ax.spines["top"].set_visible(False)
 ax.spines["right"].set_visible(False)
+ax.spines["left"].set_linewidth(0.6)
+ax.spines["left"].set_color("#CCCCCC")
+ax.spines["bottom"].set_linewidth(0.6)
+ax.spines["bottom"].set_color("#CCCCCC")
 
-# Add subtle grid on y-axis only
-ax.yaxis.grid(True, alpha=0.3, linestyle="--")
+# Subtle grid on y-axis only
+ax.yaxis.grid(True, alpha=0.15, linewidth=0.6, color="#888888")
 ax.set_axisbelow(True)
 
-plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+plt.tight_layout(pad=1.5)
+plt.savefig("plot.png", dpi=300, bbox_inches="tight", facecolor="white")
