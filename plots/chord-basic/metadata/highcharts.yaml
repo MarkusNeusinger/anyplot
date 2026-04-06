@@ -1,7 +1,7 @@
 library: highcharts
 specification_id: chord-basic
 created: '2025-12-23T10:03:24Z'
-updated: '2026-04-06T20:39:52Z'
+updated: '2026-04-06T20:47:45Z'
 generated_by: claude-opus-4-6
 workflow_run: 20457537033
 issue: 0
@@ -9,7 +9,7 @@ python_version: '3.14'
 library_version: 1.10.3
 preview_url: https://storage.googleapis.com/pyplots-images/plots/chord-basic/highcharts/plot.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/chord-basic/highcharts/plot.html
-quality_score: 87
+quality_score: 89
 impl_tags:
   dependencies:
   - selenium
@@ -26,76 +26,84 @@ impl_tags:
   - edge-highlighting
 review:
   strengths:
-  - Excellent spec compliance — all required features implemented perfectly (15/15)
-  - Strong data quality with realistic trade flow context and good scale
-  - Custom professional color palette with colorblind-safe tones
-  - 'Good visual refinement: gradient background, Inter font, text outlines, semi-transparent
-    borders'
-  - Clean, well-structured code with deterministic data
-  - Interactive HTML version generated alongside PNG
+  - Perfect spec compliance with all required features — bidirectional flows, distinct
+    colors, proportional chord widths, interactive tooltips (15/15)
+  - Now uses highcharts-core Python API (DependencyWheelSeries) idiomatically rather
+    than raw JSON config
+  - Professional visual design with gradient background, Inter web font, muted harmonious
+    palette, and semi-transparent styling
+  - Excellent realistic data context — continental trade flows in billions USD are
+    neutral, comprehensible, and demonstrate chord diagram features well
+  - Clean deterministic code with both PNG and interactive HTML output
   weaknesses:
-  - Canvas utilization could be improved — wheel at 78% leaves some empty space at
-    edges
-  - Raw JSON config bypasses highcharts-core Python API reducing LM-01 score
-  - Visual storytelling could be stronger with additional emphasis on key trade routes
+  - Design sophistication is strong but not publication-perfect — needs final polish
+    to reach FiveThirtyEight/Nature level for DE-01=8
+  - Canvas utilization could be slightly better — wheel at 84% still leaves some unbalanced
+    whitespace
+  - 'Dead code on line 177-178: standalone_js replace is a no-op (replaces string
+    with identical string)'
   image_description: 'The plot displays a dependency wheel (chord diagram) on a 3600x3600
-    square canvas with a subtle light-gray gradient background. Six continents are
-    arranged around the circle perimeter: Europe (dark steel blue), Asia (golden amber),
-    Africa (muted purple), N. America (teal), S. America (green), and Oceania (coral
-    red). Colored arc segments along the rim represent each continent''s total trade
-    volume, with Asia and N. America having the largest arcs. Chords connect continents
-    with widths proportional to trade flow values, colored by blending source/destination
-    colors at 50% opacity. The largest chords (Asia-N. America, Europe-N. America)
-    are immediately prominent. The title "chord-basic · highcharts · pyplots.ai" appears
-    at the top in bold dark text, with subtitle "Trade Flows Between Continents (Billions
-    USD)" in lighter gray below. Data labels (continent names) are positioned outside
-    the wheel with white text outlines for readability. The Inter web font is loaded
-    for typography.'
+    square canvas with a subtle light-gray linear gradient background transitioning
+    from #FAFBFC to #EEF1F5. Six continents are arranged around the circle perimeter:
+    Europe (dark steel blue #306998), Asia (golden amber #E8A838), Africa (muted purple
+    #8B6CAF), N. America (teal #2BA5B5), S. America (green #3DAA6D), and Oceania (coral
+    #D4654A). Colored arc segments along the rim represent each continent''s total
+    trade volume, with Asia and N. America having the largest arcs. Chords connect
+    continents with widths proportional to bilateral trade values at 50% opacity,
+    with the largest chords being Asia-N. America and Europe-N. America clearly dominant.
+    Node arcs have semi-transparent white borders (2px) for definition. The title
+    "chord-basic · highcharts · pyplots.ai" appears at top in bold 60px dark text
+    (#1A2332), with subtitle "Trade Flows Between Continents (Billions USD)" in 40px
+    lighter gray (#5A6878) below. Data labels (continent names) are positioned outside
+    the wheel at 44px with white text outlines for contrast. The wheel fills approximately
+    84% of the canvas with good centering. The Inter web font is loaded for typography.'
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 60px, subtitle 40px, labels
-          42px). Clear and readable.
+        comment: 'All font sizes explicitly set: title 60px, subtitle 40px, data labels
+          44px with 5px textOutline, tooltip 32px. All clearly readable at 3600px.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Labels well-positioned with distance=45 and overflow=allow. No text
-          collisions.
+        comment: Labels well-positioned with distance=40, padding=10, overflow=allow.
+          No text collisions.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Chords visible with minLinkWidth=4 and linkOpacity=0.5. Center area
-          busy but inherent to chord diagrams.
+        comment: Chords visible with linkOpacity=0.5 and minLinkWidth=4. Center area
+          busy with 30 overlapping chords but inherent to chart type.
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Custom palette with blue, gold, purple, teal, green, coral — colorblind-safe.
+        comment: Custom 6-hue palette (blue, amber, purple, teal, green, coral) all
+          distinguishable under common colorblindness.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Wheel at 78% fills most of canvas but some wasted space at edges.
+        comment: Wheel at size=84% with center=[50%,53%] fills canvas well. Slight
+          imbalance with more whitespace at bottom-right.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title matches format. Subtitle provides context with units (Billions
-          USD).
+        comment: Descriptive subtitle with units (Billions USD). No traditional axes
+          needed for chord diagram.
     design_excellence:
       score: 14
       max: 20
@@ -105,22 +113,24 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom palette, gradient background, Inter font, text outlines, semi-transparent
-          borders.
+        comment: Custom harmonious palette, gradient background, Inter web font, white
+          text outlines, semi-transparent borders. Professional polish clearly above
+          defaults.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Gradient background, adjusted curveFactor, custom nodePadding/nodeWidth,
-          border transparency.
+        comment: Gradient background, custom curveFactor (0.6), nodePadding (16),
+          nodeWidth (44), borderColor with transparency, credits disabled. Good refinement.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Natural visual hierarchy through chord width. Asia-N. America dominance
-          immediately visible.
+        comment: Trade flow data creates natural visual hierarchy through chord widths.
+          Asia-N.America dominance immediately visible. Bidirectional asymmetries
+          reveal trade imbalances.
     spec_compliance:
       score: 15
       max: 15
@@ -130,26 +140,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Highcharts dependency wheel correctly implements chord diagram.
+        comment: Highcharts dependency wheel correctly implements chord diagram with
+          entities around circle perimeter.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Distinct colors, proportional chord width, tooltips, bidirectional
-          flows all present.
+        comment: Distinct colors per entity, chord width proportional to flow, hover
+          tooltips with nodeFormat/pointFormat, bidirectional flows visible.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Source, target, weight correctly mapped. 6 continents, 30 connections.
+        comment: Source, target, weight correctly mapped via from/to/weight keys.
+          All 6 continents and 30 bidirectional connections present.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Legend disabled appropriately.
+        comment: Title format 'chord-basic · highcharts · pyplots.ai' correct. Legend
+          appropriately disabled — node colors serve as identification.
     data_quality:
       score: 14
       max: 15
@@ -159,19 +172,21 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: 30 bidirectional connections with good magnitude variety (1B to 35B).
+        comment: 6 entities, 30 bidirectional connections, magnitude range 1B-35B.
+          Shows major and minor trade routes. Good variation.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Inter-continental trade flows in billions USD — real-world and neutral.
+        comment: Inter-continental trade flows in billions USD — real-world, neutral,
+          immediately comprehensible.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Trade values 1-35B realistic for continental trade aggregates.
+        comment: Trade values 1-35B are realistic for continental trade aggregates.
     code_quality:
       score: 10
       max: 10
@@ -181,47 +196,51 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: data, config, download JS, HTML, screenshot.'
+        comment: 'Linear flow: imports → data → chart config → download JS → HTML
+          → screenshot. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data deterministic (hardcoded trade flows).
+        comment: All data is deterministic (hardcoded trade flows).
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used.
+        comment: 'All imports used: tempfile, time, urllib.request, Path, Chart, HighchartsOptions,
+          DependencyWheelSeries, Image, webdriver, Options.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean and well-organized.
+        comment: Clean and well-organized. Minor no-op replace on line 177-178 but
+          overall appropriate complexity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png via Selenium. Current Highcharts v11 API.
+        comment: Saves as plot.png via Selenium screenshot. Uses current Highcharts
+          v11 API.
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Raw JSON config rather than highcharts-core Python API. Pragmatic
-          but bypasses Python library.
+        comment: Uses highcharts-core Python API properly — DependencyWheelSeries,
+          HighchartsOptions, chart.add_series(). Idiomatic Python wrapper usage.
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Uses dependency-wheel module, custom tooltip formats, curveFactor,
-          nodePadding, interactive HTML export.
+        comment: Leverages dependency-wheel module, curveFactor, nodePadding, nodeWidth,
+          minLinkWidth, linkOpacity, interactive HTML export, tooltip nodeFormat/pointFormat.
   verdict: REJECTED

@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 chord-basic: Basic Chord Diagram
 Library: highcharts 1.10.3 | Python 3.14
-Quality: 87/100 | Updated: 2026-04-06
+Quality: 89/100 | Updated: 2026-04-06
 """
 
 import tempfile
