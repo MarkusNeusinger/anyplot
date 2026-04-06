@@ -1,7 +1,7 @@
 library: pygal
 specification_id: chord-basic
 created: '2025-12-23T10:02:16Z'
-updated: '2026-04-06T20:52:08Z'
+updated: '2026-04-06T21:01:05Z'
 generated_by: claude-opus-4-6
 workflow_run: 20457534934
 issue: 0
@@ -9,14 +9,13 @@ python_version: '3.14'
 library_version: 3.1.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/chord-basic/pygal/plot.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/chord-basic/pygal/plot.html
-quality_score: 74
+quality_score: 73
 impl_tags:
   dependencies:
   - cairosvg
   techniques:
   - bezier-curves
   - html-export
-  - annotations
   patterns:
   - data-generation
   - iteration-over-groups
@@ -26,38 +25,41 @@ impl_tags:
   - minimal-chrome
 review:
   strengths:
-  - Filled chord ribbons with proper Bezier-arc-Bezier paths (major improvement from
-    attempt 1)
+  - Properly filled chord ribbons with Bezier-arc-Bezier SVG paths
   - Opacity variation by flow magnitude creates meaningful visual hierarchy
-  - Colorblind-safe palette with colored labels matching arc segments
-  - Realistic migration data theme with good flow variation
+  - Colorblind-safe palette with per-continent colored bold labels and smart text
+    anchoring
+  - Realistic migration data theme with 30 bidirectional flows and good magnitude
+    variation
   - Interactive HTML export leveraging pygal SVG nature
   weaknesses:
   - Significant wasted whitespace — legend far below diagram, large gaps above
-  - Lighter-colored chords (gold, teal) still somewhat faint against white background
-  - Node arcs are thin relative to the filled chord ribbons
-  - No clear focal point or annotation guiding the viewer to key insights
+  - Lighter-colored chords (gold/Asia, teal/Oceania) still somewhat faint against
+    white for small flows
+  - Node arcs are stroke-based rather than filled, appearing thin relative to chord
+    ribbons
+  - Canvas utilization could be improved by enlarging the diagram radius
   image_description: 'The plot displays a chord diagram on a white background with
     6 continents (Africa, Asia, Europe, N. America, S. America, Oceania) arranged
-    in a circle. Each continent has a thick colored arc segment and a bold colored
-    label positioned outside the circle. Filled Bezier chord ribbons connect the continents
-    through the center, with varying width proportional to flow magnitude at both
-    endpoints and opacity scaling with flow strength (stronger flows more opaque).
-    Colors: Africa (steel blue), Asia (dark gold), Europe (forest green), N. America
-    (deep orange), S. America (deep purple), Oceania (teal). The title "chord-basic
-    · pygal · pyplots.ai" appears at top center. A legend with colored squares for
-    all 6 continents sits at the very bottom, far below the diagram. The chords are
-    properly filled ribbons. Some lighter-colored chords (gold/Asia, teal/Oceania)
-    remain somewhat faint against the white background. There is significant whitespace
-    between the diagram and the bottom legend.'
+    in a circle. Each continent has a thick colored arc segment (stroke-based) and
+    a bold colored label positioned outside the circle with smart text anchoring.
+    Filled Bezier chord ribbons connect the continents through the center, with ribbon
+    width proportional to flow magnitude at both endpoints. Opacity scales with flow
+    strength — stronger flows like Asia to N. America and S. America to Europe are
+    more opaque and visually prominent. Colors: Africa (steel blue), Asia (dark gold),
+    Europe (forest green), N. America (deep orange), S. America (deep purple), Oceania
+    (teal). The title "chord-basic · pygal · pyplots.ai" appears at top center. A
+    legend with colored squares for all 6 continents sits at the very bottom, far
+    below the diagram. Significant whitespace between diagram and legend. Some lighter-colored
+    chords remain somewhat faint against the white background for smaller flows.'
   criteria_checklist:
     visual_quality:
-      score: 24
+      score: 23
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
         comment: Font sizes explicitly set in Style and SVG labels. All text clearly
@@ -75,21 +77,21 @@ review:
         max: 6
         passed: false
         comment: Filled chord ribbons visible with opacity 0.45-0.75. Lighter colors
-          (gold, teal) still faint against white.
+          (gold, teal) somewhat faint on white.
       - id: VQ-04
         name: Color Accessibility
         score: 3
         max: 4
         passed: true
-        comment: Colorblind-safe diverse palette. Gold on white has contrast concerns
-          for faintest chords.
+        comment: Colorblind-safe palette with diverse hues. Gold on white has moderate
+          contrast concerns.
       - id: VQ-05
         name: Layout & Canvas
         score: 2
         max: 4
         passed: false
-        comment: Significant wasted whitespace above diagram and between diagram and
-          bottom legend.
+        comment: Significant wasted whitespace. Legend far below diagram. Diagram
+          uses ~45-50% of canvas.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -105,22 +107,22 @@ review:
         score: 5
         max: 8
         passed: false
-        comment: Custom palette, colored labels, filled ribbons with opacity variation.
-          Above defaults but not publication-ready.
+        comment: Custom palette, colored labels, opacity variation. Above defaults
+          but not publication-ready.
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: false
-        comment: Axes/guides hidden, clean background, colored labels. Excessive whitespace
+        comment: Clean background, hidden guides, colored labels. Excessive whitespace
           reduces polish.
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: false
-        comment: Opacity scales with flow magnitude creating visual hierarchy. No
-          clear focal point or annotation.
+        comment: Opacity scales with magnitude creating visual hierarchy. No focal
+          annotation.
     spec_compliance:
       score: 13
       max: 15
@@ -130,8 +132,7 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Chord diagram with filled Bezier ribbons. Node arcs stroke-based
-          rather than filled.
+        comment: Chord diagram with filled Bezier ribbons and proportional arc allocation.
       - id: SC-02
         name: Required Features
         score: 3
@@ -149,7 +150,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Legend with all 6 continent names.
+        comment: Title format correct. Legend with all 6 continents and correct colors.
     data_quality:
       score: 14
       max: 15
@@ -159,19 +160,20 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: 30 bidirectional flows with good magnitude variation (2-35).
+        comment: 30 bidirectional flows with good magnitude variation (2-35k).
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Inter-continental migration flows — classic, neutral use case.
+        comment: Inter-continental migration flows — classic, neutral, realistic use
+          case.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values in thousands plausible for migration.
+        comment: Values in thousands of people plausible for migration.
     code_quality:
       score: 8
       max: 10
@@ -187,25 +189,25 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Deterministic hardcoded data.
+        comment: All data deterministic (hardcoded flow values).
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used.
+        comment: 'All imports used: math, cairosvg, pygal, Style.'
       - id: CQ-04
         name: Code Elegance
         score: 1
         max: 2
         passed: false
-        comment: SVG injection adds complexity. Coordinate mapping verbose.
+        comment: SVG injection is creative but adds significant complexity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png via cairosvg.
+        comment: Saves plot.png via cairosvg. Also creates HTML.
     library_mastery:
       score: 4
       max: 10
@@ -215,12 +217,13 @@ review:
         score: 2
         max: 5
         passed: false
-        comment: Uses pygal.XY as generic canvas — creative workaround but not idiomatic.
+        comment: Uses pygal.XY as generic canvas. Creative workaround but not idiomatic.
+          Library limitation.
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Leverages Style system, SVG pipeline, legend, HTML export. Core viz
-          bypasses pygal charting.
+        comment: Leverages Style system, SVG rendering, legend, HTML export. Core
+          viz bypasses pygal charting.
   verdict: REJECTED
