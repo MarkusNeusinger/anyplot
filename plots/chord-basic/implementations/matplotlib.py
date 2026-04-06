@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 chord-basic: Basic Chord Diagram
 Library: matplotlib 3.10.8 | Python 3.14
-Created: 2026-04-06
+Quality: 87/100 | Created: 2026-04-06
 """
 
 import matplotlib.patches as mpatches

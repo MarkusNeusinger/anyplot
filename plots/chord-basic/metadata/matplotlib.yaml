@@ -1,7 +1,7 @@
 library: matplotlib
 specification_id: chord-basic
 created: 2025-12-14 19:45:02+00:00
-updated: '2026-04-06T20:33:09Z'
+updated: '2026-04-06T20:40:16Z'
 generated_by: claude-opus-4-6
 workflow_run: 20213174710
 issue: 858
@@ -9,7 +9,7 @@ python_version: '3.14'
 library_version: 3.10.8
 preview_url: https://storage.googleapis.com/pyplots-images/plots/chord-basic/matplotlib/plot.png
 preview_html: null
-quality_score: 88
+quality_score: 87
 impl_tags:
   dependencies: []
   techniques:
@@ -27,35 +27,31 @@ impl_tags:
   - edge-highlighting
 review:
   strengths:
-  - Excellent use of matplotlib's low-level Path/Patch API to build a chord diagram
-    from scratch
-  - Colorblind-safe Wong palette with colored entity labels matching arcs
-  - Alpha variation by flow magnitude and draw-order sorting create effective visual
-    hierarchy
-  - Clean, well-structured code with deterministic data and proper geometry calculations
-  - Bidirectional flows correctly represented as separate chords
+  - Excellent custom Bezier chord rendering with proper arc-based positioning
+  - Alpha scaling by flow magnitude creates effective visual depth
+  - Colorblind-safe palette with strong contrast against off-white background
+  - Smart pre-computation of chord positions to decouple draw order from layout
+  - Perfect spec compliance — all required features implemented correctly
   weaknesses:
-  - Entity label font size (18pt) slightly below the 20pt guideline for optimal legibility
-  - 16:9 aspect ratio wastes horizontal space for a circular chart — square would
-    be more appropriate
-  - Some smaller chords (Oceania connections) are very thin and hard to distinguish
-  - Could benefit from additional visual polish to reach publication quality
+  - Center area is busy — hard to trace individual flows through the middle
+  - No visual emphasis on the most important relationships (top flows look similar
+    to mid-range)
+  - Data storytelling could be stronger — viewer must discover insights rather than
+    being guided
   improvements: []
   verdict: REJECTED
   image_description: 'The plot displays a chord diagram showing continental migration
-    flows between six continents: Africa (dark blue, top-right), Asia (amber/gold,
-    right), Europe (teal, bottom), N. America (burnt orange, left), S. America (light
-    blue, upper-left), and Oceania (pink/mauve, top). Each continent has a proportional
-    arc segment around the circle perimeter with white edge separation. Chords connect
-    arcs with widths proportional to flow magnitude. Chord colors match their source
-    continent with alpha transparency varying by flow size. Larger chords (e.g., Asia-Europe,
-    Africa-Asia) are drawn on top for visual prominence. Entity labels are bold, colored
-    to match their arcs, positioned outside the circle. Title reads "Continental Migration
-    Flows · chord-basic · matplotlib · pyplots.ai" at the top. White background, axes
-    turned off, clean layout.'
+    flows between 6 continents arranged clockwise from top-right: Africa (dark blue),
+    Asia (amber/gold), Europe (teal), N. America (red-orange), S. America (light blue),
+    and Oceania (pink). Outer arcs are proportional to each continent''s total flow
+    volume — Asia and Europe have the largest arcs. Chords connect continents with
+    widths proportional to migration magnitude and alpha-blended by flow size (larger
+    flows more opaque). The background is a subtle off-white (#FAFAFA). Title reads
+    "Continental Migration Flows · chord-basic · matplotlib · pyplots.ai" at the top.
+    Labels are bold, colored to match their arc segments.'
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -63,42 +59,40 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title at 24pt, labels at 18pt bold. All readable but entity labels
-          slightly under 20pt guideline.
+        comment: Title 24pt, labels 20pt bold, all explicitly set and readable
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All labels well-positioned with no collisions.
+        comment: Labels placed outside circle with intelligent alignment, no collisions
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Most chords clearly visible; some smaller flows (Oceania connections)
-          are quite thin.
+        comment: Chords mostly distinguishable; minimum chord angle ensures small
+          flows visible; some center blending
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Colorblind-safe Wong palette with good contrast between all six colors.
+        comment: Wong colorblind-safe palette variant with good contrast
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 16:9 aspect ratio creates wasted horizontal space for circular chart.
-          Square format would be better.
+        comment: Square 12x12 canvas, circle well-centered with balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive title with proper format. No axes needed for chord diagrams.
+        comment: Descriptive title with context, no axes needed for circular layout
     design_excellence:
-      score: 14
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -106,22 +100,21 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom colorblind-safe palette, colored labels, alpha variation.
-          Clearly above defaults.
+        comment: Custom palette, off-white background, alpha-scaled chords, white
+          edge separators
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Axes hidden, clean background, white edge separation. Good but could
-          push further.
+        comment: Axes hidden, custom background, white arc separators, 3-degree gaps
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: Alpha variation and draw order create effective visual hierarchy.
-          Dominant flows immediately apparent.
+        passed: false
+        comment: Alpha scaling creates some hierarchy but center is busy; no clear
+          focal point
     spec_compliance:
       score: 15
       max: 15
@@ -131,26 +124,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct chord diagram with entities around circle connected by chords.
+        comment: Correct chord diagram with circular perimeter layout
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Distinct colors, proportional chord widths, bidirectional flows all
-          present.
+        comment: Distinct colors, proportional widths, bidirectional flows, 6 entities
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 6 continents with bidirectional flow matrix correctly mapped.
+        comment: Flow matrix correctly mapped to arc sizes and chord widths
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows format. Colored labels serve as legend for chord diagrams.
+        comment: Title includes descriptive prefix + required format; colored labels
+          as legend
     data_quality:
       score: 14
       max: 15
@@ -160,20 +153,20 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Shows bidirectional flows, varying magnitudes, asymmetric relationships.
+        comment: Bidirectional asymmetric flows, varying magnitudes, different entity
+          sizes
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Intercontinental migration flows — real, neutral, comprehensible
-          scenario.
+        comment: Continental migration flows in millions — neutral, real-world scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values in millions, realistic magnitudes for intercontinental migration.
+        comment: Values 1-15 million plausible for intercontinental migration
     code_quality:
       score: 10
       max: 10
@@ -183,46 +176,45 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, geometry, plot, save. No functions/classes.'
+        comment: Linear flow with no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic with hardcoded flow matrix.
+        comment: Fully deterministic hardcoded matrix
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: matplotlib.patches, pyplot, numpy, Path.'
+        comment: All 4 imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-structured Bezier chord construction. Appropriate complexity.
+        comment: Smart pre-computation of chord positions, clean alpha formula
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300 and bbox_inches='tight'.
+        comment: Saves as plot.png, dpi=300, bbox_inches=tight
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: Uses matplotlib patches and Path with Bezier curves — correct approach
-          for chord diagrams.
+        comment: Correct use of patches and Path API but very low-level approach
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Path with CURVE4 Bezier, mpatches.Wedge, custom PathPatch — distinctively
-          matplotlib.
+        comment: Bezier curves via Path CURVE4, mpatches.Wedge, PathPatch — distinctively
+          matplotlib
