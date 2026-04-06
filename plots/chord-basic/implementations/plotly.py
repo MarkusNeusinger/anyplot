@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 chord-basic: Basic Chord Diagram
 Library: plotly 6.5.2 | Python 3.14
 Quality: 88/100 | Updated: 2026-04-06
@@ -107,7 +107,7 @@ for i in range(n):
     )
 
 # Draw chords with enhanced visibility and storytelling
-min_chord_width = 0.005  # Minimum visual width for thin chords
+min_chord_width = 0.008  # Minimum visual width for thin chords
 for i in range(n):
     src_pos = arc_starts[i]
     for j in range(n):
@@ -207,7 +207,7 @@ for i in range(n):
     fig.add_annotation(
         x=lx,
         y=ly,
-        text=f"<b>{continents[i]}</b> <span style='font-size:15px;color:#888'>{int(totals[i])}M</span>",
+        text=f"<b>{continents[i]}</b> <span style='font-size:17px;color:#888'>{int(totals[i])}M</span>",
         font={"size": 20, "color": colors[i], "family": "Arial, Helvetica, sans-serif"},
         showarrow=False,
         xanchor=xanchor,
@@ -244,7 +244,7 @@ fig.update_layout(
         "zeroline": False,
         "showticklabels": False,
         "showline": False,
-        "range": [-1.5, 1.5],
+        "range": [-1.6, 1.4],
         "scaleanchor": "x",
     },
     template="plotly_white",
@@ -252,16 +252,17 @@ fig.update_layout(
     legend={
         "font": {"size": 18, "family": "Arial, Helvetica, sans-serif"},
         "title": {"text": "<b>Continents</b>", "font": {"size": 18, "color": "#444"}},
-        "x": 1.0,
-        "y": 0.5,
-        "yanchor": "middle",
-        "bgcolor": "rgba(255,255,255,0.85)",
+        "x": 0.98,
+        "y": 0.02,
+        "xanchor": "right",
+        "yanchor": "bottom",
+        "bgcolor": "rgba(255,255,255,0.9)",
         "bordercolor": "#ddd",
         "borderwidth": 1,
-        "tracegroupgap": 8,
+        "tracegroupgap": 6,
         "itemsizing": "constant",
     },
-    margin={"l": 30, "r": 170, "t": 90, "b": 30},
+    margin={"l": 20, "r": 20, "t": 80, "b": 15},
     plot_bgcolor="white",
     paper_bgcolor="#FAFAFA",
     hovermode="closest",
@@ -273,5 +274,5 @@ fig.update_layout(
 )
 
 # Save outputs
-fig.write_image("plot.png", width=1600, height=900, scale=3)
+fig.write_image("plot.png", width=1200, height=1200, scale=3)
 fig.write_html("plot.html", include_plotlyjs="cdn")
