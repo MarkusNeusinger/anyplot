@@ -1,7 +1,7 @@
 library: letsplot
 specification_id: chord-basic
 created: '2025-12-23T10:01:36Z'
-updated: '2026-04-06T20:26:19+00:00'
+updated: '2026-04-06T20:32:41Z'
 generated_by: claude-opus-4-6
 workflow_run: 20457536364
 issue: 0
@@ -9,154 +9,175 @@ python_version: '3.14'
 library_version: 4.8.2
 preview_url: https://storage.googleapis.com/pyplots-images/plots/chord-basic/letsplot/plot.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/chord-basic/letsplot/plot.html
-quality_score: null
+quality_score: 83
 impl_tags:
-  dependencies: []
+  dependencies:
+  - pillow
   techniques:
-  - layer-composition
   - bezier-curves
+  - layer-composition
+  - hover-tooltips
   - html-export
   patterns:
   - data-generation
-  - matrix-construction
   - iteration-over-groups
   dataprep: []
   styling:
+  - minimal-chrome
   - alpha-blending
+  - edge-highlighting
 review:
   strengths:
-  - Excellent chord diagram construction using geom_polygon with smooth Bezier curves
-  - Clean implementation building polygons mathematically for both arcs and chords
-  - Perfect square format (1200x1200 base, scaled 3x) for circular visualization
-  - Realistic migration flow data with bidirectional flows between 6 continents
-  - Good use of alpha transparency (0.55) for chord overlap visibility
-  - Well-positioned labels outside the ring with bold formatting
+  - Full spec compliance with all required features including interactive tooltips
+    and bidirectional flows
+  - Clean, well-structured code that manually constructs chord geometry with proper
+    bezier curves
+  - Excellent use of letsplot-specific layer_tooltips() for interactivity and HTML
+    export
+  - Realistic, neutral migration flow data with good variety in magnitudes
+  - Appropriate use of theme_void() and coord_fixed() for circular visualization
   weaknesses:
-  - Title format could better follow the spec-id pattern (title text after the standard
-    format)
-  - Chord colors only show source color; adding gradient or target indication would
-    improve bidirectional flow clarity
-  image_description: The plot displays a chord diagram showing migration flows between
-    6 continents arranged in a circle. Asia (blue) is positioned at the top-right,
-    Europe (yellow) at top-left, Africa (green) at center-left, North America (red)
-    at bottom, South America (purple) at bottom-right, and Oceania (teal) at right.
-    Curved chords connect the continents with varying widths proportional to flow
-    magnitude. The thickest chords appear between Asia-Europe, Africa-Europe, and
-    South America-North America. Labels are positioned outside the ring in bold dark
-    text. A horizontal legend at the bottom identifies all continents. The title "Migration
-    Flows Between Continents · chord-basic · letsplot · pyplots.ai" appears at the
-    top. The background is white/clean.
+  - Color palette has similar hues for Asia (dark teal) and Oceania (dark green-teal),
+    reducing distinguishability
+  - No visual emphasis on dominant flows — all chords treated equally, missing storytelling
+    opportunity
+  - Title is left-aligned rather than centered over the circular diagram
+  - Thin chords for small flows are hard to distinguish individually
+  image_description: 'The plot displays a chord diagram showing continental migration
+    flows between 6 continents: Asia (dark teal-blue), Europe (gold/amber), Africa
+    (light blue), North America (orange), South America (purple), and Oceania (dark
+    green-teal). Each continent occupies an arc segment around the circle perimeter,
+    with arc width proportional to total flow volume. Semi-transparent chords connect
+    continents, colored by their source continent, with width proportional to flow
+    magnitude. Asia and Europe have the largest arcs indicating highest total flow.
+    The title reads "Continental Migration Flows · chord-basic · letsplot · pyplots.ai"
+    at the top left. A legend at the bottom maps colors to continent names. Entity
+    labels are positioned outside the ring in bold dark text. The white background
+    is clean and the overall layout is well-balanced within a square canvas.'
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 26
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title, continent labels, and legend text are all clearly readable
-          at the output resolution
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text; labels well-positioned outside the ring
-      - id: VQ-03
-        name: Element Visibility
         score: 7
         max: 8
         passed: true
-        comment: Chords are visible with good alpha (0.55), though some thin chords
-          are subtle
+        comment: 'Font sizes explicitly set (title=26, labels=18, legend=16/18). All
+          readable. Minor: labels could be slightly larger for long names.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: All labels clearly separated. No text collisions.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Chords visible with alpha=0.55, arcs with alpha=0.95. Some thin chords
+          harder to distinguish.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
+        score: 3
+        max: 4
         passed: true
-        comment: Six distinct colors used; mostly colorblind-safe but red-green proximity
-          could be improved
+        comment: 6-color palette mostly distinguishable. Asia and Oceania colors too
+          similar for colorblind viewers.
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 3
+        max: 4
         passed: true
-        comment: Square format perfect for circular diagram, good proportions
-      - id: VQ-07
-        name: Grid & Legend
+        comment: Square format appropriate. Good utilization ~60%. Title left-aligned
+          instead of centered.
+      - id: VQ-06
+        name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Legend well placed at bottom, no distracting grid
+        comment: Descriptive title with context. No axes needed for chord diagram.
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Custom palette with good harmony. White edges create clean separation.
+          Above defaults but not publication-level.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: theme_void removes unnecessary chrome. White borders on arcs and
+          chords add definition. Good alpha layering.
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Varying chord widths convey magnitude. Bidirectional flows distinguishable.
+          No particular flow emphasized.
     spec_compliance:
-      score: 23
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct chord diagram implementation
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Source/target/value correctly mapped to chords
-      - id: SC-03
+        comment: Correct chord diagram with entities on circle connected by proportional-width
+          chords.
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Chord width proportional to flow, distinct entity colors; bidirectional
-          flows shown but not distinctly colored at both ends
-      - id: SC-04
-        name: Data Range
+        comment: Distinct colors, proportional width, tooltips, bidirectional flows
+          all present.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All entities and connections visible
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Source, target, value correctly mapped. All 18 flows rendered.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies all continents
-      - id: SC-06
-        name: Title Format
-        score: 1
-        max: 2
-        passed: true
-        comment: Title present but "Migration Flows Between Continents" should ideally
-          be after the spec-id format
+        comment: Title follows spec format. Legend shows Continent with all 6 entities.
     data_quality:
-      score: 19
-      max: 20
+      score: 13
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Shows multiple bidirectional flows, varying magnitudes; could show
-          more extreme flow differences
+        comment: Bidirectional flows, varying magnitudes (8-45), 6 entities, 18 connections.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Migration between continents is a perfect real-world scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Flow values (8-45) are plausible relative magnitudes
+        comment: Continental migration flows — real-world, neutral, comprehensible.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 3
+        max: 4
+        passed: true
+        comment: Values 8-45 are relative/illustrative with sensible ordering.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -164,40 +185,47 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → calculations → plot → save'
+        comment: 'Linear flow: imports, data, computation, plot, save. No functions/classes.'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Deterministic data (no random seed needed)
+        comment: All data hardcoded/deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used.
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-structured bezier curve construction. Appropriate complexity.
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current lets-plot API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: true
-        comment: Saves plot.png but also plot.html (correct for letsplot)
-    library_features:
-      score: 4
-      max: 5
+        comment: Saves plot.png with scale=3. Also exports HTML.
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 4
         max: 5
         passed: true
-        comment: Good use of ggplot grammar, geom_polygon, scale_fill_manual, coord_fixed;
-          could leverage more interactive features
-  verdict: APPROVED
+        comment: Proper ggplot grammar with geom_polygon, geom_text, scale_fill_manual,
+          coord_fixed, theme_void.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses layer_tooltips() for interactive hover and HTML export — genuine
+          letsplot capabilities.
+  verdict: REJECTED
