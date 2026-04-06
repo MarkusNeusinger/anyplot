@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 chord-basic: Basic Chord Diagram
 Library: pygal 3.1.0 | Python 3.14
 Quality: 73/100 | Updated: 2026-04-06
@@ -48,14 +48,14 @@ flows = [
     (5, 4, 3),
 ]
 
-# Colorblind-safe palette — all colors with strong contrast on white
+# Colorblind-safe palette — strong contrast on white
 colors = [
     "#306998",  # Africa - Python Blue
-    "#BF8C00",  # Asia - Dark Gold
+    "#C78C00",  # Asia - Rich Amber (darkened for visibility)
     "#2E7D32",  # Europe - Forest Green
     "#D84315",  # N. America - Deep Orange
     "#7B1FA2",  # S. America - Deep Purple
-    "#00838F",  # Oceania - Teal
+    "#00695C",  # Oceania - Dark Teal (darkened for visibility)
 ]
 
 # Arc allocation proportional to total flow per entity
@@ -89,8 +89,7 @@ custom_style = Style(
     stroke_width=3,
 )
 
-# Pygal chart for structure, title, and legend
-center = 5.0
+# Pygal chart — square canvas, legend at bottom close to diagram
 chart = pygal.XY(
     width=3600,
     height=3600,
@@ -108,45 +107,49 @@ chart = pygal.XY(
     legend_at_bottom=True,
     legend_at_bottom_columns=6,
     legend_box_size=24,
+    margin=40,
+    margin_bottom=80,
     range=(0, 10),
     xrange=(0, 10),
     truncate_legend=-1,
 )
 
-# Node arcs as pygal XY series (thick strokes, provide legend entries)
-node_r = 3.55
+# Node arcs as pygal XY series — filled arcs with wide strokes
+node_r = 3.8
 for i, name in enumerate(continents):
     steps = max(20, int(arc_spans[i] * 30))
     pts = [
         (
-            center + node_r * math.cos(arc_starts[i] + arc_spans[i] * k / steps),
-            center + node_r * math.sin(arc_starts[i] + arc_spans[i] * k / steps),
+            5.0 + node_r * math.cos(arc_starts[i] + arc_spans[i] * k / steps),
+            5.0 + node_r * math.sin(arc_starts[i] + arc_spans[i] * k / steps),
         )
         for k in range(steps + 1)
     ]
-    chart.add(name, pts, stroke=True, show_dots=False, fill=False, stroke_style={"width": 36, "linecap": "butt"})
+    chart.add(name, pts, stroke=True, show_dots=False, fill=False, stroke_style={"width": 42, "linecap": "butt"})
 
 chart.render_to_file("plot.svg")
 
-# --- SVG injection: filled chord ribbons + labels ---
-# Coordinate mapping: chart data (0-10) → root SVG pixels
-pad = 550
-plot_sz = 2500
-svg_cx = pad + plot_sz / 2  # 1800
-svg_cy = pad + plot_sz / 2  # 1800
-scale = plot_sz / 10  # 250 px per chart unit
+# --- SVG injection: background, filled chord ribbons, labels ---
+# Map chart data coords (0-10) to SVG pixel coords
+# Plot area: translate(40, 122), rect 3520 x 3344
+svg_cx = 40 + 3520 / 2  # 1800
+svg_cy = 122 + 3344 / 2  # 1794
+sx = 3520 / 10  # 352 px per data unit
+sy = 3344 / 10  # 334.4 px per data unit
 
+svg_elems = []
 
-def polar_svg(r_chart, theta):
-    """Convert polar coords (chart-unit radius, math angle) to SVG pixels."""
-    return (svg_cx + r_chart * scale * math.cos(theta), svg_cy - r_chart * scale * math.sin(theta))
+# Subtle background ellipse matching the node arc shape
+bg_rx = node_r * sx + 30
+bg_ry = node_r * sy + 30
+svg_elems.append(
+    f'  <ellipse cx="{svg_cx:.0f}" cy="{svg_cy:.0f}" rx="{bg_rx:.0f}" ry="{bg_ry:.0f}" fill="#F7F7F7" stroke="none"/>'
+)
 
-
-# Build filled chord ribbons
-chord_r = 3.2  # chart units — inner edge of node arcs
+# Filled chord ribbons
+chord_r = 3.4  # inner edge of node arcs (chart units)
 arc_pos = list(arc_starts)
 max_val = max(v for _, _, v in flows)
-svg_elems = []
 
 for s, t, v in flows:
     s_ext = arc_spans[s] * v / totals[s]
@@ -156,30 +159,36 @@ for s, t, v in flows:
     arc_pos[s] = s_a2
     arc_pos[t] = t_a2
 
-    sx1, sy1 = polar_svg(chord_r, s_a1)
-    sx2, sy2 = polar_svg(chord_r, s_a2)
-    tx1, ty1 = polar_svg(chord_r, t_a1)
-    tx2, ty2 = polar_svg(chord_r, t_a2)
-    r_px = chord_r * scale
+    sx1 = svg_cx + chord_r * sx * math.cos(s_a1)
+    sy1 = svg_cy - chord_r * sy * math.sin(s_a1)
+    sx2 = svg_cx + chord_r * sx * math.cos(s_a2)
+    sy2 = svg_cy - chord_r * sy * math.sin(s_a2)
+    tx1 = svg_cx + chord_r * sx * math.cos(t_a1)
+    ty1 = svg_cy - chord_r * sy * math.sin(t_a1)
+    tx2 = svg_cx + chord_r * sx * math.cos(t_a2)
+    ty2 = svg_cy - chord_r * sy * math.sin(t_a2)
+    rx = chord_r * sx
+    ry = chord_r * sy
 
-    # Opacity scales with flow magnitude for visual hierarchy
-    opacity = 0.45 + 0.30 * v / max_val
+    # Higher opacity floor ensures all chords are clearly visible
+    opacity = 0.55 + 0.35 * v / max_val
 
-    # Filled ribbon: bezier → arc → bezier → arc
     path = (
         f"M {sx1:.1f},{sy1:.1f} "
         f"Q {svg_cx:.1f},{svg_cy:.1f} {tx1:.1f},{ty1:.1f} "
-        f"A {r_px:.1f},{r_px:.1f} 0 0,1 {tx2:.1f},{ty2:.1f} "
+        f"A {rx:.1f},{ry:.1f} 0 0,1 {tx2:.1f},{ty2:.1f} "
         f"Q {svg_cx:.1f},{svg_cy:.1f} {sx2:.1f},{sy2:.1f} "
-        f"A {r_px:.1f},{r_px:.1f} 0 0,0 {sx1:.1f},{sy1:.1f} Z"
+        f"A {rx:.1f},{ry:.1f} 0 0,0 {sx1:.1f},{sy1:.1f} Z"
     )
     svg_elems.append(f'  <path d="{path}" fill="{colors[s]}" fill-opacity="{opacity:.2f}" stroke="none"/>')
 
 # Labels positioned outside node arcs
-label_r = 4.1
+label_r = 4.25
 for i, name in enumerate(continents):
     mid = arc_starts[i] + arc_spans[i] / 2
-    lx, ly = polar_svg(label_r, mid)
+    lx = svg_cx + label_r * sx * math.cos(mid)
+    ly = svg_cy - label_r * sy * math.sin(mid)
+    ly = max(100, min(3450, ly))
     deg = math.degrees(mid) % 360
     if deg <= 75 or deg >= 285:
         anchor = "start"
@@ -187,9 +196,16 @@ for i, name in enumerate(continents):
         anchor = "end"
     else:
         anchor = "middle"
+    # Keep labels within viewBox — override anchor near edges
+    if anchor == "end" and lx < 300:
+        anchor = "start"
+        lx = max(20, lx)
+    elif anchor == "start" and lx > 3300:
+        anchor = "end"
+        lx = min(3580, lx)
     svg_elems.append(
         f'  <text x="{lx:.0f}" y="{ly:.0f}" fill="{colors[i]}" '
-        f'font-size="52" font-weight="bold" text-anchor="{anchor}" '
+        f'font-size="54" font-weight="bold" text-anchor="{anchor}" '
         f'dominant-baseline="central" '
         f'font-family="DejaVu Sans, sans-serif">{name}</text>'
     )
@@ -203,7 +219,7 @@ with open("plot.svg", "w") as f:
 
 cairosvg.svg2png(bytestring=svg.encode("utf-8"), write_to="plot.png")
 
-# Interactive HTML
+# Interactive HTML export
 with open("plot.html", "w") as f:
     f.write(
         "<!DOCTYPE html>\n<html>\n<head>\n"
