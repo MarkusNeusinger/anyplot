@@ -13,8 +13,9 @@ A dendrogram visualizes hierarchical clustering by showing how data points or cl
 
 ## Data
 
+- `features` (numeric matrix) - measurement values for each item (e.g., petal length, sepal width), used to compute distances
 - `labels` (string) - names or identifiers for each item being clustered
-- `linkage_matrix` (numeric) - output from scipy's linkage function containing merge distances
+- `linkage_matrix` (numeric) - output from scipy's linkage function containing merge distances, computed from features
 - Size: 10-50 items recommended for readable dendrograms
 - Example: hierarchical clustering of iris flower species by measurements
 

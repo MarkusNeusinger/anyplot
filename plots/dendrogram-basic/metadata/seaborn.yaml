@@ -1,165 +1,175 @@
 library: seaborn
 specification_id: dendrogram-basic
 created: '2025-12-23T10:01:46Z'
-updated: '2025-12-23T10:24:16Z'
-generated_by: claude-opus-4-5-20251101
+updated: '2026-04-05T21:08:36Z'
+generated_by: claude-opus-4-6
 workflow_run: 20457530242
 issue: 0
-python_version: 3.13.11
+python_version: 3.14.3
 library_version: 0.13.2
 preview_url: https://storage.googleapis.com/pyplots-images/plots/dendrogram-basic/seaborn/plot.png
 preview_html: null
-quality_score: 91
+quality_score: 89
 impl_tags:
-  dependencies:
-  - scipy
-  - sklearn
+  dependencies: []
   techniques:
+  - colorbar
   - custom-legend
   patterns:
   - dataset-loading
   - iteration-over-groups
+  - groupby-aggregation
   dataprep:
   - hierarchical-clustering
-  styling: []
+  styling:
+  - custom-colormap
+  - edge-highlighting
 review:
   strengths:
-  - Excellent use of colorblind-safe palette for species differentiation
-  - Clean hierarchical structure clearly showing species relationships (Setosa distinct,
-    Versicolor/Virginica mixed)
-  - Species-colored x-axis labels with bold font enhance readability
-  - Proper use of Ward linkage method for meaningful clustering
-  - Good sample size (30) within recommended 10-50 range for readable dendrograms
-  - Title and axis labels follow specification format exactly
-  - Subtle y-axis grid with alpha=0.3 provides reference without distraction
+  - Excellent use of sns.clustermap as the idiomatic seaborn dendrogram approach
+  - Species color-coding on both row_colors strip and y-axis labels creates strong
+    visual storytelling
+  - Real iris dataset with appropriate sampling provides genuine scientific context
+  - Clean, well-structured code with good reproducibility
   weaknesses:
-  - Legend color markers use squares but appear slightly different shade than the
-    x-axis label colors (minor visual inconsistency)
-  image_description: 'The plot displays a hierarchical dendrogram visualizing clustering
-    of 30 iris flower samples (10 from each species: Setosa, Versicolor, and Virginica).
-    The dendrogram uses Ward linkage distances on the y-axis (ranging from 0 to ~15).
-    The tree structure clearly shows Setosa samples clustering together on the left
-    with low merge distances (~1.5), while Versicolor and Virginica samples cluster
-    together on the right with higher merge distances (~6-7), reflecting that these
-    two species are more similar to each other than to Setosa. Branch colors correspond
-    to clusters, with orange branches for Setosa, green branches for Versicolor/Virginica
-    clusters. X-axis labels are rotated 45 degrees and color-coded by species (teal/blue
-    for Setosa, orange for Versicolor, green for Virginica). A legend in the upper
-    right identifies the species. The title follows the required format "dendrogram-basic
-    · seaborn · pyplots.ai". Grid lines are subtle and present only on the y-axis.'
+  - Tick label font size (13pt) slightly below recommended 16pt for this canvas size
+  - Minor label overlap at bottom-left between Species and Sepal Length
+  image_description: The plot shows a seaborn clustermap combining hierarchical clustering
+    dendrograms with a heatmap of iris flower measurements. The row dendrogram (left
+    side) shows how 30 iris samples cluster hierarchically using Ward's method, with
+    Setosa samples clearly separating from Versicolor/Virginica. A column dendrogram
+    (top) clusters the four features. The heatmap uses the viridis colormap (yellow-green-teal-purple)
+    to encode feature values. A "Species" color strip on the left marks samples by
+    species using blue (#306998, Setosa), orange (#E8843C, Versicolor), and green
+    (#4EA86B, Virginica). Y-axis labels are color-coded by species and show sample
+    identifiers like "Setosa-1". X-axis labels show "Sepal Length", "Petal Width",
+    "Sepal Width", "Petal Length" (reordered by clustering). A species legend sits
+    to the right of the heatmap. Title reads "dendrogram-basic · seaborn · pyplots.ai"
+    at the top. A colorbar labeled "Feature Value" is in the upper left.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 25
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 6
+        max: 8
         passed: true
-        comment: Title 24pt, axis labels 20pt, tick labels 14-16pt, all clearly readable
+        comment: Font sizes explicitly set via set_context and manual sizing, but
+          tick labels at 13pt below 16pt guideline
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: X-axis labels rotated 45°, no overlapping text
+        comment: Minor overlap between Species row_colors label and Sepal Length column
+          label
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Dendrogram branches well-sized, species-colored labels enhance visibility
+        comment: Heatmap cells clearly visible with white gridlines; dendrogram lines
+          adequate but gray color could be more prominent
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Uses seaborn colorblind palette, teal/orange/green distinguishable
+        comment: Viridis colormap is colorblind-safe; species colors blue/orange/green
+          are distinguishable
       - id: VQ-05
-        name: Layout Balance
+        name: Layout & Canvas
         score: 3
-        max: 5
+        max: 4
         passed: true
-        comment: Good proportions, slight asymmetry due to clustering pattern (natural)
+        comment: Clustermap fills canvas well; colorbar placement slightly disconnected
+          from heatmap
       - id: VQ-06
-        name: Axis Labels
+        name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive: "Iris Samples (by Species)" and "Distance (Ward Linkage)"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
-        max: 2
-        passed: false
-        comment: Legend uses blue square markers but Setosa labels appear teal/blue
-          in plot; slight color mismatch
+        comment: 'Descriptive labels with context: Iris Features, Iris Samples (by
+          Species), Feature Value'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom species palette, viridis cmap, color-coded y-axis labels —
+          clearly above defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: White theme, despine applied, white cell borders, generous spacing
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Species color-coding on row_colors and y-axis labels creates visual
+          hierarchy; dendrogram reveals species separation
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct dendrogram/hierarchical clustering visualization
+        comment: Dendrogram via clustermap with hierarchical clustering on both axes
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Samples on x-axis, merge distances on y-axis
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Labels, linkage matrix, branch heights proportional to distances
-      - id: SC-04
-        name: Data Range
+        comment: Labels, Ward linkage, iris data, 30 samples, row and column clustering
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Full y-axis range shown (0-15)
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Samples on rows, features on columns, correct mapping
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Correctly identifies three iris species
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses exact format "dendrogram-basic · seaborn · pyplots.ai"
+        comment: Correct title format and species legend with matching labels
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows hierarchical structure with varying merge distances, clear
-          species clustering
+        comment: Shows hierarchical clustering, species groupings, feature correlations
+          via column clustering
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Classic iris dataset, meaningful biological clustering example
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: 30 samples within recommended 10-50 range, Ward distances realistic
+        comment: Iris dataset — classic, real-world, neutral scientific dataset
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Real iris measurements with biologically accurate values
     code_quality:
-      score: 7
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -167,42 +177,47 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → plot → save (no functions/classes)'
+        comment: 'Clean linear flow: imports, style, data, plot, customize, save'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) and random_state=42
       - id: CQ-03
         name: Clean Imports
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: sklearn.datasets imported but could use simpler approach; seaborn
-          not heavily utilized
+        passed: true
+        comment: All imports used
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-structured, appropriate complexity
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: All APIs current
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 0
-        passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot.png with dpi=300, bbox_inches=tight
+    library_mastery:
+      score: 10
+      max: 10
       items:
-      - id: LF-01
-        name: Uses seaborn styling
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses sns.set_theme, sns.set_context, sns.color_palette, sns.despine;
-          however, core dendrogram is from scipy (seaborn has no native dendrogram),
-          seaborn primarily used for theming and aesthetics
-  verdict: APPROVED
+        comment: sns.clustermap is the idiomatic seaborn approach; uses set_theme,
+          set_context, load_dataset
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: clustermap with row_colors is distinctive seaborn feature not easily
+          replicated elsewhere
+  verdict: REJECTED
