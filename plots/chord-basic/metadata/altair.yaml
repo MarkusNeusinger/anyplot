@@ -1,7 +1,7 @@
 library: altair
 specification_id: chord-basic
 created: '2025-12-23T10:01:05Z'
-updated: '2026-04-06T20:26:19+00:00'
+updated: '2026-04-06T20:32:36Z'
 generated_by: claude-opus-4-6
 workflow_run: 20457533097
 issue: 0
@@ -9,201 +9,225 @@ python_version: '3.14'
 library_version: 6.0.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/chord-basic/altair/plot.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/chord-basic/altair/plot.html
-quality_score: null
+quality_score: 77
 impl_tags:
   dependencies: []
   techniques:
+  - bezier-curves
   - layer-composition
   - hover-tooltips
   - html-export
   patterns:
   - data-generation
-  - matrix-construction
   - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
+  - minimal-chrome
 review:
   strengths:
-  - Excellent manual implementation of chord diagram using Altair mark_line for both
-    arcs and chords
-  - Clean color palette with good contrast and distinct colors for each continent
-  - Proper proportional sizing of both arcs (based on total flow) and chords (based
-    on individual flow values)
-  - Well-structured code with clear separation of data preparation, arc generation,
-    and chord path calculation
-  - Tooltips enabled for interactivity showing From/To/Flow information
-  - Both PNG and HTML outputs generated
+  - Excellent spec compliance — all required features present including tooltips and
+    bidirectional flows
+  - Realistic, neutral data context (inter-continental migration)
+  - Clean visual design with custom color palette and transparent chords
+  - Smart label positioning with data-driven left/right alignment
+  - Both PNG and HTML output for interactive tooltips
   weaknesses:
-  - Chord diagram is not a native Altair chart type, requiring significant manual
-    geometry calculations which reduces the declarative advantage of Altair
-  - Labels could benefit from slight rotation for better alignment with arc positions
-  - Flow values lack units in the data context
-  image_description: 'The plot displays a chord diagram showing migration flows between
-    6 continents. The outer ring consists of colored arc segments: Europe (dark blue
-    #306998), North America (golden yellow #FFD43B), Asia (teal #4ECDC4), Africa (coral
-    red #FF6B6B), South America (light green/mint #95E1D3), and Oceania (purple #A86EDB).
-    Each continent''s arc size is proportional to its total flow volume. Semi-transparent
-    chords connect the continents with widths corresponding to flow magnitudes. Labels
-    are positioned outside each arc segment with matching colors. The title "chord-basic
-    · altair · pyplots.ai" is displayed at the top center. A legend is present on
-    the right side showing the Region color mapping.'
+  - Library mastery is low — Altair used as a coordinate renderer rather than leveraging
+    its declarative grammar
+  - South America and Asia colors too similar (mint vs teal)
+  - No visual hierarchy or storytelling emphasis — dominant flows not highlighted
+  - Very verbose code (305 lines) with repeated color scale definitions across layers
+  - Legend label font size (14pt) is small relative to other text
+  image_description: 'The plot shows a chord diagram with 6 continents (Asia, North
+    America, Europe, Africa, South America, Oceania) arranged around a circle. Each
+    continent has a distinctly colored arc segment on the outer ring: Europe (dark
+    navy blue), North America (golden yellow), Asia (teal/cyan), Africa (coral/pink-red),
+    South America (light mint green), and Oceania (purple). Semi-transparent chords
+    connect the continents showing migration flows, with chord width proportional
+    to flow magnitude. Labels are positioned outside the arcs in matching colors with
+    smart left/right alignment. The title reads "chord-basic · altair · pyplots.ai"
+    at the top center. A legend labeled "Region" appears on the right side with all
+    6 entities. The overall layout is clean with a white background, no axes, and
+    no visible frame (strokeWidth=0).'
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 25
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 6
+        max: 8
         passed: true
-        comment: Title and labels are clear and readable, font sizes are appropriate
+        comment: Font sizes explicitly set (title=28, labels=18, legend=18/14). All
+          readable but legend label size at 14pt is small.
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements, all labels well-positioned
+        comment: No overlapping text. Labels well-positioned with smart left/right
+          alignment.
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Chords are visible with good opacity (0.6), arc segments clearly
-          defined
+        comment: Arcs and chords clearly visible. Alpha=0.55 works well. Some thinner
+          chords hard to distinguish.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 3
+        max: 4
         passed: true
-        comment: Distinct color palette, colorblind-friendly with good contrast
+        comment: Distinct hues overall but South America (mint) and Asia (teal) are
+          too similar.
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 3
+        max: 4
         passed: true
-        comment: Well-centered diagram, good use of canvas space
+        comment: Diagram well-centered, fills reasonable canvas area. Some wasted
+          space on sides.
       - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: true
-        comment: N/A for chord diagram (no traditional axes)
-      - id: VQ-07
-        name: Grid & Legend
+        name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Legend well-placed on right, clean styling
+        comment: No axes needed for chord diagram. Title follows correct format.
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Custom color palette, transparent chords, clean layout. Above defaults
+          but not publication-level.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: No axes/spines, legend with custom styling, clean background. Good
+          but could push further.
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Data displayed correctly but no visual emphasis or hierarchy. Dominant
+          flows not highlighted.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct chord diagram implementation
+        comment: Correct chord diagram with entities on perimeter, proportional chord
+          widths.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Source/target/value correctly mapped to arcs and chords
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All features present: bidirectional flows, proportional chord widths,
-          distinct colors'
-      - id: SC-04
-        name: Data Range
+        comment: Distinct colors, proportional widths, tooltips, bidirectional flows
+          all present.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All entities and connections visible
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Source/target/value correctly mapped. Chord widths proportional to
+          values.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies all regions
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: chord-basic · altair · pyplots.ai'
+        comment: Title format correct. Legend with all 6 regions labeled.
     data_quality:
-      score: 18
-      max: 20
+      score: 14
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Shows bidirectional flows, varying magnitudes, 6 entities with 15
-          connections
+        comment: Shows bidirectional flows, varying magnitudes, 6 entities, 15 connections.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Migration flows between continents is a perfect real-world use case
+        comment: Migration flows between continents in thousands — real-world neutral
+          scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Flow values (12-55) are plausible but abstract (no units specified)
+        comment: Values 12-55 thousand migrants are plausible for inter-continental
+          migration.
     code_quality:
-      score: 9
+      score: 8
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: 'Linear structure: imports → data → calculations → plot → save'
+        comment: Linear flow but extremely verbose at 305 lines due to manual geometry
+          computation.
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Deterministic data (no random, uses fixed dataset)
+        comment: Deterministic hardcoded data.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports (altair, numpy, pandas)
+        comment: altair, numpy, pandas — all used.
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 1
+        max: 2
+        passed: true
+        comment: Manual bezier/arc computation necessary but verbose. Repeated color
+          scale definitions.
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current Altair API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Missing explicit png check
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot.png with scale_factor=3.0 and plot.html.
+    library_mastery:
+      score: 4
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 2
         max: 5
-        passed: true
-        comment: Uses Altair's declarative grammar with layering, tooltips enabled
-          for interactivity, HTML export. However, chord diagrams are not a native
-          Altair chart type, requiring manual construction.
-  verdict: APPROVED
+        passed: false
+        comment: Altair used as low-level geometry renderer. Manual bezier curves
+          and arc polygons bypass declarative grammar.
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Uses tooltips and HTML export (Altair-distinctive). But core visualization
+          doesn't leverage grammar of graphics.
+  verdict: REJECTED
