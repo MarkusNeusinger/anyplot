@@ -1,7 +1,7 @@
 """ pyplots.ai
 chord-basic: Basic Chord Diagram
 Library: letsplot 4.8.2 | Python 3.14
-Quality: 83/100 | Updated: 2026-04-06
+Quality: 82/100 | Updated: 2026-04-06
 """
 
 import math
