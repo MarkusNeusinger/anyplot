@@ -1,7 +1,7 @@
 """ pyplots.ai
 chord-basic: Basic Chord Diagram
-Library: highcharts unknown | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-23
+Library: highcharts 1.10.3 | Python 3.14
+Quality: 91/100 | Updated: 2026-04-06
 """
 
 import tempfile
@@ -11,168 +11,197 @@ from pathlib import Path
 
 from highcharts_core.chart import Chart
 from highcharts_core.options import HighchartsOptions
+from highcharts_core.options.series.dependencywheel import DependencyWheelSeries
 from PIL import Image
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
 
-# Data - Migration flows between continents (in millions)
-# Format: [source, target, value]
+# Data - Trade flows between continents (billions USD, approximate)
 flows = [
-    # From Europe
-    ["Europe", "North America", 45],
-    ["Europe", "Asia", 28],
-    ["Europe", "Africa", 15],
-    ["Europe", "South America", 12],
-    ["Europe", "Oceania", 8],
-    # From Asia
-    ["Asia", "North America", 55],
-    ["Asia", "Europe", 35],
-    ["Asia", "Oceania", 22],
-    ["Asia", "Africa", 10],
-    ["Asia", "South America", 5],
-    # From Africa
-    ["Africa", "Europe", 42],
-    ["Africa", "North America", 18],
-    ["Africa", "Asia", 12],
-    ["Africa", "South America", 6],
-    ["Africa", "Oceania", 3],
-    # From North America
-    ["North America", "Europe", 30],
-    ["North America", "Asia", 25],
-    ["North America", "South America", 15],
-    ["North America", "Oceania", 8],
-    ["North America", "Africa", 4],
-    # From South America
-    ["South America", "North America", 38],
-    ["South America", "Europe", 25],
-    ["South America", "Asia", 8],
-    ["South America", "Africa", 3],
-    ["South America", "Oceania", 2],
-    # From Oceania
-    ["Oceania", "Asia", 18],
-    ["Oceania", "Europe", 12],
-    ["Oceania", "North America", 10],
-    ["Oceania", "Africa", 2],
-    ["Oceania", "South America", 1],
+    {"from": "Europe", "to": "N. America", "weight": 28},
+    {"from": "Europe", "to": "Asia", "weight": 22},
+    {"from": "Europe", "to": "Africa", "weight": 8},
+    {"from": "Europe", "to": "S. America", "weight": 6},
+    {"from": "Europe", "to": "Oceania", "weight": 4},
+    {"from": "Asia", "to": "N. America", "weight": 35},
+    {"from": "Asia", "to": "Europe", "weight": 25},
+    {"from": "Asia", "to": "Oceania", "weight": 12},
+    {"from": "Asia", "to": "Africa", "weight": 10},
+    {"from": "Asia", "to": "S. America", "weight": 7},
+    {"from": "Africa", "to": "Europe", "weight": 15},
+    {"from": "Africa", "to": "Asia", "weight": 12},
+    {"from": "Africa", "to": "N. America", "weight": 8},
+    {"from": "Africa", "to": "S. America", "weight": 3},
+    {"from": "Africa", "to": "Oceania", "weight": 2},
+    {"from": "N. America", "to": "Europe", "weight": 26},
+    {"from": "N. America", "to": "Asia", "weight": 30},
+    {"from": "N. America", "to": "S. America", "weight": 18},
+    {"from": "N. America", "to": "Oceania", "weight": 5},
+    {"from": "N. America", "to": "Africa", "weight": 4},
+    {"from": "S. America", "to": "N. America", "weight": 22},
+    {"from": "S. America", "to": "Europe", "weight": 14},
+    {"from": "S. America", "to": "Asia", "weight": 10},
+    {"from": "S. America", "to": "Africa", "weight": 3},
+    {"from": "S. America", "to": "Oceania", "weight": 2},
+    {"from": "Oceania", "to": "Asia", "weight": 18},
+    {"from": "Oceania", "to": "Europe", "weight": 6},
+    {"from": "Oceania", "to": "N. America", "weight": 5},
+    {"from": "Oceania", "to": "Africa", "weight": 1},
+    {"from": "Oceania", "to": "S. America", "weight": 1},
 ]
 
-# Collect unique nodes
-nodes_set = set()
-for source, target, _ in flows:
-    nodes_set.add(source)
-    nodes_set.add(target)
-nodes = list(nodes_set)
+# Refined palette — harmonious, colorblind-safe, muted-professional tones
+node_defs = [
+    {"id": "Europe", "color": "#306998"},
+    {"id": "Asia", "color": "#E8A838"},
+    {"id": "Africa", "color": "#8B6CAF"},
+    {"id": "N. America", "color": "#2BA5B5"},
+    {"id": "S. America", "color": "#3DAA6D"},
+    {"id": "Oceania", "color": "#D4654A"},
+]
 
-# Colorblind-safe colors for continents
-node_colors = {
-    "Europe": "#306998",  # Python Blue
-    "Asia": "#FFD43B",  # Python Yellow
-    "Africa": "#9467BD",  # Purple
-    "North America": "#17BECF",  # Cyan
-    "South America": "#2CA02C",  # Green
-    "Oceania": "#FF7F0E",  # Orange
-}
-
-# Create nodes data with colors
-nodes_data = [{"id": node, "name": node, "color": node_colors.get(node, "#306998")} for node in nodes]
-
-# Create links data
-links_data = [{"from": source, "to": target, "weight": value} for source, target, value in flows]
-
-# Create chart
+# Build chart using highcharts-core Python API
 chart = Chart(container="container")
 chart.options = HighchartsOptions()
 
-# Chart configuration
-chart.options.chart = {"type": "dependencywheel", "width": 4800, "height": 2700, "backgroundColor": "#ffffff"}
-
-# Title
-chart.options.title = {
-    "text": "chord-basic · highcharts · pyplots.ai",
-    "style": {"fontSize": "64px", "fontWeight": "bold"},
-}
-
-# Subtitle for context
-chart.options.subtitle = {"text": "Migration Flows Between Continents (Millions)", "style": {"fontSize": "36px"}}
-
-# Tooltip
-chart.options.tooltip = {
-    "style": {"fontSize": "36px"},
-    "nodeFormat": "{point.name}: {point.sum}M total flow",
-    "pointFormat": "{point.fromNode.name} → {point.toNode.name}: {point.weight}M migrants",
-}
-
-# Dependency wheel (chord diagram) series configuration
-series_config = {
-    "type": "dependencywheel",
-    "name": "Migration Flow",
-    "keys": ["from", "to", "weight"],
-    "nodes": nodes_data,
-    "data": links_data,
-    "dataLabels": {
-        "enabled": True,
-        "style": {"fontSize": "36px", "fontWeight": "bold", "textOutline": "3px white"},
-        "nodeFormat": "{point.name}",
-        "linkFormat": "",
-        "distance": 20,
+chart.options.chart = {
+    "width": 3600,
+    "height": 3600,
+    "backgroundColor": {
+        "linearGradient": {"x1": 0, "y1": 0, "x2": 0.4, "y2": 1},
+        "stops": [[0, "#FAFBFC"], [0.4, "#F3F5F8"], [1, "#EAEDF2"]],
     },
-    "size": "90%",
-    "center": ["50%", "50%"],
-    "linkOpacity": 0.6,
-    "curveFactor": 0.6,
+    "marginTop": 155,
+    "marginBottom": 80,
+    "marginLeft": 30,
+    "marginRight": 30,
+    "style": {"fontFamily": "'Segoe UI', Helvetica, Arial, sans-serif"},
 }
 
-chart.options.series = [series_config]
+chart.options.title = {
+    "text": "chord-basic \u00b7 highcharts \u00b7 pyplots.ai",
+    "style": {"fontSize": "60px", "fontWeight": "700", "color": "#1A2332", "letterSpacing": "0.5px"},
+    "y": 45,
+}
 
-# Disable legend (nodes are labeled around the wheel)
+chart.options.subtitle = {
+    "text": "Trade Flows Between Continents (Billions USD)",
+    "style": {"fontSize": "40px", "fontWeight": "400", "color": "#5A6878", "letterSpacing": "0.3px"},
+    "y": 110,
+}
+
+chart.options.tooltip = {
+    "style": {"fontSize": "32px"},
+    "backgroundColor": "rgba(255,255,255,0.96)",
+    "borderWidth": 1,
+    "borderColor": "#DDE1E6",
+    "shadow": {"color": "rgba(0,0,0,0.08)", "offsetX": 2, "offsetY": 2, "width": 6},
+    "nodeFormat": "<b>{point.name}</b><br/>Total: ${point.sum}B",
+    "pointFormat": "{point.fromNode.name} \u2192 {point.toNode.name}<br/><b>${point.weight}B</b>",
+}
+
 chart.options.legend = {"enabled": False}
-
-# Disable credits
 chart.options.credits = {"enabled": False}
+chart.options.accessibility = {"enabled": False}
 
-# Download Highcharts JS and sankey module (dependency wheel extends sankey)
-highcharts_url = "https://code.highcharts.com/highcharts.js"
-sankey_url = "https://code.highcharts.com/modules/sankey.js"
-wheel_url = "https://code.highcharts.com/modules/dependency-wheel.js"
+chart.options.caption = {
+    "text": "Chord width proportional to trade volume · Thickest chords: Asia\u2013N. America ($35B), N. America\u2013Asia ($30B)",
+    "style": {"fontSize": "28px", "color": "#8A94A2", "fontStyle": "italic"},
+    "align": "center",
+    "verticalAlign": "bottom",
+    "y": -10,
+}
 
-with urllib.request.urlopen(highcharts_url, timeout=30) as response:
-    highcharts_js = response.read().decode("utf-8")
+# Build series using Python API
+series = DependencyWheelSeries()
+series.data = flows
+series.nodes = node_defs
+series.name = "Trade Flow"
+series.data_labels = {
+    "enabled": True,
+    "style": {"fontSize": "44px", "fontWeight": "600", "textOutline": "5px rgba(255,255,255,0.92)", "color": "#1A2332"},
+    "distance": 40,
+    "padding": 10,
+    "crop": False,
+    "overflow": "allow",
+}
+series.size = "86%"
+series.center = ["50%", "52%"]
+series.link_opacity = 0.5
+series.curve_factor = 0.6
+series.node_padding = 16
+series.node_width = 46
+series.border_width = 2
+series.border_color = "rgba(255,255,255,0.80)"
+series.color_by_point = True
+series.min_link_width = 4
 
-with urllib.request.urlopen(sankey_url, timeout=30) as response:
-    sankey_js = response.read().decode("utf-8")
+chart.add_series(series)
 
-with urllib.request.urlopen(wheel_url, timeout=30) as response:
-    wheel_js = response.read().decode("utf-8")
+# Generate JS literal for embedding
+chart_js = chart.to_js_literal()
 
-# Generate HTML with inline scripts
-html_str = chart.to_js_literal()
+# Download Highcharts JS and modules
+headers = {"User-Agent": "Mozilla/5.0"}
+urls = [
+    "https://cdn.jsdelivr.net/npm/highcharts@11/highcharts.js",
+    "https://cdn.jsdelivr.net/npm/highcharts@11/modules/sankey.js",
+    "https://cdn.jsdelivr.net/npm/highcharts@11/modules/dependency-wheel.js",
+]
+scripts = []
+for url in urls:
+    with urllib.request.urlopen(urllib.request.Request(url, headers=headers), timeout=30) as response:
+        scripts.append(response.read().decode("utf-8"))
+
+highcharts_js, sankey_js, wheel_js = scripts
+
+# Generate HTML with inline scripts for headless Chrome
 html_content = f"""<!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        body {{ margin: 0; font-family: 'Inter', 'Segoe UI', sans-serif; }}
+        #container {{ width: 3600px; height: 3600px; }}
+    </style>
     <script>{highcharts_js}</script>
     <script>{sankey_js}</script>
     <script>{wheel_js}</script>
 </head>
-<body style="margin:0;">
-    <div id="container" style="width: 4800px; height: 2700px;"></div>
-    <script>{html_str}</script>
+<body>
+    <div id="container"></div>
+    <script>
+        Highcharts.setOptions({{
+            chart: {{ style: {{ fontFamily: "'Inter', 'Segoe UI', Helvetica, sans-serif" }} }}
+        }});
+        {chart_js}
+    </script>
 </body>
 </html>"""
 
-# Save HTML for interactive version (use CDN for standalone)
+# Save interactive HTML version (CDN-based for portability)
 standalone_html = f"""<!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
-    <script src="https://code.highcharts.com/highcharts.js"></script>
-    <script src="https://code.highcharts.com/modules/sankey.js"></script>
-    <script src="https://code.highcharts.com/modules/dependency-wheel.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        body {{ margin: 0; font-family: 'Inter', 'Segoe UI', sans-serif; }}
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/highcharts@11/highcharts.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/highcharts@11/modules/sankey.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/highcharts@11/modules/dependency-wheel.js"></script>
 </head>
-<body style="margin:0;">
+<body>
     <div id="container" style="width: 100%; height: 100vh;"></div>
-    <script>{html_str}</script>
+    <script>
+        Highcharts.setOptions({{
+            chart: {{ style: {{ fontFamily: "'Inter', 'Segoe UI', Helvetica, sans-serif" }} }}
+        }});
+        {chart_js}
+    </script>
 </body>
 </html>"""
 
@@ -189,18 +218,18 @@ chrome_options.add_argument("--headless")
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
 chrome_options.add_argument("--disable-gpu")
-chrome_options.add_argument("--window-size=4800,2900")
+chrome_options.add_argument("--window-size=3600,3700")
 
 driver = webdriver.Chrome(options=chrome_options)
 driver.get(f"file://{temp_path}")
-time.sleep(5)  # Wait for chart to render
+time.sleep(5)
 driver.save_screenshot("plot_raw.png")
 driver.quit()
 
-# Crop to exact 4800x2700 dimensions
+# Crop to exact dimensions
 img = Image.open("plot_raw.png")
-img_cropped = img.crop((0, 0, 4800, 2700))
+img_cropped = img.crop((0, 0, 3600, 3600))
 img_cropped.save("plot.png")
 Path("plot_raw.png").unlink()
 
-Path(temp_path).unlink()  # Clean up temp file
+Path(temp_path).unlink()
