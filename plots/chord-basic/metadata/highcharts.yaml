@@ -1,15 +1,15 @@
 library: highcharts
 specification_id: chord-basic
 created: '2025-12-23T10:03:24Z'
-updated: '2025-12-23T10:12:13Z'
-generated_by: claude-opus-4-5-20251101
+updated: '2026-04-06T20:26:19+00:00'
+generated_by: claude-opus-4-6
 workflow_run: 20457537033
 issue: 0
-python_version: 3.13.11
-library_version: unknown
+python_version: '3.14'
+library_version: 1.10.3
 preview_url: https://storage.googleapis.com/pyplots-images/plots/chord-basic/highcharts/plot.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/chord-basic/highcharts/plot.html
-quality_score: 92
+quality_score: null
 impl_tags:
   dependencies:
   - pillow
