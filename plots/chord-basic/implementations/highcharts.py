@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 chord-basic: Basic Chord Diagram
 Library: highcharts 1.10.3 | Python 3.14
 Quality: 89/100 | Updated: 2026-04-06
@@ -69,11 +69,11 @@ chart.options.chart = {
     "width": 3600,
     "height": 3600,
     "backgroundColor": {
-        "linearGradient": {"x1": 0, "y1": 0, "x2": 0.3, "y2": 1},
-        "stops": [[0, "#FAFBFC"], [0.5, "#F4F6F9"], [1, "#EEF1F5"]],
+        "linearGradient": {"x1": 0, "y1": 0, "x2": 0.4, "y2": 1},
+        "stops": [[0, "#FAFBFC"], [0.4, "#F3F5F8"], [1, "#EAEDF2"]],
     },
-    "marginTop": 150,
-    "marginBottom": 30,
+    "marginTop": 155,
+    "marginBottom": 80,
     "marginLeft": 30,
     "marginRight": 30,
     "style": {"fontFamily": "'Segoe UI', Helvetica, Arial, sans-serif"},
@@ -88,7 +88,7 @@ chart.options.title = {
 chart.options.subtitle = {
     "text": "Trade Flows Between Continents (Billions USD)",
     "style": {"fontSize": "40px", "fontWeight": "400", "color": "#5A6878", "letterSpacing": "0.3px"},
-    "y": 105,
+    "y": 110,
 }
 
 chart.options.tooltip = {
@@ -105,6 +105,14 @@ chart.options.legend = {"enabled": False}
 chart.options.credits = {"enabled": False}
 chart.options.accessibility = {"enabled": False}
 
+chart.options.caption = {
+    "text": "Chord width proportional to trade volume · Thickest chords: Asia\u2013N. America ($35B), N. America\u2013Asia ($30B)",
+    "style": {"fontSize": "28px", "color": "#8A94A2", "fontStyle": "italic"},
+    "align": "center",
+    "verticalAlign": "bottom",
+    "y": -10,
+}
+
 # Build series using Python API
 series = DependencyWheelSeries()
 series.data = flows
@@ -118,14 +126,14 @@ series.data_labels = {
     "crop": False,
     "overflow": "allow",
 }
-series.size = "84%"
-series.center = ["50%", "53%"]
+series.size = "86%"
+series.center = ["50%", "52%"]
 series.link_opacity = 0.5
 series.curve_factor = 0.6
 series.node_padding = 16
-series.node_width = 44
+series.node_width = 46
 series.border_width = 2
-series.border_color = "rgba(255,255,255,0.75)"
+series.border_color = "rgba(255,255,255,0.80)"
 series.color_by_point = True
 series.min_link_width = 4
 
@@ -174,10 +182,6 @@ html_content = f"""<!DOCTYPE html>
 </html>"""
 
 # Save interactive HTML version (CDN-based for portability)
-standalone_js = chart_js.replace(
-    "document.addEventListener('DOMContentLoaded', function() {",
-    "document.addEventListener('DOMContentLoaded', function() {",
-)
 standalone_html = f"""<!DOCTYPE html>
 <html>
 <head>
@@ -196,7 +200,7 @@ standalone_html = f"""<!DOCTYPE html>
         Highcharts.setOptions({{
             chart: {{ style: {{ fontFamily: "'Inter', 'Segoe UI', Helvetica, sans-serif" }} }}
         }});
-        {standalone_js}
+        {chart_js}
     </script>
 </body>
 </html>"""
