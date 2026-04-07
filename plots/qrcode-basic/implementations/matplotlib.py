@@ -1,99 +1,106 @@
 """ pyplots.ai
 qrcode-basic: Basic QR Code Generator
-Library: matplotlib 3.10.8 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-07
+Library: matplotlib 3.10.8 | Python 3.14.3
+Quality: 90/100 | Updated: 2026-04-07
 """
 
+import matplotlib.patches as mpatches
+import matplotlib.patheffects as pe
 import matplotlib.pyplot as plt
 import numpy as np
+import qrcode
+from matplotlib.colors import ListedColormap
 
 
-# Data - Create a QR code-like pattern encoding "pyplots.ai"
-# Note: This is a simplified visual representation of a QR code structure
-np.random.seed(42)
+# Data - Generate a real, scannable QR code encoding "https://pyplots.ai"
+content = "https://pyplots.ai"
 
-# QR code dimensions (Version 1: 21x21 modules)
-size = 21
+qr = qrcode.QRCode(version=1, error_correction=qrcode.constants.ERROR_CORRECT_M, box_size=1, border=4)
+qr.add_data(content)
+qr.make(fit=True)
 
-# Initialize the QR code matrix (0 = white, 1 = black)
-qr_matrix = np.zeros((size, size), dtype=int)
+# Convert QR code to numpy matrix
+qr_matrix = np.array(qr.get_matrix(), dtype=int)
+rows, cols = qr_matrix.shape
 
-# Position Detection Patterns (finder patterns) - 7x7 in three corners
-finder_pattern = np.array(
-    [
-        [1, 1, 1, 1, 1, 1, 1],
-        [1, 0, 0, 0, 0, 0, 1],
-        [1, 0, 1, 1, 1, 0, 1],
-        [1, 0, 1, 1, 1, 0, 1],
-        [1, 0, 1, 1, 1, 0, 1],
-        [1, 0, 0, 0, 0, 0, 1],
-        [1, 1, 1, 1, 1, 1, 1],
-    ]
+# Plot
+fig, ax = plt.subplots(figsize=(12, 12), facecolor="white")
+
+# Custom two-color colormap for crisp rendering
+qr_cmap = ListedColormap(["#FFFFFF", "#1A1A2E"])
+ax.imshow(qr_matrix, cmap=qr_cmap, interpolation="nearest", vmin=0, vmax=1, aspect="equal")
+
+# Completely remove axes and all frame artifacts
+ax.set_axis_off()
+for spine in ax.spines.values():
+    spine.set_visible(False)
+ax.set_frame_on(False)
+
+# Decorative rounded-corner frame around the QR code using FancyBboxPatch
+padding = 0.8
+frame = mpatches.FancyBboxPatch(
+    (-padding, -padding),
+    cols - 1 + 2 * padding,
+    rows - 1 + 2 * padding,
+    boxstyle=mpatches.BoxStyle.Round(pad=0.6, rounding_size=1.5),
+    facecolor="none",
+    edgecolor="#306998",
+    linewidth=2.5,
+    zorder=5,
 )
+ax.add_patch(frame)
 
-# Place finder patterns in three corners
-qr_matrix[0:7, 0:7] = finder_pattern  # Top-left
-qr_matrix[0:7, size - 7 : size] = finder_pattern  # Top-right
-qr_matrix[size - 7 : size, 0:7] = finder_pattern  # Bottom-left
-
-# Timing patterns (alternating black/white lines)
-for i in range(8, size - 8):
-    qr_matrix[6, i] = i % 2  # Horizontal
-    qr_matrix[i, 6] = i % 2  # Vertical
-
-# Alignment pattern (5x5) for Version 2+ QR codes - placing one at center area
-alignment = np.array([[1, 1, 1, 1, 1], [1, 0, 0, 0, 1], [1, 0, 1, 0, 1], [1, 0, 0, 0, 1], [1, 1, 1, 1, 1]])
-
-# Place alignment pattern (avoiding finder patterns)
-qr_matrix[size - 9 : size - 4, size - 9 : size - 4] = alignment
-
-# Separators (white border around finder patterns) - already 0 in initialization
-# Format information areas (fixed patterns near finder patterns)
-qr_matrix[8, 0:6] = [1, 0, 1, 0, 1, 0]
-qr_matrix[8, 7:9] = [1, 1]
-qr_matrix[0:6, 8] = [1, 0, 1, 0, 1, 0]
-qr_matrix[7:9, 8] = [1, 1]
-
-# Data encoding area - fill with a pattern representing "pyplots.ai"
-# Using deterministic pattern based on the URL characters
-data_string = "https://pyplots.ai"
-data_values = [ord(c) for c in data_string]
-
-# Fill data area with encoded pattern
-data_idx = 0
-for row in range(8, size - 1):
-    for col in range(9, size - 1):
-        if qr_matrix[row, col] == 0:  # Only fill empty cells
-            if row != 6 and col != 6:  # Avoid timing patterns
-                # Create pattern from data
-                qr_matrix[row, col] = data_values[data_idx % len(data_values)] % 2
-                data_idx += 1
-
-# Add quiet zone (white border) by padding
-quiet_zone = 4
-padded_size = size + 2 * quiet_zone
-qr_with_border = np.zeros((padded_size, padded_size), dtype=int)
-qr_with_border[quiet_zone : quiet_zone + size, quiet_zone : quiet_zone + size] = qr_matrix
-
-# Create figure (square format for QR code)
-fig, ax = plt.subplots(figsize=(12, 12))
-
-# Display QR code with high contrast black on white
-ax.imshow(qr_with_border, cmap="gray_r", interpolation="nearest", vmin=0, vmax=1)
-
-# Remove axes for clean QR code appearance
-ax.axis("off")
-
-# Add title
-ax.set_title("qrcode-basic · matplotlib · pyplots.ai", fontsize=28, fontweight="bold", pad=30, color="#306998")
-
-# Add the encoded content as annotation below
-fig.text(0.5, 0.06, f"Encoded: {data_string}", ha="center", fontsize=20, color="#555555", family="monospace")
-
-# Add note about structure
-fig.text(
-    0.5, 0.02, "QR Code Version 1 (21×21) with Error Correction Level M", ha="center", fontsize=14, color="#888888"
+# Subtle shadow frame behind the main frame for depth
+shadow = mpatches.FancyBboxPatch(
+    (-padding + 0.15, -padding + 0.15),
+    cols - 1 + 2 * padding,
+    rows - 1 + 2 * padding,
+    boxstyle=mpatches.BoxStyle.Round(pad=0.6, rounding_size=1.5),
+    facecolor="none",
+    edgecolor="#306998",
+    linewidth=2.5,
+    alpha=0.15,
+    zorder=4,
 )
+ax.add_patch(shadow)
 
-plt.tight_layout()
+# Extend view to accommodate frame and annotations
+ax.set_xlim(-2.5, cols + 1.5)
+ax.set_ylim(rows + 1.5, -2.5)
+
+fig.subplots_adjust(left=0.06, right=0.94, top=0.87, bottom=0.14)
+
+# Title with patheffects for subtle glow
+title = ax.set_title(
+    "qrcode-basic \u00b7 matplotlib \u00b7 pyplots.ai", fontsize=28, fontweight="bold", pad=30, color="#306998"
+)
+title.set_path_effects([pe.withStroke(linewidth=3, foreground="white"), pe.Normal()])
+
+# Accent rule line using axhline in figure coordinates via fig.add_axes
+accent_ax = fig.add_axes([0.25, 0.105, 0.50, 0.002])
+accent_ax.set_xlim(0, 1)
+accent_ax.set_ylim(0, 1)
+gradient = np.linspace(0, 1, 256).reshape(1, -1)
+accent_ax.imshow(gradient, aspect="auto", cmap=ListedColormap(["#306998", "#FFD43B"]), extent=[0, 1, 0, 1])
+accent_ax.set_axis_off()
+
+# Metadata text with patheffects
+encoded_text = fig.text(
+    0.5,
+    0.085,
+    f"Encoded: {content}",
+    ha="center",
+    fontsize=20,
+    color="#444444",
+    family="monospace",
+    fontweight="medium",
+)
+encoded_text.set_path_effects([pe.withStroke(linewidth=2, foreground="white"), pe.Normal()])
+
+version_info = (
+    f"QR Code Version {qr.version} ({qr_matrix.shape[0]}\u00d7{qr_matrix.shape[1]}) \u00b7 Error Correction Level M"
+)
+meta_text = fig.text(0.5, 0.04, version_info, ha="center", fontsize=16, color="#777777", style="italic")
+meta_text.set_path_effects([pe.withStroke(linewidth=1.5, foreground="white"), pe.Normal()])
+
 plt.savefig("plot.png", dpi=300, bbox_inches="tight", facecolor="white")

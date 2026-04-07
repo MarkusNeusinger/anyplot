@@ -130,7 +130,7 @@ jobs:
 
     - name: Upload coverage to Codecov
       if: steps.check.outputs.should_test == 'true'
-      uses: codecov/codecov-action@v5
+      uses: codecov/codecov-action@v6
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         files: ./coverage.xml
@@ -201,7 +201,7 @@ jobs:
 
     - name: Upload frontend coverage to Codecov
       if: steps.check.outputs.should_test == 'true'
-      uses: codecov/codecov-action@v5
+      uses: codecov/codecov-action@v6
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         files: ./app/coverage/coverage-final.json
