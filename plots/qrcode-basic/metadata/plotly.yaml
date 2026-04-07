@@ -1,7 +1,7 @@
 library: plotly
 specification_id: qrcode-basic
 created: '2026-01-07T16:30:22Z'
-updated: '2026-04-07T18:14:16Z'
+updated: '2026-04-07T18:21:24Z'
 generated_by: claude-opus-4-6
 workflow_run: 20788378599
 issue: 3184
@@ -9,40 +9,44 @@ python_version: 3.14.3
 library_version: 6.6.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/qrcode-basic/plotly/plot.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/qrcode-basic/plotly/plot.html
-quality_score: 89
+quality_score: 90
 review:
   strengths:
-  - Uses proper qrcode library for scannable QR code generation (spec requirement)
-  - Polished design with intentional color choices (dark navy, Python Blue accents,
-    light gray background)
+  - Uses proper qrcode library ensuring scannable QR code output (critical spec requirement)
+  - 'Polished design with intentional color choices: dark navy modules, Python Blue
+    accents, light gray paper background'
   - Clear visual hierarchy with title, QR code, divider, URL, and metadata
-  - Clean, deterministic code with KISS structure
-  - Dual output (PNG + HTML) leverages Plotly interactivity capability
+  - Clean deterministic code with KISS structure and dual output (PNG + interactive
+    HTML)
+  - Font sizes improved from prior attempts — all explicitly set and well-sized for
+    canvas
   weaknesses:
-  - Title appears slightly small relative to the 3600x3600 canvas
-  - Whitespace gap between bottom of QR code and annotations could be reduced for
-    tighter layout
+  - Minor whitespace gap between QR code bottom edge and annotation area
+  - Library mastery limited by the nature of QR code visualization (fewer opportunities
+    for distinctive Plotly features)
   image_description: 'The plot displays a QR code rendered as a Plotly heatmap on
-    a 3600x3600 canvas. The QR code uses dark navy (#1a1a2e) modules on a white background
-    with slight gaps between modules (xgap/ygap=0.3). Three finder patterns are clearly
-    visible in the top-left, top-right, and bottom-left corners. The title "qrcode-basic
-    · plotly · pyplots.ai" appears at the top in blue (#306998) with an Arial Black
-    font against a light gray (#f8f9fa) paper background. Below the QR code, a subtle
-    dotted blue divider separates the code from annotations: the encoded URL "https://pyplots.ai"
-    in bold blue, and metadata "Error Correction M (15%) · Version 2 · 33×33 modules"
-    in gray (#888888).'
+    a 3600×3600 square canvas. The QR code uses dark navy (#1a1a2e) modules on a white
+    background with subtle gaps between modules (xgap/ygap=0.3). Three finder patterns
+    are clearly visible in the top-left, top-right, and bottom-left corners with characteristic
+    nested squares. The title "qrcode-basic · plotly · pyplots.ai" appears at the
+    top in blue (#306998) Arial Black font against a light gray (#f8f9fa) paper background.
+    A subtle blue decorative border frames the plot area. Below the QR code, a dotted
+    blue divider line separates the code from annotations: the encoded URL "https://pyplots.ai"
+    in bold blue (48pt), and metadata "Error Correction M (15%) · Version 2 · 33×33
+    modules" in gray (#888888, 38pt). The overall design is clean and professional
+    with intentional typographic hierarchy.'
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 52pt, URL 44pt, metadata 36pt).
-          Title slightly small relative to canvas.
+        comment: 'All font sizes explicitly set: title 64pt, URL 48pt, metadata 38pt
+          — all well above minimums and perfectly readable'
       - id: VQ-02
         name: No Overlap
         score: 6
@@ -54,7 +58,8 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: QR code modules crisp and clearly visible with good contrast
+        comment: QR code modules crisp with clear dark navy on white contrast and
+          subtle module gaps
       - id: VQ-04
         name: Color Accessibility
         score: 4
@@ -66,8 +71,8 @@ review:
         score: 3
         max: 4
         passed: true
-        comment: Good utilization but slightly excessive whitespace between QR code
-          and bottom annotations
+        comment: Good canvas utilization, minor whitespace gap between QR code and
+          annotations
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -90,15 +95,14 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Axes/grid hidden, subtle dotted divider, generous whitespace, clean
-          layout
+        comment: Axes/grid hidden, subtle dotted divider, decorative border, generous
+          whitespace
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Clear visual hierarchy: QR code focal point, URL identification,
-          technical metadata'
+        comment: 'Clear visual hierarchy: QR code focal point → URL → metadata'
     spec_compliance:
       score: 15
       max: 15
@@ -114,21 +118,20 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Quiet zone, high contrast, finder patterns, error correction M, qrcode
-          library
+        comment: Quiet zone, high contrast, finder patterns, error correction M, uses
+          qrcode library
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Matrix correctly rendered as heatmap with reversed y-axis and 1:1
-          aspect ratio
+        comment: Matrix correctly rendered with reversed y-axis and 1:1 aspect ratio
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format; no legend needed
+        comment: Title matches format, no legend needed
     data_quality:
       score: 14
       max: 15
@@ -138,20 +141,19 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Complete QR code with finder patterns, data modules, quiet zone,
-          timing patterns
+        comment: Shows complete QR code with all structural elements
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Encodes https://pyplots.ai — a real, meaningful URL
+        comment: Encodes https://pyplots.ai — real, meaningful URL
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Version 2, 33x33 modules — appropriate for URL content
+        comment: Version 2, 33×33 modules — appropriate for URL content
     code_quality:
       score: 10
       max: 10
@@ -161,7 +163,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports, data, plot, style, save structure
+        comment: Clean imports → data → plot → style → save structure
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -173,7 +175,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports used (numpy, plotly.graph_objects, qrcode)
+        comment: 'All three imports used: numpy, plotly.graph_objects, qrcode'
       - id: CQ-04
         name: Code Elegance
         score: 2
@@ -195,14 +197,15 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of go.Heatmap, annotations, shapes, update_layout patterns
+        comment: Good use of go.Heatmap, annotations, shapes, scaleanchor for aspect
+          ratio
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Plotly-specific xgap/ygap, HTML export, custom colorscale
-  verdict: REJECTED
+        comment: Plotly-specific xgap/ygap, hovertemplate, HTML export via write_html
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - qrcode
