@@ -1,6 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 qrcode-basic: Basic QR Code Generator
-Library: letsplot 4.9.0 | Python 3.14.3
+Library: letsplot 4.8.2 | Python 3.14.3
+Quality: 90/100 | Updated: 2026-04-07
 """
 
 import pandas as pd
