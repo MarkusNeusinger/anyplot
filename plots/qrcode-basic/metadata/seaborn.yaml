@@ -1,148 +1,160 @@
 library: seaborn
 specification_id: qrcode-basic
 created: '2026-01-07T16:31:08Z'
-updated: '2026-04-07T17:45:00+00:00'
+updated: '2026-04-07T17:54:08Z'
 generated_by: claude-opus-4-6
 workflow_run: 20788379946
 issue: 3184
-python_version: '3.14.3'
-library_version: '0.13.2'
+python_version: 3.14.3
+library_version: 0.13.2
 preview_url: https://storage.googleapis.com/pyplots-images/plots/qrcode-basic/seaborn/plot.png
 preview_html: null
-quality_score: null
+quality_score: 82
 review:
   strengths:
-  - Excellent use of seaborn heatmap for QR code matrix visualization
-  - Clean code structure following KISS principles
-  - Proper quiet zone and high contrast for scanability
-  - Correct title format following spec-id · library · pyplots.ai convention
-  - Square figure format appropriate for QR codes
-  - Spines correctly removed for clean appearance
+  - Uses the proper qrcode library for genuine scannable QR code generation (not manually
+    constructed)
+  - Perfect spec compliance — all required features present
+  - Clean, minimal code with excellent structure
+  - Appropriate square format and high-contrast color scheme
+  - Deterministic output without needing random seed
   weaknesses:
-  - Title font size could be slightly larger for 3600x3600 canvas
-  - Using seaborn heatmap for binary data is creative but not leveraging seaborn statistical
-    visualization strengths
-  image_description: The plot displays a QR code encoding "https://pyplots.ai" rendered
-    using seaborn's heatmap function. The QR code shows the classic black-on-white
-    matrix pattern with three finder patterns (large squares) in the top-left, top-right,
-    and bottom-left corners. The code includes a proper quiet zone (white border)
-    around the matrix. The title "qrcode-basic · seaborn · pyplots.ai" appears at
-    the top in black text. The overall layout is square format with the QR code well-centered
-    and filling most of the canvas. The high contrast black and white color scheme
-    ensures maximum scanability.
+  - Library mastery is low — sns.heatmap() is used as a basic matrix renderer with
+    no seaborn-specific features
+  - Design excellence is limited — while B&W is correct for QR codes, there's room
+    for more visual polish (subtitle showing encoded URL, styled frame)
+  - Data storytelling is absent — the QR code is displayed without context about what
+    it encodes
+  image_description: The plot shows a QR code rendered as a black-and-white square
+    heatmap using seaborn. The title "qrcode-basic · seaborn · pyplots.ai" is displayed
+    at the top in a medium-weight font at approximately 28pt. The QR code features
+    three finder patterns (position detection patterns) in the top-left, top-right,
+    and bottom-left corners, as expected for a valid QR code. The data region contains
+    the typical pattern of black and white modules encoding "https://pyplots.ai".
+    A quiet zone (white border) surrounds the QR code. No axes, tick marks, colorbar,
+    or grid lines are visible. The image is square format (~3600x3600 at 300 DPI).
+    The contrast is maximum — pure black (#000000) on pure white (#FFFFFF).
   criteria_checklist:
     visual_quality:
-      score: 38
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 7
+        max: 8
         passed: true
-        comment: Title is clearly readable at 24pt, well-positioned
+        comment: Title explicitly set at 28pt with fontweight medium and pad=24. Only
+          text element; clearly readable.
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping elements, clean layout
+        comment: No overlapping elements.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: QR code modules are crisp and well-defined
+        comment: QR modules perfectly crisp with sharp black/white edges.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: High contrast black on white, universally accessible
+        comment: Maximum contrast black on white; perfect for all vision types.
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Square format appropriate for QR code, good canvas utilization
+        comment: Square format ideal for QR codes. Good canvas utilization with appropriate
+          quiet zone.
       - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: false
-        comment: N/A for QR codes, axes correctly hidden
-      - id: VQ-07
-        name: Grid & Legend
+        name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No grid or legend needed, spines correctly removed
+        comment: Title follows correct format. No axis labels needed for QR code.
+    design_excellence:
+      score: 10
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Clean and purposeful B&W design but no creative touches beyond format
+          requirements.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines removed, ticks hidden, no grid, clean whitespace, tight_layout
+          applied.
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: QR code displayed without context about what it encodes. No visual
+          hierarchy.
     spec_compliance:
-      score: 23
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct QR code visualization
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: QR matrix correctly mapped to heatmap
-      - id: SC-03
+        comment: Correct QR code visualization using qrcode library.
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Has quiet zone, finder patterns, high contrast; error correction
-          M used as recommended
-      - id: SC-04
-        name: Data Range
+        comment: Quiet zone, high contrast, finder patterns, error correction M, qrcode
+          library, scannable.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Full QR code visible
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 'QR matrix correctly mapped: 0=white, 1=black.'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No legend needed, correctly omitted
-      - id: SC-06
-        name: Title Format
-        score: 1
-        max: 2
-        passed: true
-        comment: Uses correct format but title uses different separator style
+        comment: Title exactly matches required format. No legend needed.
     data_quality:
-      score: 18
-      max: 20
+      score: 14
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Shows standard QR code features; could demonstrate different error
-          correction levels
+        comment: Shows all standard QR features. Only one content type (URL) encoded.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Encodes actual pyplots.ai URL, practical and scannable
+        comment: Encodes https://pyplots.ai — the project's own URL.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Good size, though version 1 is minimal
+        comment: Auto-sized version, error correction M is recommended default.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -150,50 +162,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear structure: imports → QR generation → plot → save'
+        comment: 'Clean linear flow: imports, QR generation, plot, style, save.'
       - id: CQ-02
         name: Reproducibility
         score: 2
-        max: 3
+        max: 2
         passed: true
-        comment: QR generation is deterministic, but no explicit seed for any random
-          operations
+        comment: QR code is deterministic for same input. No random seed needed.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All 4 imports are used.
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current seaborn API
+        comment: Concise, clean code with no over-engineering.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with correct parameters
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot.png at 300 DPI.
+    library_mastery:
+      score: 4
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 3
         max: 5
-        passed: true
-        comment: Creative use of heatmap for binary matrix visualization, though heatmap
-          is not the most distinctive seaborn feature
-  verdict: APPROVED
+        passed: false
+        comment: sns.heatmap() is correct but basic API usage for matrix display.
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Seaborn used as thin wrapper over plt.imshow(). No distinctive features
+          leveraged.
+  verdict: REJECTED
 impl_tags:
   dependencies:
   - qrcode
   techniques: []
   patterns:
   - matrix-construction
+  - explicit-figure
   dataprep: []
   styling:
   - minimal-chrome
