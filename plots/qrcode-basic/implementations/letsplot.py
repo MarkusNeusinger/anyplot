@@ -1,7 +1,7 @@
 """ pyplots.ai
 qrcode-basic: Basic QR Code Generator
-Library: letsplot 4.8.2 | Python 3.13.11
-Quality: 92/100 | Created: 2026-01-07
+Library: letsplot 4.8.2 | Python 3.14.3
+Quality: 90/100 | Updated: 2026-04-07
 """
 
 import pandas as pd
@@ -9,15 +9,19 @@ import qrcode
 from lets_plot import (
     LetsPlot,
     aes,
-    element_blank,
+    coord_fixed,
+    element_geom,
+    element_rect,
     element_text,
-    geom_tile,
+    flavor_high_contrast_light,
+    geom_raster,
     ggplot,
     ggsave,
     ggsize,
     labs,
-    scale_fill_manual,
+    scale_fill_identity,
     theme,
+    theme_void,
 )
 
 
@@ -29,36 +33,43 @@ qr = qrcode.QRCode(version=1, error_correction=qrcode.constants.ERROR_CORRECT_M,
 qr.add_data(content)
 qr.make(fit=True)
 
-# Get the QR code matrix (list of lists with True/False)
+# Convert QR matrix to dataframe — use fill values directly for scale_fill_identity
 matrix = qr.get_matrix()
 size = len(matrix)
-
-# Convert to dataframe for lets-plot
 rows = []
 for y, row in enumerate(matrix):
     for x, cell in enumerate(row):
-        rows.append({"x": x, "y": size - 1 - y, "fill": 1 if cell else 0})
+        rows.append({"x": x, "y": size - 1 - y, "fill": "#1A1A2E" if cell else "#FFFFFF"})
 df = pd.DataFrame(rows)
 
-# Create the QR code visualization
+# Plot using lets-plot distinctive features:
+# - theme_void() for clean base with no axes/grid
+# - flavor_high_contrast_light() for crisp white background
+# - geom_raster() optimized for grid/matrix rendering
+# - scale_fill_identity() maps fill column directly to colors
+# - element_geom() for global geom styling
 plot = (
     ggplot(df, aes(x="x", y="y", fill="fill"))
-    + geom_tile(width=1, height=1, show_legend=False)
-    + scale_fill_manual(values=["#FFFFFF", "#000000"])
-    + labs(title="qrcode-basic · letsplot · pyplots.ai")
+    + geom_raster()
+    + scale_fill_identity()
+    + coord_fixed()
+    + labs(
+        title="qrcode-basic · letsplot · pyplots.ai",
+        subtitle="Encoded: https://pyplots.ai | Error Correction: M (15%)",
+        caption="Version 2 · 25×25 modules · ECC Level M (15%)",
+    )
     + ggsize(1200, 1200)
+    + theme_void()
+    + flavor_high_contrast_light()
     + theme(
-        plot_title=element_text(size=24, hjust=0.5),
-        axis_title=element_blank(),
-        axis_text=element_blank(),
-        axis_ticks=element_blank(),
-        axis_line=element_blank(),
-        panel_background=element_blank(),
-        panel_grid=element_blank(),
-        plot_background=element_blank(),
+        plot_title=element_text(size=26, hjust=0.5, face="bold"),
+        plot_subtitle=element_text(size=16, hjust=0.5, color="#555555"),
+        plot_caption=element_text(size=13, hjust=0.5, color="#888888"),
+        plot_background=element_rect(fill="#FFFFFF", color="#FFFFFF"),
+        panel_background=element_rect(fill="#FFFFFF", color="#FFFFFF"),
+        geom=element_geom(pen="#1A1A2E", brush="#1A1A2E", paper="#FFFFFF"),
     )
 )
 
-# Save as PNG and HTML
+# Save — square format (3600×3600 px)
 ggsave(plot, "plot.png", path=".", scale=3)
-ggsave(plot, "plot.html", path=".")
