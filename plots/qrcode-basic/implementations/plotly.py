@@ -1,7 +1,7 @@
 """ pyplots.ai
 qrcode-basic: Basic QR Code Generator
-Library: plotly 6.5.0 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-07
+Library: plotly 6.6.0 | Python 3.14.3
+Quality: 90/100 | Updated: 2026-04-07
 """
 
 import numpy as np
@@ -11,73 +11,112 @@ import qrcode
 
 # Data - Generate QR code for pyplots.ai
 content = "https://pyplots.ai"
-error_correction = qrcode.constants.ERROR_CORRECT_M  # 15% error correction
 
-qr = qrcode.QRCode(
-    version=1,
-    error_correction=error_correction,
-    box_size=1,
-    border=4,  # Quiet zone
-)
+qr = qrcode.QRCode(version=None, error_correction=qrcode.constants.ERROR_CORRECT_M, box_size=1, border=4)
 qr.add_data(content)
 qr.make(fit=True)
 
-# Convert QR code to numpy array (0=white, 1=black)
 qr_matrix = np.array(qr.get_matrix(), dtype=int)
+n_modules = qr_matrix.shape[0]
 
-# Invert so black=1, white=0 for proper display
-qr_display = 1 - qr_matrix
-
-# Create figure with heatmap
+# Plot - Render as heatmap with custom colorscale
 fig = go.Figure(
-    data=go.Heatmap(z=qr_display, colorscale=[[0, "#000000"], [1, "#FFFFFF"]], showscale=False, xgap=0, ygap=0)
+    data=go.Heatmap(
+        z=qr_matrix,
+        colorscale=[[0, "#FFFFFF"], [1, "#1a1a2e"]],
+        showscale=False,
+        xgap=0.3,
+        ygap=0.3,
+        hovertemplate="Module: (%{x}, %{y})<br>Value: %{z}<extra></extra>",
+    )
 )
 
-# Layout for square display
+# Style - tighter layout for better canvas utilization
 fig.update_layout(
     title={
         "text": "qrcode-basic · plotly · pyplots.ai",
-        "font": {"size": 28, "color": "#306998"},
+        "font": {"size": 64, "color": "#306998", "family": "Arial Black, sans-serif"},
         "x": 0.5,
         "xanchor": "center",
+        "y": 0.97,
     },
-    xaxis={"showticklabels": False, "showgrid": False, "zeroline": False, "scaleanchor": "y", "scaleratio": 1},
+    xaxis={
+        "showticklabels": False,
+        "showgrid": False,
+        "zeroline": False,
+        "scaleanchor": "y",
+        "scaleratio": 1,
+        "constrain": "domain",
+        "showline": False,
+        "range": [-0.5, n_modules - 0.5],
+    },
     yaxis={
         "showticklabels": False,
         "showgrid": False,
         "zeroline": False,
-        "autorange": "reversed",  # Flip to show QR code correctly
+        "autorange": "reversed",
+        "constrain": "domain",
+        "showline": False,
+        "range": [-0.5, n_modules - 0.5],
     },
     template="plotly_white",
-    margin={"l": 150, "r": 150, "t": 200, "b": 350},
-    paper_bgcolor="white",
+    margin={"l": 60, "r": 60, "t": 220, "b": 260},
+    paper_bgcolor="#f8f9fa",
     plot_bgcolor="white",
 )
 
-# Add annotations below the plot
-fig.add_annotation(
-    text=f"Content: {content}",
+# Decorative border around the QR code area
+fig.add_shape(
+    type="rect",
     xref="paper",
     yref="paper",
-    x=0.5,
-    y=-0.05,
-    showarrow=False,
-    font={"size": 28, "color": "#666666"},
-    xanchor="center",
-    yanchor="top",
+    x0=-0.01,
+    y0=-0.01,
+    x1=1.01,
+    y1=1.01,
+    line={"color": "#306998", "width": 1, "dash": "solid"},
+    fillcolor="rgba(0,0,0,0)",
+    opacity=0.3,
 )
+
+# Subtle divider line between QR code and annotations
+fig.add_shape(
+    type="line",
+    xref="paper",
+    yref="paper",
+    x0=0.3,
+    y0=-0.01,
+    x1=0.7,
+    y1=-0.01,
+    line={"color": "#306998", "width": 1.5, "dash": "dot"},
+)
+
+# Content URL annotation - prominent, below plot area
 fig.add_annotation(
-    text="Error Correction: M (15%)",
+    text=f"<b>{content}</b>",
     xref="paper",
     yref="paper",
     x=0.5,
-    y=-0.10,
+    y=-0.025,
     showarrow=False,
-    font={"size": 24, "color": "#888888"},
+    font={"size": 48, "color": "#306998", "family": "Arial, sans-serif"},
     xanchor="center",
     yanchor="top",
 )
 
-# Save outputs
+# Error correction and version info
+fig.add_annotation(
+    text=f"Error Correction: M (15%)  ·  Version {qr.version}  ·  {n_modules}×{n_modules} modules",
+    xref="paper",
+    yref="paper",
+    x=0.5,
+    y=-0.055,
+    showarrow=False,
+    font={"size": 38, "color": "#888888", "family": "Arial, sans-serif"},
+    xanchor="center",
+    yanchor="top",
+)
+
+# Save
 fig.write_image("plot.png", width=3600, height=3600, scale=1)
-fig.write_html("plot.html")
+fig.write_html("plot.html", include_plotlyjs="cdn")
