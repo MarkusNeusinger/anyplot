@@ -1,7 +1,7 @@
 library: altair
 specification_id: qrcode-basic
 created: '2026-01-07T16:30:24Z'
-updated: '2026-04-07T17:54:36Z'
+updated: '2026-04-07T18:08:44Z'
 generated_by: claude-opus-4-6
 workflow_run: 20788384689
 issue: 3184
@@ -12,29 +12,33 @@ preview_html: https://storage.googleapis.com/pyplots-images/plots/qrcode-basic/a
 quality_score: 82
 review:
   strengths:
-  - Uses the qrcode library to generate a real, scannable QR code (not manually constructed)
-  - Proper quiet zone implementation with 4-module padding
-  - Interactive tooltips classifying QR regions (Finder Pattern, Timing Pattern, Data)
-    add educational value
-  - Clean, deterministic code with no unnecessary complexity
-  - Perfect spec compliance — all required features present
+  - Uses real qrcode library for genuinely scannable QR codes (spec requirement)
+  - Proper quiet zone implementation (4 modules)
+  - Region classification (Finder/Timing/Data/Quiet Zone) already computed in data
+  - Perfect code quality — clean KISS structure, deterministic, all imports used
+  - Dual output (PNG + interactive HTML with tooltips)
   weaknesses:
-  - Region classification (Finder Pattern, Timing Pattern, Data, Quiet Zone) is computed
-    but only visible via tooltips — visual color-coding of regions would improve design
-    excellence and data storytelling
-  - Title font size could be larger and more prominent for the 3600x3600 canvas
-  - Generic Altair usage — could leverage more distinctive features like conditional
-    color encoding or layered composition
-  image_description: The plot shows a square QR code rendered using Altair's mark_rect
-    on a white background. The title "qrcode-basic · altair · pyplots.ai" appears
-    at the top in black text. The QR code has three finder patterns (concentric square
-    markers) in the top-left, top-right, and bottom-left corners. A proper quiet zone
-    (white border) surrounds the QR code. The modules are rendered as crisp black
-    and white squares with no visible gaps or artifacts. The overall layout is clean
-    and square-formatted (~3600x3600 px). No axes or grid lines are visible.
+  - Region column computed but only used for tooltips — not for color encoding in
+    visual output
+  - Static PNG is plain black-and-white with no visual differentiation of QR structural
+    regions
+  - No subtitle or educational context in the rendered plot
+  - Design Excellence is the primary bottleneck (9/20)
+  image_description: 'The plot displays a QR code encoding "https://pyplots.ai" rendered
+    as a grid of square modules using Altair''s mark_rect. The image shows colored
+    structural regions: three finder patterns (large square-in-square patterns) in
+    dark navy blue at top-left, top-right, and bottom-left corners; timing patterns
+    in teal running between finder patterns; and data modules in black. The background
+    and quiet zone are white. The title "qrcode-basic · altair · pyplots.ai" appears
+    at the top in large bold text. A subtitle reads "Structural regions of a QR code:
+    Finder Patterns for orientation, Timing Patterns for grid alignment, and Data
+    modules." A legend at the bottom labels the three region types with their colors.
+    Note: The rendered image appears to be from a previous code version — the current
+    code maps color to value (0/1) producing strictly black-and-white output without
+    subtitle or legend.'
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -42,38 +46,39 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Title fontSize=28 explicitly set and readable; limited other text
-          (axes correctly hidden)
+        comment: Title fontSize=28 explicitly set. Axes correctly hidden. Loses 2
+          for not setting all text sizes explicitly.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements
+        comment: No overlapping elements; only the title is rendered as text.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: QR modules crisp, well-sized, high contrast black on white
+        comment: All QR modules clearly visible as distinct rect marks. High contrast
+          black/white.
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Black and white is inherently colorblind-safe
+        comment: Pure black-on-white is maximally accessible and colorblind-safe.
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Square format ideal for QR codes; good canvas utilization
+        comment: 800x800 square canvas appropriate for QR code. Minor wasted space.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title present and correct; axes appropriately hidden
+        comment: Axes appropriately hidden for QR code. Title present and descriptive.
     design_excellence:
       score: 9
       max: 20
@@ -83,21 +88,22 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Clean but no design enhancements beyond minimum; looks like configured
-          default
+        comment: Clean black-and-white but no design effort beyond defaults. Region
+          data unused for color encoding.
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: false
-        comment: Axes hidden, strokeWidth=0, clean view; some refinement but limited
-          polish
+        comment: View strokeWidth=0, axes hidden, grid disabled. Some refinement but
+          could go further.
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Regions classified in code but only exposed via tooltips, not visually
+        comment: QR code displayed but no visual story. Region info only in tooltips
+          (HTML), not in static PNG.
     spec_compliance:
       score: 15
       max: 15
@@ -107,25 +113,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct QR code using qrcode library as recommended
+        comment: Correct QR code visualization using recommended qrcode library.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Quiet zone, high contrast, finder patterns, error correction M, scannable
+        comment: Quiet zone, high contrast, error correction M, finder patterns, scannable.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: QR matrix correctly converted to Altair rect grid
+        comment: X/Y correctly map to QR module positions with inverted Y-axis.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; no legend needed
+        comment: Title format correct. No legend needed for single-color QR code.
     data_quality:
       score: 14
       max: 15
@@ -135,20 +141,20 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Complete QR code with finder patterns, timing patterns, data modules,
-          quiet zone
+        comment: Complete QR code with finder/timing/data/quiet zone. Region classification
+          adds depth in tooltips.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Encodes https://pyplots.ai — a real, practical URL
+        comment: Encodes https://pyplots.ai — real, meaningful URL.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: QR version 1 with error correction M appropriate for short URL
+        comment: QR version 1 with error correction M appropriate for short URL.
     code_quality:
       score: 10
       max: 10
@@ -158,49 +164,49 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean Imports → Data → Plot → Save structure
+        comment: Clean Imports → Data → Plot → Save structure. No functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: 'Deterministic: same URL always generates same QR code'
+        comment: 'Fully deterministic: same URL always produces identical QR code.'
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: 'All imports used: altair, numpy, pandas, qrcode.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, purposeful code; module classification adds tooltip value
+        comment: Clean region classification, appropriate complexity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html; current API
+        comment: Saves as plot.png and plot.html. Current Altair API.
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Uses mark_rect, proper encoding types, alt.Title, configure_view;
-          standard patterns
+        comment: Proper mark_rect with ordinal encoding, configure_view, alt.Title.
+          Good declarative style.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Interactive tooltips showing region type; HTML export leverages web-native
-          nature
+        comment: Interactive tooltips with region info, HTML export. Declarative encoding
+          not fully leveraged for color.
   verdict: REJECTED
 impl_tags:
   dependencies:
