@@ -1,7 +1,7 @@
 library: seaborn
 specification_id: qrcode-basic
 created: '2026-01-07T16:31:08Z'
-updated: '2026-04-07T17:54:08Z'
+updated: '2026-04-07T18:01:40Z'
 generated_by: claude-opus-4-6
 workflow_run: 20788379946
 issue: 3184
@@ -9,34 +9,31 @@ python_version: 3.14.3
 library_version: 0.13.2
 preview_url: https://storage.googleapis.com/pyplots-images/plots/qrcode-basic/seaborn/plot.png
 preview_html: null
-quality_score: 82
+quality_score: 87
 review:
   strengths:
-  - Uses the proper qrcode library for genuine scannable QR code generation (not manually
-    constructed)
-  - Perfect spec compliance — all required features present
-  - Clean, minimal code with excellent structure
-  - Appropriate square format and high-contrast color scheme
-  - Deterministic output without needing random seed
+  - Uses proper qrcode library producing a scannable QR code (key spec requirement)
+  - Clean minimal design with all unnecessary chart chrome removed
+  - Seaborn heatmap is a natural and idiomatic choice for binary matrix visualization
+  - Subtitle provides useful metadata about encoded content, error correction, and
+    QR version
   weaknesses:
-  - Library mastery is low — sns.heatmap() is used as a basic matrix renderer with
-    no seaborn-specific features
-  - Design excellence is limited — while B&W is correct for QR codes, there's room
-    for more visual polish (subtitle showing encoded URL, styled frame)
-  - Data storytelling is absent — the QR code is displayed without context about what
-    it encodes
-  image_description: The plot shows a QR code rendered as a black-and-white square
-    heatmap using seaborn. The title "qrcode-basic · seaborn · pyplots.ai" is displayed
-    at the top in a medium-weight font at approximately 28pt. The QR code features
-    three finder patterns (position detection patterns) in the top-left, top-right,
-    and bottom-left corners, as expected for a valid QR code. The data region contains
-    the typical pattern of black and white modules encoding "https://pyplots.ai".
-    A quiet zone (white border) surrounds the QR code. No axes, tick marks, colorbar,
-    or grid lines are visible. The image is square format (~3600x3600 at 300 DPI).
-    The contrast is maximum — pure black (#000000) on pure white (#FFFFFF).
+  - DE-01 could reach 6+ with a more sophisticated color scheme (e.g., dark blue modules
+    instead of pure black)
+  - DE-03 limited — could add visual annotations highlighting QR structure to improve
+    storytelling
+  - 'VQ-05: slight excess padding below the QR code'
+  image_description: 'The plot displays a QR code rendered as a seaborn heatmap on
+    a square (12x12 inch) canvas. The QR code consists of black and white modules
+    on a light gray background. Three finder patterns (concentric squares) are clearly
+    visible in the top-left, top-right, and bottom-left corners. The title "qrcode-basic
+    · seaborn · pyplots.ai" appears at the top in bold dark navy (#1a1a2e) font. Below
+    the QR code, an italic gray subtitle reads "Encodes: https://pyplots.ai · Error
+    Correction: M (15%) · Version 2". The QR code appears well-formed with a proper
+    quiet zone border. All spines and tick marks are removed for a clean presentation.'
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -44,64 +41,61 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title explicitly set at 28pt with fontweight medium and pad=24. Only
-          text element; clearly readable.
+        comment: Title 28pt, subtitle 16pt explicitly set; all readable
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements.
+        comment: No overlapping text elements
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: QR modules perfectly crisp with sharp black/white edges.
+        comment: QR modules sharp with high contrast black on white
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Maximum contrast black on white; perfect for all vision types.
+        comment: Black/white maximum contrast, fully colorblind-safe
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Square format ideal for QR codes. Good canvas utilization with appropriate
-          quiet zone.
+        comment: Well-centered QR code; slight excess padding below
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title follows correct format. No axis labels needed for QR code.
+        comment: Title correct, axis labels N/A for QR code
     design_excellence:
-      score: 10
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Clean and purposeful B&W design but no creative touches beyond format
-          requirements.
+        passed: true
+        comment: Clean minimal design with custom colormap and intentional title color;
+          above defaults but not magazine-level
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Spines removed, ticks hidden, no grid, clean whitespace, tight_layout
-          applied.
+        comment: Spines removed, ticks hidden, colorbar suppressed, generous whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 3
         max: 6
-        passed: false
-        comment: QR code displayed without context about what it encodes. No visual
-          hierarchy.
+        passed: true
+        comment: Subtitle communicates encoded content and QR parameters; limited
+          storytelling opportunity
     spec_compliance:
       score: 15
       max: 15
@@ -111,26 +105,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct QR code visualization using qrcode library.
+        comment: Correct QR code visualization using qrcode library
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Quiet zone, high contrast, finder patterns, error correction M, qrcode
-          library, scannable.
+        comment: Quiet zone, high contrast, finder patterns, error correction M, scannable
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'QR matrix correctly mapped: 0=white, 1=black.'
+        comment: QR matrix correctly mapped to heatmap binary values
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly matches required format. No legend needed.
+        comment: Title format correct, no legend needed
     data_quality:
       score: 14
       max: 15
@@ -140,19 +133,19 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Shows all standard QR features. Only one content type (URL) encoded.
+        comment: Complete QR code with finder patterns, data modules, quiet zone
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Encodes https://pyplots.ai — the project's own URL.
+        comment: Encodes https://pyplots.ai — real, relevant, neutral URL
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Auto-sized version, error correction M is recommended default.
+        comment: Version 2 QR with error correction M appropriate for short URL
     code_quality:
       score: 10
       max: 10
@@ -162,53 +155,53 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports, QR generation, plot, style, save.'
+        comment: 'Linear flow: imports, config, QR generation, plot, save'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: QR code is deterministic for same input. No random seed needed.
+        comment: 'Deterministic: same URL always produces identical QR code'
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All 4 imports are used.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Concise, clean code with no over-engineering.
+        comment: Clean, appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png at 300 DPI.
+        comment: Saves as plot.png, dpi=300, current API
     library_mastery:
-      score: 4
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
-        passed: false
-        comment: sns.heatmap() is correct but basic API usage for matrix display.
+        passed: true
+        comment: Good use of sns.heatmap, set_context, set_style, despine, color_palette
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 3
         max: 5
-        passed: false
-        comment: Seaborn used as thin wrapper over plt.imshow(). No distinctive features
-          leveraged.
+        passed: true
+        comment: Uses sns.heatmap with rich parameter set, sns.color_palette, sns.despine
   verdict: REJECTED
 impl_tags:
   dependencies:
   - qrcode
-  techniques: []
+  techniques:
+  - annotations
   patterns:
   - matrix-construction
   - explicit-figure
