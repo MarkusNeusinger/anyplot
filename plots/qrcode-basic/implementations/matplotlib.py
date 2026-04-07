@@ -1,7 +1,7 @@
 """ pyplots.ai
 qrcode-basic: Basic QR Code Generator
 Library: matplotlib 3.10.8 | Python 3.14.3
-Quality: 88/100 | Updated: 2026-04-07
+Quality: 90/100 | Updated: 2026-04-07
 """
 
 import matplotlib.patches as mpatches
