@@ -1,15 +1,15 @@
 library: plotly
 specification_id: qrcode-basic
 created: '2026-01-07T16:30:22Z'
-updated: '2026-01-07T16:38:15Z'
-generated_by: claude-opus-4-5-20251101
+updated: '2026-04-07T17:45:00+00:00'
+generated_by: claude-opus-4-6
 workflow_run: 20788378599
 issue: 3184
-python_version: 3.13.11
-library_version: 6.5.0
+python_version: '3.14.3'
+library_version: '6.6.0'
 preview_url: https://storage.googleapis.com/pyplots-images/plots/qrcode-basic/plotly/plot.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/qrcode-basic/plotly/plot.html
-quality_score: 91
+quality_score: null
 review:
   strengths:
   - Excellent use of Plotly heatmap to render QR code matrix

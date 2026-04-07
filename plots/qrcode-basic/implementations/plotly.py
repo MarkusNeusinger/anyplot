@@ -1,7 +1,7 @@
-""" pyplots.ai
+"""pyplots.ai
 qrcode-basic: Basic QR Code Generator
-Library: plotly 6.5.0 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-07
+Library: plotly 6.6.0 | Python 3.14.3
+Quality: /100 | Updated: 2026-04-07
 """
 
 import numpy as np
@@ -11,58 +11,43 @@ import qrcode
 
 # Data - Generate QR code for pyplots.ai
 content = "https://pyplots.ai"
-error_correction = qrcode.constants.ERROR_CORRECT_M  # 15% error correction
 
-qr = qrcode.QRCode(
-    version=1,
-    error_correction=error_correction,
-    box_size=1,
-    border=4,  # Quiet zone
-)
+qr = qrcode.QRCode(version=None, error_correction=qrcode.constants.ERROR_CORRECT_M, box_size=1, border=4)
 qr.add_data(content)
 qr.make(fit=True)
 
-# Convert QR code to numpy array (0=white, 1=black)
+# Convert QR matrix to numpy array (True=black module, False=white)
 qr_matrix = np.array(qr.get_matrix(), dtype=int)
 
-# Invert so black=1, white=0 for proper display
-qr_display = 1 - qr_matrix
-
-# Create figure with heatmap
+# Plot - Render as heatmap (1=black, 0=white)
 fig = go.Figure(
-    data=go.Heatmap(z=qr_display, colorscale=[[0, "#000000"], [1, "#FFFFFF"]], showscale=False, xgap=0, ygap=0)
+    data=go.Heatmap(z=qr_matrix, colorscale=[[0, "#FFFFFF"], [1, "#000000"]], showscale=False, xgap=0, ygap=0)
 )
 
-# Layout for square display
+# Style
 fig.update_layout(
     title={
         "text": "qrcode-basic · plotly · pyplots.ai",
-        "font": {"size": 28, "color": "#306998"},
+        "font": {"size": 32, "color": "#306998"},
         "x": 0.5,
         "xanchor": "center",
     },
     xaxis={"showticklabels": False, "showgrid": False, "zeroline": False, "scaleanchor": "y", "scaleratio": 1},
-    yaxis={
-        "showticklabels": False,
-        "showgrid": False,
-        "zeroline": False,
-        "autorange": "reversed",  # Flip to show QR code correctly
-    },
+    yaxis={"showticklabels": False, "showgrid": False, "zeroline": False, "autorange": "reversed"},
     template="plotly_white",
-    margin={"l": 150, "r": 150, "t": 200, "b": 350},
+    margin={"l": 80, "r": 80, "t": 160, "b": 240},
     paper_bgcolor="white",
     plot_bgcolor="white",
 )
 
-# Add annotations below the plot
 fig.add_annotation(
     text=f"Content: {content}",
     xref="paper",
     yref="paper",
     x=0.5,
-    y=-0.05,
+    y=-0.04,
     showarrow=False,
-    font={"size": 28, "color": "#666666"},
+    font={"size": 32, "color": "#666666"},
     xanchor="center",
     yanchor="top",
 )
@@ -71,13 +56,13 @@ fig.add_annotation(
     xref="paper",
     yref="paper",
     x=0.5,
-    y=-0.10,
+    y=-0.09,
     showarrow=False,
-    font={"size": 24, "color": "#888888"},
+    font={"size": 28, "color": "#888888"},
     xanchor="center",
     yanchor="top",
 )
 
-# Save outputs
+# Save
 fig.write_image("plot.png", width=3600, height=3600, scale=1)
 fig.write_html("plot.html")
