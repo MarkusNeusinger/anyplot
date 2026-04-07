@@ -1,7 +1,6 @@
-""" pyplots.ai
+"""pyplots.ai
 qrcode-basic: Basic QR Code Generator
 Library: pygal 3.1.0 | Python 3.14.3
-Quality: 86/100 | Updated: 2026-04-07
 """
 
 import sys
@@ -31,74 +30,90 @@ matrix_size = len(qr_matrix)
 quiet_zone = 4
 total_cols = matrix_size + 2 * quiet_zone
 
-# --- Color mapping for QR structural elements ---
-FINDER_DARK = "#1a237e"  # Deep indigo for finder patterns
-DATA_DARK = "#000000"  # Black for data modules
+# --- Color palette for QR structural elements ---
+FINDER_DARK = "#1a237e"  # Deep indigo — finder patterns
+TIMING_DARK = "#6a1b9a"  # Purple — timing strips
+ALIGN_DARK = "#00695c"  # Teal — alignment pattern
+DATA_DARK = "#212121"  # Near-black — data modules
 WHITE = "#FFFFFF"
 
+# --- Identify structural elements inline (KISS: no helper functions) ---
+finder_cells = set()
+for r in range(7):
+    for c in range(7):
+        finder_cells.add((r, c))  # Top-left
+        finder_cells.add((r, matrix_size - 7 + c))  # Top-right
+        finder_cells.add((matrix_size - 7 + r, c))  # Bottom-left
 
-def is_finder(row, col, size):
-    """Check if cell belongs to a finder pattern (three 7x7 corner squares)."""
-    if row < 7 and col < 7:
-        return True
-    if row < 7 and col >= size - 7:
-        return True
-    if row >= size - 7 and col < 7:
-        return True
-    return False
+timing_cells = set()
+for i in range(7, matrix_size - 7):
+    timing_cells.add((6, i))  # Horizontal timing strip
+    timing_cells.add((i, 6))  # Vertical timing strip
 
+align_cells = set()
+if matrix_size >= 25:
+    ax, ay = matrix_size - 7, matrix_size - 7
+    for dr in range(-2, 3):
+        for dc in range(-2, 3):
+            align_cells.add((ax + dr, ay + dc))
 
 # --- Style ---
 custom_style = Style(
     background="white",
-    plot_background="white",
+    plot_background="#fafafa",
     foreground="#333333",
-    foreground_strong="#333333",
+    foreground_strong="#222222",
     foreground_subtle="#666666",
     colors=("#000000",),
-    title_font_size=72,
-    label_font_size=42,
-    major_label_font_size=42,
+    title_font_size=64,
+    label_font_size=36,
+    major_label_font_size=36,
     legend_font_size=0,
     value_font_size=0,
-    font_family="sans-serif",
+    font_family="'Helvetica Neue', Helvetica, Arial, sans-serif",
     opacity=1.0,
     opacity_hover=1.0,
     transition="0s",
 )
 
 # --- Chart ---
-# Inject CSS to remove strokes between bars (pygal's SVG/CSS capability)
-no_gap_css = (
-    "inline:rect { stroke-width: 0 !important; stroke: none !important; shape-rendering: crispEdges !important; }"
+# CSS: remove bar strokes for seamless pixel grid; add subtle border to plot area
+custom_css = (
+    "inline:"
+    "rect { stroke-width: 0 !important; stroke: none !important;"
+    " shape-rendering: crispEdges !important; }"
+    " .plot_background { stroke: #bdbdbd !important; stroke-width: 2 !important;"
+    " rx: 6 !important; ry: 6 !important; }"
+    " .title { font-weight: 600 !important; letter-spacing: 1px !important; }"
 )
 
 chart = pygal.StackedBar(
     width=3600,
     height=3600,
     style=custom_style,
-    title="qrcode-basic \u00b7 pygal \u00b7 pyplots.ai",
+    title="qrcode-basic · pygal · pyplots.ai",
     show_legend=False,
     show_x_labels=False,
     show_y_labels=False,
     show_x_guides=False,
     show_y_guides=False,
     spacing=0,
-    margin=180,
-    margin_top=250,
-    margin_bottom=400,
+    margin=100,
+    margin_top=160,
+    margin_bottom=300,
     print_values=False,
     range=(0, total_cols),
     x_title=(
-        f"{qr_content}  \u00b7  Error Correction: M (15%)"
-        f"  \u00b7  {matrix_size}\u00d7{matrix_size} modules"
-        f"  \u00b7  Finder patterns highlighted in indigo"
+        f"{qr_content}  ·  Error Correction: M (15%)"
+        f"  ·  {matrix_size}×{matrix_size} modules\n"
+        f"■ Finder (indigo)   ■ Timing (purple)"
+        f"   ■ Alignment (teal)   ■ Data (black)"
     ),
-    css=["file://style.css", "file://graph.css", no_gap_css],
+    css=["file://style.css", "file://graph.css", custom_css],
 )
 
 # --- Build rows ---
-# Slight oversize (1.03) makes rows overlap, eliminating SVG rendering seams
+# Slight oversize (1.03) ensures rows overlap, eliminating SVG rendering seams
 CELL = 1.03
 white_row = [{"value": CELL, "color": WHITE} for _ in range(total_cols)]
 
@@ -113,7 +128,15 @@ for row_idx in reversed(range(matrix_size)):
         if col_idx < 0 or col_idx >= matrix_size:
             row_data.append({"value": CELL, "color": WHITE})
         elif qr_matrix[row_idx][col_idx]:
-            color = FINDER_DARK if is_finder(row_idx, col_idx, matrix_size) else DATA_DARK
+            pos = (row_idx, col_idx)
+            if pos in finder_cells:
+                color = FINDER_DARK
+            elif pos in align_cells:
+                color = ALIGN_DARK
+            elif pos in timing_cells:
+                color = TIMING_DARK
+            else:
+                color = DATA_DARK
             row_data.append({"value": CELL, "color": color})
         else:
             row_data.append({"value": CELL, "color": WHITE})
