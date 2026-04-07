@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 qrcode-basic: Basic QR Code Generator
 Library: pygal 3.1.0 | Python 3.14.3
-Quality: /100 | Updated: 2026-04-07
+Quality: 81/100 | Updated: 2026-04-07
 """
 
 import sys
