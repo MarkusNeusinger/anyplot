@@ -1,13 +1,12 @@
-""" pyplots.ai
+"""pyplots.ai
 qrcode-basic: Basic QR Code Generator
 Library: bokeh 3.8.2 | Python 3.14.3
-Quality: 86/100 | Updated: 2026-04-07
 """
 
 import numpy as np
 import qrcode
 from bokeh.io import export_png, output_file, save
-from bokeh.models import ColumnDataSource, Label
+from bokeh.models import ColumnDataSource, HoverTool, Label
 from bokeh.plotting import figure
 
 
@@ -25,16 +24,59 @@ size = qr_matrix.shape[0]
 # Add quiet zone for reliable scanning
 quiet_zone = 4
 
-# Create coordinates for black modules
-black_x = []
-black_y = []
+# Classify QR code regions for visual storytelling
+finder_size = 7
+alignment_pos = qrcode.util.pattern_position(qr.version)
+
+
+def classify_module(row, col):
+    """Classify each module into its functional region."""
+    # Finder patterns (three corners)
+    if row < finder_size and col < finder_size:
+        return "Finder Pattern (Top-Left)"
+    if row < finder_size and col >= size - finder_size:
+        return "Finder Pattern (Top-Right)"
+    if row >= size - finder_size and col < finder_size:
+        return "Finder Pattern (Bottom-Left)"
+    # Timing patterns (row 6 and col 6 between finders)
+    if row == 6 and finder_size <= col <= size - finder_size - 1:
+        return "Timing Pattern"
+    if col == 6 and finder_size <= row <= size - finder_size - 1:
+        return "Timing Pattern"
+    # Alignment pattern
+    if alignment_pos:
+        for ar in alignment_pos:
+            for ac in alignment_pos:
+                if abs(row - ar) <= 2 and abs(col - ac) <= 2:
+                    # Skip if overlapping with finder
+                    if not (row < finder_size and col < finder_size):
+                        if not (row < finder_size and col >= size - finder_size):
+                            if not (row >= size - finder_size and col < finder_size):
+                                return "Alignment Pattern"
+    return "Data & Error Correction"
+
+
+# Create coordinates with region classification
+mod_x, mod_y, mod_region, mod_color = [], [], [], []
+region_colors = {
+    "Finder Pattern (Top-Left)": "#306998",
+    "Finder Pattern (Top-Right)": "#306998",
+    "Finder Pattern (Bottom-Left)": "#306998",
+    "Timing Pattern": "#4A8BBE",
+    "Alignment Pattern": "#4A8BBE",
+    "Data & Error Correction": "#1a1a1a",
+}
+
 for row in range(size):
     for col in range(size):
         if qr_matrix[row, col]:
-            black_x.append(col + quiet_zone + 0.5)
-            black_y.append(size - row - 1 + quiet_zone + 0.5)
+            region = classify_module(row, col)
+            mod_x.append(col + quiet_zone + 0.5)
+            mod_y.append(size - row - 1 + quiet_zone + 0.5)
+            mod_region.append(region)
+            mod_color.append(region_colors[region])
 
-source = ColumnDataSource(data={"x": black_x, "y": black_y})
+source = ColumnDataSource(data={"x": mod_x, "y": mod_y, "region": mod_region, "color": mod_color})
 
 total_size = size + 2 * quiet_zone
 
@@ -42,9 +84,9 @@ total_size = size + 2 * quiet_zone
 p = figure(
     width=3600,
     height=3600,
-    title="qrcode-basic \u00b7 bokeh \u00b7 pyplots.ai",
+    title="qrcode-basic · bokeh · pyplots.ai",
     x_range=(-1, total_size + 1),
-    y_range=(-3, total_size + 1),
+    y_range=(-4.5, total_size + 1),
     tools="",
     toolbar_location=None,
     match_aspect=True,
@@ -65,16 +107,21 @@ p.ygrid.visible = False
 p.title.text_font_size = "36pt"
 p.title.align = "center"
 p.title.text_color = "#306998"
+p.title.offset = 10
 
-# Draw QR code modules as unit squares
-p.rect(x="x", y="y", width=1, height=1, source=source, fill_color="#000000", line_color=None)
+# Draw QR code modules color-coded by region
+renderer = p.rect(x="x", y="y", width=1, height=1, source=source, fill_color="color", line_color=None)
 
-# Footer with encoded content and version info
+# HoverTool - distinctive Bokeh feature for interactive HTML output
+hover = HoverTool(renderers=[renderer], tooltips=[("Region", "@region"), ("Position", "(@x, @y)")], mode="mouse")
+p.add_tools(hover)
+
+# Footer with encoded content and version info - balanced spacing
 encoded_label = Label(
     x=total_size / 2,
-    y=-1.5,
+    y=-1.8,
     text=f"Encoded: {content}",
-    text_font_size="20pt",
+    text_font_size="22pt",
     text_color="#555555",
     text_font="monospace",
     text_align="center",
@@ -83,9 +130,9 @@ p.add_layout(encoded_label)
 
 version_label = Label(
     x=total_size / 2,
-    y=-3,
-    text=f"Version {qr.version} ({size}\u00d7{size}) \u00b7 Error Correction Level M (15%)",
-    text_font_size="14pt",
+    y=-3.5,
+    text=f"Version {qr.version} ({size}×{size}) · Error Correction Level M (15%)",
+    text_font_size="18pt",
     text_color="#888888",
     text_align="center",
 )
