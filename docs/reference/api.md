@@ -271,6 +271,42 @@ The pyplots API is a **FastAPI-based REST API** serving plot data to the fronten
 
 ---
 
+## Insights Endpoints
+
+### GET `/insights/dashboard`
+
+**Purpose**: Rich platform statistics for the public stats page
+
+Returns aggregated data: per-library quality and LOC distributions, coverage matrix, top implementations, tag distribution, implementation timeline.
+
+Cached with stale-while-revalidate (1h refresh, 24h TTL).
+
+### GET `/insights/plot-of-the-day`
+
+**Purpose**: Daily featured high-quality implementation
+
+Deterministically selects an implementation with quality_score >= 90 based on today's date. Returns spec info, preview URL, AI image description, and code.
+
+### GET `/insights/related/{spec_id}`
+
+**Purpose**: Tag-based similarity recommendations
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `limit` | int | 6 | Number of results (1-12) |
+| `mode` | string | `spec` | `spec` = spec tags only, `full` = spec + impl tags |
+| `library` | string | null | In `full` mode, match against this library's impl_tags |
+
+Returns related specs sorted by Jaccard similarity with preview thumbnails and shared tags.
+
+### GET `/specs/{spec_id}/{library}/code`
+
+**Purpose**: Lightweight endpoint for implementation code
+
+Returns only the code field for a single implementation. Used by the frontend to lazy-load code on demand (code is deferred in the main `/specs/{spec_id}` response).
+
+---
+
 ## SEO Endpoints
 
 ### GET `/sitemap.xml`

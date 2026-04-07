@@ -11,11 +11,12 @@ import BugReportIcon from '@mui/icons-material/BugReport';
 import { NotFoundPage } from './NotFoundPage';
 
 import { API_URL, GITHUB_URL } from '../constants';
-import { useAnalytics } from '../hooks';
+import { useAnalytics, useCodeFetch } from '../hooks';
 import { useAppData } from '../hooks';
 import { LibraryPills } from '../components/LibraryPills';
 import { Breadcrumb } from '../components/Breadcrumb';
 import { Footer } from '../components/Footer';
+import { RelatedSpecs } from '../components/RelatedSpecs';
 
 const SpecTabs = lazy(() => import('../components/SpecTabs').then(m => ({ default: m.SpecTabs })));
 const SpecOverview = lazy(() => import('../components/SpecOverview').then(m => ({ default: m.SpecOverview })));
@@ -48,6 +49,8 @@ export function SpecPage() {
   const [descExpanded, setDescExpanded] = useState(false);
   const [codeCopied, setCodeCopied] = useState<string | null>(null);
   const [openTooltip, setOpenTooltip] = useState<string | null>(null);
+  const [highlightedTags, setHighlightedTags] = useState<string[]>([]);
+  const { fetchCode, getCode } = useCodeFetch();
 
   // Get library metadata by ID
   const getLibraryMeta = useCallback(
@@ -99,6 +102,16 @@ export function SpecPage() {
     return specData.implementations.find((impl) => impl.library_id === selectedLibrary) || null;
   }, [specData, selectedLibrary]);
 
+  // Prefetch code in background when impl detail page opens
+  useEffect(() => {
+    if (specId && selectedLibrary) {
+      fetchCode(specId, selectedLibrary);
+    }
+  }, [specId, selectedLibrary, fetchCode]);
+
+  // Get code from cache (populated by prefetch or on-demand)
+  const currentCode = specId && selectedLibrary ? getCode(specId, selectedLibrary) : null;
+
   // Handle library switch (in detail mode)
   const handleLibrarySelect = useCallback(
     (libraryId: string) => {
@@ -138,12 +151,13 @@ export function SpecPage() {
     [specId, trackEvent, isOverviewMode]
   );
 
-  // Handle copy code
+  // Handle copy code (fetches on-demand if not prefetched yet)
   const handleCopyCode = useCallback(
     async (impl: Implementation) => {
-      if (!impl?.code) return;
       try {
-        await navigator.clipboard.writeText(impl.code);
+        const code = impl.code || (specId ? await fetchCode(specId, impl.library_id) : null);
+        if (!code) return;
+        await navigator.clipboard.writeText(code);
         setCodeCopied(impl.library_id);
         trackEvent('copy_code', {
           spec: specId,
@@ -352,6 +366,7 @@ export function SpecPage() {
               notes={specData.notes}
               tags={specData.tags}
               created={specData.created}
+              updated={specData.updated}
               imageDescription={undefined}
               strengths={undefined}
               weaknesses={undefined}
@@ -360,6 +375,7 @@ export function SpecPage() {
               libraryId=""
               onTrackEvent={trackEvent}
               overviewMode={true}
+              highlightedTags={highlightedTags}
             />
           </>
         ) : (
@@ -387,7 +403,7 @@ export function SpecPage() {
             />
 
             <SpecTabs
-              code={currentImpl?.code || null}
+              code={currentCode || currentImpl?.code || null}
               specId={specData.id}
               title={specData.title}
               description={specData.description}
@@ -396,18 +412,23 @@ export function SpecPage() {
               notes={specData.notes}
               tags={specData.tags}
               created={specData.created}
+              updated={specData.updated}
               imageDescription={currentImpl?.review_image_description}
               strengths={currentImpl?.review_strengths}
               weaknesses={currentImpl?.review_weaknesses}
               implTags={currentImpl?.impl_tags}
               qualityScore={currentImpl?.quality_score || null}
               criteriaChecklist={currentImpl?.review_criteria_checklist}
+              generatedAt={currentImpl?.generated_at}
               libraryId={selectedLibrary || ''}
               onTrackEvent={trackEvent}
+              highlightedTags={highlightedTags}
             />
           </>
         )}
         </Suspense>
+
+        <RelatedSpecs specId={specId!} mode={isOverviewMode ? 'spec' : 'full'} library={selectedLibrary || undefined} onHoverTags={setHighlightedTags} />
 
         <Footer onTrackEvent={trackEvent} selectedSpec={specId} selectedLibrary={selectedLibrary || ''} />
       </Box>

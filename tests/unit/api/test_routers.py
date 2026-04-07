@@ -76,6 +76,7 @@ def mock_spec():
     mock_impl.quality_score = 92.5
     mock_impl.code = "import matplotlib.pyplot as plt"
     mock_impl.generated_at = None
+    mock_impl.updated = None
     mock_impl.generated_by = "claude"
     mock_impl.python_version = "3.13"
     mock_impl.library_version = "3.10.0"
@@ -244,7 +245,7 @@ class TestLibrariesRouter:
         client, _ = db_client
 
         mock_spec_repo = MagicMock()
-        mock_spec_repo.get_all = AsyncMock(return_value=[mock_spec])
+        mock_spec_repo.get_all_with_code = AsyncMock(return_value=[mock_spec])
 
         with (
             patch("api.routers.libraries.get_cache", return_value=None),

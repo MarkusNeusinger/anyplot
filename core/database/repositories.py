@@ -6,9 +6,9 @@ Provides abstraction layer between API and database models.
 
 from typing import Generic, Optional, TypeVar
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
+from sqlalchemy.orm import selectinload, undefer
 
 from core.database.models import Impl, Library, Spec
 
@@ -112,15 +112,30 @@ class SpecRepository(BaseRepository[Spec]):
     updatable_fields = SPEC_UPDATABLE_FIELDS
 
     async def get_by_id(self, spec_id: str) -> Optional[Spec]:
-        """Get a spec by ID with all implementations and library info."""
+        """Get a spec by ID with implementations and library info.
+
+        Note: Heavy deferred fields (code, review_criteria_checklist) are NOT loaded.
+        Use ImplRepository.get_by_spec_and_library() for full impl details.
+        review_image_description IS loaded (small, needed for detail display).
+        """
         result = await self.session.execute(
-            select(Spec).where(Spec.id == spec_id).options(selectinload(Spec.impls).selectinload(Impl.library))
+            select(Spec)
+            .where(Spec.id == spec_id)
+            .options(
+                selectinload(Spec.impls).selectinload(Impl.library),
+                selectinload(Spec.impls).undefer(Impl.review_image_description).undefer(Impl.review_criteria_checklist),
+            )
         )
         return result.scalar_one_or_none()
 
     async def get_all(self) -> list[Spec]:
-        """Get all specs with their implementations."""
+        """Get all specs with their implementations (deferred heavy fields excluded)."""
         result = await self.session.execute(select(Spec).options(selectinload(Spec.impls)))
+        return list(result.scalars().all())
+
+    async def get_all_with_code(self) -> list[Spec]:
+        """Get all specs with implementations including deferred code field."""
+        result = await self.session.execute(select(Spec).options(selectinload(Spec.impls).undefer(Impl.code)))
         return list(result.scalars().all())
 
     async def get_ids(self) -> list[str]:
@@ -187,6 +202,21 @@ class ImplRepository(BaseRepository[Impl]):
     model = Impl
     updatable_fields = IMPL_UPDATABLE_FIELDS
 
+    async def get_total_code_lines(self) -> int:
+        """Count total lines of code across all implementations (lightweight, no code loading)."""
+        result = await self.session.execute(
+            select(func.sum(func.length(Impl.code) - func.length(func.replace(Impl.code, "\n", "")) + 1)).where(
+                Impl.code.isnot(None)
+            )
+        )
+        return result.scalar_one() or 0
+
+    async def get_loc_per_impl(self) -> list[tuple[str, int]]:
+        """Get (library_id, line_count) for each implementation (lightweight, no code loading)."""
+        loc_expr = func.length(Impl.code) - func.length(func.replace(Impl.code, "\n", "")) + 1
+        result = await self.session.execute(select(Impl.library_id, loc_expr).where(Impl.code.isnot(None)))
+        return [(row[0], row[1]) for row in result.all()]
+
     async def get_by_spec(self, spec_id: str) -> list[Impl]:
         """Get all implementations for a spec."""
         result = await self.session.execute(
@@ -202,8 +232,14 @@ class ImplRepository(BaseRepository[Impl]):
         return list(result.scalars().all())
 
     async def get_by_spec_and_library(self, spec_id: str, library_id: str) -> Optional[Impl]:
-        """Get a specific implementation by spec and library."""
-        result = await self.session.execute(select(Impl).where(Impl.spec_id == spec_id, Impl.library_id == library_id))
+        """Get a specific implementation by spec and library (includes all deferred fields)."""
+        result = await self.session.execute(
+            select(Impl)
+            .where(Impl.spec_id == spec_id, Impl.library_id == library_id)
+            .options(
+                undefer(Impl.code), undefer(Impl.review_image_description), undefer(Impl.review_criteria_checklist)
+            )
+        )
         return result.scalar_one_or_none()
 
     async def upsert(self, spec_id: str, library_id: str, impl_data: dict) -> Impl:

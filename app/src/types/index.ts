@@ -121,6 +121,7 @@ export interface Implementation {
   quality_score: number | null;
   code: string | null;
   generated_at?: string;
+  updated?: string;
   library_version?: string;
   review_strengths?: string[];
   review_weaknesses?: string[];

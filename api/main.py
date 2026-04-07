@@ -27,6 +27,7 @@ from api.routers import (  # noqa: E402
     debug_router,
     download_router,
     health_router,
+    insights_router,
     libraries_router,
     og_images_router,
     plots_router,
@@ -128,6 +129,9 @@ async def add_cache_headers(request: Request, call_next):
     # Individual spec details (5 min cache, 1h stale-while-revalidate)
     elif path.startswith("/specs/"):
         response.headers["Cache-Control"] = "public, max-age=300, stale-while-revalidate=3600"
+    # Insights endpoints (5 min cache, 1h stale-while-revalidate)
+    elif path.startswith("/insights/"):
+        response.headers["Cache-Control"] = "public, max-age=300, stale-while-revalidate=3600"
 
     return response
 
@@ -141,6 +145,7 @@ app.include_router(stats_router)
 app.include_router(specs_router)
 app.include_router(libraries_router)
 app.include_router(plots_router)
+app.include_router(insights_router)
 app.include_router(download_router)
 app.include_router(seo_router)
 app.include_router(og_images_router)

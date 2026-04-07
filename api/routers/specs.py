@@ -8,7 +8,7 @@ from api.dependencies import require_db
 from api.exceptions import raise_not_found
 from api.schemas import ImplementationResponse, SpecDetailResponse, SpecListItem
 from core.config import settings
-from core.database import SpecRepository
+from core.database import ImplRepository, SpecRepository
 from core.database.connection import get_db_context
 from core.utils import strip_noqa_comments
 
@@ -96,8 +96,9 @@ async def get_spec(spec_id: str, db: AsyncSession = Depends(require_db)):
             preview_url=impl.preview_url,
             preview_html=impl.preview_html,
             quality_score=impl.quality_score,
-            code=strip_noqa_comments(impl.code),
+            code=None,  # Code loaded separately via /specs/{spec_id}/{library}/code
             generated_at=impl.generated_at.isoformat() if impl.generated_at else None,
+            updated=impl.updated.isoformat() if impl.updated else None,
             generated_by=impl.generated_by,
             python_version=impl.python_version,
             library_version=impl.library_version,
@@ -125,6 +126,29 @@ async def get_spec(spec_id: str, db: AsyncSession = Depends(require_db)):
         updated=spec.updated.isoformat() if spec.updated else None,
         implementations=impls,
     )
+    set_cache(key, result)
+    return result
+
+
+@router.get("/specs/{spec_id}/{library}/code")
+async def get_impl_code(spec_id: str, library: str, db: AsyncSession = Depends(require_db)):
+    """
+    Get implementation code for a specific spec + library.
+
+    Lightweight endpoint that loads only the code field (deferred in main query).
+    """
+    key = cache_key("impl_code", spec_id, library)
+    cached = get_cache(key)
+    if cached is not None:
+        return cached
+
+    repo = ImplRepository(db)
+    impl = await repo.get_by_spec_and_library(spec_id, library)
+
+    if not impl or not impl.code:
+        raise_not_found("Implementation code", f"{spec_id}/{library}")
+
+    result = {"spec_id": spec_id, "library": library, "code": strip_noqa_comments(impl.code)}
     set_cache(key, result)
     return result
 
