@@ -1,15 +1,15 @@
 library: pygal
 specification_id: qrcode-basic
 created: '2026-01-07T16:30:49Z'
-updated: '2026-01-07T16:41:00Z'
-generated_by: claude-opus-4-5-20251101
+updated: '2026-04-07T17:45:00+00:00'
+generated_by: claude-opus-4-6
 workflow_run: 20788388854
 issue: 3184
-python_version: 3.13.11
-library_version: 3.1.0
+python_version: '3.14.3'
+library_version: '3.1.0'
 preview_url: https://storage.googleapis.com/pyplots-images/plots/qrcode-basic/pygal/plot.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/qrcode-basic/pygal/plot.html
-quality_score: 91
+quality_score: null
 review:
   strengths:
   - Excellent creative use of pygal SVG capabilities to render QR codes by extending

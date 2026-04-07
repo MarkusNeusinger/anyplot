@@ -24,6 +24,7 @@ A QR (Quick Response) code visualization that encodes text or URL data into a sq
 - Include a quiet zone (white border) around the QR code for reliable scanning
 - Use high contrast black on white for maximum readability
 - Position detection patterns (finder patterns) in three corners are required
-- Recommended libraries: `qrcode` (with PIL), `segno`, or `pyqrcode`
+- Recommended libraries: `qrcode` (primary, with PIL for rendering), `segno`, or `pyqrcode`
 - Output should be printable at 300 DPI for physical media
 - Error correction level M (15%) is a good default balance between capacity and reliability
+- The generated QR code MUST be scannable by standard QR code readers — use a proper QR encoding library (`qrcode` is the primary recommendation) instead of manually constructing the QR matrix
