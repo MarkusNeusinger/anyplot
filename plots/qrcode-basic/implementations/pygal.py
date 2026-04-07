@@ -1,7 +1,6 @@
-""" pyplots.ai
+"""pyplots.ai
 qrcode-basic: Basic QR Code Generator
 Library: pygal 3.1.0 | Python 3.14.3
-Quality: 81/100 | Updated: 2026-04-07
 """
 
 import sys
@@ -20,23 +19,35 @@ from pygal.style import Style  # noqa: E402
 
 sys.path.insert(0, _cwd)
 
-# Data - URL to encode in QR code
+# --- Data ---
 qr_content = "https://pyplots.ai"
 
-# Generate QR code matrix using qrcode library (real, scannable)
 qr = qrcode.QRCode(version=None, error_correction=qrcode.constants.ERROR_CORRECT_M, box_size=1, border=0)
 qr.add_data(qr_content)
 qr.make(fit=True)
 qr_matrix = qr.get_matrix()
-
 matrix_size = len(qr_matrix)
 quiet_zone = 4
-
-# Build row data for StackedBar (each row becomes a stacked layer)
-# Rows go bottom-to-top in StackedBar, so reverse the matrix
 total_cols = matrix_size + 2 * quiet_zone
 
-# Style
+# --- Color mapping for QR structural elements ---
+FINDER_DARK = "#1a237e"  # Deep indigo for finder patterns
+DATA_DARK = "#000000"  # Black for data modules
+WHITE = "#FFFFFF"
+
+
+def is_finder(row, col, size):
+    """Check if cell belongs to a finder pattern (three 7x7 corner squares)."""
+    if row < 7 and col < 7:
+        return True
+    if row < 7 and col >= size - 7:
+        return True
+    if row >= size - 7 and col < 7:
+        return True
+    return False
+
+
+# --- Style ---
 custom_style = Style(
     background="white",
     plot_background="white",
@@ -55,7 +66,12 @@ custom_style = Style(
     transition="0s",
 )
 
-# Chart - square canvas, stacked bar to render QR grid
+# --- Chart ---
+# Inject CSS to remove strokes between bars (pygal's SVG/CSS capability)
+no_gap_css = (
+    "inline:rect { stroke-width: 0 !important; stroke: none !important; shape-rendering: crispEdges !important; }"
+)
+
 chart = pygal.StackedBar(
     width=3600,
     height=3600,
@@ -71,35 +87,41 @@ chart = pygal.StackedBar(
     margin_top=250,
     margin_bottom=400,
     print_values=False,
-    range=(0, matrix_size + 2 * quiet_zone),
-    x_title=f"{qr_content}  \u00b7  Error Correction: M (15%)  \u00b7  {matrix_size}\u00d7{matrix_size} modules",
+    range=(0, total_cols),
+    x_title=(
+        f"{qr_content}  \u00b7  Error Correction: M (15%)"
+        f"  \u00b7  {matrix_size}\u00d7{matrix_size} modules"
+        f"  \u00b7  Finder patterns highlighted in indigo"
+    ),
+    css=["file://style.css", "file://graph.css", no_gap_css],
 )
 
-# Add quiet zone rows at bottom
-for _ in range(quiet_zone):
-    row_data = [{"value": 1, "color": "#FFFFFF"} for _ in range(total_cols)]
-    chart.add("", row_data)
+# --- Build rows ---
+# Slight oversize (1.03) makes rows overlap, eliminating SVG rendering seams
+CELL = 1.03
+white_row = [{"value": CELL, "color": WHITE} for _ in range(total_cols)]
 
-# Add QR matrix rows (bottom to top, since StackedBar stacks upward)
+# Bottom quiet zone
+for _ in range(quiet_zone):
+    chart.add("", white_row)
+
+# QR matrix rows (bottom to top for StackedBar stacking)
 for row_idx in reversed(range(matrix_size)):
     row_data = []
-    # Left quiet zone
-    for _ in range(quiet_zone):
-        row_data.append({"value": 1, "color": "#FFFFFF"})
-    # QR modules
-    for col_idx in range(matrix_size):
-        color = "#000000" if qr_matrix[row_idx][col_idx] else "#FFFFFF"
-        row_data.append({"value": 1, "color": color})
-    # Right quiet zone
-    for _ in range(quiet_zone):
-        row_data.append({"value": 1, "color": "#FFFFFF"})
+    for col_idx in range(-quiet_zone, matrix_size + quiet_zone):
+        if col_idx < 0 or col_idx >= matrix_size:
+            row_data.append({"value": CELL, "color": WHITE})
+        elif qr_matrix[row_idx][col_idx]:
+            color = FINDER_DARK if is_finder(row_idx, col_idx, matrix_size) else DATA_DARK
+            row_data.append({"value": CELL, "color": color})
+        else:
+            row_data.append({"value": CELL, "color": WHITE})
     chart.add("", row_data)
 
-# Add quiet zone rows at top
+# Top quiet zone
 for _ in range(quiet_zone):
-    row_data = [{"value": 1, "color": "#FFFFFF"} for _ in range(total_cols)]
-    chart.add("", row_data)
+    chart.add("", white_row)
 
-# Save
+# --- Save ---
 chart.render_to_png("plot.png")
 chart.render_to_file("plot.html")
