@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 qrcode-basic: Basic QR Code Generator
 Library: altair 6.0.0 | Python 3.14.3
-Quality: 82/100 | Updated: 2026-04-07
+Quality: 89/100 | Updated: 2026-04-07
 """
 
 import altair as alt
