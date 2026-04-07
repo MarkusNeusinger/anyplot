@@ -1,7 +1,6 @@
-""" pyplots.ai
+"""pyplots.ai
 qrcode-basic: Basic QR Code Generator
 Library: plotly 6.6.0 | Python 3.14.3
-Quality: 89/100 | Updated: 2026-04-07
 """
 
 import numpy as np
@@ -19,16 +18,23 @@ qr.make(fit=True)
 qr_matrix = np.array(qr.get_matrix(), dtype=int)
 n_modules = qr_matrix.shape[0]
 
-# Plot - Render as heatmap (1=black, 0=white)
+# Plot - Render as heatmap with custom colorscale
 fig = go.Figure(
-    data=go.Heatmap(z=qr_matrix, colorscale=[[0, "#FFFFFF"], [1, "#1a1a2e"]], showscale=False, xgap=0.3, ygap=0.3)
+    data=go.Heatmap(
+        z=qr_matrix,
+        colorscale=[[0, "#FFFFFF"], [1, "#1a1a2e"]],
+        showscale=False,
+        xgap=0.3,
+        ygap=0.3,
+        hovertemplate="Module: (%{x}, %{y})<br>Value: %{z}<extra></extra>",
+    )
 )
 
-# Style
+# Style - tighter layout for better canvas utilization
 fig.update_layout(
     title={
         "text": "qrcode-basic · plotly · pyplots.ai",
-        "font": {"size": 52, "color": "#306998", "family": "Arial Black, sans-serif"},
+        "font": {"size": 64, "color": "#306998", "family": "Arial Black, sans-serif"},
         "x": 0.5,
         "xanchor": "center",
         "y": 0.97,
@@ -53,9 +59,23 @@ fig.update_layout(
         "range": [-0.5, n_modules - 0.5],
     },
     template="plotly_white",
-    margin={"l": 60, "r": 60, "t": 200, "b": 320},
+    margin={"l": 60, "r": 60, "t": 220, "b": 260},
     paper_bgcolor="#f8f9fa",
     plot_bgcolor="white",
+)
+
+# Decorative border around the QR code area
+fig.add_shape(
+    type="rect",
+    xref="paper",
+    yref="paper",
+    x0=-0.01,
+    y0=-0.01,
+    x1=1.01,
+    y1=1.01,
+    line={"color": "#306998", "width": 1, "dash": "solid"},
+    fillcolor="rgba(0,0,0,0)",
+    opacity=0.3,
 )
 
 # Subtle divider line between QR code and annotations
@@ -64,9 +84,9 @@ fig.add_shape(
     xref="paper",
     yref="paper",
     x0=0.3,
-    y0=-0.015,
+    y0=-0.01,
     x1=0.7,
-    y1=-0.015,
+    y1=-0.01,
     line={"color": "#306998", "width": 1.5, "dash": "dot"},
 )
 
@@ -76,9 +96,9 @@ fig.add_annotation(
     xref="paper",
     yref="paper",
     x=0.5,
-    y=-0.03,
+    y=-0.025,
     showarrow=False,
-    font={"size": 44, "color": "#306998", "family": "Arial, sans-serif"},
+    font={"size": 48, "color": "#306998", "family": "Arial, sans-serif"},
     xanchor="center",
     yanchor="top",
 )
@@ -89,13 +109,13 @@ fig.add_annotation(
     xref="paper",
     yref="paper",
     x=0.5,
-    y=-0.06,
+    y=-0.055,
     showarrow=False,
-    font={"size": 36, "color": "#888888", "family": "Arial, sans-serif"},
+    font={"size": 38, "color": "#888888", "family": "Arial, sans-serif"},
     xanchor="center",
     yanchor="top",
 )
 
 # Save
 fig.write_image("plot.png", width=3600, height=3600, scale=1)
-fig.write_html("plot.html")
+fig.write_html("plot.html", include_plotlyjs="cdn")
