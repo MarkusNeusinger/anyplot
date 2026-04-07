@@ -88,7 +88,7 @@ async def get_library_images(library_id: str, db: AsyncSession = Depends(require
         return cached
 
     repo = SpecRepository(db)
-    specs = await repo.get_all()
+    specs = await repo.get_all_with_code()
 
     images = []
     for spec in specs:

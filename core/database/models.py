@@ -9,7 +9,7 @@ from typing import Any, Optional
 from uuid import uuid4
 
 from sqlalchemy import BigInteger, CheckConstraint, DateTime, Float, ForeignKey, Integer, String, Text, UniqueConstraint
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, deferred, mapped_column, relationship
 from sqlalchemy.sql import func
 
 from core.constants import LIBRARIES_METADATA
@@ -87,8 +87,8 @@ class Impl(Base):
     spec_id: Mapped[str] = mapped_column(String, ForeignKey("specs.id", ondelete="CASCADE"), nullable=False)
     library_id: Mapped[str] = mapped_column(String, ForeignKey("libraries.id", ondelete="CASCADE"), nullable=False)
 
-    # Code
-    code: Mapped[Optional[str]] = mapped_column(Text, nullable=True)  # Python source
+    # Code (deferred — ~13 MB total, only loaded when explicitly accessed or undeferred)
+    code: Mapped[Optional[str]] = deferred(mapped_column(Text, nullable=True))  # Python source
 
     # Previews (filled by workflow, synced from metadata YAML)
     preview_url: Mapped[Optional[str]] = mapped_column(String, nullable=True)  # Full PNG
@@ -98,8 +98,8 @@ class Impl(Base):
     python_version: Mapped[Optional[str]] = mapped_column(String, nullable=True)  # e.g., "3.13"
     library_version: Mapped[Optional[str]] = mapped_column(String, nullable=True)  # e.g., "3.9.0"
 
-    # Test matrix: [{"py": "3.11", "lib": "3.8.5", "ok": true}, ...]
-    tested: Mapped[Optional[list]] = mapped_column(UniversalJSON, nullable=True)
+    # Test matrix (deferred — unused by any endpoint)
+    tested: Mapped[Optional[list]] = deferred(mapped_column(UniversalJSON, nullable=True))
 
     # Quality & Generation - quality_score constrained to 0-100 range
     quality_score: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
@@ -113,10 +113,12 @@ class Impl(Base):
     review_strengths: Mapped[list[str]] = mapped_column(StringArray, default=list)  # What's good
     review_weaknesses: Mapped[list[str]] = mapped_column(StringArray, default=list)  # What needs work
 
-    # Extended review data (from issue #2845)
-    review_image_description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)  # AI's visual description
-    review_criteria_checklist: Mapped[Optional[dict[str, Any]]] = mapped_column(
-        UniversalJSON, nullable=True
+    # Extended review data (deferred — ~12 MB total, only needed on detail pages)
+    review_image_description: Mapped[Optional[str]] = deferred(
+        mapped_column(Text, nullable=True)
+    )  # AI's visual description
+    review_criteria_checklist: Mapped[Optional[dict[str, Any]]] = deferred(
+        mapped_column(UniversalJSON, nullable=True)
     )  # Detailed scoring
     review_verdict: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)  # "APPROVED" or "REJECTED"
 

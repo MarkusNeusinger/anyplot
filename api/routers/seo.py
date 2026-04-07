@@ -31,6 +31,7 @@ def _build_sitemap_xml(specs: list) -> str:
         "  <url><loc>https://pyplots.ai/catalog</loc></url>",
         "  <url><loc>https://pyplots.ai/mcp</loc></url>",
         "  <url><loc>https://pyplots.ai/legal</loc></url>",
+        "  <url><loc>https://pyplots.ai/stats</loc></url>",
     ]
 
     for spec in specs:

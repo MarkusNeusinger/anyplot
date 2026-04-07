@@ -19,6 +19,7 @@ class ImplementationResponse(BaseModel):
     quality_score: float | None = None
     code: str | None = None
     generated_at: str | None = None
+    updated: str | None = None
     generated_by: str | None = None
     python_version: str | None = None
     library_version: str | None = None

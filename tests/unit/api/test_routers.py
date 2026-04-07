@@ -76,6 +76,7 @@ def mock_spec():
     mock_impl.quality_score = 92.5
     mock_impl.code = "import matplotlib.pyplot as plt"
     mock_impl.generated_at = None
+    mock_impl.updated = None
     mock_impl.generated_by = "claude"
     mock_impl.python_version = "3.13"
     mock_impl.library_version = "3.10.0"
@@ -244,7 +245,7 @@ class TestLibrariesRouter:
         client, _ = db_client
 
         mock_spec_repo = MagicMock()
-        mock_spec_repo.get_all = AsyncMock(return_value=[mock_spec])
+        mock_spec_repo.get_all_with_code = AsyncMock(return_value=[mock_spec])
 
         with (
             patch("api.routers.libraries.get_cache", return_value=None),
@@ -1376,3 +1377,248 @@ class TestPlotsHelperFunctions:
         impl_lookup = {("scatter-basic", "matplotlib"): {"styling": ["alpha-blending"]}}
         groups = [{"category": "style", "values": ["minimal-chrome"]}]
         assert _image_matches_groups("scatter-basic", "matplotlib", groups, spec_lookup, impl_lookup) is False
+
+
+class TestInsightsRouter:
+    """Tests for insights router."""
+
+    def test_dashboard_without_db(self, client: TestClient) -> None:
+        """Dashboard should return 503 when DB not configured."""
+        with patch(DB_CONFIG_PATCH, return_value=False):
+            response = client.get("/insights/dashboard")
+            assert response.status_code == 503
+
+    def test_dashboard_with_db(self, client: TestClient, mock_spec) -> None:
+        """Dashboard should return aggregated stats."""
+        mock_spec_repo = MagicMock()
+        mock_spec_repo.get_all = AsyncMock(return_value=[mock_spec])
+        mock_impl_repo = MagicMock()
+        mock_impl_repo.get_total_code_lines = AsyncMock(return_value=500)
+        mock_impl_repo.get_loc_per_impl = AsyncMock(return_value=[("matplotlib", 50)])
+
+        with (
+            patch(DB_CONFIG_PATCH, return_value=True),
+            patch("api.routers.insights.get_or_set_cache", side_effect=_passthrough_cache),
+            patch("api.routers.insights.SpecRepository", return_value=mock_spec_repo),
+            patch("api.routers.insights.ImplRepository", return_value=mock_impl_repo),
+        ):
+            response = client.get("/insights/dashboard")
+            assert response.status_code == 200
+            data = response.json()
+            assert data["total_specs"] == 1
+            assert data["total_implementations"] == 1
+            assert data["total_lines_of_code"] == 500
+            assert data["total_interactive"] == 0
+            assert len(data["library_stats"]) == 9
+            assert isinstance(data["coverage_matrix"], list)
+            assert isinstance(data["score_distribution"], dict)
+            assert isinstance(data["tag_distribution"], dict)
+
+    def test_potd_without_db(self, client: TestClient) -> None:
+        """Plot of the day should return 503 when DB not configured."""
+        with patch(DB_CONFIG_PATCH, return_value=False):
+            response = client.get("/insights/plot-of-the-day")
+            assert response.status_code == 503
+
+    def test_potd_with_db(self, client: TestClient, mock_spec) -> None:
+        """Plot of the day should return a featured implementation."""
+        mock_spec_repo = MagicMock()
+        mock_spec_repo.get_all = AsyncMock(return_value=[mock_spec])
+        mock_impl = MagicMock()
+        mock_impl.code = "import matplotlib"
+        mock_impl.review_image_description = "A scatter plot"
+        mock_impl_repo = MagicMock()
+        mock_impl_repo.get_by_spec_and_library = AsyncMock(return_value=mock_impl)
+
+        with (
+            patch(DB_CONFIG_PATCH, return_value=True),
+            patch("api.routers.insights.get_or_set_cache", side_effect=_passthrough_cache),
+            patch("api.routers.insights.SpecRepository", return_value=mock_spec_repo),
+            patch("api.routers.insights.ImplRepository", return_value=mock_impl_repo),
+        ):
+            response = client.get("/insights/plot-of-the-day")
+            assert response.status_code == 200
+            data = response.json()
+            assert data["spec_id"] == "scatter-basic"
+            assert data["library_id"] == "matplotlib"
+            assert data["quality_score"] == 92.5
+
+    def test_potd_no_candidates(self, client: TestClient) -> None:
+        """Plot of the day should return null when no high-quality implementations."""
+        mock_impl = MagicMock()
+        mock_impl.library_id = "matplotlib"
+        mock_impl.quality_score = 50.0  # Below threshold
+        mock_impl.preview_url = TEST_IMAGE_URL
+        mock_spec = MagicMock()
+        mock_spec.id = "low-quality"
+        mock_spec.impls = [mock_impl]
+
+        mock_spec_repo = MagicMock()
+        mock_spec_repo.get_all = AsyncMock(return_value=[mock_spec])
+        mock_impl_repo = MagicMock()
+
+        with (
+            patch(DB_CONFIG_PATCH, return_value=True),
+            patch("api.routers.insights.get_or_set_cache", side_effect=_passthrough_cache),
+            patch("api.routers.insights.SpecRepository", return_value=mock_spec_repo),
+            patch("api.routers.insights.ImplRepository", return_value=mock_impl_repo),
+        ):
+            response = client.get("/insights/plot-of-the-day")
+            assert response.status_code == 200
+            assert response.json() is None
+
+    def test_related_without_db(self, client: TestClient) -> None:
+        """Related should return 503 when DB not configured."""
+        with patch(DB_CONFIG_PATCH, return_value=False):
+            response = client.get("/insights/related/scatter-basic")
+            assert response.status_code == 503
+
+    def test_related_spec_mode(self, client: TestClient) -> None:
+        """Related in spec mode should return similar specs based on spec tags."""
+        mock_impl1 = MagicMock()
+        mock_impl1.library_id = "matplotlib"
+        mock_impl1.quality_score = 90.0
+        mock_impl1.preview_url = TEST_IMAGE_URL
+        mock_impl1.impl_tags = {}
+
+        mock_spec1 = MagicMock()
+        mock_spec1.id = "scatter-basic"
+        mock_spec1.title = "Basic Scatter"
+        mock_spec1.tags = {"plot_type": ["scatter"], "domain": ["statistics"]}
+        mock_spec1.impls = [mock_impl1]
+
+        mock_impl2 = MagicMock()
+        mock_impl2.library_id = "matplotlib"
+        mock_impl2.quality_score = 88.0
+        mock_impl2.preview_url = TEST_IMAGE_URL
+        mock_impl2.impl_tags = {}
+
+        mock_spec2 = MagicMock()
+        mock_spec2.id = "scatter-regression"
+        mock_spec2.title = "Scatter with Regression"
+        mock_spec2.tags = {"plot_type": ["scatter"], "domain": ["machine-learning"]}
+        mock_spec2.impls = [mock_impl2]
+
+        mock_spec_repo = MagicMock()
+        mock_spec_repo.get_all = AsyncMock(return_value=[mock_spec1, mock_spec2])
+
+        with (
+            patch(DB_CONFIG_PATCH, return_value=True),
+            patch("api.routers.insights.get_or_set_cache", side_effect=_passthrough_cache),
+            patch("api.routers.insights.SpecRepository", return_value=mock_spec_repo),
+        ):
+            response = client.get("/insights/related/scatter-basic?mode=spec&limit=3")
+            assert response.status_code == 200
+            data = response.json()
+            assert len(data["related"]) == 1
+            assert data["related"][0]["id"] == "scatter-regression"
+            assert data["related"][0]["similarity"] > 0
+            assert "scatter" in data["related"][0]["shared_tags"]
+
+    def test_related_not_found(self, client: TestClient) -> None:
+        """Related should return empty list for nonexistent spec."""
+        mock_spec_repo = MagicMock()
+        mock_spec_repo.get_all = AsyncMock(return_value=[])
+
+        with (
+            patch(DB_CONFIG_PATCH, return_value=True),
+            patch("api.routers.insights.get_or_set_cache", side_effect=_passthrough_cache),
+            patch("api.routers.insights.SpecRepository", return_value=mock_spec_repo),
+        ):
+            response = client.get("/insights/related/nonexistent")
+            assert response.status_code == 200
+            assert response.json()["related"] == []
+
+    def test_related_full_mode_with_library(self, client: TestClient) -> None:
+        """Related in full mode should include impl tags."""
+        mock_impl1 = MagicMock()
+        mock_impl1.library_id = "matplotlib"
+        mock_impl1.quality_score = 90.0
+        mock_impl1.preview_url = TEST_IMAGE_URL
+        mock_impl1.impl_tags = {"techniques": ["annotations"], "patterns": ["data-generation"]}
+
+        mock_spec1 = MagicMock()
+        mock_spec1.id = "scatter-basic"
+        mock_spec1.title = "Basic Scatter"
+        mock_spec1.tags = {"plot_type": ["scatter"]}
+        mock_spec1.impls = [mock_impl1]
+
+        mock_impl2 = MagicMock()
+        mock_impl2.library_id = "matplotlib"
+        mock_impl2.quality_score = 85.0
+        mock_impl2.preview_url = TEST_IMAGE_URL
+        mock_impl2.impl_tags = {"techniques": ["annotations"], "patterns": ["other"]}
+
+        mock_spec2 = MagicMock()
+        mock_spec2.id = "bar-annotated"
+        mock_spec2.title = "Annotated Bar"
+        mock_spec2.tags = {"plot_type": ["bar"]}
+        mock_spec2.impls = [mock_impl2]
+
+        mock_spec_repo = MagicMock()
+        mock_spec_repo.get_all = AsyncMock(return_value=[mock_spec1, mock_spec2])
+
+        with (
+            patch(DB_CONFIG_PATCH, return_value=True),
+            patch("api.routers.insights.get_or_set_cache", side_effect=_passthrough_cache),
+            patch("api.routers.insights.SpecRepository", return_value=mock_spec_repo),
+        ):
+            response = client.get("/insights/related/scatter-basic?mode=full&library=matplotlib")
+            assert response.status_code == 200
+            data = response.json()
+            assert len(data["related"]) == 1
+            assert "annotations" in data["related"][0]["shared_tags"]
+
+
+class TestSpecCodeEndpoint:
+    """Tests for the /specs/{spec_id}/{library}/code endpoint."""
+
+    def test_code_without_db(self, client: TestClient) -> None:
+        """Code endpoint should return 503 when DB not configured."""
+        with patch(DB_CONFIG_PATCH, return_value=False):
+            response = client.get("/specs/scatter-basic/matplotlib/code")
+            assert response.status_code == 503
+
+    def test_code_with_db(self, client: TestClient) -> None:
+        """Code endpoint should return code for a specific implementation."""
+        mock_impl = MagicMock()
+        mock_impl.code = "import matplotlib.pyplot as plt\nplt.plot([1,2,3])"
+        mock_impl_repo = MagicMock()
+        mock_impl_repo.get_code = AsyncMock(return_value=mock_impl)
+
+        with (
+            patch(DB_CONFIG_PATCH, return_value=True),
+            patch("api.routers.specs.get_cache", return_value=None),
+            patch("api.routers.specs.set_cache"),
+            patch("api.routers.specs.ImplRepository", return_value=mock_impl_repo),
+        ):
+            response = client.get("/specs/scatter-basic/matplotlib/code")
+            assert response.status_code == 200
+            data = response.json()
+            assert data["spec_id"] == "scatter-basic"
+            assert data["library"] == "matplotlib"
+            assert "matplotlib" in data["code"]
+
+    def test_code_not_found(self, client: TestClient) -> None:
+        """Code endpoint should return 404 when implementation not found."""
+        mock_impl_repo = MagicMock()
+        mock_impl_repo.get_code = AsyncMock(return_value=None)
+
+        with (
+            patch(DB_CONFIG_PATCH, return_value=True),
+            patch("api.routers.specs.get_cache", return_value=None),
+            patch("api.routers.specs.ImplRepository", return_value=mock_impl_repo),
+        ):
+            response = client.get("/specs/nonexistent/matplotlib/code")
+            assert response.status_code == 404
+
+    def test_code_cache_hit(self, client: TestClient) -> None:
+        """Code endpoint should return cached data when available."""
+        cached = {"spec_id": "scatter-basic", "library": "matplotlib", "code": "cached code"}
+        with (
+            patch(DB_CONFIG_PATCH, return_value=True),
+            patch("api.routers.specs.get_cache", return_value=cached),
+        ):
+            response = client.get("/specs/scatter-basic/matplotlib/code")
+            assert response.status_code == 200
+            assert response.json()["code"] == "cached code"

@@ -1,8 +1,8 @@
 /**
  * Hook for fetching plot code on-demand.
  *
- * Code is excluded from /plots/filter to reduce payload size (~2MB savings).
- * This hook fetches code from /specs/{spec_id} when needed.
+ * Code is deferred in the database and excluded from /specs/{id} responses.
+ * This hook fetches code from the lightweight /specs/{spec_id}/{library}/code endpoint.
  */
 
 import { useState, useCallback, useRef } from 'react';
@@ -42,21 +42,18 @@ export function useCodeFetch(): UseCodeFetchReturn {
       return pending;
     }
 
-    // Fetch from API
+    // Fetch from lightweight code endpoint
     setIsLoading(true);
     const promise = (async () => {
       try {
-        const response = await fetch(`${API_URL}/specs/${specId}`);
+        const response = await fetch(`${API_URL}/specs/${specId}/${library}/code`);
         if (!response.ok) {
           cacheRef.current[key] = null;
           return null;
         }
 
         const data = await response.json();
-        const impl = data.implementations?.find(
-          (i: { library_id: string }) => i.library_id === library
-        );
-        const code = impl?.code ?? null;
+        const code = data.code ?? null;
         cacheRef.current[key] = code;
         return code;
       } catch {

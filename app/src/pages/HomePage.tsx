@@ -13,6 +13,7 @@ import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
 import { FilterBar } from '../components/FilterBar';
 import { ImagesGrid } from '../components/ImagesGrid';
+import { PlotOfTheDay } from '../components/PlotOfTheDay';
 import { useAppData, useHomeState } from '../hooks';
 
 export function HomePage() {
@@ -165,6 +166,8 @@ export function HomePage() {
         <link rel="canonical" href="https://pyplots.ai/" />
       </Helmet>
       <Header stats={stats} onRandom={handleRandom} />
+
+      {isFiltersEmpty(activeFilters) && !loading && <PlotOfTheDay />}
 
       {error && (
         <Alert severity="error" sx={{ mb: 4, maxWidth: 500, mx: 'auto' }}>

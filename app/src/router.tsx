@@ -23,6 +23,7 @@ const router = createBrowserRouter([
       { path: 'catalog', lazy: () => import('./pages/CatalogPage').then(m => ({ Component: m.CatalogPage, HydrateFallback: LazyFallback })) },
       { path: 'legal', lazy: () => import('./pages/LegalPage').then(m => ({ Component: m.LegalPage, HydrateFallback: LazyFallback })) },
       { path: 'mcp', lazy: () => import('./pages/McpPage').then(m => ({ Component: m.McpPage, HydrateFallback: LazyFallback })) },
+      { path: 'stats', lazy: () => import('./pages/StatsPage').then(m => ({ Component: m.StatsPage, HydrateFallback: LazyFallback })) },
       { path: ':specId', lazy: () => import('./pages/SpecPage').then(m => ({ Component: m.SpecPage, HydrateFallback: LazyFallback })) },
       { path: ':specId/:library', lazy: () => import('./pages/SpecPage').then(m => ({ Component: m.SpecPage, HydrateFallback: LazyFallback })) },
       { path: '*', element: <NotFoundPage /> },

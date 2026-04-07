@@ -44,6 +44,7 @@ https://pyplots.ai/{category}/{value}/{category}/{value}/...
 | `/catalog` | Catalog page (alphabetical spec list) |
 | `/legal` | Legal notice, privacy policy, transparency |
 | `/mcp` | MCP server documentation (AI assistant integration) |
+| `/stats` | Platform statistics (library scores, coverage, tags, top implementations) |
 | `/{spec_id}` | Spec overview page (grid of all implementations) |
 | `/{spec_id}/{library}` | Spec detail page (single library implementation) |
 | `/interactive/{spec_id}/{library}` | Interactive fullscreen view (HTML plots) |
@@ -230,7 +231,7 @@ To see event properties in Plausible dashboard, you **MUST** register them as cu
 | `category` | Filter category (lib, spec, plot, data, dom, feat, dep, tech, pat, prep, style) | `search`, `random_filter`, `filter_remove` |
 | `value` | Filter value | `random_filter`, `filter_remove`, `tag_click` |
 | `query` | Search query text | `search`, `search_no_results` |
-| `destination` | Link target (github, stats, linkedin, mcp, legal) | `external_link`, `internal_link` |
+| `destination` | Link target (github, plausible, stats, compare, linkedin, mcp, legal) | `external_link`, `internal_link` |
 | `tab` | Tab name (code, specification, implementation, quality) | `tab_toggle` |
 | `action` | Toggle action (open, close) | `tab_toggle` |
 | `size` | Grid size (normal, compact) | `grid_resize` |
