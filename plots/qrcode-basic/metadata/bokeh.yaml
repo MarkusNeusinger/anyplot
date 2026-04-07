@@ -1,15 +1,15 @@
 library: bokeh
 specification_id: qrcode-basic
 created: '2026-01-07T16:29:36Z'
-updated: '2026-01-07T16:37:23Z'
-generated_by: claude-opus-4-5-20251101
+updated: '2026-04-07T17:45:00+00:00'
+generated_by: claude-opus-4-6
 workflow_run: 20788383981
 issue: 3184
-python_version: 3.13.11
-library_version: 3.8.2
+python_version: '3.14.3'
+library_version: '3.8.2'
 preview_url: https://storage.googleapis.com/pyplots-images/plots/qrcode-basic/bokeh/plot.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/qrcode-basic/bokeh/plot.html
-quality_score: 95
+quality_score: null
 review:
   strengths:
   - Excellent use of Bokeh rect glyph for pixel-perfect QR module rendering
