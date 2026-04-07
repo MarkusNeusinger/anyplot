@@ -1,7 +1,7 @@
 library: matplotlib
 specification_id: qrcode-basic
 created: '2026-01-07T16:30:05Z'
-updated: '2026-04-07T18:01:51Z'
+updated: '2026-04-07T18:08:02Z'
 generated_by: claude-opus-4-6
 workflow_run: 20788379500
 issue: 3184
@@ -9,27 +9,32 @@ python_version: 3.14.3
 library_version: 3.10.8
 preview_url: https://storage.googleapis.com/pyplots-images/plots/qrcode-basic/matplotlib/plot.png
 preview_html: null
-quality_score: 85
+quality_score: 88
 review:
   strengths:
-  - Uses real qrcode library producing scannable output (key spec requirement)
-  - Perfect spec compliance — all required features present
-  - Clean, deterministic code with appropriate structure
-  - Thoughtful color hierarchy with dark navy, Python Blue, and gray shades
-  - Good metadata annotations showing encoded content and QR properties
+  - Uses the qrcode library to generate a real, scannable QR code as spec requires
+  - Polished design with custom dark navy color, rounded frame with shadow, gradient
+    accent line, and path effects
+  - Perfect spec compliance — all requirements met including quiet zone, error correction
+    level, and title format
+  - Clean, deterministic code with linear KISS structure
+  - Cohesive Python Blue color scheme throughout
   weaknesses:
-  - Design Excellence needs improvement to reach 90+ threshold
-  - Faint border/frame artifact around QR code area detracts from visual polish
-  - Library mastery could be elevated with more distinctive matplotlib features
-  - Version info text slightly small at 14pt
-  image_description: 'The plot displays a QR code on a white background in a square
-    layout. The QR code is rendered in dark navy (#1A1A2E) on white, with three finder
-    patterns (concentric squares) visible in the top-left, top-right, and bottom-left
-    corners. The title "qrcode-basic · matplotlib · pyplots.ai" appears at the top
-    in Python Blue (#306998), bold and italicized. Below the QR code, "Encoded: https://pyplots.ai"
-    is shown in gray monospace font, and beneath that, "QR Code Version 2 (33×33)
-    · Error Correction Level M" in lighter gray. The axes are turned off. A faint
-    rectangular border/frame is visible around the QR code rendering area.'
+  - Data storytelling limited — could benefit from additional visual context or annotations
+    highlighting QR code structure
+  - Canvas utilization could be slightly tighter — some excess whitespace within the
+    frame
+  - Title font size (28pt) could be slightly larger for a 3600x3600 canvas
+  image_description: 'The plot displays a square-format QR code rendered in dark navy
+    (#1A1A2E) on a white background. Three finder patterns (concentric squares) are
+    clearly visible in the top-left, top-right, and bottom-left corners. The QR code
+    is surrounded by a decorative rounded-corner frame in Python Blue (#306998) with
+    a subtle offset shadow for depth. The title "qrcode-basic · matplotlib · pyplots.ai"
+    appears at the top in bold blue with a white glow path effect. Below the QR code,
+    a gradient accent line transitions from blue to gold, followed by "Encoded: https://pyplots.ai"
+    in monospace font and "QR Code Version 2 (33×33) · Error Correction Level M" in
+    italic gray. The layout is clean, square (12×12 figure), and the QR code occupies
+    the majority of the canvas.'
   criteria_checklist:
     visual_quality:
       score: 28
@@ -40,63 +45,62 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set (28pt title, 20pt subtitle, 14pt metadata).
-          Version info slightly small at 14pt.
+        comment: All font sizes explicitly set (title=28, encoded=20, meta=16), all
+          readable
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements.
+        comment: No overlapping elements
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: QR code modules crisp and clearly visible with nearest-neighbor interpolation.
+        comment: QR modules crisp with interpolation=nearest
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: High contrast dark navy on white, no colorblind concerns.
+        comment: High contrast dark navy on white, colorblind-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good square canvas usage. Faint border artifact around QR code area.
+        comment: Good square layout, slight excess whitespace within frame
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Axes appropriately hidden. Informative metadata annotations.
+        comment: Axes hidden appropriately, metadata provides context
     design_excellence:
-      score: 12
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Thoughtful color choices (dark navy, Python Blue, gray hierarchy).
-          Above default but not publication-level.
+        comment: Custom dark navy, rounded frame with shadow, gradient accent, path
+          effects, cohesive color scheme
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Axes removed, white background, good whitespace. Faint border artifact
-          remains.
+        comment: Axes removed, clean whitespace, rounded frame with shadow, gradient
+          accent divider
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
-        passed: true
-        comment: Metadata annotations provide context. Typography hierarchy creates
-          some emphasis.
+        passed: false
+        comment: Good visual hierarchy but limited storytelling for QR code plot type
     spec_compliance:
       score: 15
       max: 15
@@ -106,26 +110,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct QR code visualization using recommended qrcode library.
+        comment: Correct QR code visualization using qrcode library
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: quiet zone, high contrast, finder patterns,
-          error correction M, scannable.'
+        comment: Quiet zone, high contrast, finder patterns, error correction M, proper
+          QR library
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Encodes https://pyplots.ai correctly.
+        comment: Encodes real URL https://pyplots.ai
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. No legend needed.
+        comment: Correct title format, no legend needed
     data_quality:
       score: 14
       max: 15
@@ -135,21 +139,20 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Complete QR code with finder/timing/alignment patterns. Shows version
-          and error correction info.
+        comment: Shows finder patterns, timing patterns, data modules, quiet zone,
+          version and EC info
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real, meaningful URL. Neutral, practical content.
+        comment: Real URL, practical real-world scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Version 2 (33x33) appropriate for short URL with error correction
-          M.
+        comment: QR Version 2 appropriate for short URL, EC level M as recommended
     code_quality:
       score: 10
       max: 10
@@ -159,33 +162,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports, QR generation, plot, save.'
+        comment: Linear flow, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: QR code generation is deterministic.
+        comment: QR generation is fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriate complexity.
+        comment: Clean, well-structured, appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300.
+        comment: Saves plot.png at 300 DPI
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -193,23 +196,24 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of imshow, axes methods, fig.text for positioned annotations.
+        comment: Good use of imshow, FancyBboxPatch, patheffects, fig.add_axes
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: ListedColormap and imshow interpolation used, but nothing strongly
-          distinctive.
+        passed: true
+        comment: FancyBboxPatch with BoxStyle.Round, patheffects, fig.add_axes for
+          gradient
   verdict: REJECTED
 impl_tags:
   dependencies:
   - qrcode
   techniques:
-  - annotations
+  - patches
   patterns:
   - explicit-figure
   dataprep: []
   styling:
   - minimal-chrome
   - custom-colormap
+  - edge-highlighting
