@@ -1,7 +1,7 @@
 library: bokeh
 specification_id: qrcode-basic
 created: '2026-01-07T16:29:36Z'
-updated: '2026-04-07T17:54:15Z'
+updated: '2026-04-07T18:01:37Z'
 generated_by: claude-opus-4-6
 workflow_run: 20788383981
 issue: 3184
@@ -12,25 +12,28 @@ preview_html: https://storage.googleapis.com/pyplots-images/plots/qrcode-basic/b
 quality_score: 86
 review:
   strengths:
-  - Uses real qrcode library for genuinely scannable output
-  - Clean minimalist design appropriate for QR code visualization
-  - Informative footer with encoded content, version, and error correction level
-  - Dual output (PNG + HTML) leveraging Bokeh strength
-  - Perfect spec compliance with all required features
+  - Real scannable QR code using the qrcode library as spec requires
+  - Color-coded region classification (finder, timing, alignment, data) adds educational
+    value and visual interest
+  - HoverTool for interactive HTML exploration is an excellent use of Bokeh distinctive
+    features
+  - Clean minimal design with hidden axes/grid appropriate for QR code visualization
+  - Correct title format and informative footer with encoded content and version details
   weaknesses:
-  - Version info label at 14pt slightly small for 3600px canvas
-  - Uneven vertical spacing between QR code and footer
-  - Bokeh interactive features underutilized (no HoverTool)
-  - Limited data storytelling beyond footer text
-  image_description: 'The plot shows a scannable QR code rendered as black square
-    modules on a white background in a 3600x3600 square format. The title "qrcode-basic
-    · bokeh · pyplots.ai" appears at the top in Python Blue (#306998). Three finder
-    patterns (large squares with nested squares) are visible in the top-left, top-right,
-    and bottom-left corners. A quiet zone of white space surrounds the QR code. Below
-    the code, a monospace footer reads "Encoded: https://pyplots.ai" in gray, and
-    a smaller version info line reads "Version 2 (25x25) · Error Correction Level
-    M (15%)". Axes and grid are completely hidden. The QR code fills the central portion
-    of the canvas well, with balanced whitespace.'
+  - Contains a helper function (classify_module) violating the KISS flat structure
+    requirement
+  - Some excess whitespace between QR code and footer labels
+  - The classify_module function has deeply nested conditionals that could be simplified
+  image_description: 'The plot displays a QR code on a white background in square
+    format (3600x3600). The title "qrcode-basic · bokeh · pyplots.ai" appears at the
+    top in blue (#306998) at 36pt. The QR code itself uses color-coding to distinguish
+    functional regions: three finder patterns (top-left, top-right, bottom-left) are
+    rendered in medium blue (#306998), timing patterns and the alignment pattern (lower-right
+    area) appear in a lighter blue (#4A8BBE), and data/error correction modules are
+    near-black (#1a1a1a). A quiet zone of white space surrounds the QR code. Below
+    the code, footer text reads "Encoded: https://pyplots.ai" in gray monospace (22pt),
+    and beneath that "Version 2 (25x25) · Error Correction Level M (15%)" in smaller
+    gray text (18pt). The overall appearance is clean and professional.'
   criteria_checklist:
     visual_quality:
       score: 28
@@ -41,40 +44,41 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title at 36pt and footer at 20pt explicitly set; version label at
-          14pt slightly small
+        comment: All font sizes explicitly set (36pt title, 22pt encoded label, 18pt
+          version). Version info slightly small but readable.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements
+        comment: No overlapping text or elements anywhere.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: QR modules crisp black on white, perfectly visible
+        comment: QR modules clearly visible with good sizing and strong contrast.
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Maximum contrast black on white
+        comment: Blue and black on white, fully colorblind-safe.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good utilization but extra whitespace between QR code and footer
+        comment: Good square format. Some excess whitespace between QR code bottom
+          and footer.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Axes appropriately hidden; title descriptive
+        comment: Axes appropriately hidden for QR code. Title correctly formatted.
     design_excellence:
-      score: 12
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -82,19 +86,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Clean intentional design with Python Blue title and monospace footer
+        comment: Color-coded QR regions is a thoughtful design choice. Python Blue
+          theme is cohesive. Above defaults but not publication-level.
       - id: DE-02
         name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Axes, grid, outline all hidden. Clean white background. Good whitespace
+          management. Monospace font for URL is a nice detail.
+      - id: DE-03
+        name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Axes/grid/outlines removed, clean white background
-      - id: DE-03
-        name: Data Storytelling
-        score: 3
-        max: 6
-        passed: false
-        comment: Footer provides context but limited visual narrative
+        comment: Color differentiation of QR regions creates visual hierarchy. Footer
+          contextualizes encoded content and QR version.
     spec_compliance:
       score: 15
       max: 15
@@ -104,26 +111,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct QR code visualization
+        comment: Correct QR code visualization using qrcode library as recommended.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: quiet zone, high contrast, finder patterns,
-          error correction M, qrcode library'
+        comment: 'All spec features present: scannable QR code, quiet zone, high contrast,
+          error correction M, finder patterns.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Correctly encodes https://pyplots.ai
+        comment: URL content correctly encoded and mapped to visual grid.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows required format, no legend needed
+        comment: Title matches required format. No legend needed.
     data_quality:
       score: 14
       max: 15
@@ -133,55 +140,57 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Shows all QR code features; could demonstrate error correction visually
+        comment: Shows finder patterns, timing patterns, alignment pattern, and data
+          modules.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Encodes a real meaningful URL
+        comment: Encodes https://pyplots.ai — a real, relevant URL.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Version 2 (25x25) appropriate for URL length
+        comment: Version 2 (25x25) with error correction M is appropriate for a short
+          URL.
     code_quality:
-      score: 10
+      score: 7
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 1
         max: 3
-        passed: true
-        comment: Clean imports → data → plot → save structure
+        passed: false
+        comment: Contains classify_module function, violating flat KISS structure.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: 'Deterministic: same URL always produces same QR code'
+        comment: 'Deterministic: fixed string input produces identical output.'
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: All imports used.
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Appropriate complexity, straightforward coordinate extraction
+        passed: false
+        comment: classify_module function with nested conditionals is over-engineered.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png via export_png
+        comment: Saves as plot.png via export_png. Also generates plot.html.
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -189,23 +198,25 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of ColumnDataSource, figure, rect glyph, Label model
+        comment: Uses ColumnDataSource, figure, rect glyphs — idiomatic Bokeh patterns.
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: HTML export and ColumnDataSource are Bokeh-specific; could add HoverTool
+        comment: HoverTool for interactive region exploration. Dual PNG+HTML export
+          leverages Bokeh interactive capabilities.
   verdict: REJECTED
 impl_tags:
   dependencies:
   - qrcode
   techniques:
+  - hover-tooltips
   - annotations
   - html-export
   patterns:
   - columndatasource
-  - matrix-construction
+  - iteration-over-groups
   dataprep: []
   styling:
   - minimal-chrome
