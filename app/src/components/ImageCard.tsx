@@ -15,6 +15,7 @@ import type { PlotImage } from '../types';
 import { BATCH_SIZE, type ImageSize } from '../constants';
 import { useCodeFetch } from '../hooks';
 import { buildSrcSet, getResponsiveSizes, getFallbackSrc } from '../utils/responsiveImage';
+import { fontSize, semanticColors } from '../theme';
 
 // Library abbreviations for compact mode
 const LIBRARY_ABBR: Record<string, string> = {
@@ -61,7 +62,7 @@ export const ImageCard = memo(function ImageCard({
   const theme = useTheme();
   const isXs = useMediaQuery(theme.breakpoints.down('sm')); // < 600px
 
-  const labelFontSize = imageSize === 'compact' ? '0.65rem' : '0.8rem';
+  const labelFontSize = imageSize === 'compact' ? fontSize.xs : fontSize.md;
   const labelLetterSpacing = isXs ? '-0.03em' : 'normal';
   const { fetchCode } = useCodeFetch();
   const [copyState, setCopyState] = useState<'idle' | 'loading' | 'copied'>('idle');
@@ -136,10 +137,14 @@ export const ImageCard = memo(function ImageCard({
           position: 'relative',
           borderRadius: 3,
           overflow: 'hidden',
-          border: '2px solid rgba(55, 118, 171, 0.2)',
+          border: '2px solid rgba(55, 118, 171, 0.3)',
           boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
           transition: 'all 0.3s ease',
           cursor: 'pointer',
+          outline: 'none',
+          '&:focus-visible': {
+            border: '2px solid rgba(55, 118, 171, 0.6)',
+          },
           '&:hover': {
             border: '2px solid rgba(55, 118, 171, 0.4)',
             boxShadow: '0 8px 30px rgba(0,0,0,0.15)',
@@ -185,6 +190,26 @@ export const ImageCard = memo(function ImageCard({
             }}
           />
         </Box>
+        {/* Copied confirmation */}
+        {copyState === 'copied' && (
+          <Box sx={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            bgcolor: 'rgba(0,0,0,0.7)',
+            color: '#fff',
+            px: 1.5,
+            py: 0.5,
+            borderRadius: 1,
+            fontFamily: '"MonoLisa", monospace',
+            fontSize: fontSize.sm,
+            pointerEvents: 'none',
+            zIndex: 2,
+          }}>
+            {'>>> copied'}
+          </Box>
+        )}
         {/* Copy button - appears on hover */}
         <IconButton
           onClick={handleCopyCode}
@@ -196,10 +221,11 @@ export const ImageCard = memo(function ImageCard({
             top: 8,
             right: 8,
             bgcolor: 'rgba(255,255,255,0.9)',
+            color: semanticColors.mutedText,
             opacity: 0,
-            transition: 'opacity 0.2s',
+            transition: 'opacity 0.2s, color 0.2s',
             '.MuiCard-root:hover &': { opacity: 1 },
-            '&:hover': { bgcolor: 'rgba(255,255,255,1)' },
+            '&:hover': { bgcolor: 'rgba(255,255,255,1)', color: '#3776AB' },
           }}
         >
           {copyState === 'loading' ? (
@@ -243,7 +269,7 @@ export const ImageCard = memo(function ImageCard({
               letterSpacing: labelLetterSpacing,
               fontWeight: 600,
               fontFamily: '"MonoLisa", "MonoLisa Fallback", monospace',
-              color: isSpecTooltipOpen ? '#3776AB' : '#9ca3af',
+              color: isSpecTooltipOpen ? '#3776AB' : semanticColors.labelText,
               textTransform: 'lowercase',
               cursor: 'pointer',
               '&:hover': {
@@ -313,7 +339,7 @@ export const ImageCard = memo(function ImageCard({
                   letterSpacing: labelLetterSpacing,
                   fontWeight: 600,
                   fontFamily: '"MonoLisa", "MonoLisa Fallback", monospace',
-                  color: isLibTooltipOpen ? '#3776AB' : '#9ca3af',
+                  color: isLibTooltipOpen ? '#3776AB' : semanticColors.labelText,
                   textTransform: 'lowercase',
                   cursor: 'pointer',
                   '&:hover': {

@@ -3,6 +3,7 @@ import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import { fontSize, semanticColors } from '../theme';
 
 // Library abbreviations (same as filter display)
 const LIBRARY_ABBREV: Record<string, string> = {
@@ -97,7 +98,7 @@ export const LibraryPills = memo(function LibraryPills({
         aria-label="Previous library"
         size="small"
         sx={{
-          color: '#9ca3af',
+          color: semanticColors.mutedText,
           '&:hover': { color: '#3776AB', bgcolor: '#f3f4f6' },
         }}
       >
@@ -127,11 +128,11 @@ export const LibraryPills = memo(function LibraryPills({
                 py: 0.5,
                 borderRadius: 2,
                 fontFamily: '"MonoLisa", monospace',
-                fontSize: '0.85rem',
+                fontSize: fontSize.base,
                 fontWeight: isCenter ? 600 : 400,
                 bgcolor: '#f3f4f6',
                 border: isCenter ? '1px solid #3776AB' : '1px solid transparent',
-                color: isCenter ? '#374151' : '#9ca3af',
+                color: isCenter ? '#374151' : semanticColors.mutedText,
                 cursor: 'pointer',
                 transition: 'all 0.2s ease',
                 whiteSpace: 'nowrap',
@@ -154,7 +155,7 @@ export const LibraryPills = memo(function LibraryPills({
                   component="span"
                   sx={{
                     ml: 0.5,
-                    fontSize: '0.7rem',
+                    fontSize: fontSize.xs,
                     color: '#6b7280',
                   }}
                 >
@@ -172,7 +173,7 @@ export const LibraryPills = memo(function LibraryPills({
         aria-label="Next library"
         size="small"
         sx={{
-          color: '#9ca3af',
+          color: semanticColors.mutedText,
           '&:hover': { color: '#3776AB', bgcolor: '#f3f4f6' },
         }}
       >

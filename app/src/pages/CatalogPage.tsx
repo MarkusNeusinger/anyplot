@@ -14,6 +14,7 @@ import { useAppData, useHomeState } from '../hooks';
 import { Breadcrumb } from '../components/Breadcrumb';
 import { Footer } from '../components/Footer';
 import type { PlotImage } from '../types';
+import { fontSize, semanticColors } from '../theme';
 
 interface CatalogSpec {
   id: string;
@@ -166,7 +167,7 @@ export function CatalogPage() {
               rel="noopener noreferrer"
               onClick={() => trackEvent('suggest_spec')}
               sx={{
-                color: '#9ca3af',
+                color: semanticColors.mutedText,
                 textDecoration: 'none',
                 '&:hover': { color: '#3776AB' },
               }}
@@ -193,9 +194,9 @@ export function CatalogPage() {
             component="span"
             sx={{
               ml: 2,
-              fontSize: '1rem',
+              fontSize: fontSize.lg,
               fontWeight: 400,
-              color: '#9ca3af',
+              color: semanticColors.mutedText,
             }}
           >
             {catalogSpecs.length} specifications
@@ -296,7 +297,7 @@ export function CatalogPage() {
                         py: 0.25,
                         bgcolor: 'rgba(0,0,0,0.6)',
                         borderRadius: 1,
-                        fontSize: '0.7rem',
+                        fontSize: fontSize.xs,
                         fontFamily: '"MonoLisa", monospace',
                         color: '#fff',
                         opacity: 0,
@@ -318,7 +319,7 @@ export function CatalogPage() {
                       py: 0.25,
                       bgcolor: 'rgba(0,0,0,0.6)',
                       borderRadius: 0.5,
-                      fontSize: '0.65rem',
+                      fontSize: fontSize.xs,
                       fontFamily: '"MonoLisa", monospace',
                       color: '#fff',
                       opacity: 0,
@@ -347,7 +348,7 @@ export function CatalogPage() {
                     sx={{
                       fontFamily: '"MonoLisa", monospace',
                       fontWeight: 600,
-                      fontSize: '1rem',
+                      fontSize: fontSize.xl,
                       color: '#1f2937',
                       mb: 0.5,
                       '&:hover': { color: '#3776AB' },
@@ -366,8 +367,8 @@ export function CatalogPage() {
                       }}
                       sx={{
                         fontFamily: '"MonoLisa", monospace',
-                        fontSize: '0.85rem',
-                        color: '#6b7280',
+                        fontSize: fontSize.base,
+                        color: semanticColors.subtleText,
                         lineHeight: 1.6,
                         cursor: expandedDescs[spec.id] ? 'default' : 'pointer',
                         ...(!expandedDescs[spec.id] && {

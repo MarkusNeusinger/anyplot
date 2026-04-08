@@ -26,7 +26,7 @@ interface SpecDetailViewProps {
   imageLoaded: boolean;
   codeCopied: string | null;
   onImageLoad: () => void;
-  onImageClick: () => void;
+  onImageZoom: () => void;
   onCopyCode: (impl: Implementation) => void;
   onDownload: (impl: Implementation) => void;
   onTrackEvent: (event: string, props?: Record<string, string | undefined>) => void;
@@ -41,7 +41,7 @@ export function SpecDetailView({
   imageLoaded,
   codeCopied,
   onImageLoad,
-  onImageClick,
+  onImageZoom,
   onCopyCode,
   onDownload,
   onTrackEvent,
@@ -58,7 +58,7 @@ export function SpecDetailView({
       }}
     >
       <Box
-        onClick={onImageClick}
+        onClick={onImageZoom}
         sx={{
           position: 'relative',
           borderRadius: 2,
@@ -66,7 +66,7 @@ export function SpecDetailView({
           bgcolor: '#fff',
           boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
           aspectRatio: '16/9',
-          cursor: 'pointer',
+          cursor: 'zoom-in',
           '&:hover .impl-counter': {
             opacity: 1,
           },
@@ -142,7 +142,7 @@ export function SpecDetailView({
                 aria-label="Copy code"
                 sx={{
                   bgcolor: 'rgba(255,255,255,0.9)',
-                  '&:hover': { bgcolor: '#fff' },
+                  '&:hover': { bgcolor: '#fff', color: '#3776AB' },
                 }}
                 size="small"
               >
@@ -161,7 +161,7 @@ export function SpecDetailView({
                 aria-label="Download PNG"
                 sx={{
                   bgcolor: 'rgba(255,255,255,0.9)',
-                  '&:hover': { bgcolor: '#fff' },
+                  '&:hover': { bgcolor: '#fff', color: '#3776AB' },
                 }}
                 size="small"
               >
@@ -181,7 +181,7 @@ export function SpecDetailView({
                 }}
                 sx={{
                   bgcolor: 'rgba(255,255,255,0.9)',
-                  '&:hover': { bgcolor: '#fff' },
+                  '&:hover': { bgcolor: '#fff', color: '#3776AB' },
                 }}
                 size="small"
               >

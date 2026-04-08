@@ -11,6 +11,7 @@ import ViewModuleIcon from '@mui/icons-material/ViewModule';
 import ListIcon from '@mui/icons-material/List';
 
 import type { ImageSize } from '../constants';
+import { semanticColors } from '../theme';
 
 interface ToolbarActionsProps {
   imageSize: ImageSize;
@@ -31,13 +32,13 @@ export function CatalogLink() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          width: 32,
-          height: 32,
-          color: '#9ca3af',
+          width: 36,
+          height: 36,
+          color: semanticColors.mutedText,
           '&:hover': { color: '#3776AB' },
         }}
       >
-        <ListIcon sx={{ fontSize: '1.25rem' }} />
+        <ListIcon sx={{ fontSize: '1.4rem' }} />
       </Box>
     </Tooltip>
   );
@@ -72,18 +73,18 @@ export function GridSizeToggle({ imageSize, onImageSizeChange, onTrackEvent }: T
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          width: 32,
-          height: 32,
+          width: 36,
+          height: 36,
           cursor: 'pointer',
-          color: '#9ca3af',
+          color: semanticColors.mutedText,
           '&:hover': { color: '#3776AB' },
-          '&:focus': { outline: '2px solid #3776AB', outlineOffset: 2 },
+          '&:focus-visible': { outline: '2px solid #3776AB', outlineOffset: 2 },
         }}
       >
         {imageSize === 'normal' ? (
-          <ViewAgendaIcon sx={{ fontSize: '1.25rem' }} />
+          <ViewAgendaIcon sx={{ fontSize: '1.4rem' }} />
         ) : (
-          <ViewModuleIcon sx={{ fontSize: '1.25rem' }} />
+          <ViewModuleIcon sx={{ fontSize: '1.4rem' }} />
         )}
       </Box>
     </Tooltip>

@@ -19,6 +19,7 @@ import CheckIcon from '@mui/icons-material/Check';
 
 import type { Implementation } from '../types';
 import { buildSrcSet, OVERVIEW_SIZES } from '../utils/responsiveImage';
+import { fontSize, semanticColors } from '../theme';
 
 interface LibraryMeta {
   id: string;
@@ -60,11 +61,11 @@ export function SpecOverview({
   return (
     <Box
       sx={{
-        maxWidth: { xs: '100%', md: 1200, lg: 1400, xl: 1600 },
+        maxWidth: { xs: '100%', md: 1200, lg: 1400, xl: 1800 },
         mx: 'auto',
         mt: 4,
         display: 'grid',
-        gridTemplateColumns: 'repeat(3, 1fr)',
+        gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' },
         gap: 3,
       }}
     >
@@ -201,7 +202,7 @@ function ImplementationCard({
                 aria-label="Copy code"
                 sx={{
                   bgcolor: 'rgba(255,255,255,0.9)',
-                  '&:hover': { bgcolor: '#fff' },
+                  '&:hover': { bgcolor: '#fff', color: '#3776AB' },
                 }}
                 size="small"
               >
@@ -238,7 +239,7 @@ function ImplementationCard({
                 }}
                 sx={{
                   bgcolor: 'rgba(255,255,255,0.9)',
-                  '&:hover': { bgcolor: '#fff' },
+                  '&:hover': { bgcolor: '#fff', color: '#3776AB' },
                 }}
                 size="small"
               >
@@ -264,7 +265,7 @@ function ImplementationCard({
             <Tooltip
               title={
                 <Box>
-                  <Typography sx={{ fontSize: '0.8rem', mb: libMeta?.documentation_url ? 1 : 0 }}>
+                  <Typography sx={{ fontSize: fontSize.md, mb: libMeta?.documentation_url ? 1 : 0 }}>
                     {libMeta?.description || 'No description available'}
                   </Typography>
                   {libMeta?.documentation_url && (
@@ -277,7 +278,7 @@ function ImplementationCard({
                         display: 'inline-flex',
                         alignItems: 'center',
                         gap: 0.5,
-                        fontSize: '0.75rem',
+                        fontSize: fontSize.xs,
                         color: '#90caf9',
                         textDecoration: 'underline',
                         '&:hover': { color: '#fff' },
@@ -300,7 +301,7 @@ function ImplementationCard({
                   sx: {
                     maxWidth: { xs: '80vw', sm: 400 },
                     fontFamily: '"MonoLisa", monospace',
-                    fontSize: '0.8rem',
+                    fontSize: fontSize.md,
                   },
                 },
               }}
@@ -311,10 +312,10 @@ function ImplementationCard({
                   onTooltipToggle(isTooltipOpen ? null : tooltipId);
                 }}
                 sx={{
-                  fontSize: '0.8rem',
+                  fontSize: fontSize.md,
                   fontWeight: 600,
                   fontFamily: '"MonoLisa", monospace',
-                  color: isTooltipOpen ? '#3776AB' : '#9ca3af',
+                  color: isTooltipOpen ? '#3776AB' : semanticColors.labelText,
                   textTransform: 'lowercase',
                   cursor: 'pointer',
                   '&:hover': { color: '#3776AB' },
@@ -327,13 +328,13 @@ function ImplementationCard({
         </ClickAwayListener>
         {impl.quality_score && (
           <>
-            <Typography sx={{ color: '#d1d5db', fontSize: '0.8rem' }}>·</Typography>
+            <Typography sx={{ color: semanticColors.mutedText, fontSize: fontSize.md }}>·</Typography>
             <Typography
               sx={{
-                fontSize: '0.8rem',
+                fontSize: fontSize.md,
                 fontWeight: 600,
                 fontFamily: '"MonoLisa", monospace',
-                color: '#9ca3af',
+                color: semanticColors.labelText,
               }}
             >
               {Math.round(impl.quality_score)}

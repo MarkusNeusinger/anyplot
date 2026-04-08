@@ -2,6 +2,7 @@ import Box from '@mui/material/Box';
 import Link from '@mui/material/Link';
 import { Link as RouterLink } from 'react-router-dom';
 import { GITHUB_URL } from '../constants';
+import { fontSize, semanticColors } from '../theme';
 
 interface FooterProps {
   onTrackEvent?: (name: string, props?: Record<string, string | undefined>) => void;
@@ -18,9 +19,9 @@ export function Footer({ onTrackEvent, selectedSpec, selectedLibrary }: FooterPr
           justifyContent: 'center',
           alignItems: 'center',
           gap: 1,
-          fontSize: '0.8rem',
+          fontSize: fontSize.md,
           fontFamily: '"MonoLisa", "MonoLisa Fallback", monospace',
-          color: '#9ca3af',
+          color: semanticColors.mutedText,
         }}
       >
         <Link
@@ -29,9 +30,9 @@ export function Footer({ onTrackEvent, selectedSpec, selectedLibrary }: FooterPr
           rel="noopener noreferrer"
           onClick={() => onTrackEvent?.('external_link', { destination: 'github', spec: selectedSpec, library: selectedLibrary })}
           sx={{
-            color: '#9ca3af',
+            color: semanticColors.mutedText,
             textDecoration: 'none',
-            '&:hover': { color: '#6b7280' },
+            '&:hover': { color: '#374151' },
           }}
         >
           github
@@ -39,12 +40,25 @@ export function Footer({ onTrackEvent, selectedSpec, selectedLibrary }: FooterPr
         <span>·</span>
         <Link
           component={RouterLink}
+          to="/catalog"
+          onClick={() => onTrackEvent?.('internal_link', { destination: 'catalog', spec: selectedSpec, library: selectedLibrary })}
+          sx={{
+            color: semanticColors.mutedText,
+            textDecoration: 'none',
+            '&:hover': { color: '#374151' },
+          }}
+        >
+          catalog
+        </Link>
+        <span>·</span>
+        <Link
+          component={RouterLink}
           to="/stats"
           onClick={() => onTrackEvent?.('internal_link', { destination: 'stats', spec: selectedSpec, library: selectedLibrary })}
           sx={{
-            color: '#9ca3af',
+            color: semanticColors.mutedText,
             textDecoration: 'none',
-            '&:hover': { color: '#6b7280' },
+            '&:hover': { color: '#374151' },
           }}
         >
           stats
@@ -57,9 +71,9 @@ export function Footer({ onTrackEvent, selectedSpec, selectedLibrary }: FooterPr
             rel="noopener noreferrer"
             onClick={() => onTrackEvent?.('external_link', { destination: 'linkedin', spec: selectedSpec, library: selectedLibrary })}
             sx={{
-              color: '#9ca3af',
+              color: semanticColors.mutedText,
               textDecoration: 'none',
-              '&:hover': { color: '#6b7280' },
+              '&:hover': { color: '#374151' },
             }}
           >
             markus neusinger
@@ -71,9 +85,9 @@ export function Footer({ onTrackEvent, selectedSpec, selectedLibrary }: FooterPr
           to="/mcp"
           onClick={() => onTrackEvent?.('internal_link', { destination: 'mcp', spec: selectedSpec, library: selectedLibrary })}
           sx={{
-            color: '#9ca3af',
+            color: semanticColors.mutedText,
             textDecoration: 'none',
-            '&:hover': { color: '#6b7280' },
+            '&:hover': { color: '#374151' },
           }}
         >
           mcp
@@ -84,9 +98,9 @@ export function Footer({ onTrackEvent, selectedSpec, selectedLibrary }: FooterPr
           to="/legal"
           onClick={() => onTrackEvent?.('internal_link', { destination: 'legal', spec: selectedSpec, library: selectedLibrary })}
           sx={{
-            color: '#9ca3af',
+            color: semanticColors.mutedText,
             textDecoration: 'none',
-            '&:hover': { color: '#6b7280' },
+            '&:hover': { color: '#374151' },
           }}
         >
           legal

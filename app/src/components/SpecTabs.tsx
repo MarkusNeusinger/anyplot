@@ -1,4 +1,4 @@
-import { useState, useCallback, lazy, Suspense } from 'react';
+import { useState, useCallback, useEffect, lazy, Suspense } from 'react';
 import Box from '@mui/material/Box';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
@@ -17,6 +17,12 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 
 const CodeHighlighter = lazy(() => import('./CodeHighlighter'));
+import { fontSize, semanticColors } from '../theme';
+import { API_URL } from '../constants';
+
+
+// Cached global tag counts — loaded once, shared across all SpecTabs instances
+let cachedTagCounts: Record<string, Record<string, number>> | null = null;
 
 // Map tag category names to URL parameter names
 const SPEC_TAG_PARAM_MAP: Record<string, string> = {
@@ -180,6 +186,27 @@ export function SpecTabs({
   // In overview mode, start with Spec tab open; in detail mode, all collapsed
   const [tabIndex, setTabIndex] = useState<number | null>(null);
   const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({});
+  const [tagCounts, setTagCounts] = useState<Record<string, Record<string, number>> | null>(cachedTagCounts);
+
+  // Fetch global tag counts once (module-level cache)
+  useEffect(() => {
+    if (cachedTagCounts) { setTagCounts(cachedTagCounts); return; }
+    fetch(`${API_URL}/plots/filter?limit=1`)
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (data?.globalCounts) {
+          cachedTagCounts = data.globalCounts;
+          setTagCounts(data.globalCounts);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  // Get count for a tag value (e.g., "scatter" in "plot" category → 421 implementations)
+  const getTagCount = useCallback((paramName: string | undefined, value: string): number | null => {
+    if (!tagCounts || !paramName) return null;
+    return tagCounts[paramName]?.[value] ?? null;
+  }, [tagCounts]);
 
   // Handle tag click - navigate to filtered catalog (full page navigation)
   const handleTagClick = useCallback(
@@ -638,21 +665,22 @@ export function SpecTabs({
 
       {/* Tags — always visible after tab content (spec tags + impl tags on detail page) */}
       {((tags && Object.keys(tags).length > 0) || (implTags && Object.values(implTags).some(v => v?.length > 0))) && (
-        <Box sx={{ mt: 1.5, display: 'flex', flexWrap: 'wrap', gap: 2 }}>
+        <Box sx={{ mt: 1.5, display: 'flex', flexWrap: 'wrap', gap: 2.5, py: 1.5 }}>
           {tags && Object.entries(tags).map(([category, values]) => {
             const paramName = SPEC_TAG_PARAM_MAP[category];
             return (
               <Box key={`spec-${category}`} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                <Typography component="span" sx={{ fontFamily: '"MonoLisa", monospace', fontSize: '0.65rem', color: '#9ca3af' }}>
+                <Typography component="span" sx={{ fontFamily: '"MonoLisa", monospace', fontSize: fontSize.sm, color: semanticColors.mutedText }}>
                   {category.replace(/_/g, ' ')}:
                 </Typography>
                 {values.map((value, i) => {
                   const isHighlighted = highlightedTags.includes(value);
-                  return (
+                  const count = getTagCount(paramName, value);
+                  const chip = (
                     <Chip key={i} label={value} size="small"
                       onClick={paramName ? () => handleTagClick(paramName, value) : undefined}
                       sx={{
-                        fontFamily: '"MonoLisa", monospace', fontSize: '0.65rem', height: 20,
+                        fontFamily: '"MonoLisa", monospace', fontSize: fontSize.xs, height: 24,
                         bgcolor: isHighlighted ? '#dbeafe' : '#f3f4f6',
                         color: isHighlighted ? '#1e40af' : '#4b5563',
                         cursor: paramName ? 'pointer' : 'default',
@@ -662,6 +690,9 @@ export function SpecTabs({
                       }}
                     />
                   );
+                  return count !== null ? (
+                    <Tooltip key={i} title={`${count} plots`} placement="top" enterDelay={200}>{chip}</Tooltip>
+                  ) : chip;
                 })}
               </Box>
             );
@@ -672,16 +703,17 @@ export function SpecTabs({
               const paramName = IMPL_TAG_PARAM_MAP[category];
               return (
                 <Box key={`impl-${category}`} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                  <Typography component="span" sx={{ fontFamily: '"MonoLisa", monospace', fontSize: '0.65rem', color: '#9ca3af' }}>
+                  <Typography component="span" sx={{ fontFamily: '"MonoLisa", monospace', fontSize: fontSize.sm, color: semanticColors.mutedText }}>
                     {category}:
                   </Typography>
                   {values.map((value, i) => {
                     const isHighlighted = highlightedTags.includes(value);
-                    return (
+                    const count = getTagCount(paramName, value);
+                    const chip = (
                       <Chip key={i} label={value} size="small"
                         onClick={paramName ? () => handleTagClick(paramName, value) : undefined}
                         sx={{
-                          fontFamily: '"MonoLisa", monospace', fontSize: '0.65rem', height: 20,
+                          fontFamily: '"MonoLisa", monospace', fontSize: fontSize.xs, height: 24,
                           bgcolor: isHighlighted ? '#dbeafe' : '#f3f4f6',
                           color: isHighlighted ? '#1e40af' : '#4b5563',
                           cursor: paramName ? 'pointer' : 'default',
@@ -691,6 +723,9 @@ export function SpecTabs({
                         }}
                       />
                     );
+                    return count !== null ? (
+                      <Tooltip key={i} title={`${count} plots`} placement="top" enterDelay={200}>{chip}</Tooltip>
+                    ) : chip;
                   })}
                 </Box>
               );
@@ -699,7 +734,7 @@ export function SpecTabs({
       )}
 
       {/* Metadata footer — always visible */}
-      <Typography sx={{ fontFamily: '"MonoLisa", monospace', fontSize: '0.7rem', color: '#d1d5db', mt: 1 }}>
+      <Typography sx={{ fontFamily: '"MonoLisa", monospace', fontSize: fontSize.sm, color: '#9ca3af', mt: 1 }}>
         {specId}
         {!overviewMode && libraryId && ` · ${libraryId}`}
         {(() => {

@@ -19,6 +19,7 @@ import { FILTER_LABELS, FILTER_TOOLTIPS, FILTER_CATEGORIES } from '../types';
 import type { ImageSize } from '../constants';
 import { getAvailableValues, getAvailableValuesForGroup, getSearchResults, type SearchResult } from '../utils';
 import { ToolbarActions } from './ToolbarActions';
+import { fontSize, semanticColors } from '../theme';
 
 interface FilterBarProps {
   activeFilters: ActiveFilters;
@@ -345,8 +346,8 @@ export function FilterBar({
               position: 'absolute',
               left: 0,
               fontFamily: '"MonoLisa", "MonoLisa Fallback", monospace',
-              fontSize: '0.75rem',
-              color: '#9ca3af',
+              fontSize: fontSize.sm,
+              color: semanticColors.mutedText,
               whiteSpace: 'nowrap',
             }}
           >
@@ -381,7 +382,7 @@ export function FilterBar({
             deleteIcon={<CloseIcon sx={{ fontSize: '1rem !important' }} />}
             sx={{
               fontFamily: '"MonoLisa", "MonoLisa Fallback", monospace',
-              fontSize: '0.85rem',
+              fontSize: fontSize.base,
               height: 32,
               bgcolor: '#f3f4f6',
               border: '1px solid #3776AB',
@@ -492,11 +493,11 @@ export function FilterBar({
               opacity: isSearchExpanded ? 1 : 0,
               transition: 'all 0.2s ease',
               fontFamily: '"MonoLisa", "MonoLisa Fallback", monospace',
-              fontSize: '0.85rem',
+              fontSize: fontSize.base,
               '& input': {
                 padding: 0,
                 '&::placeholder': {
-                  color: '#9ca3af',
+                  color: semanticColors.mutedText,
                   opacity: 1,
                 },
               },
@@ -511,7 +512,7 @@ export function FilterBar({
               }}
               sx={{
                 color: '#9ca3af',
-                fontSize: '0.9rem',
+                fontSize: fontSize.lg,
                 cursor: 'pointer',
                 '&:hover': { color: '#6b7280' },
               }}
@@ -535,8 +536,8 @@ export function FilterBar({
             <Typography
               sx={{
                 fontFamily: '"MonoLisa", "MonoLisa Fallback", monospace',
-                fontSize: '0.75rem',
-                color: '#9ca3af',
+                fontSize: fontSize.sm,
+                color: semanticColors.mutedText,
                 whiteSpace: 'nowrap',
               }}
             >
@@ -603,12 +604,12 @@ export function FilterBar({
                       secondary={`${availableVals.length} options`}
                       primaryTypographyProps={{
                         fontFamily: '"MonoLisa", "MonoLisa Fallback", monospace',
-                        fontSize: '0.9rem',
+                        fontSize: fontSize.lg,
                       }}
                       secondaryTypographyProps={{
                         fontFamily: '"MonoLisa", "MonoLisa Fallback", monospace',
-                        fontSize: '0.75rem',
-                        color: '#9ca3af',
+                        fontSize: fontSize.sm,
+                        color: semanticColors.mutedText,
                       }}
                     />
                   </MenuItem>
@@ -665,19 +666,19 @@ export function FilterBar({
                           secondary={!selectedCategory ? FILTER_LABELS[category] : undefined}
                           primaryTypographyProps={{
                             fontFamily: '"MonoLisa", "MonoLisa Fallback", monospace',
-                            fontSize: '0.85rem',
+                            fontSize: fontSize.base,
                           }}
                           secondaryTypographyProps={{
                             fontFamily: '"MonoLisa", "MonoLisa Fallback", monospace',
-                            fontSize: '0.7rem',
-                            color: '#9ca3af',
+                            fontSize: fontSize.xs,
+                            color: semanticColors.mutedText,
                           }}
                         />
                         <Typography
                           sx={{
                             fontFamily: '"MonoLisa", "MonoLisa Fallback", monospace',
-                            fontSize: '0.75rem',
-                            color: '#9ca3af',
+                            fontSize: fontSize.sm,
+                            color: semanticColors.mutedText,
                             ml: 2,
                           }}
                         >
@@ -705,8 +706,8 @@ export function FilterBar({
                       <Divider key="exact-fuzzy-divider" sx={{ my: 0.5 }}>
                         <Typography
                           sx={{
-                            fontSize: '0.65rem',
-                            color: '#9ca3af',
+                            fontSize: fontSize.xs,
+                            color: semanticColors.mutedText,
                             fontFamily: '"MonoLisa", "MonoLisa Fallback", monospace',
                             px: 1,
                           }}
@@ -727,8 +728,8 @@ export function FilterBar({
                       <Typography
                         sx={{
                           fontFamily: '"MonoLisa", "MonoLisa Fallback", monospace',
-                          fontSize: '0.85rem',
-                          color: '#9ca3af',
+                          fontSize: fontSize.base,
+                          color: semanticColors.mutedText,
                         }}
                       >
                         no matches
@@ -764,8 +765,8 @@ export function FilterBar({
                   sx={{
                     px: 2,
                     py: 0.5,
-                    fontSize: '0.7rem',
-                    color: '#9ca3af',
+                    fontSize: fontSize.xs,
+                    color: semanticColors.mutedText,
                     fontFamily: '"MonoLisa", "MonoLisa Fallback", monospace',
                     textTransform: 'uppercase',
                   }}
@@ -779,8 +780,8 @@ export function FilterBar({
                     sx={{ fontFamily: '"MonoLisa", "MonoLisa Fallback", monospace', py: 0.5 }}
                   >
                     <AddIcon fontSize="small" sx={{ mr: 1, color: '#22c55e', fontSize: '1rem' }} />
-                    <Typography sx={{ fontSize: '0.85rem', flex: 1 }}>{value}</Typography>
-                    <Typography sx={{ fontSize: '0.75rem', color: '#9ca3af' }}>({count})</Typography>
+                    <Typography sx={{ fontSize: fontSize.base, flex: 1 }}>{value}</Typography>
+                    <Typography sx={{ fontSize: fontSize.sm, color: semanticColors.mutedText }}>({count})</Typography>
                   </MenuItem>
                 )),
                 <Divider key="divider-add" />,

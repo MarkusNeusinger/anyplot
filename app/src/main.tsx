@@ -15,14 +15,14 @@ const theme = createTheme({
   palette: {
     mode: 'light',
     primary: {
-      main: '#2563eb', // Slightly softer blue
+      main: '#3776AB', // Python blue
     },
     text: {
       primary: '#1f2937',
-      secondary: '#6b7280',
+      secondary: '#52525b',
     },
     background: {
-      default: '#ffffff',
+      default: '#fafafa',
     },
   },
   shape: {
@@ -32,7 +32,25 @@ const theme = createTheme({
     MuiCssBaseline: {
       styleOverrides: {
         body: {
-          backgroundColor: '#ffffff',
+          backgroundColor: '#fafafa',
+        },
+      },
+    },
+    MuiTooltip: {
+      defaultProps: {
+        enterDelay: 200,
+        placement: 'top' as const,
+      },
+      styleOverrides: {
+        tooltip: {
+          backgroundColor: 'rgba(0,0,0,0.8)',
+          fontFamily: '"MonoLisa", "MonoLisa Fallback", monospace',
+          fontSize: '0.75rem',
+          padding: '4px 8px',
+          borderRadius: 4,
+        },
+        arrow: {
+          color: 'rgba(0,0,0,0.8)',
         },
       },
     },

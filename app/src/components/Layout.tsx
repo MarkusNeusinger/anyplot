@@ -82,7 +82,7 @@ export function Layout() {
         <meta name="robots" content="index, follow" />
       </Helmet>
       <Box component="main" sx={{ minHeight: '100vh', bgcolor: '#fafafa', py: 5, position: 'relative' }}>
-        <Container maxWidth={false} sx={{ px: { xs: 2, sm: 4, md: 8, lg: 12 } }}>
+        <Container maxWidth={false} sx={{ px: { xs: 2, sm: 4, md: 8, lg: 12, xl: 16 }, maxWidth: 2200, mx: 'auto' }}>
           <Outlet />
         </Container>
       </Box>

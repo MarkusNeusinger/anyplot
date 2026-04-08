@@ -5,6 +5,7 @@
 import { Link } from 'react-router-dom';
 import Box from '@mui/material/Box';
 import type { SxProps, Theme } from '@mui/material/styles';
+import { fontSize, semanticColors } from '../theme';
 
 export interface BreadcrumbItem {
   label: string;
@@ -49,7 +50,7 @@ export function Breadcrumb({ items, rightAction, sx }: BreadcrumbProps) {
         bgcolor: '#f3f4f6',
         borderBottom: '1px solid #e5e7eb',
         fontFamily: '"MonoLisa", monospace',
-        fontSize: '0.85rem',
+        fontSize: fontSize.base,
         ...sx,
       }}
     >
@@ -58,7 +59,7 @@ export function Breadcrumb({ items, rightAction, sx }: BreadcrumbProps) {
         {items.map((item, index) => (
           <Box key={index} sx={{ display: 'flex', alignItems: 'center' }}>
             {index > 0 && (
-              <Box component="span" sx={{ mx: 1, color: '#9ca3af' }}>
+              <Box component="span" sx={{ mx: 1, color: semanticColors.mutedText }}>
                 ›
               </Box>
             )}
@@ -75,7 +76,7 @@ export function Breadcrumb({ items, rightAction, sx }: BreadcrumbProps) {
                 {item.label}
               </Box>
             ) : (
-              <Box component="span" sx={{ color: '#4b5563' }}>
+              <Box component="span" sx={{ color: '#374151' }}>
                 {item.label}
               </Box>
             )}

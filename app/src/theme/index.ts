@@ -38,13 +38,20 @@ export const colors = {
   background: '#fafafa',
 } as const;
 
+// Semantic text colors — WCAG AA safe on #fafafa/#fff backgrounds
+export const semanticColors = {
+  labelText: '#4b5563', // gray.600 — 7.0:1 on white, labels/categories
+  subtleText: '#52525b', // ~5.8:1 on white, secondary/metadata text
+  mutedText: '#6b7280', // gray.500, 4.6:1 — decorative/less critical text
+} as const;
+
 export const fontSize = {
-  xs: '0.65rem',
-  sm: '0.75rem',
-  md: '0.8rem',
-  base: '0.85rem',
-  lg: '0.9rem',
-  xl: '1rem',
+  xs: '0.75rem',
+  sm: '0.8rem',
+  md: '0.875rem',
+  base: '0.9375rem',
+  lg: '1rem',
+  xl: '1.125rem',
 } as const;
 
 export const spacing = {
@@ -63,5 +70,5 @@ export const monoText = {
 export const labelStyle = {
   fontFamily: typography.fontFamily,
   fontSize: fontSize.md,
-  color: colors.gray[400],
+  color: semanticColors.labelText,
 } as const;

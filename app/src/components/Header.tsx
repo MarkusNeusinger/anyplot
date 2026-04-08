@@ -7,6 +7,7 @@ import ClickAwayListener from '@mui/material/ClickAwayListener';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { useTheme } from '@mui/material/styles';
 import ShuffleIcon from '@mui/icons-material/Shuffle';
+import { semanticColors } from '../theme';
 
 interface HeaderProps {
   stats?: { specs: number; plots: number; libraries: number } | null;
@@ -165,7 +166,7 @@ export const Header = memo(function Header({ stats, onRandom }: HeaderProps) {
           mx: 'auto',
           lineHeight: 1.8,
           fontFamily: '"MonoLisa", "MonoLisa Fallback", monospace',
-          color: '#6b7280',
+          color: semanticColors.subtleText,
           fontSize: { xs: '0.875rem', md: '1rem' },
         }}
       >
@@ -180,7 +181,7 @@ export const Header = memo(function Header({ stats, onRandom }: HeaderProps) {
           lineHeight: 1.8,
           fontFamily: '"MonoLisa", "MonoLisa Fallback", monospace',
           color: '#374151',
-          fontSize: { xs: '0.925rem', md: '1.05rem' },
+          fontSize: { xs: '1rem', md: '1.125rem' },
           fontWeight: 500,
         }}
       >

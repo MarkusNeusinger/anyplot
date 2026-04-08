@@ -7,6 +7,7 @@ import IconButton from '@mui/material/IconButton';
 import CloseIcon from '@mui/icons-material/Close';
 
 import { API_URL } from '../constants';
+import { fontSize, semanticColors } from '../theme';
 import { buildSrcSet, getFallbackSrc } from '../utils/responsiveImage';
 
 interface PlotOfTheDayData {
@@ -65,7 +66,7 @@ export function PlotOfTheDay() {
           '&:hover': { color: '#9ca3af' },
         }}
       >
-        <CloseIcon sx={{ fontSize: '0.9rem' }} />
+        <CloseIcon sx={{ fontSize: fontSize.lg }} />
       </IconButton>
       {/* Preview image */}
       {data.preview_url && (
@@ -91,10 +92,10 @@ export function PlotOfTheDay() {
       {/* Info */}
       <Box sx={{ flex: 1, minWidth: 0 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-          <Typography sx={{ fontFamily: mono, fontSize: '0.65rem', color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+          <Typography sx={{ fontFamily: mono, fontSize: fontSize.xs, color: semanticColors.mutedText, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
             plot of the day
           </Typography>
-          <Typography sx={{ fontFamily: mono, fontSize: '0.6rem', color: '#d1d5db' }}>
+          <Typography sx={{ fontFamily: mono, fontSize: fontSize.xs, color: semanticColors.mutedText }}>
             {data.date}
           </Typography>
         </Box>
@@ -102,18 +103,18 @@ export function PlotOfTheDay() {
         <Link component={RouterLink} to={`/${data.spec_id}/${data.library_id}`}
           sx={{ textDecoration: 'none', color: 'inherit', '&:hover': { color: '#306998' } }}
         >
-          <Typography sx={{ fontFamily: mono, fontSize: '0.95rem', fontWeight: 600, color: '#1f2937', lineHeight: 1.3 }}>
+          <Typography sx={{ fontFamily: mono, fontSize: fontSize.lg, fontWeight: 600, color: '#1f2937', lineHeight: 1.3 }}>
             {data.spec_title}
           </Typography>
         </Link>
 
-        <Typography sx={{ fontFamily: mono, fontSize: '0.7rem', color: '#9ca3af', mt: 0.25 }}>
+        <Typography sx={{ fontFamily: mono, fontSize: fontSize.sm, color: semanticColors.mutedText, mt: 0.25 }}>
           {data.library_name} · {data.quality_score}/100
         </Typography>
 
         {data.image_description && (
           <Typography sx={{
-            fontFamily: mono, fontSize: '0.75rem', color: '#6b7280', mt: 1, lineHeight: 1.6,
+            fontFamily: mono, fontSize: fontSize.sm, color: semanticColors.subtleText, mt: 1, lineHeight: 1.6,
             fontStyle: 'italic',
             display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden',
           }}>

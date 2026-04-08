@@ -6,6 +6,7 @@ import Link from '@mui/material/Link';
 
 import { API_URL } from '../constants';
 import { buildSrcSet, getFallbackSrc } from '../utils/responsiveImage';
+import { fontSize, semanticColors } from '../theme';
 
 interface RelatedSpec {
   id: string;
@@ -17,6 +18,18 @@ interface RelatedSpec {
 }
 
 const mono = '"MonoLisa", "MonoLisa Fallback", monospace';
+
+const LIB_ABBREV: Record<string, string> = {
+  matplotlib: 'mpl',
+  seaborn: 'sns',
+  plotly: 'ply',
+  bokeh: 'bok',
+  altair: 'alt',
+  plotnine: 'p9',
+  pygal: 'pyg',
+  highcharts: 'hc',
+  letsplot: 'lp',
+};
 
 // 6 columns max at md+, ~160px each → 400w is plenty
 const SIZES = '(max-width: 599px) 50vw, (max-width: 899px) 33vw, 17vw';
@@ -49,13 +62,16 @@ export function RelatedSpecs({ specId, mode = 'spec', library, onHoverTags }: Re
 
   return (
     <Box sx={{ mt: 4 }}>
-      <Typography sx={{ fontFamily: mono, fontSize: '0.85rem', fontWeight: 600, color: '#374151', mb: 1.5 }}>
+      <Typography sx={{ fontFamily: mono, fontSize: fontSize.base, fontWeight: 600, color: '#374151', mb: 1.5 }}>
         {mode === 'full' ? 'similar implementations' : 'similar specifications'}
       </Typography>
       <Box sx={{
         display: 'grid',
-        gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(3, 1fr)', md: `repeat(${Math.min(related.length, 6)}, 1fr)` },
-        gap: 1.5,
+        gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))',
+        gridTemplateRows: 'auto',
+        gridAutoRows: 0,
+        gap: 2,
+        overflow: 'hidden',
       }}>
         {related.map(spec => (
           <Link
@@ -67,7 +83,7 @@ export function RelatedSpecs({ specId, mode = 'spec', library, onHoverTags }: Re
             sx={{
               textDecoration: 'none',
               color: 'inherit',
-              border: '1px solid #f3f4f6',
+              border: '1px solid #e5e7eb',
               borderRadius: 1,
               overflow: 'hidden',
               transition: 'transform 0.15s ease',
@@ -88,17 +104,17 @@ export function RelatedSpecs({ specId, mode = 'spec', library, onHoverTags }: Re
                 <Typography sx={{ fontFamily: mono, fontSize: '0.7rem', color: '#d1d5db' }}>no preview</Typography>
               </Box>
             )}
-            <Box sx={{ p: 1 }}>
-              <Typography sx={{ fontFamily: mono, fontSize: '0.7rem', color: '#374151', lineHeight: 1.3 }} noWrap>
+            <Box sx={{ p: 1.5 }}>
+              <Typography title={spec.title} sx={{ fontFamily: mono, fontSize: fontSize.sm, color: '#374151', lineHeight: 1.3 }} noWrap>
                 {spec.title}
               </Typography>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 0.25 }}>
-                <Typography sx={{ fontFamily: mono, fontSize: '0.6rem', color: '#9ca3af' }}>
-                  {spec.shared_tags.length} tags in common
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 0.25, gap: 0.5 }}>
+                <Typography title={`${spec.shared_tags.length} tags in common: ${spec.shared_tags.join(', ')}`} sx={{ fontFamily: mono, fontSize: fontSize.xs, color: semanticColors.mutedText, whiteSpace: 'nowrap' }}>
+                  {spec.shared_tags.length} common
                 </Typography>
                 {mode === 'full' && spec.library_id && (
-                  <Typography sx={{ fontFamily: mono, fontSize: '0.6rem', color: '#9ca3af' }}>
-                    {spec.library_id}
+                  <Typography title={spec.library_id} sx={{ fontFamily: mono, fontSize: fontSize.xs, color: semanticColors.mutedText, whiteSpace: 'nowrap' }}>
+                    {LIB_ABBREV[spec.library_id] || spec.library_id}
                   </Typography>
                 )}
               </Box>
