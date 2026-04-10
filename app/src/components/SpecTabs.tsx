@@ -191,7 +191,8 @@ export function SpecTabs({
   // Fetch global tag counts once (module-level cache)
   useEffect(() => {
     if (cachedTagCounts) return;
-    fetch(`${API_URL}/plots/filter?limit=1`)
+    const controller = new AbortController();
+    fetch(`${API_URL}/plots/filter?limit=1`, { signal: controller.signal })
       .then(r => r.ok ? r.json() : null)
       .then(data => {
         if (data?.globalCounts) {
@@ -200,6 +201,7 @@ export function SpecTabs({
         }
       })
       .catch(() => {});
+    return () => controller.abort();
   }, []);
 
   // Get count for a tag value (e.g., "scatter" in "plot" category → 421 implementations)

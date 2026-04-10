@@ -4,7 +4,7 @@
  * Shows large image with library carousel and action buttons.
  */
 
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
@@ -56,6 +56,7 @@ export function SpecDetailView({
   const [zoomed, setZoomed] = useState(false);
   const [origin, setOrigin] = useState({ x: 50, y: 50 });
   const [animating, setAnimating] = useState(false);
+  const animTimerRef = useRef<ReturnType<typeof setTimeout>>(null);
   const prevLibRef = useRef(selectedLibrary);
 
   // Reset zoom when library changes (no effect needed)
@@ -77,10 +78,15 @@ export function SpecDetailView({
       }
       setAnimating(true);
       setZoomed((z) => !z);
-      setTimeout(() => setAnimating(false), 300);
+      if (animTimerRef.current) clearTimeout(animTimerRef.current);
+      animTimerRef.current = setTimeout(() => setAnimating(false), 300);
     },
     [zoomed],
   );
+
+  useEffect(() => {
+    return () => { if (animTimerRef.current) clearTimeout(animTimerRef.current); };
+  }, []);
 
   const handleMouseMove = useCallback(
     (e: React.MouseEvent) => {
@@ -116,7 +122,11 @@ export function SpecDetailView({
     >
       <Box
         ref={containerRef}
+        role="button"
+        tabIndex={0}
+        aria-label={zoomed ? 'Zoom out' : 'Zoom in'}
         onClick={handleZoomToggle}
+        onKeyDown={(e: React.KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleZoomToggle(e as unknown as React.MouseEvent); } }}
         onMouseMove={handleMouseMove}
         onTouchMove={handleTouchMove}
         sx={{
@@ -128,6 +138,8 @@ export function SpecDetailView({
           aspectRatio: '16/9',
           cursor: zoomed ? 'zoom-out' : 'zoom-in',
           touchAction: zoomed ? 'none' : 'auto',
+          outline: 'none',
+          '&:focus-visible': { boxShadow: `0 0 0 2px ${colors.primary}` },
           '&:hover .impl-counter': {
             opacity: 1,
           },

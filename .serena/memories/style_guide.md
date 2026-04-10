@@ -37,8 +37,8 @@ Full scale: micro, xxs, xs, sm, md, base, lg, xl.
 - `tableStyle` — consistent table cells/headers
 - `labelStyle` — small labels (0.875rem, labelText)
 
-## Highlight Colors (not tokenized)
-`#dbeafe`/`#1e40af` (highlighted tag chips) and `#90caf9` (tooltip text on dark bg) are intentionally kept as direct values.
+## Highlight Colors
+Use theme tokens for highlight treatments: `colors.highlight.bg`/`colors.highlight.text` for highlighted tag chips and `colors.tooltipLight` for tooltip text on dark backgrounds. Do not reintroduce hardcoded highlight hex values.
 
 ## Full reference
 See `docs/reference/style-guide.md` for complete documentation including spacing, breakpoints, component specs, animations, and accessibility rules.
