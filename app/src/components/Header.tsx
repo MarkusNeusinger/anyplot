@@ -7,7 +7,7 @@ import ClickAwayListener from '@mui/material/ClickAwayListener';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { useTheme } from '@mui/material/styles';
 import ShuffleIcon from '@mui/icons-material/Shuffle';
-import { semanticColors } from '../theme';
+import { colors, typography, semanticColors } from '../theme';
 
 interface HeaderProps {
   stats?: { specs: number; plots: number; libraries: number } | null;
@@ -98,7 +98,7 @@ export const Header = memo(function Header({ stats, onRandom }: HeaderProps) {
         component="h1"
         sx={{
           fontWeight: 700,
-          fontFamily: '"MonoLisa", "MonoLisa Fallback", monospace',
+          fontFamily: typography.fontFamily,
           mb: { xs: 2, md: 3 },
           letterSpacing: '-0.02em',
           fontSize: { xs: '2rem', sm: '2.75rem', md: '3.75rem' },
@@ -112,9 +112,9 @@ export const Header = memo(function Header({ stats, onRandom }: HeaderProps) {
           onKeyDown={handleLogoKeyDown}
           sx={{ cursor: 'pointer', userSelect: 'none', '&:focus': { outline: 'none' } }}
         >
-          <Box component="span" sx={{ color: '#3776AB' }}>py</Box>
-          <Box component="span" sx={{ color: '#FFD43B' }}>plots</Box>
-          <Box component="span" sx={{ color: '#1f2937' }}>.ai</Box>
+          <Box component="span" sx={{ color: colors.primary }}>py</Box>
+          <Box component="span" sx={{ color: colors.accent }}>plots</Box>
+          <Box component="span" sx={{ color: colors.gray[800] }}>.ai</Box>
         </Box>
         {onRandom && (
           <ShuffleIcon
@@ -140,13 +140,13 @@ export const Header = memo(function Header({ stats, onRandom }: HeaderProps) {
               }
             }}
             sx={{
-              color: '#9ca3af',
+              color: colors.gray[500],
               cursor: 'pointer',
               fontSize: '0.5em',
               ml: 0.5,
               verticalAlign: 'super',
-              '&:hover': { color: '#3776AB' },
-              '&:focus': { outline: 'none', color: '#3776AB' },
+              '&:hover': { color: colors.primary },
+              '&:focus': { outline: 'none', color: colors.primary },
               '@keyframes shuffle-wiggle': {
                 '0%': { transform: 'rotate(0deg)' },
                 '20%': { transform: 'rotate(-25deg)' },
@@ -165,7 +165,7 @@ export const Header = memo(function Header({ stats, onRandom }: HeaderProps) {
           maxWidth: 560,
           mx: 'auto',
           lineHeight: 1.8,
-          fontFamily: '"MonoLisa", "MonoLisa Fallback", monospace',
+          fontFamily: typography.fontFamily,
           color: semanticColors.subtleText,
           fontSize: { xs: '0.875rem', md: '1rem' },
         }}
@@ -179,8 +179,8 @@ export const Header = memo(function Header({ stats, onRandom }: HeaderProps) {
           mx: 'auto',
           mt: { xs: 1, md: 1.5 },
           lineHeight: 1.8,
-          fontFamily: '"MonoLisa", "MonoLisa Fallback", monospace',
-          color: '#374151',
+          fontFamily: typography.fontFamily,
+          color: colors.gray[700],
           fontSize: { xs: '1rem', md: '1.125rem' },
           fontWeight: 500,
         }}
@@ -211,11 +211,11 @@ export const Header = memo(function Header({ stats, onRandom }: HeaderProps) {
                   onMouseEnter={() => setTooltipOpen(true)}
                   onMouseLeave={() => { if (!pinned) setTooltipOpen(false); }}
                   sx={{
-                    color: tooltipOpen ? '#FFD43B' : '#3776AB',
+                    color: tooltipOpen ? colors.accent : colors.primary,
                     cursor: 'pointer',
                     fontSize: '0.65rem',
                     ml: 0.25,
-                    '&:hover': { color: '#FFD43B' },
+                    '&:hover': { color: colors.accent },
                   }}
                 >
                   ✦
@@ -227,7 +227,7 @@ export const Header = memo(function Header({ stats, onRandom }: HeaderProps) {
           <Box
             component="sup"
             sx={{
-              color: '#3776AB',
+              color: colors.primary,
               fontSize: '0.65rem',
               ml: 0.25,
             }}

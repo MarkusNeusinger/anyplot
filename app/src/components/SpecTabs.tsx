@@ -17,7 +17,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 
 const CodeHighlighter = lazy(() => import('./CodeHighlighter'));
-import { fontSize, semanticColors } from '../theme';
+import { colors, fontSize, semanticColors, typography } from '../theme';
 import { API_URL } from '../constants';
 
 
@@ -95,10 +95,10 @@ function MdHeading({ level, children }: { level: 1 | 2; children: React.ReactNod
     <Typography
       component={level === 1 ? 'h1' : 'h2'}
       sx={{
-        fontFamily: '"MonoLisa", monospace',
+        fontFamily: typography.fontFamily,
         fontSize: level === 1 ? '1rem' : '0.8rem',
         fontWeight: 600,
-        color: level === 1 ? '#1f2937' : '#6b7280',
+        color: level === 1 ? colors.gray[800] : semanticColors.mutedText,
         textTransform: level === 2 ? 'uppercase' : 'none',
         letterSpacing: level === 2 ? '0.05em' : 'normal',
         mt: level === 1 ? 0 : 2.5,
@@ -120,10 +120,10 @@ function parseInlineCode(text: string): React.ReactNode[] {
           key={i}
           component="code"
           sx={{
-            fontFamily: '"MonoLisa", monospace',
+            fontFamily: typography.fontFamily,
             fontSize: '0.8rem',
-            bgcolor: '#f3f4f6',
-            color: '#be185d',
+            bgcolor: colors.gray[100],
+            color: colors.primary,
             px: 0.5,
             py: 0.25,
             borderRadius: 0.5,
@@ -143,14 +143,14 @@ function MdListItem({ children }: { children: string }) {
     <Typography
       component="li"
       sx={{
-        fontFamily: '"MonoLisa", monospace',
+        fontFamily: typography.fontFamily,
         fontSize: '0.85rem',
-        color: '#4b5563',
+        color: semanticColors.labelText,
         lineHeight: 1.7,
         ml: 2,
         mb: 0.25,
         '&::marker': {
-          color: '#d1d5db',
+          color: colors.gray[300],
         },
       }}
     >
@@ -190,7 +190,7 @@ export function SpecTabs({
 
   // Fetch global tag counts once (module-level cache)
   useEffect(() => {
-    if (cachedTagCounts) { setTagCounts(cachedTagCounts); return; }
+    if (cachedTagCounts) return;
     fetch(`${API_URL}/plots/filter?limit=1`)
       .then(r => r.ok ? r.json() : null)
       .then(data => {
@@ -252,7 +252,7 @@ export function SpecTabs({
   // Lazy-loaded syntax highlighter - only loads when Code tab is opened
   const highlightedCode = code ? (
     <Suspense fallback={
-      <Box sx={{ fontFamily: '"MonoLisa", "MonoLisa Fallback", monospace', fontSize: '0.85rem', whiteSpace: 'pre-wrap', color: '#4b5563' }}>
+      <Box sx={{ fontFamily: typography.fontFamily, fontSize: '0.85rem', whiteSpace: 'pre-wrap', color: semanticColors.labelText }}>
         {code}
       </Box>
     }>
@@ -286,22 +286,22 @@ export function SpecTabs({
           variant="fullWidth"
           sx={{
             '& .MuiTab-root': {
-              fontFamily: '"MonoLisa", monospace',
+              fontFamily: typography.fontFamily,
               textTransform: 'none',
               fontSize: '0.875rem',
               minHeight: 48,
               transition: 'background-color 0.15s ease, color 0.15s ease',
               borderRadius: '4px 4px 0 0',
               '&:hover': {
-                backgroundColor: '#f3f4f6',
-                color: '#3776AB',
+                backgroundColor: colors.gray[100],
+                color: colors.primary,
               },
             },
             '& .Mui-selected': {
-              color: '#3776AB',
+              color: colors.primary,
             },
             '& .MuiTabs-indicator': {
-              backgroundColor: '#3776AB',
+              backgroundColor: colors.primary,
             },
           }}
         >
@@ -315,7 +315,7 @@ export function SpecTabs({
           {!overviewMode && (
             <Tab
               onClick={(e) => tabIndex === 3 && handleTabChange(e, 3)}
-              icon={<StarIcon sx={{ fontSize: '1.1rem', color: tabIndex === 3 ? '#3776AB' : '#f59e0b' }} />}
+              icon={<StarIcon sx={{ fontSize: '1.1rem', color: tabIndex === 3 ? colors.primary : colors.warning }} />}
               iconPosition="start"
               label={qualityScore ? `${Math.round(qualityScore)}` : 'Quality'}
             />
@@ -346,7 +346,7 @@ export function SpecTabs({
             </Tooltip>
             <Box
               sx={{
-                bgcolor: '#fafafa',
+                bgcolor: colors.background,
                 p: 3,
                 borderRadius: 1,
               }}
@@ -361,20 +361,20 @@ export function SpecTabs({
       <TabPanel value={tabIndex} index={specTabIndex}>
         <Box
           sx={{
-            bgcolor: '#fafafa',
+            bgcolor: colors.background,
             p: 3,
             borderRadius: 1,
-            fontFamily: '"MonoLisa", monospace',
+            fontFamily: typography.fontFamily,
           }}
         >
           {/* Title only - spec ID visible in breadcrumb */}
           <Typography
             component="h2"
             sx={{
-              fontFamily: '"MonoLisa", monospace',
+              fontFamily: typography.fontFamily,
               fontSize: '1.1rem',
               fontWeight: 600,
-              color: '#1f2937',
+              color: colors.gray[800],
               mb: 1.5,
             }}
           >
@@ -385,9 +385,9 @@ export function SpecTabs({
           <MdHeading level={2}>Description</MdHeading>
           <Typography
             sx={{
-              fontFamily: '"MonoLisa", monospace',
+              fontFamily: typography.fontFamily,
               fontSize: '0.85rem',
-              color: '#4b5563',
+              color: semanticColors.labelText,
               lineHeight: 1.7,
             }}
           >
@@ -438,10 +438,10 @@ export function SpecTabs({
         <TabPanel value={tabIndex} index={2}>
           <Box
             sx={{
-              bgcolor: '#fafafa',
+              bgcolor: colors.background,
               p: 3,
               borderRadius: 1,
-              fontFamily: '"MonoLisa", monospace',
+              fontFamily: typography.fontFamily,
             }}
           >
             {/* Image Description */}
@@ -450,9 +450,9 @@ export function SpecTabs({
                 <MdHeading level={2}>Description</MdHeading>
                 <Typography
                   sx={{
-                    fontFamily: '"MonoLisa", monospace',
+                    fontFamily: typography.fontFamily,
                     fontSize: '0.85rem',
-                    color: '#4b5563',
+                    color: semanticColors.labelText,
                     lineHeight: 1.7,
                   }}
                 >
@@ -471,13 +471,13 @@ export function SpecTabs({
                       key={i}
                       component="li"
                       sx={{
-                        fontFamily: '"MonoLisa", monospace',
+                        fontFamily: typography.fontFamily,
                         fontSize: '0.85rem',
-                        color: '#4b5563',
+                        color: semanticColors.labelText,
                         lineHeight: 1.7,
                         ml: 2,
                         mb: 0.25,
-                        '&::marker': { color: '#22c55e' },
+                        '&::marker': { color: colors.success },
                       }}
                     >
                       {s}
@@ -497,13 +497,13 @@ export function SpecTabs({
                       key={i}
                       component="li"
                       sx={{
-                        fontFamily: '"MonoLisa", monospace',
+                        fontFamily: typography.fontFamily,
                         fontSize: '0.85rem',
-                        color: '#4b5563',
+                        color: semanticColors.labelText,
                         lineHeight: 1.7,
                         ml: 2,
                         mb: 0.25,
-                        '&::marker': { color: '#ef4444' },
+                        '&::marker': { color: colors.error },
                       }}
                     >
                       {w}
@@ -515,13 +515,13 @@ export function SpecTabs({
 
             {/* No data message */}
             {!imageDescription && (!strengths || strengths.length === 0) && (!weaknesses || weaknesses.length === 0) && (
-              <Typography sx={{ fontFamily: '"MonoLisa", monospace', fontSize: '0.85rem', color: '#9ca3af' }}>
+              <Typography sx={{ fontFamily: typography.fontFamily, fontSize: '0.85rem', color: colors.gray[400] }}>
                 No implementation review data available.
               </Typography>
             )}
 
             {/* Metadata */}
-            <Typography sx={{ fontFamily: '"MonoLisa", monospace', fontSize: fontSize.sm, color: '#9ca3af', mt: 2 }}>
+            <Typography sx={{ fontFamily: typography.fontFamily, fontSize: fontSize.sm, color: colors.gray[400], mt: 2 }}>
               {specId}
               {libraryId && ` · ${libraryId}`}
               {(() => {
@@ -538,20 +538,20 @@ export function SpecTabs({
         <TabPanel value={tabIndex} index={3}>
         <Box
           sx={{
-            bgcolor: '#fafafa',
+            bgcolor: colors.background,
             p: 3,
             borderRadius: 1,
-            fontFamily: '"MonoLisa", monospace',
+            fontFamily: typography.fontFamily,
           }}
         >
           {/* Score */}
           <MdHeading level={2}>Score</MdHeading>
           <Typography
             sx={{
-              fontFamily: '"MonoLisa", monospace',
+              fontFamily: typography.fontFamily,
               fontSize: '2rem',
               fontWeight: 700,
-              color: qualityScore && qualityScore >= 90 ? '#22c55e' : qualityScore && qualityScore >= 70 ? '#f59e0b' : '#ef4444',
+              color: qualityScore && qualityScore >= 90 ? colors.success : qualityScore && qualityScore >= 70 ? colors.warning : colors.error,
             }}
           >
             {qualityScore ? `${Math.round(qualityScore)}/100` : 'N/A'}
@@ -587,26 +587,26 @@ export function SpecTabs({
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                           {items.length > 0 && (
                             isExpanded ? (
-                              <ExpandLessIcon sx={{ fontSize: '1rem', color: '#9ca3af' }} />
+                              <ExpandLessIcon sx={{ fontSize: '1rem', color: colors.gray[400] }} />
                             ) : (
-                              <ExpandMoreIcon sx={{ fontSize: '1rem', color: '#9ca3af' }} />
+                              <ExpandMoreIcon sx={{ fontSize: '1rem', color: colors.gray[400] }} />
                             )
                           )}
-                          <Typography sx={{ fontFamily: '"MonoLisa", monospace', fontSize: '0.85rem', color: '#4b5563' }}>
+                          <Typography sx={{ fontFamily: typography.fontFamily, fontSize: '0.85rem', color: semanticColors.labelText }}>
                             {category.replace(/_/g, ' ')}
                           </Typography>
                         </Box>
-                        <Typography sx={{ fontFamily: '"MonoLisa", monospace', fontSize: '0.85rem', color: '#6b7280' }}>
+                        <Typography sx={{ fontFamily: typography.fontFamily, fontSize: '0.85rem', color: semanticColors.mutedText }}>
                           {score}/{max}
                         </Typography>
                       </Box>
                       {/* Progress bar */}
-                      <Box sx={{ height: 4, bgcolor: '#e5e7eb', borderRadius: 2, overflow: 'hidden' }}>
+                      <Box sx={{ height: 4, bgcolor: colors.gray[200], borderRadius: 2, overflow: 'hidden' }}>
                         <Box
                           sx={{
                             height: '100%',
                             width: `${pct}%`,
-                            bgcolor: pct >= 90 ? '#22c55e' : pct >= 70 ? '#f59e0b' : '#ef4444',
+                            bgcolor: pct >= 90 ? colors.success : pct >= 70 ? colors.warning : colors.error,
                             borderRadius: 2,
                           }}
                         />
@@ -625,26 +625,26 @@ export function SpecTabs({
                                       borderRadius: '50%',
                                       bgcolor:
                                         item.score === 0
-                                          ? '#ef4444' // red for 0
+                                          ? colors.error
                                           : item.score === item.max
-                                            ? '#22c55e' // green for full
-                                            : '#f59e0b', // yellow for partial
+                                            ? colors.success
+                                            : colors.warning,
                                     }}
                                   />
-                                  <Typography sx={{ fontFamily: '"MonoLisa", monospace', fontSize: '0.85rem', color: '#4b5563' }}>
+                                  <Typography sx={{ fontFamily: typography.fontFamily, fontSize: '0.85rem', color: semanticColors.labelText }}>
                                     {item.name}
                                   </Typography>
                                 </Box>
-                                <Typography sx={{ fontFamily: '"MonoLisa", monospace', fontSize: '0.8rem', color: '#9ca3af' }}>
+                                <Typography sx={{ fontFamily: typography.fontFamily, fontSize: '0.8rem', color: colors.gray[400] }}>
                                   {item.score}/{item.max}
                                 </Typography>
                               </Box>
                               {item.comment && (
                                 <Typography
                                   sx={{
-                                    fontFamily: '"MonoLisa", monospace',
+                                    fontFamily: typography.fontFamily,
                                     fontSize: '0.85rem',
-                                    color: '#6b7280',
+                                    color: semanticColors.mutedText,
                                     ml: 1.5,
                                     fontStyle: 'italic',
                                   }}
@@ -665,7 +665,7 @@ export function SpecTabs({
 
           {/* No data message */}
           {!qualityScore && (!criteriaChecklist || Object.keys(criteriaChecklist).length === 0) && (
-            <Typography sx={{ fontFamily: '"MonoLisa", monospace', fontSize: '0.85rem', color: '#9ca3af' }}>
+            <Typography sx={{ fontFamily: typography.fontFamily, fontSize: '0.85rem', color: colors.gray[400] }}>
               No quality data available.
             </Typography>
           )}
@@ -680,7 +680,7 @@ export function SpecTabs({
             const paramName = SPEC_TAG_PARAM_MAP[category];
             return (
               <Box key={`spec-${category}`} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                <Typography component="span" sx={{ fontFamily: '"MonoLisa", monospace', fontSize: fontSize.sm, color: semanticColors.mutedText }}>
+                <Typography component="span" sx={{ fontFamily: typography.fontFamily, fontSize: fontSize.sm, color: semanticColors.mutedText }}>
                   {category.replace(/_/g, ' ')}:
                 </Typography>
                 {values.map((value, i) => {
@@ -690,13 +690,13 @@ export function SpecTabs({
                     <Chip key={i} label={value} size="small"
                       onClick={paramName ? () => handleTagClick(paramName, value) : undefined}
                       sx={{
-                        fontFamily: '"MonoLisa", monospace', fontSize: fontSize.xs, height: 24,
-                        bgcolor: isHighlighted ? '#dbeafe' : '#f3f4f6',
-                        color: isHighlighted ? '#1e40af' : '#4b5563',
+                        fontFamily: typography.fontFamily, fontSize: fontSize.xs, height: 24,
+                        bgcolor: isHighlighted ? colors.highlight.bg : colors.gray[100],
+                        color: isHighlighted ? colors.highlight.text : semanticColors.labelText,
                         cursor: paramName ? 'pointer' : 'default',
                         transition: 'all 0.2s ease',
                         fontWeight: isHighlighted ? 600 : 400,
-                        '&:hover': paramName ? { bgcolor: '#e5e7eb' } : {},
+                        '&:hover': paramName ? { bgcolor: colors.gray[200] } : {},
                       }}
                     />
                   );
@@ -713,7 +713,7 @@ export function SpecTabs({
               const paramName = IMPL_TAG_PARAM_MAP[category];
               return (
                 <Box key={`impl-${category}`} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                  <Typography component="span" sx={{ fontFamily: '"MonoLisa", monospace', fontSize: fontSize.sm, color: semanticColors.mutedText }}>
+                  <Typography component="span" sx={{ fontFamily: typography.fontFamily, fontSize: fontSize.sm, color: semanticColors.mutedText }}>
                     {category}:
                   </Typography>
                   {values.map((value, i) => {
@@ -723,13 +723,13 @@ export function SpecTabs({
                       <Chip key={i} label={value} size="small"
                         onClick={paramName ? () => handleTagClick(paramName, value) : undefined}
                         sx={{
-                          fontFamily: '"MonoLisa", monospace', fontSize: fontSize.xs, height: 24,
-                          bgcolor: isHighlighted ? '#dbeafe' : '#f3f4f6',
-                          color: isHighlighted ? '#1e40af' : '#4b5563',
+                          fontFamily: typography.fontFamily, fontSize: fontSize.xs, height: 24,
+                          bgcolor: isHighlighted ? colors.highlight.bg : colors.gray[100],
+                          color: isHighlighted ? colors.highlight.text : semanticColors.labelText,
                           cursor: paramName ? 'pointer' : 'default',
                           transition: 'all 0.2s ease',
                           fontWeight: isHighlighted ? 600 : 400,
-                          '&:hover': paramName ? { bgcolor: '#e5e7eb' } : {},
+                          '&:hover': paramName ? { bgcolor: colors.gray[200] } : {},
                         }}
                       />
                     );

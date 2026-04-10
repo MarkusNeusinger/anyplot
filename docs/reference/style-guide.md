@@ -19,12 +19,14 @@ Design system for the pyplots.ai frontend. All values are defined in `app/src/th
 | `gray.800` | `#1f2937` | 13.5:1 | Primary text |
 | `gray.700` | `#374151` | 10.3:1 | Headings, hover states |
 | `gray.600` | `#4b5563` | 7.0:1 | Labels, categories |
-| `gray.500` | `#6b7280` | 4.6:1 | Muted text, decorative |
-| `gray.400` | `#9ca3af` | 2.9:1 | Borders, dividers only (fails AA for text) |
-| `gray.300` | `#d1d5db` | — | Subtle borders |
+| `gray.500` | `#6b7280` | 4.6:1 | Muted text, decorative icons |
+| `gray.400` | `#9ca3af` | 2.9:1 | Borders, dividers, dashed outlines ONLY |
+| `gray.300` | `#d1d5db` | — | Subtle borders, missing-data indicators |
 | `gray.200` | `#e5e7eb` | — | Card borders, dividers |
 | `gray.100` | `#f3f4f6` | — | Breadcrumb background, chips |
 | `gray.50` | `#f9fafb` | — | Subtle backgrounds |
+
+**Gray Usage Rule:** `gray.400` (#9ca3af) and lighter grays **must never be used for text or interactive icon colors**. They fail WCAG AA contrast requirements (2.9:1 vs required 4.5:1). Use `semanticColors.mutedText` (#6b7280, 4.6:1) as the minimum contrast for any text.
 
 ### Semantic Text Colors
 
@@ -36,13 +38,37 @@ WCAG AA requires 4.5:1 contrast for normal text, 3:1 for large text (>=18px or >
 | `semanticColors.subtleText` | `#52525b` | 5.8:1 | Secondary text, descriptions, metadata |
 | `semanticColors.mutedText` | `#6b7280` | 4.6:1 | Decorative text, footer links, breadcrumb separators |
 
+### Extended Brand
+
+| Token | Hex | Usage |
+|-------|-----|-------|
+| `colors.primaryDark` | `#306998` | Python dark blue — dataviz bars, chart hover accents |
+| `colors.accentBg` | `#fffef5` | Warm yellow-tinted background for accent sections |
+
+### Highlight Colors
+
+| Token | Hex | Usage |
+|-------|-----|-------|
+| `colors.highlight.bg` | `#dbeafe` | Light blue background for highlighted tag chips |
+| `colors.highlight.text` | `#1e40af` | Dark blue text for highlighted tag chips |
+| `colors.tooltipLight` | `#90caf9` | Light blue text/links on dark tooltip backgrounds |
+
+### Code Block Colors
+
+| Token | Hex | Usage |
+|-------|-----|-------|
+| `colors.codeBlock.bg` | `#1e293b` | Dark code block background |
+| `colors.codeBlock.text` | `#e2e8f0` | Code block text on dark background |
+
+Inline code uses `colors.gray[100]` background with `colors.primary` text color.
+
 ### Semantic Status
 
 | Token | Hex | Usage |
 |-------|-----|-------|
-| `colors.success` | `#22c55e` | Success states |
-| `colors.error` | `#ef4444` | Error states |
-| `colors.warning` | `#f59e0b` | Warnings |
+| `colors.success` | `#22c55e` | Success states, score >= 90 |
+| `colors.error` | `#ef4444` | Error states, score < 50 |
+| `colors.warning` | `#f59e0b` | Warnings, score 50-89 |
 | `colors.info` | `#3b82f6` | Info states |
 
 ## Typography
@@ -59,6 +85,8 @@ MonoLisa is a premium monospace font loaded from GCS with unicode-range subsets.
 
 | Token | Size | Px (at 16px base) | Usage |
 |-------|------|-------|-------|
+| `fontSize.micro` | 0.5rem | 8px | Decorative axis labels, coverage legends (data-dense pages only) |
+| `fontSize.xxs` | 0.625rem | 10px | Compact data values, secondary counts (data-dense pages only) |
 | `fontSize.xs` | 0.75rem | 12px | Tiny labels, tag chips, keyboard hints |
 | `fontSize.sm` | 0.8rem | 12.8px | Small text, shared tags, metadata footer |
 | `fontSize.md` | 0.875rem | 14px | Body default, card labels, footer |
@@ -149,14 +177,6 @@ max-width: 2200px (centered)
 - Inactive: `border: transparent`, `color: semanticColors.mutedText`
 - Background: `#f3f4f6`
 
-### Lightbox
-
-- Backdrop: `rgba(0,0,0,0.85)`
-- Image: `max-height: 90vh`, `max-width: 95vw`, `object-fit: contain`
-- Close button: top-right, white icon on semi-transparent background
-- Bottom bar: frosted glass (`backdrop-filter: blur(10px)`)
-- Navigation arrows: centered vertically, semi-transparent circles
-
 ### Tooltips (global)
 
 All tooltips share a consistent style defined in the MUI theme (`main.tsx`):
@@ -198,6 +218,53 @@ All tooltips share a consistent style defined in the MUI theme (`main.tsx`):
 | Chip roll | 0.5s | ease-in/out | Filter chip add/remove |
 | Shuffle wiggle | 0.8s | ease | Random button icon |
 | Loader | 2s | linear | Loading spinner |
+
+## Page Headings
+
+Shared style constants are exported from `app/src/theme/index.ts`:
+
+| Constant | Font Size | Weight | Color | Usage |
+|----------|-----------|--------|-------|-------|
+| `headingStyle` | 1.25rem | 600 | `gray.800` | Page section headings (h2) |
+| `subheadingStyle` | `fontSize.lg` (1rem) | 600 | `gray.700` | Subsection headings (h3) |
+| `textStyle` | `fontSize.base` (0.9375rem) | — | `labelText` | Body text paragraphs |
+
+## Tables
+
+Import `tableStyle` from theme for consistent table styling:
+
+- Cell text: `semanticColors.labelText` (#4b5563)
+- Cell font: `fontSize.md` (0.875rem)
+- Header: `fontWeight: 600`, `color: gray.700`, `bgcolor: gray.50`
+- Cell borders: `1px solid gray.100`
+
+## Code Blocks
+
+Import `codeBlockStyle` from theme for dark code blocks:
+
+- Background: `colors.codeBlock.bg` (#1e293b)
+- Text: `colors.codeBlock.text` (#e2e8f0)
+- Font: `fontSize.md`, MonoLisa
+- Inline code: `bgcolor: gray.100`, `color: colors.primary`, `padding: 4px 8px`, `borderRadius: 4px`
+
+## Chart / DataViz Colors
+
+| Element | Color Token | Usage |
+|---------|------------|-------|
+| Bar fills | `colors.primaryDark` | LOC histograms, timeline bars |
+| Score >= 90 | `colors.success` | Green indicators |
+| Score 50-89 | `colors.warning` | Yellow indicators |
+| Score < 50 | `colors.error` | Red indicators |
+| Missing/null | `colors.gray[200]` or `colors.gray[300]` | Background placeholder |
+| Coverage heatmap | `rgba(34, 197, 94, opacity)` | Green gradient from 0.15 to 0.85 |
+
+## Data-Dense Pages
+
+StatsPage and DebugPage are internal data-dense pages that may use `fontSize.micro` and `fontSize.xxs` for compact data displays. These sizes are **not permitted** on public-facing pages (Home, Catalog, Spec, Legal, MCP).
+
+## ErrorBoundary Exception
+
+ErrorBoundary intentionally uses MUI defaults and raw `fontFamily: 'monospace'` as a crash-safe fallback. It must not depend on custom theme imports or MonoLisa font loading, since a font loading failure could have caused the crash.
 
 ## Accessibility
 

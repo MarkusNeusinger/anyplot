@@ -2,7 +2,7 @@ import Box from '@mui/material/Box';
 import Link from '@mui/material/Link';
 import { Link as RouterLink } from 'react-router-dom';
 import { GITHUB_URL } from '../constants';
-import { fontSize, semanticColors } from '../theme';
+import { colors, fontSize, semanticColors, typography } from '../theme';
 
 interface FooterProps {
   onTrackEvent?: (name: string, props?: Record<string, string | undefined>) => void;
@@ -12,7 +12,7 @@ interface FooterProps {
 
 export function Footer({ onTrackEvent, selectedSpec, selectedLibrary }: FooterProps) {
   return (
-    <Box component="footer" sx={{ textAlign: 'center', mt: 4, pt: 4, borderTop: '1px solid #f3f4f6' }}>
+    <Box component="footer" sx={{ textAlign: 'center', mt: 4, pt: 4, borderTop: `1px solid ${colors.gray[100]}` }}>
       <Box
         sx={{
           display: 'flex',
@@ -20,7 +20,7 @@ export function Footer({ onTrackEvent, selectedSpec, selectedLibrary }: FooterPr
           alignItems: 'center',
           gap: 1,
           fontSize: fontSize.md,
-          fontFamily: '"MonoLisa", "MonoLisa Fallback", monospace',
+          fontFamily: typography.fontFamily,
           color: semanticColors.mutedText,
         }}
       >
@@ -32,7 +32,7 @@ export function Footer({ onTrackEvent, selectedSpec, selectedLibrary }: FooterPr
           sx={{
             color: semanticColors.mutedText,
             textDecoration: 'none',
-            '&:hover': { color: '#374151' },
+            '&:hover': { color: colors.gray[700] },
           }}
         >
           github
@@ -45,7 +45,7 @@ export function Footer({ onTrackEvent, selectedSpec, selectedLibrary }: FooterPr
           sx={{
             color: semanticColors.mutedText,
             textDecoration: 'none',
-            '&:hover': { color: '#374151' },
+            '&:hover': { color: colors.gray[700] },
           }}
         >
           catalog
@@ -58,7 +58,7 @@ export function Footer({ onTrackEvent, selectedSpec, selectedLibrary }: FooterPr
           sx={{
             color: semanticColors.mutedText,
             textDecoration: 'none',
-            '&:hover': { color: '#374151' },
+            '&:hover': { color: colors.gray[700] },
           }}
         >
           stats
@@ -73,7 +73,7 @@ export function Footer({ onTrackEvent, selectedSpec, selectedLibrary }: FooterPr
             sx={{
               color: semanticColors.mutedText,
               textDecoration: 'none',
-              '&:hover': { color: '#374151' },
+              '&:hover': { color: colors.gray[700] },
             }}
           >
             markus neusinger
@@ -87,7 +87,7 @@ export function Footer({ onTrackEvent, selectedSpec, selectedLibrary }: FooterPr
           sx={{
             color: semanticColors.mutedText,
             textDecoration: 'none',
-            '&:hover': { color: '#374151' },
+            '&:hover': { color: colors.gray[700] },
           }}
         >
           mcp
@@ -100,7 +100,7 @@ export function Footer({ onTrackEvent, selectedSpec, selectedLibrary }: FooterPr
           sx={{
             color: semanticColors.mutedText,
             textDecoration: 'none',
-            '&:hover': { color: '#374151' },
+            '&:hover': { color: colors.gray[700] },
           }}
         >
           legal

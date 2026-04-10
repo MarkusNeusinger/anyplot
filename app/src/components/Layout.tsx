@@ -4,6 +4,7 @@ import { Helmet } from 'react-helmet-async';
 import Box from '@mui/material/Box';
 import Container from '@mui/material/Container';
 
+import { colors } from '../theme';
 import { API_URL } from '../constants';
 import type { LibraryInfo, SpecInfo } from '../types';
 import {
@@ -81,7 +82,7 @@ export function Layout() {
       <Helmet>
         <meta name="robots" content="index, follow" />
       </Helmet>
-      <Box component="main" sx={{ minHeight: '100vh', bgcolor: '#fafafa', py: 5, position: 'relative' }}>
+      <Box component="main" sx={{ minHeight: '100vh', bgcolor: colors.background, py: 5, position: 'relative' }}>
         <Container maxWidth={false} sx={{ px: { xs: 2, sm: 4, md: 8, lg: 12, xl: 16 }, maxWidth: 2200, mx: 'auto' }}>
           <Outlet />
         </Container>

@@ -18,7 +18,7 @@ import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 
 import type { Implementation } from '../types';
 import { buildSrcSet, OVERVIEW_SIZES } from '../utils/responsiveImage';
-import { fontSize, semanticColors } from '../theme';
+import { colors, fontSize, semanticColors, typography } from '../theme';
 
 interface LibraryMeta {
   id: string;
@@ -197,7 +197,7 @@ function ImplementationCard({
             px: 1.5,
             py: 0.5,
             borderRadius: 1,
-            fontFamily: '"MonoLisa", monospace',
+            fontFamily: typography.fontFamily,
             fontSize: fontSize.sm,
             pointerEvents: 'none',
             zIndex: 2,
@@ -226,7 +226,7 @@ function ImplementationCard({
               aria-label="Copy code"
               sx={{
                 bgcolor: 'rgba(255,255,255,0.9)',
-                '&:hover': { bgcolor: '#fff', color: '#3776AB' },
+                '&:hover': { bgcolor: '#fff', color: colors.primary },
               }}
               size="medium"
             >
@@ -239,7 +239,7 @@ function ImplementationCard({
               aria-label="Download PNG"
               sx={{
                 bgcolor: 'rgba(255,255,255,0.9)',
-                '&:hover': { bgcolor: '#fff', color: '#3776AB' },
+                '&:hover': { bgcolor: '#fff', color: colors.primary },
               }}
               size="medium"
             >
@@ -258,7 +258,7 @@ function ImplementationCard({
                 }}
                 sx={{
                   bgcolor: 'rgba(255,255,255,0.9)',
-                  '&:hover': { bgcolor: '#fff', color: '#3776AB' },
+                  '&:hover': { bgcolor: '#fff', color: colors.primary },
                 }}
                 size="medium"
               >
@@ -298,7 +298,7 @@ function ImplementationCard({
                         alignItems: 'center',
                         gap: 0.5,
                         fontSize: fontSize.xs,
-                        color: '#90caf9',
+                        color: colors.tooltipLight,
                         textDecoration: 'underline',
                         '&:hover': { color: '#fff' },
                       }}
@@ -319,7 +319,7 @@ function ImplementationCard({
                 tooltip: {
                   sx: {
                     maxWidth: { xs: '80vw', sm: 400 },
-                    fontFamily: '"MonoLisa", monospace',
+                    fontFamily: typography.fontFamily,
                     fontSize: fontSize.md,
                   },
                 },
@@ -333,11 +333,11 @@ function ImplementationCard({
                 sx={{
                   fontSize: fontSize.md,
                   fontWeight: 600,
-                  fontFamily: '"MonoLisa", monospace',
-                  color: isTooltipOpen ? '#3776AB' : semanticColors.labelText,
+                  fontFamily: typography.fontFamily,
+                  color: isTooltipOpen ? colors.primary : semanticColors.labelText,
                   textTransform: 'lowercase',
                   cursor: 'pointer',
-                  '&:hover': { color: '#3776AB' },
+                  '&:hover': { color: colors.primary },
                 }}
               >
                 {impl.library_id}
@@ -352,7 +352,7 @@ function ImplementationCard({
               sx={{
                 fontSize: fontSize.md,
                 fontWeight: 600,
-                fontFamily: '"MonoLisa", monospace',
+                fontFamily: typography.fontFamily,
                 color: semanticColors.labelText,
               }}
             >

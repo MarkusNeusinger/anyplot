@@ -13,6 +13,15 @@ import { useAnalytics } from '../hooks';
 import { Breadcrumb } from '../components/Breadcrumb';
 import { Footer } from '../components/Footer';
 import { GITHUB_URL } from '../constants';
+import {
+  colors,
+  semanticColors,
+  fontSize,
+  headingStyle,
+  subheadingStyle,
+  textStyle,
+  tableStyle,
+} from '../theme';
 
 export function LegalPage() {
   const { trackPageview, trackEvent } = useAnalytics();
@@ -21,43 +30,10 @@ export function LegalPage() {
     trackPageview('/legal');
   }, [trackPageview]);
 
-  const headingStyle = {
-    fontFamily: '"MonoLisa", monospace',
-    fontWeight: 600,
-    fontSize: '1.25rem',
-    color: '#1f2937',
-    mb: 2,
-  };
-
-  const subheadingStyle = {
-    fontFamily: '"MonoLisa", monospace',
-    fontWeight: 600,
-    fontSize: '1rem',
-    color: '#374151',
-    mt: 3,
-    mb: 1,
-  };
-
-  const textStyle = {
-    fontFamily: '"MonoLisa", monospace',
-    fontSize: '0.9rem',
-    color: '#4b5563',
-    lineHeight: 1.8,
-    mb: 2,
-  };
-
-  const tableStyle = {
-    '& .MuiTableCell-root': {
-      fontFamily: '"MonoLisa", monospace',
-      fontSize: '0.85rem',
-      color: '#4b5563',
-      borderBottom: '1px solid #f3f4f6',
-      py: 1.5,
-      px: 2,
-    },
+  const firstColStyle = {
     '& .MuiTableCell-root:first-of-type': {
       fontWeight: 500,
-      color: '#374151',
+      color: colors.gray[700],
       width: '25%',
     },
   };
@@ -72,16 +48,16 @@ export function LegalPage() {
         <link rel="canonical" href="https://pyplots.ai/legal" />
       </Helmet>
 
-      <Breadcrumb items={[{ label: 'pyplots.ai', to: '/' }, { label: 'legal' }]} sx={{ mb: 2 }} />
+      <Breadcrumb items={[{ label: 'pyplots.ai', shortLabel: 'pp', to: '/' }, { label: 'legal' }]} sx={{ mb: 2 }} />
 
       <Box sx={{ mb: 3, display: 'flex', gap: 2, flexWrap: 'wrap', justifyContent: 'center' }}>
-        <Link href="#legal-notice" sx={{ color: '#3776AB', fontFamily: '"MonoLisa", monospace', fontSize: '0.9rem' }}>
+        <Link href="#legal-notice" sx={{ color: colors.primary, fontFamily: textStyle.fontFamily, fontSize: fontSize.base }}>
           Legal Notice
         </Link>
-        <Link href="#privacy" sx={{ color: '#3776AB', fontFamily: '"MonoLisa", monospace', fontSize: '0.9rem' }}>
+        <Link href="#privacy" sx={{ color: colors.primary, fontFamily: textStyle.fontFamily, fontSize: fontSize.base }}>
           Privacy Policy
         </Link>
-        <Link href="#transparency" sx={{ color: '#3776AB', fontFamily: '"MonoLisa", monospace', fontSize: '0.9rem' }}>
+        <Link href="#transparency" sx={{ color: colors.primary, fontFamily: textStyle.fontFamily, fontSize: fontSize.base }}>
           Transparency
         </Link>
       </Box>
@@ -105,7 +81,7 @@ export function LegalPage() {
             <strong>Contact</strong>
             <br />
             Email:{' '}
-            <Link href="mailto:admin@pyplots.ai" sx={{ color: '#3776AB' }}>
+            <Link href="mailto:admin@pyplots.ai" sx={{ color: colors.primary }}>
               admin@pyplots.ai
             </Link>
             <br />
@@ -115,7 +91,7 @@ export function LegalPage() {
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => trackEvent('external_link', { destination: 'linkedin' })}
-              sx={{ color: '#3776AB' }}
+              sx={{ color: colors.primary }}
             >
               markus-neusinger
             </Link>
@@ -126,7 +102,7 @@ export function LegalPage() {
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => trackEvent('external_link', { destination: 'x' })}
-              sx={{ color: '#3776AB' }}
+              sx={{ color: colors.primary }}
             >
               @MarkusNeusinger
             </Link>
@@ -137,7 +113,7 @@ export function LegalPage() {
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => trackEvent('external_link', { destination: 'github_personal' })}
-              sx={{ color: '#3776AB' }}
+              sx={{ color: colors.primary }}
             >
               MarkusNeusinger
             </Link>
@@ -166,7 +142,7 @@ export function LegalPage() {
           <Typography sx={subheadingStyle}>What We Collect</Typography>
           <Typography sx={textStyle}>
             <strong>Anonymized Analytics</strong>: We use{' '}
-            <Link href="https://plausible.io" target="_blank" rel="noopener" sx={{ color: '#3776AB' }}>
+            <Link href="https://plausible.io" target="_blank" rel="noopener" sx={{ color: colors.primary }}>
               Plausible Analytics
             </Link>
             , a privacy-focused analytics tool. It collects no personal data, uses no cookies, and does not track you
@@ -176,7 +152,7 @@ export function LegalPage() {
           </Typography>
           <Typography sx={textStyle}>
             <strong>Public Dashboard</strong>: Our analytics are{' '}
-            <Link href="https://plausible.io/pyplots.ai" target="_blank" rel="noopener" sx={{ color: '#3776AB' }}>
+            <Link href="https://plausible.io/pyplots.ai" target="_blank" rel="noopener" sx={{ color: colors.primary }}>
               fully public
             </Link>{' '}
             – see exactly what we see.
@@ -184,7 +160,7 @@ export function LegalPage() {
           <Typography sx={textStyle}>
             <strong>Server Logs</strong>: Technical server logs including IP addresses, request URLs, and user agents
             are retained for 30 days via{' '}
-            <Link href="https://cloud.google.com/logging" target="_blank" rel="noopener" sx={{ color: '#3776AB' }}>
+            <Link href="https://cloud.google.com/logging" target="_blank" rel="noopener" sx={{ color: colors.primary }}>
               Google Cloud Logging
             </Link>{' '}
             for security and debugging purposes.
@@ -207,7 +183,7 @@ export function LegalPage() {
 
           <Typography sx={subheadingStyle}>Hosting &amp; Third Parties</Typography>
           <Typography sx={textStyle}>All services are hosted in the EU (Netherlands, europe-west4):</Typography>
-          <Table sx={tableStyle}>
+          <Table sx={{ ...tableStyle, ...firstColStyle }}>
             <TableBody>
               <TableRow>
                 <TableCell>Hosting</TableCell>
@@ -232,7 +208,7 @@ export function LegalPage() {
           <Typography sx={textStyle}>
             You have the right to access, rectify, erase, and export your data. Since we do not store personal data,
             there is typically nothing to delete or export. For questions, contact{' '}
-            <Link href="mailto:admin@pyplots.ai" sx={{ color: '#3776AB' }}>
+            <Link href="mailto:admin@pyplots.ai" sx={{ color: colors.primary }}>
               admin@pyplots.ai
             </Link>
             .
@@ -250,12 +226,12 @@ export function LegalPage() {
           </Typography>
 
           <Typography sx={subheadingStyle}>Technology Stack</Typography>
-          <Table sx={tableStyle}>
+          <Table sx={{ ...tableStyle, ...firstColStyle }}>
             <TableBody>
               <TableRow>
                 <TableCell>Editor</TableCell>
                 <TableCell>
-                  <Link href="https://www.jetbrains.com/pycharm/" target="_blank" rel="noopener" sx={{ color: '#3776AB' }}>
+                  <Link href="https://www.jetbrains.com/pycharm/" target="_blank" rel="noopener" sx={{ color: colors.primary }}>
                     JetBrains PyCharm
                   </Link>
                 </TableCell>
@@ -263,19 +239,19 @@ export function LegalPage() {
               <TableRow>
                 <TableCell>Frontend</TableCell>
                 <TableCell>
-                  <Link href="https://react.dev" target="_blank" rel="noopener" sx={{ color: '#3776AB' }}>
+                  <Link href="https://react.dev" target="_blank" rel="noopener" sx={{ color: colors.primary }}>
                     React
                   </Link>{' '}
                   19,{' '}
-                  <Link href="https://vite.dev" target="_blank" rel="noopener" sx={{ color: '#3776AB' }}>
+                  <Link href="https://vite.dev" target="_blank" rel="noopener" sx={{ color: colors.primary }}>
                     Vite
                   </Link>
                   ,{' '}
-                  <Link href="https://mui.com" target="_blank" rel="noopener" sx={{ color: '#3776AB' }}>
+                  <Link href="https://mui.com" target="_blank" rel="noopener" sx={{ color: colors.primary }}>
                     MUI
                   </Link>{' '}
                   7,{' '}
-                  <Link href="https://typescriptlang.org" target="_blank" rel="noopener" sx={{ color: '#3776AB' }}>
+                  <Link href="https://typescriptlang.org" target="_blank" rel="noopener" sx={{ color: colors.primary }}>
                     TypeScript
                   </Link>
                 </TableCell>
@@ -283,15 +259,15 @@ export function LegalPage() {
               <TableRow>
                 <TableCell>Backend</TableCell>
                 <TableCell>
-                  <Link href="https://python.org" target="_blank" rel="noopener" sx={{ color: '#3776AB' }}>
+                  <Link href="https://python.org" target="_blank" rel="noopener" sx={{ color: colors.primary }}>
                     Python
                   </Link>{' '}
                   3.13,{' '}
-                  <Link href="https://fastapi.tiangolo.com" target="_blank" rel="noopener" sx={{ color: '#3776AB' }}>
+                  <Link href="https://fastapi.tiangolo.com" target="_blank" rel="noopener" sx={{ color: colors.primary }}>
                     FastAPI
                   </Link>
                   ,{' '}
-                  <Link href="https://sqlalchemy.org" target="_blank" rel="noopener" sx={{ color: '#3776AB' }}>
+                  <Link href="https://sqlalchemy.org" target="_blank" rel="noopener" sx={{ color: colors.primary }}>
                     SQLAlchemy
                   </Link>
                 </TableCell>
@@ -299,7 +275,7 @@ export function LegalPage() {
               <TableRow>
                 <TableCell>Database</TableCell>
                 <TableCell>
-                  <Link href="https://postgresql.org" target="_blank" rel="noopener" sx={{ color: '#3776AB' }}>
+                  <Link href="https://postgresql.org" target="_blank" rel="noopener" sx={{ color: colors.primary }}>
                     PostgreSQL
                   </Link>{' '}
                   18
@@ -308,7 +284,7 @@ export function LegalPage() {
               <TableRow>
                 <TableCell>Hosting</TableCell>
                 <TableCell>
-                  <Link href="https://cloud.google.com/run" target="_blank" rel="noopener" sx={{ color: '#3776AB' }}>
+                  <Link href="https://cloud.google.com/run" target="_blank" rel="noopener" sx={{ color: colors.primary }}>
                     Google Cloud Run
                   </Link>{' '}
                   (Netherlands)
@@ -317,7 +293,7 @@ export function LegalPage() {
               <TableRow>
                 <TableCell>Storage</TableCell>
                 <TableCell>
-                  <Link href="https://cloud.google.com/storage" target="_blank" rel="noopener" sx={{ color: '#3776AB' }}>
+                  <Link href="https://cloud.google.com/storage" target="_blank" rel="noopener" sx={{ color: colors.primary }}>
                     Google Cloud Storage
                   </Link>
                 </TableCell>
@@ -325,11 +301,11 @@ export function LegalPage() {
               <TableRow>
                 <TableCell>Analytics</TableCell>
                 <TableCell>
-                  <Link href="https://plausible.io" target="_blank" rel="noopener" sx={{ color: '#3776AB' }}>
+                  <Link href="https://plausible.io" target="_blank" rel="noopener" sx={{ color: colors.primary }}>
                     Plausible
                   </Link>{' '}
                   (privacy-friendly, no cookies,{' '}
-                  <Link href="https://plausible.io/pyplots.ai" target="_blank" rel="noopener" sx={{ color: '#3776AB' }}>
+                  <Link href="https://plausible.io/pyplots.ai" target="_blank" rel="noopener" sx={{ color: colors.primary }}>
                     public dashboard
                   </Link>
                   )
@@ -338,11 +314,11 @@ export function LegalPage() {
               <TableRow>
                 <TableCell>Code Generation</TableCell>
                 <TableCell>
-                  <Link href="https://anthropic.com" target="_blank" rel="noopener" sx={{ color: '#3776AB' }}>
+                  <Link href="https://anthropic.com" target="_blank" rel="noopener" sx={{ color: colors.primary }}>
                     Anthropic Claude
                   </Link>{' '}
                   (code generation &amp; review),{' '}
-                  <Link href="https://github.com/features/copilot" target="_blank" rel="noopener" sx={{ color: '#3776AB' }}>
+                  <Link href="https://github.com/features/copilot" target="_blank" rel="noopener" sx={{ color: colors.primary }}>
                     GitHub Copilot
                   </Link>{' '}
                   (PR reviews)
@@ -351,7 +327,7 @@ export function LegalPage() {
               <TableRow>
                 <TableCell>Typography</TableCell>
                 <TableCell>
-                  <Link href="https://www.monolisa.dev/" target="_blank" rel="noopener" sx={{ color: '#3776AB' }}>
+                  <Link href="https://www.monolisa.dev/" target="_blank" rel="noopener" sx={{ color: colors.primary }}>
                     MonoLisa
                   </Link>{' '}
                   by Marcus Sterz
@@ -364,13 +340,13 @@ export function LegalPage() {
           <Typography sx={textStyle}>
             The entire codebase is publicly available under the MIT License:
             <br />
-            <Link href={GITHUB_URL} target="_blank" rel="noopener" sx={{ color: '#3776AB' }}>
+            <Link href={GITHUB_URL} target="_blank" rel="noopener" sx={{ color: colors.primary }}>
               github.com/MarkusNeusinger/pyplots
             </Link>
           </Typography>
 
           <Typography sx={subheadingStyle}>Monthly Hosting Costs (approximate)</Typography>
-          <Table sx={tableStyle}>
+          <Table sx={{ ...tableStyle, ...firstColStyle }}>
             <TableBody>
               <TableRow>
                 <TableCell>Cloud Run</TableCell>
@@ -398,13 +374,13 @@ export function LegalPage() {
               </TableRow>
             </TableBody>
           </Table>
-          <Typography sx={{ ...textStyle, fontSize: '0.8rem', color: '#9ca3af', mt: 1 }}>
+          <Typography sx={{ ...textStyle, fontSize: fontSize.sm, color: semanticColors.mutedText, mt: 1 }}>
             Direct hosting costs only. Subscriptions (GitHub Pro, Plausible, Claude MAX, PyCharm, etc.) are shared
             across projects. All costs are currently covered privately.
           </Typography>
         </Paper>
 
-        <Typography sx={{ textAlign: 'center', fontSize: '0.8rem', color: '#9ca3af', mt: 2 }}>
+        <Typography sx={{ textAlign: 'center', fontSize: fontSize.sm, color: semanticColors.mutedText, mt: 2 }}>
           Last updated: March 2026
         </Typography>
       </Box>

@@ -5,10 +5,11 @@
 import { Link } from 'react-router-dom';
 import Box from '@mui/material/Box';
 import type { SxProps, Theme } from '@mui/material/styles';
-import { fontSize, semanticColors } from '../theme';
+import { colors, fontSize, semanticColors, typography } from '../theme';
 
 export interface BreadcrumbItem {
   label: string;
+  shortLabel?: string; // Shown on mobile (xs) if provided
   to?: string; // If undefined, this is the current page (not linked)
 }
 
@@ -27,11 +28,12 @@ export interface BreadcrumbProps {
  * <Breadcrumb items={[{ label: 'pyplots.ai', to: '/' }, { label: 'catalog' }]} />
  *
  * @example
- * // With right action
- * <Breadcrumb
- *   items={[{ label: 'pyplots.ai', to: '/' }, { label: 'catalog' }]}
- *   rightAction={<Link to="/suggest">suggest spec</Link>}
- * />
+ * // With short labels for mobile
+ * <Breadcrumb items={[
+ *   { label: 'pyplots.ai', to: '/' },
+ *   { label: 'scatter-basic', to: '/scatter-basic' },
+ *   { label: 'matplotlib', shortLabel: 'mpl' },
+ * ]} />
  */
 export function Breadcrumb({ items, rightAction, sx }: BreadcrumbProps) {
   return (
@@ -47,9 +49,9 @@ export function Breadcrumb({ items, rightAction, sx }: BreadcrumbProps) {
         px: 2,
         py: 1,
         mb: 2,
-        bgcolor: '#f3f4f6',
-        borderBottom: '1px solid #e5e7eb',
-        fontFamily: '"MonoLisa", monospace',
+        bgcolor: colors.gray[100],
+        borderBottom: `1px solid ${colors.gray[200]}`,
+        fontFamily: typography.fontFamily,
         fontSize: fontSize.base,
         ...sx,
       }}
@@ -68,16 +70,26 @@ export function Breadcrumb({ items, rightAction, sx }: BreadcrumbProps) {
                 component={Link}
                 to={item.to}
                 sx={{
-                  color: '#3776AB',
+                  color: colors.primary,
                   textDecoration: 'none',
                   '&:hover': { textDecoration: 'underline' },
                 }}
               >
-                {item.label}
+                {item.shortLabel ? (
+                  <>
+                    <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>{item.label}</Box>
+                    <Box component="span" sx={{ display: { xs: 'inline', sm: 'none' } }}>{item.shortLabel}</Box>
+                  </>
+                ) : item.label}
               </Box>
             ) : (
-              <Box component="span" sx={{ color: '#374151' }}>
-                {item.label}
+              <Box component="span" sx={{ color: colors.gray[700] }}>
+                {item.shortLabel ? (
+                  <>
+                    <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>{item.label}</Box>
+                    <Box component="span" sx={{ display: { xs: 'inline', sm: 'none' } }}>{item.shortLabel}</Box>
+                  </>
+                ) : item.label}
               </Box>
             )}
           </Box>

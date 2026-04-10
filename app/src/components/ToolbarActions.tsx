@@ -11,7 +11,7 @@ import ViewModuleIcon from '@mui/icons-material/ViewModule';
 import ListIcon from '@mui/icons-material/List';
 
 import type { ImageSize } from '../constants';
-import { semanticColors } from '../theme';
+import { colors, semanticColors } from '../theme';
 
 interface ToolbarActionsProps {
   imageSize: ImageSize;
@@ -35,7 +35,7 @@ export function CatalogLink() {
           width: 36,
           height: 36,
           color: semanticColors.mutedText,
-          '&:hover': { color: '#3776AB' },
+          '&:hover': { color: colors.primary },
         }}
       >
         <ListIcon sx={{ fontSize: '1.4rem' }} />
@@ -77,8 +77,8 @@ export function GridSizeToggle({ imageSize, onImageSizeChange, onTrackEvent }: T
           height: 36,
           cursor: 'pointer',
           color: semanticColors.mutedText,
-          '&:hover': { color: '#3776AB' },
-          '&:focus-visible': { outline: '2px solid #3776AB', outlineOffset: 2 },
+          '&:hover': { color: colors.primary },
+          '&:focus-visible': { outline: `2px solid ${colors.primary}`, outlineOffset: 2 },
         }}
       >
         {imageSize === 'normal' ? (

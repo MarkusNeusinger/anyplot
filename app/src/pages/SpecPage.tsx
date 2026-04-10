@@ -11,8 +11,8 @@ import BugReportIcon from '@mui/icons-material/BugReport';
 import ListIcon from '@mui/icons-material/List';
 import { NotFoundPage } from './NotFoundPage';
 
-import { API_URL, GITHUB_URL } from '../constants';
-import { fontSize, semanticColors } from '../theme';
+import { API_URL, GITHUB_URL, LIB_ABBREV } from '../constants';
+import { typography, colors, fontSize, semanticColors } from '../theme';
 import { useAnalytics, useCodeFetch } from '../hooks';
 import { useAppData } from '../hooks';
 import { LibraryPills } from '../components/LibraryPills';
@@ -174,7 +174,7 @@ export function SpecPage() {
         console.error('Copy failed:', err);
       }
     },
-    [specId, trackEvent, isOverviewMode]
+    [specId, trackEvent, isOverviewMode, fetchCode]
   );
 
   // Build report issue URL
@@ -244,10 +244,10 @@ export function SpecPage() {
   if (error) {
     return (
       <Box sx={{ textAlign: 'center', py: 8 }}>
-        <Typography variant="h5" sx={{ mb: 2, color: '#6b7280' }}>
+        <Typography variant="h5" sx={{ mb: 2, color: semanticColors.mutedText }}>
           {error}
         </Typography>
-        <Button component={Link} to="/" startIcon={<ArrowBackIcon />} sx={{ color: '#3776AB' }}>
+        <Button component={Link} to="/" startIcon={<ArrowBackIcon />} sx={{ color: colors.primary }}>
           Back to Home
         </Button>
       </Box>
@@ -285,17 +285,17 @@ export function SpecPage() {
           items={
             isOverviewMode
               ? [
-                  { label: 'pyplots.ai', to: '/' },
+                  { label: 'pyplots.ai', shortLabel: 'pp', to: '/' },
                   { label: specId || '' },
                 ]
               : [
-                  { label: 'pyplots.ai', to: '/' },
+                  { label: 'pyplots.ai', shortLabel: 'pp', to: '/' },
                   { label: specId || '', to: `/${specId}` },
-                  { label: selectedLibrary || '' },
+                  { label: selectedLibrary || '', shortLabel: LIB_ABBREV[selectedLibrary || ''] || selectedLibrary || '' },
                 ]
           }
           rightAction={
-            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1.5, md: 0 } }}>
               <Tooltip title="catalog">
                 <Box
                   component={Link}
@@ -305,15 +305,15 @@ export function SpecPage() {
                     textDecoration: 'none',
                     display: 'flex',
                     alignItems: 'center',
-                    '&:hover': { color: '#3776AB' },
+                    '&:hover': { color: colors.primary },
                   }}
                 >
-                  <ListIcon sx={{ fontSize: '1.1rem', display: { xs: 'block', md: 'none' } }} />
+                  <ListIcon sx={{ fontSize: '1.4rem', display: { xs: 'block', md: 'none' } }} />
                   <Box
                     component="span"
                     sx={{
                       display: { xs: 'none', md: 'block' },
-                      fontFamily: '"MonoLisa", monospace',
+                      fontFamily: typography.fontFamily,
                       fontSize: fontSize.base,
                     }}
                   >
@@ -334,15 +334,15 @@ export function SpecPage() {
                     textDecoration: 'none',
                     display: 'flex',
                     alignItems: 'center',
-                    '&:hover': { color: '#3776AB' },
+                    '&:hover': { color: colors.primary },
                   }}
                 >
-                  <BugReportIcon sx={{ fontSize: '1.1rem', display: { xs: 'block', md: 'none' } }} />
+                  <BugReportIcon sx={{ fontSize: '1.4rem', display: { xs: 'block', md: 'none' } }} />
                   <Box
                     component="span"
                     sx={{
                       display: { xs: 'none', md: 'block' },
-                      fontFamily: '"MonoLisa", monospace',
+                      fontFamily: typography.fontFamily,
                       fontSize: fontSize.base,
                     }}
                   >
@@ -360,11 +360,11 @@ export function SpecPage() {
           component="h1"
           sx={{
             textAlign: 'center',
-            fontFamily: '"MonoLisa", monospace',
+            fontFamily: typography.fontFamily,
             fontWeight: 600,
             fontSize: { xs: '1.375rem', sm: '1.625rem', md: '2.125rem' },
             mb: 1,
-            color: '#1f2937',
+            color: colors.gray[800],
           }}
         >
           {specData.title}
@@ -375,9 +375,9 @@ export function SpecPage() {
           onClick={() => !descExpanded && setDescExpanded(true)}
           sx={{
             textAlign: 'center',
-            fontFamily: '"MonoLisa", monospace',
+            fontFamily: typography.fontFamily,
             fontSize: { xs: '0.875rem', sm: '0.9375rem' },
-            color: '#52525b',
+            color: semanticColors.subtleText,
             maxWidth: { xs: '100%', md: 800, lg: 950, xl: 1100 },
             mx: 'auto',
             mb: 2,
@@ -446,11 +446,11 @@ export function SpecPage() {
 
             <Box sx={{ textAlign: 'center', mt: -0.5, mb: 1 }}>
               <Box component={Link} to={`/${specId}`} sx={{
-                fontFamily: '"MonoLisa", monospace',
+                fontFamily: typography.fontFamily,
                 fontSize: fontSize.sm,
                 color: semanticColors.mutedText,
                 textDecoration: 'none',
-                '&:hover': { color: '#3776AB' },
+                '&:hover': { color: colors.primary },
               }}>
                 {'< all implementations'}
               </Box>

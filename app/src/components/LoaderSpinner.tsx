@@ -1,4 +1,5 @@
 import Box from '@mui/material/Box';
+import { colors } from '../theme';
 
 interface LoaderSpinnerProps {
   size?: 'large' | 'small';
@@ -23,8 +24,8 @@ export function LoaderSpinner({ size = 'large' }: LoaderSpinnerProps) {
           width: dotSize,
           height: dotSize,
           borderRadius: '50%',
-          background: '#3776AB',
-          boxShadow: `${offset}px 0 #3776AB`,
+          background: colors.primary,
+          boxShadow: `${offset}px 0 ${colors.primary}`,
           left: 0,
           top: 0,
           animation: 'ballMoveX 2s linear infinite',
@@ -35,7 +36,7 @@ export function LoaderSpinner({ size = 'large' }: LoaderSpinnerProps) {
           width: dotSize,
           height: dotSize,
           borderRadius: '50%',
-          background: '#3776AB',
+          background: colors.primary,
           left: 0,
           top: 0,
           transform: `translateX(${doubleOffset}px) scale(1)`,
@@ -45,23 +46,23 @@ export function LoaderSpinner({ size = 'large' }: LoaderSpinnerProps) {
         '@keyframes trfLoader': {
           '0%, 5%': {
             transform: `translateX(${doubleOffset}px) scale(1)`,
-            background: '#3776AB',
+            background: colors.primary,
           },
           '10%': {
             transform: `translateX(${doubleOffset}px) scale(1)`,
-            background: '#FFD43B',
+            background: colors.accent,
           },
           '40%': {
             transform: `translateX(${offset}px) scale(1.5)`,
-            background: '#FFD43B',
+            background: colors.accent,
           },
           '90%, 95%': {
             transform: 'translateX(0px) scale(1)',
-            background: '#FFD43B',
+            background: colors.accent,
           },
           '100%': {
             transform: 'translateX(0px) scale(1)',
-            background: '#3776AB',
+            background: colors.primary,
           },
         },
         '@keyframes ballMoveX': {

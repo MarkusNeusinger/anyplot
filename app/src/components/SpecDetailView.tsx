@@ -4,7 +4,7 @@
  * Shows large image with library carousel and action buttons.
  */
 
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
@@ -15,7 +15,7 @@ import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 
 import type { Implementation } from '../types';
-import { fontSize } from '../theme';
+import { colors, fontSize, typography } from '../theme';
 import { buildDetailSrcSet, DETAIL_SIZES } from '../utils/responsiveImage';
 
 interface SpecDetailViewProps {
@@ -56,11 +56,14 @@ export function SpecDetailView({
   const [zoomed, setZoomed] = useState(false);
   const [origin, setOrigin] = useState({ x: 50, y: 50 });
   const [animating, setAnimating] = useState(false);
+  const prevLibRef = useRef(selectedLibrary);
 
-  useEffect(() => {
+  // Reset zoom when library changes (no effect needed)
+  if (prevLibRef.current !== selectedLibrary) {
+    prevLibRef.current = selectedLibrary;
     setZoomed(false);
     setOrigin({ x: 50, y: 50 });
-  }, [selectedLibrary]);
+  }
 
   const handleZoomToggle = useCallback(
     (e: React.MouseEvent) => {
@@ -197,7 +200,7 @@ export function SpecDetailView({
             px: 1.5,
             py: 0.5,
             borderRadius: 1,
-            fontFamily: '"MonoLisa", monospace',
+            fontFamily: typography.fontFamily,
             fontSize: fontSize.sm,
             pointerEvents: 'none',
             zIndex: 2,
@@ -224,7 +227,7 @@ export function SpecDetailView({
                 aria-label="Copy code"
                 sx={{
                   bgcolor: 'rgba(255,255,255,0.9)',
-                  '&:hover': { bgcolor: '#fff', color: '#3776AB' },
+                  '&:hover': { bgcolor: '#fff', color: colors.primary },
                 }}
                 size="medium"
               >
@@ -239,7 +242,7 @@ export function SpecDetailView({
                 aria-label="Download PNG"
                 sx={{
                   bgcolor: 'rgba(255,255,255,0.9)',
-                  '&:hover': { bgcolor: '#fff', color: '#3776AB' },
+                  '&:hover': { bgcolor: '#fff', color: colors.primary },
                 }}
                 size="medium"
               >
@@ -259,7 +262,7 @@ export function SpecDetailView({
                 }}
                 sx={{
                   bgcolor: 'rgba(255,255,255,0.9)',
-                  '&:hover': { bgcolor: '#fff', color: '#3776AB' },
+                  '&:hover': { bgcolor: '#fff', color: colors.primary },
                 }}
                 size="medium"
               >
@@ -282,7 +285,7 @@ export function SpecDetailView({
               bgcolor: 'rgba(0,0,0,0.6)',
               borderRadius: 1,
               fontSize: '0.75rem',
-              fontFamily: '"MonoLisa", monospace',
+              fontFamily: typography.fontFamily,
               color: '#fff',
               opacity: 0,
               transition: 'opacity 0.2s',

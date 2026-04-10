@@ -15,7 +15,7 @@ import type { PlotImage } from '../types';
 import { BATCH_SIZE, type ImageSize } from '../constants';
 import { useCodeFetch } from '../hooks';
 import { buildSrcSet, getResponsiveSizes, getFallbackSrc } from '../utils/responsiveImage';
-import { fontSize, semanticColors } from '../theme';
+import { colors, typography, fontSize, semanticColors } from '../theme';
 
 // Library abbreviations for compact mode
 const LIBRARY_ABBR: Record<string, string> = {
@@ -202,7 +202,7 @@ export const ImageCard = memo(function ImageCard({
             px: 1.5,
             py: 0.5,
             borderRadius: 1,
-            fontFamily: '"MonoLisa", monospace',
+            fontFamily: typography.fontFamily,
             fontSize: fontSize.sm,
             pointerEvents: 'none',
             zIndex: 2,
@@ -224,7 +224,7 @@ export const ImageCard = memo(function ImageCard({
             opacity: 0,
             transition: 'opacity 0.2s, color 0.2s',
             '.MuiCard-root:hover &': { opacity: 1 },
-            '&:hover': { bgcolor: 'rgba(255,255,255,1)', color: '#3776AB' },
+            '&:hover': { bgcolor: 'rgba(255,255,255,1)', color: colors.primary },
           }}
         >
           {copyState === 'loading' ? (
@@ -251,7 +251,7 @@ export const ImageCard = memo(function ImageCard({
             tooltip: {
               sx: {
                 maxWidth: { xs: '80vw', sm: 400 },
-                fontFamily: '"MonoLisa", "MonoLisa Fallback", monospace',
+                fontFamily: typography.fontFamily,
                 fontSize: labelFontSize,
               },
             },
@@ -267,12 +267,12 @@ export const ImageCard = memo(function ImageCard({
               fontSize: labelFontSize,
               letterSpacing: labelLetterSpacing,
               fontWeight: 600,
-              fontFamily: '"MonoLisa", "MonoLisa Fallback", monospace',
-              color: isSpecTooltipOpen ? '#3776AB' : semanticColors.labelText,
+              fontFamily: typography.fontFamily,
+              color: isSpecTooltipOpen ? colors.primary : semanticColors.labelText,
               textTransform: 'lowercase',
               cursor: 'pointer',
               '&:hover': {
-                color: '#3776AB',
+                color: colors.primary,
               },
             }}
           >
@@ -282,7 +282,7 @@ export const ImageCard = memo(function ImageCard({
 
         {showLibrary && (
           <>
-            <Typography sx={{ color: '#d1d5db', fontSize: labelFontSize }}>·</Typography>
+            <Typography sx={{ color: colors.gray[300], fontSize: labelFontSize }}>·</Typography>
 
             {/* Clickable Library */}
             <Tooltip
@@ -301,7 +301,7 @@ export const ImageCard = memo(function ImageCard({
                         alignItems: 'center',
                         gap: 0.5,
                         fontSize: '0.75rem',
-                        color: '#90caf9',
+                        color: colors.tooltipLight,
                         textDecoration: 'underline',
                         '&:hover': { color: '#fff' },
                       }}
@@ -321,7 +321,7 @@ export const ImageCard = memo(function ImageCard({
                 tooltip: {
                   sx: {
                     maxWidth: { xs: '80vw', sm: 400 },
-                    fontFamily: '"MonoLisa", "MonoLisa Fallback", monospace',
+                    fontFamily: typography.fontFamily,
                     fontSize: labelFontSize,
                   },
                 },
@@ -337,12 +337,12 @@ export const ImageCard = memo(function ImageCard({
                   fontSize: labelFontSize,
                   letterSpacing: labelLetterSpacing,
                   fontWeight: 600,
-                  fontFamily: '"MonoLisa", "MonoLisa Fallback", monospace',
-                  color: isLibTooltipOpen ? '#3776AB' : semanticColors.labelText,
+                  fontFamily: typography.fontFamily,
+                  color: isLibTooltipOpen ? colors.primary : semanticColors.labelText,
                   textTransform: 'lowercase',
                   cursor: 'pointer',
                   '&:hover': {
-                    color: '#3776AB',
+                    color: colors.primary,
                   },
                 }}
               >

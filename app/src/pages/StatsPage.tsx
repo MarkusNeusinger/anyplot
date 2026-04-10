@@ -11,6 +11,13 @@ import { Breadcrumb } from '../components/Breadcrumb';
 import { Footer } from '../components/Footer';
 import { API_URL } from '../constants';
 import { buildSrcSet, getFallbackSrc } from '../utils/responsiveImage';
+import {
+  typography,
+  colors,
+  semanticColors,
+  fontSize,
+  subheadingStyle,
+} from '../theme';
 
 interface LibraryStats {
   id: string;
@@ -63,13 +70,11 @@ interface DashboardData {
   timeline: TimelinePoint[];
 }
 
-const mono = '"MonoLisa", "MonoLisa Fallback", monospace';
-
 function scoreColor(score: number | null): string {
-  if (score === null) return '#e5e7eb';
-  if (score >= 90) return '#22c55e';
-  if (score >= 75) return '#eab308';
-  return '#ef4444';
+  if (score === null) return colors.gray[200];
+  if (score >= 90) return colors.success;
+  if (score >= 75) return colors.warning;
+  return colors.error;
 }
 
 
@@ -97,17 +102,15 @@ export function StatsPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  const subheadingStyle = { fontFamily: mono, fontWeight: 600, fontSize: '0.95rem', color: '#374151', mt: 4, mb: 1.5 };
-
   if (loading) return (
     <Box sx={{ maxWidth: 960, mx: 'auto', px: 2, py: 4, textAlign: 'center' }}>
-      <Typography sx={{ fontFamily: mono, color: '#9ca3af' }}>loading stats...</Typography>
+      <Typography sx={{ fontFamily: typography.fontFamily, color: semanticColors.mutedText }}>loading stats...</Typography>
     </Box>
   );
 
   if (error || !data) return (
     <Box sx={{ maxWidth: 960, mx: 'auto', px: 2, py: 4, textAlign: 'center' }}>
-      <Typography sx={{ fontFamily: mono, color: '#ef4444' }}>failed to load stats{error ? `: ${error}` : ''}</Typography>
+      <Typography sx={{ fontFamily: typography.fontFamily, color: colors.error }}>failed to load stats{error ? `: ${error}` : ''}</Typography>
     </Box>
   );
 
@@ -121,7 +124,7 @@ export function StatsPage() {
       </Helmet>
 
       <Box sx={{ maxWidth: 960, mx: 'auto', px: 2, py: 2 }}>
-        <Breadcrumb items={[{ label: 'pyplots.ai', to: '/' }, { label: 'stats' }]} />
+        <Breadcrumb items={[{ label: 'pyplots.ai', shortLabel: 'pp', to: '/' }, { label: 'stats' }]} />
 
         {/* Summary Counters */}
         <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(3, 1fr)', md: 'repeat(6, 1fr)' }, gap: 2, mt: 3, mb: 4 }}>
@@ -133,28 +136,28 @@ export function StatsPage() {
             { label: 'avg quality', value: data.avg_quality_score, suffix: '' },
             { label: 'coverage', value: data.coverage_percent, suffix: '%' },
           ].map(item => (
-            <Box key={item.label} sx={{ textAlign: 'center', p: 2, border: '1px solid #f3f4f6', borderRadius: 1 }}>
-              <Typography sx={{ fontFamily: mono, fontSize: '2rem', fontWeight: 700, color: '#1f2937', lineHeight: 1.2 }}>
+            <Box key={item.label} sx={{ textAlign: 'center', p: 2, border: `1px solid ${colors.gray[100]}`, borderRadius: 1 }}>
+              <Typography sx={{ fontFamily: typography.fontFamily, fontSize: '2rem', fontWeight: 700, color: colors.gray[800], lineHeight: 1.2 }}>
                 {typeof item.value === 'number' ? `${formatNum(item.value)}${item.suffix}` : '—'}
               </Typography>
-              <Typography sx={{ fontFamily: mono, fontSize: '0.7rem', color: '#9ca3af', mt: 0.5 }}>
+              <Typography sx={{ fontFamily: typography.fontFamily, fontSize: fontSize.xs, color: semanticColors.mutedText, mt: 0.5 }}>
                 {item.label}
               </Typography>
             </Box>
           ))}
         </Box>
-        <Typography sx={{ fontFamily: mono, fontSize: '0.6rem', color: '#d1d5db', textAlign: 'center', mt: -2, mb: 3 }}>
+        <Typography sx={{ fontFamily: typography.fontFamily, fontSize: fontSize.xxs, color: semanticColors.mutedText, textAlign: 'center', mt: -2, mb: 3 }}>
           visitor analytics at{' '}
           <Link href="https://plausible.io/pyplots.ai" target="_blank" rel="noopener noreferrer"
             onClick={() => trackEvent('external_link', { destination: 'plausible' })}
-            sx={{ color: '#9ca3af', textDecoration: 'none', '&:hover': { color: '#306998' } }}
+            sx={{ color: semanticColors.mutedText, textDecoration: 'none', '&:hover': { color: colors.primaryDark } }}
           >plausible.io/pyplots.ai</Link>
         </Typography>
 
         {/* Library Stats — dual mini histograms per library */}
         <Typography sx={subheadingStyle}>libraries</Typography>
         {/* Quality distribution per library */}
-        <Typography sx={{ fontFamily: mono, fontSize: '0.7rem', color: '#9ca3af', mb: 1 }}>
+        <Typography sx={{ fontFamily: typography.fontFamily, fontSize: fontSize.xs, color: semanticColors.mutedText, mb: 1 }}>
           quality distribution 50–100 · count · avg
         </Typography>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
@@ -167,7 +170,7 @@ export function StatsPage() {
             const maxBucket = Math.max(...allBuckets.map(([, c]) => c), 1);
             return (
               <Box key={lib.id} sx={{ display: 'flex', alignItems: 'flex-end', gap: 1.5 }}>
-                <Typography sx={{ fontFamily: mono, fontSize: '0.7rem', color: '#6b7280', width: 80, textAlign: 'right', flexShrink: 0, pb: '2px' }}>
+                <Typography sx={{ fontFamily: typography.fontFamily, fontSize: fontSize.xs, color: semanticColors.mutedText, width: 80, textAlign: 'right', flexShrink: 0, pb: '2px' }}>
                   {lib.name}
                 </Typography>
                 <Box sx={{ display: 'flex', alignItems: 'flex-end', gap: '1px', height: 22, flex: 1 }}>
@@ -186,7 +189,7 @@ export function StatsPage() {
                     );
                   })}
                 </Box>
-                <Typography sx={{ fontFamily: mono, fontSize: '0.6rem', color: '#9ca3af', width: 70, flexShrink: 0, pb: '2px', textAlign: 'right' }}>
+                <Typography sx={{ fontFamily: typography.fontFamily, fontSize: fontSize.xxs, color: semanticColors.mutedText, width: 70, flexShrink: 0, pb: '2px', textAlign: 'right' }}>
                   {lib.impl_count} · {lib.avg_score ?? '—'}
                 </Typography>
               </Box>
@@ -195,7 +198,7 @@ export function StatsPage() {
         </Box>
 
         {/* LOC distribution per library */}
-        <Typography sx={{ fontFamily: mono, fontSize: '0.7rem', color: '#9ca3af', mt: 2, mb: 1 }}>
+        <Typography sx={{ fontFamily: typography.fontFamily, fontSize: fontSize.xs, color: semanticColors.mutedText, mt: 2, mb: 1 }}>
           lines of code per implementation 0–400+ · avg
         </Typography>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
@@ -205,7 +208,7 @@ export function StatsPage() {
             const maxLoc = Math.max(...locBuckets.map(([, c]) => c), 1);
             return (
               <Box key={lib.id} sx={{ display: 'flex', alignItems: 'flex-end', gap: 1.5 }}>
-                <Typography sx={{ fontFamily: mono, fontSize: '0.7rem', color: '#6b7280', width: 80, textAlign: 'right', flexShrink: 0, pb: '2px' }}>
+                <Typography sx={{ fontFamily: typography.fontFamily, fontSize: fontSize.xs, color: semanticColors.mutedText, width: 80, textAlign: 'right', flexShrink: 0, pb: '2px' }}>
                   {lib.name}
                 </Typography>
                 <Box sx={{ display: 'flex', alignItems: 'flex-end', gap: '1px', height: 22, flex: 1 }}>
@@ -214,14 +217,14 @@ export function StatsPage() {
                       <Box sx={{
                         flex: 1,
                         height: count > 0 ? `${Math.max((count / maxLoc) * 100, 15)}%` : 0,
-                        bgcolor: '#306998',
+                        bgcolor: colors.primaryDark,
                         opacity: 0.4,
                         borderRadius: '1px 1px 0 0',
                       }} />
                     </Tooltip>
                   ))}
                 </Box>
-                <Typography sx={{ fontFamily: mono, fontSize: '0.6rem', color: '#9ca3af', width: 70, flexShrink: 0, pb: '2px', textAlign: 'right' }}>
+                <Typography sx={{ fontFamily: typography.fontFamily, fontSize: fontSize.xxs, color: semanticColors.mutedText, width: 70, flexShrink: 0, pb: '2px', textAlign: 'right' }}>
                   avg {lib.avg_loc?.toFixed(0) ?? '—'}
                 </Typography>
               </Box>
@@ -231,7 +234,7 @@ export function StatsPage() {
 
         {/* Coverage dot matrix — right after libraries */}
         <Typography sx={subheadingStyle}>coverage</Typography>
-        <Typography sx={{ fontFamily: mono, fontSize: '0.7rem', color: '#9ca3af', mb: 1 }}>
+        <Typography sx={{ fontFamily: typography.fontFamily, fontSize: fontSize.xs, color: semanticColors.mutedText, mb: 1 }}>
           {data.coverage_percent}% · {data.total_implementations} of {data.total_specs * 9} possible
         </Typography>
         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: '2px' }}>
@@ -245,9 +248,9 @@ export function StatsPage() {
                   to={`/${row.spec_id}`}
                   sx={{
                     display: 'block', width: 10, height: 10, borderRadius: '2px',
-                    bgcolor: count === 0 ? '#f3f4f6' : `rgba(34, 197, 94, ${0.15 + intensity * 0.7})`,
+                    bgcolor: count === 0 ? colors.gray[100] : `rgba(34, 197, 94, ${0.15 + intensity * 0.7})`,
                     textDecoration: 'none',
-                    '&:hover': { outline: '1px solid #22c55e' },
+                    '&:hover': { outline: `1px solid ${colors.success}` },
                   }}
                 />
               </Tooltip>
@@ -255,11 +258,11 @@ export function StatsPage() {
           })}
         </Box>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.5 }}>
-          <Typography sx={{ fontFamily: mono, fontSize: '0.5rem', color: '#d1d5db' }}>less</Typography>
+          <Typography sx={{ fontFamily: typography.fontFamily, fontSize: fontSize.micro, color: semanticColors.mutedText }}>less</Typography>
           {[0, 0.25, 0.5, 0.75, 1].map(v => (
             <Box key={v} sx={{ width: 8, height: 8, borderRadius: '1px', bgcolor: `rgba(34, 197, 94, ${0.15 + v * 0.7})` }} />
           ))}
-          <Typography sx={{ fontFamily: mono, fontSize: '0.5rem', color: '#d1d5db' }}>more</Typography>
+          <Typography sx={{ fontFamily: typography.fontFamily, fontSize: fontSize.micro, color: semanticColors.mutedText }}>more</Typography>
         </Box>
 
         {/* Timeline */}
@@ -272,7 +275,7 @@ export function StatsPage() {
                   <Box sx={{
                     flex: 1,
                     height: `${Math.max((point.count / maxTimeline) * 100, 3)}%`,
-                    bgcolor: '#306998',
+                    bgcolor: colors.primaryDark,
                     opacity: 0.5,
                     borderRadius: '2px 2px 0 0',
                     minHeight: 2,
@@ -283,10 +286,10 @@ export function StatsPage() {
               ))}
             </Box>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 0.25 }}>
-              <Typography sx={{ fontFamily: mono, fontSize: '0.55rem', color: '#d1d5db' }}>
+              <Typography sx={{ fontFamily: typography.fontFamily, fontSize: fontSize.micro, color: semanticColors.mutedText }}>
                 {data.timeline.slice(-24)[0]?.month ?? data.timeline[0]?.month}
               </Typography>
-              <Typography sx={{ fontFamily: mono, fontSize: '0.55rem', color: '#d1d5db' }}>
+              <Typography sx={{ fontFamily: typography.fontFamily, fontSize: fontSize.micro, color: semanticColors.mutedText }}>
                 {data.timeline[data.timeline.length - 1]?.month}
               </Typography>
             </Box>
@@ -304,7 +307,7 @@ export function StatsPage() {
               sx={{ textDecoration: 'none', color: 'inherit', '&:hover': { opacity: 0.85 }, transition: 'opacity 0.15s ease' }}
               onClick={() => trackEvent('stats_top_impl_click', { spec: impl.spec_id, library: impl.library_id })}
             >
-              <Box sx={{ border: '1px solid #f3f4f6', borderRadius: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+              <Box sx={{ border: `1px solid ${colors.gray[100]}`, borderRadius: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
                 <Box sx={{ width: '100%', aspectRatio: '16/9', overflow: 'hidden', flexShrink: 0 }}>
                   {impl.preview_url ? (
                     <Box component="picture" sx={{ display: 'block', width: '100%', height: '100%' }}>
@@ -315,18 +318,18 @@ export function StatsPage() {
                       />
                     </Box>
                   ) : (
-                    <Box sx={{ width: '100%', height: '100%', bgcolor: '#f9fafb' }} />
+                    <Box sx={{ width: '100%', height: '100%', bgcolor: colors.gray[50] }} />
                   )}
                 </Box>
                 <Box sx={{ p: 1 }}>
-                  <Typography sx={{ fontFamily: mono, fontSize: '0.65rem', color: '#374151', lineHeight: 1.3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  <Typography sx={{ fontFamily: typography.fontFamily, fontSize: fontSize.xxs, color: colors.gray[700], lineHeight: 1.3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {impl.spec_title}
                   </Typography>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 0.25 }}>
-                    <Typography sx={{ fontFamily: mono, fontSize: '0.6rem', color: '#9ca3af' }}>
+                    <Typography sx={{ fontFamily: typography.fontFamily, fontSize: fontSize.xxs, color: semanticColors.mutedText }}>
                       {impl.library_id}
                     </Typography>
-                    <Typography sx={{ fontFamily: mono, fontSize: '0.6rem', color: scoreColor(impl.quality_score), fontWeight: 600 }}>
+                    <Typography sx={{ fontFamily: typography.fontFamily, fontSize: fontSize.xxs, color: scoreColor(impl.quality_score), fontWeight: 600 }}>
                       {impl.quality_score}
                     </Typography>
                   </Box>
@@ -348,12 +351,12 @@ export function StatsPage() {
             const entries = Object.entries(values);
             return (
             <Box key={category}>
-              <Typography sx={{ fontFamily: mono, fontSize: '0.7rem', color: '#9ca3af', mb: 0.5 }}>
+              <Typography sx={{ fontFamily: typography.fontFamily, fontSize: fontSize.xs, color: semanticColors.mutedText, mb: 0.5 }}>
                 {category.replace('_', ' ')}
               </Typography>
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                 {entries.slice(0, 20).map(([tag, count]) => {
-                  const size = count >= 100 ? '0.85rem' : count >= 50 ? '0.75rem' : count >= 10 ? '0.68rem' : '0.6rem';
+                  const size = count >= 100 ? fontSize.md : count >= 50 ? fontSize.xs : count >= 10 ? fontSize.xxs : fontSize.xxs;
                   const weight = count >= 50 ? 600 : count >= 10 ? 500 : 400;
                   const opacity = count >= 100 ? 1 : count >= 50 ? 0.85 : count >= 10 ? 0.7 : 0.5;
                   return (
@@ -362,13 +365,13 @@ export function StatsPage() {
                       component={RouterLink}
                       to={param ? `/?${param}=${tag}` : '/'}
                       sx={{
-                        fontFamily: mono, fontSize: size, fontWeight: weight, textDecoration: 'none',
+                        fontFamily: typography.fontFamily, fontSize: size, fontWeight: weight, textDecoration: 'none',
                         px: 0.75, py: 0.25, borderRadius: 0.5,
                         color: `rgba(55, 65, 81, ${opacity})`,
-                        '&:hover': { color: '#306998' },
+                        '&:hover': { color: colors.primaryDark },
                       }}
                     >
-                      {tag}<Box component="span" sx={{ fontFamily: mono, fontSize: '0.5rem', color: '#d1d5db', ml: 0.5 }}>{count}</Box>
+                      {tag}<Box component="span" sx={{ fontFamily: typography.fontFamily, fontSize: fontSize.micro, color: semanticColors.mutedText, ml: 0.5 }}>{count}</Box>
                     </Link>
                   );
                 })}

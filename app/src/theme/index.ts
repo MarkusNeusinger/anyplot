@@ -36,6 +36,23 @@ export const colors = {
 
   // Background
   background: '#fafafa',
+
+  // Extended brand
+  primaryDark: '#306998', // Python dark blue — dataviz bars, hover accents
+  accentBg: '#fffef5', // Warm yellow-tinted bg for accent sections
+
+  // Highlights
+  highlight: {
+    bg: '#dbeafe', // Light blue bg for highlighted chips
+    text: '#1e40af', // Dark blue text for highlighted chips
+  },
+  tooltipLight: '#90caf9', // Light blue text on dark tooltip backgrounds
+
+  // Code blocks (dark theme)
+  codeBlock: {
+    bg: '#1e293b',
+    text: '#e2e8f0',
+  },
 } as const;
 
 // Semantic text colors — WCAG AA safe on #fafafa/#fff backgrounds
@@ -46,6 +63,8 @@ export const semanticColors = {
 } as const;
 
 export const fontSize = {
+  micro: '0.5rem', // 8px — decorative axis/legend labels only
+  xxs: '0.625rem', // 10px — data-dense dashboards (stats, debug)
   xs: '0.75rem',
   sm: '0.8rem',
   md: '0.875rem',
@@ -71,4 +90,59 @@ export const labelStyle = {
   fontFamily: typography.fontFamily,
   fontSize: fontSize.md,
   color: semanticColors.labelText,
+} as const;
+
+// Page-level style constants
+export const headingStyle = {
+  fontFamily: typography.fontFamily,
+  fontWeight: 600,
+  fontSize: '1.25rem',
+  color: colors.gray[800],
+  mb: 2,
+} as const;
+
+export const subheadingStyle = {
+  fontFamily: typography.fontFamily,
+  fontWeight: 600,
+  fontSize: fontSize.lg,
+  color: colors.gray[700],
+  mt: 3,
+  mb: 1,
+} as const;
+
+export const textStyle = {
+  fontFamily: typography.fontFamily,
+  fontSize: fontSize.base,
+  color: semanticColors.labelText,
+  lineHeight: 1.8,
+  mb: 2,
+} as const;
+
+export const codeBlockStyle = {
+  fontFamily: typography.fontFamily,
+  fontSize: fontSize.md,
+  backgroundColor: colors.codeBlock.bg,
+  color: colors.codeBlock.text,
+  p: 2,
+  borderRadius: 1,
+  overflow: 'auto',
+  mb: 2,
+  whiteSpace: 'pre-wrap' as const,
+  wordBreak: 'break-word' as const,
+} as const;
+
+export const tableStyle = {
+  '& .MuiTableCell-root': {
+    fontFamily: typography.fontFamily,
+    fontSize: fontSize.md,
+    color: semanticColors.labelText,
+    borderBottom: `1px solid ${colors.gray[100]}`,
+    py: 1.5,
+    px: 2,
+  },
+  '& .MuiTableCell-head': {
+    fontWeight: 600,
+    color: colors.gray[700],
+    backgroundColor: colors.gray[50],
+  },
 } as const;

@@ -3,6 +3,7 @@ import { Helmet } from 'react-helmet-async';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import { Footer } from '../components/Footer';
+import { typography, colors, semanticColors } from '../theme';
 
 export function NotFoundPage() {
   return (
@@ -15,17 +16,17 @@ export function NotFoundPage() {
         <Typography
           variant="h4"
           component="h1"
-          sx={{ fontFamily: '"MonoLisa", monospace', fontWeight: 600, mb: 2, color: '#1f2937' }}
+          sx={{ fontFamily: typography.fontFamily, fontWeight: 600, mb: 2, color: colors.gray[800] }}
         >
           404
         </Typography>
-        <Typography sx={{ fontFamily: '"MonoLisa", monospace', color: '#6b7280', mb: 4 }}>
+        <Typography sx={{ fontFamily: typography.fontFamily, color: semanticColors.mutedText, mb: 4 }}>
           page not found
         </Typography>
         <Box
           component={Link}
           to="/"
-          sx={{ color: '#3776AB', fontFamily: '"MonoLisa", monospace', textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}
+          sx={{ color: colors.primary, fontFamily: typography.fontFamily, textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}
         >
           back to pyplots.ai
         </Box>

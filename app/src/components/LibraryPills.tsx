@@ -3,7 +3,7 @@ import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import { fontSize, semanticColors } from '../theme';
+import { colors, fontSize, semanticColors, typography } from '../theme';
 
 // Library abbreviations (same as filter display)
 const LIBRARY_ABBREV: Record<string, string> = {
@@ -99,7 +99,7 @@ export const LibraryPills = memo(function LibraryPills({
         size="small"
         sx={{
           color: semanticColors.mutedText,
-          '&:hover': { color: '#3776AB', bgcolor: '#f3f4f6' },
+          '&:hover': { color: colors.primary, bgcolor: colors.gray[100] },
         }}
       >
         <ChevronLeftIcon />
@@ -126,19 +126,19 @@ export const LibraryPills = memo(function LibraryPills({
                 px: 1.5,
                 py: 0.5,
                 borderRadius: 2,
-                fontFamily: '"MonoLisa", monospace',
+                fontFamily: typography.fontFamily,
                 fontSize: fontSize.base,
                 fontWeight: isCenter ? 600 : 400,
-                bgcolor: '#f3f4f6',
-                border: isCenter ? '1px solid #3776AB' : '1px solid transparent',
-                color: isCenter ? '#374151' : semanticColors.mutedText,
+                bgcolor: colors.gray[100],
+                border: isCenter ? `1px solid ${colors.primary}` : '1px solid transparent',
+                color: isCenter ? colors.gray[700] : semanticColors.mutedText,
                 cursor: 'pointer',
                 transition: 'all 0.2s ease',
                 whiteSpace: 'nowrap',
                 '&:hover': {
-                  bgcolor: '#e5e7eb',
-                  borderColor: '#3776AB',
-                  color: '#374151',
+                  bgcolor: colors.gray[200],
+                  borderColor: colors.primary,
+                  color: colors.gray[700],
                 },
               }}
             >
@@ -161,7 +161,7 @@ export const LibraryPills = memo(function LibraryPills({
         size="small"
         sx={{
           color: semanticColors.mutedText,
-          '&:hover': { color: '#3776AB', bgcolor: '#f3f4f6' },
+          '&:hover': { color: colors.primary, bgcolor: colors.gray[100] },
         }}
       >
         <ChevronRightIcon />

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
@@ -7,9 +7,9 @@ import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 
-import { API_URL } from '../constants';
+import { API_URL, LIB_ABBREV } from '../constants';
 import { buildSrcSet, getFallbackSrc } from '../utils/responsiveImage';
-import { fontSize, semanticColors } from '../theme';
+import { colors, fontSize, semanticColors, typography } from '../theme';
 
 interface RelatedSpec {
   id: string;
@@ -20,19 +20,8 @@ interface RelatedSpec {
   shared_tags: string[];
 }
 
-const mono = '"MonoLisa", "MonoLisa Fallback", monospace';
+const mono = typography.fontFamily;
 
-const LIB_ABBREV: Record<string, string> = {
-  matplotlib: 'mpl',
-  seaborn: 'sns',
-  plotly: 'ply',
-  bokeh: 'bok',
-  altair: 'alt',
-  plotnine: 'p9',
-  pygal: 'pyg',
-  highcharts: 'hc',
-  letsplot: 'lp',
-};
 
 // 6 columns max at md+, ~160px each → 400w is plenty
 const SIZES = '(max-width: 599px) 50vw, (max-width: 899px) 33vw, 17vw';
@@ -50,6 +39,13 @@ interface RelatedSpecsProps {
 export function RelatedSpecs({ specId, mode = 'spec', library, onHoverTags }: RelatedSpecsProps) {
   const [related, setRelated] = useState<RelatedSpec[]>([]);
   const [expanded, setExpanded] = useState(false);
+  const prevSpecIdRef = useRef(specId);
+
+  // Reset expanded when specId changes (no effect needed)
+  if (prevSpecIdRef.current !== specId) {
+    prevSpecIdRef.current = specId;
+    setExpanded(false);
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -62,16 +58,12 @@ export function RelatedSpecs({ specId, mode = 'spec', library, onHoverTags }: Re
     return () => { cancelled = true; };
   }, [specId, mode, library]);
 
-  useEffect(() => {
-    setExpanded(false);
-  }, [specId]);
-
   if (related.length === 0) return null;
 
   // Collapsed: CSS hides extra rows via gridAutoRows:0 + overflow:hidden
 
   return (
-    <Box sx={{ mt: 3, maxWidth: { xs: '100%', md: 1200, lg: 1400, xl: 1600 }, mx: 'auto' }}>
+    <Box sx={{ mt: 1.5, maxWidth: { xs: '100%', md: 1200, lg: 1400, xl: 1600 }, mx: 'auto' }}>
       <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
         <Tabs
           value={expanded ? 0 : false}
@@ -79,16 +71,16 @@ export function RelatedSpecs({ specId, mode = 'spec', library, onHoverTags }: Re
           variant="fullWidth"
           sx={{
             '& .MuiTab-root': {
-              fontFamily: '"MonoLisa", monospace',
+              fontFamily: typography.fontFamily,
               textTransform: 'none',
               fontSize: '0.875rem',
               minHeight: 48,
               transition: 'background-color 0.15s ease, color 0.15s ease',
               borderRadius: '4px 4px 0 0',
-              '&:hover': { backgroundColor: '#f3f4f6', color: '#3776AB' },
+              '&:hover': { backgroundColor: colors.gray[100], color: colors.primary },
             },
-            '& .Mui-selected': { color: '#3776AB' },
-            '& .MuiTabs-indicator': { backgroundColor: '#3776AB' },
+            '& .Mui-selected': { color: colors.primary },
+            '& .MuiTabs-indicator': { backgroundColor: colors.primary },
           }}
         >
           <Tab
@@ -101,7 +93,7 @@ export function RelatedSpecs({ specId, mode = 'spec', library, onHoverTags }: Re
       </Box>
       <Box sx={{
         display: 'grid',
-        gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(3, 1fr)', md: 'repeat(6, 1fr)' },
+        gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(3, 1fr)', md: 'repeat(4, 1fr)', lg: 'repeat(6, 1fr)' },
         columnGap: 2,
         rowGap: expanded ? 2 : 0,
         pt: 2,
@@ -117,11 +109,11 @@ export function RelatedSpecs({ specId, mode = 'spec', library, onHoverTags }: Re
             sx={{
               textDecoration: 'none',
               color: 'inherit',
-              border: '1px solid #e5e7eb',
+              border: `1px solid ${colors.gray[200]}`,
               borderRadius: 1,
               overflow: 'hidden',
               transition: 'transform 0.15s ease',
-              '&:hover': { transform: 'scale(1.02)', borderColor: '#e5e7eb' },
+              '&:hover': { transform: 'scale(1.02)', borderColor: colors.gray[200] },
             }}
           >
             {spec.preview_url ? (
@@ -134,17 +126,17 @@ export function RelatedSpecs({ specId, mode = 'spec', library, onHoverTags }: Re
                 />
               </Box>
             ) : (
-              <Box sx={{ width: '100%', aspectRatio: '16/9', bgcolor: '#f9fafb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Typography sx={{ fontFamily: mono, fontSize: '0.7rem', color: '#d1d5db' }}>no preview</Typography>
+              <Box sx={{ width: '100%', aspectRatio: '16/9', bgcolor: colors.gray[50], display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Typography sx={{ fontFamily: mono, fontSize: '0.7rem', color: colors.gray[300] }}>no preview</Typography>
               </Box>
             )}
             <Box sx={{ p: 1.5 }}>
-              <Typography title={spec.title} sx={{ fontFamily: mono, fontSize: fontSize.sm, color: '#374151', lineHeight: 1.3 }} noWrap>
+              <Typography title={spec.title} sx={{ fontFamily: mono, fontSize: fontSize.sm, color: colors.gray[700], lineHeight: 1.3 }} noWrap>
                 {spec.title}
               </Typography>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 0.25, gap: 0.5 }}>
                 <Typography title={`${spec.shared_tags.length} tags in common: ${spec.shared_tags.join(', ')}`} sx={{ fontFamily: mono, fontSize: fontSize.xs, color: semanticColors.mutedText, whiteSpace: 'nowrap' }}>
-                  {spec.shared_tags.length} common
+                  {spec.shared_tags.length} tags in common
                 </Typography>
                 {mode === 'full' && spec.library_id && (
                   <Typography title={spec.library_id} sx={{ fontFamily: mono, fontSize: fontSize.xs, color: semanticColors.mutedText, whiteSpace: 'nowrap' }}>

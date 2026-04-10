@@ -9,6 +9,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 
 import { API_URL } from '../constants';
+import { typography, colors, semanticColors } from '../theme';
 import { useAnalytics } from '../hooks';
 import { Breadcrumb } from '../components/Breadcrumb';
 
@@ -162,7 +163,7 @@ export function InteractivePage() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          bgcolor: '#fafafa',
+          bgcolor: colors.background,
         }}
       >
         <CircularProgress />
@@ -180,13 +181,13 @@ export function InteractivePage() {
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          bgcolor: '#fafafa',
-          fontFamily: '"MonoLisa", monospace',
-          color: '#6b7280',
+          bgcolor: colors.background,
+          fontFamily: typography.fontFamily,
+          color: semanticColors.mutedText,
         }}
       >
         <Box sx={{ mb: 2 }}>{error || 'Interactive plot not available'}</Box>
-        <IconButton onClick={handleClose} aria-label="Close" sx={{ color: '#3776AB' }}>
+        <IconButton onClick={handleClose} aria-label="Close" sx={{ color: colors.primary }}>
           <CloseIcon />
         </IconButton>
       </Box>
@@ -217,7 +218,7 @@ export function InteractivePage() {
         {/* Breadcrumb navigation */}
         <Breadcrumb
           items={[
-            { label: 'pyplots.ai', to: '/' },
+            { label: 'pyplots.ai', shortLabel: 'pp', to: '/' },
             { label: specId || '', to: `/${specId}` },
             { label: library || '', to: `/${specId}/${library}` },
             { label: 'interactive' },
@@ -239,7 +240,7 @@ export function InteractivePage() {
             flex: 1,
             position: 'relative',
             overflow: 'hidden',
-            bgcolor: '#fafafa',
+            bgcolor: colors.background,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
