@@ -4,6 +4,7 @@
  * Shows large image with library carousel and action buttons.
  */
 
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
@@ -12,9 +13,9 @@ import Skeleton from '@mui/material/Skeleton';
 import DownloadIcon from '@mui/icons-material/Download';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import CheckIcon from '@mui/icons-material/Check';
 
 import type { Implementation } from '../types';
+import { colors, fontSize, typography } from '../theme';
 import { buildDetailSrcSet, DETAIL_SIZES } from '../utils/responsiveImage';
 
 interface SpecDetailViewProps {
@@ -25,8 +26,8 @@ interface SpecDetailViewProps {
   implementations: Implementation[];
   imageLoaded: boolean;
   codeCopied: string | null;
+  downloadDone: string | null;
   onImageLoad: () => void;
-  onImageClick: () => void;
   onCopyCode: (impl: Implementation) => void;
   onDownload: (impl: Implementation) => void;
   onTrackEvent: (event: string, props?: Record<string, string | undefined>) => void;
@@ -40,8 +41,8 @@ export function SpecDetailView({
   implementations,
   imageLoaded,
   codeCopied,
+  downloadDone,
   onImageLoad,
-  onImageClick,
   onCopyCode,
   onDownload,
   onTrackEvent,
@@ -49,6 +50,68 @@ export function SpecDetailView({
   // Sort implementations alphabetically for the counter
   const sortedImpls = [...implementations].sort((a, b) => a.library_id.localeCompare(b.library_id));
   const currentIndex = sortedImpls.findIndex((impl) => impl.library_id === selectedLibrary);
+
+  // In-place zoom + pan
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [zoomed, setZoomed] = useState(false);
+  const [origin, setOrigin] = useState({ x: 50, y: 50 });
+  const [animating, setAnimating] = useState(false);
+  const animTimerRef = useRef<ReturnType<typeof setTimeout>>(null);
+  const prevLibRef = useRef(selectedLibrary);
+
+  // Reset zoom when library changes (no effect needed)
+  if (prevLibRef.current !== selectedLibrary) {
+    prevLibRef.current = selectedLibrary;
+    setZoomed(false);
+    setOrigin({ x: 50, y: 50 });
+  }
+
+  const handleZoomToggle = useCallback(
+    (e: React.MouseEvent) => {
+      if (!containerRef.current) return;
+      if (!zoomed) {
+        const rect = containerRef.current.getBoundingClientRect();
+        setOrigin({
+          x: ((e.clientX - rect.left) / rect.width) * 100,
+          y: ((e.clientY - rect.top) / rect.height) * 100,
+        });
+      }
+      setAnimating(true);
+      setZoomed((z) => !z);
+      if (animTimerRef.current) clearTimeout(animTimerRef.current);
+      animTimerRef.current = setTimeout(() => setAnimating(false), 300);
+    },
+    [zoomed],
+  );
+
+  useEffect(() => {
+    return () => { if (animTimerRef.current) clearTimeout(animTimerRef.current); };
+  }, []);
+
+  const handleMouseMove = useCallback(
+    (e: React.MouseEvent) => {
+      if (!zoomed || animating || !containerRef.current) return;
+      const rect = containerRef.current.getBoundingClientRect();
+      setOrigin({
+        x: ((e.clientX - rect.left) / rect.width) * 100,
+        y: ((e.clientY - rect.top) / rect.height) * 100,
+      });
+    },
+    [zoomed, animating],
+  );
+
+  const handleTouchMove = useCallback(
+    (e: React.TouchEvent) => {
+      if (!zoomed || animating || !containerRef.current) return;
+      const touch = e.touches[0];
+      const rect = containerRef.current.getBoundingClientRect();
+      setOrigin({
+        x: ((touch.clientX - rect.left) / rect.width) * 100,
+        y: ((touch.clientY - rect.top) / rect.height) * 100,
+      });
+    },
+    [zoomed, animating],
+  );
 
   return (
     <Box
@@ -58,7 +121,14 @@ export function SpecDetailView({
       }}
     >
       <Box
-        onClick={onImageClick}
+        ref={containerRef}
+        role="button"
+        tabIndex={0}
+        aria-label={zoomed ? 'Zoom out' : 'Zoom in'}
+        onClick={handleZoomToggle}
+        onKeyDown={(e: React.KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleZoomToggle(e as unknown as React.MouseEvent); } }}
+        onMouseMove={handleMouseMove}
+        onTouchMove={handleTouchMove}
         sx={{
           position: 'relative',
           borderRadius: 2,
@@ -66,7 +136,10 @@ export function SpecDetailView({
           bgcolor: '#fff',
           boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
           aspectRatio: '16/9',
-          cursor: 'pointer',
+          cursor: zoomed ? 'zoom-out' : 'zoom-in',
+          touchAction: zoomed ? 'none' : 'auto',
+          outline: 'none',
+          '&:focus-visible': { boxShadow: `0 0 0 2px ${colors.primary}` },
           '&:hover .impl-counter': {
             opacity: 1,
           },
@@ -110,6 +183,9 @@ export function SpecDetailView({
                 width: '100%',
                 height: '100%',
                 objectFit: 'contain',
+                transform: zoomed ? 'scale(2.5)' : 'scale(1)',
+                transformOrigin: `${origin.x}% ${origin.y}%`,
+                transition: animating ? 'transform 0.3s ease' : 'none',
               }}
               onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
                 const target = e.target as HTMLImageElement;
@@ -124,6 +200,27 @@ export function SpecDetailView({
           </Box>
         )}
 
+        {/* Copied/Downloaded confirmation overlay */}
+        {currentImpl && (codeCopied === currentImpl.library_id || downloadDone === currentImpl.library_id) && (
+          <Box sx={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            bgcolor: 'rgba(0,0,0,0.7)',
+            color: '#fff',
+            px: 1.5,
+            py: 0.5,
+            borderRadius: 1,
+            fontFamily: typography.fontFamily,
+            fontSize: fontSize.sm,
+            pointerEvents: 'none',
+            zIndex: 2,
+          }}>
+            {codeCopied === currentImpl.library_id ? '>>> copied' : '>>> downloaded'}
+          </Box>
+        )}
+
         {/* Action Buttons (top-right) - stop propagation */}
         <Box
           onClick={(e) => e.stopPropagation()}
@@ -131,46 +228,42 @@ export function SpecDetailView({
             position: 'absolute',
             top: 8,
             right: 8,
-            display: 'flex',
+            display: zoomed ? 'none' : 'flex',
             gap: 0.5,
           }}
         >
-          {currentImpl?.code && (
-            <Tooltip title={codeCopied === currentImpl.library_id ? 'Copied!' : 'Copy Code'}>
+          {currentImpl && (
+            <Tooltip title="Copy Code" disableFocusListener>
               <IconButton
-                onClick={() => onCopyCode(currentImpl)}
+                onClick={(e: React.MouseEvent) => { (e.currentTarget as HTMLElement).blur(); onCopyCode(currentImpl); }}
                 aria-label="Copy code"
                 sx={{
                   bgcolor: 'rgba(255,255,255,0.9)',
-                  '&:hover': { bgcolor: '#fff' },
+                  '&:hover': { bgcolor: '#fff', color: colors.primary },
                 }}
-                size="small"
+                size="medium"
               >
-                {codeCopied === currentImpl.library_id ? (
-                  <CheckIcon fontSize="small" color="success" />
-                ) : (
-                  <ContentCopyIcon fontSize="small" />
-                )}
+                <ContentCopyIcon fontSize="small" />
               </IconButton>
             </Tooltip>
           )}
           {currentImpl && (
-            <Tooltip title="Download PNG">
+            <Tooltip title="Download PNG" disableFocusListener>
               <IconButton
-                onClick={() => onDownload(currentImpl)}
+                onClick={(e: React.MouseEvent) => { (e.currentTarget as HTMLElement).blur(); onDownload(currentImpl); }}
                 aria-label="Download PNG"
                 sx={{
                   bgcolor: 'rgba(255,255,255,0.9)',
-                  '&:hover': { bgcolor: '#fff' },
+                  '&:hover': { bgcolor: '#fff', color: colors.primary },
                 }}
-                size="small"
+                size="medium"
               >
                 <DownloadIcon fontSize="small" />
               </IconButton>
             </Tooltip>
           )}
           {currentImpl?.preview_html && (
-            <Tooltip title="Open Interactive">
+            <Tooltip title="Open Interactive" disableFocusListener>
               <IconButton
                 component={Link}
                 to={`/interactive/${specId}/${selectedLibrary}`}
@@ -181,9 +274,9 @@ export function SpecDetailView({
                 }}
                 sx={{
                   bgcolor: 'rgba(255,255,255,0.9)',
-                  '&:hover': { bgcolor: '#fff' },
+                  '&:hover': { bgcolor: '#fff', color: colors.primary },
                 }}
-                size="small"
+                size="medium"
               >
                 <OpenInNewIcon fontSize="small" />
               </IconButton>
@@ -192,7 +285,7 @@ export function SpecDetailView({
         </Box>
 
         {/* Implementation counter (hover) */}
-        {implementations.length > 1 && (
+        {implementations.length > 1 && !zoomed && (
           <Box
             className="impl-counter"
             sx={{
@@ -204,7 +297,7 @@ export function SpecDetailView({
               bgcolor: 'rgba(0,0,0,0.6)',
               borderRadius: 1,
               fontSize: '0.75rem',
-              fontFamily: '"MonoLisa", monospace',
+              fontFamily: typography.fontFamily,
               color: '#fff',
               opacity: 0,
               transition: 'opacity 0.2s',

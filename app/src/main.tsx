@@ -4,25 +4,26 @@ import CssBaseline from '@mui/material/CssBaseline';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { AppRouter } from './router';
 import { reportWebVitals } from './analytics/reportWebVitals';
+import { typography, colors, semanticColors, fontSize } from './theme';
 
 // Import MonoLisa font - hosted on GCS (all text uses MonoLisa)
 import './styles/fonts.css';
 
 const theme = createTheme({
   typography: {
-    fontFamily: '"MonoLisa", "MonoLisa Fallback", Consolas, Menlo, Monaco, monospace',
+    fontFamily: typography.fontFamily,
   },
   palette: {
     mode: 'light',
     primary: {
-      main: '#2563eb', // Slightly softer blue
+      main: colors.primary,
     },
     text: {
-      primary: '#1f2937',
-      secondary: '#6b7280',
+      primary: colors.gray[800],
+      secondary: semanticColors.subtleText,
     },
     background: {
-      default: '#ffffff',
+      default: colors.background,
     },
   },
   shape: {
@@ -32,7 +33,25 @@ const theme = createTheme({
     MuiCssBaseline: {
       styleOverrides: {
         body: {
-          backgroundColor: '#ffffff',
+          backgroundColor: colors.background,
+        },
+      },
+    },
+    MuiTooltip: {
+      defaultProps: {
+        enterDelay: 200,
+        placement: 'top' as const,
+      },
+      styleOverrides: {
+        tooltip: {
+          backgroundColor: 'rgba(0,0,0,0.8)',
+          fontFamily: typography.fontFamily,
+          fontSize: fontSize.xs,
+          padding: '4px 8px',
+          borderRadius: 4,
+        },
+        arrow: {
+          color: 'rgba(0,0,0,0.8)',
         },
       },
     },

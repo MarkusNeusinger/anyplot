@@ -18,12 +18,8 @@ describe('useCodeFetch', () => {
     });
   }
 
-  const apiResponse = {
-    implementations: [
-      { library_id: 'matplotlib', code: 'import matplotlib\nfig, ax = plt.subplots()' },
-      { library_id: 'seaborn', code: 'import seaborn as sns\nsns.heatmap(data)' },
-    ],
-  };
+  const mplCode = 'import matplotlib\nfig, ax = plt.subplots()';
+  const snsCode = 'import seaborn as sns\nsns.heatmap(data)';
 
   describe('getCode', () => {
     it('returns null for uncached entries', () => {
@@ -32,22 +28,20 @@ describe('useCodeFetch', () => {
     });
 
     it('returns cached code after successful fetch', async () => {
-      mockFetchResponse(apiResponse);
+      mockFetchResponse({ code: mplCode });
       const { result } = renderHook(() => useCodeFetch());
 
       await act(async () => {
         await result.current.fetchCode('scatter-basic', 'matplotlib');
       });
 
-      expect(result.current.getCode('scatter-basic', 'matplotlib')).toBe(
-        'import matplotlib\nfig, ax = plt.subplots()'
-      );
+      expect(result.current.getCode('scatter-basic', 'matplotlib')).toBe(mplCode);
     });
   });
 
   describe('fetchCode', () => {
     it('fetches code from API and returns it', async () => {
-      mockFetchResponse(apiResponse);
+      mockFetchResponse({ code: mplCode });
       const { result } = renderHook(() => useCodeFetch());
 
       let code: string | null = null;
@@ -55,14 +49,14 @@ describe('useCodeFetch', () => {
         code = await result.current.fetchCode('scatter-basic', 'matplotlib');
       });
 
-      expect(code).toBe('import matplotlib\nfig, ax = plt.subplots()');
+      expect(code).toBe(mplCode);
       expect(globalThis.fetch).toHaveBeenCalledWith(
-        expect.stringContaining('/specs/scatter-basic')
+        expect.stringContaining('/specs/scatter-basic/matplotlib/code')
       );
     });
 
     it('returns cached result on second call without re-fetching', async () => {
-      mockFetchResponse(apiResponse);
+      mockFetchResponse({ code: mplCode });
       const { result } = renderHook(() => useCodeFetch());
 
       await act(async () => {
@@ -74,12 +68,12 @@ describe('useCodeFetch', () => {
         code = await result.current.fetchCode('scatter-basic', 'matplotlib');
       });
 
-      expect(code).toBe('import matplotlib\nfig, ax = plt.subplots()');
+      expect(code).toBe(mplCode);
       expect(globalThis.fetch).toHaveBeenCalledTimes(1);
     });
 
     it('deduplicates concurrent requests for the same key', async () => {
-      mockFetchResponse(apiResponse);
+      mockFetchResponse({ code: mplCode });
       const { result } = renderHook(() => useCodeFetch());
 
       await act(async () => {
@@ -105,8 +99,8 @@ describe('useCodeFetch', () => {
       expect(code).toBeNull();
     });
 
-    it('returns null when implementation is not found for library', async () => {
-      mockFetchResponse({ implementations: [{ library_id: 'plotly', code: 'plotly code' }] });
+    it('returns null when code field is missing', async () => {
+      mockFetchResponse({});
       const { result } = renderHook(() => useCodeFetch());
 
       let code: string | null = 'initial';
@@ -135,7 +129,7 @@ describe('useCodeFetch', () => {
     });
 
     it('manages isLoading state during fetch', async () => {
-      mockFetchResponse(apiResponse);
+      mockFetchResponse({ code: mplCode });
       const { result } = renderHook(() => useCodeFetch());
 
       expect(result.current.isLoading).toBe(false);
@@ -148,21 +142,21 @@ describe('useCodeFetch', () => {
     });
 
     it('fetches different libraries independently', async () => {
-      mockFetchResponse(apiResponse);
-      mockFetchResponse(apiResponse);
+      mockFetchResponse({ code: mplCode });
+      mockFetchResponse({ code: snsCode });
       const { result } = renderHook(() => useCodeFetch());
 
-      let mplCode: string | null = null;
-      let snsCode: string | null = null;
+      let mplResult: string | null = null;
+      let snsResult: string | null = null;
       await act(async () => {
-        mplCode = await result.current.fetchCode('scatter-basic', 'matplotlib');
+        mplResult = await result.current.fetchCode('scatter-basic', 'matplotlib');
       });
       await act(async () => {
-        snsCode = await result.current.fetchCode('scatter-basic', 'seaborn');
+        snsResult = await result.current.fetchCode('scatter-basic', 'seaborn');
       });
 
-      expect(mplCode).toContain('matplotlib');
-      expect(snsCode).toContain('seaborn');
+      expect(mplResult).toContain('matplotlib');
+      expect(snsResult).toContain('seaborn');
       expect(globalThis.fetch).toHaveBeenCalledTimes(2);
     });
   });

@@ -14,6 +14,7 @@ import { useAppData, useHomeState } from '../hooks';
 import { Breadcrumb } from '../components/Breadcrumb';
 import { Footer } from '../components/Footer';
 import type { PlotImage } from '../types';
+import { typography, colors, fontSize, semanticColors } from '../theme';
 
 interface CatalogSpec {
   id: string;
@@ -157,7 +158,7 @@ export function CatalogPage() {
       <Box sx={{ pb: 4 }}>
         {/* Breadcrumb navigation */}
         <Breadcrumb
-          items={[{ label: 'pyplots.ai', to: '/' }, { label: 'catalog' }]}
+          items={[{ label: 'pyplots.ai', shortLabel: 'pp', to: '/' }, { label: 'catalog' }]}
           rightAction={
             <Box
               component="a"
@@ -166,9 +167,9 @@ export function CatalogPage() {
               rel="noopener noreferrer"
               onClick={() => trackEvent('suggest_spec')}
               sx={{
-                color: '#9ca3af',
+                color: semanticColors.mutedText,
                 textDecoration: 'none',
-                '&:hover': { color: '#3776AB' },
+                '&:hover': { color: colors.primary },
               }}
             >
               suggest spec
@@ -182,10 +183,10 @@ export function CatalogPage() {
           variant="h4"
           component="h1"
           sx={{
-            fontFamily: '"MonoLisa", monospace',
+            fontFamily: typography.fontFamily,
             fontWeight: 600,
             mb: 4,
-            color: '#1f2937',
+            color: colors.gray[800],
           }}
         >
           catalog
@@ -193,9 +194,9 @@ export function CatalogPage() {
             component="span"
             sx={{
               ml: 2,
-              fontSize: '1rem',
+              fontSize: fontSize.lg,
               fontWeight: 400,
-              color: '#9ca3af',
+              color: semanticColors.mutedText,
             }}
           >
             {catalogSpecs.length} specifications
@@ -296,8 +297,8 @@ export function CatalogPage() {
                         py: 0.25,
                         bgcolor: 'rgba(0,0,0,0.6)',
                         borderRadius: 1,
-                        fontSize: '0.7rem',
-                        fontFamily: '"MonoLisa", monospace',
+                        fontSize: fontSize.xs,
+                        fontFamily: typography.fontFamily,
                         color: '#fff',
                         opacity: 0,
                         transition: 'opacity 0.2s',
@@ -318,8 +319,8 @@ export function CatalogPage() {
                       py: 0.25,
                       bgcolor: 'rgba(0,0,0,0.6)',
                       borderRadius: 0.5,
-                      fontSize: '0.65rem',
-                      fontFamily: '"MonoLisa", monospace',
+                      fontSize: fontSize.xs,
+                      fontFamily: typography.fontFamily,
                       color: '#fff',
                       opacity: 0,
                       transition: 'opacity 0.2s',
@@ -345,12 +346,12 @@ export function CatalogPage() {
                 >
                   <Typography
                     sx={{
-                      fontFamily: '"MonoLisa", monospace',
+                      fontFamily: typography.fontFamily,
                       fontWeight: 600,
-                      fontSize: '1rem',
-                      color: '#1f2937',
+                      fontSize: fontSize.xl,
+                      color: colors.gray[800],
                       mb: 0.5,
-                      '&:hover': { color: '#3776AB' },
+                      '&:hover': { color: colors.primary },
                     }}
                   >
                     {spec.title}
@@ -365,9 +366,9 @@ export function CatalogPage() {
                         }
                       }}
                       sx={{
-                        fontFamily: '"MonoLisa", monospace',
-                        fontSize: '0.85rem',
-                        color: '#6b7280',
+                        fontFamily: typography.fontFamily,
+                        fontSize: fontSize.base,
+                        color: semanticColors.subtleText,
                         lineHeight: 1.6,
                         cursor: expandedDescs[spec.id] ? 'default' : 'pointer',
                         ...(!expandedDescs[spec.id] && {
@@ -399,12 +400,12 @@ export function CatalogPage() {
           position: 'fixed',
           bottom: 24,
           right: 24,
-          bgcolor: '#f3f4f6',
-          color: '#6b7280',
+          bgcolor: colors.gray[100],
+          color: semanticColors.mutedText,
           opacity: showScrollTop ? 1 : 0,
           visibility: showScrollTop ? 'visible' : 'hidden',
           transition: 'opacity 0.3s, visibility 0.3s',
-          '&:hover': { bgcolor: '#e5e7eb', color: '#3776AB' },
+          '&:hover': { bgcolor: colors.gray[200], color: colors.primary },
         }}
       >
         <KeyboardArrowUpIcon />

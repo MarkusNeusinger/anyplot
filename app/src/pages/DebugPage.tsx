@@ -28,6 +28,12 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 
 import { API_URL, LIBRARIES } from '../constants';
 import { Breadcrumb } from '../components/Breadcrumb';
+import {
+  typography,
+  colors,
+  semanticColors,
+  fontSize,
+} from '../theme';
 
 // ============================================================================
 // Types
@@ -94,16 +100,16 @@ type SortDir = 'asc' | 'desc';
 // ============================================================================
 
 const getScoreColor = (score: number | null): string => {
-  if (score === null) return '#d1d5db';
-  if (score >= 90) return '#22c55e';
-  if (score >= 50) return '#eab308';
-  return '#ef4444';
+  if (score === null) return colors.gray[300];
+  if (score >= 90) return colors.success;
+  if (score >= 50) return colors.warning;
+  return colors.error;
 };
 
 const ScoreCell = ({ score, specId, library }: { score: number | null; specId: string; library: string }) => {
   if (score === null) {
     return (
-      <Typography sx={{ color: '#d1d5db', fontSize: '0.75rem', textAlign: 'center' }}>-</Typography>
+      <Typography sx={{ color: colors.gray[300], fontSize: fontSize.xs, textAlign: 'center' }}>-</Typography>
     );
   }
   return (
@@ -112,7 +118,7 @@ const ScoreCell = ({ score, specId, library }: { score: number | null; specId: s
       to={`/${specId}/${library}`}
       sx={{ display: 'block', textDecoration: 'none', textAlign: 'center', '&:hover': { opacity: 0.7 } }}
     >
-      <Typography sx={{ fontSize: '0.75rem', fontFamily: 'monospace', fontWeight: 600, color: getScoreColor(score) }}>
+      <Typography sx={{ fontSize: fontSize.xs, fontFamily: typography.fontFamily, fontWeight: 600, color: getScoreColor(score) }}>
         {Math.round(score)}
       </Typography>
     </Box>
@@ -139,14 +145,14 @@ const ProblemList = ({ items, title, icon }: { items: ProblemSpec[]; title: stri
                   <Box
                     component={Link}
                     to={`/${item.id}`}
-                    sx={{ fontFamily: 'monospace', fontSize: '0.8rem', color: '#3776AB', textDecoration: 'none' }}
+                    sx={{ fontFamily: typography.fontFamily, fontSize: fontSize.sm, color: colors.primary, textDecoration: 'none' }}
                   >
                     {item.id}
                   </Box>
                 </TableCell>
-                <TableCell sx={{ color: '#6b7280', fontSize: '0.8rem' }}>{item.issue}</TableCell>
+                <TableCell sx={{ color: semanticColors.mutedText, fontSize: fontSize.sm }}>{item.issue}</TableCell>
                 {item.value && (
-                  <TableCell sx={{ fontFamily: 'monospace', fontSize: '0.8rem', color: '#ef4444' }}>
+                  <TableCell sx={{ fontFamily: typography.fontFamily, fontSize: fontSize.sm, color: colors.error }}>
                     {item.value}
                   </TableCell>
                 )}
@@ -276,10 +282,10 @@ export function DebugPage() {
   }
 
   return (
-    <Box sx={{ p: 3, minHeight: '100vh', bgcolor: '#fafafa' }}>
+    <Box sx={{ p: 3, minHeight: '100vh', bgcolor: colors.background }}>
       {/* Breadcrumb */}
       <Breadcrumb
-        items={[{ label: 'pyplots.ai', to: '/' }, { label: 'debug' }]}
+        items={[{ label: 'pyplots.ai', shortLabel: 'pp', to: '/' }, { label: 'debug' }]}
         sx={{
           mx: 0,
           mt: 0,
@@ -287,7 +293,7 @@ export function DebugPage() {
           bgcolor: 'transparent',
           borderBottom: 'none',
           fontWeight: 600,
-          fontSize: '0.9rem',
+          fontSize: fontSize.base,
         }}
       />
 
@@ -314,16 +320,16 @@ export function DebugPage() {
       <Paper sx={{ p: 2, mb: 2, display: 'flex', gap: 3, flexWrap: 'wrap', alignItems: 'center' }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
           {data.system.database_connected ? (
-            <CheckCircleIcon sx={{ color: '#22c55e', fontSize: 18 }} />
+            <CheckCircleIcon sx={{ color: colors.success, fontSize: 18 }} />
           ) : (
-            <WarningIcon sx={{ color: '#ef4444', fontSize: 18 }} />
+            <WarningIcon sx={{ color: colors.error, fontSize: 18 }} />
           )}
-          <Typography sx={{ fontSize: '0.8rem' }}>Database</Typography>
+          <Typography sx={{ fontSize: fontSize.sm }}>Database</Typography>
         </Box>
-        <Typography sx={{ fontSize: '0.8rem', color: '#6b7280' }}>
+        <Typography sx={{ fontSize: fontSize.sm, color: semanticColors.mutedText }}>
           Response: <strong>{data.system.api_response_time_ms.toFixed(0)}ms</strong>
         </Typography>
-        <Typography sx={{ fontSize: '0.8rem', color: '#6b7280' }}>
+        <Typography sx={{ fontSize: fontSize.sm, color: semanticColors.mutedText }}>
           Updated: {new Date(data.system.timestamp).toLocaleTimeString()}
         </Typography>
       </Paper>
@@ -338,18 +344,18 @@ export function DebugPage() {
               elevation={0}
               sx={{
                 p: 1.5,
-                bgcolor: '#f9fafb',
-                border: '1px solid #e5e7eb',
+                bgcolor: colors.gray[50],
+                border: `1px solid ${colors.gray[200]}`,
                 borderRadius: 1,
                 minWidth: 100,
               }}
             >
-              <Typography sx={{ fontSize: '0.75rem', fontWeight: 600, color: '#374151' }}>{lib.name}</Typography>
-              <Typography sx={{ fontSize: '1.25rem', fontWeight: 700, color: '#3776AB' }}>{lib.impl_count}</Typography>
-              <Typography sx={{ fontSize: '0.7rem', color: getScoreColor(lib.avg_score) }}>
+              <Typography sx={{ fontSize: fontSize.xs, fontWeight: 600, color: colors.gray[700] }}>{lib.name}</Typography>
+              <Typography sx={{ fontSize: '1.25rem', fontWeight: 700, color: colors.primary }}>{lib.impl_count}</Typography>
+              <Typography sx={{ fontSize: fontSize.xs, color: getScoreColor(lib.avg_score) }}>
                 avg: {lib.avg_score?.toFixed(1) || '-'}
               </Typography>
-              <Typography sx={{ fontSize: '0.65rem', color: '#9ca3af' }}>
+              <Typography sx={{ fontSize: fontSize.xxs, color: semanticColors.mutedText }}>
                 {lib.min_score?.toFixed(0) || '-'} - {lib.max_score?.toFixed(0) || '-'}
               </Typography>
             </Paper>
@@ -367,22 +373,22 @@ export function DebugPage() {
           <ProblemList
             items={data.low_score_specs}
             title="Low Scores (avg < 85)"
-            icon={<WarningIcon sx={{ color: '#ef4444', fontSize: 18 }} />}
+            icon={<WarningIcon sx={{ color: colors.error, fontSize: 18 }} />}
           />
           <ProblemList
             items={data.missing_preview_specs}
             title="Missing Previews"
-            icon={<WarningIcon sx={{ color: '#f59e0b', fontSize: 18 }} />}
+            icon={<WarningIcon sx={{ color: colors.warning, fontSize: 18 }} />}
           />
           <ProblemList
             items={data.missing_tags_specs}
             title="Missing Tags"
-            icon={<WarningIcon sx={{ color: '#f59e0b', fontSize: 18 }} />}
+            icon={<WarningIcon sx={{ color: colors.warning, fontSize: 18 }} />}
           />
           <ProblemList
             items={data.oldest_specs}
             title="Oldest Specs"
-            icon={<WarningIcon sx={{ color: '#6b7280', fontSize: 18 }} />}
+            icon={<WarningIcon sx={{ color: semanticColors.mutedText, fontSize: 18 }} />}
           />
         </Paper>
       )}
@@ -399,11 +405,11 @@ export function DebugPage() {
         />
         <FormControlLabel
           control={<Checkbox checked={showIncomplete} onChange={(e) => setShowIncomplete(e.target.checked)} />}
-          label={<Typography sx={{ fontSize: '0.875rem' }}>Incomplete ({'<'}9)</Typography>}
+          label={<Typography sx={{ fontSize: fontSize.md }}>Incomplete ({'<'}9)</Typography>}
         />
         <FormControlLabel
           control={<Checkbox checked={showLowScores} onChange={(e) => setShowLowScores(e.target.checked)} />}
-          label={<Typography sx={{ fontSize: '0.875rem' }}>Low scores ({'<'}90)</Typography>}
+          label={<Typography sx={{ fontSize: fontSize.md }}>Low scores ({'<'}90)</Typography>}
         />
         <FormControl size="small" sx={{ minWidth: 180 }}>
           <InputLabel>Missing library</InputLabel>
@@ -421,21 +427,21 @@ export function DebugPage() {
       </Paper>
 
       {/* Legend */}
-      <Box sx={{ mb: 2, display: 'flex', gap: 3, flexWrap: 'wrap', fontSize: '0.75rem' }}>
+      <Box sx={{ mb: 2, display: 'flex', gap: 3, flexWrap: 'wrap', fontSize: fontSize.xs }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-          <Box sx={{ width: 12, height: 12, bgcolor: '#22c55e', borderRadius: 0.5 }} />
+          <Box sx={{ width: 12, height: 12, bgcolor: colors.success, borderRadius: 0.5 }} />
           <span>90+ (excellent)</span>
         </Box>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-          <Box sx={{ width: 12, height: 12, bgcolor: '#eab308', borderRadius: 0.5 }} />
+          <Box sx={{ width: 12, height: 12, bgcolor: colors.warning, borderRadius: 0.5 }} />
           <span>50-89 (acceptable)</span>
         </Box>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-          <Box sx={{ width: 12, height: 12, bgcolor: '#ef4444', borderRadius: 0.5 }} />
+          <Box sx={{ width: 12, height: 12, bgcolor: colors.error, borderRadius: 0.5 }} />
           <span>&lt;50 (poor)</span>
         </Box>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-          <Box sx={{ width: 12, height: 12, bgcolor: '#d1d5db', borderRadius: 0.5 }} />
+          <Box sx={{ width: 12, height: 12, bgcolor: colors.gray[300], borderRadius: 0.5 }} />
           <span>- (missing)</span>
         </Box>
       </Box>
@@ -476,7 +482,7 @@ export function DebugPage() {
                 </TableSortLabel>
               </TableCell>
               {LIBRARIES.map((lib) => (
-                <TableCell key={lib} align="center" sx={{ fontWeight: 600, fontSize: '0.7rem', minWidth: 45, px: 0.5 }}>
+                <TableCell key={lib} align="center" sx={{ fontWeight: 600, fontSize: fontSize.xs, minWidth: 45, px: 0.5 }}>
                   {lib.slice(0, 4)}
                 </TableCell>
               ))}
@@ -495,15 +501,15 @@ export function DebugPage() {
             {filteredSpecs.map((spec) => {
               const implCount = countImpls(spec);
               return (
-                <TableRow key={spec.id} hover sx={{ '&:hover': { bgcolor: '#f3f4f6' } }}>
+                <TableRow key={spec.id} hover sx={{ '&:hover': { bgcolor: colors.gray[100] } }}>
                   <TableCell>
                     <Box
                       component={Link}
                       to={`/${spec.id}`}
                       sx={{
-                        fontFamily: 'monospace',
-                        fontSize: '0.8rem',
-                        color: '#3776AB',
+                        fontFamily: typography.fontFamily,
+                        fontSize: fontSize.sm,
+                        color: colors.primary,
                         textDecoration: 'none',
                         '&:hover': { textDecoration: 'underline' },
                       }}
@@ -514,8 +520,8 @@ export function DebugPage() {
                   <TableCell>
                     <Typography
                       sx={{
-                        fontSize: '0.8rem',
-                        color: '#4b5563',
+                        fontSize: fontSize.sm,
+                        color: semanticColors.labelText,
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
                         whiteSpace: 'nowrap',
@@ -528,10 +534,10 @@ export function DebugPage() {
                   <TableCell align="center">
                     <Typography
                       sx={{
-                        fontSize: '0.75rem',
+                        fontSize: fontSize.xs,
                         fontWeight: 600,
-                        fontFamily: 'monospace',
-                        color: implCount === 9 ? '#22c55e' : implCount > 0 ? '#6b7280' : '#d1d5db',
+                        fontFamily: typography.fontFamily,
+                        color: implCount === 9 ? colors.success : implCount > 0 ? semanticColors.mutedText : colors.gray[300],
                       }}
                     >
                       {implCount}/9
@@ -540,9 +546,9 @@ export function DebugPage() {
                   <TableCell align="center">
                     <Typography
                       sx={{
-                        fontSize: '0.75rem',
+                        fontSize: fontSize.xs,
                         fontWeight: 600,
-                        fontFamily: 'monospace',
+                        fontFamily: typography.fontFamily,
                         color: getScoreColor(spec.avg_score),
                       }}
                     >
@@ -555,7 +561,7 @@ export function DebugPage() {
                     </TableCell>
                   ))}
                   <TableCell>
-                    <Typography sx={{ fontSize: '0.7rem', fontFamily: 'monospace', color: '#9ca3af' }}>
+                    <Typography sx={{ fontSize: fontSize.xs, fontFamily: typography.fontFamily, color: semanticColors.mutedText }}>
                       {spec.updated
                         ? new Date(spec.updated).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
                         : '-'}

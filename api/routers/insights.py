@@ -109,6 +109,8 @@ class PlotOfTheDayResponse(BaseModel):
     preview_url: str | None = None
     image_description: str | None = None
     code: str | None = None
+    library_version: str | None = None
+    python_version: str | None = None
     date: str
 
 
@@ -397,6 +399,8 @@ async def _build_potd(spec_repo: SpecRepository, impl_repo: ImplRepository) -> P
         preview_url=preview_url,
         image_description=full_impl.review_image_description if full_impl else None,
         code=strip_noqa_comments(full_impl.code) if full_impl and full_impl.code else None,
+        library_version=full_impl.library_version if full_impl else None,
+        python_version=full_impl.python_version if full_impl else None,
         date=today,
     )
 
@@ -525,7 +529,7 @@ async def _build_related(
 @router.get("/related/{spec_id}", response_model=RelatedSpecsResponse)
 async def get_related_specs(
     spec_id: str,
-    limit: int = Query(default=6, ge=1, le=12),
+    limit: int = Query(default=6, ge=1, le=24),
     mode: str = Query(default="spec", pattern="^(spec|full)$"),
     library: str | None = Query(default=None),
     db: AsyncSession = Depends(require_db),

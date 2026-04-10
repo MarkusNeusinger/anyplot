@@ -15,6 +15,7 @@ import { FilterBar } from '../components/FilterBar';
 import { ImagesGrid } from '../components/ImagesGrid';
 import { PlotOfTheDay } from '../components/PlotOfTheDay';
 import { useAppData, useHomeState } from '../hooks';
+import { colors } from '../theme';
 
 export function HomePage() {
   const navigate = useNavigate();
@@ -228,12 +229,12 @@ export function HomePage() {
           position: 'fixed',
           bottom: 24,
           right: 24,
-          bgcolor: '#f3f4f6',
-          color: '#6b7280',
+          bgcolor: colors.gray[100],
+          color: colors.gray[500],
           opacity: showScrollTop ? 1 : 0,
           visibility: showScrollTop ? 'visible' : 'hidden',
           transition: 'opacity 0.3s, visibility 0.3s',
-          '&:hover': { bgcolor: '#e5e7eb', color: '#3776AB' },
+          '&:hover': { bgcolor: colors.gray[200], color: colors.primary },
         }}
       >
         <KeyboardArrowUpIcon />

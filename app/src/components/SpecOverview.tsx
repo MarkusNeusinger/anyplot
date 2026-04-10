@@ -15,10 +15,10 @@ import ClickAwayListener from '@mui/material/ClickAwayListener';
 import DownloadIcon from '@mui/icons-material/Download';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import CheckIcon from '@mui/icons-material/Check';
 
 import type { Implementation } from '../types';
 import { buildSrcSet, OVERVIEW_SIZES } from '../utils/responsiveImage';
+import { colors, fontSize, semanticColors, typography } from '../theme';
 
 interface LibraryMeta {
   id: string;
@@ -32,6 +32,7 @@ interface SpecOverviewProps {
   specTitle: string;
   implementations: Implementation[];
   codeCopied: string | null;
+  downloadDone: string | null;
   openTooltip: string | null;
   onImplClick: (libraryId: string) => void;
   onCopyCode: (impl: Implementation) => void;
@@ -46,6 +47,7 @@ export function SpecOverview({
   specTitle,
   implementations,
   codeCopied,
+  downloadDone,
   openTooltip,
   onImplClick,
   onCopyCode,
@@ -60,11 +62,11 @@ export function SpecOverview({
   return (
     <Box
       sx={{
-        maxWidth: { xs: '100%', md: 1200, lg: 1400, xl: 1600 },
+        maxWidth: { xs: '100%', md: 1200, lg: 1400, xl: 1800 },
         mx: 'auto',
         mt: 4,
         display: 'grid',
-        gridTemplateColumns: 'repeat(3, 1fr)',
+        gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' },
         gap: 3,
       }}
     >
@@ -75,6 +77,7 @@ export function SpecOverview({
           specId={specId}
           specTitle={specTitle}
           codeCopied={codeCopied}
+          downloadDone={downloadDone}
           openTooltip={openTooltip}
           onImplClick={onImplClick}
           onCopyCode={onCopyCode}
@@ -93,6 +96,7 @@ interface ImplementationCardProps {
   specId: string;
   specTitle: string;
   codeCopied: string | null;
+  downloadDone: string | null;
   openTooltip: string | null;
   onImplClick: (libraryId: string) => void;
   onCopyCode: (impl: Implementation) => void;
@@ -107,6 +111,7 @@ function ImplementationCard({
   specId,
   specTitle,
   codeCopied,
+  downloadDone,
   openTooltip,
   onImplClick,
   onCopyCode,
@@ -180,6 +185,27 @@ function ImplementationCard({
           <Skeleton variant="rectangular" sx={{ width: '100%', aspectRatio: '16/10' }} />
         )}
 
+        {/* Copied/Downloaded confirmation overlay */}
+        {(codeCopied === impl.library_id || downloadDone === impl.library_id) && (
+          <Box sx={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            bgcolor: 'rgba(0,0,0,0.7)',
+            color: '#fff',
+            px: 1.5,
+            py: 0.5,
+            borderRadius: 1,
+            fontFamily: typography.fontFamily,
+            fontSize: fontSize.sm,
+            pointerEvents: 'none',
+            zIndex: 2,
+          }}>
+            {codeCopied === impl.library_id ? '>>> copied' : '>>> downloaded'}
+          </Box>
+        )}
+
         {/* Action Buttons (top-right) */}
         <Box
           className="action-buttons"
@@ -194,40 +220,34 @@ function ImplementationCard({
             transition: 'opacity 0.2s',
           }}
         >
-          {impl.code && (
-            <Tooltip title={codeCopied === impl.library_id ? 'Copied!' : 'Copy Code'}>
-              <IconButton
-                onClick={() => onCopyCode(impl)}
-                aria-label="Copy code"
-                sx={{
-                  bgcolor: 'rgba(255,255,255,0.9)',
-                  '&:hover': { bgcolor: '#fff' },
-                }}
-                size="small"
-              >
-                {codeCopied === impl.library_id ? (
-                  <CheckIcon fontSize="small" color="success" />
-                ) : (
-                  <ContentCopyIcon fontSize="small" />
-                )}
-              </IconButton>
-            </Tooltip>
-          )}
-          <Tooltip title="Download PNG">
+          <Tooltip title="Copy Code" disableFocusListener>
             <IconButton
-              onClick={() => onDownload(impl)}
+              onClick={(e: React.MouseEvent) => { (e.currentTarget as HTMLElement).blur(); onCopyCode(impl); }}
+              aria-label="Copy code"
+              sx={{
+                bgcolor: 'rgba(255,255,255,0.9)',
+                '&:hover': { bgcolor: '#fff', color: colors.primary },
+              }}
+              size="medium"
+            >
+              <ContentCopyIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Download PNG" disableFocusListener>
+            <IconButton
+              onClick={(e: React.MouseEvent) => { (e.currentTarget as HTMLElement).blur(); onDownload(impl); }}
               aria-label="Download PNG"
               sx={{
                 bgcolor: 'rgba(255,255,255,0.9)',
-                '&:hover': { bgcolor: '#fff' },
+                '&:hover': { bgcolor: '#fff', color: colors.primary },
               }}
-              size="small"
+              size="medium"
             >
               <DownloadIcon fontSize="small" />
             </IconButton>
           </Tooltip>
           {impl.preview_html && (
-            <Tooltip title="Open Interactive">
+            <Tooltip title="Open Interactive" disableFocusListener>
               <IconButton
                 component={Link}
                 to={`/interactive/${specId}/${impl.library_id}`}
@@ -238,9 +258,9 @@ function ImplementationCard({
                 }}
                 sx={{
                   bgcolor: 'rgba(255,255,255,0.9)',
-                  '&:hover': { bgcolor: '#fff' },
+                  '&:hover': { bgcolor: '#fff', color: colors.primary },
                 }}
-                size="small"
+                size="medium"
               >
                 <OpenInNewIcon fontSize="small" />
               </IconButton>
@@ -264,7 +284,7 @@ function ImplementationCard({
             <Tooltip
               title={
                 <Box>
-                  <Typography sx={{ fontSize: '0.8rem', mb: libMeta?.documentation_url ? 1 : 0 }}>
+                  <Typography sx={{ fontSize: fontSize.md, mb: libMeta?.documentation_url ? 1 : 0 }}>
                     {libMeta?.description || 'No description available'}
                   </Typography>
                   {libMeta?.documentation_url && (
@@ -277,8 +297,8 @@ function ImplementationCard({
                         display: 'inline-flex',
                         alignItems: 'center',
                         gap: 0.5,
-                        fontSize: '0.75rem',
-                        color: '#90caf9',
+                        fontSize: fontSize.xs,
+                        color: colors.tooltipLight,
                         textDecoration: 'underline',
                         '&:hover': { color: '#fff' },
                       }}
@@ -299,8 +319,8 @@ function ImplementationCard({
                 tooltip: {
                   sx: {
                     maxWidth: { xs: '80vw', sm: 400 },
-                    fontFamily: '"MonoLisa", monospace',
-                    fontSize: '0.8rem',
+                    fontFamily: typography.fontFamily,
+                    fontSize: fontSize.md,
                   },
                 },
               }}
@@ -311,13 +331,13 @@ function ImplementationCard({
                   onTooltipToggle(isTooltipOpen ? null : tooltipId);
                 }}
                 sx={{
-                  fontSize: '0.8rem',
+                  fontSize: fontSize.md,
                   fontWeight: 600,
-                  fontFamily: '"MonoLisa", monospace',
-                  color: isTooltipOpen ? '#3776AB' : '#9ca3af',
+                  fontFamily: typography.fontFamily,
+                  color: isTooltipOpen ? colors.primary : semanticColors.labelText,
                   textTransform: 'lowercase',
                   cursor: 'pointer',
-                  '&:hover': { color: '#3776AB' },
+                  '&:hover': { color: colors.primary },
                 }}
               >
                 {impl.library_id}
@@ -327,13 +347,13 @@ function ImplementationCard({
         </ClickAwayListener>
         {impl.quality_score && (
           <>
-            <Typography sx={{ color: '#d1d5db', fontSize: '0.8rem' }}>·</Typography>
+            <Typography sx={{ color: semanticColors.mutedText, fontSize: fontSize.md }}>·</Typography>
             <Typography
               sx={{
-                fontSize: '0.8rem',
+                fontSize: fontSize.md,
                 fontWeight: 600,
-                fontFamily: '"MonoLisa", monospace',
-                color: '#9ca3af',
+                fontFamily: typography.fontFamily,
+                color: semanticColors.labelText,
               }}
             >
               {Math.round(impl.quality_score)}

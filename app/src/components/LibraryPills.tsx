@@ -3,6 +3,7 @@ import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import { colors, fontSize, semanticColors, typography } from '../theme';
 
 // Library abbreviations (same as filter display)
 const LIBRARY_ABBREV: Record<string, string> = {
@@ -97,8 +98,8 @@ export const LibraryPills = memo(function LibraryPills({
         aria-label="Previous library"
         size="small"
         sx={{
-          color: '#9ca3af',
-          '&:hover': { color: '#3776AB', bgcolor: '#f3f4f6' },
+          color: semanticColors.mutedText,
+          '&:hover': { color: colors.primary, bgcolor: colors.gray[100] },
         }}
       >
         <ChevronLeftIcon />
@@ -115,7 +116,6 @@ export const LibraryPills = memo(function LibraryPills({
       >
         {visibleItems.map(({ impl, position }) => {
           const isCenter = position === 'center';
-          const score = impl.quality_score;
 
           return (
             <Box
@@ -126,19 +126,19 @@ export const LibraryPills = memo(function LibraryPills({
                 px: 1.5,
                 py: 0.5,
                 borderRadius: 2,
-                fontFamily: '"MonoLisa", monospace',
-                fontSize: '0.85rem',
+                fontFamily: typography.fontFamily,
+                fontSize: fontSize.base,
                 fontWeight: isCenter ? 600 : 400,
-                bgcolor: '#f3f4f6',
-                border: isCenter ? '1px solid #3776AB' : '1px solid transparent',
-                color: isCenter ? '#374151' : '#9ca3af',
+                bgcolor: colors.gray[100],
+                border: isCenter ? `1px solid ${colors.primary}` : '1px solid transparent',
+                color: isCenter ? colors.gray[700] : semanticColors.mutedText,
                 cursor: 'pointer',
                 transition: 'all 0.2s ease',
                 whiteSpace: 'nowrap',
                 '&:hover': {
-                  bgcolor: '#e5e7eb',
-                  borderColor: '#3776AB',
-                  color: '#374151',
+                  bgcolor: colors.gray[200],
+                  borderColor: colors.primary,
+                  color: colors.gray[700],
                 },
               }}
             >
@@ -149,18 +149,6 @@ export const LibraryPills = memo(function LibraryPills({
               <Box component="span" sx={{ display: { xs: 'inline', sm: 'none' } }}>
                 {isCenter ? impl.library_id : (LIBRARY_ABBREV[impl.library_id] || impl.library_id)}
               </Box>
-              {score && isCenter && (
-                <Box
-                  component="span"
-                  sx={{
-                    ml: 0.5,
-                    fontSize: '0.7rem',
-                    color: '#6b7280',
-                  }}
-                >
-                  {Math.round(score)}
-                </Box>
-              )}
             </Box>
           );
         })}
@@ -172,8 +160,8 @@ export const LibraryPills = memo(function LibraryPills({
         aria-label="Next library"
         size="small"
         sx={{
-          color: '#9ca3af',
-          '&:hover': { color: '#3776AB', bgcolor: '#f3f4f6' },
+          color: semanticColors.mutedText,
+          '&:hover': { color: colors.primary, bgcolor: colors.gray[100] },
         }}
       >
         <ChevronRightIcon />

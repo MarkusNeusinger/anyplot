@@ -8,9 +8,11 @@ import Tooltip from '@mui/material/Tooltip';
 import Skeleton from '@mui/material/Skeleton';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import BugReportIcon from '@mui/icons-material/BugReport';
+import ListIcon from '@mui/icons-material/List';
 import { NotFoundPage } from './NotFoundPage';
 
-import { API_URL, GITHUB_URL } from '../constants';
+import { API_URL, GITHUB_URL, LIB_ABBREV } from '../constants';
+import { typography, colors, fontSize, semanticColors } from '../theme';
 import { useAnalytics, useCodeFetch } from '../hooks';
 import { useAppData } from '../hooks';
 import { LibraryPills } from '../components/LibraryPills';
@@ -70,6 +72,7 @@ export function SpecPage() {
       setLoading(true);
       setError(null);
       setImageLoaded(false);
+      setHighlightedTags([]);
 
       try {
         const res = await fetch(`${API_URL}/specs/${specId}`);
@@ -129,26 +132,27 @@ export function SpecPage() {
     [specId, navigate]
   );
 
-  // Handle image click (in detail mode - go back to overview)
-  const handleImageClick = useCallback(() => {
-    navigate(`/${specId}`);
-  }, [specId, navigate]);
-
   // Handle download
+  const [downloadDone, setDownloadDone] = useState<string | null>(null);
+
   const handleDownload = useCallback(
-    (impl: Implementation) => {
-      if (!impl?.preview_url) return;
+    async (impl: Implementation) => {
+      if (!specId) return;
       const link = document.createElement('a');
-      link.href = impl.preview_url;
+      link.href = `${API_URL}/download/${specId}/${impl.library_id}`;
       link.download = `${specId}-${impl.library_id}.png`;
+      document.body.appendChild(link);
       link.click();
+      document.body.removeChild(link);
+      setDownloadDone(impl.library_id);
+      setTimeout(() => setDownloadDone(null), 2000);
       trackEvent('download_image', {
         spec: specId,
         library: impl.library_id,
         page: isOverviewMode ? 'spec_overview' : 'spec_detail',
       });
     },
-    [specId, trackEvent, isOverviewMode]
+    [specId, trackEvent, isOverviewMode],
   );
 
   // Handle copy code (fetches on-demand if not prefetched yet)
@@ -170,7 +174,7 @@ export function SpecPage() {
         console.error('Copy failed:', err);
       }
     },
-    [specId, trackEvent, isOverviewMode]
+    [specId, trackEvent, isOverviewMode, fetchCode]
   );
 
   // Build report issue URL
@@ -193,6 +197,32 @@ export function SpecPage() {
     }
   }, [specData, isOverviewMode, selectedLibrary, specId, trackPageview]);
 
+  // Keyboard shortcuts: left/right arrows switch libraries in detail mode
+  useEffect(() => {
+    if (isOverviewMode || !specData) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement;
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT') return;
+      const sorted = [...specData.implementations].sort((a, b) => a.library_id.localeCompare(b.library_id));
+      const idx = sorted.findIndex((impl) => impl.library_id === selectedLibrary);
+      if (idx < 0) return;
+
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        const prev = (idx - 1 + sorted.length) % sorted.length;
+        handleLibrarySelect(sorted[prev].library_id);
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        const next = (idx + 1) % sorted.length;
+        handleLibrarySelect(sorted[next].library_id);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOverviewMode, specData, selectedLibrary, handleLibrarySelect]);
+
   // Loading state
   if (loading) {
     return (
@@ -214,10 +244,10 @@ export function SpecPage() {
   if (error) {
     return (
       <Box sx={{ textAlign: 'center', py: 8 }}>
-        <Typography variant="h5" sx={{ mb: 2, color: '#6b7280' }}>
+        <Typography variant="h5" sx={{ mb: 2, color: semanticColors.mutedText }}>
           {error}
         </Typography>
-        <Button component={Link} to="/" startIcon={<ArrowBackIcon />} sx={{ color: '#3776AB' }}>
+        <Button component={Link} to="/" startIcon={<ArrowBackIcon />} sx={{ color: colors.primary }}>
           Back to Home
         </Button>
       </Box>
@@ -255,46 +285,72 @@ export function SpecPage() {
           items={
             isOverviewMode
               ? [
-                  { label: 'pyplots.ai', to: '/' },
-                  { label: 'catalog', to: '/catalog' },
+                  { label: 'pyplots.ai', shortLabel: 'pp', to: '/' },
                   { label: specId || '' },
                 ]
               : [
-                  { label: 'pyplots.ai', to: '/' },
-                  { label: 'catalog', to: '/catalog' },
+                  { label: 'pyplots.ai', shortLabel: 'pp', to: '/' },
                   { label: specId || '', to: `/${specId}` },
-                  { label: selectedLibrary || '' },
+                  { label: selectedLibrary || '', shortLabel: LIB_ABBREV[selectedLibrary || ''] || selectedLibrary || '' },
                 ]
           }
           rightAction={
-            <Tooltip title="report issue">
-              <Box
-                component="a"
-                href={buildReportUrl()}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() => trackEvent('report_issue', { spec: specId, library: selectedLibrary || undefined })}
-                sx={{
-                  color: '#9ca3af',
-                  textDecoration: 'none',
-                  display: 'flex',
-                  alignItems: 'center',
-                  '&:hover': { color: '#3776AB' },
-                }}
-              >
-                <BugReportIcon sx={{ fontSize: '1.1rem', display: { xs: 'block', md: 'none' } }} />
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1.5, md: 0 } }}>
+              <Tooltip title="catalog">
                 <Box
-                  component="span"
+                  component={Link}
+                  to="/catalog"
                   sx={{
-                    display: { xs: 'none', md: 'block' },
-                    fontFamily: '"MonoLisa", monospace',
-                    fontSize: '0.85rem',
+                    color: semanticColors.mutedText,
+                    textDecoration: 'none',
+                    display: 'flex',
+                    alignItems: 'center',
+                    '&:hover': { color: colors.primary },
                   }}
                 >
-                  report issue
+                  <ListIcon sx={{ fontSize: '1.4rem', display: { xs: 'block', md: 'none' } }} />
+                  <Box
+                    component="span"
+                    sx={{
+                      display: { xs: 'none', md: 'block' },
+                      fontFamily: typography.fontFamily,
+                      fontSize: fontSize.base,
+                    }}
+                  >
+                    catalog
+                  </Box>
                 </Box>
-              </Box>
-            </Tooltip>
+              </Tooltip>
+              <Box component="span" sx={{ mx: 0.5, color: semanticColors.mutedText, display: { xs: 'none', md: 'inline' } }}>·</Box>
+              <Tooltip title="report issue">
+                <Box
+                  component="a"
+                  href={buildReportUrl()}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => trackEvent('report_issue', { spec: specId, library: selectedLibrary || undefined })}
+                  sx={{
+                    color: semanticColors.mutedText,
+                    textDecoration: 'none',
+                    display: 'flex',
+                    alignItems: 'center',
+                    '&:hover': { color: colors.primary },
+                  }}
+                >
+                  <BugReportIcon sx={{ fontSize: '1.4rem', display: { xs: 'block', md: 'none' } }} />
+                  <Box
+                    component="span"
+                    sx={{
+                      display: { xs: 'none', md: 'block' },
+                      fontFamily: typography.fontFamily,
+                      fontSize: fontSize.base,
+                    }}
+                  >
+                    report issue
+                  </Box>
+                </Box>
+              </Tooltip>
+            </Box>
           }
         />
 
@@ -304,11 +360,11 @@ export function SpecPage() {
           component="h1"
           sx={{
             textAlign: 'center',
-            fontFamily: '"MonoLisa", monospace',
+            fontFamily: typography.fontFamily,
             fontWeight: 600,
-            fontSize: { xs: '1.25rem', sm: '1.5rem', md: '2rem' },
+            fontSize: { xs: '1.375rem', sm: '1.625rem', md: '2.125rem' },
             mb: 1,
-            color: '#1f2937',
+            color: colors.gray[800],
           }}
         >
           {specData.title}
@@ -319,9 +375,9 @@ export function SpecPage() {
           onClick={() => !descExpanded && setDescExpanded(true)}
           sx={{
             textAlign: 'center',
-            fontFamily: '"MonoLisa", monospace',
-            fontSize: { xs: '0.8rem', sm: '0.9rem' },
-            color: '#6b7280',
+            fontFamily: typography.fontFamily,
+            fontSize: { xs: '0.875rem', sm: '0.9375rem' },
+            color: semanticColors.subtleText,
             maxWidth: { xs: '100%', md: 800, lg: 950, xl: 1100 },
             mx: 'auto',
             mb: 2,
@@ -347,6 +403,7 @@ export function SpecPage() {
               specTitle={specData.title}
               implementations={specData.implementations}
               codeCopied={codeCopied}
+              downloadDone={downloadDone}
               openTooltip={openTooltip}
               onImplClick={handleImplClick}
               onCopyCode={handleCopyCode}
@@ -387,6 +444,18 @@ export function SpecPage() {
               onSelect={handleLibrarySelect}
             />
 
+            <Box sx={{ textAlign: 'center', mt: -0.5, mb: 1 }}>
+              <Box component={Link} to={`/${specId}`} sx={{
+                fontFamily: typography.fontFamily,
+                fontSize: fontSize.sm,
+                color: semanticColors.mutedText,
+                textDecoration: 'none',
+                '&:hover': { color: colors.primary },
+              }}>
+                {'< all implementations'}
+              </Box>
+            </Box>
+
             <SpecDetailView
               specId={specId || ''}
               specTitle={specData.title}
@@ -395,12 +464,13 @@ export function SpecPage() {
               implementations={specData.implementations}
               imageLoaded={imageLoaded}
               codeCopied={codeCopied}
+              downloadDone={downloadDone}
               onImageLoad={() => setImageLoaded(true)}
-              onImageClick={handleImageClick}
               onCopyCode={handleCopyCode}
               onDownload={handleDownload}
               onTrackEvent={trackEvent}
             />
+
 
             <SpecTabs
               code={currentCode || currentImpl?.code || null}

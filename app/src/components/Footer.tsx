@@ -2,6 +2,7 @@ import Box from '@mui/material/Box';
 import Link from '@mui/material/Link';
 import { Link as RouterLink } from 'react-router-dom';
 import { GITHUB_URL } from '../constants';
+import { colors, fontSize, semanticColors, typography } from '../theme';
 
 interface FooterProps {
   onTrackEvent?: (name: string, props?: Record<string, string | undefined>) => void;
@@ -11,16 +12,16 @@ interface FooterProps {
 
 export function Footer({ onTrackEvent, selectedSpec, selectedLibrary }: FooterProps) {
   return (
-    <Box component="footer" sx={{ textAlign: 'center', mt: 4, pt: 4, borderTop: '1px solid #f3f4f6' }}>
+    <Box component="footer" sx={{ textAlign: 'center', mt: 4, pt: 4, borderTop: `1px solid ${colors.gray[100]}` }}>
       <Box
         sx={{
           display: 'flex',
           justifyContent: 'center',
           alignItems: 'center',
           gap: 1,
-          fontSize: '0.8rem',
-          fontFamily: '"MonoLisa", "MonoLisa Fallback", monospace',
-          color: '#9ca3af',
+          fontSize: fontSize.md,
+          fontFamily: typography.fontFamily,
+          color: semanticColors.mutedText,
         }}
       >
         <Link
@@ -29,9 +30,9 @@ export function Footer({ onTrackEvent, selectedSpec, selectedLibrary }: FooterPr
           rel="noopener noreferrer"
           onClick={() => onTrackEvent?.('external_link', { destination: 'github', spec: selectedSpec, library: selectedLibrary })}
           sx={{
-            color: '#9ca3af',
+            color: semanticColors.mutedText,
             textDecoration: 'none',
-            '&:hover': { color: '#6b7280' },
+            '&:hover': { color: colors.gray[700] },
           }}
         >
           github
@@ -39,12 +40,25 @@ export function Footer({ onTrackEvent, selectedSpec, selectedLibrary }: FooterPr
         <span>·</span>
         <Link
           component={RouterLink}
+          to="/catalog"
+          onClick={() => onTrackEvent?.('internal_link', { destination: 'catalog', spec: selectedSpec, library: selectedLibrary })}
+          sx={{
+            color: semanticColors.mutedText,
+            textDecoration: 'none',
+            '&:hover': { color: colors.gray[700] },
+          }}
+        >
+          catalog
+        </Link>
+        <span>·</span>
+        <Link
+          component={RouterLink}
           to="/stats"
           onClick={() => onTrackEvent?.('internal_link', { destination: 'stats', spec: selectedSpec, library: selectedLibrary })}
           sx={{
-            color: '#9ca3af',
+            color: semanticColors.mutedText,
             textDecoration: 'none',
-            '&:hover': { color: '#6b7280' },
+            '&:hover': { color: colors.gray[700] },
           }}
         >
           stats
@@ -57,9 +71,9 @@ export function Footer({ onTrackEvent, selectedSpec, selectedLibrary }: FooterPr
             rel="noopener noreferrer"
             onClick={() => onTrackEvent?.('external_link', { destination: 'linkedin', spec: selectedSpec, library: selectedLibrary })}
             sx={{
-              color: '#9ca3af',
+              color: semanticColors.mutedText,
               textDecoration: 'none',
-              '&:hover': { color: '#6b7280' },
+              '&:hover': { color: colors.gray[700] },
             }}
           >
             markus neusinger
@@ -71,9 +85,9 @@ export function Footer({ onTrackEvent, selectedSpec, selectedLibrary }: FooterPr
           to="/mcp"
           onClick={() => onTrackEvent?.('internal_link', { destination: 'mcp', spec: selectedSpec, library: selectedLibrary })}
           sx={{
-            color: '#9ca3af',
+            color: semanticColors.mutedText,
             textDecoration: 'none',
-            '&:hover': { color: '#6b7280' },
+            '&:hover': { color: colors.gray[700] },
           }}
         >
           mcp
@@ -84,9 +98,9 @@ export function Footer({ onTrackEvent, selectedSpec, selectedLibrary }: FooterPr
           to="/legal"
           onClick={() => onTrackEvent?.('internal_link', { destination: 'legal', spec: selectedSpec, library: selectedLibrary })}
           sx={{
-            color: '#9ca3af',
+            color: semanticColors.mutedText,
             textDecoration: 'none',
-            '&:hover': { color: '#6b7280' },
+            '&:hover': { color: colors.gray[700] },
           }}
         >
           legal

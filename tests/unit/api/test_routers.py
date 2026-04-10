@@ -1427,6 +1427,8 @@ class TestInsightsRouter:
         mock_impl = MagicMock()
         mock_impl.code = "import matplotlib"
         mock_impl.review_image_description = "A scatter plot"
+        mock_impl.library_version = "3.10.0"
+        mock_impl.python_version = "3.13.11"
         mock_impl_repo = MagicMock()
         mock_impl_repo.get_by_spec_and_library = AsyncMock(return_value=mock_impl)
 

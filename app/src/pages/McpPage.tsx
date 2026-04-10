@@ -14,6 +14,15 @@ import { useAnalytics } from '../hooks';
 import { Breadcrumb } from '../components/Breadcrumb';
 import { Footer } from '../components/Footer';
 import { GITHUB_URL } from '../constants';
+import {
+  colors,
+  fontSize,
+  headingStyle,
+  subheadingStyle,
+  textStyle,
+  codeBlockStyle,
+  tableStyle,
+} from '../theme';
 
 export function McpPage() {
   const { trackPageview, trackEvent } = useAnalytics();
@@ -21,64 +30,6 @@ export function McpPage() {
   useEffect(() => {
     trackPageview('/mcp');
   }, [trackPageview]);
-
-  const headingStyle = {
-    fontFamily: '"MonoLisa", monospace',
-    fontWeight: 600,
-    fontSize: '1.25rem',
-    color: '#1f2937',
-    mb: 2,
-  };
-
-  const subheadingStyle = {
-    fontFamily: '"MonoLisa", monospace',
-    fontWeight: 600,
-    fontSize: '1rem',
-    color: '#374151',
-    mt: 3,
-    mb: 1,
-  };
-
-  const textStyle = {
-    fontFamily: '"MonoLisa", monospace',
-    fontSize: '0.9rem',
-    color: '#4b5563',
-    lineHeight: 1.8,
-    mb: 2,
-  };
-
-  const codeBlockStyle = {
-    fontFamily: '"MonoLisa", monospace',
-    fontSize: '0.85rem',
-    backgroundColor: '#1e293b',
-    color: '#e2e8f0',
-    p: 2,
-    borderRadius: 1,
-    overflow: 'auto',
-    mb: 2,
-    whiteSpace: 'pre-wrap',
-    wordBreak: 'break-word',
-  };
-
-  const tableStyle = {
-    '& .MuiTableCell-root': {
-      fontFamily: '"MonoLisa", monospace',
-      fontSize: '0.85rem',
-      color: '#4b5563',
-      borderBottom: '1px solid #f3f4f6',
-      py: 1.5,
-      px: 2,
-    },
-    '& .MuiTableCell-head': {
-      fontWeight: 600,
-      color: '#374151',
-      backgroundColor: '#f9fafb',
-    },
-    '& .MuiTableCell-root:first-of-type': {
-      fontWeight: 500,
-      color: '#374151',
-    },
-  };
 
   return (
     <>
@@ -96,22 +47,22 @@ export function McpPage() {
         <link rel="canonical" href="https://pyplots.ai/mcp" />
       </Helmet>
 
-      <Breadcrumb items={[{ label: 'pyplots.ai', to: '/' }, { label: 'mcp' }]} sx={{ mb: 2 }} />
+      <Breadcrumb items={[{ label: 'pyplots.ai', shortLabel: 'pp', to: '/' }, { label: 'mcp' }]} sx={{ mb: 2 }} />
 
       <Box sx={{ mb: 3, display: 'flex', gap: 2, flexWrap: 'wrap', justifyContent: 'center' }}>
-        <Link href="#what-is-mcp" sx={{ color: '#3776AB', fontFamily: '"MonoLisa", monospace', fontSize: '0.9rem' }}>
+        <Link href="#what-is-mcp" sx={{ color: colors.primary, fontFamily: textStyle.fontFamily, fontSize: fontSize.base }}>
           What is MCP
         </Link>
-        <Link href="#configuration" sx={{ color: '#3776AB', fontFamily: '"MonoLisa", monospace', fontSize: '0.9rem' }}>
+        <Link href="#configuration" sx={{ color: colors.primary, fontFamily: textStyle.fontFamily, fontSize: fontSize.base }}>
           Configuration
         </Link>
-        <Link href="#tools" sx={{ color: '#3776AB', fontFamily: '"MonoLisa", monospace', fontSize: '0.9rem' }}>
+        <Link href="#tools" sx={{ color: colors.primary, fontFamily: textStyle.fontFamily, fontSize: fontSize.base }}>
           Available Tools
         </Link>
-        <Link href="#use-cases" sx={{ color: '#3776AB', fontFamily: '"MonoLisa", monospace', fontSize: '0.9rem' }}>
+        <Link href="#use-cases" sx={{ color: colors.primary, fontFamily: textStyle.fontFamily, fontSize: fontSize.base }}>
           Use Cases
         </Link>
-        <Link href="#resources" sx={{ color: '#3776AB', fontFamily: '"MonoLisa", monospace', fontSize: '0.9rem' }}>
+        <Link href="#resources" sx={{ color: colors.primary, fontFamily: textStyle.fontFamily, fontSize: fontSize.base }}>
           Resources
         </Link>
       </Box>
@@ -125,7 +76,7 @@ export function McpPage() {
 
           <Typography sx={textStyle}>
             The{' '}
-            <Link href="https://modelcontextprotocol.io" target="_blank" rel="noopener" sx={{ color: '#3776AB' }}>
+            <Link href="https://modelcontextprotocol.io" target="_blank" rel="noopener" sx={{ color: colors.primary }}>
               Model Context Protocol (MCP)
             </Link>{' '}
             is an open standard by Anthropic that enables AI assistants to securely connect to external data sources and tools.
@@ -142,13 +93,7 @@ export function McpPage() {
               <Typography
                 key={i}
                 component="li"
-                sx={{
-                  fontFamily: '"MonoLisa", monospace',
-                  fontSize: '0.9rem',
-                  color: '#4b5563',
-                  lineHeight: 1.8,
-                  mb: 0.5,
-                }}
+                sx={textStyle}
               >
                 {item}
               </Typography>
@@ -157,7 +102,7 @@ export function McpPage() {
 
           <Typography sx={textStyle}>
             <strong>Endpoint</strong>:{' '}
-            <code style={{ backgroundColor: '#f3f4f6', padding: '4px 8px', borderRadius: '4px', color: '#3776AB' }}>
+            <code style={{ backgroundColor: colors.gray[100], padding: '4px 8px', borderRadius: '4px', color: colors.primary }}>
               https://api.pyplots.ai/mcp/
             </code>
           </Typography>
@@ -303,7 +248,7 @@ export function McpPage() {
                     href={`${GITHUB_URL}/blob/main/docs/reference/mcp.md`}
                     target="_blank"
                     rel="noopener"
-                    sx={{ color: '#3776AB' }}
+                    sx={{ color: colors.primary }}
                   >
                     docs/reference/mcp.md
                   </Link>
@@ -312,7 +257,7 @@ export function McpPage() {
               <TableRow>
                 <TableCell>MCP Official Website</TableCell>
                 <TableCell>
-                  <Link href="https://modelcontextprotocol.io" target="_blank" rel="noopener" sx={{ color: '#3776AB' }}>
+                  <Link href="https://modelcontextprotocol.io" target="_blank" rel="noopener" sx={{ color: colors.primary }}>
                     modelcontextprotocol.io
                   </Link>
                 </TableCell>

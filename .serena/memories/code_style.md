@@ -18,8 +18,8 @@
 - **Hooks**: camelCase with `use` prefix (e.g., `useSpecs.ts`)
 - **Utils/Types**: camelCase files (e.g., `api.ts`)
 - **Exports**: Named exports (no default exports)
-- **Styling**: MUI `sx` prop + Emotion `styled()`, no CSS modules
-- **State**: Local state + custom hooks (no Redux/Zustand)
+- **Styling**: MUI `sx` prop + theme tokens from `app/src/theme/index.ts`. No hardcoded hex colors — use `colors.*`, `semanticColors.*`, `fontSize.*`, `typography.fontFamily` imports. See Serena memory `style_guide` for full token reference.
+- **State**: Local state + custom hooks (no Redux/Zustand). Avoid `setState` inside `useEffect` for prop resets — use render-time ref pattern instead.
 - **API calls**: Plain `fetch()` in `utils/api.ts`
 
 ## Agentic Layer Conventions

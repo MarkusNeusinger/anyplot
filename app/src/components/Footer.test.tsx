@@ -35,7 +35,7 @@ describe('Footer', () => {
     render(<Footer onTrackEvent={onTrackEvent} />);
 
     await user.click(screen.getByText('stats'));
-    expect(onTrackEvent).toHaveBeenCalledWith('external_link', expect.objectContaining({ destination: 'stats' }));
+    expect(onTrackEvent).toHaveBeenCalledWith('internal_link', expect.objectContaining({ destination: 'stats' }));
   });
 
   it('renders without onTrackEvent', () => {

@@ -19,6 +19,7 @@ import { FILTER_LABELS, FILTER_TOOLTIPS, FILTER_CATEGORIES } from '../types';
 import type { ImageSize } from '../constants';
 import { getAvailableValues, getAvailableValuesForGroup, getSearchResults, type SearchResult } from '../utils';
 import { ToolbarActions } from './ToolbarActions';
+import { fontSize, semanticColors, colors, typography } from '../theme';
 
 interface FilterBarProps {
   activeFilters: ActiveFilters;
@@ -317,8 +318,8 @@ export function FilterBar({
           ? {
               mx: { xs: -2, sm: -4, md: -8, lg: -12 },
               px: { xs: 2, sm: 4, md: 8, lg: 12 },
-              bgcolor: '#f3f4f6',
-              borderBottom: '1px solid #e5e7eb',
+              bgcolor: colors.gray[100],
+              borderBottom: `1px solid ${colors.gray[200]}`,
             }
           : {
               px: 2,
@@ -344,9 +345,9 @@ export function FilterBar({
             sx={{
               position: 'absolute',
               left: 0,
-              fontFamily: '"MonoLisa", "MonoLisa Fallback", monospace',
-              fontSize: '0.75rem',
-              color: '#9ca3af',
+              fontFamily: typography.fontFamily,
+              fontSize: fontSize.sm,
+              color: semanticColors.mutedText,
               whiteSpace: 'nowrap',
             }}
           >
@@ -380,17 +381,17 @@ export function FilterBar({
             onDelete={() => onRemoveGroup(index)}
             deleteIcon={<CloseIcon sx={{ fontSize: '1rem !important' }} />}
             sx={{
-              fontFamily: '"MonoLisa", "MonoLisa Fallback", monospace',
-              fontSize: '0.85rem',
+              fontFamily: typography.fontFamily,
+              fontSize: fontSize.base,
               height: 32,
-              bgcolor: '#f3f4f6',
-              border: '1px solid #3776AB',
-              color: '#374151',
+              bgcolor: colors.gray[100],
+              border: `1px solid ${colors.primary}`,
+              color: colors.gray[700],
               cursor: 'pointer',
-              '&:hover': { bgcolor: '#e5e7eb' },
+              '&:hover': { bgcolor: colors.gray[200] },
               '& .MuiChip-deleteIcon': {
-                color: '#9ca3af',
-                '&:hover': { color: '#3776AB' },
+                color: colors.gray[500],
+                '&:hover': { color: colors.primary },
               },
               ...(animationClass === 'chip-blur-out' && {
                 animation: 'chip-roll-out 0.5s ease-in forwards',
@@ -434,26 +435,26 @@ export function FilterBar({
             height: 32,
             width: isSearchExpanded ? { xs: 80, sm: 160, md: 'auto' } : 32,
             minWidth: isSearchExpanded ? { xs: 80, sm: 160, md: 120 } : 32,
-            border: isSearchExpanded ? '1px dashed #9ca3af' : 'none',
+            border: isSearchExpanded ? `1px dashed ${colors.gray[400]}` : 'none',
             borderRadius: '16px',
-            bgcolor: isDropdownOpen ? '#f9fafb' : 'transparent',
+            bgcolor: isDropdownOpen ? colors.gray[50] : 'transparent',
             cursor: 'pointer',
             transition: 'all 0.2s ease',
             '&:hover': {
-              borderColor: isSearchExpanded ? '#3776AB' : undefined,
-              bgcolor: isSearchExpanded ? '#f9fafb' : undefined,
+              borderColor: isSearchExpanded ? colors.primary : undefined,
+              bgcolor: isSearchExpanded ? colors.gray[50] : undefined,
             },
             '&:hover .search-icon': {
-              color: '#3776AB',
+              color: colors.primary,
             },
-            '&:focus': isSearchExpanded ? {} : { outline: '2px solid #3776AB', outlineOffset: 2 },
+            '&:focus': isSearchExpanded ? {} : { outline: `2px solid ${colors.primary}`, outlineOffset: 2 },
           }}
         >
           <Tooltip title={isSearchExpanded ? '' : 'search'}>
             <SearchIcon
               className="search-icon"
               sx={{
-                color: '#9ca3af',
+                color: colors.gray[500],
                 fontSize: isSearchExpanded ? '1rem' : '1.25rem',
                 transition: 'all 0.2s ease',
                 flexShrink: 0,
@@ -491,12 +492,12 @@ export function FilterBar({
               width: isSearchExpanded ? 'auto' : 0,
               opacity: isSearchExpanded ? 1 : 0,
               transition: 'all 0.2s ease',
-              fontFamily: '"MonoLisa", "MonoLisa Fallback", monospace',
-              fontSize: '0.85rem',
+              fontFamily: typography.fontFamily,
+              fontSize: fontSize.base,
               '& input': {
                 padding: 0,
                 '&::placeholder': {
-                  color: '#9ca3af',
+                  color: semanticColors.mutedText,
                   opacity: 1,
                 },
               },
@@ -510,10 +511,10 @@ export function FilterBar({
                 setSelectedCategory(null);
               }}
               sx={{
-                color: '#9ca3af',
-                fontSize: '0.9rem',
+                color: colors.gray[500],
+                fontSize: fontSize.lg,
                 cursor: 'pointer',
-                '&:hover': { color: '#6b7280' },
+                '&:hover': { color: colors.gray[700] },
               }}
             />
           )}
@@ -534,9 +535,9 @@ export function FilterBar({
           {currentTotal > 0 ? (
             <Typography
               sx={{
-                fontFamily: '"MonoLisa", "MonoLisa Fallback", monospace',
-                fontSize: '0.75rem',
-                color: '#9ca3af',
+                fontFamily: typography.fontFamily,
+                fontSize: fontSize.sm,
+                color: semanticColors.mutedText,
                 whiteSpace: 'nowrap',
               }}
             >
@@ -596,19 +597,19 @@ export function FilterBar({
                   <MenuItem
                     onClick={() => handleCategorySelect(category)}
                     selected={visibleIdx === highlightedIndex}
-                    sx={{ fontFamily: '"MonoLisa", "MonoLisa Fallback", monospace' }}
+                    sx={{ fontFamily: typography.fontFamily }}
                   >
                     <ListItemText
                       primary={FILTER_LABELS[category]}
                       secondary={`${availableVals.length} options`}
                       primaryTypographyProps={{
-                        fontFamily: '"MonoLisa", "MonoLisa Fallback", monospace',
-                        fontSize: '0.9rem',
+                        fontFamily: typography.fontFamily,
+                        fontSize: fontSize.lg,
                       }}
                       secondaryTypographyProps={{
-                        fontFamily: '"MonoLisa", "MonoLisa Fallback", monospace',
-                        fontSize: '0.75rem',
-                        color: '#9ca3af',
+                        fontFamily: typography.fontFamily,
+                        fontSize: fontSize.sm,
+                        color: semanticColors.mutedText,
                       }}
                     />
                   </MenuItem>
@@ -625,7 +626,7 @@ export function FilterBar({
                         setSelectedCategory(null);
                         setSearchQuery('');
                       }}
-                      sx={{ fontFamily: '"MonoLisa", "MonoLisa Fallback", monospace', color: '#6b7280' }}
+                      sx={{ fontFamily: typography.fontFamily, color: semanticColors.mutedText }}
                     >
                       &larr; {FILTER_LABELS[selectedCategory]}
                     </MenuItem>,
@@ -658,26 +659,26 @@ export function FilterBar({
                         key={`${category}-${value}`}
                         onClick={() => handleValueSelect(category, value)}
                         selected={idx === highlightedIndex}
-                        sx={{ fontFamily: '"MonoLisa", "MonoLisa Fallback", monospace' }}
+                        sx={{ fontFamily: typography.fontFamily }}
                       >
                         <ListItemText
                           primary={value}
                           secondary={!selectedCategory ? FILTER_LABELS[category] : undefined}
                           primaryTypographyProps={{
-                            fontFamily: '"MonoLisa", "MonoLisa Fallback", monospace',
-                            fontSize: '0.85rem',
+                            fontFamily: typography.fontFamily,
+                            fontSize: fontSize.base,
                           }}
                           secondaryTypographyProps={{
-                            fontFamily: '"MonoLisa", "MonoLisa Fallback", monospace',
-                            fontSize: '0.7rem',
-                            color: '#9ca3af',
+                            fontFamily: typography.fontFamily,
+                            fontSize: fontSize.xs,
+                            color: semanticColors.mutedText,
                           }}
                         />
                         <Typography
                           sx={{
-                            fontFamily: '"MonoLisa", "MonoLisa Fallback", monospace',
-                            fontSize: '0.75rem',
-                            color: '#9ca3af',
+                            fontFamily: typography.fontFamily,
+                            fontSize: fontSize.sm,
+                            color: semanticColors.mutedText,
                             ml: 2,
                           }}
                         >
@@ -705,9 +706,9 @@ export function FilterBar({
                       <Divider key="exact-fuzzy-divider" sx={{ my: 0.5 }}>
                         <Typography
                           sx={{
-                            fontSize: '0.65rem',
-                            color: '#9ca3af',
-                            fontFamily: '"MonoLisa", "MonoLisa Fallback", monospace',
+                            fontSize: fontSize.xs,
+                            color: semanticColors.mutedText,
+                            fontFamily: typography.fontFamily,
                             px: 1,
                           }}
                         >
@@ -726,9 +727,9 @@ export function FilterBar({
                     <MenuItem key="no-results" disabled>
                       <Typography
                         sx={{
-                          fontFamily: '"MonoLisa", "MonoLisa Fallback", monospace',
-                          fontSize: '0.85rem',
-                          color: '#9ca3af',
+                          fontFamily: typography.fontFamily,
+                          fontSize: fontSize.base,
+                          color: semanticColors.mutedText,
                         }}
                       >
                         no matches
@@ -764,9 +765,9 @@ export function FilterBar({
                   sx={{
                     px: 2,
                     py: 0.5,
-                    fontSize: '0.7rem',
-                    color: '#9ca3af',
-                    fontFamily: '"MonoLisa", "MonoLisa Fallback", monospace',
+                    fontSize: fontSize.xs,
+                    color: semanticColors.mutedText,
+                    fontFamily: typography.fontFamily,
                     textTransform: 'uppercase',
                   }}
                 >
@@ -776,11 +777,11 @@ export function FilterBar({
                   <MenuItem
                     key={`add-${value}`}
                     onClick={() => handleAddValueToExistingGroup(value)}
-                    sx={{ fontFamily: '"MonoLisa", "MonoLisa Fallback", monospace', py: 0.5 }}
+                    sx={{ fontFamily: typography.fontFamily, py: 0.5 }}
                   >
-                    <AddIcon fontSize="small" sx={{ mr: 1, color: '#22c55e', fontSize: '1rem' }} />
-                    <Typography sx={{ fontSize: '0.85rem', flex: 1 }}>{value}</Typography>
-                    <Typography sx={{ fontSize: '0.75rem', color: '#9ca3af' }}>({count})</Typography>
+                    <AddIcon fontSize="small" sx={{ mr: 1, color: colors.success, fontSize: '1rem' }} />
+                    <Typography sx={{ fontSize: fontSize.base, flex: 1 }}>{value}</Typography>
+                    <Typography sx={{ fontSize: fontSize.sm, color: semanticColors.mutedText }}>({count})</Typography>
                   </MenuItem>
                 )),
                 <Divider key="divider-add" />,
@@ -791,9 +792,9 @@ export function FilterBar({
             <MenuItem
               key={`remove-${value}`}
               onClick={() => handleRemoveValue(value)}
-              sx={{ fontFamily: '"MonoLisa", "MonoLisa Fallback", monospace' }}
+              sx={{ fontFamily: typography.fontFamily }}
             >
-              <CloseIcon fontSize="small" sx={{ mr: 1, color: '#ef4444' }} />
+              <CloseIcon fontSize="small" sx={{ mr: 1, color: colors.error }} />
               {value}
             </MenuItem>
           )),
@@ -804,7 +805,7 @@ export function FilterBar({
                 <MenuItem
                   key="remove-all"
                   onClick={handleRemoveGroup}
-                  sx={{ fontFamily: '"MonoLisa", "MonoLisa Fallback", monospace', color: '#ef4444' }}
+                  sx={{ fontFamily: typography.fontFamily, color: colors.error }}
                 >
                   <CloseIcon fontSize="small" sx={{ mr: 1 }} />
                   remove all
