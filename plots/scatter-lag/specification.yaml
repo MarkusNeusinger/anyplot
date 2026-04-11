@@ -1,0 +1,29 @@
+# Specification-level metadata for scatter-lag
+# Auto-synced to PostgreSQL on push to main
+
+spec_id: scatter-lag
+title: Lag Plot for Time Series Autocorrelation Diagnosis
+
+# Specification tracking
+created: "2026-04-11T20:23:52Z"
+updated: null
+issue: 5251
+suggested: MarkusNeusinger
+
+# Classification tags (applies to all library implementations)
+# See docs/reference/tagging-system.md for detailed guidelines
+tags:
+  plot_type:
+    - scatter
+  data_type:
+    - timeseries
+    - numeric
+    - continuous
+  domain:
+    - statistics
+    - finance
+    - general
+  features:
+    - correlation
+    - temporal
+    - 2d
