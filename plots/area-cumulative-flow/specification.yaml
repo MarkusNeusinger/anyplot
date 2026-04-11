@@ -1,0 +1,30 @@
+# Specification-level metadata for area-cumulative-flow
+# Auto-synced to PostgreSQL on push to main
+
+spec_id: area-cumulative-flow
+title: Cumulative Flow Diagram for Workflow Analytics
+
+# Specification tracking
+created: "2026-04-11T20:22:20Z"
+updated: null
+issue: 5239
+suggested: MarkusNeusinger
+
+# Classification tags (applies to all library implementations)
+# See docs/reference/tagging-system.md for detailed guidelines
+tags:
+  plot_type:
+    - area
+    - stacked
+  data_type:
+    - timeseries
+    - categorical
+    - numeric
+  domain:
+    - business
+    - technology
+  features:
+    - stacked
+    - cumulative
+    - flow
+    - temporal
