@@ -1,0 +1,27 @@
+# Specification-level metadata for scatter-embedding
+# Auto-synced to PostgreSQL on push to main
+
+spec_id: scatter-embedding
+title: t-SNE and UMAP Embedding Visualization
+
+# Specification tracking
+created: "2026-04-11T20:22:05Z"
+updated: null
+issue: 5236
+suggested: MarkusNeusinger
+
+# Classification tags (applies to all library implementations)
+# See docs/reference/tagging-system.md for detailed guidelines
+tags:
+  plot_type:
+    - scatter
+  data_type:
+    - numeric
+    - categorical
+  domain:
+    - machine-learning
+    - science
+  features:
+    - color-mapped
+    - annotated
+    - 2d
