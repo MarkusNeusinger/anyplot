@@ -1,0 +1,29 @@
+# Specification-level metadata for upset-basic
+# Auto-synced to PostgreSQL on push to main
+
+spec_id: upset-basic
+title: UpSet Plot for Multi-Set Intersection Analysis
+
+# Specification tracking
+created: "2026-04-11T20:23:33Z"
+updated: null
+issue: 5250
+suggested: MarkusNeusinger
+
+# Classification tags (applies to all library implementations)
+# See docs/reference/tagging-system.md for detailed guidelines
+tags:
+  plot_type:
+    - upset
+    - bar
+  data_type:
+    - categorical
+    - numeric
+  domain:
+    - general
+    - science
+    - research
+  features:
+    - basic
+    - comparison
+    - multi
