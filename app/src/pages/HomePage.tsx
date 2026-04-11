@@ -168,7 +168,7 @@ export function HomePage() {
       </Helmet>
       <Header stats={stats} onRandom={handleRandom} />
 
-      {isFiltersEmpty(activeFilters) && !loading && <PlotOfTheDay />}
+      {isFiltersEmpty(activeFilters) && <PlotOfTheDay />}
 
       {error && (
         <Alert severity="error" sx={{ mb: 4, maxWidth: 500, mx: 'auto' }}>

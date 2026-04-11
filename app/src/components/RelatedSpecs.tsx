@@ -38,6 +38,7 @@ interface RelatedSpecsProps {
 
 export function RelatedSpecs({ specId, mode = 'spec', library, onHoverTags }: RelatedSpecsProps) {
   const [related, setRelated] = useState<RelatedSpec[]>([]);
+  const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState(false);
   const prevSpecIdRef = useRef(specId);
 
@@ -49,21 +50,35 @@ export function RelatedSpecs({ specId, mode = 'spec', library, onHoverTags }: Re
 
   useEffect(() => {
     let cancelled = false;
+    setLoading(true);
     const params = new URLSearchParams({ limit: '24', mode });
     if (library && mode === 'full') params.set('library', library);
     fetch(`${API_URL}/insights/related/${specId}?${params}`)
       .then(r => { if (!r.ok) throw new Error(); return r.json(); })
-      .then(data => { if (!cancelled) setRelated(data.related ?? []); })
-      .catch(() => { if (!cancelled) setRelated([]); });
+      .then(data => { if (!cancelled) { setRelated(data.related ?? []); setLoading(false); } })
+      .catch(() => { if (!cancelled) { setRelated([]); setLoading(false); } });
     return () => { cancelled = true; };
   }, [specId, mode, library]);
 
-  if (related.length === 0) return null;
+  // After loading, if no related specs, render nothing
+  if (!loading && related.length === 0) return null;
 
   // Collapsed: CSS hides extra rows via gridAutoRows:0 + overflow:hidden
 
+  // While loading, reserve space without showing the tab bar.
+  // This prevents CLS both when results exist (common) and when they don't (rare).
+  if (loading) {
+    return (
+      <Box sx={{ mt: 1.5, maxWidth: { xs: '100%', md: 1200, lg: 1400, xl: 1600 }, mx: 'auto', minHeight: { xs: 250, sm: 210 } }} />
+    );
+  }
+
   return (
-    <Box sx={{ mt: 1.5, maxWidth: { xs: '100%', md: 1200, lg: 1400, xl: 1600 }, mx: 'auto' }}>
+    <Box sx={{
+      mt: 1.5, maxWidth: { xs: '100%', md: 1200, lg: 1400, xl: 1600 }, mx: 'auto',
+      animation: 'relatedFadeIn 0.4s ease-out',
+      '@keyframes relatedFadeIn': { from: { opacity: 0 }, to: { opacity: 1 } },
+    }}>
       <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
         <Tabs
           value={expanded ? 0 : false}

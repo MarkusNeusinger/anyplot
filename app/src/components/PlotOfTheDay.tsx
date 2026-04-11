@@ -29,6 +29,7 @@ const mono = typography.fontFamily;
 
 export function PlotOfTheDay() {
   const [data, setData] = useState<PlotOfTheDayData | null>(null);
+  const [loading, setLoading] = useState(true);
   const [dismissed, setDismissed] = useState(() => window.sessionStorage.getItem('potd_dismissed') === 'true');
 
   useEffect(() => {
@@ -36,7 +37,8 @@ export function PlotOfTheDay() {
     fetch(`${API_URL}/insights/plot-of-the-day`)
       .then(r => { if (!r.ok) throw new Error(); return r.json(); })
       .then(setData)
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }, [dismissed]);
 
   const handleDismiss = useCallback((e: React.MouseEvent) => {
@@ -45,7 +47,16 @@ export function PlotOfTheDay() {
     window.sessionStorage.setItem('potd_dismissed', 'true');
   }, []);
 
-  if (!data || dismissed) return null;
+  // Already dismissed — no space needed (user saw page before)
+  if (dismissed) return null;
+
+  // Still loading — reserve space to prevent CLS
+  if (loading) {
+    return <Box sx={{ minHeight: { xs: 280, sm: 200 }, mb: 2 }} />;
+  }
+
+  // Fetch failed or no data — collapse (post-initial-paint, negligible CLS)
+  if (!data) return null;
 
   return (
     <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>

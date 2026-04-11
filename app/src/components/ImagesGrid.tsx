@@ -83,8 +83,9 @@ export function ImagesGrid({
         sx={{
           display: 'flex',
           justifyContent: 'center',
-          alignItems: 'center',
-          my: 8,
+          alignItems: 'flex-start',
+          pt: 8,
+          minHeight: '80vh',
           opacity: 0,
           animation: 'fadeInDelayed 1.5s ease-out 0.3s forwards',
           '@keyframes fadeInDelayed': {

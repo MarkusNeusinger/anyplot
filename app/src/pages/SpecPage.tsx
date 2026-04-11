@@ -394,7 +394,7 @@ export function SpecPage() {
           {specData.description}
         </Typography>
 
-        <Suspense>
+        <Suspense fallback={<Box sx={{ minHeight: 400 }} />}>
         {isOverviewMode ? (
           /* OVERVIEW MODE */
           <>
