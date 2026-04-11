@@ -1,0 +1,29 @@
+# Specification-level metadata for network-bipartite
+# Auto-synced to PostgreSQL on push to main
+
+spec_id: network-bipartite
+title: Bipartite Network Graph
+
+# Specification tracking
+created: "2026-04-11T20:23:16Z"
+updated: null
+issue: 5247
+suggested: MarkusNeusinger
+
+# Classification tags (applies to all library implementations)
+# See docs/reference/tagging-system.md for detailed guidelines
+tags:
+  plot_type:
+    - network
+  data_type:
+    - categorical
+    - relational
+    - network
+  domain:
+    - general
+    - science
+    - research
+  features:
+    - bipartite
+    - color-mapped
+    - comparison
