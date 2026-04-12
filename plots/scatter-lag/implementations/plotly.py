@@ -1,4 +1,4 @@
-""" pyplots.ai
+"""pyplots.ai
 scatter-lag: Lag Plot for Time Series Autocorrelation Diagnosis
 Library: plotly 6.7.0 | Python 3.14.3
 Quality: 84/100 | Created: 2026-04-12
@@ -26,28 +26,39 @@ time_index = np.arange(len(y_t))
 # Correlation coefficient
 correlation = np.corrcoef(y_t, y_t_lag)[0, 1]
 
+# Regression line through the data
+slope, intercept = np.polyfit(y_t, y_t_lag, 1)
+x_fit = np.array([y_t.min(), y_t.max()])
+y_fit = slope * x_fit + intercept
+
 # Plot
 fig = go.Figure()
 
+# Scatter points with Plasma for stronger visual contrast
 fig.add_trace(
     go.Scatter(
         x=y_t,
         y=y_t_lag,
         mode="markers",
         marker={
-            "size": 10,
+            "size": 7,
             "color": time_index,
-            "colorscale": "Viridis",
+            "colorscale": "Plasma",
             "colorbar": {
-                "title": {"text": "Time Index", "font": {"size": 18}},
-                "tickfont": {"size": 16},
-                "thickness": 20,
-                "len": 0.7,
+                "title": {"text": "Time Index", "font": {"size": 18, "color": "#444444"}},
+                "tickfont": {"size": 16, "color": "#666666"},
+                "thickness": 18,
+                "len": 0.65,
+                "outlinewidth": 0,
+                "y": 0.5,
             },
-            "opacity": 0.7,
-            "line": {"width": 0.5, "color": "white"},
+            "opacity": 0.55,
+            "line": {"width": 0.3, "color": "rgba(255,255,255,0.6)"},
         },
-        hovertemplate="y(t): %{x:.2f}<br>y(t+1): %{y:.2f}<extra></extra>",
+        hovertemplate=(
+            "<b>Time %{customdata}</b><br>Temp at t: %{x:.1f} °C<br>Temp at t+1: %{y:.1f} °C<extra></extra>"
+        ),
+        customdata=time_index,
     )
 )
 
@@ -63,51 +74,87 @@ fig.add_trace(
         x=[line_min, line_max],
         y=[line_min, line_max],
         mode="lines",
-        line={"color": "#999999", "width": 2, "dash": "dash"},
+        line={"color": "rgba(0,0,0,0.15)", "width": 1.5, "dash": "dot"},
         showlegend=False,
         hoverinfo="skip",
+        name="y = x",
     )
 )
 
-# Layout
+# Regression trend line
+fig.add_trace(
+    go.Scatter(
+        x=x_fit,
+        y=y_fit,
+        mode="lines",
+        line={"color": "#306998", "width": 2.5},
+        showlegend=False,
+        hoverinfo="skip",
+        name="trend",
+    )
+)
+
+# Layout with custom background and removed axis borders
 fig.update_layout(
-    title={"text": "scatter-lag · plotly · pyplots.ai", "font": {"size": 28}, "x": 0.5, "xanchor": "center"},
+    title={
+        "text": "scatter-lag · plotly · pyplots.ai",
+        "font": {"size": 28, "color": "#333333"},
+        "x": 0.5,
+        "xanchor": "center",
+        "y": 0.96,
+    },
     xaxis={
-        "title": {"text": "y(t)", "font": {"size": 22}},
-        "tickfont": {"size": 18},
+        "title": {"text": "Temperature (°C) at time t", "font": {"size": 22, "color": "#444444"}},
+        "tickfont": {"size": 18, "color": "#666666"},
         "showgrid": True,
-        "gridcolor": "rgba(0,0,0,0.08)",
+        "gridcolor": "rgba(0,0,0,0.06)",
         "gridwidth": 1,
         "zeroline": False,
+        "showline": False,
+        "ticks": "",
     },
     yaxis={
-        "title": {"text": f"y(t + {lag})", "font": {"size": 22}},
-        "tickfont": {"size": 18},
+        "title": {"text": f"Temperature (°C) at time t+{lag}", "font": {"size": 22, "color": "#444444"}},
+        "tickfont": {"size": 18, "color": "#666666"},
         "showgrid": True,
-        "gridcolor": "rgba(0,0,0,0.08)",
+        "gridcolor": "rgba(0,0,0,0.06)",
         "gridwidth": 1,
         "zeroline": False,
+        "showline": False,
+        "ticks": "",
     },
     template="plotly_white",
     plot_bgcolor="#FFFFFF",
-    paper_bgcolor="#FFFFFF",
+    paper_bgcolor="#F8F9FA",
     showlegend=False,
-    margin={"l": 80, "r": 120, "t": 80, "b": 80},
+    margin={"l": 90, "r": 130, "t": 100, "b": 90},
 )
 
-# Correlation annotation
+# Subtitle annotation for context
 fig.add_annotation(
-    text=f"r = {correlation:.3f}",
+    text="AR(1) process  |  lag = 1  |  500 observations",
     xref="paper",
     yref="paper",
-    x=0.02,
-    y=0.98,
+    x=0.5,
+    y=1.06,
     showarrow=False,
-    font={"size": 20, "color": "#333333"},
-    bgcolor="rgba(255,255,255,0.8)",
-    bordercolor="#cccccc",
-    borderwidth=1,
-    borderpad=6,
+    font={"size": 16, "color": "#999999"},
+    xanchor="center",
+)
+
+# Correlation annotation - prominent and well-styled
+fig.add_annotation(
+    text=f"<b>r = {correlation:.3f}</b>",
+    xref="paper",
+    yref="paper",
+    x=0.03,
+    y=0.97,
+    showarrow=False,
+    font={"size": 24, "color": "#306998"},
+    bgcolor="rgba(255,255,255,0.9)",
+    bordercolor="rgba(48,105,152,0.3)",
+    borderwidth=1.5,
+    borderpad=10,
 )
 
 # Save
