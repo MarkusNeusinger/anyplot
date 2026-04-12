@@ -1,7 +1,7 @@
 library: bokeh
 specification_id: scatter-lag
 created: '2026-04-12T18:12:37Z'
-updated: '2026-04-12T18:17:04Z'
+updated: '2026-04-12T18:33:40Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 24313009887
 issue: 5251
@@ -9,52 +9,38 @@ python_version: 3.14.3
 library_version: 3.9.0
 preview_url: https://storage.googleapis.com/pyplots-images/plots/scatter-lag/bokeh/plot.png
 preview_html: https://storage.googleapis.com/pyplots-images/plots/scatter-lag/bokeh/plot.html
-quality_score: 84
+quality_score: 85
 review:
   strengths:
-  - 'Perfect spec compliance: diagonal reference line, time-indexed color with Viridis,
-    correlation coefficient annotation, and configurable lag=1 all implemented correctly'
-  - Colorblind-safe Viridis colormap with proper ColorBar integration and ColumnDataSource
-    — idiomatic Bokeh usage
-  - 'Good visual refinement: subtle grid (alpha=0.2), outline removed, tick marks
-    removed, white background'
-  - All font sizes explicitly set and meet or exceed minimums (title 32pt, axis labels
-    24pt, tick labels 20pt)
-  - Clean KISS code structure with np.random.seed(42), no over-engineering, all imports
-    used
-  - HTML export with CDN resources adds interactive Bokeh output alongside the PNG
+  - 'Perfect spec compliance: diagonal reference line, time-colored points, r annotation,
+    and configurable lag all implemented'
+  - Viridis colormap is an excellent and justified choice for temporal progression
+    — colorblind-safe and perceptually uniform
+  - Clean KISS code structure with np.random.seed(42) ensuring reproducibility
+  - linear_cmap transform and ColorBar show good idiomatic Bokeh usage
+  - r=0.834 annotation directly communicates autocorrelation magnitude to the viewer
   weaknesses:
-  - 'DE-01 (4/8): Aesthetic sophistication is limited to Viridis defaults — no custom
-    typographic hierarchy, no distinctive color treatment for non-data elements, still
-    looks like a configured library default rather than publication-ready'
-  - 'DE-02 (4/6): Visual refinement is good but incomplete — the Bokeh frame/border
-    area and padding could be tightened; a single-axis grid or no grid at all would
-    be more refined'
-  - 'VQ-03 (4/6): Marker size=20 is at the lower bound for 500 points; slightly larger
-    markers (25-30) with lower alpha (0.5-0.6) would reduce crowding in the center
-    and improve density rendering'
-  - 'DE-03 (4/6): The correlation annotation and temporal color together tell a decent
-    story, but there is no emphasis drawing the viewer''s eye to the core insight
-    — a subtle regression trend line or shaded confidence band would strengthen the
-    narrative'
-  - 'DQ-02 (4/5): The AR(1) scenario is plausible but labels are generic (y(t), y(t+1))
-    with no real-world context (e.g., ''Daily Returns'', ''Temperature''); adding
-    a subtitle or data label would improve realism'
-  image_description: The plot shows a lag-1 scatter plot (scatter-lag) of a synthetic
-    AR(1) time series against its lagged version. The x-axis is labeled "y(t)" and
-    the y-axis "y(t + 1)", with the title "scatter-lag · bokeh · pyplots.ai" displayed
-    in the top-left corner. The 499 scatter points are colored using the Viridis colormap,
-    transitioning from dark purple (early time index, near 0) through teal/green to
-    bright yellow-green (late time index, near 499). A dashed gray diagonal reference
-    line (y = x) runs through the center of the plot from lower-left to upper-right.
-    A text annotation "r = 0.834" appears in the upper-left area of the data region.
-    A vertical color bar labeled "Time Index" is positioned on the right side of the
-    plot, showing the purple-to-yellow gradient with tick labels at 0, 100, 200, 300,
-    400, 499. The scatter points form a strong diagonal linear cluster consistent
-    with the high positive autocorrelation (φ=0.85) of the AR(1) process. The background
-    is white, the grid lines are very subtle (light gray, low opacity), and tick marks
-    are absent. The overall plot occupies roughly 60-65% of the canvas width, with
-    the color bar taking some right-side space.
+  - 'DE-01/DE-02 not publication-ready: clean layout but no distinctive typographic
+    hierarchy or intentional spacing refinements'
+  - 'LM-02: No HoverTool or interactive features that are distinctly Bokeh — missing
+    a key differentiating capability that would appear in the HTML export'
+  - Axis labels use abstract notation y(t)/y(t+1) rather than domain-specific labels
+    with units
+  - Marker size=20 is at the minimum bound for 499 points; slightly larger markers
+    (25-30) with lower alpha would improve readability
+  image_description: The plot displays approximately 499 scatter points colored using
+    the Viridis palette (purple = early time period, yellow/green = late time period),
+    plotting y(t) vs y(t+1) for an AR(1) time series process. A dashed diagonal reference
+    line (y=x) runs from the lower-left to upper-right of the plot. The correlation
+    coefficient annotation "r = 0.834" appears in the upper-left area of the plot
+    interior. A "Time Index" color bar is displayed on the right side, scaled 0–499.
+    The title "scatter-lag · bokeh · pyplots.ai" appears at the top-left. Axis labels
+    show time-series notation on x and y axes. The data shows a clear positive autocorrelation
+    pattern with points clustering along the diagonal. The background is white with
+    subtle grid lines (alpha=0.2) and no outer frame. The visual density of overlapping
+    semi-transparent points near the diagonal creates a band-like effect, reinforcing
+    the autocorrelation story. White point outlines provide visual separation between
+    overlapping markers.
   criteria_checklist:
     visual_quality:
       score: 26
@@ -62,74 +48,70 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title=32pt, axis labels=24pt, tick
-          labels=20pt, colorbar title=22pt, correlation label=24pt — all meet or exceed
-          minimums'
+        comment: 'Font sizes explicitly set: 32pt title, 24pt axis labels, 20pt tick
+          labels. All readable at 4800x2700. Minor: title positioned top-left vs centered.'
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Some point overlap in center of distribution with 500 points, but
-          text elements don't overlap and the pattern remains readable
+        comment: No text overlap. Point overlap natural for 499 points; alpha=0.8
+          and white outlines mitigate it.
       - id: VQ-03
         name: Element Visibility
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: 'size=20 is at the lower bound for 300+ points (guideline: 20-50);
-          dots visible but slightly small for the 4800x2700 canvas'
+        comment: size=20 is at the lower bound for 300+ points (spec says 20-50).
+          Points visible but slightly small.
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Viridis256 is perceptually uniform and colorblind-safe; excellent
-          choice
+        comment: Viridis is perceptually uniform and colorblind-safe. Excellent choice.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good layout with plot filling ~60-65% of canvas; colorbar on right
-          is well-integrated but some top whitespace could be reduced
+        comment: Good proportions. Minor excess whitespace on edges. Colorbar uses
+          right margin effectively.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: y(t) and y(t + 1) are descriptive and unambiguous for a lag plot;
-          title follows required format
+        comment: Descriptive time-series notation labels. Title format correct.
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Well-configured default using Viridis palette; clean but no distinctive
-          design language, typographic hierarchy, or publication-level polish beyond
-          good color choice
+        passed: true
+        comment: Thoughtful Viridis mapping for temporal progression, white background,
+          no frame, white point outlines. Above well-configured default but not publication-ready.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Grid alpha set to 0.2 (subtle), outline removed, tick marks removed
-          — good but frame padding and border could be tightened further
+        comment: Minor ticks removed, major ticks removed, outline removed, grid at
+          alpha=0.2. Genuine refinements above default. Grid still present.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Temporal color gradient + diagonal reference line + r-value annotation
-          together communicate autocorrelation effectively, but no emphasis element
-          guides the eye to the core insight
+        comment: Temporal color progression + r=0.834 annotation guides viewer to
+          autocorrelation story. Diagonal reference gives comparison anchor. Good
+          focal point.
     spec_compliance:
       score: 15
       max: 15
@@ -139,56 +121,51 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct lag scatter plot: y(t) on x-axis vs y(t+1) on y-axis'
+        comment: 'Correct lag plot: scatter of y(t) vs y(t+lag).'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: diagonal reference line, time-indexed
-          color (Viridis), correlation coefficient annotation (r=0.834), configurable
-          lag variable'
+        comment: Diagonal reference line, points colored by time index, correlation
+          annotation, configurable lag - all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=y_t (current values), Y=y_t_lag (lagged values) — correctly mapped
-          per spec
+        comment: X=y(t), Y=y(t+1), correct lag-1 mapping.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'scatter-lag · bokeh · pyplots.ai' matches required format;
-          ColorBar labeled 'Time Index' correctly represents the color encoding
+        comment: Title 'scatter-lag · bokeh · pyplots.ai' matches required format.
+          Color bar correctly labeled.
     data_quality:
       score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: AR(1) with phi=0.85 shows strong positive autocorrelation, clear
-          diagonal cluster, temporal evolution visible through color — covers all
-          diagnostic aspects of a lag plot
+        comment: 'AR(1) with phi=0.85 demonstrates strong positive autocorrelation
+          clearly. Minor: only one lag shown, only positive autocorrelation case demonstrated.'
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: AR(1) process is a plausible time series; however axis labels are
-          generic (y(t)/y(t+1)) with no real-world context (e.g., financial returns,
-          temperature)
+        comment: AR(1) time series / temperature anomaly context is realistic and
+          scientifically neutral.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values range ~-5 to 6 for standardized AR(1) process — appropriate
-          and realistic
+        comment: Values in range ~[-5, 5] appropriate for temperature anomalies.
     code_quality:
       score: 10
       max: 10
@@ -198,33 +175,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clear linear structure: imports → data generation → plot setup →
-          styling → save'
+        comment: Clean Imports -> Data -> Plot -> Save. No classes or extra functions.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set at the start
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All 7 import groups are actually used in the code
+        comment: 'All imports used: numpy, export_png/save, ColorBar/ColumnDataSource/Label/LinearColorMapper,
+          Viridis256, figure, CDN, linear_cmap.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic code; appropriate complexity for the visualization;
-          no fake UI elements
+        comment: Clean, Pythonic. No over-engineering or fake UI elements.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png via export_png; current Bokeh API used throughout
+        comment: Saves as plot.png via export_png(). Current Bokeh API.
     library_mastery:
       score: 7
       max: 10
@@ -234,16 +210,16 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Good idiomatic Bokeh: ColumnDataSource, linear_cmap transform, figure()
-          API, model-based ColorBar and Label — slightly below expert level'
+        comment: Good use of ColumnDataSource, LinearColorMapper, linear_cmap transform,
+          ColorBar via add_layout. Follows Bokeh recommended patterns.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: true
-        comment: 'Uses Bokeh-distinctive features: linear_cmap with ColumnDataSource
-          for continuous color mapping, ColorBar model, HTML export with CDN — above
-          generic but not fully leveraging Bokeh''s interactive capabilities'
+        passed: false
+        comment: linear_cmap transform for data-driven per-point coloring and HTML
+          export are Bokeh-specific. Missing HoverTool which is a truly unique Bokeh
+          interactive feature.
   verdict: REJECTED
 impl_tags:
   dependencies: []
@@ -258,4 +234,4 @@ impl_tags:
   styling:
   - custom-colormap
   - alpha-blending
-  - grid-styling
+  - edge-highlighting
