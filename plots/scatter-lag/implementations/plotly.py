@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 scatter-lag: Lag Plot for Time Series Autocorrelation Diagnosis
 Library: plotly 6.7.0 | Python 3.14.3
-Quality: 84/100 | Created: 2026-04-12
+Quality: 89/100 | Created: 2026-04-12
 """
 
 import numpy as np
