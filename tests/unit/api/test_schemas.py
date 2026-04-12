@@ -139,10 +139,7 @@ class TestFilterCountsResponse:
         assert counts.style == {}
 
     def test_with_counts(self) -> None:
-        counts = FilterCountsResponse(
-            lib={"matplotlib": 5, "seaborn": 3},
-            plot={"scatter": 8},
-        )
+        counts = FilterCountsResponse(lib={"matplotlib": 5, "seaborn": 3}, plot={"scatter": 8})
         assert counts.lib["matplotlib"] == 5
 
 
@@ -150,9 +147,7 @@ class TestFilteredPlotsResponse:
     """Tests for FilteredPlotsResponse schema."""
 
     def test_minimal(self) -> None:
-        resp = FilteredPlotsResponse(
-            total=0, images=[], counts={}, globalCounts={}, orCounts=[]
-        )
+        resp = FilteredPlotsResponse(total=0, images=[], counts={}, globalCounts={}, orCounts=[])
         assert resp.total == 0
         assert resp.offset == 0
         assert resp.limit is None

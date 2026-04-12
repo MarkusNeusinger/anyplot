@@ -140,8 +140,6 @@ class TestBotHtmlTemplate:
 
     def test_template_has_canonical(self) -> None:
         url = "https://pyplots.ai/"
-        result = BOT_HTML_TEMPLATE.format(
-            title="t", description="d", image="i", url=url
-        )
+        result = BOT_HTML_TEMPLATE.format(title="t", description="d", image="i", url=url)
         assert 'rel="canonical"' in result
         assert url in result

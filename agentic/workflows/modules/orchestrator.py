@@ -45,5 +45,5 @@ def extract_run_id(stdout: str) -> str | None:
     try:
         data = json.loads(stdout.strip())
         return data.get("run_id")
-    except (json.JSONDecodeError, ValueError):
+    except json.JSONDecodeError, ValueError:
         return None

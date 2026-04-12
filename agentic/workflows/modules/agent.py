@@ -144,7 +144,7 @@ def parse_json(output: str, target_type: Type[T] = None) -> Any:
                 return [target_type.model_validate(item) for item in parsed]
             return target_type.model_validate(parsed)
         return parsed
-    except (json.JSONDecodeError, ValueError):
+    except json.JSONDecodeError, ValueError:
         pass
 
     # Strategy 2: Strip markdown code fences
@@ -162,7 +162,7 @@ def parse_json(output: str, target_type: Type[T] = None) -> Any:
                         return [target_type.model_validate(item) for item in parsed]
                     return target_type.model_validate(parsed)
                 return parsed
-            except (json.JSONDecodeError, ValueError):
+            except json.JSONDecodeError, ValueError:
                 pass
 
     # Strategy 3: Find first JSON array or object in output
@@ -182,7 +182,7 @@ def parse_json(output: str, target_type: Type[T] = None) -> Any:
                     return [target_type.model_validate(item) for item in parsed]
                 return target_type.model_validate(parsed)
             return parsed
-        except (json.JSONDecodeError, ValueError):
+        except json.JSONDecodeError, ValueError:
             continue
 
     raise json.JSONDecodeError("No valid JSON found in output", output, 0)

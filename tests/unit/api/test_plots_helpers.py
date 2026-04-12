@@ -134,19 +134,13 @@ class TestImageMatchesGroups:
     def test_multiple_groups_and_logic(self) -> None:
         spec_lookup = {"s1": {"tags": {"plot_type": ["scatter"], "domain": ["statistics"]}}}
         impl_lookup = {}
-        groups = [
-            {"category": "plot", "values": ["scatter"]},
-            {"category": "dom", "values": ["statistics"]},
-        ]
+        groups = [{"category": "plot", "values": ["scatter"]}, {"category": "dom", "values": ["statistics"]}]
         assert _image_matches_groups("s1", "matplotlib", groups, spec_lookup, impl_lookup) is True
 
     def test_multiple_groups_one_fails(self) -> None:
         spec_lookup = {"s1": {"tags": {"plot_type": ["scatter"], "domain": ["finance"]}}}
         impl_lookup = {}
-        groups = [
-            {"category": "plot", "values": ["scatter"]},
-            {"category": "dom", "values": ["statistics"]},
-        ]
+        groups = [{"category": "plot", "values": ["scatter"]}, {"category": "dom", "values": ["statistics"]}]
         assert _image_matches_groups("s1", "matplotlib", groups, spec_lookup, impl_lookup) is False
 
     def test_spec_not_in_lookup(self) -> None:
@@ -223,10 +217,7 @@ class TestBuildCacheKey:
         assert result == "filter:lib=matplotlib"
 
     def test_multiple_groups_sorted(self) -> None:
-        groups = [
-            {"category": "plot", "values": ["scatter"]},
-            {"category": "lib", "values": ["matplotlib"]},
-        ]
+        groups = [{"category": "plot", "values": ["scatter"]}, {"category": "lib", "values": ["matplotlib"]}]
         result = _build_cache_key(groups)
         assert result == "filter:lib=matplotlib:plot=scatter"
 
@@ -236,14 +227,8 @@ class TestBuildCacheKey:
         assert result == "filter:lib=matplotlib,seaborn"
 
     def test_stable_key_different_order(self) -> None:
-        groups1 = [
-            {"category": "lib", "values": ["matplotlib"]},
-            {"category": "plot", "values": ["scatter"]},
-        ]
-        groups2 = [
-            {"category": "plot", "values": ["scatter"]},
-            {"category": "lib", "values": ["matplotlib"]},
-        ]
+        groups1 = [{"category": "lib", "values": ["matplotlib"]}, {"category": "plot", "values": ["scatter"]}]
+        groups2 = [{"category": "plot", "values": ["scatter"]}, {"category": "lib", "values": ["matplotlib"]}]
         assert _build_cache_key(groups1) == _build_cache_key(groups2)
 
 
@@ -374,10 +359,7 @@ class TestFilterImages:
         assert len(result) == 1
 
     def test_filter_by_lib(self) -> None:
-        images = [
-            {"spec_id": "s1", "library": "matplotlib"},
-            {"spec_id": "s1", "library": "seaborn"},
-        ]
+        images = [{"spec_id": "s1", "library": "matplotlib"}, {"spec_id": "s1", "library": "seaborn"}]
         spec_lookup = {"s1": {"tags": {}}}
         impl_lookup = {}
         groups = [{"category": "lib", "values": ["matplotlib"]}]
@@ -432,10 +414,7 @@ class TestCalculateOrCounts:
 
     def test_or_counts_for_single_group(self) -> None:
         filter_groups = [{"category": "lib", "values": ["matplotlib"]}]
-        all_images = [
-            {"spec_id": "s1", "library": "matplotlib"},
-            {"spec_id": "s1", "library": "seaborn"},
-        ]
+        all_images = [{"spec_id": "s1", "library": "matplotlib"}, {"spec_id": "s1", "library": "seaborn"}]
         spec_id_to_tags = {"s1": {}}
         spec_lookup = {"s1": {"tags": {}}}
         impl_lookup = {}

@@ -7,14 +7,7 @@ Tests model instantiation, defaults, and constraints.
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from core.database.models import (
-    Impl,
-    Library,
-    MAX_LIBRARY_ID_LENGTH,
-    MAX_SPEC_ID_LENGTH,
-    REVIEW_VERDICTS,
-    Spec,
-)
+from core.database.models import MAX_LIBRARY_ID_LENGTH, MAX_SPEC_ID_LENGTH, REVIEW_VERDICTS, Impl, Library, Spec
 
 
 class TestModelConstants:
@@ -66,6 +59,7 @@ class TestSpecModel:
         await test_session.commit()
 
         from sqlalchemy import select
+
         result = await test_session.execute(select(Spec).where(Spec.id == "test-spec"))
         retrieved = result.scalar_one()
         assert retrieved.title == "Test Spec"
@@ -140,16 +134,12 @@ class TestImplModel:
         test_session.add_all([lib, spec])
         await test_session.commit()
 
-        impl = Impl(
-            spec_id="scatter-basic",
-            library_id="matplotlib",
-            code="import matplotlib",
-            quality_score=90.0,
-        )
+        impl = Impl(spec_id="scatter-basic", library_id="matplotlib", code="import matplotlib", quality_score=90.0)
         test_session.add(impl)
         await test_session.commit()
 
         from sqlalchemy import select
+
         result = await test_session.execute(select(Impl).where(Impl.spec_id == "scatter-basic"))
         retrieved = result.scalar_one()
         assert retrieved.quality_score == 90.0

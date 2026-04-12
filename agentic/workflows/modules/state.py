@@ -172,7 +172,7 @@ class WorkflowState:
             state = cls(run_id=run_id, prompt=data.get("prompt", ""))
             state.data = data
             return state
-        except (json.JSONDecodeError, EOFError):
+        except json.JSONDecodeError, EOFError:
             return None
 
     def to_stdout(self) -> None:
