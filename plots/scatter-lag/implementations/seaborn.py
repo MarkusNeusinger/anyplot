@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 scatter-lag: Lag Plot for Time Series Autocorrelation Diagnosis
 Library: seaborn 0.13.2 | Python 3.14.3
-Quality: 83/100 | Created: 2026-04-12
+Quality: 89/100 | Created: 2026-04-12
 """
 
 import matplotlib.pyplot as plt
