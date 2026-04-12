@@ -1,0 +1,227 @@
+library: pygal
+specification_id: scatter-lag
+created: '2026-04-12T18:12:36Z'
+updated: '2026-04-12T18:32:40Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 24313009875
+issue: 5251
+python_version: 3.14.3
+library_version: 3.1.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/scatter-lag/pygal/plot.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/scatter-lag/pygal/plot.html
+quality_score: 87
+review:
+  strengths:
+  - Intentional warm-to-cool temporal palette (terracotta → amber → teal → navy) creates
+    a compelling visual narrative of time progression within the autocorrelation structure
+  - All required spec features fully implemented plus value-adding ±1σ envelope around
+    the diagonal reference line
+  - Comprehensive explicit font sizing throughout; perfect spec compliance (15/15)
+    and code quality (10/10)
+  weaknesses:
+  - dots_size=8–9 causes overplotting for 400 data points; smaller dots (5–6) with
+    lower opacity (~0.45) would reduce central cluster overlap
+  - Terracotta (#c25a3c) and amber (#d4a028) risk confusion for deuteranopic (red-green
+    colorblind) viewers; palette shift needed for full accessibility
+  image_description: 'The plot shows a lag scatter plot on a light beige (#f8f7f5)
+    background. The title reads "Lag Plot (k=1, r=0.75) · scatter-lag · pygal · pyplots.ai"
+    centered at the top. The X-axis is labeled "y(t)" and the Y-axis "y(t+1)". Four
+    temporal quartile series are plotted: Days 1–100 in terracotta (brick-red), Days
+    101–200 in amber/golden-yellow, Days 201–300 in teal/seafoam, and Days 301–399
+    in deep navy. A dashed gray diagonal reference line (y = x ±1σ) runs from lower-left
+    to upper-right. Subtle dotted grid lines are visible across the plot. The legend
+    sits at the bottom with five labeled entries. A clear positive linear autocorrelation
+    pattern is evident — data points cluster diagonally, confirming the AR(1) process
+    (r=0.75).'
+  criteria_checklist:
+    visual_quality:
+      score: 25
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title=56, labels=42, major=38, legend=32,
+          value=28; fully readable at 4800x2700 px'
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Text elements clear; minor dot overlap in dense central cluster expected
+          for 400 points
+      - id: VQ-03
+        name: Element Visibility
+        score: 4
+        max: 6
+        passed: false
+        comment: dots_size=8-9 for 400 points causes noticeable overplotting; guidelines
+          suggest size 20-50 with alpha 0.3-0.5 for 300+ points
+      - id: VQ-04
+        name: Color Accessibility
+        score: 3
+        max: 4
+        passed: false
+        comment: Terracotta (#c25a3c) and amber (#d4a028) may be confused by deuteranopic
+          users; rest of palette is good
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good proportions; margins tuned; legend well-anchored at bottom
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: y(t) / y(t+1) are standard lag-plot notation; title is descriptive
+          and complete
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Intentional warm-to-cool temporal palette with custom beige background;
+          clearly above defaults, but not quite publication-ready
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle guide_stroke_color, beige plot background, legend columns,
+          margin tuning; limited further by pygal API (no spine removal)
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Temporal color gradient is an effective storytelling device; correlation
+          coefficient in title; ±1σ envelope contextualises autocorrelation spread
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct XY scatter for lag plot
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Diagonal y=x reference line, temporal point coloring, r-value annotation
+          in title, configurable lag; bonus ±1σ envelope
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: y(t) on X, y(t+lag) on Y, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title includes spec-id, library, pyplots.ai, plus informative k and
+          r values; legend labels match temporal quartiles
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear positive autocorrelation pattern demonstrated; temporal coloring
+          reveals consistent structure; could include stronger/weaker autocorrelation
+          variation
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Daily temperature readings with AR(1) mean reversion (mu=20C) is
+          natural and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values 16-25C and phi=0.78 are realistic for daily temperatures
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean imports -> data -> plot -> save; no functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: numpy, pygal, Style; all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Four separate list comprehensions for quartiles are verbose but clear;
+          no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: render_to_png('plot.png') correct; HTML export is a pygal bonus
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Dict-format data points with label keys for SVG tooltips, stroke_style
+          for line customisation, legend_at_bottom_columns — all idiomatic pygal
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Pygal-specific dict tooltip data and stroke_style dasharray are library-distinctive;
+          could leverage pygal interactive SVG more explicitly
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - time-series
+  styling:
+  - alpha-blending

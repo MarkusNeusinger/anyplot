@@ -1,0 +1,231 @@
+library: highcharts
+specification_id: scatter-lag
+created: '2026-04-12T18:13:46Z'
+updated: '2026-04-12T18:18:46Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 24313009902
+issue: 5251
+python_version: 3.14.3
+library_version: unknown
+preview_url: https://storage.googleapis.com/pyplots-images/plots/scatter-lag/highcharts/plot.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/scatter-lag/highcharts/plot.html
+quality_score: 88
+review:
+  strengths:
+  - 'Perfect spec compliance: all four required features (lag=1, diagonal reference
+    line, time-index coloring, r-value) implemented correctly'
+  - Time-based blue gradient adds genuine analytical value — temporal drift visible
+    within the autocorrelation structure
+  - Correlation coefficient in subtitle provides immediate quantitative framing
+  - Subtle dotted grid at near-zero opacity avoids visual noise while maintaining
+    structure
+  weaknesses:
+  - 'Design Excellence gap: aesthetically above default but not publication-ready
+    (13/20)'
+  - Bottom canvas whitespace reduces layout score
+  - Library Mastery could be pushed further with a Highcharts colorAxis for the time
+    gradient instead of manual per-point coloring
+  image_description: The plot shows a scatter lag plot on a light (#fafbfc) background.
+    The title "scatter-lag · highcharts · pyplots.ai" appears at the top center in
+    dark text, with the subtitle "AR(1) Temperature Series — Lag 1 Autocorrelation
+    (r = 0.814)" below it. The x-axis is labeled "y(t)" and the y-axis is labeled
+    "y(t+1)"; both axes span roughly 15–26. Approximately 299 scatter points are rendered
+    in a blue gradient — lighter/more transparent blues for early time steps, darker
+    blues for later ones — revealing a clear positive linear trend along the diagonal.
+    A dashed gray reference line (y = x) runs diagonally from lower-left to upper-right.
+    A small legend appears floating in the upper-right corner with entries "Lag 1
+    pairs" and "y = x reference". Dot grid lines at very low opacity provide subtle
+    structure. The strong clustering of points near the diagonal visually confirms
+    high positive autocorrelation at lag 1.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: 64px title, 38px subtitle, 44px axis
+          labels, 34px tick labels, 30px legend'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Text elements are clean; no label collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Markers visible with appropriate alpha gradient; centre density causes
+          slight crowding but manageable
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Blue gradient palette is fully colorblind-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good proportions; slight excess whitespace visible at bottom of canvas
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: y(t) / y(t+1) are standard lag-plot notation, descriptive and correct
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Time-gradient coloring shows genuine design intent above defaults;
+          custom background and typography; not yet publication-ready
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle dotted grid at 6% opacity, refined axis lines; could remove
+          spines for cleaner look
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Time-based color gradient creates temporal narrative; r-value in
+          subtitle gives immediate quantitative insight; diagonal reference line provides
+          clear comparison baseline
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct lag scatter plot
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Lag=1, diagonal reference line, time-index coloring, r-value annotation
+          all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: y(t) on x-axis, y(t+1) on y-axis, correct
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches scatter-lag · highcharts · pyplots.ai; legend labels
+          appropriate
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Demonstrates strong autocorrelation with clear diagonal clustering;
+          time gradient shows temporal structure; diagonal line provides uncorrelated
+          baseline contrast
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: AR(1) temperature series is a real-world environmental monitoring
+          scenario, neutral and plausible
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 16-26C range with mean 20C is realistic for a daily temperature series;
+          300 observations appropriate
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear: imports -> data -> chart options -> series -> export; no
+          functions or classes'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imported packages are used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Per-point color loop is necessary and clean; well-organised overall
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot.png via container.screenshot(); also exports plot.html
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct use of typed series objects, add_series(), per-point data
+          dicts; CDN JS downloaded and inlined per guide
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: 'Per-point color key in data objects and {point.color} in tooltip
+          template; enableMouseTracking: False on reference line; could use colorAxis
+          for more idiomatic gradient'
+  verdict: REJECTED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - html-export
+  - hover-tooltips
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting

@@ -1,0 +1,242 @@
+library: seaborn
+specification_id: scatter-lag
+created: '2026-04-12T18:10:33Z'
+updated: '2026-04-12T18:25:33Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 24313009886
+issue: 5251
+python_version: 3.14.3
+library_version: 0.13.2
+preview_url: https://storage.googleapis.com/pyplots-images/plots/scatter-lag/seaborn/plot.png
+preview_html: null
+quality_score: 89
+review:
+  strengths:
+  - 'Perfect spec compliance: diagonal reference line, time-index coloring, and r-value
+    annotation all implemented exactly as specified'
+  - 'Excellent visual quality: font sizes explicitly set to correct values, viridis
+    colormap is colorblind-safe and semantically meaningful for temporal ordering'
+  - Clean, reproducible code with appropriate marker size/alpha calibration for the
+    dataset density (s=35, alpha=0.45 for 499 points)
+  weaknesses:
+  - Design excellence is good but not exceptional — the aesthetic is polished but
+    not publication-ready; a more distinctive visual treatment would push DE-01 from
+    5 to 6-7
+  - Data storytelling only demonstrates one scenario (strong positive autocorrelation);
+    contrasting with what weak/no autocorrelation looks like would strengthen the
+    diagnostic narrative
+  image_description: The plot shows a scatter lag plot of a synthetic AR(1) time series
+    on a 16:9 canvas. The x-axis is labeled "y(t)" and the y-axis "y(t + 1)", both
+    in clean sans-serif font. Approximately 499 scatter points are rendered with the
+    viridis colormap (purple → teal → green → yellow) encoding the time index from
+    0 to ~499. A red dashed diagonal reference line (y = x) runs from bottom-left
+    to top-right, visually anchoring the correlation pattern. A colorbar on the right
+    side of the plot is labeled "Time Index" with tick marks from 0 to 400. In the
+    top-left corner, a rounded annotation box displays "r = 0.83" in bold dark text
+    on a white background with a light grey border. The title reads "scatter-lag ·
+    seaborn · pyplots.ai" at the top. The plot uses the seaborn "ticks" style with
+    top/right spines removed and a very faint grey grid. The x-axis ranges from approximately
+    -5 to 6 and the y-axis from approximately -4 to 6. The scatter shows a clear linear
+    pattern along the diagonal, indicating strong positive autocorrelation at lag
+    1. The viridis color gradient shows no systematic temporal drift — early (purple)
+    and late (yellow) observations are mixed throughout, confirming the stationarity
+    of the process. Overall layout is clean and balanced.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt,
+          colorbar label 18pt, annotation 18pt'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text collisions; annotation box, colorbar, axis labels, and title
+          occupy distinct regions
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: s=35, alpha=0.45 well-calibrated for 499 points; points clearly visible
+          without over-saturation
+      - id: VQ-04
+        name: Color Accessibility
+        score: 4
+        max: 4
+        passed: true
+        comment: Viridis is perceptually uniform and colorblind-safe; red dashed line
+          provides clear contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Balanced margins, plot fills ~65-70% of canvas width; colorbar appropriately
+          sized
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: y(t) / y(t+1) is standard lag plot notation; descriptive and domain-appropriate
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above well-configured default: muted reference line color, viridis
+          for temporal ordering, styled annotation box. Intentional and cohesive,
+          but stops short of publication-ready polish'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Top/right spines removed via sns.despine; grid is very subtle (alpha=0.15,
+          linewidth=0.6); custom axis edge color. Good refinement above defaults
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Visual hierarchy works: viridis coloring reveals temporal uniformity;
+          r=0.83 gives immediate quantitative context; reference line anchors interpretation.
+          Only one autocorrelation scenario shown'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct scatter of y(t) vs y(t+k) for lag k=1
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Diagonal reference line, time-index coloring, correlation annotation,
+          configurable lag variable — all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x=y(t), y=y(t+1); time index mapped to viridis color; axes show full
+          data range
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format 'scatter-lag · seaborn · pyplots.ai' correct; colorbar
+          serves as legend for time index
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: 'AR(1) with phi=0.85 clearly shows strong positive autocorrelation.
+          Minor deduction: only one scenario shown; contrasting with random data would
+          strengthen diagnostic utility'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Synthetic AR(1) process explicitly listed in spec as example data;
+          neutral and scientifically plausible
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: phi=0.85 with unit-variance noise yields values in [-4, 6], appropriate
+          for standardized financial/environmental time series
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean Imports → Data → Plot → Save; no functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: matplotlib.pyplot, numpy, pandas, seaborn — all used, none superfluous
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic; appropriate complexity; no fake UI elements
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: plt.savefig('plot.png', dpi=300, bbox_inches='tight'); current seaborn
+          0.13 API
+    library_features:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'sns.set_theme with custom rc params, sns.scatterplot with continuous
+          hue, sns.despine — all idiomatic. Minor deduction: colorbar added via matplotlib
+          ScalarMappable (legend=False limitation)'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Seaborn's continuous hue encoding in scatterplot with viridis palette
+          is library-distinctive. Most visual decoration (colorbar, annotation, reference
+          line) handled through matplotlib directly
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - annotations
+  patterns:
+  - data-generation
+  - explicit-figure
+  dataprep: []
+  styling:
+  - alpha-blending
+  - custom-colormap
+  - edge-highlighting
