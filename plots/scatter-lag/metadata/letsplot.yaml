@@ -1,0 +1,235 @@
+library: letsplot
+specification_id: scatter-lag
+created: '2026-04-12T18:09:58Z'
+updated: '2026-04-12T18:15:02Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 24313009924
+issue: 5251
+python_version: 3.14.3
+library_version: 4.9.0
+preview_url: https://storage.googleapis.com/pyplots-images/plots/scatter-lag/letsplot/plot.png
+preview_html: https://storage.googleapis.com/pyplots-images/plots/scatter-lag/letsplot/plot.html
+quality_score: 87
+review:
+  strengths:
+  - 'Perfect spec compliance: diagonal reference line, temporal color encoding, r
+    annotation, and configurable lag all implemented correctly'
+  - 'Strong data quality: realistic AR(1) temperature simulation with phi=0.85 shows
+    clear autocorrelation pattern in plausible range'
+  - 'Excellent code quality: clean KISS structure, reproducible, fully idiomatic letsplot
+    grammar-of-graphics pattern'
+  - 'Good data storytelling: temporal gradient plus r annotation effectively communicates
+    autocorrelation structure to the viewer'
+  weaknesses:
+  - 'DE-01: Design is clean but not publication-quality; needs more intentional visual
+    hierarchy beyond temporal gradient'
+  - 'VQ-04: Custom blue-orange gradient is not a standard colorblind-safe palette;
+    viridis or plasma preferred for perceptual uniformity'
+  - 'VQ-03: Alpha=0.6 slightly high for 399 points; central cluster has visual density;
+    reduce to 0.4-0.5'
+  - 'LM-02: layer_tooltips() underutilized; could leverage more letsplot-distinctive
+    capabilities like geom_smooth'
+  image_description: The plot shows a lag-1 scatter plot of an AR(1) simulated daily
+    temperature time series (~399 points). Points are colored with a blue (#306998)
+    to orange (#E3882D) gradient encoding temporal order — early days are dark blue,
+    later days warm orange. The x-axis is labeled "y(t)" and the y-axis "y(t + 1)".
+    A dashed light-gray diagonal reference line (y = x) spans the entire plot area.
+    A large monospace "r = 0.83" annotation appears in the lower-right corner. The
+    title reads "scatter-lag · letsplot · pyplots.ai" in bold. A "Day" gradient legend
+    is displayed on the right. The plot uses a minimal theme with very subtle gray
+    grid lines (major only), no minor grid. An italic gray caption at the bottom reads
+    "AR(1) simulated daily temperature · dashed line = y(t+1) = y(t)". The overall
+    layout is 16:9, clean, and professional.
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title=24, axis titles=20, axis text=16,
+          legend=14'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text element overlap; r annotation well-placed in lower right
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Points visible but size=4 slightly large for 399 points; alpha=0.6
+          slightly high causing density in center
+      - id: VQ-04
+        name: Color Accessibility
+        score: 3
+        max: 4
+        passed: true
+        comment: Blue-orange gradient not red-green so accessible, but not a standard
+          perceptually-uniform colormap like viridis
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good 16:9 proportions with balanced legend placement; minor whitespace
+          on margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: y(t) and y(t+1) are descriptive standard lag plot notation
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Custom blue-orange gradient and monospace annotation show design
+          intent; fundamentally a well-configured minimal default, not publication-ready
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid (E8E8E8, size=0.35), minor grid removed, custom tick
+          colors and margins; good attention to detail
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Temporal color encoding reveals time series movement through scatter;
+          r=0.83 annotation immediately communicates autocorrelation strength
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct lag plot: scatter of y(t) vs y(t+lag)'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Diagonal reference line, color by time index, r correlation annotation,
+          configurable lag all implemented
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x=value_t (y(t)), y=value_t_lag (y(t+1)); correct mapping
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: scatter-lag · letsplot · pyplots.ai exact format; Day gradient
+          legend correctly labeled'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows strong positive autocorrelation, temporal structure via color,
+          reference diagonal, quantified r value
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: AR(1) simulated daily temperature; plausible real-world scenario;
+          non-controversial
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Temperature range ~12-32°C realistic for daily temp; phi=0.85 gives
+          realistic autocorrelation
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean linear flow: imports, data, lag construction, r calc, ref
+          line, plot, save; no functions or classes'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used; noqa comments appropriate for star import pattern
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Pythonic, appropriate complexity; AR(1) loop is clearest way to generate
+          the process
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot.png via export_ggsave with scale=3
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert grammar-of-graphics usage: ggplot/geom/aes/labs/theme composition,
+          ggsize for sizing, scale_color_gradient — fully idiomatic'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses layer_tooltips() (letsplot-specific interactive tooltips) and
+          HTML export; good but could leverage more letsplot-specific capabilities
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - custom-colormap
