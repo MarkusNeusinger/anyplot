@@ -1,7 +1,7 @@
 library: matplotlib
 specification_id: scatter-lag
 created: '2026-04-12T18:10:35Z'
-updated: '2026-04-12T18:15:15Z'
+updated: '2026-04-12T18:25:18Z'
 generated_by: claude-opus-4-5-20251101
 workflow_run: 24313009889
 issue: 5251
@@ -9,79 +9,79 @@ python_version: 3.14.3
 library_version: 3.10.8
 preview_url: https://storage.googleapis.com/pyplots-images/plots/scatter-lag/matplotlib/plot.png
 preview_html: null
-quality_score: 84
+quality_score: 85
 review:
   strengths:
-  - 'Perfect spec compliance: diagonal reference line, temporal color encoding, correlation
-    annotation, and configurable lag all implemented'
-  - 'Excellent code quality: clean KISS structure, reproducible with seed(42), idiomatic
-    matplotlib patterns throughout'
-  - 'Good data storytelling: viridis time-index coloring meaningfully encodes temporal
-    evolution of the AR(1) series'
+  - 'Perfect code quality: clean KISS structure, seed set, correct API throughout'
+  - Temporal color encoding via viridis clearly reveals time structure in the scatter
+  - r=0.834 annotation with ax.transAxes relative positioning is well-executed
+  - 'All required spec features implemented: diagonal reference line, time-index color,
+    r-value annotation'
+  - Font sizes explicitly set at all levels for high-res output
   weaknesses:
-  - Marker size too large for 500 points (s=120 vs recommended s=20-50); significant
-    overplotting in the dense central diagonal band
-  - Design follows the library guide but lacks aesthetic differentiation — viridis
-    + spine removal is well-configured but not elevated
-  - Full x+y grid should be y-only per library conventions; colorbar tick labels at
-    14pt should be raised to 16pt
-  image_description: The plot shows a lag-1 scatter plot of a synthetic AR(1) time
-    series (500 observations, phi=0.85). The x-axis shows y(t) ranging from approximately
-    -4.5 to 5.5, and the y-axis shows y(t+1) over the same range. Points are colored
-    by time index using the viridis colormap (purple=early, yellow=late), with a vertical
-    colorbar on the right labeled "Time Index" (range 0-500). A dashed gray diagonal
-    reference line (y=x) runs from bottom-left to top-right. In the upper-left corner,
-    an annotation reads "r = 0.834". The scatter cloud forms a clear elongated ellipse
-    along the diagonal, demonstrating strong positive autocorrelation. The top and
-    right spines are removed; a subtle full-grid is visible. The title reads "AR(1)
-    Autocorrelation · scatter-lag · matplotlib · pyplots.ai". Overall layout is clean
-    and balanced on a 16:9 canvas.
+  - Marker size s=120 too large for 499 data points causing dense overlap; reduce
+    to s=50-60, alpha=0.45-0.55
+  - Title format deviates from spec-id · library · pyplots.ai — has extra AR(1) Autocorrelation
+    prefix
+  - Full x+y gridlines instead of preferred y-axis-only grid
+  - Generic annotation box style; needs subtle white background bbox with no border
+    edge
+  image_description: The plot shows a scatter plot of an AR(1) time series against
+    its lag-1 version. The x-axis is labeled "y(t)" and the y-axis "y(t + 1)", with
+    values ranging roughly from -4.5 to 5.5 on both axes. Approximately 499 data points
+    are colored using the viridis colormap, transitioning from dark purple (time index
+    0) to bright yellow (time index ~499), with a colorbar on the right labeled "Time
+    Index". A dashed diagonal reference line (y = x) runs from lower-left to upper-right
+    in light gray. The data forms a strong linear cluster along the diagonal, visually
+    confirming high positive autocorrelation. An annotation in the upper-left corner
+    shows "r = 0.834" in bold. The title reads "AR(1) Autocorrelation · scatter-lag
+    · matplotlib · pyplots.ai". Top and right spines are removed; a subtle grid (alpha=0.2)
+    is visible. The overall layout is clean and professional on a light background
+    with a 16:9 aspect ratio.
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All key fonts explicitly set (title 24pt, labels 20pt, ticks 16pt,
-          r-annotation 20pt); colorbar tick labels at 14pt are slightly below the
-          16pt minimum
+        comment: 'All font sizes explicitly set: title=24, labels=20, ticks=16, colorbar
+          label=18, colorbar ticks=14, annotation=20'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; r annotation, colorbar, and axis labels are well
-          separated
+        comment: No overlapping text or elements
       - id: VQ-03
         name: Element Visibility
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: 500 points with s=120, alpha=0.65 produces significant overplotting
-          in the dense center; guidelines recommend s=20-50, alpha=0.3-0.5 for 300+
-          points
+        passed: true
+        comment: s=120, alpha=0.65 for 499 points is too large per guideline (s=20-50
+          for 300+); visible crowding in dense center
       - id: VQ-04
         name: Color Accessibility
         score: 4
         max: 4
         passed: true
-        comment: Viridis is perceptually uniform and colorblind-safe
+        comment: Viridis colormap is perceptually uniform and colorblind-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 canvas, balanced margins, colorbar well-placed
+        comment: Good canvas utilization, balanced margins, colorbar well-positioned
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: y(t) and y(t+1) are standard mathematical notation for a lag plot
+        comment: y(t) and y(t+1) are standard notation for lag plots; appropriate
+          and descriptive
     design_excellence:
       score: 12
       max: 20
@@ -90,25 +90,25 @@ review:
         name: Aesthetic Sophistication
         score: 4
         max: 8
-        passed: false
-        comment: 'Well-configured library defaults: viridis + spine removal follows
-          the guide but does not reach strong design territory'
+        passed: true
+        comment: Clean functional design; viridis and spine removal add polish but
+          overall is a well-configured library default
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: 'Spines removed, grid alpha=0.2 is subtle; minor issue: full x+y
-          grid rather than y-only as recommended'
+        comment: Spines removed, subtle grid (alpha=0.2), tight_layout; deducted for
+          full x+y grid instead of preferred y-axis-only
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Temporal color encoding reveals autocorrelation evolution; diagonal
-          reference + r annotation create a clear narrative
+        comment: Temporal color encoding reveals time structure, r annotation quantifies
+          the pattern, diagonal line guides interpretation
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -116,29 +116,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct lag scatter plot (y(t) vs y(t+k))
+        comment: 'Correct lag plot: scatter of y(t) vs y(t+k)'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Diagonal reference line, time-index color coding, correlation annotation,
-          and configurable lag variable all present
+        comment: Diagonal y=x reference line, time-index color encoding, r-value annotation,
+          configurable lag all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x=y(t), y=y(t+1) correctly assigned; axes cover full data range
+        comment: x=y(t), y=y(t+1), correct per spec
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Title contains spec-id · library · pyplots.ai; colorbar labeled Time
-          Index is appropriate
+        passed: false
+        comment: Title has extra 'AR(1) Autocorrelation · ' prefix before spec-id;
+          should start with scatter-lag · matplotlib · pyplots.ai
     data_quality:
-      score: 13
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -146,22 +146,22 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Demonstrates strong positive autocorrelation clearly; could show
-          contrast with uncorrelated or differently-lagged data
+        comment: Strong autocorrelation case clearly demonstrated; missing contrast
+          with random/uncorrelated case which spec explicitly describes
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Synthetic AR(1) is explicitly listed in the spec as valid; neutral
-          and appropriate, though abstract without real-world labeling
+        comment: AR(1) synthetic process is explicitly listed in spec; neutral and
+          scientifically appropriate
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: AR(1) with phi=0.85 and unit noise produces values in [-5, 5] — correct
-          and realistic
+        comment: Values -4.5 to 5.5 are realistic for zero-mean AR(1) with Gaussian
+          noise std=1
     code_quality:
       score: 10
       max: 10
@@ -171,8 +171,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: imports → data generation → correlation → plot → save; no
-          functions or classes'
+        comment: Imports → Data → Plot → Save, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -184,38 +183,37 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib.pyplot and numpy imported, both used
+        comment: Only matplotlib.pyplot and numpy, both used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, idiomatic Python; appropriate complexity
+        comment: Clean, Pythonic, appropriate complexity for AR(1) generation
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300; uses ax methods throughout
+        comment: Saves as plot.png, dpi=300, bbox_inches='tight', no deprecated functions
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: ax.scatter with c= + cmap, fig.colorbar(scatter, ax=ax), ax.transAxes
-          for annotation, tight_layout — all idiomatic matplotlib patterns
+        comment: Uses ax.scatter with c= colormap, fig.colorbar(), ax methods throughout;
+          correct but no advanced matplotlib patterns
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Continuous color mapping via scatter c= + colorbar is a recognizable
-          matplotlib pattern; white edgecolors on markers is a nice touch, but not
-          uniquely distinctive
+        comment: c= parameter with colormap + colorbar on scatter is distinctive matplotlib;
+          ax.transAxes for relative text placement is a nice touch
   verdict: REJECTED
 impl_tags:
   dependencies: []
@@ -227,6 +225,7 @@ impl_tags:
   - explicit-figure
   dataprep: []
   styling:
-  - custom-colormap
   - alpha-blending
+  - custom-colormap
   - edge-highlighting
+  - grid-styling
