@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" pyplots.ai
 scatter-lag: Lag Plot for Time Series Autocorrelation Diagnosis
 Library: altair 6.0.0 | Python 3.14.3
-Quality: 79/100 | Created: 2026-04-12
+Quality: 90/100 | Created: 2026-04-12
 """
 
 import altair as alt
