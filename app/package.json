@@ -1,7 +1,7 @@
 {
-  "name": "pyplots-website",
+  "name": "anyplot-website",
   "version": "1.1.0",
-  "description": "pyplots Frontend - AI-powered plotting examples",
+  "description": "anyplot Frontend - AI-powered plotting examples",
   "private": true,
   "type": "module",
   "scripts": {

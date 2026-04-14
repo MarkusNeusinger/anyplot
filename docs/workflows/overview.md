@@ -1,8 +1,8 @@
 # Workflow Overview
 
-## How pyplots Automation Works
+## How anyplot Automation Works
 
-pyplots uses GitHub Actions to automate the entire plot lifecycle: from specification creation to implementation generation, quality review, and deployment.
+anyplot uses GitHub Actions to automate the entire plot lifecycle: from specification creation to implementation generation, quality review, and deployment.
 
 ---
 
@@ -35,7 +35,7 @@ See [Report Issues](report-issue.md) for details.
 One unified template: **report-plot-issue.yml** - Report any plot problem (spec or implementation)
 
 ```
-User reports issue (from pyplots.ai or GitHub)
+User reports issue (from anyplot.ai or GitHub)
        |
        v (report-pending label auto-added)
        |

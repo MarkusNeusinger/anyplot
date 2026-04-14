@@ -162,9 +162,9 @@ export function HomePage() {
   return (
     <Box onClick={handleContainerClick}>
       <Helmet>
-        <title>pyplots.ai</title>
+        <title>anyplot.ai</title>
         <meta name="description" content="library-agnostic, ai-powered python plotting examples. browse, compare, and copy code across 9 libraries." />
-        <link rel="canonical" href="https://pyplots.ai/" />
+        <link rel="canonical" href="https://anyplot.ai/" />
       </Helmet>
       <Header stats={stats} onRandom={handleRandom} />
 

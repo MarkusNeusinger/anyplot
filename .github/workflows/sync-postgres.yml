@@ -65,7 +65,7 @@ jobs:
         DB_USER: ${{ secrets.DB_USER }}
         DB_PASS: ${{ secrets.DB_PASS }}
         DB_NAME: ${{ secrets.DB_NAME }}
-        GCS_BUCKET: ${{ vars.GCS_BUCKET || 'pyplots-images' }}
+        GCS_BUCKET: ${{ vars.GCS_BUCKET || 'anyplot-images' }}
         ENVIRONMENT: production
 
     - name: Summary

@@ -91,7 +91,7 @@ describe('Footer', () => {
     render(<Footer />);
 
     const githubLink = screen.getByText('github').closest('a');
-    expect(githubLink).toHaveAttribute('href', 'https://github.com/MarkusNeusinger/pyplots');
+    expect(githubLink).toHaveAttribute('href', 'https://github.com/MarkusNeusinger/anyplot');
     expect(githubLink).toHaveAttribute('target', '_blank');
     expect(githubLink).toHaveAttribute('rel', 'noopener noreferrer');
   });

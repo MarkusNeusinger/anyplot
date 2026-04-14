@@ -1,12 +1,12 @@
 /**
  * Core Web Vitals tracking via web-vitals library.
  * Reports LCP, CLS, and INP to Plausible as custom events.
- * Only runs in production (pyplots.ai), dynamically imported for zero dev cost.
+ * Only runs in production (anyplot.ai), dynamically imported for zero dev cost.
  */
 export function reportWebVitals() {
   if (
     typeof window === 'undefined' ||
-    window.location.hostname !== 'pyplots.ai'
+    window.location.hostname !== 'anyplot.ai'
   ) {
     return;
   }

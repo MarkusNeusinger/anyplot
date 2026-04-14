@@ -1,7 +1,7 @@
-// Constants for pyplots.ai frontend
+// Constants for anyplot.ai frontend
 
 export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-export const GITHUB_URL = 'https://github.com/MarkusNeusinger/pyplots';
+export const GITHUB_URL = 'https://github.com/MarkusNeusinger/anyplot';
 export const LIBRARIES = ['altair', 'bokeh', 'highcharts', 'letsplot', 'matplotlib', 'plotly', 'plotnine', 'pygal', 'seaborn'];
 export const BATCH_SIZE = 36;
 

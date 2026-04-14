@@ -1,7 +1,7 @@
 /*!
  * MonoLisa 2.017 - Webfont
- * Hosted on GCS: gs://pyplots-static/fonts/
- * CORS restricted to pyplots.ai
+ * Hosted on GCS: gs://anyplot-static/fonts/
+ * CORS restricted to anyplot.ai
  *
  * © 2025 FaceType Foundry. All Rights Reserved.
  * License: https://www.monolisa.dev/license
@@ -28,7 +28,7 @@
 /* Basic Latin (A-Z, a-z, 0-9, punctuation) */
 @font-face {
   font-family: 'MonoLisa';
-  src: url('https://storage.googleapis.com/pyplots-static/fonts/0-MonoLisa-normal.woff2') format('woff2');
+  src: url('https://storage.googleapis.com/anyplot-static/fonts/0-MonoLisa-normal.woff2') format('woff2');
   font-weight: 100 900;
   font-style: normal;
   font-display: optional;
@@ -37,7 +37,7 @@
 
 @font-face {
   font-family: 'MonoLisa';
-  src: url('https://storage.googleapis.com/pyplots-static/fonts/1-MonoLisa-italic.woff2') format('woff2');
+  src: url('https://storage.googleapis.com/anyplot-static/fonts/1-MonoLisa-italic.woff2') format('woff2');
   font-weight: 100 900;
   font-style: italic;
   font-display: optional;
@@ -47,7 +47,7 @@
 /* Latin-1 Supplement (ä, ö, ü, ß, etc.) */
 @font-face {
   font-family: 'MonoLisa';
-  src: url('https://storage.googleapis.com/pyplots-static/fonts/2-MonoLisa-normal.woff2') format('woff2');
+  src: url('https://storage.googleapis.com/anyplot-static/fonts/2-MonoLisa-normal.woff2') format('woff2');
   font-weight: 100 900;
   font-style: normal;
   font-display: optional;
@@ -56,7 +56,7 @@
 
 @font-face {
   font-family: 'MonoLisa';
-  src: url('https://storage.googleapis.com/pyplots-static/fonts/3-MonoLisa-italic.woff2') format('woff2');
+  src: url('https://storage.googleapis.com/anyplot-static/fonts/3-MonoLisa-italic.woff2') format('woff2');
   font-weight: 100 900;
   font-style: italic;
   font-display: optional;
@@ -66,7 +66,7 @@
 /* General Punctuation */
 @font-face {
   font-family: 'MonoLisa';
-  src: url('https://storage.googleapis.com/pyplots-static/fonts/4-MonoLisa-normal.woff2') format('woff2');
+  src: url('https://storage.googleapis.com/anyplot-static/fonts/4-MonoLisa-normal.woff2') format('woff2');
   font-weight: 100 900;
   font-style: normal;
   font-display: optional;
@@ -75,7 +75,7 @@
 
 @font-face {
   font-family: 'MonoLisa';
-  src: url('https://storage.googleapis.com/pyplots-static/fonts/5-MonoLisa-italic.woff2') format('woff2');
+  src: url('https://storage.googleapis.com/anyplot-static/fonts/5-MonoLisa-italic.woff2') format('woff2');
   font-weight: 100 900;
   font-style: italic;
   font-display: optional;
@@ -85,7 +85,7 @@
 /* Miscellaneous Technical */
 @font-face {
   font-family: 'MonoLisa';
-  src: url('https://storage.googleapis.com/pyplots-static/fonts/6-MonoLisa-normal.woff2') format('woff2');
+  src: url('https://storage.googleapis.com/anyplot-static/fonts/6-MonoLisa-normal.woff2') format('woff2');
   font-weight: 100 900;
   font-style: normal;
   font-display: optional;
@@ -94,7 +94,7 @@
 
 @font-face {
   font-family: 'MonoLisa';
-  src: url('https://storage.googleapis.com/pyplots-static/fonts/7-MonoLisa-italic.woff2') format('woff2');
+  src: url('https://storage.googleapis.com/anyplot-static/fonts/7-MonoLisa-italic.woff2') format('woff2');
   font-weight: 100 900;
   font-style: italic;
   font-display: optional;
@@ -104,7 +104,7 @@
 /* Arrows */
 @font-face {
   font-family: 'MonoLisa';
-  src: url('https://storage.googleapis.com/pyplots-static/fonts/8-MonoLisa-normal.woff2') format('woff2');
+  src: url('https://storage.googleapis.com/anyplot-static/fonts/8-MonoLisa-normal.woff2') format('woff2');
   font-weight: 100 900;
   font-style: normal;
   font-display: optional;
@@ -113,7 +113,7 @@
 
 @font-face {
   font-family: 'MonoLisa';
-  src: url('https://storage.googleapis.com/pyplots-static/fonts/9-MonoLisa-italic.woff2') format('woff2');
+  src: url('https://storage.googleapis.com/anyplot-static/fonts/9-MonoLisa-italic.woff2') format('woff2');
   font-weight: 100 900;
   font-style: italic;
   font-display: optional;
@@ -123,7 +123,7 @@
 /* Currency Symbols */
 @font-face {
   font-family: 'MonoLisa';
-  src: url('https://storage.googleapis.com/pyplots-static/fonts/10-MonoLisa-normal.woff2') format('woff2');
+  src: url('https://storage.googleapis.com/anyplot-static/fonts/10-MonoLisa-normal.woff2') format('woff2');
   font-weight: 100 900;
   font-style: normal;
   font-display: optional;
@@ -132,7 +132,7 @@
 
 @font-face {
   font-family: 'MonoLisa';
-  src: url('https://storage.googleapis.com/pyplots-static/fonts/11-MonoLisa-italic.woff2') format('woff2');
+  src: url('https://storage.googleapis.com/anyplot-static/fonts/11-MonoLisa-italic.woff2') format('woff2');
   font-weight: 100 900;
   font-style: italic;
   font-display: optional;
@@ -142,7 +142,7 @@
 /* Mathematical Operators */
 @font-face {
   font-family: 'MonoLisa';
-  src: url('https://storage.googleapis.com/pyplots-static/fonts/12-MonoLisa-normal.woff2') format('woff2');
+  src: url('https://storage.googleapis.com/anyplot-static/fonts/12-MonoLisa-normal.woff2') format('woff2');
   font-weight: 100 900;
   font-style: normal;
   font-display: optional;
@@ -151,7 +151,7 @@
 
 @font-face {
   font-family: 'MonoLisa';
-  src: url('https://storage.googleapis.com/pyplots-static/fonts/13-MonoLisa-italic.woff2') format('woff2');
+  src: url('https://storage.googleapis.com/anyplot-static/fonts/13-MonoLisa-italic.woff2') format('woff2');
   font-weight: 100 900;
   font-style: italic;
   font-display: optional;
@@ -161,7 +161,7 @@
 /* Block Elements ░▒▓█ */
 @font-face {
   font-family: 'MonoLisa';
-  src: url('https://storage.googleapis.com/pyplots-static/fonts/14-MonoLisa-normal.woff2') format('woff2');
+  src: url('https://storage.googleapis.com/anyplot-static/fonts/14-MonoLisa-normal.woff2') format('woff2');
   font-weight: 100 900;
   font-style: normal;
   font-display: optional;
@@ -170,7 +170,7 @@
 
 @font-face {
   font-family: 'MonoLisa';
-  src: url('https://storage.googleapis.com/pyplots-static/fonts/15-MonoLisa-italic.woff2') format('woff2');
+  src: url('https://storage.googleapis.com/anyplot-static/fonts/15-MonoLisa-italic.woff2') format('woff2');
   font-weight: 100 900;
   font-style: italic;
   font-display: optional;
@@ -180,7 +180,7 @@
 /* Geometric Shapes ■□▲△ */
 @font-face {
   font-family: 'MonoLisa';
-  src: url('https://storage.googleapis.com/pyplots-static/fonts/16-MonoLisa-normal.woff2') format('woff2');
+  src: url('https://storage.googleapis.com/anyplot-static/fonts/16-MonoLisa-normal.woff2') format('woff2');
   font-weight: 100 900;
   font-style: normal;
   font-display: optional;
@@ -189,7 +189,7 @@
 
 @font-face {
   font-family: 'MonoLisa';
-  src: url('https://storage.googleapis.com/pyplots-static/fonts/17-MonoLisa-italic.woff2') format('woff2');
+  src: url('https://storage.googleapis.com/anyplot-static/fonts/17-MonoLisa-italic.woff2') format('woff2');
   font-weight: 100 900;
   font-style: italic;
   font-display: optional;
@@ -199,7 +199,7 @@
 /* Box Drawing ┌─┐│└─┘ */
 @font-face {
   font-family: 'MonoLisa';
-  src: url('https://storage.googleapis.com/pyplots-static/fonts/18-MonoLisa-normal.woff2') format('woff2');
+  src: url('https://storage.googleapis.com/anyplot-static/fonts/18-MonoLisa-normal.woff2') format('woff2');
   font-weight: 100 900;
   font-style: normal;
   font-display: optional;
@@ -208,7 +208,7 @@
 
 @font-face {
   font-family: 'MonoLisa';
-  src: url('https://storage.googleapis.com/pyplots-static/fonts/19-MonoLisa-italic.woff2') format('woff2');
+  src: url('https://storage.googleapis.com/anyplot-static/fonts/19-MonoLisa-italic.woff2') format('woff2');
   font-weight: 100 900;
   font-style: italic;
   font-display: optional;
@@ -218,7 +218,7 @@
 /* Powerline & Private Use Area */
 @font-face {
   font-family: 'MonoLisa';
-  src: url('https://storage.googleapis.com/pyplots-static/fonts/20-MonoLisa-normal.woff2') format('woff2');
+  src: url('https://storage.googleapis.com/anyplot-static/fonts/20-MonoLisa-normal.woff2') format('woff2');
   font-weight: 100 900;
   font-style: normal;
   font-display: optional;
@@ -227,7 +227,7 @@
 
 @font-face {
   font-family: 'MonoLisa';
-  src: url('https://storage.googleapis.com/pyplots-static/fonts/21-MonoLisa-italic.woff2') format('woff2');
+  src: url('https://storage.googleapis.com/anyplot-static/fonts/21-MonoLisa-italic.woff2') format('woff2');
   font-weight: 100 900;
   font-style: italic;
   font-display: optional;

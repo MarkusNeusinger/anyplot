@@ -70,15 +70,15 @@ export function InteractivePage() {
       // Validate origin - only accept messages from our API domain
       const allowedOrigins = [
         window.location.origin, // Same origin (development)
-        'https://pyplots.ai',
-        'https://api.pyplots.ai',
+        'https://anyplot.ai',
+        'https://api.anyplot.ai',
         'http://localhost:8000', // Local API server
       ];
       if (!allowedOrigins.includes(event.origin)) {
         return;
       }
 
-      if (event.data?.type === 'pyplots-size') {
+      if (event.data?.type === 'anyplot-size') {
         const { width, height } = event.data;
         if (typeof width === 'number' && typeof height === 'number' && width > 0 && height > 0) {
           setContentWidth(width);
@@ -197,13 +197,13 @@ export function InteractivePage() {
   return (
     <>
       <Helmet>
-        <title>{`${title} - ${library} (Interactive) | pyplots.ai`}</title>
-        <meta name="description" content={`Interactive ${title} visualization using ${library} | pyplots.ai`} />
-        <meta property="og:title" content={`${title} - ${library} (interactive) | pyplots.ai`} />
+        <title>{`${title} - ${library} (Interactive) | anyplot.ai`}</title>
+        <meta name="description" content={`Interactive ${title} visualization using ${library} | anyplot.ai`} />
+        <meta property="og:title" content={`${title} - ${library} (interactive) | anyplot.ai`} />
         <meta property="og:description" content={`Interactive ${title} visualization using ${library}`} />
-        <meta property="og:url" content={`https://pyplots.ai/interactive/${specId}/${library}`} />
+        <meta property="og:url" content={`https://anyplot.ai/interactive/${specId}/${library}`} />
         <meta name="robots" content="noindex, follow" />
-        <link rel="canonical" href={`https://pyplots.ai/interactive/${specId}/${library}`} />
+        <link rel="canonical" href={`https://anyplot.ai/interactive/${specId}/${library}`} />
       </Helmet>
 
       <Box
@@ -218,7 +218,7 @@ export function InteractivePage() {
         {/* Breadcrumb navigation */}
         <Breadcrumb
           items={[
-            { label: 'pyplots.ai', shortLabel: 'pp', to: '/' },
+            { label: 'anyplot.ai', shortLabel: 'ap', to: '/' },
             { label: specId || '', to: `/${specId}` },
             { label: library || '', to: `/${specId}/${library}` },
             { label: 'interactive' },

@@ -241,14 +241,14 @@ class TestSendPlausibleEvent:
                 user_agent="Twitterbot/1.0",
                 client_ip="1.2.3.4",
                 name="og_image_view",
-                url="https://pyplots.ai/",
+                url="https://anyplot.ai/",
                 props={"page": "home", "platform": "twitter"},
             )
 
             mock_client.post.assert_called_once()
             call_kwargs = mock_client.post.call_args[1]
             assert call_kwargs["json"]["name"] == "og_image_view"
-            assert call_kwargs["json"]["domain"] == "pyplots.ai"
+            assert call_kwargs["json"]["domain"] == "anyplot.ai"
 
     @pytest.mark.asyncio
     async def test_handles_network_error(self) -> None:
@@ -265,6 +265,6 @@ class TestSendPlausibleEvent:
                 user_agent="Twitterbot/1.0",
                 client_ip="1.2.3.4",
                 name="og_image_view",
-                url="https://pyplots.ai/",
+                url="https://anyplot.ai/",
                 props={},
             )

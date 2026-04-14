@@ -3,4 +3,4 @@ Allow: /
 Disallow: /debug
 Disallow: /interactive
 
-Sitemap: https://pyplots.ai/sitemap.xml
+Sitemap: https://anyplot.ai/sitemap.xml

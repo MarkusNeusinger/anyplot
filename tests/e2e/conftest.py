@@ -26,7 +26,7 @@ from core.database.models import Base
 CONNECTION_TIMEOUT = 10  # seconds - skip tests if DB unreachable
 
 # Test data constants
-TEST_IMAGE_URL = "https://storage.googleapis.com/pyplots-images/test/plot.png"
+TEST_IMAGE_URL = "https://storage.googleapis.com/anyplot-images/test/plot.png"
 
 
 def _get_database_url():
@@ -43,7 +43,7 @@ def _get_database_url():
         prod_url = os.environ.get("DATABASE_URL")
         if not prod_url:
             return None
-        # Replace database name at end of URL (e.g., /pyplots -> /test)
+        # Replace database name at end of URL (e.g., /anyplot -> /test)
         database_url = prod_url.rsplit("/", 1)[0] + "/test"
 
     # Ensure async driver

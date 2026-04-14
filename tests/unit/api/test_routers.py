@@ -444,7 +444,7 @@ class TestSeoRouter:
             assert '<?xml version="1.0"' in content
             assert "<urlset" in content
             # Check for homepage URL as proper XML element
-            assert "<loc>https://pyplots.ai/</loc>" in content
+            assert "<loc>https://anyplot.ai/</loc>" in content
 
     def test_sitemap_with_db(self, db_client, mock_spec) -> None:
         """Sitemap should include specs and implementations from DB."""
@@ -461,11 +461,11 @@ class TestSeoRouter:
             response = client.get("/sitemap.xml")
             assert response.status_code == 200
             # URL format: /, /catalog, /{spec_id}, /{spec_id}/{library_id}
-            assert "https://pyplots.ai/catalog" in response.text
+            assert "https://anyplot.ai/catalog" in response.text
             # Overview page
-            assert "https://pyplots.ai/scatter-basic</loc>" in response.text
+            assert "https://anyplot.ai/scatter-basic</loc>" in response.text
             # Implementation page
-            assert "https://pyplots.ai/scatter-basic/matplotlib</loc>" in response.text
+            assert "https://anyplot.ai/scatter-basic/matplotlib</loc>" in response.text
 
 
 class TestSeoProxyRouter:
@@ -477,7 +477,7 @@ class TestSeoProxyRouter:
         assert response.status_code == 200
         assert "text/html" in response.headers["content-type"]
         assert "og:title" in response.text
-        assert "pyplots.ai" in response.text
+        assert "anyplot.ai" in response.text
         assert "og:image" in response.text
         assert "twitter:card" in response.text
 
@@ -488,7 +488,7 @@ class TestSeoProxyRouter:
         assert "text/html" in response.headers["content-type"]
         assert "Catalog" in response.text
         assert "og:title" in response.text
-        assert "https://pyplots.ai/catalog" in response.text
+        assert "https://anyplot.ai/catalog" in response.text
 
     def test_seo_spec_overview_without_db(self, client: TestClient) -> None:
         """SEO spec overview should return fallback HTML when DB unavailable."""
@@ -497,7 +497,7 @@ class TestSeoProxyRouter:
             assert response.status_code == 200
             assert "og:title" in response.text
             assert "scatter-basic" in response.text
-            assert "api.pyplots.ai/og/home.png" in response.text  # Default image via API
+            assert "api.anyplot.ai/og/home.png" in response.text  # Default image via API
 
     def test_seo_spec_overview_with_db(self, db_client, mock_spec) -> None:
         """SEO spec overview should return HTML with spec title from DB."""
@@ -511,7 +511,7 @@ class TestSeoProxyRouter:
             assert response.status_code == 200
             assert "Basic Scatter Plot" in response.text
             assert "og:title" in response.text
-            assert "https://pyplots.ai/scatter-basic" in response.text
+            assert "https://anyplot.ai/scatter-basic" in response.text
 
     def test_seo_spec_overview_not_found(self, db_client) -> None:
         """SEO spec overview should return 404 when spec not found."""
@@ -532,7 +532,7 @@ class TestSeoProxyRouter:
             assert "og:title" in response.text
             assert "scatter-basic" in response.text
             assert "matplotlib" in response.text
-            assert "api.pyplots.ai/og/home.png" in response.text  # Default image via API
+            assert "api.anyplot.ai/og/home.png" in response.text  # Default image via API
 
     def test_seo_spec_implementation_with_preview_url(self, db_client, mock_spec) -> None:
         """SEO spec implementation should use preview_url from implementation."""
@@ -581,7 +581,7 @@ class TestSeoProxyRouter:
         with patch("api.routers.seo.SpecRepository", return_value=mock_spec_repo):
             response = client.get("/seo-proxy/scatter-basic/seaborn")
             assert response.status_code == 200
-            assert "api.pyplots.ai/og/home.png" in response.text  # Default image via API
+            assert "api.anyplot.ai/og/home.png" in response.text  # Default image via API
 
 
 class TestOgImagesRouter:

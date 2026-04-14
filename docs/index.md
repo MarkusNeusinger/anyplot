@@ -1,6 +1,6 @@
 # Documentation
 
-Welcome to the pyplots documentation. Start here to find what you're looking for.
+Welcome to the anyplot documentation. Start here to find what you're looking for.
 
 ---
 
@@ -13,7 +13,7 @@ Welcome to the pyplots documentation. Start here to find what you're looking for
 | Set up local development | [Development Guide](development.md) |
 | See how automation works | [Workflows](workflows/overview.md) |
 | Look up API endpoints | [API Reference](reference/api.md) |
-| Integrate pyplots into AI workflow | [MCP Server](reference/mcp.md) |
+| Integrate anyplot into AI workflow | [MCP Server](reference/mcp.md) |
 | Understand the database | [Database Schema](reference/database.md) |
 | Explore repository structure | [Repository Structure](reference/repository.md) |
 

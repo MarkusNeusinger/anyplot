@@ -1,5 +1,5 @@
 name: Request New Plot
-description: Propose a new plot type for pyplots
+description: Propose a new plot type for anyplot
 labels: ["spec-request"]
 body:
   - type: markdown

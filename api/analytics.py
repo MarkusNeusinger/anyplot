@@ -17,7 +17,7 @@ from fastapi import Request
 logger = logging.getLogger(__name__)
 
 PLAUSIBLE_ENDPOINT = "https://plausible.io/api/event"
-DOMAIN = "pyplots.ai"
+DOMAIN = "anyplot.ai"
 
 # All platforms from nginx.conf bot detection (27 total)
 # Order matters for some patterns - more specific patterns checked first via _detect_whatsapp_or_signal()
@@ -159,16 +159,16 @@ def track_og_image(
 
     # Build URL based on page type
     if page == "home":
-        url = "https://pyplots.ai/"
+        url = "https://anyplot.ai/"
     elif page == "catalog":
-        url = "https://pyplots.ai/catalog"
+        url = "https://anyplot.ai/catalog"
     elif spec is not None and library:
-        url = f"https://pyplots.ai/{spec}/{library}"
+        url = f"https://anyplot.ai/{spec}/{library}"
     elif spec is not None:
-        url = f"https://pyplots.ai/{spec}"
+        url = f"https://anyplot.ai/{spec}"
     else:
         # Fallback: missing spec for a spec-based page
-        url = "https://pyplots.ai/"
+        url = "https://anyplot.ai/"
 
     props: dict[str, str] = {"page": page, "platform": platform}
     if spec:

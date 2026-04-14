@@ -1,7 +1,7 @@
 """
-FastAPI backend for pyplots platform.
+FastAPI backend for anyplot platform.
 
-AI-powered Python plotting examples that work with YOUR data.
+AI-powered plotting examples that work with YOUR data.
 """
 
 # Load .env file FIRST, before any other imports that might read env vars
@@ -17,10 +17,10 @@ from fastapi.middleware.cors import CORSMiddleware  # noqa: E402
 from starlette.middleware.gzip import GZipMiddleware  # noqa: E402
 
 from api.exceptions import (  # noqa: E402
-    PyplotsException,
+    AnyplotException,
+    anyplot_exception_handler,
     generic_exception_handler,
     http_exception_handler,
-    pyplots_exception_handler,
 )
 from api.mcp.server import mcp_server  # noqa: E402
 from api.routers import (  # noqa: E402
@@ -51,7 +51,7 @@ mcp_http_app = mcp_server.http_app(path="/")
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Manage application lifecycle."""
-    logger.info("Starting pyplots API...")
+    logger.info("Starting anyplot API...")
 
     # Initialize database connection
     if is_db_configured():
@@ -67,14 +67,14 @@ async def lifespan(app: FastAPI):
         yield
 
     # Cleanup database connection
-    logger.info("Shutting down pyplots API...")
+    logger.info("Shutting down anyplot API...")
     await close_db()
 
 
 # Create FastAPI application
 app = FastAPI(
-    title="pyplots API",
-    description="Backend API for pyplots.ai - Python plotting gallery across 9 libraries",
+    title="anyplot API",
+    description="Backend API for anyplot.ai - plotting gallery across 9 libraries",
     version="1.0.0",
     lifespan=lifespan,
     docs_url="/docs",
@@ -83,7 +83,7 @@ app = FastAPI(
 )
 
 # Register exception handlers
-app.add_exception_handler(PyplotsException, pyplots_exception_handler)
+app.add_exception_handler(AnyplotException, anyplot_exception_handler)
 app.add_exception_handler(HTTPException, http_exception_handler)
 app.add_exception_handler(Exception, generic_exception_handler)
 
@@ -96,7 +96,7 @@ app.add_middleware(GZipMiddleware, minimum_size=500)
 # Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://pyplots.ai"],
+    allow_origins=["https://anyplot.ai"],
     allow_origin_regex=r"http://localhost:\d+",
     allow_credentials=True,
     allow_methods=["*"],

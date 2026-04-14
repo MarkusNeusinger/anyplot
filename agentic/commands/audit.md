@@ -1,6 +1,6 @@
 # Code Quality Audit
 
-> Team-based code quality audit for the pyplots repository. Spawns specialized Opus agents that analyze backend, frontend, infrastructure, and quality aspects in parallel. The lead synthesizes findings into a prioritized, effort-rated action plan.
+> Team-based code quality audit for the anyplot repository. Spawns specialized Opus agents that analyze backend, frontend, infrastructure, and quality aspects in parallel. The lead synthesizes findings into a prioritized, effort-rated action plan.
 
 ## Context
 
@@ -71,7 +71,7 @@ After all specialists report back:
 ### Output Format
 
 ```markdown
-# Audit Report: pyplots
+# Audit Report: anyplot
 
 **Date:** {date} | **Scope:** {scope} | **Baseline:** ruff: {N issues}, format: {status}
 

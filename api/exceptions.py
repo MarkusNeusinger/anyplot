@@ -1,5 +1,5 @@
 """
-Standardized exception handling for pyplots API.
+Standardized exception handling for anyplot API.
 
 Provides consistent error responses and HTTP status codes.
 """
@@ -31,8 +31,8 @@ class ErrorResponse(BaseModel):
 # ===== Custom Exceptions =====
 
 
-class PyplotsException(Exception):
-    """Base exception for pyplots API."""
+class AnyplotException(Exception):
+    """Base exception for anyplot API."""
 
     def __init__(self, message: str, status_code: int = 500):
         self.message = message
@@ -40,7 +40,7 @@ class PyplotsException(Exception):
         super().__init__(message)
 
 
-class ResourceNotFoundError(PyplotsException):
+class ResourceNotFoundError(AnyplotException):
     """Resource not found (404)."""
 
     def __init__(self, resource: str, identifier: str):
@@ -50,7 +50,7 @@ class ResourceNotFoundError(PyplotsException):
         self.identifier = identifier
 
 
-class DatabaseNotConfiguredError(PyplotsException):
+class DatabaseNotConfiguredError(AnyplotException):
     """Database not configured (503)."""
 
     def __init__(self):
@@ -58,7 +58,7 @@ class DatabaseNotConfiguredError(PyplotsException):
         super().__init__(message, status_code=503)
 
 
-class ExternalServiceError(PyplotsException):
+class ExternalServiceError(AnyplotException):
     """External service failure (502)."""
 
     def __init__(self, service: str, detail: str):
@@ -67,14 +67,14 @@ class ExternalServiceError(PyplotsException):
         self.service = service
 
 
-class ValidationError(PyplotsException):
+class ValidationError(AnyplotException):
     """Validation error (400)."""
 
     def __init__(self, detail: str):
         super().__init__(f"Validation failed: {detail}", status_code=400)
 
 
-class DatabaseQueryError(PyplotsException):
+class DatabaseQueryError(AnyplotException):
     """Database query failed (500)."""
 
     def __init__(self, operation: str, detail: str):
@@ -86,8 +86,8 @@ class DatabaseQueryError(PyplotsException):
 # ===== Exception Handlers =====
 
 
-async def pyplots_exception_handler(request: Request, exc: PyplotsException) -> JSONResponse:
-    """Handle PyplotsException and return standardized JSON response."""
+async def anyplot_exception_handler(request: Request, exc: AnyplotException) -> JSONResponse:
+    """Handle AnyplotException and return a standardized JSON response."""
     return JSONResponse(
         status_code=exc.status_code,
         content={"status": exc.status_code, "message": exc.message, "path": request.url.path},

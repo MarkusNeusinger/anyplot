@@ -63,7 +63,7 @@ jobs:
           prompt: |
             ## Task: Validate Issue Report
 
-            You are validating a user-submitted issue report for pyplots.
+            You are validating a user-submitted issue report for anyplot.
 
             ### Issue Details
             - **Title:** ${{ github.event.issue.title }}

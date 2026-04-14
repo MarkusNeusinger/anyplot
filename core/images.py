@@ -1,4 +1,4 @@
-"""Image processing utilities for pyplots.
+"""Image processing utilities for anyplot.
 
 This module provides reusable functions for image manipulation:
 - Thumbnail generation with aspect ratio preservation
@@ -30,15 +30,15 @@ RESPONSIVE_FORMATS: list[tuple[str, str, dict]] = [("png", "PNG", {}), ("webp", 
 WEBP_FULL_QUALITY = 85
 
 # GCS bucket for static assets (fonts)
-GCS_STATIC_BUCKET = "pyplots-static"
+GCS_STATIC_BUCKET = "anyplot-static"
 MONOLISA_FONT_PATH = "fonts/MonoLisaVariableNormal.ttf"
-FONT_CACHE_DIR = Path("/tmp/pyplots-fonts")
+FONT_CACHE_DIR = Path("/tmp/anyplot-fonts")
 
 # Brand colors from website
-PYPLOTS_BLUE = "#3776AB"  # Python blue
-PYPLOTS_YELLOW = "#FFD43B"  # Python yellow
-PYPLOTS_DARK = "#1f2937"  # Dark gray
-PYPLOTS_BG = "#f8f9fa"  # Light background
+ANYPLOT_BLUE = "#3776AB"  # Brand blue
+ANYPLOT_YELLOW = "#FFD43B"  # Brand yellow
+ANYPLOT_DARK = "#1f2937"  # Dark gray
+ANYPLOT_BG = "#f8f9fa"  # Light background
 
 # OG image dimensions (recommended for social media)
 OG_WIDTH = 1200
@@ -46,7 +46,7 @@ OG_HEIGHT = 630
 HEADER_HEIGHT = 80
 
 # Brand text
-TAGLINE = "library-agnostic, ai-powered python plotting."
+TAGLINE = "library-agnostic, ai-powered plotting."
 
 # Shared colors
 COLOR_LABEL_GRAY = "#6b7280"
@@ -305,7 +305,7 @@ def create_comparison_image(
         spec_id: Spec ID for the header label.
         library: Library name for the header label.
     """
-    canvas = Image.new("RGB", (COMPARE_WIDTH, COMPARE_HEIGHT), PYPLOTS_BG)
+    canvas = Image.new("RGB", (COMPARE_WIDTH, COMPARE_HEIGHT), ANYPLOT_BG)
     draw = ImageDraw.Draw(canvas)
 
     panel_width = (COMPARE_WIDTH - 2 * COMPARE_MARGIN - COMPARE_GAP) // 2
@@ -320,7 +320,7 @@ def create_comparison_image(
         draw.text(
             ((COMPARE_WIDTH - text_w) // 2, (COMPARE_HEADER_HEIGHT - text_h) // 2),
             header_text,
-            fill=PYPLOTS_DARK,
+            fill=ANYPLOT_DARK,
             font=header_font,
         )
 
@@ -462,8 +462,8 @@ def _get_font(
     return ImageFont.load_default()
 
 
-def _draw_pyplots_logo(draw: ImageDraw.ImageDraw, x: int, y: int, font_size: int = 36) -> int:
-    """Draw the pyplots.ai logo with proper colors.
+def _draw_anyplot_logo(draw: ImageDraw.ImageDraw, x: int, y: int, font_size: int = 36) -> int:
+    """Draw the anyplot.ai logo with proper colors.
 
     Args:
         draw: ImageDraw instance to draw on
@@ -477,7 +477,7 @@ def _draw_pyplots_logo(draw: ImageDraw.ImageDraw, x: int, y: int, font_size: int
     font = _get_font(font_size)
 
     # Draw each part with its color
-    parts = [("py", PYPLOTS_BLUE), ("plots", PYPLOTS_YELLOW), (".ai", PYPLOTS_DARK)]
+    parts = [("any", ANYPLOT_BLUE), ("plot", ANYPLOT_YELLOW), (".ai", ANYPLOT_DARK)]
 
     current_x = x
     for text, color in parts:
@@ -496,7 +496,7 @@ def _draw_branded_header(
     tagline_font_size: int,
     tagline_y: int,
 ) -> None:
-    """Draw centered pyplots.ai logo + tagline onto an existing canvas.
+    """Draw centered anyplot.ai logo + tagline onto an existing canvas.
 
     Args:
         draw: ImageDraw instance to draw on
@@ -507,10 +507,10 @@ def _draw_branded_header(
         tagline_y: Y coordinate for the tagline
     """
     logo_font = _get_font(logo_font_size)
-    logo_text = "pyplots.ai"
+    logo_text = "anyplot.ai"
     logo_width, _ = _text_size(draw, logo_text, logo_font)
     logo_x = (canvas_width - logo_width) // 2
-    _draw_pyplots_logo(draw, logo_x, top_y, logo_font_size)
+    _draw_anyplot_logo(draw, logo_x, top_y, logo_font_size)
 
     tagline_font = _get_font(tagline_font_size, weight=400)
     tagline_width, _ = _text_size(draw, TAGLINE, tagline_font)
@@ -519,7 +519,7 @@ def _draw_branded_header(
 
 
 def create_branded_header(width: int = OG_WIDTH, height: int = HEADER_HEIGHT) -> Image.Image:
-    """Create a branded header strip with pyplots.ai logo.
+    """Create a branded header strip with anyplot.ai logo.
 
     Args:
         width: Width of the header in pixels
@@ -528,7 +528,7 @@ def create_branded_header(width: int = OG_WIDTH, height: int = HEADER_HEIGHT) ->
     Returns:
         PIL Image with the branded header
     """
-    header = Image.new("RGB", (width, height), PYPLOTS_BG)
+    header = Image.new("RGB", (width, height), ANYPLOT_BG)
     draw = ImageDraw.Draw(header)
 
     # Center the logo
@@ -536,13 +536,13 @@ def create_branded_header(width: int = OG_WIDTH, height: int = HEADER_HEIGHT) ->
     font = _get_font(font_size)
 
     # Calculate total text width for centering
-    test_text = "pyplots.ai"
+    test_text = "anyplot.ai"
     text_width, text_height = _text_size(draw, test_text, font)
 
     x = (width - text_width) // 2
     y = (height - text_height) // 2 - 5  # Slight adjustment for visual centering
 
-    _draw_pyplots_logo(draw, x, y, font_size)
+    _draw_anyplot_logo(draw, x, y, font_size)
 
     return header
 
@@ -620,7 +620,7 @@ def _finalize_og_image(final: Image.Image, output_path: str | Path | None) -> Im
     Returns:
         PIL Image if output_path is given, otherwise bytes of PNG
     """
-    final_rgb = Image.new("RGB", final.size, PYPLOTS_BG)
+    final_rgb = Image.new("RGB", final.size, ANYPLOT_BG)
     final_rgb.paste(final, mask=final.split()[3] if final.mode == "RGBA" else None)
 
     if output_path:
@@ -638,10 +638,10 @@ def create_branded_og_image(
     spec_id: str | None = None,
     library: str | None = None,
 ) -> Image.Image | bytes:
-    """Create a branded OG image by adding pyplots.ai header to a plot.
+    """Create a branded OG image by adding anyplot.ai header to a plot.
 
     Design matches og-image.png style:
-    - pyplots.ai logo at top
+    - anyplot.ai logo at top
     - Tagline "Beautiful Python plotting made easy."
     - Plot in rounded paper card with shadow
     - spec_id · library label below
@@ -672,7 +672,7 @@ def create_branded_og_image(
     plot_resized = img.resize((new_width, new_height), Image.Resampling.LANCZOS)
 
     # Create canvas and draw header
-    final = Image.new("RGBA", (OG_WIDTH, OG_HEIGHT), PYPLOTS_BG)
+    final = Image.new("RGBA", (OG_WIDTH, OG_HEIGHT), ANYPLOT_BG)
     draw = ImageDraw.Draw(final)
     tagline_y = OG_TOP_MARGIN + OG_LOGO_HEIGHT + OG_TAGLINE_GAP
     _draw_branded_header(draw, OG_WIDTH, OG_TOP_MARGIN, OG_LOGO_FONT_SIZE, OG_TAGLINE_FONT_SIZE, tagline_y)
@@ -691,7 +691,7 @@ def create_branded_og_image(
         label_width, _ = _text_size(draw, label, label_font)
         label_x = (OG_WIDTH - label_width) // 2
         label_y = card_y + new_height + 2 * OG_CARD_PADDING + OG_LABEL_GAP
-        draw.text((label_x, label_y), label, fill=PYPLOTS_DARK, font=label_font)
+        draw.text((label_x, label_y), label, fill=ANYPLOT_DARK, font=label_font)
 
     return _finalize_og_image(final, output_path)
 
@@ -774,7 +774,7 @@ def _draw_collage_cards(
             lbl_width, _ = _text_size(draw, labels[i], label_font)
             label_x = slot_x + (slot_width - lbl_width) // 2
             label_y = card_y + actual_card_height + COLLAGE_LABEL_GAP
-            draw.text((label_x, label_y), labels[i], fill=PYPLOTS_DARK, font=label_font)
+            draw.text((label_x, label_y), labels[i], fill=ANYPLOT_DARK, font=label_font)
 
 
 def create_og_collage(
@@ -784,7 +784,7 @@ def create_og_collage(
 ) -> Image.Image | bytes:
     """Create a collage OG image from multiple plot images.
 
-    Creates a 2x3 grid (2 rows, 3 columns) with pyplots.ai branding:
+    Creates a 2x3 grid (2 rows, 3 columns) with anyplot.ai branding:
     - Large dominant logo and tagline at top
     - 6 plots in 16:9 rounded cards arranged in 2 rows
     - Labels below each card
@@ -803,7 +803,7 @@ def create_og_collage(
     loaded_images = [_load_plot_image(img) for img in images[:COLLAGE_MAX_IMAGES]]
 
     # Create canvas and draw header
-    final = Image.new("RGBA", (OG_WIDTH, OG_HEIGHT), PYPLOTS_BG)
+    final = Image.new("RGBA", (OG_WIDTH, OG_HEIGHT), ANYPLOT_BG)
     draw = ImageDraw.Draw(final)
     tagline_y = COLLAGE_TOP_MARGIN + COLLAGE_TAGLINE_Y_OFFSET
     _draw_branded_header(

@@ -1,4 +1,4 @@
-# Multi-stage Dockerfile for pyplots React + Vite app on Cloud Run
+# Multi-stage Dockerfile for anyplot React + Vite app on Cloud Run
 
 # Stage 1: Build the application
 FROM node:20-alpine AS builder

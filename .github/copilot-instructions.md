@@ -33,7 +33,7 @@ This file provides guidance to GitHub Copilot when working with code in this rep
 
 ## Project Overview
 
-**pyplots** is an AI-powered platform for Python data visualization that automatically discovers, generates, tests, and maintains plotting examples. The platform is specification-driven: every plot starts as a library-agnostic Markdown spec, then AI generates implementations for all supported libraries.
+**anyplot** is an AI-powered platform for Python data visualization that automatically discovers, generates, tests, and maintains plotting examples. The platform is specification-driven: every plot starts as a library-agnostic Markdown spec, then AI generates implementations for all supported libraries.
 
 **Supported Libraries** (9 total):
 - matplotlib, seaborn, plotly, bokeh, altair, plotnine, pygal, highcharts, lets-plot
@@ -179,7 +179,7 @@ Examples: `scatter-basic`, `scatter-color-mapped`, `bar-grouped-horizontal`, `he
 Plot implementations are **simple, readable scripts** - like matplotlib gallery examples:
 
 ```python
-""" pyplots.ai
+""" anyplot.ai
 scatter-basic: Basic Scatter Plot
 Library: matplotlib 3.10.0 | Python 3.13
 Quality: 92/100 | Created: 2025-01-10
@@ -202,7 +202,7 @@ plt.tight_layout()
 plt.savefig('plot.png', dpi=300, bbox_inches='tight')
 ```
 
-**Header format:** 4-line docstring with pyplots.ai branding, spec-id, library version, quality score.
+**Header format:** 4-line docstring with anyplot.ai branding, spec-id, library version, quality score.
 **Rules:** No functions, no classes, no `if __name__ == '__main__'`. Just: imports → data → plot → save.
 
 ### Anti-Patterns to Avoid
@@ -223,10 +223,10 @@ The project runs on **Google Cloud Platform** (europe-west4 region):
 
 | Service | Component          | Purpose |
 |---------|--------------------|---------|
-| **Cloud Run** | `pyplots-backend`  | FastAPI API (auto-scaling, serverless) |
-| **Cloud Run** | `pyplots-frontend` | React SPA served via nginx |
+| **Cloud Run** | `anyplot-backend`  | FastAPI API (auto-scaling, serverless) |
+| **Cloud Run** | `anyplot-frontend` | React SPA served via nginx |
 | **Cloud SQL** | PostgreSQL 18      | Database (Unix socket in production) |
-| **Cloud Storage** | `pyplots-images`   | Preview images (GCS bucket) |
+| **Cloud Storage** | `anyplot-images`   | Preview images (GCS bucket) |
 | **Secret Manager** | `DATABASE_URL`     | Secure credential storage |
 | **Cloud Build** | Triggers           | Auto-deploy on push to main |
 

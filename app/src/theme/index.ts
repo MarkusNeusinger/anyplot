@@ -1,5 +1,5 @@
 /**
- * Theme constants for pyplots frontend.
+ * Theme constants for anyplot frontend.
  *
  * Centralized styling values to avoid hardcoded repetition.
  */

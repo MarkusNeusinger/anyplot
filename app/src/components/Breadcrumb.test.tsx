@@ -4,28 +4,28 @@ import { Breadcrumb } from './Breadcrumb';
 
 describe('Breadcrumb', () => {
   it('renders breadcrumb items', () => {
-    render(<Breadcrumb items={[{ label: 'pyplots.ai', to: '/' }, { label: 'catalog' }]} />);
+    render(<Breadcrumb items={[{ label: 'anyplot.ai', to: '/' }, { label: 'catalog' }]} />);
 
-    expect(screen.getByText('pyplots.ai')).toBeInTheDocument();
+    expect(screen.getByText('anyplot.ai')).toBeInTheDocument();
     expect(screen.getByText('catalog')).toBeInTheDocument();
   });
 
   it('renders linked items as links', () => {
-    render(<Breadcrumb items={[{ label: 'pyplots.ai', to: '/' }, { label: 'catalog' }]} />);
+    render(<Breadcrumb items={[{ label: 'anyplot.ai', to: '/' }, { label: 'catalog' }]} />);
 
-    const link = screen.getByText('pyplots.ai');
+    const link = screen.getByText('anyplot.ai');
     expect(link.closest('a')).toHaveAttribute('href', '/');
   });
 
   it('renders current page as plain text', () => {
-    render(<Breadcrumb items={[{ label: 'pyplots.ai', to: '/' }, { label: 'catalog' }]} />);
+    render(<Breadcrumb items={[{ label: 'anyplot.ai', to: '/' }, { label: 'catalog' }]} />);
 
     const current = screen.getByText('catalog');
     expect(current.closest('a')).toBeNull();
   });
 
   it('renders separator between items', () => {
-    render(<Breadcrumb items={[{ label: 'pyplots.ai', to: '/' }, { label: 'catalog' }]} />);
+    render(<Breadcrumb items={[{ label: 'anyplot.ai', to: '/' }, { label: 'catalog' }]} />);
 
     expect(screen.getByText('›')).toBeInTheDocument();
   });
@@ -33,7 +33,7 @@ describe('Breadcrumb', () => {
   it('renders right action when provided', () => {
     render(
       <Breadcrumb
-        items={[{ label: 'pyplots.ai', to: '/' }]}
+        items={[{ label: 'anyplot.ai', to: '/' }]}
         rightAction={<span>action</span>}
       />
     );

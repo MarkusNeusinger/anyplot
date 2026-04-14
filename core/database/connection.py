@@ -1,5 +1,5 @@
 """
-Async SQLAlchemy database connection for pyplots.
+Async SQLAlchemy database connection for anyplot.
 
 Supports two connection modes:
 1. Cloud SQL Connector (recommended for Cloud Run) - uses INSTANCE_CONNECTION_NAME
@@ -27,7 +27,7 @@ INSTANCE_CONNECTION_NAME = os.getenv("INSTANCE_CONNECTION_NAME", "")
 DATABASE_URL = os.getenv("DATABASE_URL", "")
 DB_USER = os.getenv("DB_USER", "postgres")
 DB_PASS = os.getenv("DB_PASS", "")
-DB_NAME = os.getenv("DB_NAME", "pyplots")
+DB_NAME = os.getenv("DB_NAME", "anyplot")
 ENVIRONMENT = os.getenv("ENVIRONMENT", "development")
 
 # Database pool defaults

@@ -178,7 +178,7 @@ jobs:
           LIBRARY: ${{ inputs.library }}
         run: |
           IMPL_DIR="plots/${SPEC_ID}/implementations"
-          STAGING_PATH="gs://pyplots-images/staging/${SPEC_ID}/${LIBRARY}"
+          STAGING_PATH="gs://anyplot-images/staging/${SPEC_ID}/${LIBRARY}"
 
           if [ -z "$GCS_CREDENTIALS" ]; then
             echo "::warning::GCS_CREDENTIALS not configured"

@@ -1,9 +1,9 @@
 # pyproject.toml
 [project]
-name = "pyplots"
+name = "anyplot"
 version = "1.1.0"
-description = "AI-powered Python plotting examples"
-authors = [{ name = "Markus Neusinger", email = "admin@pyplots.ai" }]
+description = "AI-powered plotting examples"
+authors = [{ name = "Markus Neusinger", email = "admin@anyplot.ai" }]
 requires-python = ">=3.14"
 readme = "README.md"
 license = "MIT"
@@ -99,12 +99,12 @@ lib-pygal = ["pygal>=3.0.0", "cairosvg>=2.7.0", "pandas>=3.0.0", "scipy>=1.14.0"
 lib-highcharts = ["highcharts-core>=1.10.0", "numpy>=2.0.0", "pandas>=3.0.0", "scipy>=1.14.0", "scikit-learn>=1.6.0", "statsmodels>=0.14.0", "selenium>=4.15.0", "webdriver-manager>=4.0.0"]
 lib-letsplot = ["lets-plot>=4.6.0", "pandas>=3.0.0", "scipy>=1.14.0", "scikit-learn>=1.6.0", "statsmodels>=0.14.0"]
 all = [
-    "pyplots[test,dev,plotting,typecheck]",
+    "anyplot[test,dev,plotting,typecheck]",
 ]
 
 [project.urls]
-Homepage = "https://pyplots.ai"
-Repository = "https://github.com/MarkusNeusinger/pyplots"
+Homepage = "https://anyplot.ai"
+Repository = "https://github.com/MarkusNeusinger/anyplot"
 
 # ===== Ruff Configuration =====
 

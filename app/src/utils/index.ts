@@ -1,5 +1,5 @@
 /**
- * Utility functions for pyplots frontend.
+ * Utility functions for anyplot frontend.
  */
 
 export * from './tooltip';

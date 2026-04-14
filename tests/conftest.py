@@ -1,5 +1,5 @@
 """
-Pytest configuration and fixtures for pyplots tests.
+Pytest configuration and fixtures for anyplot tests.
 """
 
 import matplotlib

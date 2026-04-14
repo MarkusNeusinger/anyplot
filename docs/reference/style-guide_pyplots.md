@@ -1,6 +1,6 @@
 # Style Guide
 
-Design system for the pyplots.ai frontend. All values are defined in `app/src/theme/index.ts` and `app/src/main.tsx`.
+Design system for the anyplot.ai frontend. All values are defined in `app/src/theme/index.ts` and `app/src/main.tsx`.
 
 ## Colors
 
@@ -98,7 +98,7 @@ MonoLisa is a premium monospace font loaded from GCS with unicode-range subsets.
 
 | Element | xs | sm | md |
 |---------|----|----|------|
-| Logo (pyplots.ai) | 2rem | 2.75rem | 3.75rem |
+| Logo (anyplot.ai) | 2rem | 2.75rem | 3.75rem |
 | Spec page title | 1.375rem | 1.625rem | 2.125rem |
 | Spec description | 0.875rem | 0.9375rem | — |
 

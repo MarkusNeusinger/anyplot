@@ -20,7 +20,7 @@ describe('NotFoundPage', () => {
 
   it('renders link back to home', () => {
     render(<NotFoundPage />);
-    const link = screen.getByText('back to pyplots.ai');
+    const link = screen.getByText('back to anyplot.ai');
     expect(link.closest('a')).toHaveAttribute('href', '/');
   });
 });

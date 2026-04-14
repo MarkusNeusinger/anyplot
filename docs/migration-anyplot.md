@@ -30,7 +30,7 @@
 | Domain | pyplots.ai / api.pyplots.ai | anyplot.ai / api.anyplot.ai |
 | GCP Project | `pyplots` (308843905540) | `anyplot` (new) |
 | GitHub Repo | `MarkusNeusinger/pyplots` | `MarkusNeusinger/anyplot` |
-| Cloud Run Services | `pyplots-backend`, `pyplots-frontend` | `anyplot-backend`, `anyplot-frontend` |
+| Cloud Run Services | `pyplots-backend`, `pyplots-frontend` | `anyplot-api`, `anyplot-app` |
 | Cloud SQL Instance | `pyplots-db` | `anyplot-db` |
 | Database Name | `pyplots` | `anyplot` |
 | GCS Buckets | `pyplots-images`, `pyplots-static` | `anyplot-images`, `anyplot-static` |
@@ -528,9 +528,9 @@ Cloudflare provides free CDN, global edge caching, automatic SSL, DDoS protectio
 
 | Type | Name | Content | Proxy |
 |------|------|---------|-------|
-| CNAME | `anyplot.ai` | `anyplot-frontend-HASH.a.run.app` | Proxied (orange cloud) |
+| CNAME | `anyplot.ai` | `anyplot-app-HASH.a.run.app` | Proxied (orange cloud) |
 | CNAME | `www` | `anyplot.ai` | Proxied |
-| CNAME | `api` | `anyplot-backend-HASH.a.run.app` | Proxied |
+| CNAME | `api` | `anyplot-api-HASH.a.run.app` | Proxied |
 | MX | `anyplot.ai` | (your mail provider) | DNS only |
 
 > **Note:** Get the Cloud Run URLs after first deployment (Phase 4.3). Use the `*.a.run.app` URLs, not IPs. Cloudflare's proxy handles SSL termination and caching.
@@ -604,8 +604,8 @@ Add the old domain to Cloudflare now so DNS propagation is done by the time you 
 
 | File | Changes |
 |------|---------|
-| `api/cloudbuild.yaml` | `_SERVICE_NAME: anyplot-backend`, Cloud SQL instance `anyplot:europe-west4:anyplot-db`, `GCS_BUCKET=anyplot-images`, **migrate all `gcr.io/$PROJECT_ID/` → `europe-west4-docker.pkg.dev/$PROJECT_ID/anyplot/`** (Artifact Registry), comment on line 1 |
-| `app/cloudbuild.yaml` | `_SERVICE_NAME: anyplot-frontend`, `_VITE_API_URL: "https://api.anyplot.ai"`, **migrate all `gcr.io/$PROJECT_ID/` → `europe-west4-docker.pkg.dev/$PROJECT_ID/anyplot/`** (Artifact Registry), comment on line 1 |
+| `api/cloudbuild.yaml` | `_SERVICE_NAME: anyplot-api`, Cloud SQL instance `anyplot:europe-west4:anyplot-db`, `GCS_BUCKET=anyplot-images`, **migrate all `gcr.io/$PROJECT_ID/` → `europe-west4-docker.pkg.dev/$PROJECT_ID/anyplot/`** (Artifact Registry), comment on line 1 |
+| `app/cloudbuild.yaml` | `_SERVICE_NAME: anyplot-app`, `_VITE_API_URL: "https://api.anyplot.ai"`, **migrate all `gcr.io/$PROJECT_ID/` → `europe-west4-docker.pkg.dev/$PROJECT_ID/anyplot/`** (Artifact Registry), comment on line 1 |
 | `api/Dockerfile` | Comment on line 1 |
 | `app/Dockerfile` | Comment on line 1 |
 | `docker-compose.yml` | If exists, update service names and env vars |
@@ -898,17 +898,17 @@ gcloud builds submit \
 After services are deployed, get the Cloud Run URLs:
 
 ```bash
-gcloud run services describe anyplot-frontend --region=europe-west4 --format='value(status.url)'
-gcloud run services describe anyplot-backend --region=europe-west4 --format='value(status.url)'
+gcloud run services describe anyplot-app --region=europe-west4 --format='value(status.url)'
+gcloud run services describe anyplot-api --region=europe-west4 --format='value(status.url)'
 ```
 
 In the **Cloudflare dashboard** for `anyplot.ai`, update DNS records to point to the Cloud Run URLs:
 
 | Type | Name | Content | Proxy |
 |------|------|---------|-------|
-| CNAME | `anyplot.ai` | `anyplot-frontend-HASH.a.run.app` | Proxied (orange cloud) |
+| CNAME | `anyplot.ai` | `anyplot-app-HASH.a.run.app` | Proxied (orange cloud) |
 | CNAME | `www` | `anyplot.ai` | Proxied |
-| CNAME | `api` | `anyplot-backend-HASH.a.run.app` | Proxied |
+| CNAME | `api` | `anyplot-api-HASH.a.run.app` | Proxied |
 
 If using Cloudflare CDN for GCS images (Option A from Phase 1.8):
 

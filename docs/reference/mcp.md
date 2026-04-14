@@ -2,9 +2,9 @@
 
 ## Overview
 
-The pyplots MCP (Model Context Protocol) server enables AI assistants and tools to access pyplots programmatically. It provides a standardized interface for searching specifications, fetching implementation code, and integrating pyplots into AI-powered development workflows.
+The anyplot MCP (Model Context Protocol) server enables AI assistants and tools to access anyplot programmatically. It provides a standardized interface for searching specifications, fetching implementation code, and integrating anyplot into AI-powered development workflows.
 
-**Endpoint**: `https://api.pyplots.ai/mcp/`
+**Endpoint**: `https://api.anyplot.ai/mcp/`
 
 ---
 
@@ -20,8 +20,8 @@ Add to your Claude Desktop config file:
 ```json
 {
   "mcpServers": {
-    "pyplots": {
-      "url": "https://api.pyplots.ai/mcp/"
+    "anyplot": {
+      "url": "https://api.anyplot.ai/mcp/"
     }
   }
 }
@@ -34,8 +34,8 @@ Add to `.claude/config.json`:
 ```json
 {
   "mcp": {
-    "pyplots": {
-      "url": "https://api.pyplots.ai/mcp/"
+    "anyplot": {
+      "url": "https://api.anyplot.ai/mcp/"
     }
   }
 }
@@ -181,7 +181,7 @@ Get implementation code for a specific specification and library.
   "library": "matplotlib",
   "code": "\"\"\"...\"\"\"\nimport matplotlib.pyplot as plt\n...",
   "quality_score": 95,
-  "preview_url": "https://storage.googleapis.com/pyplots-images/plots/scatter-basic/matplotlib/plot.png",
+  "preview_url": "https://storage.googleapis.com/anyplot-images/plots/scatter-basic/matplotlib/plot.png",
   "preview_html": null,
   "library_version": "3.10.0",
   "python_version": "3.13"
@@ -223,7 +223,7 @@ List all supported plotting libraries.
 
 **Example Usage**:
 ```
-User: "What plotting libraries does pyplots support?"
+User: "What plotting libraries does anyplot support?"
 Claude: [calls list_libraries()]
 ```
 
@@ -345,7 +345,7 @@ Claude: [calls get_implementation("scatter-basic", "seaborn")]
 | **Endpoint** | `/mcp` | `/specs`, `/plots`, etc. |
 | **Response Format** | MCP protocol | JSON |
 | **Authentication** | None (public) | None (public) |
-| **Use Cases** | Claude, AI tools | pyplots.ai frontend |
+| **Use Cases** | Claude, AI tools | anyplot.ai frontend |
 
 **Key Difference**: MCP provides a **tool-based interface** optimized for AI assistants, while REST provides **data endpoints** optimized for web applications.
 
@@ -390,7 +390,7 @@ The MCP server uses the same rate limiting as the REST API:
 The MCP server is integrated into the existing FastAPI backend:
 
 ```
-api.pyplots.ai
+api.anyplot.ai
 │
 ├── /specs          (REST API for web app)
 ├── /plots          (REST API for web app)
@@ -421,14 +421,14 @@ api.pyplots.ai
 Test MCP tools directly in your browser:
 
 ```bash
-npx @anthropic-ai/mcp-inspector https://api.pyplots.ai/mcp/
+npx @anthropic-ai/mcp-inspector https://api.anyplot.ai/mcp/
 ```
 
 ### 2. Claude Desktop
 
 1. Add config (see Quick Start)
 2. Restart Claude Desktop
-3. Open chat and type: "Use pyplots to show me scatter plots"
+3. Open chat and type: "Use anyplot to show me scatter plots"
 4. Claude will automatically use MCP tools
 
 ### 3. Custom Client
@@ -436,7 +436,7 @@ npx @anthropic-ai/mcp-inspector https://api.pyplots.ai/mcp/
 ```python
 from mcp.client import Client
 
-async with Client("https://api.pyplots.ai/mcp/") as client:
+async with Client("https://api.anyplot.ai/mcp/") as client:
     tools = await client.list_tools()
     print(tools)
 
@@ -450,7 +450,7 @@ async with Client("https://api.pyplots.ai/mcp/") as client:
 
 ### "MCP server not responding"
 
-1. Check endpoint is accessible: `curl https://api.pyplots.ai/mcp/`
+1. Check endpoint is accessible: `curl https://api.anyplot.ai/mcp/`
 2. Verify config file location and syntax
 3. Restart Claude Desktop
 
@@ -479,8 +479,8 @@ async with Client("https://api.pyplots.ai/mcp/") as client:
 
 ## Feedback & Support
 
-- **Issues**: [GitHub Issues](https://github.com/MarkusNeusinger/pyplots/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/MarkusNeusinger/pyplots/discussions)
+- **Issues**: [GitHub Issues](https://github.com/MarkusNeusinger/anyplot/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/MarkusNeusinger/anyplot/discussions)
 - **Feature Requests**: Create an issue with label `enhancement`
 
 ---

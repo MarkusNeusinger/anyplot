@@ -363,7 +363,7 @@ jobs:
           PREVIEW_HTML="null"
           case "$LIBRARY" in
             plotly|bokeh|altair|highcharts|pygal|letsplot)
-              PREVIEW_HTML="https://storage.googleapis.com/pyplots-images/plots/${SPEC_ID}/${LIBRARY}/plot.html"
+              PREVIEW_HTML="https://storage.googleapis.com/anyplot-images/plots/${SPEC_ID}/${LIBRARY}/plot.html"
               ;;
           esac
 
@@ -390,7 +390,7 @@ jobs:
               'issue': issue,
               'python_version': py_ver,
               'library_version': lib_ver,
-              'preview_url': f'https://storage.googleapis.com/pyplots-images/plots/{spec}/{lib}/plot.png',
+              'preview_url': f'https://storage.googleapis.com/anyplot-images/plots/{spec}/{lib}/plot.png',
               'preview_html': preview_html if preview_html != 'null' else None,
               'quality_score': None,
               'review': {'strengths': [], 'weaknesses': []}
@@ -520,8 +520,8 @@ jobs:
           LIBRARY: ${{ steps.inputs.outputs.library }}
         run: |
           IMPL_DIR="plots/${SPEC_ID}/implementations"
-          STAGING_PATH="gs://pyplots-images/staging/${SPEC_ID}/${LIBRARY}"
-          PUBLIC_URL="https://storage.googleapis.com/pyplots-images/staging/${SPEC_ID}/${LIBRARY}"
+          STAGING_PATH="gs://anyplot-images/staging/${SPEC_ID}/${LIBRARY}"
+          PUBLIC_URL="https://storage.googleapis.com/anyplot-images/staging/${SPEC_ID}/${LIBRARY}"
 
           if [ -z "$GCS_CREDENTIALS" ]; then
             echo "::warning::GCS_CREDENTIALS not configured - skipping upload"
@@ -567,13 +567,13 @@ jobs:
           PR_NUMBER: ${{ steps.pr.outputs.pr_number }}
         run: |
           # Use staging URLs (available immediately after upload)
-          PNG_URL="https://storage.googleapis.com/pyplots-images/staging/${SPEC_ID}/${LIBRARY}/plot.png"
+          PNG_URL="https://storage.googleapis.com/anyplot-images/staging/${SPEC_ID}/${LIBRARY}/plot.png"
           HTML_URL=""
 
           # Set HTML_URL for interactive libraries
           case "$LIBRARY" in
             plotly|bokeh|altair|highcharts|pygal|letsplot)
-              HTML_URL="https://storage.googleapis.com/pyplots-images/staging/${SPEC_ID}/${LIBRARY}/plot.html"
+              HTML_URL="https://storage.googleapis.com/anyplot-images/staging/${SPEC_ID}/${LIBRARY}/plot.html"
               ;;
           esac
 

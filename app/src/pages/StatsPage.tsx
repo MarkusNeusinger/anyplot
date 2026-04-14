@@ -119,12 +119,12 @@ export function StatsPage() {
   return (
     <>
       <Helmet>
-        <title>stats | pyplots.ai</title>
-        <meta name="description" content="Platform statistics for pyplots.ai — plot counts, quality scores, library coverage, and more." />
+        <title>stats | anyplot.ai</title>
+        <meta name="description" content="Platform statistics for anyplot.ai — plot counts, quality scores, library coverage, and more." />
       </Helmet>
 
       <Box sx={{ maxWidth: 960, mx: 'auto', px: 2, py: 2 }}>
-        <Breadcrumb items={[{ label: 'pyplots.ai', shortLabel: 'pp', to: '/' }, { label: 'stats' }]} />
+        <Breadcrumb items={[{ label: 'anyplot.ai', shortLabel: 'ap', to: '/' }, { label: 'stats' }]} />
 
         {/* Summary Counters */}
         <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(3, 1fr)', md: 'repeat(6, 1fr)' }, gap: 2, mt: 3, mb: 4 }}>
@@ -148,10 +148,10 @@ export function StatsPage() {
         </Box>
         <Typography sx={{ fontFamily: typography.fontFamily, fontSize: fontSize.xxs, color: semanticColors.mutedText, textAlign: 'center', mt: -2, mb: 3 }}>
           visitor analytics at{' '}
-          <Link href="https://plausible.io/pyplots.ai" target="_blank" rel="noopener noreferrer"
+          <Link href="https://plausible.io/anyplot.ai" target="_blank" rel="noopener noreferrer"
             onClick={() => trackEvent('external_link', { destination: 'plausible' })}
             sx={{ color: semanticColors.mutedText, textDecoration: 'none', '&:hover': { color: colors.primaryDark } }}
-          >plausible.io/pyplots.ai</Link>
+          >plausible.io/anyplot.ai</Link>
         </Typography>
 
         {/* Library Stats — dual mini histograms per library */}

@@ -74,7 +74,7 @@ x = 1  # inline comment
 
     def test_real_world_letsplot_example(self):
         """Test with real lets-plot import pattern."""
-        code = '''""" pyplots.ai
+        code = '''""" anyplot.ai
 scatter-basic: Basic Scatter Plot
 """
 

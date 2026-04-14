@@ -78,7 +78,7 @@ class TestRootEndpoint:
 
         assert response.status_code == 200
         data = response.json()
-        assert data["message"] == "Welcome to pyplots API"
+        assert data["message"] == "Welcome to anyplot API"
 
     def test_returns_version(self, client: TestClient) -> None:
         """Root endpoint should return version."""
@@ -124,7 +124,7 @@ class TestHealthEndpoint:
         response = client.get("/health")
 
         data = response.json()
-        assert data["service"] == "pyplots-api"
+        assert data["service"] == "anyplot-api"
 
     def test_returns_version(self, client: TestClient) -> None:
         """Health endpoint should return version."""
@@ -159,7 +159,7 @@ class TestHelloEndpoint:
         response = client.get("/hello/Test")
 
         data = response.json()
-        assert data["service"] == "pyplots"
+        assert data["service"] == "anyplot"
 
     def test_handles_special_characters(self, client: TestClient) -> None:
         """Hello endpoint should handle URL-encoded names."""
@@ -202,7 +202,7 @@ class TestOpenAPIDocumentation:
         data = response.json()
         assert "openapi" in data
         assert "info" in data
-        assert data["info"]["title"] == "pyplots API"
+        assert data["info"]["title"] == "anyplot API"
 
 
 class TestCORSMiddleware:
@@ -234,7 +234,7 @@ class TestAppConfiguration:
 
     def test_app_title(self) -> None:
         """App should have correct title."""
-        assert fastapi_app.title == "pyplots API"
+        assert fastapi_app.title == "anyplot API"
 
     def test_app_version(self) -> None:
         """App should have correct version."""
@@ -242,7 +242,7 @@ class TestAppConfiguration:
 
     def test_app_description(self) -> None:
         """App should have description."""
-        assert "pyplots" in fastapi_app.description.lower()
+        assert "anyplot" in fastapi_app.description.lower()
         assert "plotting" in fastapi_app.description.lower()
 
 

@@ -1,4 +1,4 @@
-// Types for pyplots.ai frontend
+// Types for anyplot.ai frontend
 
 export interface PlotImage {
   library: string;

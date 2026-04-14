@@ -41,14 +41,14 @@ export function LegalPage() {
   return (
     <>
       <Helmet>
-        <title>legal | pyplots.ai</title>
-        <meta name="description" content="Legal notice, privacy policy, and transparency information for pyplots.ai" />
-        <meta property="og:title" content="legal | pyplots.ai" />
+        <title>legal | anyplot.ai</title>
+        <meta name="description" content="Legal notice, privacy policy, and transparency information for anyplot.ai" />
+        <meta property="og:title" content="legal | anyplot.ai" />
         <meta property="og:description" content="Legal notice, privacy policy, and transparency information" />
-        <link rel="canonical" href="https://pyplots.ai/legal" />
+        <link rel="canonical" href="https://anyplot.ai/legal" />
       </Helmet>
 
-      <Breadcrumb items={[{ label: 'pyplots.ai', shortLabel: 'pp', to: '/' }, { label: 'legal' }]} sx={{ mb: 2 }} />
+      <Breadcrumb items={[{ label: 'anyplot.ai', shortLabel: 'ap', to: '/' }, { label: 'legal' }]} sx={{ mb: 2 }} />
 
       <Box sx={{ mb: 3, display: 'flex', gap: 2, flexWrap: 'wrap', justifyContent: 'center' }}>
         <Link href="#legal-notice" sx={{ color: colors.primary, fontFamily: textStyle.fontFamily, fontSize: fontSize.base }}>
@@ -81,8 +81,8 @@ export function LegalPage() {
             <strong>Contact</strong>
             <br />
             Email:{' '}
-            <Link href="mailto:admin@pyplots.ai" sx={{ color: colors.primary }}>
-              admin@pyplots.ai
+            <Link href="mailto:admin@anyplot.ai" sx={{ color: colors.primary }}>
+              admin@anyplot.ai
             </Link>
             <br />
             LinkedIn:{' '}
@@ -152,7 +152,7 @@ export function LegalPage() {
           </Typography>
           <Typography sx={textStyle}>
             <strong>Public Dashboard</strong>: Our analytics are{' '}
-            <Link href="https://plausible.io/pyplots.ai" target="_blank" rel="noopener" sx={{ color: colors.primary }}>
+            <Link href="https://plausible.io/anyplot.ai" target="_blank" rel="noopener" sx={{ color: colors.primary }}>
               fully public
             </Link>{' '}
             – see exactly what we see.
@@ -208,8 +208,8 @@ export function LegalPage() {
           <Typography sx={textStyle}>
             You have the right to access, rectify, erase, and export your data. Since we do not store personal data,
             there is typically nothing to delete or export. For questions, contact{' '}
-            <Link href="mailto:admin@pyplots.ai" sx={{ color: colors.primary }}>
-              admin@pyplots.ai
+            <Link href="mailto:admin@anyplot.ai" sx={{ color: colors.primary }}>
+              admin@anyplot.ai
             </Link>
             .
           </Typography>
@@ -305,7 +305,7 @@ export function LegalPage() {
                     Plausible
                   </Link>{' '}
                   (privacy-friendly, no cookies,{' '}
-                  <Link href="https://plausible.io/pyplots.ai" target="_blank" rel="noopener" sx={{ color: colors.primary }}>
+                  <Link href="https://plausible.io/anyplot.ai" target="_blank" rel="noopener" sx={{ color: colors.primary }}>
                     public dashboard
                   </Link>
                   )
@@ -341,7 +341,7 @@ export function LegalPage() {
             The entire codebase is publicly available under the MIT License:
             <br />
             <Link href={GITHUB_URL} target="_blank" rel="noopener" sx={{ color: colors.primary }}>
-              github.com/MarkusNeusinger/pyplots
+              github.com/MarkusNeusinger/anyplot
             </Link>
           </Typography>
 

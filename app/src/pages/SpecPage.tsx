@@ -261,22 +261,22 @@ export function SpecPage() {
     <>
       <Helmet>
         <title>
-          {isOverviewMode ? `${specData.title} | pyplots.ai` : `${specData.title} - ${selectedLibrary} | pyplots.ai`}
+          {isOverviewMode ? `${specData.title} | anyplot.ai` : `${specData.title} - ${selectedLibrary} | anyplot.ai`}
         </title>
         <meta name="description" content={specData.description} />
         <meta
           property="og:title"
           content={
-            isOverviewMode ? `${specData.title} | pyplots.ai` : `${specData.title} - ${selectedLibrary} | pyplots.ai`
+            isOverviewMode ? `${specData.title} | anyplot.ai` : `${specData.title} - ${selectedLibrary} | anyplot.ai`
           }
         />
         <meta property="og:description" content={specData.description} />
         {currentImpl?.preview_url && <meta property="og:image" content={currentImpl.preview_url} />}
         <meta
           property="og:url"
-          content={isOverviewMode ? `https://pyplots.ai/${specId}` : `https://pyplots.ai/${specId}/${selectedLibrary}`}
+          content={isOverviewMode ? `https://anyplot.ai/${specId}` : `https://anyplot.ai/${specId}/${selectedLibrary}`}
         />
-        <link rel="canonical" href={isOverviewMode ? `https://pyplots.ai/${specId}` : `https://pyplots.ai/${specId}/${selectedLibrary}`} />
+        <link rel="canonical" href={isOverviewMode ? `https://anyplot.ai/${specId}` : `https://anyplot.ai/${specId}/${selectedLibrary}`} />
       </Helmet>
 
       <Box sx={{ pb: 4 }}>
@@ -285,11 +285,11 @@ export function SpecPage() {
           items={
             isOverviewMode
               ? [
-                  { label: 'pyplots.ai', shortLabel: 'pp', to: '/' },
+                  { label: 'anyplot.ai', shortLabel: 'ap', to: '/' },
                   { label: specId || '' },
                 ]
               : [
-                  { label: 'pyplots.ai', shortLabel: 'pp', to: '/' },
+                  { label: 'anyplot.ai', shortLabel: 'ap', to: '/' },
                   { label: specId || '', to: `/${specId}` },
                   { label: selectedLibrary || '', shortLabel: LIB_ABBREV[selectedLibrary || ''] || selectedLibrary || '' },
                 ]

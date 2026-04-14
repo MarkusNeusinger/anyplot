@@ -25,9 +25,9 @@ describe('reportWebVitals', () => {
     // No error = success, web-vitals is not imported
   });
 
-  it('does nothing when hostname is not pyplots.ai', () => {
+  it('does nothing when hostname is not anyplot.ai', () => {
     Object.defineProperty(window, 'location', {
-      value: { ...originalLocation, hostname: 'staging.pyplots.ai' },
+      value: { ...originalLocation, hostname: 'staging.anyplot.ai' },
       writable: true,
       configurable: true,
     });
@@ -38,7 +38,7 @@ describe('reportWebVitals', () => {
 
   it('attempts to load web-vitals in production', async () => {
     Object.defineProperty(window, 'location', {
-      value: { ...originalLocation, hostname: 'pyplots.ai' },
+      value: { ...originalLocation, hostname: 'anyplot.ai' },
       writable: true,
       configurable: true,
     });

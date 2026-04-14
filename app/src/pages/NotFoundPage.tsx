@@ -9,7 +9,7 @@ export function NotFoundPage() {
   return (
     <>
       <Helmet>
-        <title>page not found | pyplots.ai</title>
+        <title>page not found | anyplot.ai</title>
         <meta name="robots" content="noindex, follow" />
       </Helmet>
       <Box sx={{ textAlign: 'center', py: 12 }}>
@@ -28,7 +28,7 @@ export function NotFoundPage() {
           to="/"
           sx={{ color: colors.primary, fontFamily: typography.fontFamily, textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}
         >
-          back to pyplots.ai
+          back to anyplot.ai
         </Box>
       </Box>
       <Footer />

@@ -39,7 +39,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: app
-      url: https://pyplots.ai
+      url: https://anyplot.ai
     steps:
       - run: echo "Frontend deployed via Cloud Build"
 
@@ -49,6 +49,6 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: api
-      url: https://api.pyplots.ai/docs
+      url: https://api.anyplot.ai/docs
     steps:
       - run: echo "API deployed via Cloud Build"

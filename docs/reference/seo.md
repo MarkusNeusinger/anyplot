@@ -1,10 +1,10 @@
 # SEO Architecture
 
-This document describes the SEO infrastructure for pyplots.ai, including bot detection, dynamic meta tags, branded og:images, and sitemap generation.
+This document describes the SEO infrastructure for anyplot.ai, including bot detection, dynamic meta tags, branded og:images, and sitemap generation.
 
 ## Overview
 
-pyplots.ai is a React SPA (Single Page Application). SPAs have a fundamental SEO challenge: social media bots and search engine crawlers cannot execute JavaScript, so they see an empty page without proper meta tags.
+anyplot.ai is a React SPA (Single Page Application). SPAs have a fundamental SEO challenge: social media bots and search engine crawlers cannot execute JavaScript, so they see an empty page without proper meta tags.
 
 Our solution uses **nginx-based bot detection** to serve pre-rendered HTML with correct `og:tags` to bots, while regular users get the full SPA experience.
 
@@ -21,7 +21,7 @@ Our solution uses **nginx-based bot detection** to serve pre-rendered HTML with 
 │                           nginx (Frontend)                            │
 │                                                                       │
 │  1. Check User-Agent against bot list                                │
-│  2. If bot → proxy to api.pyplots.ai/seo-proxy/*                     │
+│  2. If bot → proxy to api.anyplot.ai/seo-proxy/*                     │
 │  3. If human → serve React SPA (index.html)                          │
 └──────────────────────────────────────────────────────────────────────┘
                     │                               │
@@ -121,7 +121,7 @@ location / {
 
 # Named location for bot proxy
 location @seo_proxy {
-    proxy_pass https://api.pyplots.ai/seo-proxy$request_uri;
+    proxy_pass https://api.anyplot.ai/seo-proxy$request_uri;
 }
 ```
 
@@ -157,7 +157,7 @@ All SEO proxy endpoints return minimal HTML with meta tags:
     <meta property="og:image" content="{image}" />
     <meta property="og:url" content="{url}" />
     <meta property="og:type" content="website" />
-    <meta property="og:site_name" content="pyplots.ai" />
+    <meta property="og:site_name" content="anyplot.ai" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="{title}" />
     <meta name="twitter:description" content="{description}" />
@@ -170,7 +170,7 @@ All SEO proxy endpoints return minimal HTML with meta tags:
 
 ## Branded OG Images
 
-Dynamically generated preview images with pyplots.ai branding.
+Dynamically generated preview images with anyplot.ai branding.
 
 **Router**: `api/routers/og_images.py`
 **Image Processing**: `core/images.py`
@@ -185,7 +185,7 @@ Dynamically generated preview images with pyplots.ai branding.
 ### Single Implementation Image
 
 Layout:
-- pyplots.ai logo (centered, MonoLisa font 42px, weight 700)
+- anyplot.ai logo (centered, MonoLisa font 42px, weight 700)
 - Tagline: "Beautiful Python plotting made easy."
 - Plot image in rounded card with shadow
 - Label: `{spec_id} · {library}`
@@ -193,7 +193,7 @@ Layout:
 ### Collage Image (Spec Overview)
 
 Layout:
-- pyplots.ai logo (centered, MonoLisa font 38px)
+- anyplot.ai logo (centered, MonoLisa font 38px)
 - Tagline
 - 2x3 grid of top 6 implementations (sorted by `quality_score` descending)
 - Each plot in 16:9 rounded card with label below
@@ -207,13 +207,13 @@ Layout:
 ### Font
 
 Uses **MonoLisa** variable font (commercial, not in repo):
-- Downloaded from GCS: `gs://pyplots-static/fonts/MonoLisaVariableNormal.ttf`
-- Cached locally in `/tmp/pyplots-fonts/`
+- Downloaded from GCS: `gs://anyplot-static/fonts/MonoLisaVariableNormal.ttf`
+- Cached locally in `/tmp/anyplot-fonts/`
 - Fallback: DejaVuSansMono-Bold
 
 ## Robots.txt
 
-### Frontend (pyplots.ai)
+### Frontend (anyplot.ai)
 
 Static file at `app/public/robots.txt`:
 
@@ -222,10 +222,10 @@ User-agent: *
 Allow: /
 Disallow: /debug
 
-Sitemap: https://pyplots.ai/sitemap.xml
+Sitemap: https://anyplot.ai/sitemap.xml
 ```
 
-### Backend (api.pyplots.ai)
+### Backend (api.anyplot.ai)
 
 Dynamic endpoint at `GET /robots.txt`:
 
@@ -252,12 +252,12 @@ Dynamic XML sitemap for search engine indexing.
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://pyplots.ai/</loc></url>
-  <url><loc>https://pyplots.ai/catalog</loc></url>
-  <url><loc>https://pyplots.ai/legal</loc></url>
+  <url><loc>https://anyplot.ai/</loc></url>
+  <url><loc>https://anyplot.ai/catalog</loc></url>
+  <url><loc>https://anyplot.ai/legal</loc></url>
   <!-- For each spec with implementations: -->
-  <url><loc>https://pyplots.ai/{spec_id}</loc></url>
-  <url><loc>https://pyplots.ai/{spec_id}/{library}</loc></url>
+  <url><loc>https://anyplot.ai/{spec_id}</loc></url>
+  <url><loc>https://anyplot.ai/{spec_id}/{library}</loc></url>
   <!-- ... -->
 </urlset>
 ```
@@ -274,7 +274,7 @@ Dynamic XML sitemap for search engine indexing.
 
 ```nginx
 location = /sitemap.xml {
-    proxy_pass https://api.pyplots.ai/sitemap.xml;
+    proxy_pass https://api.anyplot.ai/sitemap.xml;
 }
 ```
 
@@ -284,7 +284,7 @@ location = /sitemap.xml {
 
 ```bash
 # Simulate Twitter bot
-curl -H "User-Agent: Twitterbot/1.0" https://pyplots.ai/scatter-basic
+curl -H "User-Agent: Twitterbot/1.0" https://anyplot.ai/scatter-basic
 
 # Should return HTML with og:tags, not React SPA
 ```
@@ -293,10 +293,10 @@ curl -H "User-Agent: Twitterbot/1.0" https://pyplots.ai/scatter-basic
 
 ```bash
 # Single implementation
-curl -o test.png https://api.pyplots.ai/og/scatter-basic/matplotlib.png
+curl -o test.png https://api.anyplot.ai/og/scatter-basic/matplotlib.png
 
 # Collage
-curl -o test.png https://api.pyplots.ai/og/scatter-basic.png
+curl -o test.png https://api.anyplot.ai/og/scatter-basic.png
 ```
 
 ### Validate with Social Media Debuggers

@@ -1,6 +1,6 @@
-# Cloud Build configuration for pyplots Backend API
+# Cloud Build configuration for anyplot Backend API
 substitutions:
-  _SERVICE_NAME: pyplots-backend
+  _SERVICE_NAME: anyplot-api
   _REGION: europe-west4
   _MEMORY: 1Gi
   _CPU: "1"
@@ -13,19 +13,19 @@ steps:
     args:
       - "build"
       - "-t"
-      - "gcr.io/$PROJECT_ID/${_SERVICE_NAME}:$BUILD_ID"
+      - "europe-west4-docker.pkg.dev/$PROJECT_ID/anyplot/${_SERVICE_NAME}:$BUILD_ID"
       - "-t"
-      - "gcr.io/$PROJECT_ID/${_SERVICE_NAME}:latest"
+      - "europe-west4-docker.pkg.dev/$PROJECT_ID/anyplot/${_SERVICE_NAME}:latest"
       - "-f"
       - "api/Dockerfile"
       - "."
     id: "build-image"
 
-  # Push the container image to Container Registry
+  # Push the container image to Artifact Registry
   - name: "gcr.io/cloud-builders/docker"
     args:
       - "push"
-      - "gcr.io/$PROJECT_ID/${_SERVICE_NAME}:$BUILD_ID"
+      - "europe-west4-docker.pkg.dev/$PROJECT_ID/anyplot/${_SERVICE_NAME}:$BUILD_ID"
     id: "push-image"
     waitFor: ["build-image"]
 
@@ -33,7 +33,7 @@ steps:
   - name: "gcr.io/cloud-builders/docker"
     args:
       - "push"
-      - "gcr.io/$PROJECT_ID/${_SERVICE_NAME}:latest"
+      - "europe-west4-docker.pkg.dev/$PROJECT_ID/anyplot/${_SERVICE_NAME}:latest"
     id: "push-latest"
     waitFor: ["build-image"]
 
@@ -43,7 +43,7 @@ steps:
       - "run"
       - "deploy"
       - "${_SERVICE_NAME}"
-      - "--image=gcr.io/$PROJECT_ID/${_SERVICE_NAME}:$BUILD_ID"
+      - "--image=europe-west4-docker.pkg.dev/$PROJECT_ID/anyplot/${_SERVICE_NAME}:$BUILD_ID"
       - "--region=${_REGION}"
       - "--platform=managed"
       - "--memory=${_MEMORY}"
@@ -52,12 +52,12 @@ steps:
       - "--max-instances=${_MAX_INSTANCES}"
       - "--port=8000"
       - "--allow-unauthenticated"
-      - "--add-cloudsql-instances=pyplots:europe-west4:pyplots-db"
+      - "--add-cloudsql-instances=anyplot:europe-west4:anyplot-db"
       - "--set-secrets=DATABASE_URL=DATABASE_URL:latest"
       - "--set-env-vars=ENVIRONMENT=production"
       - "--execution-environment=gen2"
       - "--set-env-vars=GOOGLE_CLOUD_PROJECT=$PROJECT_ID"
-      - "--set-env-vars=GCS_BUCKET=pyplots-images"
+      - "--set-env-vars=GCS_BUCKET=anyplot-images"
       - "--cpu-throttling"
       - "--concurrency=15"
       - "--timeout=600"
@@ -79,8 +79,8 @@ steps:
 
 # Store image in Artifact Registry
 images:
-  - "gcr.io/$PROJECT_ID/${_SERVICE_NAME}:$BUILD_ID"
-  - "gcr.io/$PROJECT_ID/${_SERVICE_NAME}:latest"
+  - "europe-west4-docker.pkg.dev/$PROJECT_ID/anyplot/${_SERVICE_NAME}:$BUILD_ID"
+  - "europe-west4-docker.pkg.dev/$PROJECT_ID/anyplot/${_SERVICE_NAME}:latest"
 
 options:
   logging: CLOUD_LOGGING_ONLY

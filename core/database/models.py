@@ -1,5 +1,5 @@
 """
-SQLAlchemy ORM models for pyplots.
+SQLAlchemy ORM models for anyplot.
 
 Defines database tables for specs, libraries, and impls.
 """

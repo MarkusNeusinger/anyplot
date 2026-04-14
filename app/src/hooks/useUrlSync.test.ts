@@ -97,7 +97,7 @@ describe('useUrlSync', () => {
     renderHook(() => useUrlSync({ activeFilters: filters, onTrackPageview }));
 
     expect(window.location.search).toBe('?lib=matplotlib');
-    expect(document.title).toBe('lib:matplotlib | pyplots.ai');
+    expect(document.title).toBe('lib:matplotlib | anyplot.ai');
     expect(onTrackPageview).toHaveBeenCalled();
   });
 
@@ -106,6 +106,6 @@ describe('useUrlSync', () => {
 
     renderHook(() => useUrlSync({ activeFilters: [], onTrackPageview }));
 
-    expect(document.title).toBe('pyplots.ai');
+    expect(document.title).toBe('anyplot.ai');
   });
 });

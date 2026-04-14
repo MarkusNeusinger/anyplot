@@ -96,7 +96,7 @@ async def get_branded_impl_image(
 ) -> Response:
     """Get a branded OG image for an implementation.
 
-    Returns a 1200x630 PNG with pyplots.ai header and the plot image.
+    Returns a 1200x630 PNG with anyplot.ai header and the plot image.
     """
     # Track og:image request (fire-and-forget)
     track_og_image(request, page="spec_detail", spec=spec_id, library=library)
@@ -144,7 +144,7 @@ async def get_spec_collage_image(
 ) -> Response:
     """Get a collage OG image for a spec (showing top 6 implementations by quality).
 
-    Returns a 1200x630 PNG with pyplots.ai branding and a 2x3 grid of implementations,
+    Returns a 1200x630 PNG with anyplot.ai branding and a 2x3 grid of implementations,
     sorted by quality_score descending.
     """
     # Track og:image request (fire-and-forget)

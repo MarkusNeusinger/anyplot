@@ -1,5 +1,5 @@
 """
-FastAPI dependencies for pyplots API.
+FastAPI dependencies for anyplot API.
 
 Reusable dependencies for database access, authentication, etc.
 """

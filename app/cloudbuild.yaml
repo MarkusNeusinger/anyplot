@@ -1,8 +1,8 @@
-# Cloud Build configuration for pyplots Frontend
+# Cloud Build configuration for anyplot Frontend
 substitutions:
   _REGION: "europe-west4"
-  _SERVICE_NAME: "pyplots-frontend"
-  _VITE_API_URL: "https://api.pyplots.ai"
+  _SERVICE_NAME: "anyplot-app"
+  _VITE_API_URL: "https://api.anyplot.ai"
 
 steps:
   # Build the container image
@@ -11,9 +11,9 @@ steps:
       [
         "build",
         "-t",
-        "gcr.io/$PROJECT_ID/${_SERVICE_NAME}:$BUILD_ID",
+        "europe-west4-docker.pkg.dev/$PROJECT_ID/anyplot/${_SERVICE_NAME}:$BUILD_ID",
         "-t",
-        "gcr.io/$PROJECT_ID/${_SERVICE_NAME}:latest",
+        "europe-west4-docker.pkg.dev/$PROJECT_ID/anyplot/${_SERVICE_NAME}:latest",
         "--build-arg",
         "VITE_API_URL=${_VITE_API_URL}",
         "-f",
@@ -21,9 +21,9 @@ steps:
         "app",
       ]
 
-  # Push the container image to Container Registry
+  # Push the container image to Artifact Registry
   - name: "gcr.io/cloud-builders/docker"
-    args: ["push", "--all-tags", "gcr.io/$PROJECT_ID/${_SERVICE_NAME}"]
+    args: ["push", "--all-tags", "europe-west4-docker.pkg.dev/$PROJECT_ID/anyplot/${_SERVICE_NAME}"]
 
   # Deploy container image to Cloud Run
   - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
@@ -33,7 +33,7 @@ steps:
       - "deploy"
       - "${_SERVICE_NAME}"
       - "--image"
-      - "gcr.io/$PROJECT_ID/${_SERVICE_NAME}:$BUILD_ID"
+      - "europe-west4-docker.pkg.dev/$PROJECT_ID/anyplot/${_SERVICE_NAME}:$BUILD_ID"
       - "--region"
       - "${_REGION}"
       - "--platform"
@@ -57,10 +57,10 @@ steps:
       - "--concurrency"
       - "15"
 
-# Store images in Container Registry
+# Store images in Artifact Registry
 images:
-  - "gcr.io/$PROJECT_ID/${_SERVICE_NAME}:$BUILD_ID"
-  - "gcr.io/$PROJECT_ID/${_SERVICE_NAME}:latest"
+  - "europe-west4-docker.pkg.dev/$PROJECT_ID/anyplot/${_SERVICE_NAME}:$BUILD_ID"
+  - "europe-west4-docker.pkg.dev/$PROJECT_ID/anyplot/${_SERVICE_NAME}:latest"
 
 options:
   logging: CLOUD_LOGGING_ONLY
