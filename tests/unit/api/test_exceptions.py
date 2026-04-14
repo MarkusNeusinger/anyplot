@@ -11,15 +11,15 @@ from fastapi import Request
 from fastapi.responses import JSONResponse
 
 from api.exceptions import (
+    AnyplotException,
     DatabaseNotConfiguredError,
     DatabaseQueryError,
     ExternalServiceError,
-    PyplotsException,
     ResourceNotFoundError,
     ValidationError,
+    anyplot_exception_handler,
     generic_exception_handler,
     http_exception_handler,
-    pyplots_exception_handler,
     raise_database_not_configured,
     raise_database_query_error,
     raise_external_service_error,
@@ -28,24 +28,24 @@ from api.exceptions import (
 )
 
 
-class TestPyplotsException:
-    """Tests for PyplotsException base class."""
+class TestAnyplotException:
+    """Tests for AnyplotException base class."""
 
     def test_default_status_code(self) -> None:
         """Should have default status code 500."""
-        exc = PyplotsException("Test error")
+        exc = AnyplotException("Test error")
         assert exc.status_code == 500
         assert exc.message == "Test error"
 
     def test_custom_status_code(self) -> None:
         """Should accept custom status code."""
-        exc = PyplotsException("Test error", status_code=418)
+        exc = AnyplotException("Test error", status_code=418)
         assert exc.status_code == 418
         assert exc.message == "Test error"
 
     def test_str_representation(self) -> None:
         """Should return message as string representation."""
-        exc = PyplotsException("Test error")
+        exc = AnyplotException("Test error")
         assert str(exc) == "Test error"
 
 
@@ -134,13 +134,13 @@ class TestExceptionHandlers:
     """Tests for exception handler functions."""
 
     @pytest.mark.asyncio
-    async def test_pyplots_exception_handler(self) -> None:
-        """Should handle PyplotsException and return proper JSON response."""
+    async def test_anyplot_exception_handler(self) -> None:
+        """Should handle AnyplotException and return proper JSON response."""
         request = MagicMock(spec=Request)
         request.url.path = "/test/path"
-        exc = PyplotsException("Test error", status_code=418)
+        exc = AnyplotException("Test error", status_code=418)
 
-        response = await pyplots_exception_handler(request, exc)
+        response = await anyplot_exception_handler(request, exc)
 
         assert isinstance(response, JSONResponse)
         assert response.status_code == 418

@@ -1,5 +1,5 @@
 """
-FastMCP server for pyplots.
+FastMCP server for anyplot.
 
 Provides tools for AI assistants to search plot specifications and fetch implementation code.
 """
@@ -15,8 +15,8 @@ from api.schemas import ImplementationResponse, SpecDetailResponse, SpecListItem
 from core.database import ImplRepository, LibraryRepository, SpecRepository, is_db_configured
 
 
-# Website URL for linking to pyplots.ai
-PYPLOTS_WEBSITE_URL = "https://pyplots.ai"
+# Website URL for linking to anyplot.ai
+ANYPLOT_WEBSITE_URL = "https://anyplot.ai"
 
 # MCP-specific database engine (created lazily)
 # This is separate from FastAPI's engine to avoid greenlet context issues
@@ -69,7 +69,7 @@ async def get_mcp_db_session() -> AsyncSession:
 os.environ.setdefault("FASTMCP_STATELESS_HTTP", "true")
 
 # Initialize FastMCP server
-mcp_server = FastMCP("pyplots")
+mcp_server = FastMCP("anyplot")
 
 
 @mcp_server.tool()
@@ -102,7 +102,7 @@ async def list_specs(limit: int = 100, offset: int = 0) -> list[dict[str, Any]]:
             item = SpecListItem(
                 id=spec.id, title=spec.title, description=spec.description, tags=spec.tags, library_count=impl_count
             )
-            result.append({**item.model_dump(), "website_url": f"{PYPLOTS_WEBSITE_URL}/{spec.id}"})
+            result.append({**item.model_dump(), "website_url": f"{ANYPLOT_WEBSITE_URL}/{spec.id}"})
 
         return result
     finally:
@@ -228,7 +228,7 @@ async def search_specs_by_tags(
             item = SpecListItem(
                 id=spec.id, title=spec.title, description=spec.description, tags=spec.tags, library_count=impl_count
             )
-            result.append({**item.model_dump(), "website_url": f"{PYPLOTS_WEBSITE_URL}/{spec.id}"})
+            result.append({**item.model_dump(), "website_url": f"{ANYPLOT_WEBSITE_URL}/{spec.id}"})
 
         return result
     finally:
@@ -289,7 +289,7 @@ async def get_spec_detail(spec_id: str) -> dict[str, Any]:
                 impl_tags=impl.impl_tags,
             )
             implementations.append(
-                {**impl_response.model_dump(), "website_url": f"{PYPLOTS_WEBSITE_URL}/{spec_id}/{impl.library.id}"}
+                {**impl_response.model_dump(), "website_url": f"{ANYPLOT_WEBSITE_URL}/{spec_id}/{impl.library.id}"}
             )
 
         # Build full spec response
@@ -308,7 +308,7 @@ async def get_spec_detail(spec_id: str) -> dict[str, Any]:
             implementations=implementations,
         )
 
-        return {**response.model_dump(), "website_url": f"{PYPLOTS_WEBSITE_URL}/{spec_id}"}
+        return {**response.model_dump(), "website_url": f"{ANYPLOT_WEBSITE_URL}/{spec_id}"}
     finally:
         await session.close()
 
@@ -380,7 +380,7 @@ async def get_implementation(spec_id: str, library: str) -> dict[str, Any]:
             impl_tags=impl.impl_tags,
         )
 
-        return {**response.model_dump(), "website_url": f"{PYPLOTS_WEBSITE_URL}/{spec_id}/{library}"}
+        return {**response.model_dump(), "website_url": f"{ANYPLOT_WEBSITE_URL}/{spec_id}/{library}"}
     finally:
         await session.close()
 

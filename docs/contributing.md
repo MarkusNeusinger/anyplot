@@ -1,14 +1,14 @@
-# Contributing to pyplots
+# Contributing to anyplot
 
 ## Overview
 
-pyplots is a specification-driven platform where **AI generates all plot implementations**. As a contributor, your main focus is on **specifications** (what to visualize) rather than code (how to implement).
+anyplot is a specification-driven platform where **AI generates all plot implementations**. As a contributor, your main focus is on **specifications** (what to visualize) rather than code (how to implement).
 
 ---
 
 ## Two Ways to Contribute
 
-| Action | When to Use | From pyplots.ai |
+| Action | When to Use | From anyplot.ai |
 |--------|-------------|-----------------|
 | **[Request New Plot](#request-a-new-plot)** | Propose a new plot type | Click "suggest spec" in catalog |
 | **[Report Plot Issue](#report-a-plot-issue)** | Problem with a spec or implementation | Click "report issue" on any page |
@@ -36,8 +36,8 @@ All contributions go through GitHub Issues with AI-powered validation and proces
 
 Found a problem with a plot (specification or implementation)?
 
-1. **From pyplots.ai**: Click "report issue" on any spec or implementation page
-2. **From GitHub**: Use the [Report Plot Issue](https://github.com/MarkusNeusinger/pyplots/issues/new?template=report-plot-issue.yml) template
+1. **From anyplot.ai**: Click "report issue" on any spec or implementation page
+2. **From GitHub**: Use the [Report Plot Issue](https://github.com/MarkusNeusinger/anyplot/issues/new?template=report-plot-issue.yml) template
 3. **Select affected libraries** (or leave empty if all/unsure)
 4. **Choose a category** (optional): Visual, Data, Functional, or Other
 5. **Describe the issue**
@@ -93,5 +93,5 @@ See [workflows/overview.md](./workflows/overview.md) for the complete label syst
 
 ## Questions?
 
-- Check existing [Issues](https://github.com/MarkusNeusinger/pyplots/issues) for similar requests
+- Check existing [Issues](https://github.com/MarkusNeusinger/anyplot/issues) for similar requests
 - Review the [workflows overview](./workflows/overview.md) for automation details

@@ -75,7 +75,7 @@ Read `prompts/quality-criteria.md` and evaluate:
 | SC-01 | Plot Type | 5 | Correct chart type? |
 | SC-02 | Required Features | 4 | All features from spec? |
 | SC-03 | Data Mapping | 3 | X/Y correct? Axes show all data? |
-| SC-04 | Title & Legend | 3 | `{spec-id} · {library} · pyplots.ai`? Legend labels match? |
+| SC-04 | Title & Legend | 3 | `{spec-id} · {library} · anyplot.ai`? Legend labels match? |
 
 #### Data Quality (15 pts)
 | ID | Criterion | Max | Check |

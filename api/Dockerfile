@@ -1,4 +1,4 @@
-# Dockerfile for pyplots FastAPI backend on Cloud Run
+# Dockerfile for anyplot FastAPI backend on Cloud Run
 FROM python:3.14-slim
 
 # Set working directory

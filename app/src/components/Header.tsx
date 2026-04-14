@@ -112,8 +112,8 @@ export const Header = memo(function Header({ stats, onRandom }: HeaderProps) {
           onKeyDown={handleLogoKeyDown}
           sx={{ cursor: 'pointer', userSelect: 'none', '&:focus': { outline: 'none' } }}
         >
-          <Box component="span" sx={{ color: colors.primary }}>py</Box>
-          <Box component="span" sx={{ color: colors.accent }}>plots</Box>
+          <Box component="span" sx={{ color: colors.primary }}>any</Box>
+          <Box component="span" sx={{ color: colors.accent }}>plot</Box>
           <Box component="span" sx={{ color: colors.gray[800] }}>.ai</Box>
         </Box>
         {onRandom && (

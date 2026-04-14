@@ -1,20 +1,20 @@
-<img src="app/public/logo.svg" alt="pyplots.ai" width="250">
+<img src="app/public/logo.svg" alt="anyplot.ai" width="250">
 
-**→ [pyplots.ai](https://pyplots.ai)**
+**→ [anyplot.ai](https://anyplot.ai)**
 
 [![Python 3.13+](https://img.shields.io/badge/python-3.13+-blue.svg)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Tests](https://github.com/MarkusNeusinger/pyplots/actions/workflows/ci-tests.yml/badge.svg?branch=main)](https://github.com/MarkusNeusinger/pyplots/actions/workflows/ci-tests.yml)
-[![Ruff](https://github.com/MarkusNeusinger/pyplots/actions/workflows/ci-lint.yml/badge.svg?branch=main)](https://github.com/MarkusNeusinger/pyplots/actions/workflows/ci-lint.yml)
-[![codecov](https://codecov.io/github/MarkusNeusinger/pyplots/graph/badge.svg?token=4EGPSHH0H0)](https://codecov.io/github/MarkusNeusinger/pyplots)
+[![Tests](https://github.com/MarkusNeusinger/anyplot/actions/workflows/ci-tests.yml/badge.svg?branch=main)](https://github.com/MarkusNeusinger/anyplot/actions/workflows/ci-tests.yml)
+[![Ruff](https://github.com/MarkusNeusinger/anyplot/actions/workflows/ci-lint.yml/badge.svg?branch=main)](https://github.com/MarkusNeusinger/anyplot/actions/workflows/ci-lint.yml)
+[![codecov](https://codecov.io/github/MarkusNeusinger/anyplot/graph/badge.svg?token=4EGPSHH0H0)](https://codecov.io/github/MarkusNeusinger/anyplot)
 
 > library-agnostic, ai-powered python plotting examples.
 
 ---
 
-## What is pyplots?
+## What is anyplot?
 
-**pyplots** is an AI-powered platform for Python data visualization that automatically discovers, generates, tests, and
+**anyplot** is an AI-powered platform for Python data visualization that automatically discovers, generates, tests, and
 maintains plotting examples. Browse hundreds of plots across all major Python libraries - matplotlib, seaborn, plotly,
 bokeh, altair, plotnine, pygal, highcharts, and lets-plot.
 
@@ -79,7 +79,7 @@ See [docs/reference/](docs/reference/) for details.
 
 ## MCP Server
 
-pyplots provides an [MCP (Model Context Protocol)](https://modelcontextprotocol.io/) server for AI assistants to search plot specifications and fetch implementation code.
+anyplot provides an [MCP (Model Context Protocol)](https://modelcontextprotocol.io/) server for AI assistants to search plot specifications and fetch implementation code.
 
 **Available Tools:**
 - `list_specs` - List all plot specifications
@@ -97,9 +97,9 @@ Add to your MCP client configuration (e.g., Claude Code `.mcp.json`):
 ```json
 {
   "mcpServers": {
-    "pyplots": {
+    "anyplot": {
       "command": "npx",
-      "args": ["-y", "mcp-remote", "https://api.pyplots.ai/sse/"]
+      "args": ["-y", "mcp-remote", "https://api.anyplot.ai/sse/"]
     }
   }
 }
@@ -109,9 +109,9 @@ Add to your MCP client configuration (e.g., Claude Code `.mcp.json`):
 ```json
 {
   "mcpServers": {
-    "pyplots": {
+    "anyplot": {
       "command": "npx",
-      "args": ["-y", "mcp-remote", "https://api.pyplots.ai/mcp/"]
+      "args": ["-y", "mcp-remote", "https://api.anyplot.ai/mcp/"]
     }
   }
 }
@@ -130,7 +130,7 @@ Most plotting libraries are fully open source. Note these exceptions:
 ## Project Structure
 
 ```
-pyplots/
+anyplot/
 ├── plots/              # Plot specs + metadata + implementations
 ├── prompts/            # AI agent prompts
 ├── api/                # FastAPI backend
@@ -160,9 +160,9 @@ pyplots/
 
 We welcome contributions! **All code is AI-generated** - you propose ideas, AI implements them.
 
-**Three ways to contribute** (from [pyplots.ai](https://pyplots.ai) or GitHub):
+**Three ways to contribute** (from [anyplot.ai](https://anyplot.ai) or GitHub):
 
-| Action | When to Use | From pyplots.ai |
+| Action | When to Use | From anyplot.ai |
 |--------|-------------|-----------------|
 | **Suggest Spec** | Propose a new plot type | "suggest spec" link in catalog |
 | **Report Spec Issue** | Problem with a specification | "report issue" link on spec page |
@@ -170,7 +170,7 @@ We welcome contributions! **All code is AI-generated** - you propose ideas, AI i
 
 **How it works**:
 
-1. You create Issue (or click link on pyplots.ai)
+1. You create Issue (or click link on anyplot.ai)
 2. AI validates and processes your input
 3. Maintainer reviews and approves
 4. AI generates/fixes the code
@@ -196,11 +196,11 @@ MIT License - see [LICENSE](LICENSE) file for details.
 
 ## Links
 
-- **Website**: [pyplots.ai](https://pyplots.ai)
+- **Website**: [anyplot.ai](https://anyplot.ai)
 - **Documentation**: [docs/](docs/)
-- **Issues**: [GitHub Issues](https://github.com/MarkusNeusinger/pyplots/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/MarkusNeusinger/pyplots/discussions)
-- **Stats**: [Public Analytics](https://plausible.io/pyplots.ai)
+- **Issues**: [GitHub Issues](https://github.com/MarkusNeusinger/anyplot/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/MarkusNeusinger/anyplot/discussions)
+- **Stats**: [Public Analytics](https://plausible.io/anyplot.ai)
 
 ---
 
@@ -208,6 +208,6 @@ MIT License - see [LICENSE](LICENSE) file for details.
 
 **Built by [Markus Neusinger](https://linkedin.com/in/markus-neusinger/)**
 
-[⭐ Star us on GitHub](https://github.com/MarkusNeusinger/pyplots) • [💡 Request New Plot](https://github.com/MarkusNeusinger/pyplots/issues/new?template=request-new-plot.yml)
+[⭐ Star us on GitHub](https://github.com/MarkusNeusinger/anyplot) • [💡 Request New Plot](https://github.com/MarkusNeusinger/anyplot/issues/new?template=request-new-plot.yml)
 
 </div>

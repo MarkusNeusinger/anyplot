@@ -47,7 +47,7 @@ describe('McpPage', () => {
   it('renders the MCP endpoint URL', () => {
     render(<McpPage />);
 
-    const endpoints = screen.getAllByText('https://api.pyplots.ai/mcp/');
+    const endpoints = screen.getAllByText('https://api.anyplot.ai/mcp/');
     expect(endpoints.length).toBeGreaterThan(0);
   });
 
@@ -55,7 +55,7 @@ describe('McpPage', () => {
     render(<McpPage />);
 
     expect(
-      screen.getByText(/claude mcp add pyplots/)
+      screen.getByText(/claude mcp add anyplot/)
     ).toBeInTheDocument();
   });
 

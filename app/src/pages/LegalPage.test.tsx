@@ -51,8 +51,8 @@ describe('LegalPage', () => {
   it('renders contact email link', () => {
     render(<LegalPage />);
 
-    const emailLinks = screen.getAllByRole('link', { name: 'admin@pyplots.ai' });
-    expect(emailLinks[0]).toHaveAttribute('href', 'mailto:admin@pyplots.ai');
+    const emailLinks = screen.getAllByRole('link', { name: 'admin@anyplot.ai' });
+    expect(emailLinks[0]).toHaveAttribute('href', 'mailto:admin@anyplot.ai');
   });
 
   it('renders Plausible as analytics provider', () => {

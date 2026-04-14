@@ -1,6 +1,6 @@
 # Tagging System
 
-pyplots uses a two-level tagging system:
+anyplot uses a two-level tagging system:
 - **Spec-Level Tags** (4 dimensions) - describe WHAT is visualized
 - **Impl-Level Tags** (5 dimensions) - describe HOW it is implemented
 

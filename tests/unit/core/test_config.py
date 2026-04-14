@@ -48,8 +48,8 @@ class TestSettings:
     def test_gcs_bucket_default(self) -> None:
         """Should have default GCS bucket."""
         with patch.dict(os.environ, {}, clear=True):
-            settings = Settings()
-            assert settings.gcs_bucket == "pyplots-images"
+            settings = Settings(_env_file=None)
+            assert settings.gcs_bucket == "anyplot-images"
 
     def test_github_token_from_env(self) -> None:
         """Should read GITHUB_TOKEN from environment."""

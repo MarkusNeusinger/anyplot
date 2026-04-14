@@ -1,5 +1,5 @@
 """
-Central constants and configuration for the pyplots project.
+Central constants and configuration for the anyplot project.
 
 This module provides a single source of truth for library definitions,
 labels, and other constants used throughout the application.

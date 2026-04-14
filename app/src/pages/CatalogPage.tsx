@@ -148,17 +148,17 @@ export function CatalogPage() {
   return (
     <>
       <Helmet>
-        <title>catalog | pyplots.ai</title>
+        <title>catalog | anyplot.ai</title>
         <meta name="description" content="Browse all Python plotting specifications alphabetically" />
-        <meta property="og:title" content="catalog | pyplots.ai" />
+        <meta property="og:title" content="catalog | anyplot.ai" />
         <meta property="og:description" content="Browse all Python plotting specifications alphabetically" />
-        <link rel="canonical" href="https://pyplots.ai/catalog" />
+        <link rel="canonical" href="https://anyplot.ai/catalog" />
       </Helmet>
 
       <Box sx={{ pb: 4 }}>
         {/* Breadcrumb navigation */}
         <Breadcrumb
-          items={[{ label: 'pyplots.ai', shortLabel: 'pp', to: '/' }, { label: 'catalog' }]}
+          items={[{ label: 'anyplot.ai', shortLabel: 'ap', to: '/' }, { label: 'catalog' }]}
           rightAction={
             <Box
               component="a"

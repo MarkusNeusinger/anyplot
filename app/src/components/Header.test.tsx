@@ -15,11 +15,11 @@ describe('Header', () => {
     mockNavigate.mockClear();
   });
 
-  it('renders the pyplots.ai logo text', () => {
+  it('renders the anyplot.ai logo text', () => {
     render(<Header />);
 
-    expect(screen.getByText('py')).toBeInTheDocument();
-    expect(screen.getByText('plots')).toBeInTheDocument();
+    expect(screen.getByText('any')).toBeInTheDocument();
+    expect(screen.getByText('plot')).toBeInTheDocument();
     expect(screen.getByText('.ai')).toBeInTheDocument();
   });
 

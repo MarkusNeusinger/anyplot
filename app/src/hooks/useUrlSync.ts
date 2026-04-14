@@ -68,7 +68,7 @@ export function useUrlSync({ activeFilters, onTrackPageview }: UseUrlSyncOptions
       .map((f) => `${f.category}:${f.values.join(',')}`)
       .join(' ');
 
-    document.title = filterParts ? `${filterParts} | pyplots.ai` : 'pyplots.ai';
+    document.title = filterParts ? `${filterParts} | anyplot.ai` : 'anyplot.ai';
     onTrackPageview();
   }, [activeFilters, onTrackPageview]);
 }

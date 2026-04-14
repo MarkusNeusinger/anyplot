@@ -285,7 +285,7 @@ export function DebugPage() {
     <Box sx={{ p: 3, minHeight: '100vh', bgcolor: colors.background }}>
       {/* Breadcrumb */}
       <Breadcrumb
-        items={[{ label: 'pyplots.ai', shortLabel: 'pp', to: '/' }, { label: 'debug' }]}
+        items={[{ label: 'anyplot.ai', shortLabel: 'ap', to: '/' }, { label: 'debug' }]}
         sx={{
           mx: 0,
           mt: 0,

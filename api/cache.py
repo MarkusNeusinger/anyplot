@@ -1,5 +1,5 @@
 """
-Caching utilities for pyplots API.
+Caching utilities for anyplot API.
 
 Centralized cache management with consistent key patterns.
 Includes stampede protection (per-key asyncio.Lock) and

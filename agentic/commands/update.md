@@ -157,7 +157,7 @@ Agents report back via `SendMessage` (auto-delivered to you). Agents may report 
 
    a. **Download current GCS images** for each library:
    ```bash
-   curl -sL "https://storage.googleapis.com/pyplots-images/plots/{spec_id}/{library}/plot.png" \
+   curl -sL "https://storage.googleapis.com/anyplot-images/plots/{spec_id}/{library}/plot.png" \
      -o "plots/{spec_id}/implementations/.update-preview/{library}/before.png"
    ```
    If curl fails (non-zero exit or empty file), the library has no previous version — pass `none` as before_path.
@@ -255,7 +255,7 @@ For each updated library, edit `plots/{spec_id}/metadata/{library}.yaml`:
 For each updated library, ensure the implementation file starts with:
 
 ```python
-""" pyplots.ai
+""" anyplot.ai
 {spec_id}: {Title from specification}
 Library: {library} {lib_version} | Python {py_version}
 Quality: /100 | Updated: {YYYY-MM-DD}
@@ -281,7 +281,7 @@ Note: Since we process one library at a time for GCS upload, handle sequentially
 For each library:
 
 ```bash
-STAGING_PATH="gs://pyplots-images/staging/{spec_id}/{library}"
+STAGING_PATH="gs://anyplot-images/staging/{spec_id}/{library}"
 
 # Upload PNG
 gsutil cp plots/{spec_id}/implementations/plot.png "${STAGING_PATH}/plot.png"
@@ -298,7 +298,7 @@ Update `preview_url` in the metadata YAML to point to the **production** URL
 (matching `impl-generate.yml` — production URLs are set from the start, `impl-merge.yml` promotes
 GCS files from staging to production on merge):
 
-- `preview_url`: `https://storage.googleapis.com/pyplots-images/plots/{spec_id}/{library}/plot.png`
+- `preview_url`: `https://storage.googleapis.com/anyplot-images/plots/{spec_id}/{library}/plot.png`
 
 #### 6f. Clean Up Preview Directory
 
@@ -721,5 +721,5 @@ If the lead sends you feedback, repeat Steps 2-8 with the new instructions (incl
 
 # Update from a GitHub issue
 /update #3970
-/update https://github.com/MarkusNeusinger/pyplots/issues/3970
+/update https://github.com/MarkusNeusinger/anyplot/issues/3970
 ```

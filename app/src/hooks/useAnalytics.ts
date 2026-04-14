@@ -50,14 +50,14 @@ function buildPlausibleUrl(): string {
   }
 
   return segments.length > 0
-    ? `https://pyplots.ai/${segments.join("/")}`
-    : "https://pyplots.ai/";
+    ? `https://anyplot.ai/${segments.join("/")}`
+    : "https://anyplot.ai/";
 }
 
 export function useAnalytics() {
   const lastPageviewRef = useRef<string>("");
   const isProduction =
-    typeof window !== "undefined" && window.location.hostname === "pyplots.ai";
+    typeof window !== "undefined" && window.location.hostname === "anyplot.ai";
 
   const sendPageview = useCallback(
     (urlOverride?: string) => {
@@ -69,7 +69,7 @@ export function useAnalytics() {
         if (!/^\/[\w\-/]*$/.test(urlOverride)) {
           return; // Invalid URL, skip tracking
         }
-        url = `https://pyplots.ai${urlOverride}`;
+        url = `https://anyplot.ai${urlOverride}`;
       } else {
         url = buildPlausibleUrl();
       }

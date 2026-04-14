@@ -8,7 +8,7 @@ title: {Title}
 created: null          # ISO 8601 timestamp, set by workflow on first creation
 updated: null          # ISO 8601 timestamp, set by workflow on any change
 issue: null            # GitHub issue number
-suggested: null        # GitHub username or 'pyplots' for seed plots
+suggested: null        # GitHub username or 'anyplot' for seed plots
 
 # Classification tags (applies to all library implementations)
 # See docs/reference/tagging-system.md for detailed guidelines

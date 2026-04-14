@@ -1,5 +1,5 @@
 """
-Insights endpoints for pyplots platform.
+Insights endpoints for anyplot platform.
 
 Public analytics and discovery features that leverage aggregated database data:
 - Dashboard: Rich platform statistics and visualizations

@@ -2,7 +2,7 @@
 
 ## Overview
 
-pyplots follows a **plot-centric repository pattern** where everything for one plot type lives in a single directory:
+anyplot follows a **plot-centric repository pattern** where everything for one plot type lives in a single directory:
 
 ```
 plots/{specification-id}/
@@ -27,7 +27,7 @@ plots/{specification-id}/
 ## Directory Layout
 
 ```
-pyplots/
+anyplot/
 ├── plots/                             # Plot-centric directories
 │   ├── scatter-basic/                 # Everything for basic scatter plot
 │   │   ├── specification.md           # Library-agnostic specification
@@ -256,7 +256,7 @@ python_version: "3.13"
 library_version: "3.10.0"
 
 # Previews
-preview_url: https://storage.googleapis.com/pyplots-images/plots/scatter-basic/matplotlib/plot.png
+preview_url: https://storage.googleapis.com/anyplot-images/plots/scatter-basic/matplotlib/plot.png
 preview_html: null
 
 # Quality
@@ -327,7 +327,7 @@ review:
 Preview images are stored in Google Cloud Storage (not in repo):
 
 ```
-gs://pyplots-images/
+gs://anyplot-images/
 ├── plots/{spec-id}/{library}/           # Production (after merge)
 │   ├── plot.png                         # Full-size optimized image
 │   └── plot.html                        # Optional (interactive libraries)
@@ -338,7 +338,7 @@ gs://pyplots-images/
 
 **Interactive libraries** (`.html`): plotly, bokeh, altair, highcharts, pygal, letsplot
 
-**Image Processing**: Images are optimized with pngquant. Branding is included in the plot title itself (e.g., `scatter-basic · matplotlib · pyplots.ai`).
+**Image Processing**: Images are optimized with pngquant. Branding is included in the plot title itself (e.g., `scatter-basic · matplotlib · anyplot.ai`).
 
 ---
 
@@ -359,7 +359,7 @@ gs://pyplots-images/
 
 **Code Style** (KISS):
 ```python
-""" pyplots.ai
+""" anyplot.ai
 scatter-basic: Basic Scatter Plot
 Library: matplotlib 3.10.0 | Python 3.13
 Quality: 92/100 | Created: 2025-01-10
@@ -383,7 +383,7 @@ plt.savefig('plot.png', dpi=300)
 ```
 
 **Header Format** (4 lines):
-1. `""" pyplots.ai` - Branding
+1. `""" anyplot.ai` - Branding
 2. `{spec-id}: {Title}` - Identification
 3. `Library: {lib} {version} | Python {version}` - Versions
 4. `Quality: {score}/100 | Created: {date}` - Quality + date
@@ -516,7 +516,7 @@ Always named by library: `{library}.py`
 ## What's NOT in the Repository
 
 ### ❌ Preview Images
-- **Where**: Google Cloud Storage (`gs://pyplots-images/plots/...`)
+- **Where**: Google Cloud Storage (`gs://anyplot-images/plots/...`)
 - **Why**: Binary files bloat git history
 
 ### ❌ Secrets

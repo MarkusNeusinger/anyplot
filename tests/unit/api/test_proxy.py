@@ -26,31 +26,31 @@ class TestBuildSafeGcsUrl:
 
     def test_valid_gcs_url(self):
         """Valid GCS URL should be reconstructed."""
-        url = "https://storage.googleapis.com/pyplots-images/plots/scatter-basic/matplotlib/plot.html"
+        url = "https://storage.googleapis.com/anyplot-images/plots/scatter-basic/matplotlib/plot.html"
         result = build_safe_gcs_url(url)
         assert result == url
 
     def test_valid_gcs_url_with_subdirectories(self):
         """Valid GCS URL with multiple subdirectories."""
-        url = "https://storage.googleapis.com/pyplots-images/staging/scatter-basic/matplotlib/plot.html"
+        url = "https://storage.googleapis.com/anyplot-images/staging/scatter-basic/matplotlib/plot.html"
         result = build_safe_gcs_url(url)
         assert result == url
 
     def test_http_url_rejected(self):
         """HTTP (non-HTTPS) URLs should be rejected."""
-        url = "http://storage.googleapis.com/pyplots-images/plots/scatter-basic/plot.html"
+        url = "http://storage.googleapis.com/anyplot-images/plots/scatter-basic/plot.html"
         result = build_safe_gcs_url(url)
         assert result is None
 
     def test_wrong_host_rejected(self):
         """URLs with wrong host should be rejected."""
-        url = "https://evil.com/pyplots-images/plots/scatter-basic/plot.html"
+        url = "https://evil.com/anyplot-images/plots/scatter-basic/plot.html"
         result = build_safe_gcs_url(url)
         assert result is None
 
     def test_subdomain_rejected(self):
         """URLs with subdomain of allowed host should be rejected."""
-        url = "https://evil.storage.googleapis.com/pyplots-images/plots/plot.html"
+        url = "https://evil.storage.googleapis.com/anyplot-images/plots/plot.html"
         result = build_safe_gcs_url(url)
         assert result is None
 
@@ -62,51 +62,51 @@ class TestBuildSafeGcsUrl:
 
     def test_path_traversal_rejected(self):
         """Path traversal attempts should be rejected."""
-        url = "https://storage.googleapis.com/pyplots-images/../other-bucket/plot.html"
+        url = "https://storage.googleapis.com/anyplot-images/../other-bucket/plot.html"
         result = build_safe_gcs_url(url)
         assert result is None
 
     def test_double_dot_in_path_rejected(self):
         """Double dots anywhere in path should be rejected."""
-        url = "https://storage.googleapis.com/pyplots-images/plots/..hidden/plot.html"
+        url = "https://storage.googleapis.com/anyplot-images/plots/..hidden/plot.html"
         result = build_safe_gcs_url(url)
         assert result is None
 
     def test_short_path_rejected(self):
         """Paths without file should be rejected."""
-        url = "https://storage.googleapis.com/pyplots-images"
+        url = "https://storage.googleapis.com/anyplot-images"
         result = build_safe_gcs_url(url)
         assert result is None
 
     def test_bucket_only_rejected(self):
         """Bucket without path should be rejected."""
-        url = "https://storage.googleapis.com/pyplots-images/"
+        url = "https://storage.googleapis.com/anyplot-images/"
         result = build_safe_gcs_url(url)
         assert result is None
 
     def test_invalid_characters_rejected(self):
         """Paths with invalid characters should be rejected."""
         # Semicolon is not allowed
-        url = "https://storage.googleapis.com/pyplots-images/plots/test;rm+-rf/plot.html"
+        url = "https://storage.googleapis.com/anyplot-images/plots/test;rm+-rf/plot.html"
         result = build_safe_gcs_url(url)
         assert result is None
 
     def test_space_in_path_rejected(self):
         """Paths with spaces should be rejected."""
-        url = "https://storage.googleapis.com/pyplots-images/plots/test plot/plot.html"
+        url = "https://storage.googleapis.com/anyplot-images/plots/test plot/plot.html"
         result = build_safe_gcs_url(url)
         assert result is None
 
     def test_query_string_stripped(self):
         """Query strings should be stripped (not in reconstructed URL)."""
-        url = "https://storage.googleapis.com/pyplots-images/plots/scatter/plot.html?token=abc"
+        url = "https://storage.googleapis.com/anyplot-images/plots/scatter/plot.html?token=abc"
         result = build_safe_gcs_url(url)
         # Query is stripped by urlparse when we only use path
-        assert result == "https://storage.googleapis.com/pyplots-images/plots/scatter/plot.html"
+        assert result == "https://storage.googleapis.com/anyplot-images/plots/scatter/plot.html"
 
     def test_valid_characters_allowed(self):
         """Alphanumeric, hyphens, underscores, dots, slashes, plus are allowed."""
-        url = "https://storage.googleapis.com/pyplots-images/plots/scatter-basic_v2/plot+extra.html"
+        url = "https://storage.googleapis.com/anyplot-images/plots/scatter-basic_v2/plot+extra.html"
         result = build_safe_gcs_url(url)
         assert result == url
 
@@ -122,9 +122,9 @@ class TestBuildSafeGcsUrl:
 
     def test_fragment_stripped(self):
         """URL fragments should be stripped."""
-        url = "https://storage.googleapis.com/pyplots-images/plots/scatter/plot.html#section"
+        url = "https://storage.googleapis.com/anyplot-images/plots/scatter/plot.html#section"
         result = build_safe_gcs_url(url)
-        assert result == "https://storage.googleapis.com/pyplots-images/plots/scatter/plot.html"
+        assert result == "https://storage.googleapis.com/anyplot-images/plots/scatter/plot.html"
 
 
 class TestProxyHtmlEndpoint:
@@ -155,11 +155,11 @@ class TestProxyHtmlEndpoint:
         mock_client_class.return_value = mock_client
 
         response = client.get(
-            "/proxy/html", params={"url": "https://storage.googleapis.com/pyplots-images/plots/test/plot.html"}
+            "/proxy/html", params={"url": "https://storage.googleapis.com/anyplot-images/plots/test/plot.html"}
         )
 
         assert response.status_code == 200
-        assert "pyplots-size" in response.text
+        assert "anyplot-size" in response.text
         assert SIZE_REPORTER_SCRIPT.strip() in response.text
         assert response.text.index("<script>") < response.text.index("</body>")
 
@@ -177,7 +177,7 @@ class TestProxyHtmlEndpoint:
         mock_client_class.return_value = mock_client
 
         response = client.get(
-            "/proxy/html", params={"url": "https://storage.googleapis.com/pyplots-images/plots/test/plot.html"}
+            "/proxy/html", params={"url": "https://storage.googleapis.com/anyplot-images/plots/test/plot.html"}
         )
 
         assert response.status_code == 200
@@ -198,11 +198,11 @@ class TestProxyHtmlEndpoint:
         mock_client_class.return_value = mock_client
 
         response = client.get(
-            "/proxy/html", params={"url": "https://storage.googleapis.com/pyplots-images/plots/test/plot.html"}
+            "/proxy/html", params={"url": "https://storage.googleapis.com/anyplot-images/plots/test/plot.html"}
         )
 
         assert response.status_code == 200
-        assert "pyplots-size" in response.text
+        assert "anyplot-size" in response.text
         assert response.text.index("<script>") < response.text.index("</html>")
 
     @patch("api.routers.proxy.httpx.AsyncClient")
@@ -219,7 +219,7 @@ class TestProxyHtmlEndpoint:
         mock_client_class.return_value = mock_client
 
         response = client.get(
-            "/proxy/html", params={"url": "https://storage.googleapis.com/pyplots-images/plots/test/plot.html"}
+            "/proxy/html", params={"url": "https://storage.googleapis.com/anyplot-images/plots/test/plot.html"}
         )
 
         assert response.status_code == 200
@@ -247,7 +247,7 @@ class TestProxyHtmlEndpoint:
         mock_client_class.return_value = mock_client
 
         response = client.get(
-            "/proxy/html", params={"url": "https://storage.googleapis.com/pyplots-images/plots/test/plot.html"}
+            "/proxy/html", params={"url": "https://storage.googleapis.com/anyplot-images/plots/test/plot.html"}
         )
 
         assert response.status_code == 404
@@ -265,7 +265,7 @@ class TestProxyHtmlEndpoint:
         mock_client_class.return_value = mock_client
 
         response = client.get(
-            "/proxy/html", params={"url": "https://storage.googleapis.com/pyplots-images/plots/test/plot.html"}
+            "/proxy/html", params={"url": "https://storage.googleapis.com/anyplot-images/plots/test/plot.html"}
         )
 
         assert response.status_code == 502
@@ -281,15 +281,15 @@ class TestSizeReporterScript:
         assert '"*"' not in SIZE_REPORTER_SCRIPT
         # Use regex to verify postMessage uses specific origin, not substring check
         # This avoids CodeQL's "incomplete URL substring sanitization" false positive
-        # Pattern matches: }, "https://pyplots.ai") - json.dumps() produces double quotes
-        pattern = r'\},\s*"https://pyplots\.ai"\)'
+        # Pattern matches: }, "https://anyplot.ai") - json.dumps() produces double quotes
+        pattern = r'\},\s*"https://anyplot\.ai"\)'
         assert re.search(pattern, SIZE_REPORTER_SCRIPT), (
-            'postMessage must use specific origin "https://pyplots.ai", not "*"'
+            'postMessage must use specific origin "https://anyplot.ai", not "*"'
         )
 
-    def test_script_sends_pyplots_size_message(self):
-        """Script should send pyplots-size message type."""
-        assert "pyplots-size" in SIZE_REPORTER_SCRIPT
+    def test_script_sends_anyplot_size_message(self):
+        """Script should send anyplot-size message type."""
+        assert "anyplot-size" in SIZE_REPORTER_SCRIPT
 
     def test_script_reports_width_and_height(self):
         """Script should report width and height."""
@@ -305,5 +305,5 @@ class TestConstants:
         assert ALLOWED_HOST == "storage.googleapis.com"
 
     def test_allowed_bucket(self):
-        """ALLOWED_BUCKET should be pyplots-images."""
-        assert ALLOWED_BUCKET == "pyplots-images"
+        """ALLOWED_BUCKET should be anyplot-images."""
+        assert ALLOWED_BUCKET == "anyplot-images"

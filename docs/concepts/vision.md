@@ -1,4 +1,4 @@
-# 🌟 pyplots - Vision
+# 🌟 anyplot - Vision
 
 ## Mission
 
@@ -16,14 +16,14 @@ Developers waste hours on visualization:
 
 ## The Solution
 
-**pyplots is an AI-powered platform where specifications meet automation.**
+**anyplot is an AI-powered platform where specifications meet automation.**
 
 ### The Human Touch
 
 While AI can generate plots instantly, **humans need inspiration and choice**. If you just ask AI "make a chart," you'll
 get the same generic scatter plot every time.
 
-pyplots is different: **AI curates and maintains, humans discover and choose.**
+anyplot is different: **AI curates and maintains, humans discover and choose.**
 
 - Browse hundreds of specialized plot types you didn't know existed
 - Compare visual styles side-by-side to find what resonates
@@ -65,7 +65,7 @@ pyplots is different: **AI curates and maintains, humans discover and choose.**
 
 - **Try with YOUR data**: Upload CSV/Excel/JSON, see all plots with your actual data
 - **Custom styles**: Generate plots matching your brand colors
-- **MCP Server**: Integrate pyplots into your AI workflow ([Docs](../reference/mcp.md), [Issue #4129](https://github.com/MarkusNeusinger/pyplots/issues/4129))
+- **MCP Server**: Integrate anyplot into your AI workflow ([Docs](../reference/mcp.md), [Issue #4129](https://github.com/MarkusNeusinger/anyplot/issues/4129))
 - **API access**: Programmatic access to plot generation
 
 ## Why We'll Win
@@ -80,4 +80,4 @@ pyplots is different: **AI curates and maintains, humans discover and choose.**
 
 *"Stop adapting examples to your data. Start visualizing your data directly."*
 
-**pyplots - Where your data meets visualization.**
+**anyplot - Where your data meets visualization.**

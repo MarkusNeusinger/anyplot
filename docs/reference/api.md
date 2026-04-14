@@ -2,9 +2,9 @@
 
 ## Overview
 
-The pyplots API is a **FastAPI-based REST API** serving plot data to the frontend.
+The anyplot API is a **FastAPI-based REST API** serving plot data to the frontend.
 
-**Base URL**: `https://api.pyplots.ai`
+**Base URL**: `https://api.anyplot.ai`
 
 **Key Principle**: Database is derived from repository via `sync-postgres.yml`. API reads from PostgreSQL.
 
@@ -65,7 +65,7 @@ The pyplots API is a **FastAPI-based REST API** serving plot data to the fronten
     {
       "library_id": "matplotlib",
       "library_name": "Matplotlib",
-      "preview_url": "https://storage.googleapis.com/pyplots-images/plots/scatter-basic/matplotlib/plot.png",
+      "preview_url": "https://storage.googleapis.com/anyplot-images/plots/scatter-basic/matplotlib/plot.png",
       "preview_html": null,
       "quality_score": 92.0,
       "code": "import matplotlib.pyplot as plt...",
@@ -247,7 +247,7 @@ The pyplots API is a **FastAPI-based REST API** serving plot data to the fronten
 **Response**:
 ```json
 {
-  "message": "Welcome to pyplots API",
+  "message": "Welcome to anyplot API",
   "version": "0.2.0",
   "docs": "/docs",
   "health": "/health"
@@ -264,7 +264,7 @@ The pyplots API is a **FastAPI-based REST API** serving plot data to the fronten
 ```json
 {
   "status": "healthy",
-  "service": "pyplots-api",
+  "service": "anyplot-api",
   "version": "0.2.0"
 }
 ```
@@ -367,7 +367,7 @@ All endpoints are under `/og/` prefix.
 
 ### GET `/og/{spec_id}/{library}.png`
 
-**Purpose**: Branded OG image for implementation (1200x630 with pyplots.ai header)
+**Purpose**: Branded OG image for implementation (1200x630 with anyplot.ai header)
 
 ---
 
@@ -378,7 +378,7 @@ All endpoints are under `/og/` prefix.
 **Purpose**: Proxy HTML from GCS with size reporting script injection
 
 **Query Parameters**:
-- `url` - GCS URL (must be from `pyplots-images` bucket)
+- `url` - GCS URL (must be from `anyplot-images` bucket)
 - `origin` - Target origin for postMessage (optional)
 
 Used to load interactive plots (plotly, bokeh, altair) in iframes with dynamic sizing.
@@ -435,7 +435,7 @@ Applied to:
 ## CORS Configuration
 
 **Allowed Origins**:
-- `https://pyplots.ai`
+- `https://anyplot.ai`
 - `http://localhost:*` (development)
 
 **Allowed Methods**: All
@@ -453,9 +453,9 @@ Example: `/plots/filter` response: 301KB → ~40KB compressed.
 ## OpenAPI Documentation
 
 Interactive API documentation available at:
-- **Swagger UI**: `https://api.pyplots.ai/docs`
-- **ReDoc**: `https://api.pyplots.ai/redoc`
-- **OpenAPI JSON**: `https://api.pyplots.ai/openapi.json`
+- **Swagger UI**: `https://api.anyplot.ai/docs`
+- **ReDoc**: `https://api.anyplot.ai/redoc`
+- **OpenAPI JSON**: `https://api.anyplot.ai/openapi.json`
 
 ---
 

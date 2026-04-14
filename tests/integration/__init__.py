@@ -1,1 +1,1 @@
-"""Integration tests for pyplots."""
+"""Integration tests for anyplot."""

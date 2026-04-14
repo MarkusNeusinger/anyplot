@@ -1,5 +1,5 @@
 """
-Database module for pyplots.
+Database module for anyplot.
 
 Provides database connection, models, and repositories.
 """

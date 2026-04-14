@@ -42,7 +42,7 @@ describe('useAnalytics', () => {
     });
 
     it('calls plausible with event name and props in production', () => {
-      setHostname('pyplots.ai');
+      setHostname('anyplot.ai');
       const { result } = renderHook(() => useAnalytics());
 
       act(() => {
@@ -55,7 +55,7 @@ describe('useAnalytics', () => {
     });
 
     it('calls plausible without props when none provided', () => {
-      setHostname('pyplots.ai');
+      setHostname('anyplot.ai');
       const { result } = renderHook(() => useAnalytics());
 
       act(() => {
@@ -66,7 +66,7 @@ describe('useAnalytics', () => {
     });
 
     it('strips undefined values from props', () => {
-      setHostname('pyplots.ai');
+      setHostname('anyplot.ai');
       const { result } = renderHook(() => useAnalytics());
 
       act(() => {
@@ -96,7 +96,7 @@ describe('useAnalytics', () => {
     });
 
     it('sends pageview with URL override in production', () => {
-      setHostname('pyplots.ai');
+      setHostname('anyplot.ai');
       const { result } = renderHook(() => useAnalytics());
 
       act(() => {
@@ -105,14 +105,14 @@ describe('useAnalytics', () => {
       });
 
       expect(window.plausible).toHaveBeenCalledWith('pageview', {
-        url: expect.stringContaining('pyplots.ai'),
+        url: expect.stringContaining('anyplot.ai'),
       });
     });
 
     it('deduplicates identical consecutive pageviews', () => {
-      setHostname('pyplots.ai');
+      setHostname('anyplot.ai');
       Object.defineProperty(window, 'location', {
-        value: { ...originalLocation, hostname: 'pyplots.ai', search: '?lib=matplotlib' },
+        value: { ...originalLocation, hostname: 'anyplot.ai', search: '?lib=matplotlib' },
         writable: true,
         configurable: true,
       });
@@ -136,7 +136,7 @@ describe('useAnalytics', () => {
     });
 
     it('is debounced by 150ms', () => {
-      setHostname('pyplots.ai');
+      setHostname('anyplot.ai');
       const { result } = renderHook(() => useAnalytics());
 
       act(() => {
@@ -154,7 +154,7 @@ describe('useAnalytics', () => {
     });
 
     it('rejects invalid URL overrides', () => {
-      setHostname('pyplots.ai');
+      setHostname('anyplot.ai');
       const { result } = renderHook(() => useAnalytics());
 
       // The debounced sendPageview with invalid URL — use the underlying function

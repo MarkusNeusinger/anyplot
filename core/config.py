@@ -35,14 +35,14 @@ class Settings(BaseSettings):
     db_pass: str = ""
     """Database password"""
 
-    db_name: str = "pyplots"
+    db_name: str = "anyplot"
     """Database name"""
 
     # =============================================================================
     # GOOGLE CLOUD
     # =============================================================================
 
-    gcs_bucket: str = "pyplots-images"
+    gcs_bucket: str = "anyplot-images"
     """Google Cloud Storage bucket for plot images"""
 
     google_application_credentials: Optional[str] = None
@@ -55,7 +55,7 @@ class Settings(BaseSettings):
     environment: str = "development"
     """Environment: development, staging, or production"""
 
-    base_url: str = "https://pyplots.ai"
+    base_url: str = "https://anyplot.ai"
     """Base URL for the application (used in sitemaps, etc.)"""
 
     api_version: str = "1.0.0"
@@ -68,7 +68,7 @@ class Settings(BaseSettings):
     github_token: Optional[str] = None
     """GitHub personal access token for API access"""
 
-    github_repository: str = "MarkusNeusinger/pyplots"
+    github_repository: str = "MarkusNeusinger/anyplot"
     """GitHub repository in format owner/repo"""
 
     # =============================================================================
@@ -151,8 +151,8 @@ class Settings(BaseSettings):
         "http://localhost:5173",
         "http://localhost:5174",
         "http://localhost:3000",
-        "https://pyplots.ai",
-        "https://www.pyplots.ai",
+        "https://anyplot.ai",
+        "https://www.anyplot.ai",
     ]
     """Allowed CORS origins"""
 

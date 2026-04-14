@@ -197,8 +197,8 @@ jobs:
           echo "$GCS_CREDENTIALS" > /tmp/gcs-key.json
           gcloud auth activate-service-account --key-file=/tmp/gcs-key.json
 
-          STAGING="gs://pyplots-images/staging/${SPEC_ID}/${LIBRARY}"
-          PRODUCTION="gs://pyplots-images/plots/${SPEC_ID}/${LIBRARY}"
+          STAGING="gs://anyplot-images/staging/${SPEC_ID}/${LIBRARY}"
+          PRODUCTION="gs://anyplot-images/plots/${SPEC_ID}/${LIBRARY}"
 
           # Copy from staging to production
           gsutil -m -h "Cache-Control:public, max-age=604800" cp -r "${STAGING}/*" "${PRODUCTION}/" 2>/dev/null || echo "No staging files to promote"
@@ -250,7 +250,7 @@ jobs:
 
           BODY="${BODY}
 
-          **Preview:** [View image](https://storage.googleapis.com/pyplots-images/plots/${SPEC_ID}/${LIBRARY}/plot.png)
+          **Preview:** [View image](https://storage.googleapis.com/anyplot-images/plots/${SPEC_ID}/${LIBRARY}/plot.png)
 
           ---
           :robot: *[impl-merge](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})*"

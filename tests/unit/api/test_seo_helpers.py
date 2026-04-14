@@ -34,11 +34,11 @@ class TestBuildSitemapXml:
         result = _build_sitemap_xml([])
         assert '<?xml version="1.0"' in result
         assert "<urlset" in result
-        assert "<loc>https://pyplots.ai/</loc>" in result
-        assert "<loc>https://pyplots.ai/catalog</loc>" in result
-        assert "<loc>https://pyplots.ai/mcp</loc>" in result
-        assert "<loc>https://pyplots.ai/legal</loc>" in result
-        assert "<loc>https://pyplots.ai/stats</loc>" in result
+        assert "<loc>https://anyplot.ai/</loc>" in result
+        assert "<loc>https://anyplot.ai/catalog</loc>" in result
+        assert "<loc>https://anyplot.ai/mcp</loc>" in result
+        assert "<loc>https://anyplot.ai/legal</loc>" in result
+        assert "<loc>https://anyplot.ai/stats</loc>" in result
         assert "</urlset>" in result
 
     def test_spec_with_impls(self) -> None:
@@ -52,8 +52,8 @@ class TestBuildSitemapXml:
         spec.updated = datetime(2025, 3, 14)
 
         result = _build_sitemap_xml([spec])
-        assert "https://pyplots.ai/scatter-basic" in result
-        assert "https://pyplots.ai/scatter-basic/matplotlib" in result
+        assert "https://anyplot.ai/scatter-basic" in result
+        assert "https://anyplot.ai/scatter-basic/matplotlib" in result
         assert "<lastmod>2025-03-14</lastmod>" in result
         assert "<lastmod>2025-03-15</lastmod>" in result
 
@@ -139,7 +139,7 @@ class TestBotHtmlTemplate:
         assert "Test Description" in result
 
     def test_template_has_canonical(self) -> None:
-        url = "https://pyplots.ai/"
+        url = "https://anyplot.ai/"
         result = BOT_HTML_TEMPLATE.format(title="t", description="d", image="i", url=url)
         assert 'rel="canonical"' in result
         assert url in result

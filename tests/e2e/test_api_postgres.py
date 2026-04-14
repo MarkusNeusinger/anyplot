@@ -224,7 +224,7 @@ class TestHealthEndpoints:
 
         assert response.status_code == 200
         data = response.json()
-        assert data["message"] == "Welcome to pyplots API"
+        assert data["message"] == "Welcome to anyplot API"
         assert "version" in data
 
     async def test_health_check(self, client):
@@ -234,7 +234,7 @@ class TestHealthEndpoints:
         assert response.status_code == 200
         data = response.json()
         assert data["status"] == "healthy"
-        assert data["service"] == "pyplots-api"
+        assert data["service"] == "anyplot-api"
 
     async def test_hello(self, client):
         """Should return personalized greeting."""

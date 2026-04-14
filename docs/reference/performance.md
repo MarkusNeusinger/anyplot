@@ -1,6 +1,6 @@
 # Performance Reference
 
-Backend API response time measurements for pyplots-backend (Cloud Run, europe-west4).
+Backend API response time measurements for anyplot-backend (Cloud Run, europe-west4).
 
 ## Infrastructure
 
@@ -53,7 +53,7 @@ Cloud Run config: `cpu-throttling=true` (request-based billing), 512Mi RAM.
 
 Cloud Run config: `cpu-throttling=false` (instance-based billing), 1Gi RAM.
 
-Deployed revision `pyplots-backend-00085-4rn` at 2026-03-24 22:25 UTC.
+Deployed revision `anyplot-backend-00085-4rn` at 2026-03-24 22:25 UTC.
 
 ### Uncached Requests
 
@@ -92,12 +92,12 @@ Measured via Cloud Monitoring API while running `db-f1-micro`:
 
 ### Root Cause: Shared 0.2 vCPU under concurrent load
 
-Connection establishment is **not** the issue — `num_backends` metric shows 5-8 persistent connections to the `pyplots` database at all times. The connection pool (`pool_size=5`, `max_overflow=10`, `pool_pre_ping=True`) keeps connections alive.
+Connection establishment is **not** the issue — `num_backends` metric shows 5-8 persistent connections to the `anyplot` database at all times. The connection pool (`pool_size=5`, `max_overflow=10`, `pool_pre_ping=True`) keeps connections alive.
 
 The bottleneck is the **0.2 shared vCPU** handling concurrent queries. When the 600s cache expires, the SPA fires 4 parallel requests (`/specs`, `/stats`, `/libraries`, `/specs/{id}`), each triggering a DB query simultaneously. With 0.2 shared vCPU split across 4 queries, each effectively gets ~0.05 vCPU — explaining the 6-9s response times.
 
 ```
-# DB connections (pyplots database) — persistent, never drops to 0
+# DB connections (anyplot database) — persistent, never drops to 0
 gcloud monitoring: num_backends
   22:07 → 5    22:01 → 8    21:44 → 7    21:38 → 7
 ```
@@ -121,7 +121,7 @@ Cloud Run backend OOM crash at the same timestamp caused all active DB connectio
 | PG buffer cache | ~0 MB (RAM full from OS+PG overhead) | ~800 MB | ~2.5 GB |
 | Google recommendation | Dev/test only | Lightweight workloads | Min. for production |
 
-Upgrade command: `gcloud sql instances patch pyplots-db --tier=db-g1-small`
+Upgrade command: `gcloud sql instances patch anyplot-db --tier=db-g1-small`
 
 ## Conclusion
 
@@ -131,7 +131,7 @@ Cached responses are consistently fast (2-230ms). The problem only occurs when t
 
 **Next step:** Upgrade Cloud SQL from `db-f1-micro` to `db-g1-small` (0.5 vCPU, 1.7 GB, ~$27/mo) and re-measure.
 
-Upgrade: `gcloud sql instances patch pyplots-db --tier=db-g1-small`
+Upgrade: `gcloud sql instances patch anyplot-db --tier=db-g1-small`
 
 ## After Cloud SQL upgrade to `db-g1-small` (March 26, 2026)
 
@@ -189,7 +189,7 @@ Software optimization to eliminate periodic slow responses entirely.
 ```bash
 gcloud logging read \
   'resource.type="cloud_run_revision"
-   AND resource.labels.service_name="pyplots-backend"
+   AND resource.labels.service_name="anyplot-backend"
    AND httpRequest.requestUrl=~"/(specs|stats|libraries)$"
    AND httpRequest.latency>="0.5s"' \
   --limit=30 \
@@ -202,7 +202,7 @@ gcloud logging read \
 ```bash
 gcloud logging read \
   'resource.type="cloud_run_revision"
-   AND resource.labels.service_name="pyplots-backend"
+   AND resource.labels.service_name="anyplot-backend"
    AND httpRequest.requestUrl=~"/(specs|stats|libraries)$"
    AND httpRequest.latency<"0.5s"' \
   --limit=20 \
@@ -215,7 +215,7 @@ gcloud logging read \
 ```bash
 gcloud logging read \
   'resource.type="cloud_run_revision"
-   AND resource.labels.service_name="pyplots-backend"
+   AND resource.labels.service_name="anyplot-backend"
    AND textPayload=~"Out-of-memory"' \
   --limit=15 \
   --freshness=30d \
@@ -225,7 +225,7 @@ gcloud logging read \
 ### Check Cloud Run service configuration
 
 ```bash
-gcloud run services describe pyplots-backend \
+gcloud run services describe anyplot-backend \
   --region europe-west4 \
   --format='yaml(spec.template.metadata.annotations,spec.template.spec.containers[0].resources)'
 ```
@@ -233,7 +233,7 @@ gcloud run services describe pyplots-backend \
 ### Check Cloud SQL instance tier
 
 ```bash
-gcloud sql instances describe pyplots-db \
+gcloud sql instances describe anyplot-db \
   --format='yaml(settings.tier,settings.dataDiskSizeGb,databaseVersion,settings.activationPolicy)'
 ```
 

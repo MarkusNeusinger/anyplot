@@ -308,7 +308,7 @@ This category evaluates aesthetic sophistication beyond mere correctness. A plot
 
 | Points | Criterion |
 |--------|-----------|
-| 3 | Title format `{spec-id} · {library} · pyplots.ai` AND legend labels correct |
+| 3 | Title format `{spec-id} · {library} · anyplot.ai` AND legend labels correct |
 | 2 | Title format correct but legend issues, or vice versa |
 | 1 | Partially correct |
 | 0 | Missing or wrong |

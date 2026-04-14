@@ -15,9 +15,9 @@ Reports are validated by AI and structured for efficient review.
 
 ## How to Report
 
-### From pyplots.ai (Recommended)
+### From anyplot.ai (Recommended)
 
-1. Navigate to the plot page (e.g., `pyplots.ai/scatter-basic`)
+1. Navigate to the plot page (e.g., `anyplot.ai/scatter-basic`)
 2. Click **"report issue"** in the breadcrumb bar (top right)
 3. Complete the form on GitHub
 4. Wait for AI validation
@@ -27,7 +27,7 @@ Reports are validated by AI and structured for efficient review.
 
 ### From GitHub
 
-1. Go to [New Issue](https://github.com/MarkusNeusinger/pyplots/issues/new/choose)
+1. Go to [New Issue](https://github.com/MarkusNeusinger/anyplot/issues/new/choose)
 2. Select the appropriate template:
    - **"Report Spec Issue"** - for specification problems (affects all libraries)
    - **"Report Implementation Issue"** - for implementation problems (specific library)

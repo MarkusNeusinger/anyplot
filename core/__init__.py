@@ -1,1 +1,1 @@
-"""Core business logic for pyplots."""
+"""Core business logic for anyplot."""

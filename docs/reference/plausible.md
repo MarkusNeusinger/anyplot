@@ -1,6 +1,6 @@
 # Plausible Analytics Tracking
 
-This document provides a comprehensive overview of Plausible Analytics implementation for pyplots.ai, including all tracked events, user interactions, and the required Plausible dashboard configuration.
+This document provides a comprehensive overview of Plausible Analytics implementation for anyplot.ai, including all tracked events, user interactions, and the required Plausible dashboard configuration.
 
 ## Setup
 
@@ -9,7 +9,7 @@ This document provides a comprehensive overview of Plausible Analytics implement
 - Self-hosted Plausible script loaded via `/js/script.js`
 - Custom endpoint: `/api/event` (proxied through nginx to avoid adblockers)
 - Manual pageview tracking: `autoCapturePageviews: false`
-- Production-only: Only tracks on `pyplots.ai` domain
+- Production-only: Only tracks on `anyplot.ai` domain
 - Privacy-focused: No cookies, GDPR-compliant
 
 ## Page Views
@@ -20,16 +20,16 @@ This document provides a comprehensive overview of Plausible Analytics implement
 
 Filters create dynamic URLs with the following format:
 ```
-https://pyplots.ai/{category}/{value}/{category}/{value}/...
+https://anyplot.ai/{category}/{value}/{category}/{value}/...
 ```
 
 **Ordered categories**: `lib`, `spec`, `plot`, `data`, `dom`, `feat`, `dep`, `tech`, `pat`, `prep`, `style`
 
 **Examples**:
-- `/?lib=matplotlib` → `https://pyplots.ai/lib/matplotlib`
-- `/?lib=matplotlib&plot=scatter` → `https://pyplots.ai/lib/matplotlib/plot/scatter`
-- `/?lib=matplotlib,seaborn` → `https://pyplots.ai/lib/matplotlib,seaborn` (OR logic)
-- `/?lib=matplotlib&lib=seaborn` → `https://pyplots.ai/lib/matplotlib/lib/seaborn` (AND logic)
+- `/?lib=matplotlib` → `https://anyplot.ai/lib/matplotlib`
+- `/?lib=matplotlib&plot=scatter` → `https://anyplot.ai/lib/matplotlib/plot/scatter`
+- `/?lib=matplotlib,seaborn` → `https://anyplot.ai/lib/matplotlib,seaborn` (OR logic)
+- `/?lib=matplotlib&lib=seaborn` → `https://anyplot.ai/lib/matplotlib/lib/seaborn` (AND logic)
 
 **Benefits**:
 - Plausible shows popular filter combinations
@@ -142,7 +142,7 @@ All og:images are routed through the API for tracking:
 ```
 Bot requests page → nginx detects bot → SEO proxy serves HTML with og:image URL
                                                             ↓
-                                          https://api.pyplots.ai/og/{endpoint}.png
+                                          https://api.anyplot.ai/og/{endpoint}.png
                                                             ↓
                                           track_og_image() → Plausible Events API
                                                             ↓
@@ -199,10 +199,10 @@ Some apps (Signal, others) use a WhatsApp User-Agent to bypass rate limits ([Iss
 
 ### Filter Tracking for Shared URLs
 
-When users share filtered URLs (e.g., `https://pyplots.ai/?lib=plotly&dom=statistics`), the filters are passed to the og:image endpoint:
+When users share filtered URLs (e.g., `https://anyplot.ai/?lib=plotly&dom=statistics`), the filters are passed to the og:image endpoint:
 
 ```
-og:image URL: https://api.pyplots.ai/og/home.png?lib=plotly,matplotlib&dom=statistics
+og:image URL: https://api.anyplot.ai/og/home.png?lib=plotly,matplotlib&dom=statistics
                                                   ↓
 Tracked props: { page: "home", platform: "twitter", filter_lib: "plotly,matplotlib", filter_dom: "statistics" }
 ```
@@ -307,7 +307,7 @@ Recommended custom widgets:
 The `page` property tracks **where** users perform actions to understand their journey:
 
 ```
-User lands on pyplots.ai
+User lands on anyplot.ai
     │
     ├─→ Home (grid view)
     │   └─→ copy_code { page: 'home' }
@@ -473,10 +473,10 @@ poor              # Exceeds poor threshold
 
 ## Testing
 
-**Development**: Tracking disabled (not on pyplots.ai domain)
+**Development**: Tracking disabled (not on anyplot.ai domain)
 
 **Production testing**:
-1. Open https://pyplots.ai
+1. Open https://anyplot.ai
 2. Open browser console
 3. Check for Plausible script load
 4. Trigger events and verify in Plausible dashboard (may take 1-2 min)

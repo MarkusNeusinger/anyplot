@@ -103,7 +103,7 @@ jobs:
           LIBRARY: ${{ steps.pr.outputs.library }}
         run: |
           mkdir -p plot_images
-          gsutil -m cp "gs://pyplots-images/staging/${SPEC_ID}/${LIBRARY}/*" plot_images/ 2>/dev/null || true
+          gsutil -m cp "gs://anyplot-images/staging/${SPEC_ID}/${LIBRARY}/*" plot_images/ 2>/dev/null || true
           ls -la plot_images/
 
       - name: Verify plot image exists
@@ -406,7 +406,7 @@ jobs:
           score = '${SCORE}'
           date_info = '${DATE_INFO}'
 
-          new_header = f'''\"\"\" pyplots.ai
+          new_header = f'''\"\"\" anyplot.ai
           {spec_id}: {title}
           Library: {library} {lib_version} | Python {py_version}
           Quality: {score}/100 | {date_info}

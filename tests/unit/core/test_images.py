@@ -563,15 +563,15 @@ class TestBrandingFunctions:
         font = _get_font(24, weight=400)
         assert font is not None
 
-    def test_draw_pyplots_logo(self, tmp_path: Path) -> None:
+    def test_draw_anyplot_logo(self, tmp_path: Path) -> None:
         """Should draw logo with correct colors."""
         from PIL import ImageDraw
 
-        from core.images import _draw_pyplots_logo
+        from core.images import _draw_anyplot_logo
 
         img = Image.new("RGB", (400, 100), color="#f8f9fa")
         draw = ImageDraw.Draw(img)
-        width = _draw_pyplots_logo(draw, 50, 30, font_size=32)
+        width = _draw_anyplot_logo(draw, 50, 30, font_size=32)
 
         assert width > 0
         # Save to verify visually if needed
@@ -757,7 +757,7 @@ class TestGetMonolisaFontPath:
             result = core.images._get_monolisa_font_path()
 
         # Verify GCS interactions
-        mock_client.bucket.assert_called_once_with("pyplots-static")
+        mock_client.bucket.assert_called_once_with("anyplot-static")
         mock_bucket.blob.assert_called_once_with("fonts/MonoLisaVariableNormal.ttf")
         mock_blob.download_to_filename.assert_called_once()
         assert result == tmp_path / "MonoLisaVariableNormal.ttf"

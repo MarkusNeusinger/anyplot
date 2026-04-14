@@ -197,7 +197,7 @@ If found: `auto_reject: "AR-08"`, score = 0, stop evaluation.
 | SC-01 | Plot Type | 5 | Correct chart type? |
 | SC-02 | Required Features | 4 | All spec features present? |
 | SC-03 | Data Mapping | 3 | X/Y correctly assigned? All data visible? |
-| SC-04 | Title & Legend | 3 | `{spec-id} · {library} · pyplots.ai`? Legend labels correct? |
+| SC-04 | Title & Legend | 3 | `{spec-id} · {library} · anyplot.ai`? Legend labels correct? |
 
 ### Step 4: Data Quality (15 pts)
 

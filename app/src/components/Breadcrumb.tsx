@@ -24,13 +24,13 @@ export interface BreadcrumbProps {
  * Breadcrumb navigation component.
  *
  * @example
- * // Simple: pyplots.ai > catalog
- * <Breadcrumb items={[{ label: 'pyplots.ai', to: '/' }, { label: 'catalog' }]} />
+ * // Simple: anyplot.ai > catalog
+ * <Breadcrumb items={[{ label: 'anyplot.ai', to: '/' }, { label: 'catalog' }]} />
  *
  * @example
  * // With short labels for mobile
  * <Breadcrumb items={[
- *   { label: 'pyplots.ai', to: '/' },
+ *   { label: 'anyplot.ai', to: '/' },
  *   { label: 'scatter-basic', to: '/scatter-basic' },
  *   { label: 'matplotlib', shortLabel: 'mpl' },
  * ]} />

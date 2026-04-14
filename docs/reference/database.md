@@ -2,7 +2,7 @@
 
 ## Overview
 
-pyplots uses **PostgreSQL** (Cloud SQL) as the primary data store for the website. The database contains **all data needed to serve the frontend** - specs, implementations (including full code), and metadata.
+anyplot uses **PostgreSQL** (Cloud SQL) as the primary data store for the website. The database contains **all data needed to serve the frontend** - specs, implementations (including full code), and metadata.
 
 **Key Principle**: Repository is source of truth, database is derived via `sync-postgres.yml`.
 
@@ -117,8 +117,8 @@ CREATE TABLE impls
     code            TEXT,                       -- Python source code
 
     -- Preview URLs (GCS)
-    preview_url     VARCHAR,                    -- Full PNG: gs://pyplots-images/plots/.../plot.png
-    preview_html    VARCHAR,                    -- Interactive: gs://pyplots-images/plots/.../plot.html
+    preview_url     VARCHAR,                    -- Full PNG: gs://anyplot-images/plots/.../plot.png
+    preview_html    VARCHAR,                    -- Interactive: gs://anyplot-images/plots/.../plot.html
 
     -- Version info
     python_version  VARCHAR,                    -- e.g., "3.13"
@@ -230,7 +230,7 @@ INSERT INTO libraries (id, name, version, documentation_url) VALUES
   "spec_id": "scatter-basic",
   "library_id": "matplotlib",
   "code": "import matplotlib.pyplot as plt\n...",
-  "preview_url": "https://storage.googleapis.com/pyplots-images/plots/scatter-basic/matplotlib/plot.png",
+  "preview_url": "https://storage.googleapis.com/anyplot-images/plots/scatter-basic/matplotlib/plot.png",
   "preview_html": null,
   "python_version": "3.13",
   "library_version": "3.9.0",
@@ -320,7 +320,7 @@ def downgrade():
 
 ### Connection Modes
 
-pyplots supports two connection modes (priority order):
+anyplot supports two connection modes (priority order):
 
 | Mode | Environment | Variable | Description |
 |------|-------------|----------|-------------|
@@ -331,7 +331,7 @@ pyplots supports two connection modes (priority order):
 
 ```bash
 # .env
-DATABASE_URL=postgresql+asyncpg://user:pass@34.x.x.x:5432/pyplots
+DATABASE_URL=postgresql+asyncpg://user:pass@34.x.x.x:5432/anyplot
 ```
 
 Requires IP to be authorized in Cloud SQL Authorized Networks.
@@ -341,9 +341,9 @@ Requires IP to be authorized in Cloud SQL Authorized Networks.
 ```bash
 # Set via Secret Manager / cloudbuild.yaml
 INSTANCE_CONNECTION_NAME=project:region:instance
-DB_USER=pyplots
+DB_USER=anyplot
 DB_PASS=xxx
-DB_NAME=pyplots
+DB_NAME=anyplot
 ```
 
 Uses `cloud-sql-python-connector[asyncpg]` for secure connection without exposing public IP.
@@ -377,7 +377,7 @@ Cloud SQL automatic backups:
 Before major changes:
 ```bash
 gcloud sql backups create \
-  --instance=pyplots-db \
+  --instance=anyplot-db \
   --description="Before migration 005"
 ```
 

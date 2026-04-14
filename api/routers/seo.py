@@ -27,21 +27,21 @@ def _build_sitemap_xml(specs: list) -> str:
     xml_lines = [
         '<?xml version="1.0" encoding="UTF-8"?>',
         '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
-        "  <url><loc>https://pyplots.ai/</loc></url>",
-        "  <url><loc>https://pyplots.ai/catalog</loc></url>",
-        "  <url><loc>https://pyplots.ai/mcp</loc></url>",
-        "  <url><loc>https://pyplots.ai/legal</loc></url>",
-        "  <url><loc>https://pyplots.ai/stats</loc></url>",
+        "  <url><loc>https://anyplot.ai/</loc></url>",
+        "  <url><loc>https://anyplot.ai/catalog</loc></url>",
+        "  <url><loc>https://anyplot.ai/mcp</loc></url>",
+        "  <url><loc>https://anyplot.ai/legal</loc></url>",
+        "  <url><loc>https://anyplot.ai/stats</loc></url>",
     ]
 
     for spec in specs:
         if spec.impls:
             spec_id = html.escape(spec.id)
-            xml_lines.append(f"  <url><loc>https://pyplots.ai/{spec_id}</loc>{_lastmod(spec.updated)}</url>")
+            xml_lines.append(f"  <url><loc>https://anyplot.ai/{spec_id}</loc>{_lastmod(spec.updated)}</url>")
             for impl in spec.impls:
                 library_id = html.escape(impl.library_id)
                 xml_lines.append(
-                    f"  <url><loc>https://pyplots.ai/{spec_id}/{library_id}</loc>{_lastmod(impl.updated)}</url>"
+                    f"  <url><loc>https://anyplot.ai/{spec_id}/{library_id}</loc>{_lastmod(impl.updated)}</url>"
                 )
 
     xml_lines.append("</urlset>")
@@ -71,7 +71,7 @@ BOT_HTML_TEMPLATE = """<!DOCTYPE html>
     <meta property="og:image" content="{image}" />
     <meta property="og:url" content="{url}" />
     <meta property="og:type" content="website" />
-    <meta property="og:site_name" content="pyplots.ai" />
+    <meta property="og:site_name" content="anyplot.ai" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="{title}" />
     <meta name="twitter:description" content="{description}" />
@@ -81,10 +81,10 @@ BOT_HTML_TEMPLATE = """<!DOCTYPE html>
 <body><h1>{title}</h1><p>{description}</p></body>
 </html>"""
 
-# Route through API for tracking (was: pyplots.ai/og-image.png)
-DEFAULT_HOME_IMAGE = "https://api.pyplots.ai/og/home.png"
-DEFAULT_CATALOG_IMAGE = "https://api.pyplots.ai/og/catalog.png"
-DEFAULT_DESCRIPTION = "library-agnostic, ai-powered python plotting."
+# Route through API for tracking (was: anyplot.ai/og-image.png)
+DEFAULT_HOME_IMAGE = "https://api.anyplot.ai/og/home.png"
+DEFAULT_CATALOG_IMAGE = "https://api.anyplot.ai/og/catalog.png"
+DEFAULT_DESCRIPTION = "library-agnostic, ai-powered plotting."
 
 
 @router.get("/robots.txt")
@@ -136,10 +136,10 @@ async def seo_home(request: Request):
     # Use html.escape to prevent XSS via query params
     query_string = html.escape(str(request.query_params), quote=True) if request.query_params else ""
     image_url = f"{DEFAULT_HOME_IMAGE}?{query_string}" if query_string else DEFAULT_HOME_IMAGE
-    page_url = f"https://pyplots.ai/?{query_string}" if query_string else "https://pyplots.ai/"
+    page_url = f"https://anyplot.ai/?{query_string}" if query_string else "https://anyplot.ai/"
 
     return HTMLResponse(
-        BOT_HTML_TEMPLATE.format(title="pyplots.ai", description=DEFAULT_DESCRIPTION, image=image_url, url=page_url)
+        BOT_HTML_TEMPLATE.format(title="anyplot.ai", description=DEFAULT_DESCRIPTION, image=image_url, url=page_url)
     )
 
 
@@ -148,10 +148,10 @@ async def seo_catalog():
     """Bot-optimized catalog page with correct og:tags."""
     return HTMLResponse(
         BOT_HTML_TEMPLATE.format(
-            title="Catalog | pyplots.ai",
+            title="Catalog | anyplot.ai",
             description="Browse all Python plotting specifications alphabetically. Find matplotlib, seaborn, plotly, bokeh, altair examples.",
             image=DEFAULT_CATALOG_IMAGE,
-            url="https://pyplots.ai/catalog",
+            url="https://anyplot.ai/catalog",
         )
     )
 
@@ -161,10 +161,10 @@ async def seo_legal():
     """Bot-optimized legal page with correct og:tags."""
     return HTMLResponse(
         BOT_HTML_TEMPLATE.format(
-            title="Legal | pyplots.ai",
-            description="Legal notice, privacy policy, and transparency information for pyplots.ai",
+            title="Legal | anyplot.ai",
+            description="Legal notice, privacy policy, and transparency information for anyplot.ai",
             image=DEFAULT_HOME_IMAGE,
-            url="https://pyplots.ai/legal",
+            url="https://anyplot.ai/legal",
         )
     )
 
@@ -174,10 +174,10 @@ async def seo_mcp():
     """Bot-optimized MCP page with correct og:tags."""
     return HTMLResponse(
         BOT_HTML_TEMPLATE.format(
-            title="MCP Server | pyplots.ai",
-            description="Connect your AI assistant to pyplots via the Model Context Protocol (MCP).",
+            title="MCP Server | anyplot.ai",
+            description="Connect your AI assistant to anyplot via the Model Context Protocol (MCP).",
             image=DEFAULT_HOME_IMAGE,
-            url="https://pyplots.ai/mcp",
+            url="https://anyplot.ai/mcp",
         )
     )
 
@@ -189,10 +189,10 @@ async def seo_spec_overview(spec_id: str, db: AsyncSession | None = Depends(opti
         # Fallback when DB unavailable
         return HTMLResponse(
             BOT_HTML_TEMPLATE.format(
-                title=f"{html.escape(spec_id)} | pyplots.ai",
+                title=f"{html.escape(spec_id)} | anyplot.ai",
                 description=DEFAULT_DESCRIPTION,
                 image=DEFAULT_HOME_IMAGE,
-                url=f"https://pyplots.ai/{html.escape(spec_id)}",
+                url=f"https://anyplot.ai/{html.escape(spec_id)}",
             )
         )
 
@@ -208,13 +208,13 @@ async def seo_spec_overview(spec_id: str, db: AsyncSession | None = Depends(opti
 
     # Use collage og:image if implementations exist, otherwise default
     has_previews = any(i.preview_url for i in spec.impls)
-    image = f"https://api.pyplots.ai/og/{spec_id}.png" if has_previews else DEFAULT_HOME_IMAGE
+    image = f"https://api.anyplot.ai/og/{spec_id}.png" if has_previews else DEFAULT_HOME_IMAGE
 
     result = BOT_HTML_TEMPLATE.format(
-        title=f"{html.escape(spec.title)} | pyplots.ai",
+        title=f"{html.escape(spec.title)} | anyplot.ai",
         description=html.escape(spec.description or DEFAULT_DESCRIPTION),
         image=html.escape(image, quote=True),
-        url=f"https://pyplots.ai/{html.escape(spec_id)}",
+        url=f"https://anyplot.ai/{html.escape(spec_id)}",
     )
     set_cache(key, result)
     return HTMLResponse(result)
@@ -227,10 +227,10 @@ async def seo_spec_implementation(spec_id: str, library: str, db: AsyncSession |
         # Fallback when DB unavailable
         return HTMLResponse(
             BOT_HTML_TEMPLATE.format(
-                title=f"{html.escape(spec_id)} - {html.escape(library)} | pyplots.ai",
+                title=f"{html.escape(spec_id)} - {html.escape(library)} | anyplot.ai",
                 description=DEFAULT_DESCRIPTION,
                 image=DEFAULT_HOME_IMAGE,
-                url=f"https://pyplots.ai/{html.escape(spec_id)}/{html.escape(library)}",
+                url=f"https://anyplot.ai/{html.escape(spec_id)}/{html.escape(library)}",
             )
         )
 
@@ -247,13 +247,13 @@ async def seo_spec_implementation(spec_id: str, library: str, db: AsyncSession |
     # Find the implementation for this library
     impl = next((i for i in spec.impls if i.library_id == library), None)
     # Use branded og:image endpoint if implementation has preview
-    image = f"https://api.pyplots.ai/og/{spec_id}/{library}.png" if impl and impl.preview_url else DEFAULT_HOME_IMAGE
+    image = f"https://api.anyplot.ai/og/{spec_id}/{library}.png" if impl and impl.preview_url else DEFAULT_HOME_IMAGE
 
     result = BOT_HTML_TEMPLATE.format(
-        title=f"{html.escape(spec.title)} - {html.escape(library)} | pyplots.ai",
+        title=f"{html.escape(spec.title)} - {html.escape(library)} | anyplot.ai",
         description=html.escape(spec.description or DEFAULT_DESCRIPTION),
         image=html.escape(image, quote=True),
-        url=f"https://pyplots.ai/{html.escape(spec_id)}/{html.escape(library)}",
+        url=f"https://anyplot.ai/{html.escape(spec_id)}/{html.escape(library)}",
     )
     set_cache(key, result)
     return HTMLResponse(result)

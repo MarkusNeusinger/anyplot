@@ -1,5 +1,5 @@
 """
-Pydantic schemas for pyplots API.
+Pydantic schemas for anyplot API.
 
 Centralized schema definitions for request/response models.
 """

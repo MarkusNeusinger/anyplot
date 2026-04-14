@@ -395,7 +395,7 @@ tags:
         # implementations/
         impl_dir = plot_dir / "implementations"
         impl_dir.mkdir()
-        (impl_dir / "matplotlib.py").write_text('''"""pyplots.ai"""
+        (impl_dir / "matplotlib.py").write_text('''"""anyplot.ai"""
 import matplotlib.pyplot as plt
 plt.plot([1, 2, 3])
 plt.savefig("plot.png")

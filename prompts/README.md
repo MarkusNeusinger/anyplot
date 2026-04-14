@@ -1,6 +1,6 @@
 # Prompts
 
-Central prompt collection for all AI agents in the pyplots workflow.
+Central prompt collection for all AI agents in the anyplot workflow.
 
 ## Concept
 

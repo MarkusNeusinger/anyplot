@@ -53,7 +53,7 @@ review:
 A simple Python script with this structure:
 
 ```python
-""" pyplots.ai
+""" anyplot.ai
 scatter-basic: Basic Scatter Plot
 Library: matplotlib | Python 3.13
 Quality: pending | Created: 2025-12-21
@@ -75,7 +75,7 @@ ax.scatter(study_hours, exam_scores, alpha=0.7, s=200,
 # Style
 ax.set_xlabel('Study Hours per Day', fontsize=20)
 ax.set_ylabel('Exam Score (%)', fontsize=20)
-ax.set_title('scatter-basic · matplotlib · pyplots.ai',
+ax.set_title('scatter-basic · matplotlib · anyplot.ai',
              fontsize=24, fontweight='medium')
 ax.tick_params(axis='both', labelsize=16)
 ax.spines['top'].set_visible(False)
@@ -91,23 +91,23 @@ plt.savefig('plot.png', dpi=300, bbox_inches='tight')
 **Always use this format for the plot title:**
 
 ```
-{spec-id} · {library} · pyplots.ai
+{spec-id} · {library} · anyplot.ai
 ```
 
 Examples:
-- `scatter-basic · matplotlib · pyplots.ai`
-- `bar-grouped · seaborn · pyplots.ai`
-- `heatmap-correlation · plotly · pyplots.ai`
+- `scatter-basic · matplotlib · anyplot.ai`
+- `bar-grouped · seaborn · anyplot.ai`
+- `heatmap-correlation · plotly · anyplot.ai`
 
 **Optional descriptive prefix**: If the spec-id alone doesn't explain the example data well, add a descriptive title before it:
 
 ```
-{Descriptive Title} · {spec-id} · {library} · pyplots.ai
+{Descriptive Title} · {spec-id} · {library} · anyplot.ai
 ```
 
 Examples:
-- `Tesla Stock 2024 · candle-ohlc · matplotlib · pyplots.ai`
-- `Sales by Region · bar-grouped · seaborn · pyplots.ai`
+- `Tesla Stock 2024 · candle-ohlc · matplotlib · anyplot.ai`
+- `Sales by Region · bar-grouped · seaborn · anyplot.ai`
 
 Only add the descriptive prefix when it adds value - most basic plots don't need it.
 
@@ -115,7 +115,7 @@ The middot (·) separator is required. No color or style requirements - the AI d
 
 ### Structure
 
-1. **Docstring** - 4 lines: pyplots.ai, spec-id:title, library+versions, quality+date
+1. **Docstring** - 4 lines: anyplot.ai, spec-id:title, library+versions, quality+date
    - New implementation: `Quality: pending | Created: {YYYY-MM-DD}`
    - After first review: `Quality: {score}/100 | Created: {YYYY-MM-DD}`
    - After update + review: `Quality: {score}/100 | Updated: {YYYY-MM-DD}`
@@ -187,7 +187,7 @@ np.fill_diagonal(corr_matrix, 1.0)  # Diagonal = 1
 ### Docstring Format (filled by workflow after review)
 
 ```python
-""" pyplots.ai
+""" anyplot.ai
 {spec-id}: {Title}
 Library: {library} {lib_version} | Python {py_version}
 Quality: {score}/100 | Created: {YYYY-MM-DD}
@@ -196,7 +196,7 @@ Quality: {score}/100 | Created: {YYYY-MM-DD}
 
 **During generation** (before review): Use placeholder values
 ```python
-""" pyplots.ai
+""" anyplot.ai
 scatter-basic: Basic Scatter Plot
 Library: matplotlib | Python 3.13
 Quality: pending | Created: 2025-12-21
@@ -349,7 +349,7 @@ Must pass all visual quality criteria (VQ-01 through VQ-06) and design excellenc
 
 **IMPORTANT: Large Canvas Size!**
 
-pyplots renders at **4800 × 2700 px** (16:9) or **3600 × 3600 px** (1:1) — standard element sizes are too small!
+anyplot renders at **4800 × 2700 px** (16:9) or **3600 × 3600 px** (1:1) — standard element sizes are too small!
 
 - Elements should be **~3-4x larger** than library defaults
 - See `prompts/default-style-guide.md` for aesthetic principles and sizing

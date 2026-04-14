@@ -34,20 +34,20 @@ export function McpPage() {
   return (
     <>
       <Helmet>
-        <title>mcp | pyplots.ai</title>
+        <title>mcp | anyplot.ai</title>
         <meta
           name="description"
-          content="Configure your AI assistant (Claude Desktop, Claude Code) to access pyplots data via the Model Context Protocol (MCP) server."
+          content="Configure your AI assistant (Claude Desktop, Claude Code) to access anyplot data via the Model Context Protocol (MCP) server."
         />
-        <meta property="og:title" content="mcp | pyplots.ai" />
+        <meta property="og:title" content="mcp | anyplot.ai" />
         <meta
           property="og:description"
-          content="Configure your AI assistant to access pyplots data via MCP"
+          content="Configure your AI assistant to access anyplot data via MCP"
         />
-        <link rel="canonical" href="https://pyplots.ai/mcp" />
+        <link rel="canonical" href="https://anyplot.ai/mcp" />
       </Helmet>
 
-      <Breadcrumb items={[{ label: 'pyplots.ai', shortLabel: 'pp', to: '/' }, { label: 'mcp' }]} sx={{ mb: 2 }} />
+      <Breadcrumb items={[{ label: 'anyplot.ai', shortLabel: 'ap', to: '/' }, { label: 'mcp' }]} sx={{ mb: 2 }} />
 
       <Box sx={{ mb: 3, display: 'flex', gap: 2, flexWrap: 'wrap', justifyContent: 'center' }}>
         <Link href="#what-is-mcp" sx={{ color: colors.primary, fontFamily: textStyle.fontFamily, fontSize: fontSize.base }}>
@@ -83,7 +83,7 @@ export function McpPage() {
           </Typography>
 
           <Typography sx={textStyle}>
-            pyplots provides an MCP server so you can use your AI assistant to:
+            anyplot provides an MCP server so you can use your AI assistant to:
           </Typography>
 
           <Box component="ul" sx={{ m: 0, pl: 3, mb: 2 }}>
@@ -103,7 +103,7 @@ export function McpPage() {
           <Typography sx={textStyle}>
             <strong>Endpoint</strong>:{' '}
             <code style={{ backgroundColor: colors.gray[100], padding: '4px 8px', borderRadius: '4px', color: colors.primary }}>
-              https://api.pyplots.ai/mcp/
+              https://api.anyplot.ai/mcp/
             </code>
           </Typography>
         </Paper>
@@ -115,18 +115,18 @@ export function McpPage() {
           </Typography>
 
           <Typography sx={textStyle}>
-            Use these parameters to configure pyplots in your MCP client:
+            Use these parameters to configure anyplot in your MCP client:
           </Typography>
 
           <Table sx={{ ...tableStyle, mb: 3 }}>
             <TableBody>
               <TableRow>
                 <TableCell sx={{ width: 140 }}>Server Name</TableCell>
-                <TableCell><code>pyplots</code></TableCell>
+                <TableCell><code>anyplot</code></TableCell>
               </TableRow>
               <TableRow>
                 <TableCell>URL</TableCell>
-                <TableCell><code>https://api.pyplots.ai/mcp/</code></TableCell>
+                <TableCell><code>https://api.anyplot.ai/mcp/</code></TableCell>
               </TableRow>
               <TableRow>
                 <TableCell>Transport</TableCell>
@@ -137,11 +137,11 @@ export function McpPage() {
 
           <Typography sx={subheadingStyle}>Claude Code</Typography>
           <Box sx={codeBlockStyle}>
-            {`claude mcp add pyplots --transport http https://api.pyplots.ai/mcp/`}
+            {`claude mcp add anyplot --transport http https://api.anyplot.ai/mcp/`}
           </Box>
 
           <Typography sx={{ ...textStyle, mt: 3 }}>
-            Verify by asking &quot;list available plot types from pyplots&quot;.
+            Verify by asking &quot;list available plot types from anyplot&quot;.
           </Typography>
         </Paper>
 
@@ -152,7 +152,7 @@ export function McpPage() {
           </Typography>
 
           <Typography sx={textStyle}>
-            The MCP server provides these tools for AI assistants to interact with pyplots:
+            The MCP server provides these tools for AI assistants to interact with anyplot:
           </Typography>
 
           <Table sx={tableStyle}>
@@ -214,7 +214,7 @@ export function McpPage() {
           <Typography sx={subheadingStyle}>AI-Assisted Plot Discovery</Typography>
           <Typography sx={textStyle}>
             Ask Claude to find the right plot type for your data. For example: &quot;I have two numeric variables and
-            want to show their correlation. What plot types does pyplots have?&quot; Claude will search the
+            want to show their correlation. What plot types does anyplot have?&quot; Claude will search the
             specifications and suggest appropriate visualizations.
           </Typography>
 
@@ -265,7 +265,7 @@ export function McpPage() {
               <TableRow>
                 <TableCell>MCP Inspector</TableCell>
                 <TableCell>
-                  <code>npx @modelcontextprotocol/inspector https://api.pyplots.ai/mcp/</code>
+                  <code>npx @modelcontextprotocol/inspector https://api.anyplot.ai/mcp/</code>
                 </TableCell>
               </TableRow>
             </TableBody>

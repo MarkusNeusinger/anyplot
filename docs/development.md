@@ -22,14 +22,14 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 
 ```bash
 # Clone and install
-git clone https://github.com/MarkusNeusinger/pyplots.git
-cd pyplots
+git clone https://github.com/MarkusNeusinger/anyplot.git
+cd anyplot
 uv sync --all-extras
 
 # Database configuration
 cp .env.example .env
 # Edit .env with your DATABASE_URL:
-# DATABASE_URL=postgresql+asyncpg://user:pass@host:5432/pyplots
+# DATABASE_URL=postgresql+asyncpg://user:pass@host:5432/anyplot
 
 # Run migrations
 uv run alembic upgrade head
@@ -112,14 +112,14 @@ uv run ruff check . && uv run ruff format .
 
 Set `DATABASE_URL` in `.env`:
 ```
-DATABASE_URL=postgresql+asyncpg://user:pass@localhost:5432/pyplots
+DATABASE_URL=postgresql+asyncpg://user:pass@localhost:5432/anyplot
 ```
 
 ### Cloud SQL (development)
 
 For Cloud SQL access, your IP must be in the authorized networks. Set:
 ```
-DATABASE_URL=postgresql+asyncpg://user:pass@CLOUD_SQL_PUBLIC_IP:5432/pyplots
+DATABASE_URL=postgresql+asyncpg://user:pass@CLOUD_SQL_PUBLIC_IP:5432/anyplot
 ```
 
 ### Migrations
@@ -144,7 +144,7 @@ Copy `.env.example` and configure:
 | Variable | Required | Description |
 |----------|----------|-------------|
 | `DATABASE_URL` | Yes | PostgreSQL connection string |
-| `GCS_BUCKET` | No | GCS bucket for images (default: pyplots-images) |
+| `GCS_BUCKET` | No | GCS bucket for images (default: anyplot-images) |
 | `GOOGLE_APPLICATION_CREDENTIALS` | No | Path to service account JSON |
 | `ENVIRONMENT` | No | `development` or `production` |
 
@@ -153,7 +153,7 @@ Copy `.env.example` and configure:
 ## Project Structure
 
 ```
-pyplots/
+anyplot/
 ├── api/                # FastAPI backend
 ├── app/                # React frontend
 ├── core/               # Shared business logic
@@ -198,7 +198,7 @@ uv sync --reinstall
 ### Database connection issues
 ```bash
 # Test connection
-psql -U pyplots -d pyplots -h localhost
+psql -U anyplot -d anyplot -h localhost
 
 # Check migrations
 uv run alembic current

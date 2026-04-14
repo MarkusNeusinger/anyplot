@@ -1,10 +1,10 @@
-# PyPlots.ai Default Style Guide
+# AnyPlot.ai Default Style Guide
 
 Style requirements for consistent, beautiful visualizations at large canvas sizes.
 
 ## Important: Large Canvas Size
 
-pyplots renders at high resolution (~13 million pixels). All element sizes must be scaled for visibility!
+anyplot renders at high resolution (~13 million pixels). All element sizes must be scaled for visibility!
 
 **Common Mistake:** Using default/standard sizes results in tiny, hard-to-see elements.
 
@@ -32,7 +32,7 @@ Two formats are allowed (similar pixel count for consistent font sizing):
 
 ### Primary Color
 
-**Python Blue `#306998`** is the only recommended color for single-series plots. It is the brand anchor for every pyplots visualization.
+**Python Blue `#306998`** is the only recommended color for single-series plots. It is the brand anchor for every anyplot visualization.
 
 ### Multi-Series Palettes
 
