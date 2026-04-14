@@ -1,7 +1,7 @@
-# pyplots - Project Overview
+# anyplot - Project Overview
 
 ## Purpose
-**pyplots** is an AI-powered platform for Python data visualization that automatically discovers, generates, tests, and maintains plotting examples across 9 major libraries. Community proposes plot ideas via GitHub Issues → AI generates code → AI quality review → Deployed.
+**anyplot** is an AI-powered platform for Python data visualization that automatically discovers, generates, tests, and maintains plotting examples across 9 major libraries. Community proposes plot ideas via GitHub Issues → AI generates code → AI quality review → Deployed.
 
 ## Supported Libraries (9)
 matplotlib, seaborn, plotly, bokeh, altair, plotnine, pygal, highcharts, lets-plot
@@ -16,7 +16,7 @@ matplotlib, seaborn, plotly, bokeh, altair, plotnine, pygal, highcharts, lets-pl
 
 ## Directory Structure
 ```
-pyplots/
+anyplot/
 ├── api/                    # FastAPI backend
 │   ├── main.py             # App factory, CORS, lifespan
 │   ├── routers/            # health, specs, libraries, images, plots, stats,
@@ -125,4 +125,4 @@ pyplots/
 2. `approved` label on Issue → spec merges, gets `spec-ready` label
 3. `bulk-generate.yml` → `impl-generate.yml` → `impl-review.yml` → `impl-merge.yml`
 4. `sync-postgres.yml` syncs filesystem to PostgreSQL on push to main
-5. FastAPI serves data, React frontend displays gallery at pyplots.ai
+5. FastAPI serves data, React frontend displays gallery at anyplot.ai

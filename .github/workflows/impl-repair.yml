@@ -170,23 +170,25 @@ jobs:
           echo "::notice::Processed images: optimized + responsive variants created"
           ls -la "$IMPL_DIR/"
 
+      - name: Authenticate to GCP
+        if: success()
+        uses: google-github-actions/auth@v2
+        with:
+          project_id: anyplot
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+
+      - name: Set up Cloud SDK
+        if: success()
+        uses: google-github-actions/setup-gcloud@v2
+
       - name: Upload repaired plot to GCS staging
         if: success()
         env:
-          GCS_CREDENTIALS: ${{ secrets.GCS_CREDENTIALS }}
           SPEC_ID: ${{ inputs.specification_id }}
           LIBRARY: ${{ inputs.library }}
         run: |
           IMPL_DIR="plots/${SPEC_ID}/implementations"
           STAGING_PATH="gs://anyplot-images/staging/${SPEC_ID}/${LIBRARY}"
-
-          if [ -z "$GCS_CREDENTIALS" ]; then
-            echo "::warning::GCS_CREDENTIALS not configured"
-            exit 0
-          fi
-
-          echo "$GCS_CREDENTIALS" > /tmp/gcs-key.json
-          gcloud auth activate-service-account --key-file=/tmp/gcs-key.json
 
           # Upload all plot images (original + responsive variants)
           if [ -f "$IMPL_DIR/plot.png" ]; then

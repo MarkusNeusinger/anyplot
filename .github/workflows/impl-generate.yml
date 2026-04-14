@@ -511,27 +511,27 @@ jobs:
       # ========================================================================
       # Upload to GCS Staging
       # ========================================================================
+      - name: Authenticate to GCP
+        if: steps.pr.outputs.pr_exists == 'true'
+        uses: google-github-actions/auth@v2
+        with:
+          project_id: anyplot
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+
+      - name: Set up Cloud SDK
+        if: steps.pr.outputs.pr_exists == 'true'
+        uses: google-github-actions/setup-gcloud@v2
+
       - name: Upload to GCS Staging
         id: gcs
         if: steps.pr.outputs.pr_exists == 'true'
         env:
-          GCS_CREDENTIALS: ${{ secrets.GCS_CREDENTIALS }}
           SPEC_ID: ${{ steps.inputs.outputs.specification_id }}
           LIBRARY: ${{ steps.inputs.outputs.library }}
         run: |
           IMPL_DIR="plots/${SPEC_ID}/implementations"
           STAGING_PATH="gs://anyplot-images/staging/${SPEC_ID}/${LIBRARY}"
           PUBLIC_URL="https://storage.googleapis.com/anyplot-images/staging/${SPEC_ID}/${LIBRARY}"
-
-          if [ -z "$GCS_CREDENTIALS" ]; then
-            echo "::warning::GCS_CREDENTIALS not configured - skipping upload"
-            echo "uploaded=false" >> $GITHUB_OUTPUT
-            exit 0
-          fi
-
-          # Authenticate
-          echo "$GCS_CREDENTIALS" > /tmp/gcs-key.json
-          gcloud auth activate-service-account --key-file=/tmp/gcs-key.json
 
           # Upload all plot images (original + responsive variants)
           if [ -f "$IMPL_DIR/plot.png" ]; then

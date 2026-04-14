@@ -22,6 +22,7 @@ jobs:
       pull-requests: write
       issues: write
       actions: write  # Required for gh workflow run sync-postgres.yml
+      id-token: write  # Required for Workload Identity Federation
 
     steps:
       - name: Check conditions
@@ -182,21 +183,23 @@ jobs:
       # Note: quality_score is now set by impl-review.yml before merge
       # The PR already contains the updated metadata when merged
 
+      - name: Authenticate to GCP
+        if: steps.check.outputs.should_run == 'true'
+        uses: google-github-actions/auth@v2
+        with:
+          project_id: anyplot
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+
+      - name: Set up Cloud SDK
+        if: steps.check.outputs.should_run == 'true'
+        uses: google-github-actions/setup-gcloud@v2
+
       - name: Promote GCS images to production
         if: steps.check.outputs.should_run == 'true'
         env:
-          GCS_CREDENTIALS: ${{ secrets.GCS_CREDENTIALS }}
           SPEC_ID: ${{ steps.extract.outputs.specification_id }}
           LIBRARY: ${{ steps.extract.outputs.library }}
         run: |
-          if [ -z "$GCS_CREDENTIALS" ]; then
-            echo "::warning::GCS_CREDENTIALS not configured - skipping promotion"
-            exit 0
-          fi
-
-          echo "$GCS_CREDENTIALS" > /tmp/gcs-key.json
-          gcloud auth activate-service-account --key-file=/tmp/gcs-key.json
-
           STAGING="gs://anyplot-images/staging/${SPEC_ID}/${LIBRARY}"
           PRODUCTION="gs://anyplot-images/plots/${SPEC_ID}/${LIBRARY}"
 
