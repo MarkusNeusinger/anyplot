@@ -15,30 +15,24 @@ describe('Header', () => {
     mockNavigate.mockClear();
   });
 
-  it('renders the anyplot.ai logo text', () => {
+  it('renders the any.plot() logo text', () => {
     render(<Header />);
 
     expect(screen.getByText('any')).toBeInTheDocument();
     expect(screen.getByText('plot')).toBeInTheDocument();
-    expect(screen.getByText('.ai')).toBeInTheDocument();
+    expect(screen.getByText('()')).toBeInTheDocument();
   });
 
   it('renders tagline text', () => {
     render(<Header />);
 
-    expect(screen.getByText(/ai-powered python/i)).toBeInTheDocument();
+    expect(screen.getByText(/catalogue of scientific plotting/i)).toBeInTheDocument();
   });
 
-  it('renders "get inspired" call to action', () => {
-    render(<Header />);
-
-    expect(screen.getByText(/get inspired/)).toBeInTheDocument();
-  });
-
-  it('renders stats tooltip content when stats provided', () => {
+  it('renders stats when provided', () => {
     render(<Header stats={{ specs: 254, plots: 1800, libraries: 9 }} />);
 
-    expect(screen.getByText('✦')).toBeInTheDocument();
+    expect(screen.getByText(/1800 plots/)).toBeInTheDocument();
   });
 
   it('renders shuffle icon when onRandom is provided', () => {

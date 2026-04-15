@@ -18,13 +18,11 @@ export const Header = memo(function Header({ stats, onRandom }: HeaderProps) {
   const theme = useTheme();
   const navigate = useNavigate();
   const isXs = useMediaQuery(theme.breakpoints.down('sm'));
-  const isSm = useMediaQuery(theme.breakpoints.between('sm', 'md'));
   const [tooltipOpen, setTooltipOpen] = useState(false);
-  const [pinned, setPinned] = useState(false);  // true = opened via click, stays open
+  const [pinned, setPinned] = useState(false);
   const clickCountRef = useRef(0);
   const clickTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Cleanup timer on unmount
   useEffect(() => {
     return () => {
       if (clickTimerRef.current) clearTimeout(clickTimerRef.current);
@@ -70,7 +68,6 @@ export const Header = memo(function Header({ stats, onRandom }: HeaderProps) {
     let lastTap = 0;
     const handleTouchEnd = (e: TouchEvent) => {
       const target = e.target as HTMLElement;
-      // Skip interactive elements
       const interactive = target.closest('a, button, input, textarea, select, [role="button"], [tabindex], .MuiModal-root, .MuiDialog-root, .MuiChip-root, .MuiCard-root');
       if (interactive) return;
 
@@ -93,12 +90,13 @@ export const Header = memo(function Header({ stats, onRandom }: HeaderProps) {
       flexDirection: 'column',
       justifyContent: 'center',
     }}>
+      {/* Logo: any.plot() */}
       <Typography
         variant="h2"
         component="h1"
         sx={{
           fontWeight: 700,
-          fontFamily: typography.fontFamily,
+          fontFamily: typography.mono,
           mb: { xs: 2, md: 3 },
           letterSpacing: '-0.02em',
           fontSize: { xs: '2rem', sm: '2.75rem', md: '3.75rem' },
@@ -112,9 +110,15 @@ export const Header = memo(function Header({ stats, onRandom }: HeaderProps) {
           onKeyDown={handleLogoKeyDown}
           sx={{ cursor: 'pointer', userSelect: 'none', '&:focus': { outline: 'none' } }}
         >
-          <Box component="span" sx={{ color: colors.primary }}>any</Box>
-          <Box component="span" sx={{ color: colors.accent }}>plot</Box>
-          <Box component="span" sx={{ color: colors.gray[800] }}>.ai</Box>
+          <Box component="span" sx={{ color: colors.gray[800] }}>any</Box>
+          <Box component="span" sx={{
+            color: colors.primary,
+            display: 'inline-block',
+            transform: 'scale(1.45)',
+            mx: '2px',
+          }}>.</Box>
+          <Box component="span" sx={{ color: colors.gray[800] }}>plot</Box>
+          <Box component="span" sx={{ color: colors.gray[800], fontWeight: 400, opacity: 0.45 }}>()</Box>
         </Box>
         {onRandom && (
           <ShuffleIcon
@@ -159,19 +163,24 @@ export const Header = memo(function Header({ stats, onRandom }: HeaderProps) {
           />
         )}
       </Typography>
+
+      {/* Tagline */}
       <Typography
         variant="body1"
         sx={{
           maxWidth: 560,
           mx: 'auto',
           lineHeight: 1.8,
-          fontFamily: typography.fontFamily,
+          fontFamily: typography.serif,
+          fontWeight: 300,
           color: semanticColors.subtleText,
-          fontSize: { xs: '0.875rem', md: '1rem' },
+          fontSize: { xs: '0.9375rem', md: '1.125rem' },
         }}
       >
-        {isXs ? 'ai-powered python plots' : isSm ? 'library-agnostic, ai-powered python plotting.' : 'library-agnostic, ai-powered python plotting examples.'}
+        {isXs ? 'any library. one plot.' : 'a catalogue of scientific plotting.'}
       </Typography>
+
+      {/* Stats line */}
       <Typography
         variant="body1"
         sx={{
@@ -179,13 +188,13 @@ export const Header = memo(function Header({ stats, onRandom }: HeaderProps) {
           mx: 'auto',
           mt: { xs: 1, md: 1.5 },
           lineHeight: 1.8,
-          fontFamily: typography.fontFamily,
-          color: colors.gray[700],
-          fontSize: { xs: '1rem', md: '1.125rem' },
-          fontWeight: 500,
+          fontFamily: typography.mono,
+          color: colors.gray[500],
+          fontSize: { xs: '0.75rem', md: '0.8125rem' },
+          letterSpacing: '0.08em',
+          textTransform: 'uppercase',
         }}
       >
-        get inspired
         {stats ? (
           <ClickAwayListener onClickAway={() => { setTooltipOpen(false); setPinned(false); }}>
             <span>
@@ -198,7 +207,7 @@ export const Header = memo(function Header({ stats, onRandom }: HeaderProps) {
                 disableTouchListener
               >
                 <Box
-                  component="sup"
+                  component="span"
                   onClick={() => {
                     if (pinned) {
                       setPinned(false);
@@ -210,34 +219,15 @@ export const Header = memo(function Header({ stats, onRandom }: HeaderProps) {
                   }}
                   onMouseEnter={() => setTooltipOpen(true)}
                   onMouseLeave={() => { if (!pinned) setTooltipOpen(false); }}
-                  sx={{
-                    color: tooltipOpen ? colors.accent : colors.primary,
-                    cursor: 'pointer',
-                    fontSize: '0.65rem',
-                    ml: 0.25,
-                    '&:hover': { color: colors.accent },
-                  }}
+                  sx={{ cursor: 'pointer', '&:hover': { color: colors.primary } }}
                 >
-                  ✦
+                  {stats.plots} plots · {stats.libraries} libraries
                 </Box>
               </Tooltip>
             </span>
           </ClickAwayListener>
-        ) : (
-          <Box
-            component="sup"
-            sx={{
-              color: colors.primary,
-              fontSize: '0.65rem',
-              ml: 0.25,
-            }}
-          >
-            ✦
-          </Box>
-        )}
-        {isXs ? '. copy. create.' : '. grab the code. make it yours.'}
+        ) : null}
       </Typography>
-
     </Box>
   );
 });

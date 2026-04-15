@@ -138,7 +138,7 @@ export function StatsPage() {
             { label: 'coverage', value: data.coverage_percent, suffix: '%' },
           ].map(item => (
             <Box key={item.label} sx={{ textAlign: 'center', p: 2, border: `1px solid ${colors.gray[100]}`, borderRadius: 1 }}>
-              <Typography sx={{ fontFamily: typography.fontFamily, fontSize: '2rem', fontWeight: 700, color: colors.gray[800], lineHeight: 1.2 }}>
+              <Typography sx={{ fontFamily: typography.serif, fontSize: '2rem', fontWeight: 300, color: colors.gray[800], lineHeight: 1.2 }}>
                 {typeof item.value === 'number' ? `${formatNum(item.value)}${item.suffix}` : '—'}
               </Typography>
               <Typography sx={{ fontFamily: typography.fontFamily, fontSize: fontSize.xs, color: semanticColors.mutedText, mt: 0.5 }}>

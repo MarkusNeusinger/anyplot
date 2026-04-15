@@ -13,7 +13,12 @@ import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
 import { FilterBar } from '../components/FilterBar';
 import { ImagesGrid } from '../components/ImagesGrid';
-import { PlotOfTheDay } from '../components/PlotOfTheDay';
+import { MastheadRule } from '../components/MastheadRule';
+import { HeroSection } from '../components/HeroSection';
+import { NumbersStrip } from '../components/NumbersStrip';
+import { LibrariesSection } from '../components/LibrariesSection';
+import { CodeShowcase } from '../components/CodeShowcase';
+import { ScienceNote } from '../components/ScienceNote';
 import { useAppData, useHomeState } from '../hooks';
 import { specPath } from '../utils/paths';
 import { colors } from '../theme';
@@ -89,6 +94,12 @@ export function HomePage() {
 
   // Refs
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const catalogRef = useRef<HTMLDivElement>(null);
+
+  const noFilters = isFiltersEmpty(activeFilters);
+
+  // Show hero only on fresh page load with no filters and no saved scroll position
+  const showHero = noFilters && homeStateRef.current.scrollY === 0;
 
   // Persist imageSize to localStorage
   useEffect(() => {
@@ -132,6 +143,22 @@ export function HomePage() {
     [openImageTooltip]
   );
 
+  // Handle library card click from hero section
+  const handleLibraryClick = useCallback(
+    (library: string) => {
+      handleAddFilter('lib', library);
+      setTimeout(() => {
+        catalogRef.current?.scrollIntoView({ behavior: 'smooth' });
+      }, 100);
+    },
+    [handleAddFilter]
+  );
+
+  // Handle "Browse the catalogue" CTA
+  const handleBrowse = useCallback(() => {
+    catalogRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, []);
+
   // Global keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -163,13 +190,27 @@ export function HomePage() {
   return (
     <Box onClick={handleContainerClick}>
       <Helmet>
-        <title>anyplot.ai</title>
-        <meta name="description" content="library-agnostic, ai-powered python plotting examples. browse, compare, and copy code across 9 libraries." />
+        <title>anyplot.ai — any library. one plot.</title>
+        <meta name="description" content="a catalogue of scientific plotting. browse, compare, and copy code across 9 python libraries. colorblind-safe by default." />
         <link rel="canonical" href="https://anyplot.ai/" />
       </Helmet>
-      <Header stats={stats} onRandom={handleRandom} />
 
-      {isFiltersEmpty(activeFilters) && <PlotOfTheDay />}
+      {/* Editorial hero sections — shown on fresh page load with no filters */}
+      {showHero && (
+        <>
+          <MastheadRule />
+          <HeroSection stats={stats} onBrowse={handleBrowse} />
+          <NumbersStrip stats={stats} />
+          <LibrariesSection libraries={librariesData} onLibraryClick={handleLibraryClick} />
+          <CodeShowcase />
+          <ScienceNote />
+        </>
+      )}
+
+      {/* Header — shown when hero is hidden (filters active or returning from navigation) */}
+      {!showHero && (
+        <Header stats={stats} onRandom={handleRandom} />
+      )}
 
       {error && (
         <Alert severity="error" sx={{ mb: 4, maxWidth: 500, mx: 'auto' }}>
@@ -177,44 +218,47 @@ export function HomePage() {
         </Alert>
       )}
 
-      <FilterBar
-        activeFilters={activeFilters}
-        filterCounts={filterCounts}
-        orCounts={orCounts}
-        specTitles={specTitles}
-        currentTotal={allImages.length}
-        displayedCount={displayedImages.length}
-        randomAnimation={randomAnimation}
-        searchInputRef={searchInputRef}
-        imageSize={imageSize}
-        onImageSizeChange={setImageSize}
-        onAddFilter={handleAddFilter}
-        onAddValueToGroup={handleAddValueToGroup}
-        onRemoveFilter={handleRemoveFilter}
-        onRemoveGroup={handleRemoveGroup}
-        onTrackEvent={trackEvent}
-      />
+      {/* Catalog section — always visible */}
+      <Box ref={catalogRef}>
+        <FilterBar
+          activeFilters={activeFilters}
+          filterCounts={filterCounts}
+          orCounts={orCounts}
+          specTitles={specTitles}
+          currentTotal={allImages.length}
+          displayedCount={displayedImages.length}
+          randomAnimation={randomAnimation}
+          searchInputRef={searchInputRef}
+          imageSize={imageSize}
+          onImageSizeChange={setImageSize}
+          onAddFilter={handleAddFilter}
+          onAddValueToGroup={handleAddValueToGroup}
+          onRemoveFilter={handleRemoveFilter}
+          onRemoveGroup={handleRemoveGroup}
+          onTrackEvent={trackEvent}
+        />
 
-      <ImagesGrid
-        images={displayedImages}
-        viewMode={isFiltersEmpty(activeFilters) ? 'library' : 'spec'}
-        selectedSpec={selectedSpec}
-        selectedLibrary={selectedLibrary}
-        loading={loading}
-        hasMore={hasMore}
-        isLoadingMore={false}
-        isTransitioning={false}
-        librariesData={librariesData}
-        specsData={specsData}
-        openTooltip={openImageTooltip}
-        loadMoreRef={loadMoreRef}
-        imageSize={imageSize}
-        onTooltipToggle={setOpenImageTooltip}
-        onCardClick={handleCardClick}
-        onTrackEvent={trackEvent}
-      />
+        <ImagesGrid
+          images={displayedImages}
+          viewMode={noFilters ? 'library' : 'spec'}
+          selectedSpec={selectedSpec}
+          selectedLibrary={selectedLibrary}
+          loading={loading}
+          hasMore={hasMore}
+          isLoadingMore={false}
+          isTransitioning={false}
+          librariesData={librariesData}
+          specsData={specsData}
+          openTooltip={openImageTooltip}
+          loadMoreRef={loadMoreRef}
+          imageSize={imageSize}
+          onTooltipToggle={setOpenImageTooltip}
+          onCardClick={handleCardClick}
+          onTrackEvent={trackEvent}
+        />
+      </Box>
 
-      {!loading && allImages.length === 0 && !isFiltersEmpty(activeFilters) && (
+      {!loading && allImages.length === 0 && !noFilters && (
         <Alert severity="info" sx={{ maxWidth: 400, mx: 'auto' }}>
           No plots match these filters.
         </Alert>

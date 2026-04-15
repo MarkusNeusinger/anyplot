@@ -184,8 +184,8 @@ export function CatalogPage() {
           variant="h4"
           component="h1"
           sx={{
-            fontFamily: typography.fontFamily,
-            fontWeight: 600,
+            fontFamily: typography.serif,
+            fontWeight: 400,
             mb: 4,
             color: colors.gray[800],
           }}
@@ -218,9 +218,9 @@ export function CatalogPage() {
                   flexDirection: { xs: 'column', sm: 'row' },
                   gap: { xs: 2, sm: 3 },
                   p: 2,
-                  bgcolor: '#fff',
+                  bgcolor: 'var(--bg-surface)',
                   borderRadius: 2,
-                  boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
+                  boxShadow: '0 1px 2px rgba(0,0,0,0.02), 0 24px 48px -24px rgba(0,0,0,0.08)',
                   transition: 'box-shadow 0.2s',
                   '&:hover': {
                     boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
@@ -347,8 +347,8 @@ export function CatalogPage() {
                 >
                   <Typography
                     sx={{
-                      fontFamily: typography.fontFamily,
-                      fontWeight: 600,
+                      fontFamily: typography.serif,
+                      fontWeight: 400,
                       fontSize: fontSize.xl,
                       color: colors.gray[800],
                       mb: 0.5,
@@ -367,7 +367,8 @@ export function CatalogPage() {
                         }
                       }}
                       sx={{
-                        fontFamily: typography.fontFamily,
+                        fontFamily: typography.serif,
+                        fontWeight: 300,
                         fontSize: fontSize.base,
                         color: semanticColors.subtleText,
                         lineHeight: 1.6,

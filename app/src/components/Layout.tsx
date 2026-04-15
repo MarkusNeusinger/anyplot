@@ -4,18 +4,21 @@ import { Helmet } from 'react-helmet-async';
 import Box from '@mui/material/Box';
 import Container from '@mui/material/Container';
 
-import { colors } from '../theme';
+// colors import removed — Layout uses CSS variables for dark mode support
 import { API_URL } from '../constants';
 import type { LibraryInfo, SpecInfo } from '../types';
 import {
   AppDataContext,
   HomeStateContext,
+  ThemeContext,
   initialHomeState,
   type HomeState,
 } from '../hooks/useLayoutContext';
+import { useThemeMode } from '../hooks/useThemeMode';
 
 // Global provider that wraps the entire router (persists across all pages including InteractivePage)
 export function AppDataProvider({ children }: { children: ReactNode }) {
+  const themeMode = useThemeMode();
   const [specsData, setSpecsData] = useState<SpecInfo[]>([]);
   const [librariesData, setLibrariesData] = useState<LibraryInfo[]>([]);
   const [stats, setStats] = useState<{ specs: number; plots: number; libraries: number } | null>(null);
@@ -67,11 +70,13 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <AppDataContext.Provider value={{ specsData, librariesData, stats }}>
-      <HomeStateContext.Provider value={{ homeState, homeStateRef, setHomeState, saveScrollPosition }}>
-        {children}
-      </HomeStateContext.Provider>
-    </AppDataContext.Provider>
+    <ThemeContext.Provider value={themeMode}>
+      <AppDataContext.Provider value={{ specsData, librariesData, stats }}>
+        <HomeStateContext.Provider value={{ homeState, homeStateRef, setHomeState, saveScrollPosition }}>
+          {children}
+        </HomeStateContext.Provider>
+      </AppDataContext.Provider>
+    </ThemeContext.Provider>
   );
 }
 
@@ -82,7 +87,7 @@ export function Layout() {
       <Helmet>
         <meta name="robots" content="index, follow" />
       </Helmet>
-      <Box component="main" sx={{ minHeight: '100vh', bgcolor: colors.background, py: 5, position: 'relative' }}>
+      <Box component="main" sx={{ minHeight: '100vh', bgcolor: 'var(--bg-page)', py: 5, position: 'relative' }}>
         <Container maxWidth={false} sx={{ px: { xs: 2, sm: 4, md: 8, lg: 12, xl: 16 }, maxWidth: 2200, mx: 'auto' }}>
           <Outlet />
         </Container>

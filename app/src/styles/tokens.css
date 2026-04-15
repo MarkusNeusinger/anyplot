@@ -1,0 +1,60 @@
+/*
+ * Design Tokens — anyplot.ai
+ *
+ * CSS custom properties for the editorial/paper aesthetic.
+ * Based on Okabe-Ito colorblind-safe palette.
+ * Dark mode via [data-theme="dark"] on <html>.
+ */
+
+:root {
+  /* Okabe-Ito Palette */
+  --ok-green:      #009E73;
+  --ok-vermillion: #D55E00;
+  --ok-blue:       #0072B2;
+  --ok-purple:     #CC79A7;
+  --ok-orange:     #E69F00;
+  --ok-sky:        #56B4E9;
+  --ok-yellow:     #F0E442;
+
+  /* Surfaces — warm off-white, not pure #fff */
+  --bg-page:     #F5F3EC;
+  --bg-surface:  #FAF8F1;
+  --bg-elevated: #FFFDF6;
+
+  /* Warm-tinted grays */
+  --ink:         #1A1A17;
+  --ink-soft:    #4A4A44;
+  --ink-muted:   #8A8A82;
+  --rule:        rgba(26, 26, 23, 0.10);
+
+  /* Typography stacks */
+  --serif: 'Fraunces', Georgia, serif;
+  --sans:  'Inter', system-ui, sans-serif;
+  --mono:  'MonoLisa', 'MonoLisa Fallback', 'JetBrains Mono', Consolas, monospace;
+
+  /* Layout */
+  --gutter: 24px;
+  --max: 1240px;
+  --max-wide: 1600px;
+
+  /* Code blocks */
+  --code-bg:   #0E0E0C;
+  --code-text: #E8E8E0;
+}
+
+/* Animations */
+@keyframes rise {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Dark theme */
+[data-theme="dark"] {
+  --bg-page:     #121210;
+  --bg-surface:  #1A1A17;
+  --bg-elevated: #242420;
+  --ink:         #F0EFE8;
+  --ink-soft:    #B8B7B0;
+  --ink-muted:   #6E6D66;
+  --rule:        rgba(240, 239, 232, 0.10);
+}

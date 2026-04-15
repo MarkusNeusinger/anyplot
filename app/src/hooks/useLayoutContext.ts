@@ -39,8 +39,14 @@ export const initialHomeState: HomeState = {
   initialized: false,
 };
 
+export interface ThemeContextValue {
+  isDark: boolean;
+  toggle: () => void;
+}
+
 export const AppDataContext = createContext<AppData | null>(null);
 export const HomeStateContext = createContext<HomeStateContextValue | null>(null);
+export const ThemeContext = createContext<ThemeContextValue>({ isDark: false, toggle: () => {} });
 
 export function useAppData() {
   const context = useContext(AppDataContext);
@@ -56,4 +62,8 @@ export function useHomeState() {
     throw new Error('useHomeState must be used within AppDataProvider');
   }
   return context;
+}
+
+export function useTheme() {
+  return useContext(ThemeContext);
 }

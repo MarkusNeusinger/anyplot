@@ -6,7 +6,9 @@ import { AppRouter } from './router';
 import { reportWebVitals } from './analytics/reportWebVitals';
 import { typography, colors, semanticColors, fontSize } from './theme';
 
-// Import MonoLisa font - hosted on GCS (all text uses MonoLisa)
+// Import design tokens (CSS custom properties for theming + dark mode)
+import './styles/tokens.css';
+// Import web fonts - MonoLisa from GCS, Fraunces + Inter from Google Fonts
 import './styles/fonts.css';
 
 const theme = createTheme({
@@ -33,7 +35,9 @@ const theme = createTheme({
     MuiCssBaseline: {
       styleOverrides: {
         body: {
-          backgroundColor: colors.background,
+          backgroundColor: 'var(--bg-page)',
+          color: 'var(--ink)',
+          transition: 'background-color 0.3s, color 0.3s',
         },
       },
     },

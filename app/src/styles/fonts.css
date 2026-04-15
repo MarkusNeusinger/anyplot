@@ -8,7 +8,7 @@
  */
 
 /* ==========================================================================
-   Fallback Font (prevents CLS while MonoLisa loads)
+   Fallback Fonts (prevent CLS while web fonts load)
    ========================================================================== */
 
 @font-face {
@@ -17,6 +17,15 @@
   size-adjust: 106.5%;
   ascent-override: 105%;
   descent-override: 25%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: 'Fraunces Fallback';
+  src: local('Georgia');
+  size-adjust: 105%;
+  ascent-override: 98%;
+  descent-override: 22%;
   line-gap-override: 0%;
 }
 

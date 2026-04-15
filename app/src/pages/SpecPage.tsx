@@ -361,8 +361,8 @@ export function SpecPage() {
           component="h1"
           sx={{
             textAlign: 'center',
-            fontFamily: typography.fontFamily,
-            fontWeight: 600,
+            fontFamily: typography.serif,
+            fontWeight: 400,
             fontSize: { xs: '1.375rem', sm: '1.625rem', md: '2.125rem' },
             mb: 1,
             color: colors.gray[800],
@@ -376,7 +376,8 @@ export function SpecPage() {
           onClick={() => !descExpanded && setDescExpanded(true)}
           sx={{
             textAlign: 'center',
-            fontFamily: typography.fontFamily,
+            fontFamily: typography.serif,
+            fontWeight: 300,
             fontSize: { xs: '0.875rem', sm: '0.9375rem' },
             color: semanticColors.subtleText,
             maxWidth: { xs: '100%', md: 800, lg: 950, xl: 1100 },

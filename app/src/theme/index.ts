@@ -1,65 +1,82 @@
 /**
  * Theme constants for anyplot frontend.
  *
- * Centralized styling values to avoid hardcoded repetition.
+ * Editorial/paper aesthetic with Okabe-Ito colorblind-safe palette.
+ * Brand color: #009E73 (bluish green).
+ * Warm off-white backgrounds, three font families.
  */
 
 export const typography = {
   // MonoLisa with system mono fallback (size-adjusted to prevent CLS)
   fontFamily: '"MonoLisa", "MonoLisa Fallback", Consolas, Menlo, Monaco, "DejaVu Sans Mono", monospace',
+  // Three font families for the editorial aesthetic
+  serif: '"Fraunces", "Fraunces Fallback", Georgia, serif',
+  sans: '"Inter", system-ui, sans-serif',
+  mono: '"MonoLisa", "MonoLisa Fallback", "JetBrains Mono", Consolas, monospace',
 } as const;
 
 export const colors = {
-  // Brand colors
-  primary: '#3776AB', // Python blue
-  accent: '#FFD43B', // Python yellow
+  // Brand — Okabe-Ito palette
+  primary: '#009E73', // Bluish green — brand anchor
+  accent: '#E69F00', // Orange — badges, highlights
 
-  // Gray scale
-  gray: {
-    50: '#f9fafb',
-    100: '#f3f4f6',
-    200: '#e5e7eb',
-    300: '#d1d5db',
-    400: '#9ca3af',
-    500: '#6b7280',
-    600: '#4b5563',
-    700: '#374151',
-    800: '#1f2937',
-    900: '#111827',
+  // Okabe-Ito full palette (for direct reference)
+  okabe: {
+    green: '#009E73',
+    vermillion: '#D55E00',
+    blue: '#0072B2',
+    purple: '#CC79A7',
+    orange: '#E69F00',
+    sky: '#56B4E9',
+    yellow: '#F0E442',
   },
 
-  // Semantic colors
-  success: '#22c55e',
-  error: '#ef4444',
-  warning: '#f59e0b',
-  info: '#3b82f6',
+  // Gray scale — warm-tinted
+  gray: {
+    50: '#FAF8F1',
+    100: '#F5F3EC',
+    200: '#E8E6DF',
+    300: '#D1CFC8',
+    400: '#A5A39C',
+    500: '#8A8A82',
+    600: '#4A4A44',
+    700: '#4A4A44',
+    800: '#1A1A17',
+    900: '#121210',
+  },
 
-  // Background
-  background: '#fafafa',
+  // Semantic colors — Okabe-Ito mapped
+  success: '#009E73', // Green
+  error: '#D55E00', // Vermillion
+  warning: '#E69F00', // Orange
+  info: '#0072B2', // Blue
+
+  // Background — warm off-white
+  background: '#F5F3EC',
 
   // Extended brand
-  primaryDark: '#306998', // Python dark blue — dataviz bars, hover accents
-  accentBg: '#fffef5', // Warm yellow-tinted bg for accent sections
+  primaryDark: '#007A59', // Darker green — hover accents
+  accentBg: '#FAF8F1', // Surface background
 
   // Highlights
   highlight: {
-    bg: '#dbeafe', // Light blue bg for highlighted chips
-    text: '#1e40af', // Dark blue text for highlighted chips
+    bg: 'rgba(0, 158, 115, 0.12)', // Green-tinted highlight bg
+    text: '#007A59', // Dark green text for highlighted chips
   },
-  tooltipLight: '#90caf9', // Light blue text on dark tooltip backgrounds
+  tooltipLight: '#56B4E9', // Sky blue on dark tooltip backgrounds
 
   // Code blocks (dark theme)
   codeBlock: {
-    bg: '#1e293b',
-    text: '#e2e8f0',
+    bg: '#0E0E0C',
+    text: '#E8E8E0',
   },
 } as const;
 
-// Semantic text colors — WCAG AA safe on #fafafa/#fff backgrounds
+// Semantic text colors — WCAG AA safe on #F5F3EC backgrounds
 export const semanticColors = {
-  labelText: '#4b5563', // gray.600 — 7.0:1 on white, labels/categories
-  subtleText: '#52525b', // ~5.8:1 on white, secondary/metadata text
-  mutedText: '#6b7280', // gray.500, 4.6:1 — decorative/less critical text
+  labelText: '#4A4A44', // --ink-soft — 7.2:1 on #F5F3EC, labels/categories
+  subtleText: '#4A4A44', // --ink-soft — secondary/metadata text
+  mutedText: '#8A8A82', // --ink-muted — 4.5:1, decorative/less critical text
 } as const;
 
 export const fontSize = {
@@ -92,27 +109,28 @@ export const labelStyle = {
   color: semanticColors.labelText,
 } as const;
 
-// Page-level style constants
+// Page-level style constants — serif for editorial headings
 export const headingStyle = {
-  fontFamily: typography.fontFamily,
-  fontWeight: 600,
+  fontFamily: typography.serif,
+  fontWeight: 400,
   fontSize: '1.25rem',
   color: colors.gray[800],
   mb: 2,
 } as const;
 
 export const subheadingStyle = {
-  fontFamily: typography.fontFamily,
-  fontWeight: 600,
+  fontFamily: typography.serif,
+  fontWeight: 400,
   fontSize: fontSize.lg,
-  color: colors.gray[700],
+  color: colors.gray[600],
   mt: 3,
   mb: 1,
 } as const;
 
 export const textStyle = {
-  fontFamily: typography.fontFamily,
+  fontFamily: typography.serif,
   fontSize: fontSize.base,
+  fontWeight: 300,
   color: semanticColors.labelText,
   lineHeight: 1.8,
   mb: 2,
@@ -136,13 +154,13 @@ export const tableStyle = {
     fontFamily: typography.fontFamily,
     fontSize: fontSize.md,
     color: semanticColors.labelText,
-    borderBottom: `1px solid ${colors.gray[100]}`,
+    borderBottom: `1px solid ${colors.gray[200]}`,
     py: 1.5,
     px: 2,
   },
   '& .MuiTableCell-head': {
     fontWeight: 600,
-    color: colors.gray[700],
+    color: colors.gray[600],
     backgroundColor: colors.gray[50],
   },
 } as const;

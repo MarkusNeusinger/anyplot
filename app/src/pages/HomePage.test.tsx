@@ -34,6 +34,7 @@ vi.mock('../hooks', () => ({
     setHomeState: vi.fn(),
     homeState: { scrollY: 0, imageSize: 'normal', searchExpanded: false },
   }),
+  useTheme: () => ({ isDark: false, toggle: vi.fn() }),
 }));
 
 vi.mock('react-helmet-async', () => ({
@@ -56,8 +57,29 @@ vi.mock('../components/ImagesGrid', () => ({
   ImagesGrid: () => <div data-testid="images-grid">ImagesGrid</div>,
 }));
 
-vi.mock('../components/PlotOfTheDay', () => ({
-  PlotOfTheDay: () => <div data-testid="potd">PlotOfTheDay</div>,
+// Hero section components (shown when no filters and scrollY === 0)
+vi.mock('../components/MastheadRule', () => ({
+  MastheadRule: () => <div data-testid="masthead">MastheadRule</div>,
+}));
+
+vi.mock('../components/HeroSection', () => ({
+  HeroSection: () => <div data-testid="hero">HeroSection</div>,
+}));
+
+vi.mock('../components/NumbersStrip', () => ({
+  NumbersStrip: () => <div data-testid="numbers">NumbersStrip</div>,
+}));
+
+vi.mock('../components/LibrariesSection', () => ({
+  LibrariesSection: () => <div data-testid="libraries">LibrariesSection</div>,
+}));
+
+vi.mock('../components/CodeShowcase', () => ({
+  CodeShowcase: () => <div data-testid="code-showcase">CodeShowcase</div>,
+}));
+
+vi.mock('../components/ScienceNote', () => ({
+  ScienceNote: () => <div data-testid="science">ScienceNote</div>,
 }));
 
 import { HomePage } from './HomePage';
@@ -67,21 +89,27 @@ describe('HomePage', () => {
     vi.clearAllMocks();
   });
 
-  it('renders the main components', () => {
+  it('renders hero sections when no filters active (fresh page load)', () => {
     render(<HomePage />);
-    expect(screen.getByTestId('header')).toBeInTheDocument();
-    expect(screen.getByTestId('footer')).toBeInTheDocument();
+    expect(screen.getByTestId('masthead')).toBeInTheDocument();
+    expect(screen.getByTestId('hero')).toBeInTheDocument();
+    expect(screen.getByTestId('numbers')).toBeInTheDocument();
+    expect(screen.getByTestId('libraries')).toBeInTheDocument();
+    expect(screen.getByTestId('code-showcase')).toBeInTheDocument();
+    expect(screen.getByTestId('science')).toBeInTheDocument();
+  });
+
+  it('renders catalog components (filterbar, grid, footer)', () => {
+    render(<HomePage />);
     expect(screen.getByTestId('filterbar')).toBeInTheDocument();
-  });
-
-  it('shows PlotOfTheDay when no filters active', () => {
-    render(<HomePage />);
-    expect(screen.getByTestId('potd')).toBeInTheDocument();
-  });
-
-  it('renders images grid', () => {
-    render(<HomePage />);
     expect(screen.getByTestId('images-grid')).toBeInTheDocument();
+    expect(screen.getByTestId('footer')).toBeInTheDocument();
+  });
+
+  it('hides header when hero is shown', () => {
+    render(<HomePage />);
+    // Hero is shown (scrollY=0, no filters), so Header should NOT be rendered
+    expect(screen.queryByTestId('header')).toBeNull();
   });
 
   it('renders Helmet for SEO', () => {

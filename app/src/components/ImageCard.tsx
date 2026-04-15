@@ -137,18 +137,18 @@ export const ImageCard = memo(function ImageCard({
           position: 'relative',
           borderRadius: 3,
           overflow: 'hidden',
-          border: '2px solid rgba(55, 118, 171, 0.3)',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+          border: '1px solid var(--rule)',
+          boxShadow: '0 1px 2px rgba(0,0,0,0.02), 0 24px 48px -24px rgba(0,0,0,0.08)',
           transition: 'all 0.3s ease',
           cursor: 'pointer',
           outline: 'none',
           '&:focus-visible': {
-            border: '2px solid rgba(55, 118, 171, 0.6)',
+            border: `1px solid ${colors.primary}`,
           },
           '&:hover': {
-            border: '2px solid rgba(55, 118, 171, 0.4)',
-            boxShadow: '0 8px 30px rgba(0,0,0,0.15)',
-            transform: 'scale(1.03)',
+            border: '1px solid rgba(0, 158, 115, 0.2)',
+            boxShadow: '0 8px 30px rgba(0,0,0,0.12)',
+            transform: 'translateY(-2px)',
           },
         }}
       >

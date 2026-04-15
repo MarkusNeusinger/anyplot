@@ -49,9 +49,9 @@ export function Breadcrumb({ items, rightAction, sx }: BreadcrumbProps) {
         px: 2,
         py: 1,
         mb: 2,
-        bgcolor: colors.gray[100],
+        bgcolor: colors.gray[50],
         borderBottom: `1px solid ${colors.gray[200]}`,
-        fontFamily: typography.fontFamily,
+        fontFamily: typography.mono,
         fontSize: fontSize.base,
         ...sx,
       }}
@@ -83,7 +83,7 @@ export function Breadcrumb({ items, rightAction, sx }: BreadcrumbProps) {
                 ) : item.label}
               </Box>
             ) : (
-              <Box component="span" sx={{ color: colors.gray[700] }}>
+              <Box component="span" sx={{ color: colors.gray[600] }}>
                 {item.shortLabel ? (
                   <>
                     <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>{item.label}</Box>
