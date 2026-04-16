@@ -22,7 +22,7 @@ This document provides a comprehensive overview of Plausible Analytics implement
 
 Spec and implementation URLs are prefixed with `/python/` to support future multi-language expansion (Julia, R, etc.). This ensures Plausible analytics paths remain stable when new languages are added.
 
-- Root homepage `/` and static pages (`/catalog`, `/legal`, etc.) remain un-prefixed
+- Root homepage `/` and static pages (`/plots`, `/specs`, `/legal`, etc.) remain un-prefixed
 - Spec pages: `/python/{spec_id}`, `/python/{spec_id}/{library}`
 - Interactive: `/python/interactive/{spec_id}/{library}`
 - Marketing subdomains (`python.anyplot.ai`) 301-redirect to `anyplot.ai/python/`
@@ -63,7 +63,8 @@ https://anyplot.ai/python/{category}/{value}/...
 |-----|-------------|
 | `/` | Home page (no filters) |
 | `/python/` | Python home page (no filters, language-prefixed) |
-| `/catalog` | Catalog page (alphabetical spec list) |
+| `/plots` | Plots page (filter grid of all implementations) |
+| `/specs` | Specs page (alphabetical spec list) |
 | `/legal` | Legal notice, privacy policy, transparency |
 | `/mcp` | MCP server documentation (AI assistant integration) |
 | `/stats` | Platform statistics (library scores, coverage, tags, top implementations) |
@@ -107,7 +108,7 @@ https://anyplot.ai/python/{category}/{value}/...
 | `filter_remove` | `category`, `value` | useFilterState.ts | User removes a filter |
 | `grid_resize` | `size` | ToolbarActions.tsx | User toggles between normal/compact view |
 | `tab_toggle` | `action`, `tab`, `library` | SpecTabs.tsx | User opens or closes a tab |
-| `catalog_rotate` | `spec` | CatalogPage.tsx | User clicks image in catalog to rotate library |
+| `plot_rotate` | `spec` | SpecsListPage.tsx | User clicks image on specs page to rotate library |
 | `open_interactive` | `spec`, `library` | SpecOverview.tsx, SpecDetailView.tsx | User opens interactive HTML view |
 | `suggest_spec` | - | CatalogPage.tsx | User clicks "suggest spec" link |
 | `report_issue` | `spec`, `library`? | SpecPage.tsx | User clicks "report issue" link |
@@ -183,7 +184,7 @@ Bot requests page → nginx detects bot → SEO proxy serves HTML with og:image 
 
 | Property | Values | Description |
 |----------|--------|-------------|
-| `page` | `home`, `catalog`, `spec_overview`, `spec_detail` | Page type |
+| `page` | `home`, `plots`, `spec_overview`, `spec_detail` | Page type |
 | `platform` | See list below | Detected platform from User-Agent |
 | `spec` | Specification ID | Only for spec pages |
 | `library` | Library ID | Only for detail pages |
@@ -215,7 +216,7 @@ Some apps (Signal, others) use a WhatsApp User-Agent to bypass rate limits ([Iss
 | Endpoint | Description | Tracking |
 |----------|-------------|----------|
 | `/og/home.png` | Static og:image for home page | `page=home`, `filter_*` from query params |
-| `/og/catalog.png` | Static og:image for catalog | `page=catalog` |
+| `/og/plots.png` | Static og:image for plots page | `page=plots` |
 | `/og/{spec_id}.png` | Collage og:image for spec overview | `page=spec_overview`, `spec` |
 | `/og/{spec_id}/{library}.png` | Branded og:image for implementation | `page=spec_detail`, `spec`, `library` |
 
@@ -245,10 +246,10 @@ To see event properties in Plausible dashboard, you **MUST** register them as cu
 
 | Property | Description | Used By Events |
 |----------|-------------|----------------|
-| `spec` | Plot specification ID | `copy_code`, `download_image`, `catalog_rotate`, `external_link`, `internal_link`, `open_interactive`, `report_issue`, `tag_click`, `og_image_view` |
+| `spec` | Plot specification ID | `copy_code`, `download_image`, `plot_rotate`, `external_link`, `internal_link`, `open_interactive`, `report_issue`, `tag_click`, `og_image_view` |
 | `library` | Library name (matplotlib, seaborn, etc.) | `copy_code`, `download_image`, `external_link`, `internal_link`, `open_interactive`, `tab_toggle`, `og_image_view` |
 | `method` | Action method (card, image, tab, click, space, doubletap) | `copy_code`, `random_filter` |
-| `page` | Page context (home, catalog, spec_overview, spec_detail) | `copy_code`, `download_image`, `og_image_view` |
+| `page` | Page context (home, plots, spec_overview, spec_detail) | `copy_code`, `download_image`, `og_image_view` |
 | `platform` | Bot/platform name (twitter, whatsapp, teams, etc.) | `og_image_view` |
 | `category` | Filter category (lib, spec, plot, data, dom, feat, dep, tech, pat, prep, style) | `search`, `random_filter`, `filter_remove` |
 | `value` | Filter value | `random_filter`, `filter_remove`, `tag_click` |
@@ -294,7 +295,7 @@ To see event properties in Plausible dashboard, you **MUST** register them as cu
 | `suggest_spec` | Custom Event | Track spec suggestion clicks |
 | `report_issue` | Custom Event | Track issue report clicks |
 | `tag_click` | Custom Event | Track tag filter clicks |
-| `catalog_rotate` | Custom Event | Track catalog image rotation |
+| `plot_rotate` | Custom Event | Track plot image rotation on specs page |
 | `og_image_view` | Custom Event | Track og:image requests from social media bots |
 | `LCP` | Custom Event | Largest Contentful Paint (Core Web Vital) |
 | `CLS` | Custom Event | Cumulative Layout Shift (Core Web Vital) |
@@ -372,7 +373,7 @@ User lands on anyplot.ai
 | `grid_resize` | `size` | ToolbarActions.tsx |
 | `tab_toggle` | `action`, `tab`, `library` | SpecTabs.tsx |
 | `tag_click` | `param`, `value`, `source` | SpecTabs.tsx |
-| `catalog_rotate` | `spec` | CatalogPage.tsx |
+| `plot_rotate` | `spec` | SpecsListPage.tsx |
 | `open_interactive` | `spec`, `library` | SpecOverview.tsx, SpecDetailView.tsx |
 | `suggest_spec` | - | CatalogPage.tsx |
 | `report_issue` | `spec`, `library`? | SpecPage.tsx |
@@ -410,7 +411,7 @@ doubletap # Mobile double-tap
 ### `page` Values
 ```
 home          # HomePage grid view (client) or og:image home endpoint (server)
-catalog       # CatalogPage (server og:image only)
+plots         # PlotsPage (server og:image only)
 spec_overview # SpecPage showing all libraries
 spec_detail   # SpecPage showing single library
 ```
@@ -527,7 +528,7 @@ window.plausible = function(...args) { console.log('Plausible:', args); };
 - [x] External link events (`external_link`)
 - [x] Internal link events (`internal_link`)
 - [x] Feature link events (`open_interactive`, `suggest_spec`, `report_issue`)
-- [x] Catalog rotation (`catalog_rotate`)
+- [x] Plot rotation (`plot_rotate`)
 - [x] Core Web Vitals tracking (`LCP`, `CLS`, `INP`)
 - [x] Server-side og:image tracking (`og_image_view`) with platform detection
 

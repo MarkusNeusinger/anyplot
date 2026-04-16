@@ -28,7 +28,8 @@ def _build_sitemap_xml(specs: list) -> str:
         '<?xml version="1.0" encoding="UTF-8"?>',
         '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
         "  <url><loc>https://anyplot.ai/</loc></url>",
-        "  <url><loc>https://anyplot.ai/catalog</loc></url>",
+        "  <url><loc>https://anyplot.ai/plots</loc></url>",
+        "  <url><loc>https://anyplot.ai/specs</loc></url>",
         "  <url><loc>https://anyplot.ai/mcp</loc></url>",
         "  <url><loc>https://anyplot.ai/legal</loc></url>",
         "  <url><loc>https://anyplot.ai/stats</loc></url>",
@@ -83,7 +84,7 @@ BOT_HTML_TEMPLATE = """<!DOCTYPE html>
 
 # Route through API for tracking (was: anyplot.ai/og-image.png)
 DEFAULT_HOME_IMAGE = "https://api.anyplot.ai/og/home.png"
-DEFAULT_CATALOG_IMAGE = "https://api.anyplot.ai/og/catalog.png"
+DEFAULT_PLOTS_IMAGE = "https://api.anyplot.ai/og/plots.png"
 DEFAULT_DESCRIPTION = "library-agnostic, ai-powered plotting."
 
 
@@ -103,7 +104,7 @@ async def get_sitemap(db: AsyncSession | None = Depends(optional_db)):
     """
     Generate dynamic XML sitemap for SEO.
 
-    Includes root, catalog page, and all specs with implementations.
+    Includes root, plots/specs pages, and all specs with implementations.
     """
     if db is None:
         return Response(content=_STATIC_SITEMAP, media_type="application/xml")
@@ -143,15 +144,28 @@ async def seo_home(request: Request):
     )
 
 
-@router.get("/seo-proxy/catalog")
-async def seo_catalog():
-    """Bot-optimized catalog page with correct og:tags."""
+@router.get("/seo-proxy/plots")
+async def seo_plots():
+    """Bot-optimized plots page with correct og:tags."""
     return HTMLResponse(
         BOT_HTML_TEMPLATE.format(
-            title="Catalog | anyplot.ai",
-            description="Browse all Python plotting specifications alphabetically. Find matplotlib, seaborn, plotly, bokeh, altair examples.",
-            image=DEFAULT_CATALOG_IMAGE,
-            url="https://anyplot.ai/catalog",
+            title="plots | anyplot.ai",
+            description="Browse and filter Python visualization examples across 9 libraries: matplotlib, seaborn, plotly, bokeh, altair, plotnine, pygal, highcharts, lets-plot.",
+            image=DEFAULT_PLOTS_IMAGE,
+            url="https://anyplot.ai/plots",
+        )
+    )
+
+
+@router.get("/seo-proxy/specs")
+async def seo_specs():
+    """Bot-optimized specs page with correct og:tags."""
+    return HTMLResponse(
+        BOT_HTML_TEMPLATE.format(
+            title="specs | anyplot.ai",
+            description="Browse all Python plotting specifications alphabetically.",
+            image=DEFAULT_PLOTS_IMAGE,
+            url="https://anyplot.ai/specs",
         )
     )
 

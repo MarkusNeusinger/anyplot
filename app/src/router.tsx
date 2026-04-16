@@ -25,7 +25,7 @@ const router = createBrowserRouter([
     element: <PassthroughLayout />,
     children: [
       { index: true, lazy: () => import('./pages/LandingPage').then(m => ({ Component: m.LandingPage })) },
-      { path: 'catalog', lazy: () => import('./pages/CatalogPage').then(m => ({ Component: m.CatalogPage })) },
+      { path: 'plots', lazy: () => import('./pages/PlotsPage').then(m => ({ Component: m.PlotsPage })) },
       { path: 'specs', lazy: () => import('./pages/SpecsListPage').then(m => ({ Component: m.SpecsListPage })) },
       { path: 'palette', lazy: () => import('./pages/PalettePage').then(m => ({ Component: m.PalettePage })) },
       { path: 'legal', lazy: () => import('./pages/LegalPage').then(m => ({ Component: m.LegalPage })) },

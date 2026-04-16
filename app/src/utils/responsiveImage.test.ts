@@ -6,7 +6,7 @@ import {
   getFallbackSrc,
   DETAIL_SIZES,
   OVERVIEW_SIZES,
-  CATALOG_SIZES,
+  SPECS_SIZES,
 } from './responsiveImage';
 
 describe('responsiveImage utilities', () => {
@@ -102,8 +102,8 @@ describe('responsiveImage utilities', () => {
       expect(OVERVIEW_SIZES).toBe('(max-width: 1199px) 33vw, (max-width: 1535px) 467px, 534px');
     });
 
-    it('CATALOG_SIZES matches expected media queries', () => {
-      expect(CATALOG_SIZES).toBe('(max-width: 599px) 100vw, 280px');
+    it('SPECS_SIZES matches expected media queries', () => {
+      expect(SPECS_SIZES).toBe('(max-width: 599px) 100vw, 280px');
     });
   });
 });

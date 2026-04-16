@@ -59,11 +59,11 @@ export function Footer({ onTrackEvent, selectedSpec, selectedLibrary }: FooterPr
       <span>·</span>
       <Link
         component={RouterLink}
-        to="/catalog"
-        onClick={() => onTrackEvent?.('internal_link', { destination: 'catalog', spec: selectedSpec, library: selectedLibrary })}
+        to="/plots"
+        onClick={() => onTrackEvent?.('internal_link', { destination: 'plots', spec: selectedSpec, library: selectedLibrary })}
         sx={linkSx}
       >
-        catalog
+        plots
       </Link>
       <span>·</span>
       <Link

@@ -297,10 +297,10 @@ export function SpecPage() {
           }
           rightAction={
             <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1.5, md: 0 } }}>
-              <Tooltip title="catalog">
+              <Tooltip title="plots">
                 <Box
                   component={Link}
-                  to="/catalog"
+                  to="/plots"
                   sx={{
                     color: semanticColors.mutedText,
                     textDecoration: 'none',
@@ -318,7 +318,7 @@ export function SpecPage() {
                       fontSize: fontSize.base,
                     }}
                   >
-                    catalog
+                    plots
                   </Box>
                 </Box>
               </Tooltip>

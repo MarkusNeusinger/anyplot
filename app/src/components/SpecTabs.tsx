@@ -210,7 +210,7 @@ export function SpecTabs({
     return tagCounts[paramName]?.[value] ?? null;
   }, [tagCounts]);
 
-  // Handle tag click - navigate to filtered catalog (full page navigation)
+  // Handle tag click - navigate to filtered plots page (full page navigation)
   const handleTagClick = useCallback(
     (paramName: string, value: string) => {
       onTrackEvent?.('tag_click', { param: paramName, value, source: 'spec_detail' });

@@ -148,7 +148,7 @@ def track_og_image(
 
     Args:
         request: FastAPI request for headers
-        page: Page type ('home', 'catalog', 'spec_overview', 'spec_detail')
+        page: Page type ('home', 'plots', 'spec_overview', 'spec_detail')
         spec: Spec ID (optional)
         library: Library ID (optional)
         filters: Query params for filtered home page (e.g., {'lib': 'plotly', 'dom': 'statistics'})
@@ -160,8 +160,8 @@ def track_og_image(
     # Build URL based on page type
     if page == "home":
         url = "https://anyplot.ai/"
-    elif page == "catalog":
-        url = "https://anyplot.ai/catalog"
+    elif page == "plots":
+        url = "https://anyplot.ai/plots"
     elif spec is not None and library:
         url = f"https://anyplot.ai/python/{spec}/{library}"
     elif spec is not None:

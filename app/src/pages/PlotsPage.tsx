@@ -18,7 +18,7 @@ import { specPath } from '../utils/paths';
 import { colors } from '../theme';
 import Container from '@mui/material/Container';
 
-export function CatalogPage() {
+export function PlotsPage() {
   const navigate = useNavigate();
   const { specsData, librariesData } = useAppData();
   const { homeStateRef, saveScrollPosition } = useHomeState();
@@ -154,9 +154,9 @@ export function CatalogPage() {
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'var(--bg-page)' }} onClick={handleContainerClick}>
       <Helmet>
-        <title>catalog | anyplot.ai</title>
+        <title>plots | anyplot.ai</title>
         <meta name="description" content="Browse and filter 2,600+ Python visualization examples across 9 libraries. Search by plot type, domain, features, and more." />
-        <link rel="canonical" href="https://anyplot.ai/catalog" />
+        <link rel="canonical" href="https://anyplot.ai/plots" />
       </Helmet>
       <Container maxWidth={false} sx={{ px: { xs: 2, sm: 4, md: 8, lg: 12, xl: 16 }, maxWidth: 1600, mx: 'auto' }}>
       <NavBar searchInputRef={searchInputRef} />

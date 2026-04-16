@@ -72,10 +72,10 @@ export const DETAIL_SIZES = '(max-width: 1199px) 100vw, (max-width: 1535px) 1400
 export const OVERVIEW_SIZES = '(max-width: 1199px) 33vw, (max-width: 1535px) 467px, 534px';
 
 /**
- * Sizes for the catalog page image thumbnails.
+ * Sizes for the specs page image thumbnails.
  * Mobile (xs): full width. Desktop (sm+): fixed 280px.
  */
-export const CATALOG_SIZES = '(max-width: 599px) 100vw, 280px';
+export const SPECS_SIZES = '(max-width: 599px) 100vw, 280px';
 
 /**
  * Get the fallback image URL (plot_800.png - good middle ground).

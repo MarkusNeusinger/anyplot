@@ -10,7 +10,7 @@ anyplot is a specification-driven platform where **AI generates all plot impleme
 
 | Action | When to Use | From anyplot.ai |
 |--------|-------------|-----------------|
-| **[Request New Plot](#request-a-new-plot)** | Propose a new plot type | Click "suggest spec" in catalog |
+| **[Request New Plot](#request-a-new-plot)** | Propose a new plot type | Click "suggest spec" on specs page |
 | **[Report Plot Issue](#report-a-plot-issue)** | Problem with a spec or implementation | Click "report issue" on any page |
 
 All contributions go through GitHub Issues with AI-powered validation and processing.

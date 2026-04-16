@@ -22,7 +22,7 @@ export function LibrariesSection({ libraries, onLibraryClick }: LibrariesSection
         number="§ 01"
         title={<>The <em>libraries</em></>}
         linkText="view all"
-        linkTo="/catalog"
+        linkTo="/plots"
       />
 
       <Box sx={{

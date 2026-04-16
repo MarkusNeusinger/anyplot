@@ -4,12 +4,12 @@ import Box from '@mui/material/Box';
 import { colors, typography } from '../theme';
 
 interface NavBarProps {
-  /** Ref to FilterBar search input -- when on /catalog, focuses it; otherwise navigates to /catalog */
+  /** Ref to FilterBar search input -- when on /plots, focuses it; otherwise navigates to /plots */
   searchInputRef?: React.RefObject<HTMLInputElement | null>;
 }
 
 const NAV_LINKS = [
-  { label: 'catalog', to: '/catalog' },
+  { label: 'plots', to: '/plots' },
   { label: 'specs', to: '/specs' },
   { label: 'palette', to: '/palette' },
   { label: 'mcp', to: '/mcp' },
@@ -58,10 +58,10 @@ export function NavBar({ searchInputRef }: NavBarProps) {
   const location = useLocation();
 
   const handleSearch = useCallback(() => {
-    if (location.pathname === '/catalog' && searchInputRef?.current) {
+    if (location.pathname === '/plots' && searchInputRef?.current) {
       searchInputRef.current.focus();
     } else {
-      navigate('/catalog');
+      navigate('/plots');
     }
   }, [location.pathname, searchInputRef, navigate]);
 

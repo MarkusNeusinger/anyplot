@@ -94,7 +94,7 @@ export function HomePage() {
 
   // Refs
   const searchInputRef = useRef<HTMLInputElement>(null);
-  const catalogRef = useRef<HTMLDivElement>(null);
+  const plotsRef = useRef<HTMLDivElement>(null);
 
   const noFilters = isFiltersEmpty(activeFilters);
 
@@ -148,13 +148,13 @@ export function HomePage() {
     (library: string) => {
       handleAddFilter('lib', library);
       setTimeout(() => {
-        catalogRef.current?.scrollIntoView({ behavior: 'smooth' });
+        plotsRef.current?.scrollIntoView({ behavior: 'smooth' });
       }, 100);
     },
     [handleAddFilter]
   );
 
-  // catalogRef used for library card clicks to scroll to grid
+  // plotsRef used for library card clicks to scroll to grid
 
   // Global keyboard shortcuts
   useEffect(() => {
@@ -215,8 +215,8 @@ export function HomePage() {
         </Alert>
       )}
 
-      {/* Catalog section — always visible */}
-      <Box ref={catalogRef}>
+      {/* Plots section — always visible */}
+      <Box ref={plotsRef}>
         <FilterBar
           activeFilters={activeFilters}
           filterCounts={filterCounts}
