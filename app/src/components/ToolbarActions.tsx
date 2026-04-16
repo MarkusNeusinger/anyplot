@@ -1,5 +1,5 @@
 /**
- * Toolbar action buttons: catalog link and grid size toggle.
+ * Toolbar action buttons: plots link and grid size toggle.
  * Extracted from FilterBar to eliminate code duplication between desktop and mobile views.
  */
 
@@ -20,14 +20,14 @@ interface ToolbarActionsProps {
 }
 
 /**
- * Catalog link component - navigates to /catalog page.
+ * Plots link component - navigates to /plots page.
  */
-export function CatalogLink() {
+export function PlotsLink() {
   return (
-    <Tooltip title="catalog">
+    <Tooltip title="plots">
       <Box
         component={Link}
-        to="/catalog"
+        to="/plots"
         sx={{
           display: 'flex',
           alignItems: 'center',
@@ -92,12 +92,12 @@ export function GridSizeToggle({ imageSize, onImageSizeChange, onTrackEvent }: T
 }
 
 /**
- * Combined toolbar actions component with catalog link and grid toggle.
+ * Combined toolbar actions component with plots link and grid toggle.
  */
 export function ToolbarActions({ imageSize, onImageSizeChange, onTrackEvent }: ToolbarActionsProps) {
   return (
     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-      <CatalogLink />
+      <PlotsLink />
       <GridSizeToggle
         imageSize={imageSize}
         onImageSizeChange={onImageSizeChange}

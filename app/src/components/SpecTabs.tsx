@@ -210,7 +210,7 @@ export function SpecTabs({
     return tagCounts[paramName]?.[value] ?? null;
   }, [tagCounts]);
 
-  // Handle tag click - navigate to filtered catalog (full page navigation)
+  // Handle tag click - navigate to filtered plots page (full page navigation)
   const handleTagClick = useCallback(
     (paramName: string, value: string) => {
       onTrackEvent?.('tag_click', { param: paramName, value, source: 'spec_detail' });
@@ -346,11 +346,30 @@ export function SpecTabs({
                 {copied ? <CheckIcon color="success" /> : <ContentCopyIcon fontSize="small" />}
               </IconButton>
             </Tooltip>
+            {/* cat-style terminal header */}
+            <Box sx={{
+              fontFamily: typography.fontFamily,
+              fontSize: '11px',
+              color: '#6E6D66',
+              bgcolor: '#0E0E0C',
+              px: '32px',
+              pt: 2,
+              pb: 0,
+              borderRadius: '12px 12px 0 0',
+              letterSpacing: '0.04em',
+            }}>
+              <Box component="span" sx={{ color: '#009E73' }}>$</Box> cat {specId}/{libraryId}.py
+              <Box sx={{
+                mt: 1,
+                borderBottom: '1px solid rgba(255,255,255,0.06)',
+              }} />
+            </Box>
             <Box
               sx={{
                 bgcolor: colors.background,
                 p: 3,
-                borderRadius: 1,
+                pt: 0,
+                borderRadius: '0 0 12px 12px',
               }}
             >
               {highlightedCode}

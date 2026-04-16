@@ -15,7 +15,7 @@ import { FilterBar } from '../components/FilterBar';
 import { ImagesGrid } from '../components/ImagesGrid';
 import { useAppData, useHomeState } from '../hooks';
 import { specPath } from '../utils/paths';
-import { colors } from '../theme';
+import { colors, typography } from '../theme';
 import Container from '@mui/material/Container';
 
 export function CatalogPage() {
@@ -154,18 +154,59 @@ export function CatalogPage() {
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'var(--bg-page)' }} onClick={handleContainerClick}>
       <Helmet>
-        <title>catalog | anyplot.ai</title>
+        <title>plots | anyplot.ai</title>
         <meta name="description" content="Browse and filter 2,600+ Python visualization examples across 9 libraries. Search by plot type, domain, features, and more." />
-        <link rel="canonical" href="https://anyplot.ai/catalog" />
+        <link rel="canonical" href="https://anyplot.ai/plots" />
       </Helmet>
       <Container maxWidth={false} sx={{ px: { xs: 2, sm: 4, md: 8, lg: 12, xl: 16 }, maxWidth: 1600, mx: 'auto' }}>
       <NavBar searchInputRef={searchInputRef} />
+
+      {/* Man-page header */}
+      <Box sx={{
+        fontFamily: typography.mono,
+        fontSize: '11px',
+        color: 'var(--ink-muted)',
+        textTransform: 'uppercase',
+        letterSpacing: '0.08em',
+        pt: 3,
+        pb: 1,
+        lineHeight: 1.8,
+        whiteSpace: 'pre',
+        display: { xs: 'none', sm: 'block' },
+      }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+          <span>PLOTS(1)</span>
+          <span>anyplot.ai</span>
+          <span>PLOTS(1)</span>
+        </Box>
+        <Box sx={{ mt: 1, textTransform: 'none', letterSpacing: '0.04em' }}>
+          <Box component="span" sx={{ fontWeight: 700 }}>NAME</Box>
+          {'\n'}
+          {'    plots — '}
+          {allImages.length > 0 ? allImages.length.toLocaleString() : '…'}
+          {' visualization examples across 9 libraries'}
+        </Box>
+      </Box>
 
       {error && (
         <Alert severity="error" sx={{ mb: 4, maxWidth: 500, mx: 'auto' }}>
           {error}
         </Alert>
       )}
+
+      {/* Comment-syntax section divider */}
+      <Box sx={{
+        fontFamily: typography.mono,
+        fontSize: '10px',
+        color: 'var(--ink-muted)',
+        opacity: 0.5,
+        mt: 2,
+        mb: 0.5,
+        letterSpacing: '0.04em',
+        display: { xs: 'none', md: 'block' },
+      }}>
+        # --- filters {'-'.repeat(56)}
+      </Box>
 
       <FilterBar
         activeFilters={activeFilters}
@@ -184,6 +225,19 @@ export function CatalogPage() {
         onRemoveGroup={handleRemoveGroup}
         onTrackEvent={trackEvent}
       />
+
+      {/* Comment-syntax section divider */}
+      <Box sx={{
+        fontFamily: typography.mono,
+        fontSize: '10px',
+        color: 'var(--ink-muted)',
+        opacity: 0.5,
+        mb: 1,
+        letterSpacing: '0.04em',
+        display: { xs: 'none', md: 'block' },
+      }}>
+        # --- results ({allImages.length.toLocaleString()}) {'-'.repeat(46)}
+      </Box>
 
       <ImagesGrid
         images={displayedImages}

@@ -31,7 +31,7 @@ export function SpecsListPage() {
 
   // Track catalog page view
   useEffect(() => {
-    trackPageview('/catalog');
+    trackPageview('/plots');
   }, [trackPageview]);
 
   const [allImages, setAllImages] = useState<PlotImage[]>([]);
@@ -149,17 +149,17 @@ export function SpecsListPage() {
   return (
     <>
       <Helmet>
-        <title>catalog | anyplot.ai</title>
+        <title>plots | anyplot.ai</title>
         <meta name="description" content="Browse all Python plotting specifications alphabetically" />
-        <meta property="og:title" content="catalog | anyplot.ai" />
+        <meta property="og:title" content="plots | anyplot.ai" />
         <meta property="og:description" content="Browse all Python plotting specifications alphabetically" />
-        <link rel="canonical" href="https://anyplot.ai/catalog" />
+        <link rel="canonical" href="https://anyplot.ai/plots" />
       </Helmet>
 
       <Box sx={{ pb: 4 }}>
         {/* Breadcrumb navigation */}
         <Breadcrumb
-          items={[{ label: 'anyplot.ai', shortLabel: 'ap', to: '/' }, { label: 'catalog' }]}
+          items={[{ label: 'anyplot.ai', shortLabel: 'ap', to: '/' }, { label: 'plots' }]}
           rightAction={
             <Box
               component="a"
@@ -190,7 +190,7 @@ export function SpecsListPage() {
             color: colors.gray[800],
           }}
         >
-          catalog
+          plots
           <Typography
             component="span"
             sx={{

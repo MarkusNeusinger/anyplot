@@ -50,13 +50,23 @@ export default function CodeHighlighter({ code }: CodeHighlighterProps) {
     <SyntaxHighlighter
       language="python"
       style={okabeItoDark}
+      showLineNumbers
+      lineNumberStyle={{
+        color: '#4A4A44',
+        fontSize: '0.75rem',
+        minWidth: '2.5em',
+        paddingRight: '1em',
+        borderRight: '1px solid rgba(255,255,255,0.06)',
+        marginRight: '1em',
+        userSelect: 'none',
+      }}
       customStyle={{
         margin: 0,
         padding: '28px 32px',
         fontSize: '0.85rem',
         fontFamily: typography.fontFamily,
         background: '#0E0E0C',
-        borderRadius: '12px',
+        borderRadius: '0 0 12px 12px',
         lineHeight: 1.7,
       }}
     >

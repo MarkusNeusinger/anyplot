@@ -118,7 +118,7 @@ export function HeroSection({ stats }: HeroSectionProps) {
         <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap', animation: 'rise 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) 0.3s backwards' }}>
           <Box
             component={RouterLink}
-            to="/catalog"
+            to="/plots"
             sx={{
               textDecoration: 'none',
               boxSizing: 'border-box',

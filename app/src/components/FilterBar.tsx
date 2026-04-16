@@ -339,19 +339,20 @@ export function FilterBar({
           position: { xs: 'static', md: 'relative' },
         }}
       >
-        {/* Progress counter - absolute left (desktop only) */}
+        {/* Editor statusline - absolute left (desktop only) */}
         {!isMobile && currentTotal > 0 && (
           <Typography
             sx={{
               position: 'absolute',
               left: 0,
               fontFamily: typography.fontFamily,
-              fontSize: fontSize.sm,
+              fontSize: '10px',
               color: semanticColors.mutedText,
               whiteSpace: 'nowrap',
+              letterSpacing: '0.04em',
             }}
           >
-            {scrollPercent}% · {currentTotal}
+            plots:{currentTotal}  showing:{displayedCount}  ·  {scrollPercent}%  ·  python
           </Typography>
         )}
         {/* Toolbar actions - absolute right (desktop only) */}
@@ -450,17 +451,33 @@ export function FilterBar({
             '&:focus': isSearchExpanded ? {} : { outline: `2px solid ${colors.primary}`, outlineOffset: 2 },
           }}
         >
-          <Tooltip title={isSearchExpanded ? '' : 'search'}>
-            <SearchIcon
-              className="search-icon"
+          {isSearchExpanded ? (
+            <Box
+              component="span"
               sx={{
-                color: colors.gray[500],
-                fontSize: isSearchExpanded ? '1rem' : '1.25rem',
-                transition: 'all 0.2s ease',
+                fontFamily: typography.fontFamily,
+                fontSize: fontSize.base,
+                color: colors.primary,
+                fontWeight: 700,
                 flexShrink: 0,
+                lineHeight: 1,
               }}
-            />
-          </Tooltip>
+            >
+              $
+            </Box>
+          ) : (
+            <Tooltip title="search">
+              <SearchIcon
+                className="search-icon"
+                sx={{
+                  color: colors.gray[500],
+                  fontSize: '1.25rem',
+                  transition: 'all 0.2s ease',
+                  flexShrink: 0,
+                }}
+              />
+            </Tooltip>
+          )}
           <label htmlFor="filter-search" style={{ position: 'absolute', width: 1, height: 1, overflow: 'hidden', clip: 'rect(0,0,0,0)' }}>
             {selectedCategory ? `Search ${FILTER_LABELS[selectedCategory]}` : 'Search filters'}
           </label>
@@ -469,7 +486,7 @@ export function FilterBar({
             id="filter-search"
             name="filter-search"
             inputProps={{ 'aria-label': selectedCategory ? `Search ${FILTER_LABELS[selectedCategory]}` : 'Search filters' }}
-            placeholder={selectedCategory ? FILTER_LABELS[selectedCategory] : ''}
+            placeholder={selectedCategory ? FILTER_LABELS[selectedCategory] : 'grep plots/'}
             value={searchQuery}
             onChange={(e) => {
               setSearchQuery(e.target.value);
@@ -536,12 +553,13 @@ export function FilterBar({
             <Typography
               sx={{
                 fontFamily: typography.fontFamily,
-                fontSize: fontSize.sm,
+                fontSize: '10px',
                 color: semanticColors.mutedText,
                 whiteSpace: 'nowrap',
+                letterSpacing: '0.04em',
               }}
             >
-              {scrollPercent}% · {currentTotal}
+              {currentTotal} plots · {scrollPercent}%
             </Typography>
           ) : (
             <Box />

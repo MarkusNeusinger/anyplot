@@ -24,8 +24,8 @@ export interface BreadcrumbProps {
  * Breadcrumb navigation component.
  *
  * @example
- * // Simple: anyplot.ai > catalog
- * <Breadcrumb items={[{ label: 'anyplot.ai', to: '/' }, { label: 'catalog' }]} />
+ * // Simple: anyplot.ai > plots
+ * <Breadcrumb items={[{ label: 'anyplot.ai', to: '/' }, { label: 'plots' }]} />
  *
  * @example
  * // With short labels for mobile

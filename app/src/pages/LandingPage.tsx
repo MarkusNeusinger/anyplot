@@ -40,7 +40,7 @@ export function LandingPage() {
         <Box sx={{ display: 'flex', gap: 2.5, flexWrap: 'wrap' }}>
           <Box
             component={Link}
-            to="/catalog"
+            to="/plots"
             sx={{
               textDecoration: 'none',
               fontFamily: 'var(--mono)', fontSize: '15px', fontWeight: 700,

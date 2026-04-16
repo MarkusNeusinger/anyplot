@@ -1,23 +1,23 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, userEvent } from '../test-utils';
-import { CatalogLink, GridSizeToggle, ToolbarActions } from './ToolbarActions';
+import { PlotsLink, GridSizeToggle, ToolbarActions } from './ToolbarActions';
 
-describe('CatalogLink', () => {
-  it('renders a link to /catalog', () => {
-    render(<CatalogLink />);
+describe('PlotsLink', () => {
+  it('renders a link to /plots', () => {
+    render(<PlotsLink />);
 
     const link = screen.getByRole('link');
-    expect(link).toHaveAttribute('href', '/catalog');
+    expect(link).toHaveAttribute('href', '/plots');
   });
 
-  it('has a "catalog" tooltip', async () => {
+  it('has a "plots" tooltip', async () => {
     const user = userEvent.setup();
-    render(<CatalogLink />);
+    render(<PlotsLink />);
 
     const link = screen.getByRole('link');
     await user.hover(link);
 
-    expect(await screen.findByText('catalog')).toBeInTheDocument();
+    expect(await screen.findByText('plots')).toBeInTheDocument();
   });
 });
 
@@ -107,7 +107,7 @@ describe('GridSizeToggle', () => {
 });
 
 describe('ToolbarActions', () => {
-  it('renders both CatalogLink and GridSizeToggle', () => {
+  it('renders both PlotsLink and GridSizeToggle', () => {
     render(
       <ToolbarActions
         imageSize="normal"
@@ -116,7 +116,7 @@ describe('ToolbarActions', () => {
       />
     );
 
-    expect(screen.getByRole('link')).toHaveAttribute('href', '/catalog');
+    expect(screen.getByRole('link')).toHaveAttribute('href', '/plots');
     expect(screen.getByRole('button')).toBeInTheDocument();
   });
 });
