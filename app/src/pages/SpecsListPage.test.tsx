@@ -25,7 +25,7 @@ vi.mock('../hooks', () => ({
 vi.mock('../utils/responsiveImage', () => ({
   buildSrcSet: (url: string, _format: string) => url,
   getFallbackSrc: (url: string) => url,
-  CATALOG_SIZES: '280px',
+  SPECS_SIZES: '280px',
 }));
 
 const mockImages = {
@@ -59,7 +59,7 @@ describe('SpecsListPage', () => {
 
     // Loading state renders Skeleton placeholders (MUI Skeleton uses role="progressbar" internally, but we can check for the skeleton structure)
     // The loading branch renders multiple Skeleton elements; heading text should NOT be present
-    expect(screen.queryByText('plots')).not.toBeInTheDocument();
+    expect(screen.queryByText('specs')).not.toBeInTheDocument();
   });
 
   it('renders specs after successful fetch', async () => {
@@ -79,7 +79,7 @@ describe('SpecsListPage', () => {
     mockFetchError();
     render(<SpecsListPage />);
 
-    // After error, loading ends and we get the plots heading (with 0 specs matched since no images loaded)
+    // After error, loading ends and we get the specs heading (with 0 specs matched since no images loaded)
     await waitFor(() => {
       expect(screen.getByRole('heading', { level: 1 })).toBeInTheDocument();
     });
@@ -114,7 +114,7 @@ describe('SpecsListPage', () => {
     await waitFor(() => {
       expect(screen.getByRole('heading', { level: 1 })).toBeInTheDocument();
     });
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('plots');
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('specs');
   });
 
   it('shows specification count', async () => {

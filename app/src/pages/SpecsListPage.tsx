@@ -8,7 +8,7 @@ import Fab from '@mui/material/Fab';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 
 import { API_URL, GITHUB_URL } from '../constants';
-import { buildSrcSet, getFallbackSrc, CATALOG_SIZES } from '../utils/responsiveImage';
+import { buildSrcSet, getFallbackSrc, SPECS_SIZES } from '../utils/responsiveImage';
 import { useAnalytics } from '../hooks';
 import { useAppData, useHomeState } from '../hooks';
 import { specPath } from '../utils/paths';
@@ -17,7 +17,7 @@ import { Footer } from '../components/Footer';
 import type { PlotImage } from '../types';
 import { typography, colors, fontSize, semanticColors } from '../theme';
 
-interface CatalogSpec {
+interface SpecListItem {
   id: string;
   title: string;
   description?: string;
@@ -29,9 +29,9 @@ export function SpecsListPage() {
   const { saveScrollPosition } = useHomeState();
   const { trackPageview, trackEvent } = useAnalytics();
 
-  // Track catalog page view
+  // Track specs page view
   useEffect(() => {
-    trackPageview('/plots');
+    trackPageview('/specs');
   }, [trackPageview]);
 
   const [allImages, setAllImages] = useState<PlotImage[]>([]);
@@ -69,7 +69,7 @@ export function SpecsListPage() {
   }, []);
 
   // Group images by spec_id and merge with spec metadata
-  const catalogSpecs = useMemo(() => {
+  const specList = useMemo(() => {
     // Group images by spec_id
     const imagesBySpec: Record<string, PlotImage[]> = {};
     for (const img of allImages) {
@@ -81,7 +81,7 @@ export function SpecsListPage() {
     }
 
     // Merge with spec metadata and sort images by library name
-    const specs: CatalogSpec[] = specsData
+    const specs: SpecListItem[] = specsData
       .filter((spec) => imagesBySpec[spec.id])
       .map((spec) => ({
         id: spec.id,
@@ -98,14 +98,14 @@ export function SpecsListPage() {
 
   // Initialize random rotation indices once specs are loaded
   useEffect(() => {
-    if (catalogSpecs.length > 0 && Object.keys(rotationIndex).length === 0) {
+    if (specList.length > 0 && Object.keys(rotationIndex).length === 0) {
       const initialIndices: Record<string, number> = {};
-      catalogSpecs.forEach((spec) => {
+      specList.forEach((spec) => {
         initialIndices[spec.id] = Math.floor(Math.random() * spec.images.length);
       });
       setRotationIndex(initialIndices);
     }
-  }, [catalogSpecs, rotationIndex]);
+  }, [specList, rotationIndex]);
 
   // Show/hide scroll-to-top button based on scroll position
   useEffect(() => {
@@ -123,7 +123,7 @@ export function SpecsListPage() {
         ...prev,
         [specId]: ((prev[specId] || 0) + 1) % totalImages,
       }));
-      trackEvent('catalog_rotate', { spec: specId });
+      trackEvent('plot_rotate', { spec: specId });
     },
     [trackEvent]
   );
@@ -149,17 +149,17 @@ export function SpecsListPage() {
   return (
     <>
       <Helmet>
-        <title>plots | anyplot.ai</title>
+        <title>specs | anyplot.ai</title>
         <meta name="description" content="Browse all Python plotting specifications alphabetically" />
-        <meta property="og:title" content="plots | anyplot.ai" />
+        <meta property="og:title" content="specs | anyplot.ai" />
         <meta property="og:description" content="Browse all Python plotting specifications alphabetically" />
-        <link rel="canonical" href="https://anyplot.ai/plots" />
+        <link rel="canonical" href="https://anyplot.ai/specs" />
       </Helmet>
 
       <Box sx={{ pb: 4 }}>
         {/* Breadcrumb navigation */}
         <Breadcrumb
-          items={[{ label: 'anyplot.ai', shortLabel: 'ap', to: '/' }, { label: 'plots' }]}
+          items={[{ label: 'anyplot.ai', shortLabel: 'ap', to: '/' }, { label: 'specs' }]}
           rightAction={
             <Box
               component="a"
@@ -190,7 +190,7 @@ export function SpecsListPage() {
             color: colors.gray[800],
           }}
         >
-          plots
+          specs
           <Typography
             component="span"
             sx={{
@@ -200,13 +200,13 @@ export function SpecsListPage() {
               color: semanticColors.mutedText,
             }}
           >
-            {catalogSpecs.length} specifications
+            {specList.length} specifications
           </Typography>
         </Typography>
 
         {/* Spec List */}
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          {catalogSpecs.map((spec) => {
+          {specList.map((spec) => {
             const currentIndex = rotationIndex[spec.id] || 0;
             const currentImage = spec.images[currentIndex];
 
@@ -256,12 +256,12 @@ export function SpecsListPage() {
                       <source
                         type="image/webp"
                         srcSet={buildSrcSet(currentImage.url, 'webp')}
-                        sizes={CATALOG_SIZES}
+                        sizes={SPECS_SIZES}
                       />
                       <source
                         type="image/png"
                         srcSet={buildSrcSet(currentImage.url, 'png')}
-                        sizes={CATALOG_SIZES}
+                        sizes={SPECS_SIZES}
                       />
                       <Box
                         component="img"

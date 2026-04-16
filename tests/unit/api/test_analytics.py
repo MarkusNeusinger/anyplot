@@ -168,10 +168,10 @@ class TestTrackOgImage:
             # Verify create_task was called with a coroutine
             mock_create_task.assert_called_once()
 
-    def test_catalog_page_url(self, mock_request: MagicMock, mock_create_task: MagicMock) -> None:
-        """Should build correct URL for catalog page."""
+    def test_plots_page_url(self, mock_request: MagicMock, mock_create_task: MagicMock) -> None:
+        """Should build correct URL for plots page."""
         with patch("api.analytics.asyncio.create_task", mock_create_task):
-            track_og_image(mock_request, page="catalog")
+            track_og_image(mock_request, page="plots")
             mock_create_task.assert_called_once()
 
     def test_spec_overview_url(self, mock_request: MagicMock, mock_create_task: MagicMock) -> None:

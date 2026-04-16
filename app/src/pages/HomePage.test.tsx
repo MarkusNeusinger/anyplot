@@ -99,7 +99,7 @@ describe('HomePage', () => {
     expect(screen.getByTestId('science')).toBeInTheDocument();
   });
 
-  it('renders catalog components (filterbar, grid, footer)', () => {
+  it('renders plots components (filterbar, grid, footer)', () => {
     render(<HomePage />);
     expect(screen.getByTestId('filterbar')).toBeInTheDocument();
     expect(screen.getByTestId('images-grid')).toBeInTheDocument();

@@ -136,7 +136,8 @@ Backend endpoints that serve HTML with correct meta tags for bots.
 | Endpoint | Purpose | og:image |
 |----------|---------|----------|
 | `GET /seo-proxy/` | Home page | Default (`og-image.png`) |
-| `GET /seo-proxy/catalog` | Catalog page | Default |
+| `GET /seo-proxy/plots` | Plots page | Default |
+| `GET /seo-proxy/specs` | Specs page | Default |
 | `GET /seo-proxy/legal` | Legal page | Default |
 | `GET /seo-proxy/{spec_id}` | Spec overview | Collage (2x3 grid) |
 | `GET /seo-proxy/{spec_id}/{library}` | Implementation | Single branded |
@@ -253,7 +254,8 @@ Dynamic XML sitemap for search engine indexing.
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>https://anyplot.ai/</loc></url>
-  <url><loc>https://anyplot.ai/catalog</loc></url>
+  <url><loc>https://anyplot.ai/plots</loc></url>
+  <url><loc>https://anyplot.ai/specs</loc></url>
   <url><loc>https://anyplot.ai/legal</loc></url>
   <!-- For each spec with implementations: -->
   <url><loc>https://anyplot.ai/{spec_id}</loc></url>
@@ -265,7 +267,7 @@ Dynamic XML sitemap for search engine indexing.
 ### Included URLs
 
 1. Home page (`/`)
-2. Catalog page (`/catalog`)
+2. Plots page (`/plots`)
 3. Legal page (`/legal`)
 4. Spec overview pages (`/{spec_id}`) - only if spec has implementations
 5. Implementation pages (`/{spec_id}/{library}`) - all implementations
@@ -326,7 +328,7 @@ Spec and implementation URLs use a `/python/` prefix to prepare for future multi
 | `/python/{spec_id}` | Spec overview (Python implementations) |
 | `/python/{spec_id}/{library}` | Spec detail (specific Python library) |
 | `/python/interactive/{spec_id}/{library}` | Interactive fullscreen view |
-| `/catalog`, `/legal`, `/mcp`, `/stats` | Language-independent pages (no prefix) |
+| `/plots`, `/specs`, `/legal`, `/mcp`, `/stats` | Language-independent pages (no prefix) |
 
 ### Legacy Redirects
 

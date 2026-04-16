@@ -3,7 +3,7 @@ Tests for api/routers/og_images.py — OG image endpoints.
 
 Covers:
 - Static OG image loading (including FileNotFoundError, line 32)
-- Home and catalog OG image endpoints
+- Home and plots OG image endpoints
 - _get_http_client() creation (lines 69-73)
 - _fetch_image() with 800px variant logic (lines 78-90)
 - Branded impl image: success, cache hit, no DB, not found, HTTP error (line 137-138)
@@ -79,7 +79,7 @@ def _make_spec(spec_id="scatter-basic", impls=None):
 
 
 class TestStaticOgImage:
-    """Tests for _get_static_og_image and home/catalog endpoints."""
+    """Tests for _get_static_og_image and home/plots endpoints."""
 
     def test_home_og_image_success(self, client) -> None:
         """Home OG image should return 200 with PNG content."""
@@ -107,13 +107,13 @@ class TestStaticOgImage:
         assert call_kwargs.kwargs.get("page") == "home"
         assert call_kwargs.kwargs.get("filters") is not None
 
-    def test_catalog_og_image_success(self, client) -> None:
-        """Catalog OG image should return 200 with PNG content."""
+    def test_plots_og_image_success(self, client) -> None:
+        """Plots OG image should return 200 with PNG content."""
         with (
             patch("api.routers.og_images._get_static_og_image", return_value=FAKE_PNG),
             patch("api.routers.og_images.track_og_image"),
         ):
-            response = client.get("/og/catalog.png")
+            response = client.get("/og/plots.png")
 
         assert response.status_code == 200
         assert response.headers["content-type"] == "image/png"

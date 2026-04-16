@@ -51,26 +51,26 @@ vi.mock('../components/Footer', () => ({
   Footer: () => <div data-testid="footer">Footer</div>,
 }));
 
-import { CatalogPage } from './CatalogPage';
+import { PlotsPage } from './PlotsPage';
 
-describe('CatalogPage', () => {
+describe('PlotsPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
   it('renders FilterBar and ImagesGrid', () => {
-    render(<CatalogPage />);
+    render(<PlotsPage />);
     expect(screen.getByTestId('filterbar')).toBeInTheDocument();
     expect(screen.getByTestId('images-grid')).toBeInTheDocument();
   });
 
   it('renders footer', () => {
-    render(<CatalogPage />);
+    render(<PlotsPage />);
     expect(screen.getByTestId('footer')).toBeInTheDocument();
   });
 
   it('renders Helmet for SEO', () => {
-    render(<CatalogPage />);
+    render(<PlotsPage />);
     expect(screen.getByTestId('helmet')).toBeInTheDocument();
   });
 });

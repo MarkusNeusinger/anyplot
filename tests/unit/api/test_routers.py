@@ -460,8 +460,9 @@ class TestSeoRouter:
         ):
             response = client.get("/sitemap.xml")
             assert response.status_code == 200
-            # URL format: /, /catalog, /{spec_id}, /{spec_id}/{library_id}
-            assert "https://anyplot.ai/catalog" in response.text
+            # URL format: /, /plots, /specs, /{spec_id}, /{spec_id}/{library_id}
+            assert "https://anyplot.ai/plots" in response.text
+            assert "https://anyplot.ai/specs" in response.text
             # Overview page
             assert "https://anyplot.ai/python/scatter-basic</loc>" in response.text
             # Implementation page
@@ -481,14 +482,14 @@ class TestSeoProxyRouter:
         assert "og:image" in response.text
         assert "twitter:card" in response.text
 
-    def test_seo_catalog(self, client: TestClient) -> None:
-        """SEO catalog page should return HTML with og:tags."""
-        response = client.get("/seo-proxy/catalog")
+    def test_seo_plots(self, client: TestClient) -> None:
+        """SEO plots page should return HTML with og:tags."""
+        response = client.get("/seo-proxy/plots")
         assert response.status_code == 200
         assert "text/html" in response.headers["content-type"]
-        assert "Catalog" in response.text
+        assert "plots" in response.text
         assert "og:title" in response.text
-        assert "https://anyplot.ai/catalog" in response.text
+        assert "https://anyplot.ai/plots" in response.text
 
     def test_seo_spec_overview_without_db(self, client: TestClient) -> None:
         """SEO spec overview should return fallback HTML when DB unavailable."""
@@ -607,16 +608,16 @@ class TestOgImagesRouter:
                 assert call_kwargs["page"] == "home"
                 assert call_kwargs["filters"] == {"lib": "plotly", "dom": "statistics"}
 
-    def test_get_catalog_og_image(self, client: TestClient) -> None:
-        """Should return static og:image for catalog page."""
+    def test_get_plots_og_image(self, client: TestClient) -> None:
+        """Should return static og:image for plots page."""
         with patch("api.routers.og_images.track_og_image") as mock_track:
             with patch("api.routers.og_images._get_static_og_image", return_value=b"fake-image"):
-                response = client.get("/og/catalog.png")
+                response = client.get("/og/plots.png")
                 assert response.status_code == 200
                 assert response.headers["content-type"] == "image/png"
                 mock_track.assert_called_once()
                 call_kwargs = mock_track.call_args[1]
-                assert call_kwargs["page"] == "catalog"
+                assert call_kwargs["page"] == "plots"
 
     def test_get_static_og_image_file_not_found(self, client: TestClient) -> None:
         """Should return 500 when static image file not found."""

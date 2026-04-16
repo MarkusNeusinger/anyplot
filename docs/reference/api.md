@@ -313,7 +313,7 @@ Returns only the code field for a single implementation. Used by the frontend to
 
 **Purpose**: Dynamic XML sitemap for search engines
 
-Includes: root, catalog, all specs with implementations, all implementation pages.
+Includes: root, plots, specs, all specs with implementations, all implementation pages.
 
 ---
 
@@ -325,9 +325,9 @@ Used by nginx to serve correct meta tags to social media bots.
 
 ---
 
-### GET `/seo-proxy/catalog`
+### GET `/seo-proxy/plots`
 
-**Purpose**: Bot-optimized catalog page
+**Purpose**: Bot-optimized plots page
 
 ---
 
@@ -353,9 +353,9 @@ All endpoints are under `/og/` prefix.
 
 ---
 
-### GET `/og/catalog.png`
+### GET `/og/plots.png`
 
-**Purpose**: OG image for catalog page
+**Purpose**: OG image for plots page
 
 ---
 

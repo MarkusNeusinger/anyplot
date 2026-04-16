@@ -35,7 +35,8 @@ class TestBuildSitemapXml:
         assert '<?xml version="1.0"' in result
         assert "<urlset" in result
         assert "<loc>https://anyplot.ai/</loc>" in result
-        assert "<loc>https://anyplot.ai/catalog</loc>" in result
+        assert "<loc>https://anyplot.ai/plots</loc>" in result
+        assert "<loc>https://anyplot.ai/specs</loc>" in result
         assert "<loc>https://anyplot.ai/mcp</loc>" in result
         assert "<loc>https://anyplot.ai/legal</loc>" in result
         assert "<loc>https://anyplot.ai/stats</loc>" in result

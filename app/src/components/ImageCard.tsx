@@ -152,24 +152,6 @@ export const ImageCard = memo(function ImageCard({
           },
         }}
       >
-        {/* Box-drawing style header */}
-        <Box sx={{
-          fontFamily: typography.fontFamily,
-          fontSize: '9px',
-          color: 'var(--ink-muted)',
-          opacity: 0.4,
-          px: 1.5,
-          py: 0.5,
-          display: 'flex',
-          justifyContent: 'space-between',
-          letterSpacing: '0.02em',
-          borderBottom: '1px solid var(--rule)',
-          transition: 'opacity 0.2s',
-          '.MuiCard-root:hover &': { opacity: 0.7 },
-        }}>
-          <span>┌ {image.spec_id}</span>
-          <span>{image.library} ┐</span>
-        </Box>
         <Box component="picture" sx={{ display: 'contents' }}>
           <source
             type="image/webp"

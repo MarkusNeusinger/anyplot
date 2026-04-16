@@ -50,10 +50,10 @@ async def get_home_og_image(request: Request) -> Response:
     )
 
 
-@router.get("/catalog.png")
-async def get_catalog_og_image(request: Request) -> Response:
-    """OG image for catalog page with tracking."""
-    track_og_image(request, page="catalog")
+@router.get("/plots.png")
+async def get_plots_og_image(request: Request) -> Response:
+    """OG image for plots page with tracking."""
+    track_og_image(request, page="plots")
 
     return Response(
         content=_get_static_og_image(), media_type="image/png", headers={"Cache-Control": "public, max-age=86400"}
