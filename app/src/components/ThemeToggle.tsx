@@ -14,19 +14,19 @@ export function ThemeToggle({ isDark, onToggle }: ThemeToggleProps) {
       aria-label={isDark ? 'Switch to light theme' : 'Switch to dark theme'}
       sx={{
         background: 'none',
-        border: `1px solid ${colors.gray[200]}`,
+        border: '1px solid var(--rule)',
         cursor: 'pointer',
-        padding: '4px 10px',
-        borderRadius: '99px',
+        padding: '3px 9px',
+        borderRadius: '4px',
         fontFamily: typography.mono,
-        fontSize: '10px',
-        letterSpacing: '0.12em',
-        color: colors.gray[500],
-        textTransform: 'uppercase',
-        transition: 'all 0.2s',
+        fontSize: '11px',
+        letterSpacing: '0.02em',
+        color: 'var(--ink-muted)',
+        textTransform: 'none',
+        transition: 'color 0.2s, border-color 0.2s',
         '&:hover': {
-          color: colors.gray[800],
-          borderColor: colors.gray[800],
+          color: colors.primary,
+          borderColor: 'var(--ink-muted)',
         },
       }}
     >

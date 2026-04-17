@@ -3,6 +3,13 @@ import { typography } from '../theme';
 import { ThemeToggle } from './ThemeToggle';
 import { useTheme } from '../hooks';
 
+/**
+ * Top masthead bar (style-guide §6.4).
+ *
+ * Lowercase, monospace, three slots separated by │. Reads as a status line
+ * from a tool — positions the site as a curated publication that lives
+ * inside a terminal.
+ */
 export function MastheadRule() {
   const { isDark, toggle } = useTheme();
 
@@ -11,17 +18,16 @@ export function MastheadRule() {
       display: 'grid',
       gridTemplateColumns: '1fr auto 1fr',
       alignItems: 'center',
-      py: 1.5,
+      py: 1.25,
       mb: 0,
       borderBottom: '1px solid var(--rule)',
       fontFamily: typography.mono,
       fontSize: '11px',
       color: 'var(--ink-muted)',
-      textTransform: 'uppercase',
-      letterSpacing: '0.12em',
+      letterSpacing: '0.04em',
     }}>
       <Box sx={{ display: { xs: 'none', sm: 'block' } }}>
-        Vol. 1 · 2026
+        ~/anyplot · v1 · spring 2026
       </Box>
       <Box sx={{
         px: 2,
@@ -29,9 +35,14 @@ export function MastheadRule() {
         textAlign: 'center',
         display: { xs: 'none', md: 'block' },
       }}>
-        anyplot.ai — a catalogue of scientific plotting
+        any library. one plot.
       </Box>
-      <Box sx={{ textAlign: 'right', gridColumn: { xs: '1 / -1', sm: 'auto' }, display: 'flex', justifyContent: { xs: 'center', sm: 'flex-end' } }}>
+      <Box sx={{
+        textAlign: 'right',
+        gridColumn: { xs: '1 / -1', sm: 'auto' },
+        display: 'flex',
+        justifyContent: { xs: 'center', sm: 'flex-end' },
+      }}>
         <ThemeToggle isDark={isDark} onToggle={toggle} />
       </Box>
     </Box>

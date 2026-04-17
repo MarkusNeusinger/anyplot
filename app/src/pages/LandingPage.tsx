@@ -1,7 +1,7 @@
 import { Helmet } from 'react-helmet-async';
 import Box from '@mui/material/Box';
 import Container from '@mui/material/Container';
-import { Link } from 'react-router-dom';
+import { Link as RouterLink } from 'react-router-dom';
 
 import { MastheadRule } from '../components/MastheadRule';
 import { NavBar } from '../components/NavBar';
@@ -9,123 +9,203 @@ import { HeroSection } from '../components/HeroSection';
 import { LibrariesSection } from '../components/LibrariesSection';
 import { SectionHeader } from '../components/SectionHeader';
 import { Footer } from '../components/Footer';
-import { useAppData } from '../hooks';
-import { useAnalytics } from '../hooks';
+import { useAppData, useAnalytics } from '../hooks';
+import { usePlotOfTheDay } from '../hooks/usePlotOfTheDay';
 import { GITHUB_URL } from '../constants';
-import { colors } from '../theme';
+import { colors, typography } from '../theme';
 
 export function LandingPage() {
   const { librariesData, stats } = useAppData();
   const { trackEvent } = useAnalytics();
+  const potd = usePlotOfTheDay();
+
+  // Every section on the landing page lives on the catalog tier so the grid
+  // stays consistent from hero to footer on ultrawide displays.
+  const catalogContainerSx = {
+    px: { xs: 2, sm: 4, md: 8, lg: 12 },
+    maxWidth: 'var(--max-catalog)',
+    mx: 'auto',
+  } as const;
 
   return (
     <>
       <Helmet>
-        <title>anyplot.ai — any library. one plot.</title>
-        <meta name="description" content="library-agnostic, ai-powered visualization examples. get inspired. grab the code. make it yours. 9 libraries, colorblind-safe, open source." />
+        <title>any.plot() — any library.</title>
+        <meta
+          name="description"
+          content="any library. get inspired. grab the code. make it yours. human ideas, ai builds the rest. 9 python plotting libraries, colorblind-safe, open source."
+        />
         <link rel="canonical" href="https://anyplot.ai/" />
       </Helmet>
 
       <Box sx={{ minHeight: '100vh', bgcolor: 'var(--bg-page)' }}>
-      <Container maxWidth={false} sx={{ px: { xs: 2, sm: 4, md: 8, lg: 12 }, maxWidth: 1400, mx: 'auto' }}>
-      <MastheadRule />
-      <NavBar />
+        <Container maxWidth={false} sx={catalogContainerSx}>
+          <MastheadRule />
+          <NavBar />
+        </Container>
 
-      <HeroSection stats={stats} />
-
-      {/* § 01 Languages */}
-      <Box sx={{ maxWidth: 'var(--max)', mx: 'auto', py: { xs: 6, md: 10 } }}>
-        <SectionHeader number="§ 01" title={<><em>Languages</em></>} />
-
-        <Box sx={{ display: 'flex', gap: 2.5, flexWrap: 'wrap' }}>
-          <Box
-            component={Link}
-            to="/plots"
-            sx={{
-              textDecoration: 'none',
-              fontFamily: 'var(--mono)', fontSize: '15px', fontWeight: 700,
-              color: 'var(--ink)', bgcolor: 'var(--bg-surface)',
-              border: `2px solid ${colors.primary}`,
-              borderRadius: '12px', px: 3, py: 2,
-              display: 'flex', alignItems: 'center', gap: 1.5,
-              transition: 'all 0.2s',
-              '&:hover': { bgcolor: 'var(--bg-elevated)' },
-            }}
-          >
-            <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: colors.primary }} />
-            Python
-            <Box component="span" sx={{ fontWeight: 400, fontSize: '11px', color: 'var(--ink-muted)', ml: 1 }}>
-              {stats ? `${stats.specs} specs` : ''}
-            </Box>
-          </Box>
-          <Box sx={{
-            fontFamily: 'var(--mono)', fontSize: '13px',
-            color: 'var(--ink-muted)',
-            border: '1px dashed var(--rule)',
-            borderRadius: '12px', px: 3, py: 2,
-            display: 'flex', alignItems: 'center',
-            fontStyle: 'italic',
-          }}>
-            more languages coming
-          </Box>
-        </Box>
-      </Box>
-
-      {/* § 02 Libraries */}
-      <LibrariesSection libraries={librariesData} onLibraryClick={() => {}} />
-
-      {/* § 03 Specifications */}
-      <Box sx={{ maxWidth: 'var(--max)', mx: 'auto', py: { xs: 6, md: 10 } }}>
-        <SectionHeader
-          number="§ 03"
-          title={<><em>Specifications</em></>}
-          linkText="view all"
-          linkTo="/specs"
-        />
-
-        <Box sx={{
-          fontFamily: 'var(--serif)', fontWeight: 300,
-          fontSize: { xs: '0.9375rem', md: '1.0625rem' },
-          color: 'var(--ink-soft)', lineHeight: 1.6, maxWidth: '65ch', mb: 4,
-        }}>
-          Every plot starts as a library-agnostic specification. AI generates implementations for all supported libraries, reviews quality, and maintains the code.
+        {/* Hero — fills the viewport so the fold shows only the hero */}
+        <Box
+          component="section"
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+            minHeight: { xs: 'auto', md: 'calc(100svh - 88px)' },
+          }}
+        >
+          <Container maxWidth={false} sx={catalogContainerSx}>
+            <HeroSection stats={stats} potd={potd} />
+          </Container>
         </Box>
 
-        <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap' }}>
-          <Box
-            component={Link}
-            to="/specs"
-            sx={{
-              fontFamily: 'var(--mono)', fontSize: '13px',
-              padding: '10px 18px', borderRadius: '99px',
-              border: '1px solid var(--rule)', color: 'var(--ink)',
-              textDecoration: 'none', transition: 'all 0.2s',
-              '&:hover': { borderColor: 'var(--ink)' },
-            }}
-          >
-            browse all {stats ? stats.specs : ''} specifications →
-          </Box>
-          <Box
-            component="a"
-            href={GITHUB_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            sx={{
-              fontFamily: 'var(--mono)', fontSize: '13px',
-              padding: '10px 18px', borderRadius: '99px',
-              border: '1px solid var(--rule)', color: 'var(--ink-muted)',
-              textDecoration: 'none', transition: 'all 0.2s',
-              '&:hover': { borderColor: 'var(--ink-soft)', color: 'var(--ink-soft)' },
-            }}
-          >
-            open source on github ↗
-          </Box>
-        </Box>
-      </Box>
+        <Container maxWidth={false} sx={catalogContainerSx}>
+          <LibrariesSection
+            libraries={librariesData}
+            onLibraryClick={() => {}}
+            widthTier="catalog"
+            headerStyle="prompt"
+          />
+        </Container>
 
-      <Footer onTrackEvent={trackEvent} />
-      </Container>
+        <Container maxWidth={false} sx={catalogContainerSx}>
+          <SpecsSection specCount={stats?.specs} />
+        </Container>
+
+        <Container maxWidth={false} sx={catalogContainerSx}>
+          <Footer onTrackEvent={trackEvent} />
+        </Container>
       </Box>
     </>
+  );
+}
+
+/**
+ * Specs section — catalog-tier layout. On narrow screens it stacks; on wide
+ * screens the prompt/title sits left and the narrative + action chips sit
+ * right, so the section doesn't leave a rectangle of whitespace on 2200px.
+ */
+function SpecsSection({ specCount }: { specCount?: number }) {
+  return (
+    <Box sx={{ py: { xs: 6, md: 10 } }}>
+      <SectionHeader prompt="$" title={<em>specs</em>} linkText="view all" linkTo="/specs" />
+
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: { xs: '1fr', md: 'minmax(0, 1fr) minmax(0, 1.2fr)' },
+          gap: { xs: 4, md: 8, lg: 12 },
+          alignItems: 'start',
+        }}
+      >
+        <Box
+          sx={{
+            fontFamily: typography.serif,
+            fontSize: { xs: '1rem', md: '1.25rem' },
+            lineHeight: 1.55,
+            color: 'var(--ink-soft)',
+            fontWeight: 300,
+            maxWidth: '52ch',
+          }}
+        >
+          Every plot lives as a library-agnostic markdown spec.{' '}
+          <Box component="span" sx={{ color: 'var(--ink)' }}>
+            One source, nine libraries.
+          </Box>{' '}
+          Drafted by AI from a human idea, approved before any code is
+          generated — so the intent stays with the humans.
+        </Box>
+
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 2,
+            fontFamily: typography.mono,
+          }}
+        >
+          <Box sx={{ fontSize: '12px', color: 'var(--ink-muted)', mb: 1 }}>
+            // spec pipeline
+          </Box>
+          {[
+            ['idea   ', 'human-submitted'],
+            ['spec   ', 'ai-drafted, human-approved'],
+            ['code   ', 'ai-generated'],
+            ['review ', 'ai-evaluated'],
+          ].map(([k, v]) => (
+            <Box
+              key={k}
+              sx={{
+                display: 'flex',
+                gap: 1.5,
+                fontSize: '13px',
+                lineHeight: 1.6,
+              }}
+            >
+              <Box component="span" sx={{ color: 'var(--ink)', whiteSpace: 'pre' }}>
+                {k}
+              </Box>
+              <Box component="span" sx={{ color: 'var(--ink-muted)' }}>
+                →
+              </Box>
+              <Box component="span" sx={{ color: 'var(--ink-soft)' }}>
+                {v}
+              </Box>
+            </Box>
+          ))}
+
+          <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mt: 2 }}>
+            <ActionChip to="/specs" label={`browse ${specCount ?? ''} specs`.trim()} />
+            <ActionChip href={GITHUB_URL} label="github" external />
+          </Box>
+        </Box>
+      </Box>
+    </Box>
+  );
+}
+
+interface ActionChipProps {
+  to?: string;
+  href?: string;
+  label: string;
+  external?: boolean;
+}
+
+function ActionChip({ to, href, label, external }: ActionChipProps) {
+  const sx = {
+    fontFamily: typography.mono,
+    fontSize: '13px',
+    fontWeight: 500,
+    color: 'var(--ink-muted)',
+    bgcolor: 'transparent',
+    border: 'none',
+    borderRadius: '4px',
+    px: 1.25,
+    py: 1,
+    textDecoration: 'none',
+    display: 'inline-flex',
+    alignItems: 'baseline',
+    transition: 'color 0.2s, background 0.2s',
+    '&:hover': { color: colors.primary, bgcolor: 'var(--bg-elevated)' },
+    '&::before': { content: '"."', color: 'inherit' },
+  } as const;
+
+  if (href) {
+    return (
+      <Box
+        component="a"
+        href={href}
+        target={external ? '_blank' : undefined}
+        rel={external ? 'noopener noreferrer' : undefined}
+        sx={sx}
+      >
+        {label}()
+      </Box>
+    );
+  }
+  return (
+    <Box component={RouterLink} to={to ?? '#'} sx={sx}>
+      {label}()
+    </Box>
   );
 }

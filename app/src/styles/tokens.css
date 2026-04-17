@@ -32,10 +32,11 @@
   --sans:  'Inter', system-ui, sans-serif;
   --mono:  'MonoLisa', 'MonoLisa Fallback', 'JetBrains Mono', Consolas, monospace;
 
-  /* Layout */
+  /* Layout — three-tier widths (style-guide §6.1) */
   --gutter: 24px;
-  --max: 1240px;
-  --max-wide: 1600px;
+  --max: 1240px;          /* paper tier   — landing hero box, about, blog, legal */
+  --max-wide: 1600px;     /* (legacy)     — kept for components still referencing it */
+  --max-catalog: 2200px;  /* catalog tier — plot grids, library pages, spec pages */
 
   /* Code blocks */
   --code-bg:   #0E0E0C;
@@ -46,6 +47,22 @@
 @keyframes rise {
   from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+/* Hero terminal cursor — square-wave blink (style-guide §8.2) */
+@keyframes blink {
+  50% { opacity: 0; }
+}
+
+/* Hero side plot stacks — auto-scroll (style-guide §8.5) */
+@keyframes flank-scroll {
+  from { transform: translateY(0); }
+  to   { transform: translateY(-50%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .anyplot-cursor { animation: none !important; opacity: 1; }
+  .anyplot-flank-track { animation: none !important; }
 }
 
 /* Dark theme */

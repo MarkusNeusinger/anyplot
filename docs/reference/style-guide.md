@@ -26,7 +26,7 @@ anyplot.ai is a considered reference work styled like a code editor over a paper
 
 **Color discipline:** `#009E73` (Okabe-Ito Bluish Green) appears only in small, deliberate moments — logo dot, italic accents, hover states, active navigation, terminal cursor. Everything else is warm grayscale, so when a chart appears its colors land with full impact.
 
-**Pipeline transparency:** AI is part of the story, not a hidden production detail. Specs are human-written, code is AI-generated, reviews are AI-evaluated, fixes refine specs or AI rules. Communicated openly in copy and methodology pages.
+**Pipeline transparency:** AI is part of the story, not a hidden production detail. Humans submit ideas (plot requests as GitHub issues); AI drafts the spec from the idea; humans approve the spec before any code runs; AI generates the implementations and reviews them; on rejection AI retries and humans tune the rules or refine the spec. Communicated openly in copy and methodology pages.
 
 ---
 
@@ -171,7 +171,7 @@ The first line (`any.plot() — any library.`) is the wordmark + product proposi
 - **"a catalogue of scientific plotting"** — editorial framing, when contextualizing the project in academic writing
 - **"from anyplot import *"** — code-playful, good for dev-audience posts
 - **"plots that everyone can see"** — accessibility-focused, good for technical articles about colorblind safety
-- **"specs by humans, code by AI."** — methodology framing, for about/methodology pages
+- **"human ideas. ai builds the rest."** — methodology framing, for about/methodology pages
 
 Rotate alternatives as appropriate. The canonical hero block is always the first choice.
 
@@ -249,13 +249,16 @@ The lowercase default matches the code-forward aesthetic and keeps the site feel
 > Do:
 > ```
 > // pipeline
-> spec    → human-written
-> code    → ai-generated
+> idea    → human-submitted        (github issue)
+> spec    → ai-drafted, human-approved
+> code    → ai-generated           (per library)
 > review  → ai-evaluated
-> fix     → spec refined or ai rules tuned
+> fix     → ai-retries; humans tune rules
 > ```
 >
 > Don't: `Powered by cutting-edge AI to bring you the best plotting examples!`
+>
+> Don't: `Specs hand-crafted by experts.` — they aren't; they're AI-drafted from a human one-liner, then human-approved.
 
 **The pattern:** state the mechanism, name what does what, no breathless framing. When in doubt, format as code — pipelines as arrows, results as `+`/`~`/`-`/`✗`.
 
@@ -263,9 +266,9 @@ The lowercase default matches the code-forward aesthetic and keeps the site feel
 
 > Instead of: `🚀 Supercharge your data viz workflow with AI-powered plot generation! Unlock 1000+ beautifully crafted charts across multiple libraries. Ship faster, iterate smarter, and empower your team to create stunning visualizations!`
 >
-> Write: `A catalogue of 1,000+ plotting examples across nine Python libraries. Specs are written by humans, code is generated and reviewed by AI, and every example uses the same colorblind-safe palette so switching libraries never breaks your color grammar.`
+> Write: `A catalogue of 1,000+ plotting examples across nine Python libraries. Plot ideas come from humans; AI drafts the spec, generates code for every library, and reviews each implementation. Humans approve specs and tune the rules when something repeatedly fails. Every example uses the same colorblind-safe palette, so switching libraries never breaks your color grammar.`
 
-The second version is shorter, says what's actually happening (specs human / code AI), and reads as if written by someone who cares about what they're building.
+The second version is shorter, says what's actually happening (humans submit ideas + approve + tune; AI does the drafting/generating/reviewing), and reads as if written by someone who cares about what they're building.
 
 ### 3.7 Positioning
 
@@ -276,7 +279,7 @@ The second version is shorter, says what's actually happening (specs human / cod
 - **Colorblind-safe by default**. Every example uses the Okabe-Ito palette. This isn't a feature, it's a baseline.
 - **Copyable**. Every example is self-contained, with the full code visible and executable.
 - **Curated**. We don't aggregate every plot on the internet — we maintain a considered collection.
-- **AI-built, human-shaped.** Specs come from humans. Code generation and quality review run on AI. When something doesn't pass review, we either refine the spec or tune the AI rules — never patch generated code by hand. The pipeline is documented and visible.
+- **AI-built, human-shaped.** Plot ideas come from humans (GitHub issues). Everything else — drafting the spec, generating code per library, reviewing it — runs on AI. Humans approve specs before any code is generated, and when something repeatedly fails review we either refine the spec or tune the AI rules. We never patch generated code by hand. The pipeline is documented and visible.
 
 **What anyplot is not:**
 
@@ -290,7 +293,7 @@ The second version is shorter, says what's actually happening (specs human / cod
 
 Narrative hooks for talking about anyplot — adapt to context, don't recite verbatim:
 
-**The pipeline story:** Specs are written by humans, code is generated by AI, every plot is reviewed by AI for visual quality and spec compliance, and when something doesn't pass we refine the spec or the AI rules — never patch the code. That makes anyplot a catalogue that maintains itself: when matplotlib ships a new release, we re-run the pipeline; when a better example pattern emerges, we update the spec and every library regenerates. Humans curate, AI executes.
+**The pipeline story:** Humans submit plot ideas as GitHub issues. AI drafts the spec from each idea; humans approve it before any code is generated. AI then generates implementations for all nine libraries from the same spec and reviews each one for visual quality and spec compliance. When something doesn't pass review, AI retries — and when it keeps failing, we refine the spec or tune the AI rules. We never patch the code by hand. That makes anyplot a catalogue that maintains itself: when matplotlib ships a new release, we re-run the pipeline; when a better example pattern emerges, we update the spec and every library regenerates. Humans curate; AI executes.
 
 **The palette story:** Every plot uses the Okabe-Ito palette, peer-reviewed for colorblind safety and designed for scientific publications in 2008. About 8% of men have some form of color vision deficiency — most plotting libraries ignore this entirely. We make it the default.
 

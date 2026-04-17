@@ -3,37 +3,50 @@ import { Link } from 'react-router-dom';
 import { colors, typography } from '../theme';
 
 interface SectionHeaderProps {
-  number: string;
+  /** Shell-prompt prefix per style-guide §6.3 — e.g. `❯`, `$`, `~/anyplot/`. Preferred. */
+  prompt?: string;
+  /** Legacy editorial section number — e.g. `§ 01`. Kept for non-landing pages. */
+  number?: string;
   title: React.ReactNode;
   linkText?: string;
   linkTo?: string;
 }
 
-export function SectionHeader({ number, title, linkText, linkTo }: SectionHeaderProps) {
+export function SectionHeader({ prompt, number, title, linkText, linkTo }: SectionHeaderProps) {
+  const isPrompt = !!prompt;
+
   return (
     <Box sx={{
       display: 'grid',
       gridTemplateColumns: 'auto 1fr auto',
       alignItems: 'baseline',
-      gap: 3,
+      gap: { xs: 1.5, md: 2 },
       mb: 6,
       pb: 2.5,
       borderBottom: `1px solid var(--rule)`,
     }}>
-      <Box sx={{
+      <Box sx={isPrompt ? {
+        fontFamily: typography.mono,
+        fontSize: { xs: '0.95rem', sm: '1.15rem', md: '1.4rem' },
+        fontWeight: 500,
+        color: 'var(--ink-muted)',
+        whiteSpace: 'nowrap',
+      } : {
         fontFamily: typography.mono,
         fontSize: '11px',
         color: 'var(--ink-muted)',
         textTransform: 'uppercase',
         letterSpacing: '0.15em',
       }}>
-        {number}
+        {isPrompt ? prompt : number}
       </Box>
       <Box component="h2" sx={{
         fontFamily: typography.serif,
         fontWeight: 400,
-        fontSize: { xs: '1.75rem', sm: '2.25rem', md: 'clamp(2.25rem, 4.5vw, 3.5rem)' },
-        lineHeight: 1,
+        fontSize: isPrompt
+          ? { xs: '1.5rem', sm: '1.875rem', md: 'clamp(1.875rem, 3.5vw, 2.5rem)' }
+          : { xs: '1.75rem', sm: '2.25rem', md: 'clamp(2.25rem, 4.5vw, 3.5rem)' },
+        lineHeight: isPrompt ? 1.15 : 1,
         letterSpacing: '-0.02em',
         color: 'var(--ink)',
         m: 0,
